@@ -14,7 +14,7 @@
 program     = { line } ;
 line        = [ statement ] NEWLINE ;                         (* a comment is "#" to the end of the line; it is not a token *)
 statement   = setting | headed | let | def | repeat | section | arrange | arrange_block | start | launch | import | end | loop
-            | evolve | wire | assert | sample | use | set ;
+            | evolve | wire | assert | sample | use | set | station ;
 
 (* == Settings == *)
 setting     = "tempo" tempo
@@ -240,12 +240,18 @@ lterm       = lfactor { ( "*" | "/" ) lfactor } ;
 lfactor     = NUMBER | ldeck | "(" levelexpr ")" ;
 
 (* == Sets, samples, imports == *)
-set         = "set" "{" { NEWLINE } { ( set_play | set_mix ) NEWLINE { NEWLINE } } "}" ;   (* programs of programs: an item a line *)
-set_play    = "play" ( NAME | STRING ) [ "until" until_when ] ;   (* a saved program: its CID goes in the canonical text [host] *)
+set         = "set" "{" { NEWLINE } { ( set_play | set_mix | set_next ) NEWLINE { NEWLINE } } "}" ;   (* programs of programs: an item a line *)
+set_play    = "play" ( NAME | STRING | gen ) [ "until" until_when ] ;   (* a saved program, its CID in the canonical text, or a generator call [host] *)
+set_next    = "next" step [ "until" until_when ] ;            (* the track before it, a generator call, with its seed stepped *)
 until_when  = TIME | "bar" INT | NAME | "after" NAME ;        (* a time, a bar of the track, a section's start or end *)
 set_mix     = "mix" INT ( "bar" | "bars" ) "with" TRANSITION [ "," "tempo" NUMBER "->" NUMBER ] ;
 TIME        = DECIMAL UNIT { DECIMAL UNIT } ;                 (* units glued: 20m  90s  1h  3m30s *)
 TRANSITION  = "crossfade" | "filter_exit" | "echo_out" | "cut" ;
+
+(* == Radio: stations == *)
+station     = "station" "{" { NEWLINE } { station_line NEWLINE { NEWLINE } } "}" ;   (* endless and deterministic: position N is always the same track [host] *)
+station_line = "from" gen | "next" step | "forms" NAME { NAME } ;   (* the first track's call; the step from a track to the next; the forms in turn *)
+step        = "seed" "=" ( "+" INT | "~" ) ;                 (* seed=+1 counts on; seed=~ draws from a hash of the track before's CID *)
 import      = "import" ( NAME | STRING ) ;                    (* a snippet's name in quotes, or its CID [host] *)
 sample      = "sample" NAME "from" STRING [ "license" license ] [ "else" NAME ]
             | "loop" STRING "as" NAME [ "else" NAME ] ;       (* restricted sounds: a local file, an Apple Loop by its hash *)

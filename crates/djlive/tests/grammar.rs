@@ -121,6 +121,8 @@ const SEMANTIC: &[&str] = &[
     "`tempo(...)` takes no target before it",
     // a generator call's tempo is a value in range (gen.rs), as a chance is
     "`bpm=` is a tempo from 40 to 300",
+    // TIME's UNIT is the lexer's class (ms, s, m, h ...); an `until` takes h, m and s (a set's `next` puts one in reach of the walk)
+    "`until` takes a time",
 ];
 
 #[test]
