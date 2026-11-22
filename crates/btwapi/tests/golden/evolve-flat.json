@@ -1,0 +1,132 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": [],
+    "cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
+    "canonical": "tempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",
+    "nets": {
+      "evolve@0:A": "z4EBG9j4hxR9jp2mXyvftG23Kf7FNhb5jUz5qK8uik42B9uZ7DL",
+      "evolve@0:B": "z4EBG9jA3EuYwrSgJQBx9iKQMyeDzKUztuKG7hS1VMTdqcjyJyE",
+      "evolve@12:A": "z4EBG9j8VkCYSqqiZbTfqXpxpntB7Dz9uYD5TFmLk6cQJ28tzvu",
+      "evolve@12:B": "z4EBG9j7SEezCQpZQXJs8ZYs7zUczfZckowAoRxApUMnCpSKsGS",
+      "evolve@16:A": "z4EBG9j8VkCYSqqiZbTfqXpxpntB7Dz9uYD5TFmLk6cQJ28tzvu",
+      "evolve@16:B": "z4EBG9j9EtuDqW5JHD2KNJSxvxSWKTfgE3R79UVWkuQkr8jqLRo",
+      "evolve@20:A": "z4EBG9j8VkCYSqqiZbTfqXpxpntB7Dz9uYD5TFmLk6cQJ28tzvu",
+      "evolve@20:B": "z4EBG9jGr7yVjSYjVMTFhBt4Aiu5siFSmn9h1L5q5ifwoYc4utR",
+      "evolve@24:A": "z4EBG9j8VkCYSqqiZbTfqXpxpntB7Dz9uYD5TFmLk6cQJ28tzvu",
+      "evolve@24:B": "z4EBG9j6uj484uws13WAztSdrH3Dd3pLbht5R9PSbKFLTjrgfHh",
+      "evolve@28:A": "z4EBG9jEbSiwkhbUVw8t4TR2jsHPRLfknvD5nuKF7sdv8k5X3hH",
+      "evolve@28:B": "z4EBG9jFEAqmKdGmfen1ZjMe1A6ek6QFJbvGsELWP1wZ9roYaHx",
+      "evolve@4:A": "z4EBG9izSbA11JeYjX4WxGzNZ8Pco3n6rrGzUrxxpYVa5UgCCDc",
+      "evolve@4:B": "z4EBG9j6KSvE45jXjHrVThvupWhoVTuokwtQueC4hZyMhm7FgWB",
+      "evolve@8:A": "z4EBG9j8VkCYSqqiZbTfqXpxpntB7Dz9uYD5TFmLk6cQJ28tzvu",
+      "evolve@8:B": "z4EBG9j22ymfV4kafqKmN7NkyDSSHw8bcBNNYgDN1h8Tno62WPe"
+    },
+    "song_nets": {
+      "A": "z4EBG9j2feMppjiAZGqc1CKftAAQfLC2K6ukUJm3QDhasMbcc2P",
+      "B": "z4EBG9jCiW15tSaZa31y41Ur7vj7x5vNdGTDwEf65pKkiWjw7s9"
+    },
+    "tempo": 120,
+    "key": "am",
+    "swing": null,
+    "arranged": true,
+    "song_bars": 32,
+    "ends": true,
+    "end_bar": 32,
+    "loops": false,
+    "sections": [],
+    "decks": ["A","B"],
+    "evolve": [
+      "evolve: tail 34 generations (136 bars), then it cycles: period 4 generations = period 16 bars ≈ 32s at 120"
+    ],
+    "lineage": [
+      {
+        "scope": "evolve",
+        "gen": 0,
+        "cid": "z4EBG9j8gTq7X8tXV4YvgzVCubDDQ43ddvQahPydwuWXW1QJrNg",
+        "forkedFrom": null,
+        "start_bar": 0,
+        "bars": 4
+      },
+      {
+        "scope": "evolve",
+        "gen": 1,
+        "cid": "z4EBG9j8qfetcFob6cuwhB8n26y4z3q16L6DJNFTWfdYEuZDfA6",
+        "forkedFrom": "z4EBG9j8gTq7X8tXV4YvgzVCubDDQ43ddvQahPydwuWXW1QJrNg",
+        "start_bar": 4,
+        "bars": 4
+      },
+      {
+        "scope": "evolve",
+        "gen": 2,
+        "cid": "z4EBG9jFLrH69YxrqA535V8xYT8yvqn5TtSvkvcpNHpKAL7CuW4",
+        "forkedFrom": "z4EBG9j8qfetcFob6cuwhB8n26y4z3q16L6DJNFTWfdYEuZDfA6",
+        "start_bar": 8,
+        "bars": 4
+      },
+      {
+        "scope": "evolve",
+        "gen": 3,
+        "cid": "z4EBG9j5vzvzTvo1JZshzyQLnrgL8jjgxz8CYanKMtsfAzoSo1o",
+        "forkedFrom": "z4EBG9jFLrH69YxrqA535V8xYT8yvqn5TtSvkvcpNHpKAL7CuW4",
+        "start_bar": 12,
+        "bars": 4
+      },
+      {
+        "scope": "evolve",
+        "gen": 4,
+        "cid": "z4EBG9j43JEtYLpjRL2G8pYCjbRPb3sKeweEfs8j7HNCHfTNUfk",
+        "forkedFrom": "z4EBG9j5vzvzTvo1JZshzyQLnrgL8jjgxz8CYanKMtsfAzoSo1o",
+        "start_bar": 16,
+        "bars": 4
+      },
+      {
+        "scope": "evolve",
+        "gen": 5,
+        "cid": "z4EBG9j4tbSrrTR6g2UAKaWuwHCWkpkkvQPPmMJUGJDpc1FdcVd",
+        "forkedFrom": "z4EBG9j43JEtYLpjRL2G8pYCjbRPb3sKeweEfs8j7HNCHfTNUfk",
+        "start_bar": 20,
+        "bars": 4
+      },
+      {
+        "scope": "evolve",
+        "gen": 6,
+        "cid": "z4EBG9j5RVPzE59qsSAqYUwZBFeU1rQUtXaG8HMPcwD2is6rky8",
+        "forkedFrom": "z4EBG9j4tbSrrTR6g2UAKaWuwHCWkpkkvQPPmMJUGJDpc1FdcVd",
+        "start_bar": 24,
+        "bars": 4
+      },
+      {
+        "scope": "evolve",
+        "gen": 7,
+        "cid": "z4EBG9j4XGHAtVkGf7vjGryGRZCDNN7sVrtwULupEmTbtU1EtHB",
+        "forkedFrom": "z4EBG9j5RVPzE59qsSAqYUwZBFeU1rQUtXaG8HMPcwD2is6rky8",
+        "start_bar": 28,
+        "bars": 4
+      }
+    ],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": 64
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",
+    "cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
+    "comments": ["an evolve in a program with no sections: it plays its own orbit and ends."],
+    "diagnostics": [],
+    "text": "# an evolve in a program with no sections: it plays its own orbit and ends.\ntempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://btw.bitwrap.io/#z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RY3NDoIwEITvfYq5ePFgACWYRkz0NQyHChtogJa0DUL8eXZXNPGwu8nMNzuB-sEiTiLR0gzVi4rKFieJVvOd8FrmgUY3KmBa77_AWaKnzlYzLmqHMgWlqNOCwavynsWEU8SrEDTabiTQSG7Gjn3ncRf45SWcDSoQYs4Gp4wfrCccIqTIEB0ZXKolQqMNok0MT1TlWzY-VRLa8OeAW0MGNc8KCfIcMQM-2OFvsJiJp3gD",
+    "social_url": "https://btw.bitwrap.io/c/z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RY3NDoIwEITvfYq5ePFgACWYRkz0NQyHChtogJa0DUL8eXZXNPGwu8nMNzuB-sEiTiLR0gzVi4rKFieJVvOd8FrmgUY3KmBa77_AWaKnzlYzLmqHMgWlqNOCwavynsWEU8SrEDTabiTQSG7Gjn3ncRf45SWcDSoQYs4Gp4wfrCccIqTIEB0ZXKolQqMNok0MT1TlWzY-VRLa8OeAW0MGNc8KCfIcMQM-2OFvsJiJp3gD",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RY3NDoIwEITvfYq5ePFgACWYRkz0NQyHChtogJa0DUL8eXZXNPGwu8nMNzuB-sEiTiLR0gzVi4rKFieJVvOd8FrmgUY3KmBa77_AWaKnzlYzLmqHMgWlqNOCwavynsWEU8SrEDTabiTQSG7Gjn3ncRf45SWcDSoQYs4Gp4wfrCccIqTIEB0ZXKolQqMNok0MT1TlWzY-VRLa8OeAW0MGNc8KCfIcMQM-2OFvsJiJp3gD",
+    "cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
+    "chars": 312,
+    "canonical": "tempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",
+    "warnings": []
+  }
+}

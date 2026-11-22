@@ -1,0 +1,34 @@
+# tempo: a song whose tempo moves. The tempo is linear in BEATS, so a bar is always four beats and every time word
+# below (`at bar 6 beat 2`, `before drop 2 beats`) means what it always meant: only the seconds change.
+# `djctl btw check` says how long the song is through the curve. (An original example, CC0-1.0.)
+tempo 100 -> 128 over 8 bars s-curve   # from the first bar: it speeds up through the intro, then holds 128
+key dm
+
+section intro 8 bars {
+  deck A: kick x ~ x ~ | hihat x*8 vel=50..80
+  deck B: harmony chord(dm7) oct=3
+  master: filter lp 400 -> 6k over 8 bars
+}
+
+section build 8 bars {
+  tempo 128 -> 140 over 6 bars exp                    # a tempo in a section runs from the section's first bar
+  deck A: kick x x x x | snare ~ x ~ x | hihat x*8 vel=60..100
+  deck B: harmony chord(dm7) | bass d2 ~ d2 ~
+  at bar 6 beat 2: master: reverb 0.1 -> 0.7 over 2 beats   # beats and bars: untouched by the tempo
+  before drop 2 beats: master: filter hp 100 -> 4k over 2 beats
+}
+
+section drop 16 bars {
+  tempo 140                                           # a plain tempo holds until another one says
+  deck A: kick x x x x | snare ~ x ~ x | hihat x*8 vel=60..100
+  deck B: bass d2 ~ d2 ~ | melody <f4 a4 c5 a4>
+  at bar 12: tempo 140 -> 132 over 4 bars             # a timed line: it eases back before the end of the drop
+}
+
+section breakdown 8 bars {
+  tempo 132 -> 90 over 8 bars log                     # fast at first, then it settles: the slowdown
+  deck A: hihat x ~ x ~ vel=40..60
+  deck B: harmony chord(dm7) | melody <f4 a4 c5 a4>
+}
+
+arrange intro build drop breakdown

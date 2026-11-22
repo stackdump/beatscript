@@ -1,0 +1,61 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": [],
+    "cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
+    "canonical": "tempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",
+    "nets": {
+      "one@0:A": "z4EBG9jFAVRoGQ85P8EpnVv852aMpiwLoUNa4EpoBNbdnp3QV5m",
+      "two@4:A": "z4EBG9izM2keAFyf7tZCx41JKeThCBgnCKzxmcT7mjmuDT8ihGs"
+    },
+    "song_nets": {
+      "A": "z4EBG9izvkK94JK9EejCsx6hkN6N8m4Uxj3w8MxUP7HZMujEbfa"
+    },
+    "tempo": 90,
+    "key": null,
+    "swing": null,
+    "arranged": true,
+    "song_bars": 8,
+    "ends": false,
+    "end_bar": null,
+    "loops": true,
+    "sections": [
+      {
+        "name": "one",
+        "start": 0,
+        "bars": 4
+      },
+      {
+        "name": "two",
+        "start": 4,
+        "bars": 4
+      }
+    ],
+    "decks": ["A"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": 21.333
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",
+    "cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
+    "comments": ["a song that loops, with a before-line."],
+    "diagnostics": [],
+    "text": "# a song that loops, with a before-line.\ntempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://btw.bitwrap.io/#z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU5bCgIxDPzvKeYCSln2x34IHqWtUZZ1myUpKvg4u-kq_i0hCUlmMlNpmhk775RyHbiAC6FHiqJ4OOBIecQhYBys3_FuaetEJxZCvTG6BRwwRa0kAUJXkgSPzR5-24Nt_IHc6y_TmOsy33jaXRW5M9lWjB5FYjnT4tJeuAvz7D4",
+    "social_url": "https://btw.bitwrap.io/c/z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU5bCgIxDPzvKeYCSln2x34IHqWtUZZ1myUpKvg4u-kq_i0hCUlmMlNpmhk775RyHbiAC6FHiqJ4OOBIecQhYBys3_FuaetEJxZCvTG6BRwwRa0kAUJXkgSPzR5-24Nt_IHc6y_TmOsy33jaXRW5M9lWjB5FYjnT4tJeuAvz7D4",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU5bCgIxDPzvKeYCSln2x34IHqWtUZZ1myUpKvg4u-kq_i0hCUlmMlNpmhk775RyHbiAC6FHiqJ4OOBIecQhYBys3_FuaetEJxZCvTG6BRwwRa0kAUJXkgSPzR5-24Nt_IHc6y_TmOsy33jaXRW5M9lWjB5FYjnT4tJeuAvz7D4",
+    "cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
+    "chars": 247,
+    "canonical": "tempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",
+    "warnings": []
+  }
+}

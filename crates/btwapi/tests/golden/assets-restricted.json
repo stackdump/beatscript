@@ -1,0 +1,101 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 1,
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 5,
+        "col": 35,
+        "end_col": 39,
+        "start": 215,
+        "end": 219,
+        "start16": 215,
+        "end16": 219,
+        "message": "`harp` is a sample the engine cannot play yet: this part plays `bright-pluck`",
+        "expected": [],
+        "found": "",
+        "help": "`else VOICE` on the sample line names the stand-in",
+        "render": "warning: `harp` is a sample the engine cannot play yet: this part plays `bright-pluck`\n --> 5:35\n  |\n5 | deck B: melody <c4 e4 g4 e4> inst=harp\n  |                                   ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
+      }
+    ],
+    "cid": "z4EBG9jAJ4g1ik7iwdC51L8btSGTRmVkmKUTZECAR8pbL5c3y6k",
+    "canonical": "use restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" license restricted-private else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "nets": {
+      "B": "z4EBG9j7nR5NNFtRkspWMGH6kYDUE9ChkoQ4CUumGqaW359Fhhd"
+    },
+    "song_nets": {
+      "B": "z4EBG9j7nR5NNFtRkspWMGH6kYDUE9ChkoQ4CUumGqaW359Fhhd"
+    },
+    "tempo": 110,
+    "key": null,
+    "swing": null,
+    "arranged": false,
+    "song_bars": null,
+    "ends": false,
+    "end_bar": null,
+    "loops": false,
+    "sections": [],
+    "decks": ["B"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": true,
+    "restricted": true,
+    "seconds": null
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "use restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" license restricted-private else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "cid": "z4EBG9jAJ4g1ik7iwdC51L8btSGTRmVkmKUTZECAR8pbL5c3y6k",
+    "comments": [
+      "a private program: it says so and uses a restricted sample (the default license of a local file)."
+    ],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 5,
+        "col": 35,
+        "end_col": 39,
+        "start": 215,
+        "end": 219,
+        "start16": 215,
+        "end16": 219,
+        "message": "`harp` is a sample the engine cannot play yet: this part plays `bright-pluck`",
+        "expected": [],
+        "found": "",
+        "help": "`else VOICE` on the sample line names the stand-in",
+        "render": "warning: `harp` is a sample the engine cannot play yet: this part plays `bright-pluck`\n --> 5:35\n  |\n5 | deck B: melody <c4 e4 g4 e4> inst=harp\n  |                                   ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
+      }
+    ],
+    "text": "# a private program: it says so and uses a restricted sample (the default license of a local file).\nuse restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n"
+  },
+  "share": {
+    "ok": false,
+    "error": "not shared: it uses `harp` (a local sample, ~/samples/harp.wav), which is restricted: a program that uses restricted assets is private and is never shared or made public (fork it with substitute=true to play `bright-pluck` instead)",
+    "url": null,
+    "social_url": null,
+    "beats_url": null,
+    "cid": null,
+    "chars": null,
+    "canonical": null,
+    "warnings": [],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 5,
+        "col": 35,
+        "end_col": 39,
+        "start": 215,
+        "end": 219,
+        "start16": 215,
+        "end16": 219,
+        "message": "`harp` is a sample the engine cannot play yet: this part plays `bright-pluck`",
+        "expected": [],
+        "found": "",
+        "help": "`else VOICE` on the sample line names the stand-in",
+        "render": "warning: `harp` is a sample the engine cannot play yet: this part plays `bright-pluck`\n --> 5:35\n  |\n5 | deck B: melody <c4 e4 g4 e4> inst=harp\n  |                                   ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
+      }
+    ]
+  }
+}

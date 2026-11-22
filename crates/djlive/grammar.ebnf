@@ -1,0 +1,245 @@
+(* The grammar of BeatScript: the one source of truth. The Grammar page (railroad diagrams), the grammar block of
+   docs/BTW.md and the cheat sheet are generated from this file, and tests/grammar.rs holds it to the parser both
+   ways: every example program is a sentence of it, and every sentence it writes is a program the parser reads.
+
+   Notation (ISO 14977): name = ... ;   "text" a terminal   [ x ] optional   { x } none or more   ( x ) a group
+   x | y one of, and comments between round brackets and stars.  An UPPER-CASE name that is no production is a token class of the lexer:
+   NEWLINE NAME WORD INT NUMBER DECIMAL STRING PARAM NOTE PITCH KEY CHORD ROMAN SDEG UNIT TOKEN GLOB SUGAR PHRASE CID (recognize.rs
+   what each matches). Comments go away before the grammar is read, and a `#` inside a word is a sharp.
+   A production whose note says [host] needs a host's store to be read (saved snippets, saved programs): the
+   sentence writer of the drift test leaves it out, and the example programs that use it say `#! skip-test`. *)
+
+(* == Programs and lines == *)
+program     = { line } ;
+line        = [ statement ] NEWLINE ;                         (* a comment is "#" to the end of the line; it is not a token *)
+statement   = setting | headed | let | def | repeat | section | arrange | arrange_block | start | launch | import | end | loop
+            | evolve | wire | assert | sample | use | set ;
+
+(* == Settings == *)
+setting     = "tempo" stempo
+            | "swing" arith
+            | "key" KEY ;                                     (* a setting reads no input: it is the program's own *)
+stempo      = arith [ "->" arith "over" dur [ shape ] ] ;     (* tempo 126   tempo 100 -> 130 over 8 bars exp *)
+tempo       = value [ "->" value "over" dur [ shape ] ] ;     (* a control's tempo (at bar 16: tempo 128 -> 140 ...) *)
+
+(* == Lines: when, where, what == *)
+headed      = "deck" deck ":" parts [ guard ]                (* a deck's parts: no time word before them *)
+            | [ timing ":" ] [ target ":" ] control [ cguard ]
+            | [ timing ":" ] ( invoke | duck | mix ) [ cguard ] ;   (* a def's call, a duck and a mix name their decks themselves *)
+timing      = when [ "for" dur ] | "for" dur ;
+when        = "every" dur [ "from" ( arith | pos ) ]          (* every 16 bars   every 2 beats   every 4 bars from 8 *)
+            | "on" "phrase"                                   (* every 8 bars: a phrase *)
+            | "on" "next" "bar"
+            | "on" "next" "phrase" [ "8" | "16" | "32" ]
+            | "at" pos                                        (* once, on that place of the program *)
+            | "after" NAME                                    (* once, where that section ends *)
+            | "before" NAME dur ;                             (* once, that long ahead of that section *)
+dur         = arith ( "bar" | "bars" | "beat" | "beats" ) ;   (* 4 bars   1/2 bar   2 beats *)
+pos         = "bar" arith [ "beat" arith ] ;                  (* bar 16   bar 16 beat 3   a beat is 0 to 3 *)
+guard       = "when" expr ;                                   (* kept where it holds *)
+cguard      = "when" cexpr ;                                  (* a control line's guard may read an input *)
+target      = "deck" deck | "master" ;
+deck        = "A" | "B" | PARAM ;                              (* PARAM: in a def body, filled in when it is called *)
+control     = action | do | sing ;
+
+(* == Parts == *)
+parts       = pitem { "|" pitem } ;                           (* only after "deck X:" and with no time word *)
+pitem       = part                                            (* each item between `|` has a part in it *)
+            | "stack" "(" pargs ")"                           (* over parts: `stack` is `|` *)
+            | "then" "(" pargs ")" ;                          (* over parts: the per-bar alternation <p q> *)
+pargs       = { pexpr "," } pitem { "," pexpr } ;
+pexpr       = pitem | "silence" ;                             (* silence: the unit of both *)
+part        = role [ "/" INT ] pattern { param }              (* hihat/12 x x ~ x : a cycle of 12 sixteenths *)
+            | role ref { param } ;                            (* bass seed(techno, 42)[17..24]: a generated part's bars; bass <cid>.drop: a stored program's *)
+role        = "kick" | "snare" | "hihat" | "clap"             (* drum parts: a hit plays the drum's note *)
+            | "bass" | "melody" | "harmony" | "arp" ;         (* tonal parts: a hit plays the key's root *)
+param       = pname "=" pvalue                                (* vel=70..100  oct=2  len=3  inst=sub-bass  glide=60 *)
+            | "voice-lead" [ "=" ( "on" | "off" ) ] ;         (* a switch, on when it is bare *)
+pname       = "vel" | "oct" | "len" | "inst" | "seed" | "kit" | "sound" | "route"   (* velocity, octave, length, voice, its generators' seed, a drum kit, a sound, where it plays *)
+            | "glide" | "decay" | "pitch-drop" ;              (* tonal, an 808: glide= decay= ms, pitch-drop= 1 to 24 semitones *)
+pvalue      = arith [ ".." arith ] | WORD | PARAM ;           (* a number, a range drawn per hit, a name; a $name in a body *)
+
+(* == Mini-notation: the rhythm of a part == *)
+pattern     = term { term } ;
+term        = atom [ mark ] [ "*" ( INT | "(" arith ")" ) ] { "?" [ prob ] } [ "~" INT ] ;   (* x*4  c2!  e2^  x:3  x*8?0.7 *)
+                                                              (* sugar: x? is x?0.5, c2~3 is c2 ~ ~ *)
+mark        = ( "!" | GHOST ) [ "^" ] [ "&" ] [ RATCHET ] | "^" [ "!" | GHOST ] [ "&" ] [ RATCHET ]
+            | "&" [ RATCHET ] | RATCHET ;                     (* accent ghost slide flam ratchet, any order *)
+atom        = "x"                                             (* a hit *)
+            | "~"                                             (* a rest *)
+            | NOTE                                            (* c3  f#2  bb4 *)
+            | INT                                             (* a scale degree of the key: 1 3 5 *)
+            | "(" arith ")"                                   (* a degree computed: ($i + 1) *)
+            | degrees                                         (* deg(1 b3 5' ~) *)
+            | ROMAN [ "/" INT ]                               (* i  VI  V7/7: a chord of the key; /3 /5 /7 an inversion *)
+            | PARAM                                           (* a def's parameter: $chords *)
+            | "[" pattern { "," pattern } "]"                 (* a group: squeezed into one slot; commas stack *)
+            | "<" pattern ">"                                 (* alternation: one term per cycle *)
+            | choose                                          (* choose [a b c] weights 3 1 1 *)
+            | call
+            | NAME ;                                          (* a let pattern's name *)
+call        = NAME "(" [ arg { "," arg } ] ")" ;              (* e(5,8)  markov(0.6)  arp(am7, up)  chord(am)  maybe(p, 0.5) *)
+arg         = arith | KEY | CHORD | ROMAN [ "/" INT ] | NAME | NAME "=" ( arith | WORD ) | "[" pattern "]" | degrees | call | PARAM ;
+                                                              (* a chord of chord() and arp(): a symbol (am7) or a numeral (V7  bVII  V7/7), the numeral read in the key in force *)
+
+(* == Degrees, Roman numerals, chance == *)
+degrees     = "deg" "(" dstack ")" ;                          (* one slot, its terms squeezed into it like [..] *)
+dstack      = dseq { "," dseq } ;
+dseq        = dterm { dterm } ;
+dterm       = dleaf [ mark ] [ "*" INT ] | "~" | "x" | "[" dstack "]" | "<" dseq ">" | "(" ( dterm | arith ) ")" ;
+dleaf       = ( INT | SDEG ) { "'" } { "," } ;                (* 5' an octave up, 1, down; b3 flat, #4 sharp *)
+prob        = NUMBER | "(" arith ")" ;                        (* 0 to 1, or a percent: ?0.3  ?30%  ?(1 / 4) *)
+choose      = "choose" "[" pattern "]" "weights" weight { weight } [ "seed=" INT ] ;   (* one weight for each option *)
+weight      = NUMBER | "(" arith ")" ;
+
+(* == Control: what the mix does == *)
+action      = "filter" ( "lp" | "hp" ) change                 (* hertz: 20 .. 20k *)
+            | "filter" ( "off" | "open" )
+            | ( "delay" | "reverb" | "crush" | "drive" | "resonance" ) change   (* 0 .. 1: how much *)
+            | ( "level" | "low" | "mid" | "high" ) change     (* deck X: / master: level *)
+            | "crossfader" change                             (* no target *)
+            | "tempo" tempo                                   (* no target: at bar 16: tempo 128 -> 140 over 4 bars *)
+            | "swap" "pairs" [ "with" MOVE ]                  (* the booth's: the desktop app plays these *)
+            | "move" MOVE "on" deck [ span ]
+            | "load" "pair" SPEC [ "group" INT ]
+            | "load" SPEC
+            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD )
+            | "play" | "stop" | "sync" | "mute" | "unmute" ;
+change      = value                                           (* a plain value *)
+            | value "->" value span [ shape ]                 (* a ramp: 2k -> 8k over 8 bars exp *)
+            | lfo ;                                           (* a value that keeps moving *)
+span        = "over" dur ;
+value       = carith ;                                        (* a control's value may read inputs: 200 + knob(3) * 7800 *)
+MOVE        = "filter_exit" | "echo_out" | "loop_roll" | "bass_swap" | "phrase_sync" | "vocoder_handoff" ;
+SPEC        = NAME ":" INT | NAME ;                           (* dnb:2602  acid-bass *)
+do          = ( "do" WORD | SUGAR ) [ WORD ] { STRING } { NAME "=" doval } [ span [ shape ] ] ;   (* the control registry: noun, verb; SUGAR: a noun said with no `do` (vocoder, freeze, wheel ...) *)
+doval       = arith [ "->" arith ] | WORD | STRING | "[" [ doval { "," doval } ] "]" | lfo ;
+
+(* == Shapes and lfo == *)
+shape       = "linear" | "exp" | "log" | "s-curve" | "step" INT ;
+lfo         = "lfo" wave dur { "depth=" value | "center=" value | "phase=" NUMBER } [ span ] ;   (* lfo sine 2 bars center=3k depth=1k *)
+wave        = "sine" | "tri" | "square" | "saw" ;
+
+(* == Arithmetic and guards == *)
+arith       = sum ;                                           (* worked out once, when the program is read, over exact rationals *)
+sum         = product { ( "+" | "-" ) product } ;
+product     = unary { ( "*" | "/" | "%" ) unary } ;           (* "/" is exact; "%" is Euclidean *)
+unary       = [ "-" ] primary ;
+primary     = NUMBER | PARAM | "(" arith ")" | ( "min" | "max" ) "(" arith { "," arith } ")" ;
+carith      = csum ;                                          (* arithmetic that may read inputs: only in a control *)
+csum        = cproduct { ( "+" | "-" ) cproduct } ;
+cproduct    = cunary { ( "*" | "/" | "%" ) cunary } ;
+cunary      = [ "-" ] cprimary ;
+cprimary    = NUMBER | PARAM | "(" carith ")" | ( "min" | "max" ) "(" carith { "," carith } ")" | input ;
+expr        = or ;                                            (* a guard: kept when it is true *)
+or          = and { "or" and } ;
+and         = not { "and" not } ;
+not         = [ "not" ] compare ;
+compare     = operand [ cmp operand ] ;                       (* words compare with == and != only *)
+operand     = sum | WORD ;
+cexpr       = cor ;                                           (* a control line's guard *)
+cor         = cand { "or" cand } ;
+cand        = cnot { "and" cnot } ;
+cnot        = [ "not" ] ccompare ;
+ccompare    = coperand [ cmp coperand ] ;
+coperand    = csum | WORD ;
+cmp         = "==" | "!=" | "<" | "<=" | ">" | ">=" ;
+input       = "knob" "(" INT ")" | "pad" "(" INT ")" | "fader" "(" deck ")"   (* performed: only in a control value or guard *)
+            | "held" "(" "key" ")" | "held" "(" PITCH ")" ;    (* PITCH: a note with its octave, c4 *)
+
+(* == Structure: lets, defs, sections, the arrangement == *)
+let         = "let" NAME "=" ( sexpr | arith | ref | TOKEN { TOKEN } ) ;   (* one token is a value; more tokens are a pattern *)
+def         = "def" NAME "(" [ NAME { "," NAME } ] ")"
+              [ "in" ":" type { "," type } ] [ "out" ":" type { "," type } ]
+              "{" { def_line } "}" ;                          (* $NAME inside, filled in when it is called *)
+def_line    = [ statement | emit ] NEWLINE ;                  (* a def's body line; `emit` says what an out port carries *)
+invoke      = NAME "(" [ tokens { "," tokens } ] ")" ;        (* a def's call *)
+tokens      = TOKEN { TOKEN } ;
+repeat      = "repeat" INT [ "every" INT "bars" ] "{" { body_line } "}" ;   (* the count is written out, 1 to 64 *)
+body_line   = [ statement ] NEWLINE ;                         (* a repeat's body line: $i is the pass, 0 up *)
+section     = "section" NAME INT "bars" "{" { line } "}"     (* 1 to 256 bars; a `key` may open the body *)
+            | "section" NAME "from" ref ;                     (* section intro from seed(techno, 42)[1..8]   section hook from <cid>.drop *)
+arrange     = "arrange" sexpr { sexpr }
+            | "arrange" NAME ":" sexpr { sexpr } [ arr_end ]   (* with a NAME it is one of several arrangements *)
+            | "arrange" "from" ( seed | template ) ;          (* the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff) *)
+arr_end     = "then" NAME | "loop" [ INT ] | "end" ;           (* only after a NAME: see "Several arrangements" *)
+start       = "start" NAME ;                                  (* the named arrangement that plays first; default the first written *)
+launch      = "launch" NAME "on" "pad" "(" INT ")" [ "next" ( "bar" | "phrase" [ "8" | "16" | "32" ] ) ] ;   (* a hit of the pad brings the scene, a section or an arrangement, in on that bar line: 8 bars by default *)
+sexpr       = NAME                                            (* a section, or a let that names a composition *)
+            | "silence"                                       (* the empty section *)
+            | "stack" "(" sexpr { "," sexpr } ")"             (* at the same time *)
+            | "then" "(" sexpr { "," sexpr } ")" ;            (* one after another *)
+end         = "end" [ "at" "bar" INT | "after" NAME ] ;       (* a song ends after its last section by default *)
+loop        = "loop" ;                                        (* a song starts again at its end *)
+
+(* == Arrange mutations == *)
+arrange_block = "arrange" "{" { arr_gap } NAME { arr_gap | NAME } "}" [ block_end ]   (* at least one section; see "Arrange mutations" *)
+            | "arrange" NAME ":" "{" { arr_gap } NAME { arr_gap | NAME } "}" [ arr_end ] ;   (* a named arrangement with mutations *)
+arr_gap     = NEWLINE | "," | mutation NEWLINE ;               (* a mutation runs to the end of its line *)
+mutation    = ( "~" | "@" ) [ INT ] mut_target mut_op { "|" mut_op } { "," mut_target mut_op { "|" mut_op } } ;   (* ~ from here on, @ the next section only; ~3: every 3rd pass *)
+mut_target  = GLOB | NAME ;                                   (* a let pattern, or a glob: acid_* *)
+mut_op      = NAME { NUMBER | "-" NUMBER | NAME } ;           (* rot 2  thin 0.1  oct -1  morph b 0.5  jux rev: the operators of "Arrange mutations" *)
+block_end   = "end" | "loop" | "loop" INT [ "then" { NAME } "end" ] ;   (* default end; loop N: 1 to 256 passes, then a coda *)
+
+(* == Start from a seed == *)
+ref         = seed | stored ;                                 (* music from elsewhere, written out as BeatScript before the program is read *)
+seed        = "seed" "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ] ;   (* a track of the beats generator: genre, seed; a part, bars from 1 *)
+stored      = CID [ "." NAME ] [ "." role ] ;                 (* a saved program's section or part, by its CID: <cid>.drop  <cid>.drop.bass; a bare <cid> is a program with no sections [host] *)
+structure   = "standard" | "loop" | "minimal" | "extended" ;  (* the generator's song structures; standard is the default *)
+
+(* == Phrase templates == *)
+template    = "template" "(" NAME "," ( PHRASE | STRING ) ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track *)
+
+(* == Evolving == *)
+evolve      = "evolve" "every" INT "bars" "{" { NEWLINE } { rule NEWLINE { NEWLINE } } [ bound NEWLINE { NEWLINE } ] "}" ;   (* a rule a line; the bound last *)
+rule        = ( role | "deck" deck ) ":" op { "|" op } [ "when" "gen" [ "%" INT ] cmp INT ] ;
+op          = ( "rotate" | "transpose" | "octave" | "invert" | "reverse" | "thin" ) { NUMBER | "<" NUMBER { NUMBER } ">" } [ "seed=" INT ] ;
+bound       = "stop" "when" "gen" ( "==" | ">=" | ">" ) INT | "for" INT "gens" ;
+
+(* == Typed ports == *)
+type        = "chords" | "key" | "bass" | "melody" | "drums" | "rhythm" | "bars" | "tempo" | "pattern" ;
+emit        = "emit" [ type | "out" ] tokens ;                (* a line of a def body: what an out port carries *)
+wire        = "wire" NAME "." port "->" NAME "." port ;       (* at the top: wire changes.out -> walker.chords *)
+port        = type | "in" | "out" ;
+
+(* == Mix moves and sung lyrics == *)
+duck        = "duck" deck "under" deck "." role db { "attack=" time | "release=" time } ;
+mix         = "mix" "{" { NEWLINE } mixitem { ( "," | NEWLINE ) { NEWLINE } mixitem } { NEWLINE } "}" ;   (* in a section: put back where the section ends *)
+mixitem     = deck "level" arith | deck "eq" band arith [ "db" ] | "master" "level" arith | deck "pan" arith ;
+band        = "low" | "mid" | "high" ;
+db          = DECIMAL "db" ;                                  (* glued: 6db *)
+time        = DECIMAL ( "ms" | "s" ) ;                        (* glued: 5ms *)
+sing        = "sing" ( lyric | PHRASE ) "on" role { "bars=" INT | "key=" KEY | "voice=" NAME } ;   (* a tonal role; PHRASE: a phrasebook id, @hands_up *)
+lyric       = STRING ;   (* its text is lyric_text; docs/btw/phonemes.md *)
+lyric_text  = { TEXT | "/" SPACE | escape } [ "/" { TEXT } ] ;   (* "/" and a space is a phrase break; "/" and a phoneme opens an escape, to the next "/" (with none, a break too); a word touching "=" before an escape is its label, kept and not sung: jingle=/j ii ng g uh l/ *)
+escape      = "/" PHONES "/" ;   (* PHONES (beatscript-v1): aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, "_" a rest, "-" cuts a word, ":" holds a vowel one more note, "!" accents it *)
+
+(* == Assertions == *)
+assert      = "assert" ( "ends"
+                       | "period" [ "(" NAME ")" ] cmp INT
+                       | "length" ( ( "==" | "!=" ) clock [ "±" clock ] | ( "<" | "<=" | ">" | ">=" ) clock )
+                       | "level" leveldeck cmp levelexpr [ "in" NAME ]
+                       | "key" ( "==" | "!=" ) KEY [ "in" NAME ]
+                       | "never" subject ( "beside" | "during" ) subject [ "in" NAME ]   (* assert never A.snare beside A.snare   assert never B during sing: refused where it is false *)
+                       | subject "ends" "on" INT [ "in" NAME ] ) ;                        (* assert bass ends on 1: the lowest note of its last onset is that degree of the key *)
+subject     = "sing" | ldeck | [ ldeck "." ] role ;                                  (* sing: the vocal; a deck; A.snare; bass on both decks *)
+clock       = DECIMAL "m" [ DECIMAL "s" ] | DECIMAL "s" | DECIMAL "ms" ;   (* 3m30s  90s  500ms *)
+leveldeck   = { lfactor lop } ldeck { lop lfactor } ;         (* a level read: it names a deck *)
+lop         = "+" | "-" | "*" | "/" ;
+ldeck       = "A" | "B" | "master" ;
+levelexpr   = lterm { ( "+" | "-" ) lterm } ;                 (* arithmetic over the words A, B and master: their levels *)
+lterm       = lfactor { ( "*" | "/" ) lfactor } ;
+lfactor     = NUMBER | ldeck | "(" levelexpr ")" ;
+
+(* == Sets, samples, imports == *)
+set         = "set" "{" { NEWLINE } { ( set_play | set_mix ) NEWLINE { NEWLINE } } "}" ;   (* programs of programs: an item a line *)
+set_play    = "play" ( NAME | STRING ) [ "until" until_when ] ;   (* a saved program: its CID goes in the canonical text [host] *)
+until_when  = TIME | "bar" INT | NAME | "after" NAME ;        (* a time, a bar of the track, a section's start or end *)
+set_mix     = "mix" INT ( "bar" | "bars" ) "with" TRANSITION [ "," "tempo" NUMBER "->" NUMBER ] ;
+TIME        = DECIMAL UNIT { DECIMAL UNIT } ;                 (* units glued: 20m  90s  1h  3m30s *)
+TRANSITION  = "crossfade" | "filter_exit" | "echo_out" | "cut" ;
+import      = "import" ( NAME | STRING ) ;                    (* a snippet's name in quotes, or its CID [host] *)
+sample      = "sample" NAME "from" STRING [ "license" license ] [ "else" NAME ]
+            | "loop" STRING "as" NAME [ "else" NAME ] ;       (* restricted sounds: a local file, an Apple Loop by its hash *)
+license     = "cc0" | "cc-by" | "all-rights-reserved" | "restricted-private" ;
+use         = "use" "restricted" ;

@@ -1,0 +1,77 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": [],
+    "cid": "z4EBG9jEdNLJPBwCMQoZDwzTSERG4vS2cr61Dc1iJeE11WTS42G",
+    "canonical": "tempo 100\nkey c\nlet k = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nsection verse 4 bars {\n  deck A: kick k\n  deck B: harmony chord(c) inst=warm-pad\n}\nsection bridge 8 bars {\n  deck A: kick k | hihat x*8\n  deck B: melody <c4 e4 g4 e4> inst=pwm-lead\n  at bar 4: master: filter lp 500 -> 8000 over 4 bars\n}\nsection tag 4 bars {\n  deck A: hihat x ~ x ~\n}\narrange verse bridge verse tag\nend after bridge\n",
+    "nets": {
+      "bridge@4:A": "z4EBG9jGF7G1sZ6ZnU4yGBcCyXDdE5KpfnKK7DJLxhdfH6mVarQ",
+      "bridge@4:B": "z4EBG9j9LuMWVR5Ute4bXka3WekpwTHL4YtfSdkqUSBvqUnzTPM",
+      "tag@16:A": "z4EBG9j8umL3tLmGVcxn7JapfQdegRcX3aGG7gJV2UGzSsptpdY",
+      "verse@0:A": "z4EBG9j9eQvXJvdKnE7JX87rH8pmMVERgxuagYrMGNb4YiWohZJ",
+      "verse@0:B": "z4EBG9iz7vuJKNyK6ijB6eoACERqppzTvCGewdCa48E3zdt3eq9",
+      "verse@12:A": "z4EBG9j9eQvXJvdKnE7JX87rH8pmMVERgxuagYrMGNb4YiWohZJ",
+      "verse@12:B": "z4EBG9iz7vuJKNyK6ijB6eoACERqppzTvCGewdCa48E3zdt3eq9"
+    },
+    "song_nets": {
+      "A": "z4EBG9j1WUUEPgcAtQCBn3MppcUpEhpbw4S1mnKX1sjyBBHTAs2",
+      "B": "z4EBG9jD1HM7uFqXnSvcZMtBTSCRjqqMaXTmpG96g4LEyfT6gLH"
+    },
+    "tempo": 100,
+    "key": "c",
+    "swing": null,
+    "arranged": true,
+    "song_bars": 20,
+    "ends": true,
+    "end_bar": 12,
+    "loops": false,
+    "sections": [
+      {
+        "name": "verse",
+        "start": 0,
+        "bars": 4
+      },
+      {
+        "name": "bridge",
+        "start": 4,
+        "bars": 8
+      },
+      {
+        "name": "verse",
+        "start": 12,
+        "bars": 4
+      },
+      {
+        "name": "tag",
+        "start": 16,
+        "bars": 4
+      }
+    ],
+    "decks": ["A","B"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": 28.8
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 100\nkey c\nlet k = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nsection verse 4 bars {\n  deck A: kick k\n  deck B: harmony chord(c) inst=warm-pad\n}\nsection bridge 8 bars {\n  deck A: kick k | hihat x*8\n  deck B: melody <c4 e4 g4 e4> inst=pwm-lead\n  at bar 4: master: filter lp 500 -> 8000 over 4 bars\n}\nsection tag 4 bars {\n  deck A: hihat x ~ x ~\n}\narrange verse bridge verse tag\nend after bridge\n",
+    "cid": "z4EBG9jEdNLJPBwCMQoZDwzTSERG4vS2cr61Dc1iJeE11WTS42G",
+    "comments": ["sections, an arrange that names one twice, and an end that cuts the song short."],
+    "diagnostics": [],
+    "text": "# sections, an arrange that names one twice, and an end that cuts the song short.\ntempo 100\nkey c\nlet k = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nsection verse 4 bars {\n  deck A: kick k\n  deck B: harmony chord(c) inst=warm-pad\n}\nsection bridge 8 bars {\n  deck A: kick k | hihat x*8\n  deck B: melody <c4 e4 g4 e4> inst=pwm-lead\n  at bar 4: master: filter lp 500 -> 8000 over 4 bars\n}\nsection tag 4 bars {\n  deck A: hihat x ~ x ~\n}\narrange verse bridge verse tag\nend after bridge\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://btw.bitwrap.io/#z4EBG9jEdNLJPBwCMQoZDwzTSERG4vS2cr61Dc1iJeE11WTS42G.dVBbasMwEPzXKeazLRhUcMGYJtDeRJE2tpAsGUk0CW1z9mwiJ-QjQaBhXzM7W2iaI96lFI4O0MJTgcMKexwv7wmKTLrYGPBDKRNabFTK-BWAIe3w1cNZRndNfPcYVZpiYI0xJvOiX2FDLqsdZ5tZGfF_o9wkawZC94wTfxjtqAr2b90d_0Q-mgM-dQtqMZz_ddWYd1PjiTUAnmJWtNyucqHUY2s9I_yMDynRrNFJxsi-Fld3mxU1PLK6bFOvw-0qJRXYQb3NYqcGzCAoGKjtWbSWxAk",
+    "social_url": "https://btw.bitwrap.io/c/z4EBG9jEdNLJPBwCMQoZDwzTSERG4vS2cr61Dc1iJeE11WTS42G.dVBbasMwEPzXKeazLRhUcMGYJtDeRJE2tpAsGUk0CW1z9mwiJ-QjQaBhXzM7W2iaI96lFI4O0MJTgcMKexwv7wmKTLrYGPBDKRNabFTK-BWAIe3w1cNZRndNfPcYVZpiYI0xJvOiX2FDLqsdZ5tZGfF_o9wkawZC94wTfxjtqAr2b90d_0Q-mgM-dQtqMZz_ddWYd1PjiTUAnmJWtNyucqHUY2s9I_yMDynRrNFJxsi-Fld3mxU1PLK6bFOvw-0qJRXYQb3NYqcGzCAoGKjtWbSWxAk",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jEdNLJPBwCMQoZDwzTSERG4vS2cr61Dc1iJeE11WTS42G.dVBbasMwEPzXKeazLRhUcMGYJtDeRJE2tpAsGUk0CW1z9mwiJ-QjQaBhXzM7W2iaI96lFI4O0MJTgcMKexwv7wmKTLrYGPBDKRNabFTK-BWAIe3w1cNZRndNfPcYVZpiYI0xJvOiX2FDLqsdZ5tZGfF_o9wkawZC94wTfxjtqAr2b90d_0Q-mgM-dQtqMZz_ddWYd1PjiTUAnmJWtNyucqHUY2s9I_yMDynRrNFJxsi-Fld3mxU1PLK6bFOvw-0qJRXYQb3NYqcGzCAoGKjtWbSWxAk",
+    "cid": "z4EBG9jEdNLJPBwCMQoZDwzTSERG4vS2cr61Dc1iJeE11WTS42G",
+    "chars": 359,
+    "canonical": "tempo 100\nkey c\nlet k = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nsection verse 4 bars {\n  deck A: kick k\n  deck B: harmony chord(c) inst=warm-pad\n}\nsection bridge 8 bars {\n  deck A: kick k | hihat x*8\n  deck B: melody <c4 e4 g4 e4> inst=pwm-lead\n  at bar 4: master: filter lp 500 -> 8000 over 4 bars\n}\nsection tag 4 bars {\n  deck A: hihat x ~ x ~\n}\narrange verse bridge verse tag\nend after bridge\n",
+    "warnings": []
+  }
+}

@@ -1,0 +1,17 @@
+# sugar.btw: pattern sugar (CC0). Original.
+# Short ways to write patterns btw already has: x~4 is x ~ ~ ~, x? is x?0.5, ply doubles each step in its slot,
+# poly walks a pattern of 3 or 5 steps 8 a bar so it drifts against the kick, off stacks a copy a step later an octave
+# up, iter starts the riff a quarter later each bar and palindrome plays it back and forth. Each is written out before it
+# plays, so this is the same song as its longhand (`btw same-as` says so), and the hihat's dice fall as the longhand's.
+tempo 126
+key am
+
+section groove 8 bars {
+  deck A: kick x~4 x~4 x~4 x~4 | hihat ply([~ x ~ x?], 2) vel=50..80 | clap poly(8, [~ ~ x]) vel=70
+  deck B: bass a1~2 a1 ~ c2~3 e2 g1~4 ~~4 | melody off([a4 ~ c5 ~ e5 ~ ~ ~], 1, 12) inst=pluck
+}
+section turn 8 bars {
+  deck A: kick x x x x | hihat poly(8, [x x ~ x ~]) vel=45..75 | snare ~ x ~ x
+  deck B: bass palindrome([a1 c2 e2 g2]) | melody iter([a4 c5 e5 g5 e5 c5 ~ ~], 4) inst=pluck
+}
+arrange groove turn groove

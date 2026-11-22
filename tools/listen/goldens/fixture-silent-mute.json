@@ -1,0 +1,111 @@
+{
+ "cid": "z4EBG9jBTCoCNLdbLnNM29MjsU2e6ou4ZK4AN2oc9nLCwcMayWa",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -15.6,
+   "parts": [
+    "kick",
+    "hihat"
+   ],
+   "peak_db": -6,
+   "rms_db": -16.7,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": null,
+   "parts": [
+    "bass"
+   ],
+   "peak_db": null,
+   "rms_db": null,
+   "silent": true
+  }
+ },
+ "detected": {
+  "bpm": 124,
+  "bpm_confidence": 856.906,
+  "bpm_match": "same",
+  "declared_bpm": 124,
+  "declared_key": null,
+  "key": "A major",
+  "key_confidence": 0.08,
+  "key_match": "undeclared",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "lufs": -15.6,
+  "peak_db": -6,
+  "rms_db": -16.7
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -16.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -22,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -28.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": null,
+   "measured": true,
+   "part": "bass",
+   "peak_db": null,
+   "rms_db": null,
+   "silent": true,
+   "voice": "sub-bass"
+  }
+ ],
+ "sections": [
+  {
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -15.6,
+   "name": null,
+   "peak_db": -6,
+   "rms_db": -16.7
+  }
+ ],
+ "silent": [
+  {
+   "bars": 8,
+   "deck": "B",
+   "from_bar": 1,
+   "part": null,
+   "reason": "mute",
+   "section": null,
+   "why": "deck B is muted"
+  }
+ ],
+ "version": "listen/1",
+ "warnings": [
+  "deck B is muted"
+ ],
+ "window": {
+  "bars": 8,
+  "from_bar": 1,
+  "program_bars": 8,
+  "seconds": 15.484,
+  "section": null
+ }
+}

@@ -1,0 +1,18 @@
+# sections, an arrange that names one twice, and an end that cuts the song short.
+tempo 100
+key c
+let k = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+section verse 4 bars {
+  deck A: kick k
+  deck B: harmony chord(c) inst=warm-pad
+}
+section bridge 8 bars {
+  deck A: kick k | hihat x*8
+  deck B: melody <c4 e4 g4 e4> inst=pwm-lead
+  at bar 4: master: filter lp 500 -> 8k over 4 bars
+}
+section tag 4 bars {
+  deck A: hihat x ~ x ~
+}
+arrange verse bridge verse tag
+end after bridge

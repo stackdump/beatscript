@@ -1,0 +1,27 @@
+# progression.btw: write the chords once, as Roman numerals, and a `key` moves the whole song. Original, CC0-1.0.
+# `i VI III VII` is Am F C G in A minor. The pad (`harmony`), the bass, the arp (`arp(VI, up, 8)`: a numeral is a chord
+# wherever a chord symbol goes) and the melody are all read in the key in force, so the lift, which says `key cm`,
+# plays the same song in C minor, nothing else changed. `voice-lead` moves the pad as little as it can from chord to chord.
+tempo 108
+key am
+
+let changes = <i VI III VII>
+let arps = <arp(i, up, 8) arp(VI, updown, 8) arp(III, up, 8) arp(VII, updown, 8)>
+let tune = <markov(0.5, 7) markov(0.5, 19)>
+
+deck A: kick x ~ x ~ | hihat x*8 vel=60..90
+
+def band() {
+  deck B: bass changes | harmony changes voice-lead | arp arps inst=bright-pluck | melody tune
+}
+
+section verse 4 bars {
+  band()
+}
+
+section lift 4 bars {
+  key cm
+  band()
+}
+
+arrange verse lift verse

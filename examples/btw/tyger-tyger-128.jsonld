@@ -1,0 +1,28 @@
+{
+  "@context": "https://schema.org",
+  "@type": "MusicComposition",
+  "@id": "https://beats.bitwrap.io/p#z4EBG9jB6T7bKvVFQ6ZW6UPPCYh2RQbAHx86rZ8EKczfdupgqnn",
+  "identifier": "z4EBG9jB6T7bKvVFQ6ZW6UPPCYh2RQbAHx86rZ8EKczfdupgqnn",
+  "name": "tyger-tyger-128",
+  "description": "Reference program of the found-phrases technique: EDM at 128 in E minor, Blake's trochaic Tyger chanted on the kick (@ vox xfer kick4), with phoneme escapes for tyger, bright, the and forests.",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "genre": "https://beatscript.app/ontology/concept/technique-found-phrases",
+  "isBasedOn": [
+    {
+      "@type": "CreativeWork",
+      "name": "The Tyger (Songs of Experience)",
+      "author": {
+        "@type": "Person",
+        "name": "William Blake"
+      },
+      "dateCreated": "1794",
+      "license": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "description": "Songs of Experience, 1794."
+    }
+  ],
+  "subjectOf": {
+    "@type": "TechArticle",
+    "name": "Found phrases: borrowing text for its shape",
+    "url": "https://beatscript.app/docs/found-phrases"
+  }
+}

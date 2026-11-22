@@ -1,0 +1,38 @@
+{
+  "@context": "https://schema.org",
+  "@type": "MusicComposition",
+  "@id": "https://beats.bitwrap.io/p#z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw",
+  "identifier": "z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw",
+  "name": "Rag Rondo",
+  "description": "The reference program of the rondo form: the refrain returns mutated between contrasting strains. Themes after Joplin's The Entertainer and Maple Leaf Rag; the Maple Leaf figure is an approximation in C, not a transcription.",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "genre": "https://beatscript.app/ontology/concept/form-rondo",
+  "isBasedOn": [
+    {
+      "@type": "MusicComposition",
+      "name": "The Entertainer (the first strain)",
+      "composer": {
+        "@type": "Person",
+        "name": "Scott Joplin"
+      },
+      "dateCreated": "1902",
+      "license": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "@id": "https://beatscript.app/themes#the_entertainer"
+    },
+    {
+      "@type": "MusicComposition",
+      "name": "Maple Leaf Rag (its figure, approximated in C; not a transcription)",
+      "composer": {
+        "@type": "Person",
+        "name": "Scott Joplin"
+      },
+      "dateCreated": "1899",
+      "license": "https://creativecommons.org/publicdomain/mark/1.0/"
+    }
+  ],
+  "subjectOf": {
+    "@type": "TechArticle",
+    "name": "Forms: arrange shapes from classical music",
+    "url": "https://beatscript.app/docs/forms"
+  }
+}

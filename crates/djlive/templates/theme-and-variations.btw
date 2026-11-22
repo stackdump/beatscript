@@ -1,0 +1,53 @@
+# from $REF: a theme and variations at 84 in D-flat, the phrase sung in it (templates $VERSION)
+# phrase: $PHRASE
+# vocal: $VOCAL
+# the theme, from the public-domain theme library: the English horn's tune from Dvorak's New World Largo
+tempo 84
+key db
+
+# the drums: the drm_* parts are what the arrangement changes; the kick and the shaker stay put
+let kick4 = x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let shk = $SHAKER
+$THEME_NEW_WORLD_LARGO
+let chords = <[db3, f3, ab3] [db3, f3, ab3] [db3, f3, ab3] [ab2, c3, eb3]>
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+$VOX_LETS
+
+# theme: the tune as it is
+section theme 8 bars {
+  deck A: kick kick4 kit=drums vel=70..85 | bass <db2 db2 db2 ab1> inst=bass vel=65..80
+  deck B: harmony chords inst=strings vel=40..55 len=16 | melody new_world_largo inst=sax vel=60..80
+}
+
+# variation: the same section, and each time a different change to the tune (a one-shot @, so it comes back each time)
+section variation 8 bars {
+  master: reverb 0.2
+  deck A: kick kick4 kit=drums vel=75..90 | hihat drm_hat kit=drums vel=40..60 | bass <db2 db2 db2 ab1> inst=bass vel=65..80
+  deck B: harmony chords inst=strings vel=40..55 len=16 | melody new_world_largo inst=vibes vel=60..80
+}
+
+# sung: the phrase, the tune under it
+section sung $BARS bars {
+  master: reverb 0.2
+  deck A: kick kick4 kit=drums vel=70..85 | hihat$CYCLE shk kit=drums vel=30..45 | bass <db2 db2 db2 ab1> inst=bass vel=60..75
+  deck B: harmony chords inst=warm-pad vel=30..42 len=16 | arp new_world_largo inst=sax vel=25..40 | melody$CYCLE $VOX inst=kalimba oct=3 vel=24..38
+  deck B: sing $LYRIC on melody voice=robot-choir
+}
+
+# one source, a different transform for each section, never two themes morphed together
+arrange {
+  theme
+  @ new_world_largo_* rev
+  variation
+  @ new_world_largo_* invert
+  variation
+  @ new_world_largo_* stutter 2
+  variation
+  @ new_world_largo_* oct -1
+  sung
+  @ new_world_largo_* half | accent 0.3
+  variation
+  ~ drm_* grow
+  theme
+} loop 2 then end

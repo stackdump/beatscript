@@ -1,0 +1,42 @@
+# assert.btw: a track that checks itself (F12). Original, CC0-1.0.
+# A line that begins `assert` says what must be true of the program. `check` proves the ones about the
+# program as written (that it ends, how long it is, the key in a section, how its parts come round) and
+# refuses the program when one is false, with the actual value in the message. A `level` assertion is a
+# measurement, so `check` only notes it as pending: `djctl btw test examples/btw/assert.btw` renders the
+# track offline, measures each deck in the section and says pass or fail for every assertion.
+tempo 120
+key am
+
+let kicks = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let hats = x*8
+
+section intro 8 bars {
+  deck A: hihat hats vel=40..60
+  deck B: harmony i VI III VII
+}
+
+section drop 16 bars {
+  key dm
+  deck A: kick kicks | snare ~ x ~ x | hihat hats vel=70..100
+  deck B: bass d2 ~ d2 ~ | harmony i VI III VII
+}
+
+section outro 8 bars {
+  deck B: harmony i VI III VII
+}
+
+arrange intro drop outro
+
+# the statics: proved by `check`
+assert ends                              # a song ends after its last section
+assert length == 1m4s ± 2s               # 32 bars at 120 BPM
+assert length < 2m
+assert key == am in intro                # a section with no `key` of its own has the program's
+assert key == dm in drop                 # the `key dm` at the head of the drop
+assert key != dm in outro
+assert period == 1                       # nothing here comes round over more than a bar
+
+# the measured ones: pending at `check`, judged by `btw test`
+assert level A > 0.2 * B in drop         # the drums are not buried under the bass
+assert level A < 0.01 in outro           # deck A stops with the drop (what is left is the tail of its last notes)
+assert level master > 0.01

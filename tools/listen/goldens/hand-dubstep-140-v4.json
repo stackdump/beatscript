@@ -1,0 +1,199 @@
+{
+ "cid": "z4EBG9jB3vwMeCJNSp8WJLWDRM7ADEWxi23HyNSij5cHBL94r7v",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -17.6,
+   "parts": [
+    "kick",
+    "hihat",
+    "snare",
+    "bass"
+   ],
+   "peak_db": -4.6,
+   "rms_db": -19.7,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -16,
+   "parts": [
+    "harmony",
+    "melody"
+   ],
+   "peak_db": -5,
+   "rms_db": -19.4,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 93.3,
+  "bpm_confidence": 2.863,
+  "bpm_match": "two_thirds",
+  "declared_bpm": 140,
+  "declared_key": "fm",
+  "key": "Ab major",
+  "key_confidence": 0.07,
+  "key_match": "relative",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "lufs": -15.6,
+  "peak_db": -0.9,
+  "rms_db": -18.3
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16.9,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -5,
+   "rms_db": -19.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -21.6,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -2.5,
+   "rms_db": -28.2,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16.4,
+   "measured": true,
+   "part": "snare",
+   "peak_db": -5,
+   "rms_db": -24.1,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -17.8,
+   "measured": true,
+   "part": "bass",
+   "peak_db": -4.3,
+   "rms_db": -17.7,
+   "silent": false,
+   "voice": "wobble-lead"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -24.7,
+   "measured": true,
+   "part": "harmony",
+   "peak_db": -10.1,
+   "rms_db": -29,
+   "silent": false,
+   "voice": "warm-pad"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -15.6,
+   "measured": true,
+   "part": "melody",
+   "peak_db": -5.4,
+   "rms_db": -18.8,
+   "silent": false,
+   "voice": "pwm-lead"
+  }
+ ],
+ "sections": [
+  {
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -21.3,
+   "name": "intro",
+   "peak_db": -7.5,
+   "rms_db": -22.9
+  },
+  {
+   "bars": 8,
+   "from_bar": 9,
+   "lufs": -16,
+   "name": "build",
+   "peak_db": -0.9,
+   "rms_db": -19.1
+  },
+  {
+   "bars": 16,
+   "from_bar": 17,
+   "lufs": -13.6,
+   "name": "drop",
+   "peak_db": -1.8,
+   "rms_db": -15.1
+  },
+  {
+   "bars": 8,
+   "from_bar": 33,
+   "lufs": -23,
+   "name": "breakdown",
+   "peak_db": -7.6,
+   "rms_db": -23.9
+  },
+  {
+   "bars": 4,
+   "from_bar": 41,
+   "lufs": -18.8,
+   "name": "build2",
+   "peak_db": -2.5,
+   "rms_db": -21.9
+  },
+  {
+   "bars": 8,
+   "from_bar": 45,
+   "lufs": -15.3,
+   "name": "drop2",
+   "peak_db": -2.3,
+   "rms_db": -17.7
+  },
+  {
+   "bars": 4,
+   "from_bar": 53,
+   "lufs": -15.9,
+   "name": "halftime",
+   "peak_db": -4.9,
+   "rms_db": -18.2
+  },
+  {
+   "bars": 4,
+   "from_bar": 57,
+   "lufs": -13.6,
+   "name": "slam",
+   "peak_db": -2.6,
+   "rms_db": -15.6
+  },
+  {
+   "bars": 8,
+   "from_bar": 61,
+   "lufs": -24.4,
+   "name": "outro",
+   "peak_db": -10.3,
+   "rms_db": -26.4
+  }
+ ],
+ "silent": [],
+ "version": "listen/1",
+ "warnings": [],
+ "window": {
+  "bars": 68,
+  "from_bar": 1,
+  "program_bars": 68,
+  "seconds": 116.571,
+  "section": null
+ }
+}

@@ -1,0 +1,30 @@
+{
+  "about": "btw-cap+jws test vectors (btwserve src/caps.rs). The seed is a test key only; never use it.",
+  "seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
+  "issuer": "https://beatscript.app",
+  "jwks": {
+    "issuer": "https://beatscript.app",
+    "typ": "btw-cap+jws",
+    "keys": [
+      {
+        "kid": "fe812c12f3ab4ce6",
+        "alg": "Ed25519",
+        "pub": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw"
+      }
+    ]
+  },
+  "grant": "eyJhbGciOiJFZERTQSIsImtpZCI6ImZlODEyYzEyZjNhYjRjZTYiLCJ0eXAiOiJidHctY2FwK2p3cyJ9.eyJpc3MiOiJodHRwczovL2JlYXRzY3JpcHQuYXBwIiwic3ViIjoiZWQyNTUxOTo4YTg4ZTNkZDc0MDlmMTk1ZmQ1MmRiMmQzY2JhNWQ3MmNhNjcwOWJmMWQ5NDEyMWJmMzc0ODgwMWI0MGY2ZjVjIiwiY2FwcyI6WyJjb21wb3NlIl0sImlhdCI6MTgwMDAwMDAwMCwiZXhwIjoxODAwNjA0ODAwLCJqdGkiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R3In0.2HoANubxIhWtLDT9619nyS4D5PrOBR0P55cMYMpMnAHrqsguvBM3G180s-jM4qfvGrZP4Bv8luPmoAoMJgszBQ",
+  "payload": {
+    "iss": "https://beatscript.app",
+    "sub": "ed25519:8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+    "caps": [
+      "compose"
+    ],
+    "iat": 1800000000,
+    "exp": 1800604800,
+    "jti": "AAECAwQFBgcICQoLDA0ODw"
+  },
+  "grant_no_caps": "eyJhbGciOiJFZERTQSIsImtpZCI6ImZlODEyYzEyZjNhYjRjZTYiLCJ0eXAiOiJidHctY2FwK2p3cyJ9.eyJpc3MiOiJodHRwczovL2JlYXRzY3JpcHQuYXBwIiwic3ViIjoiZWQyNTUxOTo4YTg4ZTNkZDc0MDlmMTk1ZmQ1MmRiMmQzY2JhNWQ3MmNhNjcwOWJmMWQ5NDEyMWJmMzc0ODgwMWI0MGY2ZjVjIiwiY2FwcyI6W10sImlhdCI6MTgwMDAwMDAwMCwiZXhwIjoxODAwNjA0ODAwLCJqdGkiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R3In0.c8ljtVynDOBn6tZolJNKgNz8RvKnXgDUlCPJFjkRFz-mV18C_j7fVl_b4fy_8rONF2f_pvUf2toZKEnHqEVABg",
+  "verify_at": 1800000001,
+  "expired_at": 1800604800
+}

@@ -1,0 +1,34 @@
+# Typed ports (F11). A def may declare what it needs (`in:`) and what it makes (`out:`), each port a
+# type. `emit` makes an out port's value; `$chords` (or `$in`, when it is the only input) is the value
+# wired to an input. `wire a.out -> b.chords` glues an output to an input, and the wiring is checked:
+# the types must fit, every input is fed once, and nothing may feed itself.
+tempo 124
+key am
+
+# a module that makes a progression, and one that makes a key: each has an interface of one out port
+def changes() out: chords {
+  emit <chord(am7) chord(fmaj7) chord(cmaj7) chord(g7)>
+}
+
+def home() out: key {
+  emit am
+}
+
+# a module with two inputs and an output: it plays the changes on deck B, a melody in the key over
+# them, and hands its bass line on
+def walker(oct) in: chords, key out: bass {
+  deck B: harmony $chords | melody markov($key, 0.5) oct=$oct
+  emit [a2 ~ a2 ~ f2 ~ g2 ~]
+}
+
+# a module that only needs something: the bass line it is given
+def thump() in: bass {
+  deck A: kick x ~ x ~ | bass $in
+}
+
+wire changes.out -> walker.chords
+wire home.out -> walker.key
+wire walker.out -> thump.in
+
+walker(4)
+thump()

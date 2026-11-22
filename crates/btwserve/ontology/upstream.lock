@@ -1,0 +1,4 @@
+# The bitwrap ontology release the BeatScript ontology derives from, vendored by sync.sh upstream: sha256 per file.
+source ontology-bitwrap-io 7b6e7132e3a45fc5efaf0699f15ad594f5bc3070
+9b724ffdd5150edc11e8cb278d27a40ac27ecfa58b9d94796192d7c66c5ac14c  ns.nt
+5318b875e0251387e8eaf651ccff12eb9acf7345be9ae3df1aa1106320514db5  manifest.json

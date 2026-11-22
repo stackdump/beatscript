@@ -1,0 +1,76 @@
+[package]
+name = "btwserve"
+description = "Prototype of the beatscript.app server in Rust: the render route (GET/HEAD /api/render/<cid>[.<packed>]?format=opus|wav and /status, the djrust engine in-process, Ogg Opus encoded natively (no ffmpeg), streamed as it renders) and /api/playlists. docs/RUST-SERVER.md in beats-bitwrap-io is the plan."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+btwapi = { path = "../btwapi" }
+# private pushes to a paired phone: sealed for its key, relayed in memory (hub/private.rs)
+btwseal = { path = "../btwseal" }
+djengine.workspace = true
+djhost.workspace = true
+djlive.workspace = true
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "query"] }
+hyper = { version = "1", features = ["http1", "server", "client"] }
+hyper-util = { version = "0.1", features = ["tokio", "server", "http1", "service", "client-legacy"] }
+tower = { version = "0.5", default-features = false, features = ["util"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "fs", "io-util", "signal"] }
+bytes = "1"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+# arbitrary_precision: numbers keep their literal. It used to arrive through djhost's wallet (djrust-wallet turns it
+# on); the wallet is an off-by-default djhost feature now, so it is named here to keep every JSON answer the same.
+serde_json = { version = "1", features = ["preserve_order", "arbitrary_precision"] }
+# Ogg Opus with no C toolchain and no ffmpeg: libopus 1.3.1 transpiled to Rust (BSD-3-Clause), and the Ogg
+# container in pure Rust (BSD-3-Clause).
+unsafe-libopus = "0.2"
+ogg = "0.9"
+libc = "0.2"
+http-body = "1"
+# cache hits are served from a memory map of the file (no copy into the process)
+memmap2 = "0.9"
+# the access log's address hash (HMAC-SHA256, as the Go server's)
+hmac = "0.12"
+sha2 = "0.10"
+# the docs' HTML pages: CommonMark events, written out as goldmark writes them (docs.rs)
+pulldown-cmark = { version = "0.13", default-features = false }
+# playlists and auth: the session cookie (HMAC-SHA256), bearer tokens (SHA-256), paired-phone signatures (Ed25519)
+serde = { version = "1", features = ["derive"] }
+subtle = "2"
+hex = "0.4"
+base64 = "0.22"
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
+getrandom = "0.3"
+# the share cards (cards.rs): shapes, the Go fonts' outlines, PNG
+tiny-skia = { version = "0.11", default-features = false, features = ["std"] }
+ab_glyph = "0.2"
+ab_glyph_rasterizer = "0.1"
+png = "0.18"
+miniz_oxide = { version = "0.8", default-features = false, features = ["with-alloc"] }
+# sign-in (P4, authsvc): EIP-191 personal_sign is a secp256k1 recovery over a Keccak-256 digest
+k256 = { version = "0.13", default-features = false, features = ["ecdsa", "std"] }
+sha3 = "0.10"
+# compose: Gemini over HTTPS (rustls with ring, webpki roots; blocking, on a compose thread)
+ureq = "3"
+# /ontology/ (ontology.rs): the BeatScript ontology (forked from the bitwrap ontology 0.2.0), its query side and, in
+# tests, its release builder (src/ontology/fork.rs: the Turtle, RDF/XML and JSON-LD serializers). Oxigraph is the
+# engine ontology.bitwrap.io runs (MIT OR Apache-2.0); in-memory store only, no RocksDB. regex: the public-query
+# guard, ported from Go's.
+oxigraph = { version = "0.5", default-features = false }
+regex = "1"
+
+[dev-dependencies]
+# examples/profile_render.rs: where a render's CPU goes (SIGPROF sampling: no perf_event privileges)
+pprof = { version = "0.15", features = ["flamegraph"] }
+tempfile = "3"
+ed25519-dalek = { version = "2", default-features = false, features = ["std", "rand_core"] }
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "btwserve"
+path = "src/main.rs"

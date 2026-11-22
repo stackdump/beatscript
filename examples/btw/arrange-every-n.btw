@@ -1,0 +1,32 @@
+#! btw 1
+#! name: arrange-every-n
+#! license: CC0-1.0
+#! visibility: public
+# arrange-every-n: a change that comes round only every Nth pass of a looping arrange.
+# A count right after the mark says how often (`~3`: the 3rd pass, the 6th ...); no count is every pass. Six passes, then an outro.
+tempo 124
+key am
+let riff = a3 c4 e4 g4 a4 g4 e4 c4
+let bass_a = a1 ~ a1 ~ c2 ~ a1 e2
+let bass_b = a2 ~ e3 ~ c3 ~ ~ e3
+let kik = x ~ x ~
+let hats = ~ x ~ x ~ x ~ x
+section groove 4 bars {
+  deck A: kick kik | hihat hats
+  deck B: bass bass_a inst=fm-bass | arp riff
+}
+section lift 4 bars {
+  deck A: kick kik | snare ~ x ~ x | hihat hats
+  deck B: bass bass_b inst=fm-bass | arp riff
+}
+section outro 4 bars {
+  deck A: kick kik
+}
+arrange {
+  groove lift
+  ~3 riff rev                  # passes 3 and 6: the arp turns round, and turns back
+  groove
+  ~2 bass_* drift 0.2          # passes 2, 4 and 6: both basses wander a step, and stay there
+  @4 kik double                # pass 4 only: the next section's kick doubles, then goes back
+  lift
+} loop 6 then outro end

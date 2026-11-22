@@ -1,0 +1,11 @@
+# answer.btw: call and response between decks (CC0). Original.
+# The kick is the call, written once as a let and given to both decks. rests(call) is a hit on every step the call leaves
+# empty, and rests(call, reply) is the reply, kept only on those steps: the clap and the hat answer the kick, and editing
+# `call` moves them with it. The steps are the call's own (eight here), so the answer is its gaps; it is the same song as
+# the longhand, `clap ~ x ~ ~ ~ x ~ x | hihat ~ x x ~ x x ~ x`, and `btwd check --same-as` says so.
+tempo 122
+key am
+
+let call = x ~ ~ x ~ ~ x ~
+deck A: kick call
+deck B: clap rests(call, [~ x ~ x ~ x ~ x]) | hihat rests(call) vel=50..75

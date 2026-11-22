@@ -1,0 +1,9 @@
+# ramps on inserts and mixer levels, a timed line with an undo.
+tempo 128
+key fm
+deck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~
+master: filter lp 300 -> 8k over 8 bars
+master: resonance 0.2 -> 0.8 over 4 bars
+deck A: level 0.2 -> 0.9 over 4 bars
+at bar 16 for 4 bars: master: filter hp 600
+every 8 bars: master: delay 0.3 -> 0 over 2 bars

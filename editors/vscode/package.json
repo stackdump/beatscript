@@ -1,0 +1,57 @@
+{
+  "name": "beatscript",
+  "displayName": "BeatScript (btw)",
+  "description": "BeatScript (btw) for VS Code: highlighting, and through `btwd lsp` diagnostics, quick-fixes, the outline, go to definition, rename, completion, hover, signature help, inlay hints and refactors.",
+  "version": "0.1.0",
+  "publisher": "stackdump",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": { "vscode": "^1.82.0" },
+  "categories": ["Programming Languages", "Linters"],
+  "main": "./extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "btw",
+        "aliases": ["BeatScript", "btw"],
+        "extensions": [".btw"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      { "language": "btw", "scopeName": "source.btw", "path": "./syntaxes/btw.tmLanguage.json" }
+    ],
+    "configuration": {
+      "title": "BeatScript",
+      "properties": {
+        "btw.server.path": {
+          "type": "string",
+          "default": "btwd",
+          "description": "The btwd binary (it runs `btwd lsp`). Build it with `cargo build --release -p btwd` in stackdump/beatscript."
+        },
+        "btw.server.args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["lsp"],
+          "description": "The arguments the server is started with."
+        },
+        "btw.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Log the LSP traffic to the BeatScript output channel."
+        }
+      }
+    },
+    "commands": [
+      { "command": "btw.restartServer", "title": "BeatScript: Restart the language server" }
+    ]
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "scripts": {
+    "test": "node test/grammar.test.js"
+  }
+}

@@ -1,0 +1,6 @@
+tempo 140
+key fm
+deck A: kick x ~ ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ | snare ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ | hihat ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ x x ~ | bass <[f1 ~ ~ f1 ~ ~ ab1 ~ f1 ~ ~ ~ eb1 ~ c1 ~] [f1 ~ f1 ~ ~ ~ db1 ~ ~ ~ c1 ~ eb1 ~ eb1 ~]> inst=reese
+deck B: melody <[~ ~ c4 ~ ab3 ~ ~ ~ f3 ~ ~ g3 ~ ab3 ~ ~] [~ ~ c4 ~ eb4 ~ ~ ~ db4 ~ c4 ~ ab3 ~ ~ ~] [~ ~ c4 ~ ab3 ~ ~ ~ f3 ~ ~ g3 ~ ab3 ~ ~] [~ ~ c4 ~ eb4 ~ ~ ~ db4 ~ c4 ~ ab3 ~ ~ ~] [~ ~ c4 ~ ab3 ~ ~ ~ f3 ~ ~ g3 ~ ab3 ~ ~] [~ ~ c4 ~ eb4 ~ ~ ~ db4 ~ c4 ~ ab3 ~ ~ ~] [~ ~ c4 ~ ab3 ~ ~ ~ f3 ~ ~ g3 ~ ab3 ~ ~] [~ ~ c4 ~ eb4 ~ ~ ~ db4 ~ c4 ~ ab3 ~ ~ ~]> | harmony <chord(fm) chord(fm) chord(db) chord(db) chord(ab) chord(ab) chord(eb) chord(eb)>
+master: filter lp 400 -> 18000 over 8 bars
+every 16 bars: move loop_roll on A over 1 bars

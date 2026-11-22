@@ -1,0 +1,44 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/djengine",
+  "crates/djlive",
+  "crates/btwapi",
+  "crates/btwls",
+  "crates/btwseal",
+  "crates/btwserve",
+  "crates/djweb",
+  "crates/btwd",
+  "crates/btwround",
+  "crates/djhost",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+# Code is MIT; BeatScript programs and all content (lexicon, phrasebooks, themes, ontology, fixtures, docs) are
+# CC0-1.0. REUSE.toml says which is which, path by path.
+license = "MIT"
+publish = false
+repository = "https://github.com/stackdump/beatscript"
+homepage = "https://beatscript.app"
+
+[workspace.dependencies]
+# The public engine, stackdump/djrust, pinned by commit. Every crate here builds against exactly this revision;
+# to move it, change both revs (they must be equal) and run `cargo update -p djrust -p djrust-wallet`.
+djrust = { git = "https://github.com/stackdump/djrust", rev = "7420204bd7b6d60c12817695a0f3d906e3c61478", default-features = false }
+djrust-wallet = { git = "https://github.com/stackdump/djrust", rev = "7420204bd7b6d60c12817695a0f3d906e3c61478" }
+# The Wheel (a linear tonewheel), public stackdump/windwheel-bitwrap-io. Experimental: only djhost's off-by-default
+# `windwheel` feature pulls it in. No default build has it (scripts/check-public-build.sh).
+windwheel = { git = "https://github.com/stackdump/windwheel-bitwrap-io", rev = "9e396405794e8c218b8618ea887cbfde8cc70ba4", default-features = false }
+djengine = { path = "crates/djengine" }
+djhost = { path = "crates/djhost" }
+djlive = { path = "crates/djlive" }
+
+# The parity suites compose ~550 projects; unoptimised that takes over a minute.
+[profile.test]
+opt-level = 2
+
+[profile.release]
+lto = "thin"

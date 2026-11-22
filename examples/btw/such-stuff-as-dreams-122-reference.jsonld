@@ -1,0 +1,28 @@
+{
+  "@context": "https://schema.org",
+  "@type": "MusicComposition",
+  "@id": "https://beats.bitwrap.io/p#z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK",
+  "identifier": "z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK",
+  "name": "such-stuff-as-dreams-122",
+  "description": "Reference program of the found-phrases technique: deep house at 122 in D minor whose vocal is Prospero's iambic pentameter, buried in a full mix (night) and brought forward in a sparse section (spot), crossed onto the shaker and the hats with one-shot xfer.",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "genre": "https://beatscript.app/ontology/concept/technique-found-phrases",
+  "isBasedOn": [
+    {
+      "@type": "CreativeWork",
+      "name": "The Tempest, 4.1 (Prospero: \"We are such stuff as dreams are made on\")",
+      "author": {
+        "@type": "Person",
+        "name": "William Shakespeare"
+      },
+      "dateCreated": "1623",
+      "license": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "description": "First printed in the First Folio, 1623."
+    }
+  ],
+  "subjectOf": {
+    "@type": "TechArticle",
+    "name": "Found phrases: borrowing text for its shape",
+    "url": "https://beatscript.app/docs/found-phrases"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "beatscript-ontology",
+  "version": "0.1.0",
+  "released": "2026-11-21",
+  "namespace": "https://beatscript.app/ontology/ns#",
+  "version_iri": "https://beatscript.app/ontology/0.1.0",
+  "derived_from": {
+    "name": "bitwrap-ontology",
+    "version": "0.2.0",
+    "iri": "https://ontology.bitwrap.io/release/bitwrap-ontology-0.2.0.tar",
+    "namespace": "https://ontology.bitwrap.io/ns#",
+    "pack_content_sha256": "6555fd2acd31e66535f999879b131e8ffc0096cf5f926c5087ece72e4eabedb5",
+    "ns.nt": "9b724ffdd5150edc11e8cb278d27a40ac27ecfa58b9d94796192d7c66c5ac14c"
+  },
+  "pack_content_sha256": "9b730ce776673041c12cb2ebe6c760599bf4deab696208b6a85470f47e28a589",
+  "pack_tool_version": "btwserve-ontology-fork/1",
+  "pack_triples": 19276,
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "certificate_scope": "RDFS and OWL 2 RL schema rules only (rdfs2, rdfs3, rdfs5, rdfs7, rdfs9, rdfs11, eq-sym, prp-inv1, prp-inv2, prp-symp, prp-trp, scm-dom1, scm-dom2, scm-eqc1, scm-eqp1, scm-rng1, scm-rng2); other OWL axioms are not covered",
+  "files": {
+    "cert/asserted.sha256": "1b1d218456695cebe8e83daff33bbde3d22177c5ee4cc68f2bcf158311729d90",
+    "cert/asserted.tsv": "b7d6e8c137cdfb86fea21ccb04f4d8b5b8d9df899c6a1969611301dca8461f37",
+    "cert/derivations.tsv": "fb2aef9dcd1ead8a109f209ae86f948f50f333998eceb835e421e30086886882",
+    "cert/scope.tsv": "2464cd751287051b9afdf7bb23ba05e2177452247a6e29fa155092434f487946",
+    "ns.jsonld": "5c8b841147d48822b74113a6a79c1ee0e486ea3003fad099653b3e69f15caed3",
+    "ns.nt": "6f7400f701ea4fe5f36a345d9ac0cf9e1c0fe7dfb0089a835a6e98b26079c983",
+    "ns.rdf": "e71106ed049e4714cdafdbc93b22fce1b5e4d77b2a8440e5f0875bf3f0ee1003",
+    "ns.ttl": "37c667496fd4fcbe8b6b25430998292ef0092704da897e921f92c5f4b893a5d4",
+    "pack.json": "937ef43e2a5e475c81d281ad5720fb4569f799f8a2f52bd7e995eb45f47a5ea0"
+  }
+}

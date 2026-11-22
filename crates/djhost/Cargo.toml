@@ -1,0 +1,78 @@
+[package]
+name = "djhost"
+description = "The private host modules (MIDI, controller and gear hubs, HEOS, control socket, publishing) on top of djrust::host. Every backend is behind a feature."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = []
+# cpal: CoreAudio on macOS, ALSA on Linux (needs libasound2-dev to build).
+audio = ["djrust/audio"]
+# midir: CoreMIDI on macOS, ALSA sequencer on Linux.
+midi = ["dep:midir"]
+# rustysynth: SoundFont 2 playback, pure Rust, the cross-platform stand-in for AUSampler's SF2
+# path (`Audio/Sampler.swift`). EXS and DLS are Apple-only and have no equivalent here.
+sf2 = ["djrust/sf2"]
+# symphonia: audio files onto a sample deck (WAV, AIFF, FLAC, MP3, AAC / M4A, ALAC, Ogg Vorbis),
+# pure Rust: the stand-in for `Deck.decode`'s AVAudioFile + AVAudioConverter.
+decode = ["djrust/decode"]
+# A PreparedTrack as bytes (djrust::host::deck::transfer, re-exported as deck::transfer).
+transfer = ["djrust/transfer", "djengine/transfer"]
+# djnet (docs/NET-PROTOCOL.md): the LAN protocol between djrust devices, host and peer.
+# Off: no listener, no discovery, no client, no stream receiver.
+network = ["djrust/network", "dep:rtrb"]
+# The Wheel (windwheel's linear tonewheel, public stackdump/windwheel-bitwrap-io, pinned in the workspace)
+# played into an input strip of its own: the core djapp and djandroid share (`wheel`). Experimental, so off by
+# default: no default build has windwheel in its tree (scripts/check-public-build.sh). `windwheel` is the same switch.
+wheel = ["dep:windwheel", "dep:rtrb", "dep:anyhow"]
+windwheel = ["wheel"]
+# Set recordings signed by the booth's identity (setrec: did:pkh, EIP-191) with djrust-wallet. Off by default, so a
+# default build (btwserve, btwd, the wasm) has no wallet in its tree; the booth and the phone app turn it on.
+wallet = ["dep:djrust-wallet", "dep:zeroize"]
+
+# Beat and downbeat detection for audio djrust did not make (docs/BEAT-DETECTION.md): Beat This!
+# (MIT, JKU Linz) through the pure-Rust `beat-this` crate on `rten`, its ~11 MB of model files
+# fetched on first use and checked against a pinned SHA-256. Off: the DSP detector alone, and
+# nothing here touches the network. Needs rustc 1.89 (beat-this's own MSRV).
+neural = ["dep:beat-this", "dep:ureq"]
+
+[dependencies]
+djengine = { workspace = true, features = ["std"] }
+djrust = { workspace = true, features = ["host"] }
+djlive.workspace = true
+midir = { version = "0.11", optional = true }
+# the input strip's ring the djnet receiver writes (the same crate djrust's strips read)
+rtrb = { version = "0.3", optional = true }
+windwheel = { workspace = true, optional = true }
+anyhow = { version = "1", optional = true }
+# Set recordings: the take's sha-256 (CID) and, with the `wallet` feature, the booth's signature (did:pkh,
+# EIP-191) over a recorded set's CID, with the bitwrap identity wallet core (stackdump/djrust crates/djrust-wallet).
+# Also the model checksums of the `neural` feature.
+sha2 = "0.10"
+djrust-wallet = { workspace = true, optional = true }
+zeroize = { version = "1", optional = true }
+beat-this = { version = "=1.1.0", default-features = false, optional = true }
+ureq = { version = "3", optional = true }
+
+# platform/linux.rs: the clock thread's SCHED_FIFO and clock_nanosleep (macOS uses mach, no crate).
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[[example]]
+name = "decode_probe"
+required-features = ["decode"]
+
+[[example]]
+name = "clock_bench"
+required-features = ["midi"]
+
+[[example]]
+name = "djnet_peer"
+required-features = ["network"]
+
+[dev-dependencies]
+# tests/analysis_live.rs feeds an input strip the way a capture stream does
+rtrb = "0.3"

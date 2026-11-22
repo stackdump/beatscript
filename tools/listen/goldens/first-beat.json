@@ -1,0 +1,123 @@
+{
+ "cid": "z4EBG9jFzzkVrdxGXZhj7EUYYSYzLhhZJ4rGkQXpuGm7KeDA7Ya",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -16.7,
+   "parts": [
+    "kick",
+    "snare",
+    "hihat"
+   ],
+   "peak_db": -6,
+   "rms_db": -17.9,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -15,
+   "parts": [
+    "bass",
+    "harmony"
+   ],
+   "peak_db": -6,
+   "rms_db": -16.3,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 124,
+  "bpm_confidence": 0,
+  "bpm_match": "same",
+  "declared_bpm": 124,
+  "declared_key": null,
+  "key": "A minor",
+  "key_confidence": 0.005,
+  "key_match": "undeclared",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "lufs": -12.7,
+  "peak_db": -0.2,
+  "rms_db": -14
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -16.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -19,
+   "measured": true,
+   "part": "snare",
+   "peak_db": -6,
+   "rms_db": -25.4,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -22.8,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -29.6,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -15,
+   "measured": true,
+   "part": "bass",
+   "peak_db": -6,
+   "rms_db": -16.3,
+   "silent": false,
+   "voice": "sub-bass"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -38.7,
+   "measured": true,
+   "part": "harmony",
+   "peak_db": -24.4,
+   "rms_db": -43.5,
+   "silent": false,
+   "voice": "warm-pad"
+  }
+ ],
+ "sections": [
+  {
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -12.7,
+   "name": null,
+   "peak_db": -0.2,
+   "rms_db": -14
+  }
+ ],
+ "silent": [],
+ "version": "listen/1",
+ "warnings": [],
+ "window": {
+  "bars": 8,
+  "from_bar": 1,
+  "program_bars": 8,
+  "seconds": 15.484,
+  "section": null
+ }
+}

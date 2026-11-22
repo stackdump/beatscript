@@ -1,0 +1,20 @@
+{
+  "@context": "https://beatscript.app/context/v1.jsonld",
+  "@id": "https://beats.bitwrap.io/p#z4EBG9j8bRXBEoLq7jPF8xdf8wJLXBQ4MfcarSWc1x8VPRKsCtd",
+  "@type": "djrust:Program",
+  "cid": "z4EBG9j8bRXBEoLq7jPF8xdf8wJLXBQ4MfcarSWc1x8VPRKsCtd",
+  "euclid": [
+    {
+      "@type": "bw:EuclideanRhythm",
+      "bw:pulses": 3,
+      "bw:rotation": 0,
+      "bw:steps": 8,
+      "name": "house snare",
+      "sameShapeAs": [
+        "https://ontology.bitwrap.io/rhythm/house-snare"
+      ],
+      "uses": 1
+    }
+  ],
+  "tempo": 120
+}

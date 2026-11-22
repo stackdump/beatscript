@@ -1,0 +1,161 @@
+{
+ "cid": "z4EBG9jG5L7qDjJ4A9AXYd2Y3UKNyb87JrTSckqNFynJhpKyjAN",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -17.6,
+   "parts": [
+    "kick",
+    "hihat",
+    "bass"
+   ],
+   "peak_db": -6,
+   "rms_db": -18.5,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -16.2,
+   "parts": [
+    "melody",
+    "vox",
+    "voxc"
+   ],
+   "peak_db": -6,
+   "rms_db": -19,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 124,
+  "bpm_confidence": 0,
+  "bpm_match": "same",
+  "declared_bpm": 124,
+  "declared_key": "am",
+  "key": "E minor",
+  "key_confidence": 0.589,
+  "key_match": "unsure",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 0.023,
+  "clipped_samples": 1,
+  "lufs": -13.9,
+  "peak_db": 0,
+  "rms_db": -15.8
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16.1,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -18.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -22.7,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -32.4,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -15.5,
+   "measured": true,
+   "part": "bass",
+   "peak_db": -6,
+   "rms_db": -16.6,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -14.4,
+   "measured": true,
+   "part": "melody",
+   "peak_db": -6.4,
+   "rms_db": -17.2,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -22.9,
+   "measured": true,
+   "part": "vox",
+   "peak_db": -6,
+   "rms_db": -25.6,
+   "silent": false,
+   "voice": "voice-robot-choir"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -53.2,
+   "measured": true,
+   "part": "voxc",
+   "peak_db": -31.4,
+   "rms_db": -65.7,
+   "silent": false,
+   "voice": "voice-android"
+  }
+ ],
+ "sections": [
+  {
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -16,
+   "name": "call",
+   "peak_db": -2.2,
+   "rms_db": -17.3
+  },
+  {
+   "bars": 8,
+   "from_bar": 9,
+   "lufs": -16.4,
+   "name": "answer",
+   "peak_db": -0.6,
+   "rms_db": -17.5
+  },
+  {
+   "bars": 8,
+   "from_bar": 17,
+   "lufs": -12.4,
+   "name": "hands",
+   "peak_db": 0,
+   "rms_db": -14.4
+  },
+  {
+   "bars": 8,
+   "from_bar": 25,
+   "lufs": -12.6,
+   "name": "turn",
+   "peak_db": -0.4,
+   "rms_db": -14.7
+  }
+ ],
+ "silent": [],
+ "version": "listen/1",
+ "warnings": [
+  "the master clips: 1 samples over full scale"
+ ],
+ "window": {
+  "bars": 32,
+  "from_bar": 1,
+  "program_bars": 32,
+  "seconds": 61.935,
+  "section": null
+ }
+}

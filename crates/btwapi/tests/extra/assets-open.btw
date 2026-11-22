@@ -1,0 +1,7 @@
+# names two samples with open licenses and an Apple loop; no file is looked up, nothing is private.
+tempo 110
+sample harp from "sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa" license cc0 else bright-pluck
+sample thud from "sha256:1111000000000000000000000000000000000000000000000000000000000bb1" license cc-by else sub-bass
+loop "Dub Cycle 04" as cycle else pluck
+deck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud
+deck B: melody <c4 e4 g4 e4> inst=harp

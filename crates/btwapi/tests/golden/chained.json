@@ -1,0 +1,82 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 1,
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 1,
+        "col": 1,
+        "end_col": 2,
+        "start": 0,
+        "end": 0,
+        "start16": 0,
+        "end16": 0,
+        "message": "this program takes 85 bars to come round: it plays as nets of 64 bars chained, and loops",
+        "expected": [],
+        "found": "",
+        "help": "`end at bar N` stops it; `section` and `arrange` say its structure",
+        "render": "warning: this program takes 85 bars to come round: it plays as nets of 64 bars chained, and loops\n --> 1:1\n  |\n1 | # a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning.\n  | ^\n  = help: `end at bar N` stops it; `section` and `arrange` say its structure"
+      }
+    ],
+    "cid": "z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo",
+    "canonical": "tempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n",
+    "nets": {
+      "main@0:A": "z4EBG9jGmmLArFuvoZFHtKummqspjEPJ7ca8XQqJnrpxTr5qitB",
+      "main@64:A": "z4EBG9jEAoWUGD7F4GiX6Kg7NtE5YfyCJ64YvoXHkLu4d8fjUKE"
+    },
+    "song_nets": {},
+    "tempo": 140,
+    "key": null,
+    "swing": null,
+    "arranged": true,
+    "song_bars": null,
+    "ends": false,
+    "end_bar": null,
+    "loops": true,
+    "sections": [],
+    "decks": ["A"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": null
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n",
+    "cid": "z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo",
+    "comments": [
+      "a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning."
+    ],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 1,
+        "col": 1,
+        "end_col": 2,
+        "start": 0,
+        "end": 0,
+        "start16": 0,
+        "end16": 0,
+        "message": "this program takes 85 bars to come round: it plays as nets of 64 bars chained, and loops",
+        "expected": [],
+        "found": "",
+        "help": "`end at bar N` stops it; `section` and `arrange` say its structure",
+        "render": "warning: this program takes 85 bars to come round: it plays as nets of 64 bars chained, and loops\n --> 1:1\n  |\n1 | # a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning.\n  | ^\n  = help: `end at bar N` stops it; `section` and `arrange` say its structure"
+      }
+    ],
+    "text": "# a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning.\ntempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://btw.bitwrap.io/#z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo.xc3NCQIxFADh-1YxJWjykoCIYCl5PwmyiMJ68CDWrtiEh2GO3yOu9xt72S0etnI-sF6-f_L-9UL7tnG0hCciMRIz0ROasIxnIjMyM9MzmjHBhRCGMIUuqGAFL0RhFGahF7RgFa9EZVRmpVe0Yg1vRGM0ZqM3tPFv_bR8AA",
+    "social_url": "https://btw.bitwrap.io/c/z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo.xc3NCQIxFADh-1YxJWjykoCIYCl5PwmyiMJ68CDWrtiEh2GO3yOu9xt72S0etnI-sF6-f_L-9UL7tnG0hCciMRIz0ROasIxnIjMyM9MzmjHBhRCGMIUuqGAFL0RhFGahF7RgFa9EZVRmpVe0Yg1vRGM0ZqM3tPFv_bR8AA",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo.xc3NCQIxFADh-1YxJWjykoCIYCl5PwmyiMJ68CDWrtiEh2GO3yOu9xt72S0etnI-sF6-f_L-9UL7tnG0hCciMRIz0ROasIxnIjMyM9MzmjHBhRCGMIUuqGAFL0RhFGahF7RgFa9EZVRmpVe0Yg1vRGM0ZqM3tPFv_bR8AA",
+    "cid": "z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo",
+    "chars": 242,
+    "canonical": "tempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n",
+    "warnings": []
+  }
+}

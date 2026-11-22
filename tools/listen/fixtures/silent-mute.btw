@@ -1,0 +1,13 @@
+#! btw 1
+#! name: silent-mute
+#! license: CC0-1.0
+#! visibility: public
+# Listening-test fixture: a deck muted and never put back (the djapp filter_exit move left its strip muted for good).
+# listen must flag deck B as muted.
+# expect: silent deck=B reason=mute
+# expect: heard deck=A
+tempo 124
+deck B: mute
+deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | hihat ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+deck B: bass a2 ~ ~ a2 ~ ~ a2 ~ ~ ~ c3 ~ e2 ~ ~ ~ inst=sub-bass
+end at bar 8

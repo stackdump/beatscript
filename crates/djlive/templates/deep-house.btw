@@ -1,0 +1,49 @@
+# from $REF: deep house at 122, the phrase sung over it (templates $VERSION)
+# phrase: $PHRASE
+# vocal: $VOCAL
+tempo 122
+key am
+swing 0.12
+
+# the groove: the drm_* drums are what the arrangement changes; the kick and the backbeat stay put
+let kick4 = x x x x
+let clap24 = ~ x ~ x
+let drm_hat = ~ x ~ x ~ x ~ x
+let drm_shk = $SHAKER
+let drm_rim = ~ x ~ ~ ~ x ~ ~
+# Am F Dm G, and the bass on each root
+let bass_a = 1 ~ ~ 1 ~ ~ 8 ~ 1 ~ ~ 5 ~ 1 ~ ~
+let bass_f = 6 ~ ~ 6 ~ ~ 13 ~ 6 ~ ~ 10 ~ 6 ~ ~
+let bass_d = 4 ~ ~ 4 ~ ~ 11 ~ 4 ~ ~ 8 ~ 4 ~ ~
+let bass_g = 7 ~ ~ 7 ~ ~ 14 ~ 7 ~ ~ 11 ~ 7 ~ ~
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+$VOX_LETS
+
+# night: the voice is buried (lower, darker, ducked under the kick)
+section night $BARS bars {
+  deck A: kick kick4 | clap clap24 | hihat drm_hat | bass <bass_a bass_f bass_d bass_g> inst=sub-bass
+  deck B: harmony <i VI iv VII> inst=warm-pad len=16 vel=28..42 | melody$CYCLE $VOX inst=kalimba oct=3 vel=24..38
+  deck B: sing $LYRIC on melody voice=robot-choir
+  duck B under A.kick 3db attack=5ms release=120ms
+  mix { B level 0.45, B eq high -9 }
+}
+
+# spot: the voice is up front (the pad and the kalimba under it), and the shaker comes in
+section spot $BARS bars {
+  deck A: kick kick4 | clap clap24 | hihat$CYCLE drm_shk | snare drm_rim | bass <bass_a bass_f bass_d bass_g> inst=sub-bass
+  deck B: harmony <i VI iv VII> inst=warm-pad len=16 vel=4..10 | melody$CYCLE $VOX inst=kalimba oct=3 vel=10..18
+  deck B: sing $LYRIC on melody voice=robot-choir
+  duck B under A.kick 3db attack=5ms release=120ms
+  mix { B level 0.95 }
+}
+
+arrange {
+  night
+  @ vox_* oct 1
+  spot
+  ~ drm_* fill 0.15
+  night
+  @ vox_* xfer drm_shk
+  spot
+  ~ drm_* grow
+} loop 4 then end

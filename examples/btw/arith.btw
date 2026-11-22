@@ -1,0 +1,27 @@
+# arith: every number is an expression, worked out once when the program is read.
+# (An original example, CC0-1.0.)
+tempo 120 + 4 * 2            # 128
+key am
+swing 1 / 16 + 1 / 16        # 0.125
+
+let total = 4 * 4            # a `let` of arithmetic is one number, put in place of every later `total`
+let base = 60 + 12           # 72
+
+# a def's arithmetic argument keeps its grouping: pulse(A, 1 + 1) uses (1 + 1) wherever $step stands,
+# and a `when` after a line keeps it only where the condition holds
+def pulse(deck, step) {
+  deck $deck: hihat x*(4 + $step % 2 * 4) vel=(base + $step * 6)..100 when $deck == A
+}
+
+section groove total bars {
+  deck A: kick e(2 + 2, 16) | bass 1 ~ (1 + 2) 5 oct=3 - 1
+  deck B: harmony chord(am7)
+  pulse(A, 1 + 1)
+  pulse(B, 3)                # dropped: its guard is false for deck B
+  # a repeat: $i counts 0 to 3 and $n is 4; the filter opens on every second copy only
+  repeat 4 {
+    at bar $i * 4 + 1: master: filter lp 300 * ($i + 1) -> 2k over 2 bars when $i % 2 == 0
+    at bar $i * 4 + 3: master: reverb min(0.5, ($i + 1) / 8)
+  }
+}
+arrange groove

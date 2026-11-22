@@ -1,0 +1,5 @@
+# The language before the extensions: a small song, here so the harness always has something to check.
+tempo 124
+key am
+deck A: kick e(4,16) | snare ~ x ~ x | hihat x*8 vel=60..90
+deck B: bass <a1 ~ c2 ~> | harmony chord(am)

@@ -1,0 +1,64 @@
+# from $REF: a passacaglia at 100 in G minor, the phrase sung over it (templates $VERSION)
+# phrase: $PHRASE
+# vocal: $VOCAL
+# the ground, from the public-domain theme library: Holst's five-beat ostinato from Mars, under every section and never changed
+tempo 100
+key gm
+swing 0.08
+
+# the drums: the drm_* parts are what the arrangement changes; the kick and the shaker stay put
+let kick4 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let drm_clap = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let shk = $SHAKER
+# the ground: five beats against the four of the bar, so it comes round every five bars
+$THEME_MARS_OSTINATO
+# what the variations are made of: the chords, and a line above the ground that every pass changes a little more
+let chords_1 = [g3, bb3, d4] ~ ~ ~ ~ ~ ~ ~ [eb3, g3, bb3] ~ ~ ~ ~ ~ ~ ~
+let chords_2 = [c3, eb3, g3] ~ ~ ~ ~ ~ ~ ~ [d3, f#3, a3] ~ ~ ~ ~ ~ ~ ~
+let chords = <chords_1 chords_2>
+let upper_1 = g4 ~ bb4 d5 ~ bb4 g4 ~ d4 ~ g4 bb4 ~ g4 d4 ~
+let upper_2 = eb4 ~ g4 bb4 ~ g4 eb4 ~ c4 ~ eb4 g4 ~ d4 f#4 ~
+let upper = <upper_1 upper_2>
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+$VOX_LETS
+
+# ground: the ostinato and the chords alone
+section ground 8 bars {
+  deck A: kick kick4 kit=drums vel=80..95 | bass/20 mars_ostinato inst=bass vel=75..90
+  deck B: harmony chords inst=strings vel=40..55 len=8
+}
+
+# variation: the line above the ground, and the drums
+section variation 8 bars {
+  master: reverb 0.15
+  deck A: kick kick4 kit=drums vel=85..100 | clap drm_clap kit=drums vel=60..80 | hihat drm_hat kit=drums vel=45..70 | bass/20 mars_ostinato inst=bass vel=75..90
+  deck B: harmony chords inst=strings vel=40..55 len=8 | arp upper inst=marimba vel=50..75
+}
+
+# sung: the phrase over the ground, the line under it
+section sung $BARS bars {
+  master: reverb 0.15
+  deck A: kick kick4 kit=drums vel=80..95 | hihat$CYCLE shk kit=drums vel=30..45 | bass/20 mars_ostinato inst=bass vel=70..85
+  deck B: harmony chords inst=warm-pad vel=30..42 len=8 | arp upper inst=kalimba vel=30..45 | melody$CYCLE $VOX inst=kalimba oct=3 vel=24..38
+  deck B: sing $LYRIC on melody voice=robot-choir
+}
+
+# cumulative variations: each ~ stays and the next is added on top of it; the ground is never touched
+arrange {
+  ground
+  variation
+  ~ upper_* rot 2 | accent 0.25
+  ~ drm_hat thin 0.15
+  sung
+  ~ upper_* rev | drift 0.1
+  ~ drm_* grow
+  variation
+  @ vox_* xfer shk
+  sung
+  ~ upper_* up 1
+  variation
+  ~ upper_* down 1
+  ~ drm_* decay
+  sung
+} loop 3 then end

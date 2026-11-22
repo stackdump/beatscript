@@ -1,0 +1,53 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": [],
+    "cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
+    "canonical": "tempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",
+    "nets": {
+      "A": "z4EBG9izY25BmNLxiYaiUzrKGaYwumgCMmMKM62WHXDMGFGAr9T",
+      "B": "z4EBG9j9r4qm81y5LHg3KcHhomfiTuwMdaFEQMDZiK3yaSfSr7D"
+    },
+    "song_nets": {
+      "A": "z4EBG9izY25BmNLxiYaiUzrKGaYwumgCMmMKM62WHXDMGFGAr9T",
+      "B": "z4EBG9j9r4qm81y5LHg3KcHhomfiTuwMdaFEQMDZiK3yaSfSr7D"
+    },
+    "tempo": 87.5,
+    "key": "d:minpent",
+    "swing": 0.15,
+    "arranged": false,
+    "song_bars": null,
+    "ends": false,
+    "end_bar": null,
+    "loops": false,
+    "sections": [],
+    "decks": ["A","B"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": null
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",
+    "cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
+    "comments": [
+      "settings and plain parts: swing, a minor-pentatonic key, markov, degrees; unicode in a comment: héllo ✓ 音楽"
+    ],
+    "diagnostics": [],
+    "text": "# settings and plain parts: swing, a minor-pentatonic key, markov, degrees; unicode in a comment: héllo ✓ 音楽\ntempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://btw.bitwrap.io/#z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV.JY1NCoMwGET3nmKWWmwwDVYRXLQ3Sc1HDZpETOoPSM_etGUYZvN4E8hMDnXFysSv2j5RMF4mA-1QjdF2IhsSRd2AW4NBx6VU5KhzXDIc8FbOhDe2Xw_0upcB24lf4YlUK7DQ2IqCsar4a-4NDI1O7TByHtySFuyag_MMI9nIuy60ZTQ9pPfgUStQQlsfWkXhZUmdvVy_T3I2zu7oejerVJkqh8giHpN8AA",
+    "social_url": "https://btw.bitwrap.io/c/z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV.JY1NCoMwGET3nmKWWmwwDVYRXLQ3Sc1HDZpETOoPSM_etGUYZvN4E8hMDnXFysSv2j5RMF4mA-1QjdF2IhsSRd2AW4NBx6VU5KhzXDIc8FbOhDe2Xw_0upcB24lf4YlUK7DQ2IqCsar4a-4NDI1O7TByHtySFuyag_MMI9nIuy60ZTQ9pPfgUStQQlsfWkXhZUmdvVy_T3I2zu7oejerVJkqh8giHpN8AA",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV.JY1NCoMwGET3nmKWWmwwDVYRXLQ3Sc1HDZpETOoPSM_etGUYZvN4E8hMDnXFysSv2j5RMF4mA-1QjdF2IhsSRd2AW4NBx6VU5KhzXDIc8FbOhDe2Xw_0upcB24lf4YlUK7DQ2IqCsar4a-4NDI1O7TByHtySFuyag_MMI9nIuy60ZTQ9pPfgUStQQlsfWkXhZUmdvVy_T3I2zu7oejerVJkqh8giHpN8AA",
+    "cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
+    "chars": 302,
+    "canonical": "tempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",
+    "warnings": []
+  }
+}

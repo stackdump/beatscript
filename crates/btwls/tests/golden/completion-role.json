@@ -1,0 +1,22 @@
+[
+  {
+    "label": "hihat",
+    "kind": 5,
+    "detail": "role",
+    "documentation": {"kind":"markdown","value":"the hi-hat part"},
+    "sortText": "00hihat",
+    "filterText": "hihat",
+    "insertTextFormat": 1,
+    "textEdit": {"range":{"start":{"line":39,"character":8},"end":{"line":39,"character":11}},"newText":"hihat"}
+  },
+  {
+    "label": "high",
+    "kind": 14,
+    "detail": "control",
+    "documentation": {"kind":"markdown","value":"an EQ band, in dB"},
+    "sortText": "02high",
+    "filterText": "high",
+    "insertTextFormat": 1,
+    "textEdit": {"range":{"start":{"line":39,"character":8},"end":{"line":39,"character":11}},"newText":"high"}
+  }
+]

@@ -1,0 +1,192 @@
+#! skip-test: its `wheel level db=-8` line needs the host's registry (checked clean by `djctl btw check`)
+# deep-house-60: one hour of deep house at 122 BPM, hand-written (no generator).
+# A minor / C major. 1824 bars = 59:48. Eight movements and two breakdowns; every section
+# has its own evolve block with coprime clocks (melody, voicing, bass, hats), so nothing repeats.
+tempo 122
+swing 0.12
+key am
+
+# --- drums and shaker
+let four = x x x x
+let backs = ~ x ~ x
+let ghost = ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ ~ x
+let oh = ~ x ~ x ~ x ~ x
+let shk = x*16
+let hats7 = <oh degrade([oh],0.2,1) oh degrade([oh],0.3,3) degrade([oh],0.1,5) oh degrade([oh],0.4,7)>
+let hats_lean = <degrade([oh],0.3,2) degrade([oh],0.5,4) degrade([oh],0.35,6) oh degrade([oh],0.45,8) degrade([oh],0.25,9) oh>
+# --- the rolling bass, a root a bar (a, f, c, e, d)
+let ba = a1 ~ ~ a1 ~ ~ a2 ~ a1 ~ ~ e2 ~ a1 ~ ~
+let bf = f1 ~ ~ f1 ~ ~ f2 ~ f1 ~ ~ c2 ~ f1 ~ ~
+let bc = c2 ~ ~ c2 ~ ~ c3 ~ c2 ~ ~ g2 ~ c2 ~ ~
+let be = e1 ~ ~ e1 ~ ~ e2 ~ e1 ~ ~ b1 ~ e1 ~ ~
+let bd = d2 ~ ~ d2 ~ ~ d3 ~ d2 ~ ~ a2 ~ d2 ~ ~
+let lineA = <ba bf bc be>
+let lineB = <bd ba bf be>
+# --- Rhodes comping: a chord on the one and the "and" of three
+let kA = [chord(am9) ~ ~ ~ ~ ~ chord(am9) ~]
+let kF = [chord(fmaj7) ~ ~ ~ ~ ~ chord(fmaj7) ~]
+let kC = [chord(cmaj7) ~ ~ ~ ~ ~ chord(cmaj7) ~]
+let kE = [chord(em7) ~ ~ ~ ~ ~ chord(em7) ~]
+let kD = [chord(dm9) ~ ~ ~ ~ ~ chord(dm9) ~]
+let kG = [chord(g) ~ ~ ~ ~ ~ chord(g) ~]
+let progA = <kA kF kC kE>
+let progB = <kD kA kF kE>
+let progC = <kC kG kA kF>
+# --- the pluck motif (A minor pentatonic) and its sparse bars
+let m1 = ~ ~ e5 ~ ~ ~ ~ ~ c5 ~ ~ ~ a4 ~ ~ ~
+let m2 = ~ ~ ~ ~ g4 ~ ~ ~ ~ ~ a4 ~ ~ ~ c5 ~
+let m3 = e5 ~ ~ ~ ~ ~ d5 ~ ~ ~ ~ ~ c5 ~ ~ ~
+let melA = <m1 ~ ~ m2 ~ m3>
+let melB = <~ m2 ~ ~ m1 ~ ~ m3 ~>
+let melC = <m3 ~ m1 ~ m2>
+let drone = a1
+
+def floor(h, line) {
+  deck A: kick four vel=100 | clap backs vel=70..90 | snare ghost vel=25..40 | hihat $h vel=55..85 | bass $line inst=sub-bass vel=85..105
+}
+def top(prog, mel, shake) {
+  deck B: harmony $prog inst=electric-piano len=6 vel=50..78 | melody $mel inst=fm-bell vel=60..90 | hihat humanize([$shake],7,14) vel=30..65 | arp drone inst=dark-pad len=16 vel=40..55
+}
+def bed(prog) {
+  deck B: harmony $prog inst=warm-pad len=16 vel=45..65 | arp drone inst=dark-pad len=16 vel=40..55
+}
+def arc(lo, hi, n) {
+  master: filter lp $lo -> $hi over $n bars
+}
+# each section's evolve: melody transposes (period 7/11/13), voicings octave (5/7), bass rotates and octaves (11/13/17), hats thin on gen % 7 == k
+
+section dawn 224 bars {
+  master: level 0.85
+  master: reverb 0.3
+  arc(700, 5000, 64)
+  at bar 128: arc(5000, 3200, 64)
+  deck A: level 0
+  at bar 64: deck A: level 0 -> 0.9 over 32 bars
+  floor(hats7, lineA)
+  top(progA, melA, shk)
+  evolve every 16 bars {
+    melody: transpose <5 -5 7 -7 -5 0 0 0 10 -5 0>
+    harmony: octave <1 -1 0 -1 1>
+    bass: rotate <2 2 -4 2 -4 2 4 -6 2 -2 6 -6 2> | octave <1 0 0 -1 0 0 1 0 -1 1 -1 1 -1>
+    hihat: thin 0.07 seed=6 when gen % 7 == 6
+  }
+}
+section warmth 256 bars {
+  deck A: level 0.9
+  master: reverb 0.25
+  arc(3200, 9000, 64)
+  at bar 160: arc(9000, 4500, 64)
+  floor(hats_lean, lineA)
+  top(progB, melB, shk)
+  evolve every 16 bars {
+    melody: transpose <7 -2 -5 5 -10 0 5>
+    harmony: octave <1 -1 0 -1 1>
+    bass: rotate <-2 4 2 -4 0 0 -2 2 2 -2 0> | octave <1 0 -1 0 1 -1 1 -1 1 0 -1>
+    hihat: thin 0.07 seed=4 when gen % 7 == 4
+  }
+}
+section break1 16 bars {
+  master: reverb 0.45
+  arc(4500, 900, 16)
+  bed(progA)
+}
+section groove 256 bars {
+  deck A: level 0.9
+  master: reverb 0.2
+  master: delay 0.12
+  arc(900, 12000, 48)
+  at bar 128: wheel level db=-8
+  at bar 128: wheel sync deck=A ratio=1/2
+  at bar 130: wheel play
+  at bar 224: wheel pause
+  floor(hats7, lineB)
+  top(progC, melC, shk)
+  evolve every 16 bars {
+    melody: transpose <5 0 2 -12 5 0 -5 12 -2 0 -10 0 5>
+    harmony: octave <-1 2 -2 2 -2 0 1>
+    bass: rotate <2 -4 6 -2 0 -2 0 2 0 0 2 -4 4 0 0 0 -4> | octave <1 0 0 -1 0 1 -1 0 1 0 -1 0 0 1 0 -1 0>
+    hihat: thin 0.07 seed=2 when gen % 7 == 2
+  }
+}
+section turn 32 bars {
+  deck A: level 0.9
+  master: reverb 0.25
+  arc(12000, 5000, 32)
+  floor(hats7, lineA)
+  top(progA, melB, shk)
+  evolve every 16 bars {
+    melody: transpose <7 -2 -5 5 -10 0 5>
+    harmony: octave <1 -1 0 -1 1>
+    bass: rotate <-2 4 2 -4 0 0 -2 2 2 -2 0> | octave <1 0 -1 0 1 -1 1 -1 1 0 -1>
+    hihat: thin 0.07 seed=5 when gen % 7 == 5
+  }
+}
+section depth 256 bars {
+  deck A: level 0.85
+  master: reverb 0.4
+  master: delay 0.2
+  arc(2400, 800, 64)
+  at bar 128: arc(800, 2600, 64)
+  floor(hats_lean, lineA)
+  top(progB, melB, shk)
+  evolve every 16 bars {
+    melody: transpose <5 -5 7 -7 -5 0 0 0 10 -5 0 5 -5>
+    harmony: octave <1 -1 0 -1 1>
+    bass: rotate <-2 4 2 -4 0 0 -2 2 2 -2 0> | octave <1 0 -1 0 1 -1 1 -1 1 0 -1>
+    hihat: thin 0.07 seed=5 when gen % 7 == 5
+  }
+}
+section break2 16 bars {
+  master: reverb 0.5
+  arc(2600, 700, 16)
+  bed(progC)
+}
+section lift 256 bars {
+  deck A: level 0.95
+  master: reverb 0.2
+  master: delay 0.1
+  arc(1200, 16000, 64)
+  floor(hats7, lineB)
+  top(progC, melA, shk)
+  evolve every 16 bars {
+    melody: transpose <5 0 2 -12 5 0 -5 12 -2 0 -10 0 5 0>
+    harmony: octave <-1 2 -2 2 -2 0 1>
+    bass: rotate <2 -4 6 -2 0 -2 0 2 0 0 2 -4 4 0 0 0 -4> | octave <1 0 0 -1 0 1 -1 0 1 0 -1 0 0 1 0 -1 0>
+    hihat: thin 0.07 seed=0 when gen % 7 == 0
+  }
+}
+section afterglow 192 bars {
+  deck A: level 0.9
+  master: reverb 0.3
+  arc(16000, 6000, 64)
+  at bar 96: arc(6000, 2500, 64)
+  floor(hats_lean, lineA)
+  top(progA, melC, shk)
+  evolve every 16 bars {
+    melody: transpose <7 -2 -5 5 -10 0 5>
+    harmony: octave <-1 2 -2 2 -2 0 1>
+    bass: rotate <2 2 -4 2 -4 2 4 -6 2 -2 6 -6 2> | octave <1 0 0 -1 0 0 1 0 -1 1 -1 1 -1>
+    hihat: thin 0.07 seed=3 when gen % 7 == 3
+  }
+}
+section drift 224 bars {
+  master: reverb 0.5
+  arc(2500, 1400, 64)
+  at bar 32: deck A: level 0.9 -> 0 over 96 bars
+  floor(hats_lean, lineA)
+  top(progB, melB, shk)
+  evolve every 16 bars {
+    melody: transpose <5 0 2 -12 5 0 -5 12 -2 0 -10 0 5>
+    harmony: octave <1 -1 0 -1 1>
+    bass: rotate <-2 4 2 -4 0 0 -2 2 2 -2 0> | octave <1 0 -1 0 1 -1 1 -1 1 0 -1>
+    hihat: thin 0.07 seed=1 when gen % 7 == 1
+  }
+}
+section outro 96 bars {
+  master: reverb 0.6
+  master: filter lp 1400 -> 160 over 90 bars
+  master: level 0.85 -> 0.15 over 90 bars
+  bed(progA)
+}
+arrange dawn warmth break1 groove turn depth break2 lift afterglow drift outro
+end after outro

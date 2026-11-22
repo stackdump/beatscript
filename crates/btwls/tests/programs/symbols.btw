@@ -1,0 +1,39 @@
+# a program with one of every name
+# (two comment lines fold)
+tempo 124
+key am
+let bars8 = 8
+let riff = c2 ~ [e2 g2] ~
+sample harp from "harp.wav" license cc0 else pluck
+
+def changes() out: chords {
+  emit <i VI III VII>
+}
+
+def bed(oct) in: chords {
+  deck B: harmony $chords inst=warm-pad oct=$oct len=16
+}
+
+wire changes.out -> bed.chords
+
+section intro bars8 bars {
+  deck A: kick x ~ x ~ | hihat x*8
+  deck B: bass riff inst=harp
+  bed(3)
+}
+
+section drop 16 bars {
+  deck A: kick e(4,16) | snare ~ x ~ x
+  deck B: bass riff inst=sub-bass
+  evolve every 4 bars {
+    bass: rotate 1
+  }
+}
+
+section outro 4 bars {
+  deck A: clap x ~ ~ x
+}
+
+let both = stack(intro, outro)
+arrange both drop
+end after drop

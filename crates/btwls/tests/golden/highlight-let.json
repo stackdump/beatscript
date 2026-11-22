@@ -1,0 +1,5 @@
+[
+  {"range":{"start":{"line":5,"character":4},"end":{"line":5,"character":8}},"kind":3},
+  {"range":{"start":{"line":20,"character":15},"end":{"line":20,"character":19}},"kind":2},
+  {"range":{"start":{"line":26,"character":15},"end":{"line":26,"character":19}},"kind":2}
+]

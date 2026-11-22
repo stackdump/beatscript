@@ -1,0 +1,24 @@
+[package]
+name = "djweb"
+description = "The browser module for btw.bitwrap.io: btwapi + the Live runtime behind wasm-bindgen, plus the public djrust engine facade (Dj, DjComposer) in the same .wasm."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+btwapi = { path = "../btwapi" }
+btwls = { path = "../btwls" }
+# The public engine's browser facade: Dj (the AudioWorklet engine), DjComposer, render_offline ...
+djrust = { workspace = true, features = ["wasm"] }
+# Exactly the installed wasm-bindgen CLI (~/.cargo/bin/wasm-bindgen 0.2.129): the glue and the
+# module must agree to the patch.
+wasm-bindgen = "=0.2.129"
+
+[dev-dependencies]
+# examples/native_dump.rs hashes what it dumps
+sha2 = "0.10"

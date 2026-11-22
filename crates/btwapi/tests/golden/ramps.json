@@ -1,0 +1,111 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 2,
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 6,
+        "col": 1,
+        "end_col": 41,
+        "start": 182,
+        "end": 222,
+        "start16": 182,
+        "end16": 222,
+        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n --> 6:1\n  |\n6 | master: resonance 0.2 -> 0.8 over 4 bars\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 9,
+        "col": 1,
+        "end_col": 49,
+        "start": 304,
+        "end": 352,
+        "start16": 304,
+        "end16": 352,
+        "message": "the browser does not play this: the delay insert",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the delay insert\n --> 9:1\n  |\n9 | every 8 bars: master: delay 0.3 -> 0 over 2 bars\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "cid": "z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn",
+    "canonical": "tempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n",
+    "nets": {
+      "A": "z4EBG9jH6N1N6c1Hozd5vDYdfm48Q9FavXiLRWUi3tSosdp76Zf"
+    },
+    "song_nets": {
+      "A": "z4EBG9jH6N1N6c1Hozd5vDYdfm48Q9FavXiLRWUi3tSosdp76Zf"
+    },
+    "tempo": 128,
+    "key": "fm",
+    "swing": null,
+    "arranged": false,
+    "song_bars": null,
+    "ends": false,
+    "end_bar": null,
+    "loops": false,
+    "sections": [],
+    "decks": ["A"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": null
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n",
+    "cid": "z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn",
+    "comments": ["ramps on inserts and mixer levels, a timed line with an undo."],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 6,
+        "col": 1,
+        "end_col": 41,
+        "start": 182,
+        "end": 222,
+        "start16": 182,
+        "end16": 222,
+        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n --> 6:1\n  |\n6 | master: resonance 0.2 -> 0.8 over 4 bars\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 9,
+        "col": 1,
+        "end_col": 49,
+        "start": 304,
+        "end": 352,
+        "start16": 304,
+        "end16": 352,
+        "message": "the browser does not play this: the delay insert",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the delay insert\n --> 9:1\n  |\n9 | every 8 bars: master: delay 0.3 -> 0 over 2 bars\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "text": "# ramps on inserts and mixer levels, a timed line with an undo.\ntempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://btw.bitwrap.io/#z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY7dCoJAFITvfYq5DpKjlmxCQY-y6RHF9QdXRCF69o5uJnWxOzB8--0MXHctglB5Fc_Iay_jtMI9QVVKTnit54miLPSA6aAwsrmeyfcVSf3Q1iIPBFkur9Z24D5BXhpJmA4REY43KJJsR-mUvOntl-zZto1uUgb54UKSrxx4cuC2x7B8vEOXH0imSSKIkbdbmeBvTdEhJvLE08-fGTuTsdGzeKNV7-Shk78B",
+    "social_url": "https://btw.bitwrap.io/c/z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY7dCoJAFITvfYq5DpKjlmxCQY-y6RHF9QdXRCF69o5uJnWxOzB8--0MXHctglB5Fc_Iay_jtMI9QVVKTnit54miLPSA6aAwsrmeyfcVSf3Q1iIPBFkur9Z24D5BXhpJmA4REY43KJJsR-mUvOntl-zZto1uUgb54UKSrxx4cuC2x7B8vEOXH0imSSKIkbdbmeBvTdEhJvLE08-fGTuTsdGzeKNV7-Shk78B",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY7dCoJAFITvfYq5DpKjlmxCQY-y6RHF9QdXRCF69o5uJnWxOzB8--0MXHctglB5Fc_Iay_jtMI9QVVKTnit54miLPSA6aAwsrmeyfcVSf3Q1iIPBFkur9Z24D5BXhpJmA4REY43KJJsR-mUvOntl-zZto1uUgb54UKSrxx4cuC2x7B8vEOXH0imSSKIkbdbmeBvTdEhJvLE08-fGTuTsdGzeKNV7-Shk78B",
+    "cid": "z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn",
+    "chars": 304,
+    "canonical": "tempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n",
+    "warnings": []
+  }
+}

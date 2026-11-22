@@ -1,0 +1,68 @@
+# from seed(techno, 42): "techno · Rusted Spine", the beats generator, seeds v1
+tempo 128
+key c
+let kick_a = x x x x
+let hihat_a = x! ~ x! x ~ x x! ~ x! ~ x! x ~ x x! ~
+let snare_a = ~ x ~ x
+let hihat_b = x! x x! x x! ~ x! x x! x x! x x! ~ x! x
+let bass_a = ~ c3 c3 c3
+let bass_b = b3 b3 b3 b3
+let bass_c = c3 c3 c3 c3
+let melody_a = ~ ~ ~ c4 c4 ~ ~ ~ c4 ~ ~ c4 c4 ~ ~ ~
+let melody_b = d4 ~ ~ ~ d4 ~ c4 c4 d4 ~ ~ c4 d4 d4 ~ ~
+let melody_c = c4 ~ ~ c4 c4 ~ ~ ~ c4 ~ ~ c4 c4 ~ ~ ~
+let harmony_a = ~ e3 g3 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+let harmony_b = b3 d3 f3 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+let harmony_c = c3 e3 g3 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+let hihat_c = x! x x! x ~ x x! ~ x! ~ x! x ~ x x! ~
+let hihat_d = x! ~ x! x x! ~ x! x x! x x! x x! ~ x! x
+let melody_d = c4 ~ ~ ~ c4 ~ ~ ~ c4 ~ e4 c4 c4 ~ ~ c4
+let melody_e = d4 c4 ~ e4 f4 ~ ~ ~ f4 ~ a4 ~ b4 c4 ~ ~
+let hihat_e = x! ~ x! x ~ ~ x! x x! x x! x x! ~ x! x
+let hihat_f = x! x x! x x! ~ x! ~ x! ~ x! x ~ x x! ~
+let hihat_g = x! ~ x! x ~ x x! x x! x x! x x! ~ x! x
+let hihat_h = x! x x! x x! ~ x! x x! ~ x! x ~ x x! ~
+section intro 4 bars {
+  deck A: kick kick_a kit=drums-v8 vel=117..124
+        | hihat hihat_a kit=drums-v8 vel=66..69
+}
+section buildup 12 bars {
+  deck A: kick kick_a kit=drums-v8 vel=117..124
+        | snare snare_a kit=drums vel=103..104
+        | hihat <hihat_a hihat_a hihat_a hihat_a hihat_a hihat_a hihat_b hihat_b hihat_b hihat_b hihat_b hihat_b> kit=drums-v8 vel=66..74
+        | bass <bass_a bass_b bass_c bass_b bass_c bass_b bass_c bass_b bass_c bass_b bass_c bass_b> inst=reese vel=90
+  deck B: melody <melody_a melody_b ~ ~ melody_c melody_b ~ ~ melody_c melody_b ~ ~> inst=sync-lead vel=85 len=1
+        | harmony <harmony_a harmony_b harmony_c harmony_b harmony_c harmony_b harmony_c harmony_b harmony_c harmony_b harmony_c harmony_b> inst=dark-pad vel=68 len=15
+}
+section drop 12 bars {
+  deck A: kick kick_a kit=drums-v8 vel=117..124
+        | snare snare_a kit=drums vel=103..104
+        | hihat <hihat_c hihat_a hihat_a hihat_a hihat_a hihat_a hihat_d hihat_b hihat_b hihat_b hihat_b hihat_b> kit=drums-v8 vel=66..74
+        | bass <bass_c bass_b> inst=reese vel=90
+  deck B: melody <melody_c melody_b melody_d melody_e> inst=sync-lead vel=85 len=1
+        | harmony <harmony_c harmony_b> inst=dark-pad vel=68 len=15
+}
+section verse 12 bars {
+  deck A: kick kick_a kit=drums-v8 vel=117..124
+        | snare snare_a kit=drums vel=103..104
+        | hihat <hihat_c hihat_a hihat_a hihat_a hihat_a hihat_a hihat_a hihat_a hihat_a hihat_e hihat_b hihat_b> kit=drums-v8 vel=66..74
+        | bass <bass_c bass_b> inst=reese vel=90
+  deck B: melody <melody_c melody_b ~ ~> inst=sync-lead vel=85 len=1
+        | harmony <harmony_c harmony_b> inst=dark-pad vel=68 len=15
+}
+section drop_2 12 bars {
+  deck A: kick kick_a kit=drums-v8 vel=117..124
+        | snare snare_a kit=drums vel=103..104
+        | hihat <hihat_f hihat_a hihat_a hihat_a hihat_a hihat_a hihat_g hihat_b hihat_b hihat_b hihat_b hihat_b> kit=drums-v8 vel=66..74
+        | bass <bass_c bass_b> inst=reese vel=90
+  deck B: melody <melody_c melody_b melody_d melody_e> inst=sync-lead vel=85 len=1
+        | harmony <harmony_c harmony_b> inst=dark-pad vel=68 len=15
+}
+section outro 4 bars {
+  deck A: kick kick_a kit=drums-v8 vel=117..124
+        | hihat <hihat_h hihat_a hihat_a hihat_a> kit=drums-v8 vel=66..74
+        | bass <bass_c ~ ~ ~> inst=reese vel=90
+  deck B: melody <melody_c melody_b ~ ~> inst=sync-lead vel=85 len=1
+        | harmony <harmony_c harmony_b> inst=dark-pad vel=68 len=15
+}
+arrange intro buildup drop verse drop_2 outro

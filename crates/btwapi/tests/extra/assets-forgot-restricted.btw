@@ -1,0 +1,4 @@
+# a restricted sample without `use restricted`: an error that says to add it.
+tempo 110
+sample harp from "~/samples/harp.wav"
+deck B: melody <c4 e4 g4 e4> inst=harp

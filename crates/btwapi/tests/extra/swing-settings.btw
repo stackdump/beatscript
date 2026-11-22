@@ -1,0 +1,6 @@
+# settings and plain parts: swing, a minor-pentatonic key, markov, degrees; unicode in a comment: héllo ✓ 音楽
+tempo 87.5
+swing 0.15
+key d:minpent
+deck A: kick e(3,8,2) | snare ~ x ~ x | hihat x*16 vel=30..70 seed=3
+deck B: melody markov(0.6, 11) oct=5 len=3 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~

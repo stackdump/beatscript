@@ -1,0 +1,25 @@
+# named-arrange-mutations: named arrangements with an `arrange { }` mutation inside one of them. `open` plays the drop as
+# written, `set` rotates the acid line between its two drops (twice through), and `close` plays the drop as written again.
+tempo 128
+key am
+
+let kik = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let acid = a2 ~ c3 e3 ~ a2 g2 ~ a2 a2 ~ e3 ~ c3 ~ g2
+
+section intro 2 bars {
+  deck A: kick kik
+}
+section drop 2 bars {
+  deck A: kick kik | bass acid inst=sub-bass
+}
+section outro 2 bars {
+  deck A: kick kik
+}
+
+arrange open: intro drop then set
+arrange set: {
+  drop
+  ~ acid rot 2
+  drop
+} loop 2
+arrange close: drop outro end

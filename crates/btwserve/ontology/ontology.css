@@ -1,0 +1,34 @@
+/* /ontology/: the docs pages' look (dark, #16213e), standing on its own so the page reads right with or without
+   /docs/assets/docs.css. Everything is scoped to body.ontology. */
+body.ontology {
+  --bg: #0f1629; --panel: #16213e; --fg: #e6e9f2; --mut: #9aa4bf; --rule: #2a3558; --accent: #7fb3ff; --code: #1c2747;
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+body.ontology a { color: var(--accent); }
+body.ontology .skip { position: absolute; left: -9999px; }
+body.ontology .skip:focus { left: 8px; top: 8px; background: var(--panel); padding: 6px 10px; }
+body.ontology header.top {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--rule);
+}
+body.ontology .brand { display: flex; align-items: center; gap: 8px; color: var(--fg); text-decoration: none; font-weight: 600; }
+body.ontology .brand-mark { width: 18px; height: 18px; border-radius: 4px; background: linear-gradient(135deg, #7fb3ff, #b48cff); }
+body.ontology .crumbs { display: flex; gap: 14px; flex-wrap: wrap; }
+body.ontology .crumbs a { color: var(--mut); text-decoration: none; }
+body.ontology .crumbs a[aria-current="page"] { color: var(--fg); border-bottom: 2px solid var(--accent); }
+body.ontology .spacer { flex: 1; }
+body.ontology .tb { color: var(--mut); text-decoration: none; }
+body.ontology .layout { max-width: 52rem; margin: 0 auto; padding: 8px 20px 48px; }
+body.ontology h1, body.ontology h2 { line-height: 1.25; }
+body.ontology h2 { margin-top: 2em; padding-top: .4em; border-top: 1px solid var(--rule); }
+body.ontology .anchor { color: var(--mut); text-decoration: none; margin-right: .3em; }
+body.ontology code { background: var(--code); border-radius: 4px; padding: .1em .35em; font-size: .92em; overflow-wrap: anywhere; }
+body.ontology pre { background: var(--code); border: 1px solid var(--rule); border-radius: 6px; padding: .8em 1em; overflow-x: auto; }
+body.ontology pre code { background: none; padding: 0; }
+body.ontology .hash { font-size: .8em; color: var(--mut); }
+body.ontology ul.facts { list-style: none; padding: 0; }
+body.ontology ul.facts li { padding: .15em 0; }
+body.ontology table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+body.ontology th, body.ontology td { text-align: left; vertical-align: top; padding: .35em .6em; border-bottom: 1px solid var(--rule); overflow-wrap: anywhere; }
+body.ontology th:first-child, body.ontology td:first-child { width: 34%; }

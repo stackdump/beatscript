@@ -1,0 +1,15 @@
+[package]
+name = "btwd"
+description = "btw from a shell and for the btw.bitwrap.io server: check / fmt / open / share / highlight / cheatsheet / instruments / render (streaming PCM). No audio or MIDI features: builds on a bare Linux box."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+btwapi = { path = "../btwapi" }
+btwls = { path = "../btwls" }
+djengine.workspace = true
+djhost.workspace = true
+djlive.workspace = true

@@ -1,0 +1,131 @@
+{
+ "cid": "z4EBG9j951xnNrR8QDtVh3Y9J7XETpLzmrFMYH1H57uYcFThR5P",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -13.6,
+   "parts": [
+    "kick",
+    "snare",
+    "hihat"
+   ],
+   "peak_db": -3,
+   "rms_db": -14.9,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": null,
+   "parts": [
+    "bass",
+    "harmony"
+   ],
+   "peak_db": null,
+   "rms_db": null,
+   "silent": true
+  }
+ },
+ "detected": {
+  "bpm": 124,
+  "bpm_confidence": 1085.018,
+  "bpm_match": "same",
+  "declared_bpm": 124,
+  "declared_key": null,
+  "key": "A major",
+  "key_confidence": 0.172,
+  "key_match": "undeclared",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "lufs": -13.6,
+  "peak_db": -3,
+  "rms_db": -14.9
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -13,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -3,
+   "rms_db": -13.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16,
+   "measured": true,
+   "part": "snare",
+   "peak_db": -3,
+   "rms_db": -22.4,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -19.7,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -3,
+   "rms_db": -26.5,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "measured": false,
+   "part": "bass",
+   "silent": true,
+   "voice": "sub-bass",
+   "with_deck": true
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "measured": false,
+   "part": "harmony",
+   "silent": true,
+   "voice": "warm-pad",
+   "with_deck": true
+  }
+ ],
+ "sections": [
+  {
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -13.6,
+   "name": null,
+   "peak_db": -3,
+   "rms_db": -14.9
+  }
+ ],
+ "silent": [
+  {
+   "bars": 8,
+   "deck": "B",
+   "from_bar": 1,
+   "part": null,
+   "reason": "crossfader",
+   "section": null,
+   "why": "the crossfader is all the way to A (0.00), which shuts deck B"
+  }
+ ],
+ "version": "listen/1",
+ "warnings": [
+  "the crossfader is all the way to A (0.00), which shuts deck B"
+ ],
+ "window": {
+  "bars": 8,
+  "from_bar": 1,
+  "program_bars": 8,
+  "seconds": 15.484,
+  "section": null
+ }
+}

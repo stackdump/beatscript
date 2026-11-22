@@ -1,0 +1,301 @@
+{
+ "source": "djrust tests/fixtures/js/projects.json (written by beats' own JavaScript, scripts/beats-parity.mjs): the model CID of compose(genre, {seed, structure, cohesion: v2})",
+ "rows": [
+  {
+   "genre": "techno",
+   "seed": 42,
+   "structure": "standard",
+   "name": "techno \u00b7 Rusted Spine",
+   "tempo": 128,
+   "modelCID": "72c7c518ed7a9150f7a96ca486fa753da0d0fa3a467c960b9730d5d0d9913b0b"
+  },
+  {
+   "genre": "house",
+   "seed": 42,
+   "structure": "standard",
+   "name": "house \u00b7 Rusted Spine",
+   "tempo": 124,
+   "modelCID": "f63a4a293f673c90ebfa5da7e08ed51363278cc47d34b287519cb2648c99a895"
+  },
+  {
+   "genre": "jazz",
+   "seed": 42,
+   "structure": "standard",
+   "name": "jazz \u00b7 Rusted Spine",
+   "tempo": 110,
+   "modelCID": "3b3245ceb9ec48e1dc3486b2107cb8495bb32ff8618de27a8c6f1f81f1fe7f90"
+  },
+  {
+   "genre": "ambient",
+   "seed": 42,
+   "structure": "standard",
+   "name": "ambient \u00b7 Rusted Spine",
+   "tempo": 72,
+   "modelCID": "734d62f4b6a2d88e65b99174faa21a178bf7440c897a6458e05e980fb8e89eb7"
+  },
+  {
+   "genre": "dnb",
+   "seed": 42,
+   "structure": "standard",
+   "name": "dnb \u00b7 Rusted Spine",
+   "tempo": 174,
+   "modelCID": "373b7faac01cf4adc8052e35042965094363d44b889dc4481b561b3dbd93ea99"
+  },
+  {
+   "genre": "edm",
+   "seed": 42,
+   "structure": "standard",
+   "name": "edm \u00b7 Rusted Spine",
+   "tempo": 138,
+   "modelCID": "1715b58f7bbcc7e5b0fe1ad05ad14b28d304d524c05ca2b04525c658be68c8de"
+  },
+  {
+   "genre": "speedcore",
+   "seed": 42,
+   "structure": "standard",
+   "name": "speedcore \u00b7 Rusted Spine",
+   "tempo": 220,
+   "modelCID": "0fab03ea41d5c49572f48941afa27305ef0eeb8005138fa6f03d477239afa995"
+  },
+  {
+   "genre": "dubstep",
+   "seed": 42,
+   "structure": "standard",
+   "name": "dubstep \u00b7 Rusted Spine",
+   "tempo": 140,
+   "modelCID": "c797a0bcff5215afbc054ae7566b5a336f8598d4b176475a672e6879a0fca213"
+  },
+  {
+   "genre": "country",
+   "seed": 42,
+   "structure": "standard",
+   "name": "country \u00b7 Rusted Spine",
+   "tempo": 110,
+   "modelCID": "642bfbce19edc6dd16b9d326e45106ec3899c857202dfcaaf7ad0e134bd8add4"
+  },
+  {
+   "genre": "blues",
+   "seed": 42,
+   "structure": "standard",
+   "name": "blues \u00b7 Rusted Spine",
+   "tempo": 95,
+   "modelCID": "09b52f398b0f46041c7eb8f5520ee567a853cb2e186b9fa353028dba8ebb9e10"
+  },
+  {
+   "genre": "synthwave",
+   "seed": 42,
+   "structure": "standard",
+   "name": "synthwave \u00b7 Rusted Spine",
+   "tempo": 108,
+   "modelCID": "ff19c838de38e1c752bd75990b289a0afe851432334b57f36cf6da64820840f5"
+  },
+  {
+   "genre": "trance",
+   "seed": 42,
+   "structure": "standard",
+   "name": "trance \u00b7 Rusted Spine",
+   "tempo": 140,
+   "modelCID": "b17b9fe61d2ec26576df561e7aa11eeb22b0caf3d530732baa274f573a947374"
+  },
+  {
+   "genre": "lofi",
+   "seed": 42,
+   "structure": "standard",
+   "name": "lofi \u00b7 Rusted Spine",
+   "tempo": 82,
+   "modelCID": "be6e25faf0b8be3552ec1f6e24b70f9d33cd211c5533b013a83db51c953cddb5"
+  },
+  {
+   "genre": "reggae",
+   "seed": 42,
+   "structure": "standard",
+   "name": "reggae \u00b7 Rusted Spine",
+   "tempo": 75,
+   "modelCID": "69268af780d94e113e9f412c03ea3b1369ceb297d179dfd4465e3f1e491101b4"
+  },
+  {
+   "genre": "funk",
+   "seed": 42,
+   "structure": "standard",
+   "name": "funk \u00b7 Rusted Spine",
+   "tempo": 108,
+   "modelCID": "872b5c89e45cdc6a68498ccaf1c09ac1b00d839610894d94c869c4fef4222a00"
+  },
+  {
+   "genre": "bossa",
+   "seed": 42,
+   "structure": "standard",
+   "name": "bossa \u00b7 Rusted Spine",
+   "tempo": 88,
+   "modelCID": "7d7b73d05639c92064b216ec1073bd54683151dabf27f7742a1b9303d1599b6f"
+  },
+  {
+   "genre": "trap",
+   "seed": 42,
+   "structure": "standard",
+   "name": "trap \u00b7 Rusted Spine",
+   "tempo": 140,
+   "modelCID": "b5b90da7069e68eff5b24297e03a8231a6bf8eda2a7cd0d240f905fd268c2eec"
+  },
+  {
+   "genre": "garage",
+   "seed": 42,
+   "structure": "standard",
+   "name": "garage \u00b7 Rusted Spine",
+   "tempo": 130,
+   "modelCID": "7972c43109910867714f82748e1f1ea817f471dbc21e3771e5ce26ce9ffbadaa"
+  },
+  {
+   "genre": "metal",
+   "seed": 42,
+   "structure": "standard",
+   "name": "metal \u00b7 Rusted Spine",
+   "tempo": 180,
+   "modelCID": "21aa7368639ce46e763e57e0f6ad52c5174a210db1bb540e8e6ca46c0651264c"
+  },
+  {
+   "genre": "techno",
+   "seed": 1,
+   "structure": "loop",
+   "name": "techno \u00b7 Wired Drift",
+   "tempo": 128,
+   "modelCID": "1e1a9933856b388f735b8b0af4222f6093a0b6157cca066125b9c20f325c6db7"
+  },
+  {
+   "genre": "techno",
+   "seed": 1,
+   "structure": "minimal",
+   "name": "techno \u00b7 Wired Drift",
+   "tempo": 128,
+   "modelCID": "b120465aef72ac61bc0aa20102d4f588d8f232467347052f84738d7be9b37c2e"
+  },
+  {
+   "genre": "techno",
+   "seed": 1,
+   "structure": "extended",
+   "name": "techno \u00b7 Wired Drift",
+   "tempo": 128,
+   "modelCID": "50f81a28c8b12b276b8c307abb9d324fe218027cb5b012b273edbce68e4225cd"
+  },
+  {
+   "genre": "house",
+   "seed": 1,
+   "structure": "loop",
+   "name": "house \u00b7 Wired Drift",
+   "tempo": 124,
+   "modelCID": "5b4729170a850dfda25889e2b95dbd63ecda3ad6f111dab54febcecd009d9d9e"
+  },
+  {
+   "genre": "house",
+   "seed": 1,
+   "structure": "minimal",
+   "name": "house \u00b7 Wired Drift",
+   "tempo": 124,
+   "modelCID": "771386a278b7bc5b6452c3ae65ade7ec1fefdc9fba88d5967ea8f82f98e531b7"
+  },
+  {
+   "genre": "house",
+   "seed": 1,
+   "structure": "extended",
+   "name": "house \u00b7 Wired Drift",
+   "tempo": 124,
+   "modelCID": "ec6b013455c2a72e3681d830478b46fbeaa5da32618de5b3a06d381578f1603c"
+  },
+  {
+   "genre": "jazz",
+   "seed": 1,
+   "structure": "loop",
+   "name": "jazz \u00b7 Wired Drift",
+   "tempo": 110,
+   "modelCID": "92a48596728be6ec74729596606c8254ea82991944a9e81f62b49ce8485f548b"
+  },
+  {
+   "genre": "jazz",
+   "seed": 1,
+   "structure": "minimal",
+   "name": "jazz \u00b7 Wired Drift",
+   "tempo": 110,
+   "modelCID": "a315fb4b53ea5980aadbdc5a7a3d8fc75c767fac2039c0db18ac1ff21edfdfb5"
+  },
+  {
+   "genre": "jazz",
+   "seed": 1,
+   "structure": "extended",
+   "name": "jazz \u00b7 Wired Drift",
+   "tempo": 110,
+   "modelCID": "9599e6ea63a04d45f59a0d363ef63d102880edc050549961d706f9b0a5c8b479"
+  },
+  {
+   "genre": "dnb",
+   "seed": 1,
+   "structure": "loop",
+   "name": "dnb \u00b7 Wired Drift",
+   "tempo": 174,
+   "modelCID": "e460c16f31c88627038ab9762521ef7389e6806edaad4e32ebd3b014af5a7196"
+  },
+  {
+   "genre": "dnb",
+   "seed": 1,
+   "structure": "minimal",
+   "name": "dnb \u00b7 Wired Drift",
+   "tempo": 174,
+   "modelCID": "6db5cc9e70413e66fa072e80e0e95dcb18b51ab202a18fc827424613b085542a"
+  },
+  {
+   "genre": "dnb",
+   "seed": 1,
+   "structure": "extended",
+   "name": "dnb \u00b7 Wired Drift",
+   "tempo": 174,
+   "modelCID": "5bf2b7ac89dfb8ba96fbf20caa715fa53ccd784a5dfeffcd054b19a51303a2bc"
+  },
+  {
+   "genre": "trance",
+   "seed": 1,
+   "structure": "loop",
+   "name": "trance \u00b7 Wired Drift",
+   "tempo": 140,
+   "modelCID": "3e7b54511ac8c73e0764c842647707c514fcfd46293ce3c5bbabd83522c13eea"
+  },
+  {
+   "genre": "trance",
+   "seed": 1,
+   "structure": "minimal",
+   "name": "trance \u00b7 Wired Drift",
+   "tempo": 140,
+   "modelCID": "955106e1056a9bded1379ade081ade831f44a84e4aff66d8cd991c895b43b735"
+  },
+  {
+   "genre": "trance",
+   "seed": 1,
+   "structure": "extended",
+   "name": "trance \u00b7 Wired Drift",
+   "tempo": 140,
+   "modelCID": "bd0cb34d97544ba9c8e8f5d4e746d0ab9393af63c84e0c1a05160a1f516da9f2"
+  },
+  {
+   "genre": "lofi",
+   "seed": 1,
+   "structure": "loop",
+   "name": "lofi \u00b7 Wired Drift",
+   "tempo": 82,
+   "modelCID": "508564d878bdd07a7c5899fc5ead674bf50a79540ac81218398ecb8fdb892b00"
+  },
+  {
+   "genre": "lofi",
+   "seed": 1,
+   "structure": "minimal",
+   "name": "lofi \u00b7 Wired Drift",
+   "tempo": 82,
+   "modelCID": "884afefae47a63abfed5008c26c540877443be7c9f1bc0fae8adea15daf5c6b4"
+  },
+  {
+   "genre": "lofi",
+   "seed": 1,
+   "structure": "extended",
+   "name": "lofi \u00b7 Wired Drift",
+   "tempo": 82,
+   "modelCID": "4024d051dbe4e2a5aa8cabd1815dee6694bfd9f6ca8eff0eb927eab9f4591f07"
+  }
+ ]
+}

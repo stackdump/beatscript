@@ -1,0 +1,20 @@
+# timing: time words finer than a bar. A beat is a quarter of a bar, and beats count from 0 like bars do:
+# `at bar 3 beat 2` is the third quarter of the bar the line calls bar 3. (An original example, CC0-1.0.)
+tempo 128
+key dm
+
+section intro 4 bars {
+  deck A: kick x ~ x ~ | hihat x*8 vel=50..80
+  deck B: harmony chord(dm7)
+  at bar 1 beat 2: master: filter lp 400 -> 3k over 2 beats     # a ramp half a bar long: it ends two beats after it starts
+  at bar 2 for 3 beats: deck B: mute                              # muted for three beats, then put back
+  before drop 1/2 bar: master: reverb 0.1 -> 0.7 over 2 beats   # the swell into the drop, a half bar ahead of it
+}
+
+section drop 8 bars {
+  deck A: kick x x x x | snare ~ x ~ x | hihat x*8 vel=60..100
+  deck B: bass d2 ~ d2 ~
+  every 1/2 bar from 1: deck B: level 0.8                        # a pulse every half bar from the drop's second bar
+  at bar 7 beat 5/2: master: delay 0.3                           # beat 2 and a half of bar 7
+}
+arrange intro drop

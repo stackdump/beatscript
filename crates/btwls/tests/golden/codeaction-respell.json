@@ -1,0 +1,49 @@
+[
+  {
+    "title": "`kcik` -> `kick`",
+    "kind": "quickfix",
+    "diagnostics": [
+      {
+        "range": {"start":{"line":1,"character":8},"end":{"line":1,"character":12}},
+        "severity": 1,
+        "source": "btw",
+        "message": "`kcik` is not something to do\nexpected: swap, move, load, queue, play, stop, sync, mute, unmute, filter, delay, reverb, crush, resonance, level, low, mid, high, crossfader, duck, mix, sing, assert or wire\nhelp: did you mean `kick`?",
+        "data": {"index":0,"start":18,"end":22}
+      }
+    ],
+    "isPreferred": true,
+    "edit": {
+      "changes": {
+        "file:///test.btw": [{"range":{"start":{"line":1,"character":8},"end":{"line":1,"character":12}},"newText":"kick"}]
+      }
+    }
+  },
+  {
+    "title": "Fix all certain problems (2)",
+    "kind": "quickfix",
+    "diagnostics": [
+      {
+        "range": {"start":{"line":1,"character":8},"end":{"line":1,"character":12}},
+        "severity": 1,
+        "source": "btw",
+        "message": "`kcik` is not something to do\nexpected: swap, move, load, queue, play, stop, sync, mute, unmute, filter, delay, reverb, crush, resonance, level, low, mid, high, crossfader, duck, mix, sing, assert or wire\nhelp: did you mean `kick`?",
+        "data": {"index":0,"start":18,"end":22}
+      },
+      {
+        "range": {"start":{"line":2,"character":8},"end":{"line":2,"character":12}},
+        "severity": 1,
+        "source": "btw",
+        "message": "`bsas` is not something to do\nexpected: swap, move, load, queue, play, stop, sync, mute, unmute, filter, delay, reverb, crush, resonance, level, low, mid, high, crossfader, duck, mix, sing, assert or wire\nhelp: did you mean `bass`?",
+        "data": {"index":1,"start":55,"end":59}
+      }
+    ],
+    "edit": {
+      "changes": {
+        "file:///test.btw": [
+          {"range":{"start":{"line":1,"character":8},"end":{"line":1,"character":12}},"newText":"kick"},
+          {"range":{"start":{"line":2,"character":8},"end":{"line":2,"character":12}},"newText":"bass"}
+        ]
+      }
+    }
+  }
+]

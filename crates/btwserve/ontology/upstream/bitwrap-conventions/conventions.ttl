@@ -1,0 +1,112 @@
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:       <http://www.w3.org/2004/02/skos/core#> .
+@prefix ns:         <https://ontology.bitwrap.io/ns#> .
+@prefix genre:      <https://ontology.bitwrap.io/genre/> .
+@prefix instrument: <https://ontology.bitwrap.io/instrument/> .
+@prefix section:    <https://ontology.bitwrap.io/section/> .
+
+# Conventions module: what a genre usually is, beyond the generator's defaults. Hand-authored here (CC0), from
+# general musical practice; no outside source. BeatScript reads it to warn about style (a tempo outside the range,
+# a kit or voice the genre does not use) and to build a starting program for a genre. Advice, never rules: music
+# outside these is still music.
+#
+# - a tempo range per genre (ns:minBpm, ns:maxBpm), which always contains the genre's ns:bpm;
+# - the usual instrument per role for the genres the generator gives none (ns:typicalMelody, ns:typicalArp,
+#   ns:typicalBass, ns:typicalKit, all ns:typicalInstrument);
+# - the BeatScript voice that plays an instrument whose own name is not one (ns:beatscriptVoice);
+# - how many bars a song section usually runs (ns:bars).
+
+# --- properties ------------------------------------------------------------
+
+ns:minBpm a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:Genre ; rdfs:range xsd:integer ;
+    rdfs:label "slowest usual tempo"@en ;
+    rdfs:comment "The slowest tempo, in beats per minute, the genre is usually played at. A convention, not a rule."@en ;
+    ns:status "in-development" .
+ns:maxBpm a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:Genre ; rdfs:range xsd:integer ;
+    rdfs:label "fastest usual tempo"@en ;
+    rdfs:comment "The fastest tempo, in beats per minute, the genre is usually played at. A convention, not a rule."@en ;
+    ns:status "in-development" .
+ns:typicalInstrument a owl:ObjectProperty ; rdfs:domain ns:Genre ; rdfs:range ns:Instrument ;
+    rdfs:label "typical instrument"@en ;
+    rdfs:comment "An instrument the genre is usually played with, by convention rather than the generator's choice."@en ;
+    ns:status "in-development" .
+ns:typicalMelody a owl:ObjectProperty ; rdfs:subPropertyOf ns:typicalInstrument ; rdfs:label "typical melody instrument"@en ; ns:status "in-development" .
+ns:typicalArp a owl:ObjectProperty ; rdfs:subPropertyOf ns:typicalInstrument ; rdfs:label "typical arp instrument"@en ; ns:status "in-development" .
+ns:typicalBass a owl:ObjectProperty ; rdfs:subPropertyOf ns:typicalInstrument ; rdfs:label "typical bass instrument"@en ; ns:status "in-development" .
+ns:typicalKit a owl:ObjectProperty ; rdfs:subPropertyOf ns:typicalInstrument ; rdfs:label "typical drum kit"@en ; ns:status "in-development" .
+ns:beatscriptVoice a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:Instrument ; rdfs:range xsd:string ;
+    rdfs:label "BeatScript voice"@en ;
+    rdfs:comment "The BeatScript voice (inst=NAME) that plays this instrument, when the instrument's own name is not one."@en ;
+    ns:status "in-development" .
+ns:bars a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:SongSection ; rdfs:range xsd:integer ;
+    rdfs:label "usual length"@en ;
+    rdfs:comment "How many four-beat bars the section usually runs."@en ;
+    ns:status "in-development" .
+
+# --- tempo ranges ----------------------------------------------------------
+
+genre:ambient   ns:minBpm "60"^^xsd:integer  ; ns:maxBpm "100"^^xsd:integer .
+genre:blues     ns:minBpm "60"^^xsd:integer  ; ns:maxBpm "130"^^xsd:integer .
+genre:bossa     ns:minBpm "70"^^xsd:integer  ; ns:maxBpm "140"^^xsd:integer .
+genre:country   ns:minBpm "80"^^xsd:integer  ; ns:maxBpm "140"^^xsd:integer .
+genre:dnb       ns:minBpm "160"^^xsd:integer ; ns:maxBpm "180"^^xsd:integer .
+genre:dubstep   ns:minBpm "135"^^xsd:integer ; ns:maxBpm "150"^^xsd:integer .
+genre:edm       ns:minBpm "120"^^xsd:integer ; ns:maxBpm "150"^^xsd:integer .
+genre:funk      ns:minBpm "90"^^xsd:integer  ; ns:maxBpm "130"^^xsd:integer .
+genre:garage    ns:minBpm "125"^^xsd:integer ; ns:maxBpm "140"^^xsd:integer .
+genre:house     ns:minBpm "118"^^xsd:integer ; ns:maxBpm "130"^^xsd:integer .
+genre:jazz      ns:minBpm "70"^^xsd:integer  ; ns:maxBpm "220"^^xsd:integer .
+genre:lofi      ns:minBpm "60"^^xsd:integer  ; ns:maxBpm "95"^^xsd:integer .
+genre:metal     ns:minBpm "90"^^xsd:integer  ; ns:maxBpm "220"^^xsd:integer .
+genre:reggae    ns:minBpm "60"^^xsd:integer  ; ns:maxBpm "90"^^xsd:integer .
+genre:speedcore ns:minBpm "200"^^xsd:integer ; ns:maxBpm "300"^^xsd:integer .
+genre:synthwave ns:minBpm "80"^^xsd:integer  ; ns:maxBpm "130"^^xsd:integer .
+genre:techno    ns:minBpm "120"^^xsd:integer ; ns:maxBpm "150"^^xsd:integer .
+genre:trance    ns:minBpm "125"^^xsd:integer ; ns:maxBpm "150"^^xsd:integer .
+genre:trap      ns:minBpm "130"^^xsd:integer ; ns:maxBpm "170"^^xsd:integer .
+
+# --- instruments for the genres the generator gives none -------------------
+
+genre:blues     ns:typicalMelody instrument:electric-guitar ; ns:typicalArp instrument:piano ;            ns:typicalBass instrument:bass ;     ns:typicalKit instrument:drums-cr78 .
+genre:bossa     ns:typicalMelody instrument:flute ;           ns:typicalArp instrument:acoustic-guitar ;  ns:typicalBass instrument:bass ;     ns:typicalKit instrument:drums-cr78 .
+genre:country   ns:typicalMelody instrument:acoustic-guitar ; ns:typicalArp instrument:pluck ;            ns:typicalBass instrument:bass ;     ns:typicalKit instrument:drums .
+genre:funk      ns:typicalMelody instrument:clavinet ;        ns:typicalArp instrument:electric-piano ;   ns:typicalBass instrument:bass ;     ns:typicalKit instrument:drums .
+genre:garage    ns:typicalMelody instrument:electric-piano ;  ns:typicalArp instrument:bright-pluck ;     ns:typicalBass instrument:sub-bass ; ns:typicalKit instrument:drums .
+genre:lofi      ns:typicalMelody instrument:electric-piano ;  ns:typicalArp instrument:vibes ;            ns:typicalBass instrument:sub-bass ; ns:typicalKit instrument:drums-lofi .
+genre:metal     ns:typicalMelody instrument:distorted-guitar ; ns:typicalArp instrument:scream-lead ;     ns:typicalBass instrument:bass ;     ns:typicalKit instrument:drums-v8 .
+genre:reggae    ns:typicalMelody instrument:organ ;           ns:typicalArp instrument:electric-guitar ;  ns:typicalBass instrument:sub-bass ; ns:typicalKit instrument:drums .
+genre:synthwave ns:typicalMelody instrument:pwm-lead ;        ns:typicalArp instrument:bright-pluck ;     ns:typicalBass instrument:bass ;     ns:typicalKit instrument:drums .
+genre:trance    ns:typicalMelody instrument:supersaw ;        ns:typicalArp instrument:bright-pluck ;     ns:typicalBass instrument:sub-bass ; ns:typicalKit instrument:drums .
+genre:trap      ns:typicalMelody instrument:fm-bell ;         ns:typicalArp instrument:pluck ;            ns:typicalBass instrument:sub-bass ; ns:typicalKit instrument:drums-808 .
+
+# The instruments above that the generator does not name. Each name is also a BeatScript voice or kit.
+instrument:electric-guitar a ns:Instrument ; rdfs:label "electric-guitar"@en ; skos:definition "A clean electric guitar."@en .
+instrument:acoustic-guitar a ns:Instrument ; rdfs:label "acoustic-guitar"@en ; skos:definition "A steel- or nylon-string acoustic guitar."@en .
+instrument:distorted-guitar a ns:Instrument ; rdfs:label "distorted-guitar"@en ; skos:definition "An electric guitar through heavy distortion."@en .
+instrument:piano a ns:Instrument ; rdfs:label "piano"@en ; skos:definition "An acoustic piano."@en .
+instrument:organ a ns:Instrument ; rdfs:label "organ"@en ; skos:definition "An electric organ."@en .
+instrument:clavinet a ns:Instrument ; rdfs:label "clavinet"@en ; skos:definition "A clavinet: a bright, percussive amplified keyboard."@en .
+instrument:flute a ns:Instrument ; rdfs:label "flute"@en ; skos:definition "A concert flute."@en .
+instrument:pwm-lead a ns:Instrument ; rdfs:label "pwm-lead"@en ; skos:definition "A lead built on a pulse wave whose width is modulated."@en .
+instrument:drums-lofi a ns:Instrument ; rdfs:label "drums-lofi"@en ; skos:definition "A dusty, low-fidelity drum kit."@en .
+instrument:drums-808 a ns:Instrument ; rdfs:label "drums-808"@en ; skos:definition "A drum kit styled on the TR-808 rhythm machine."@en .
+
+# --- BeatScript voices for instruments named otherwise ---------------------
+
+instrument:supersaw ns:beatscriptVoice "trance-lead" .
+
+# --- usual section lengths -------------------------------------------------
+
+section:intro      ns:bars "8"^^xsd:integer .
+section:buildup    ns:bars "8"^^xsd:integer .
+section:drop       ns:bars "16"^^xsd:integer .
+section:breakdown  ns:bars "8"^^xsd:integer .
+section:verse      ns:bars "16"^^xsd:integer .
+section:pre-chorus ns:bars "8"^^xsd:integer .
+section:chorus     ns:bars "16"^^xsd:integer .
+section:bridge     ns:bars "8"^^xsd:integer .
+section:solo       ns:bars "16"^^xsd:integer .
+section:outro      ns:bars "8"^^xsd:integer .

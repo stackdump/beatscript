@@ -1,0 +1,11 @@
+# a song that loops, with a before-line.
+tempo 90
+section one 4 bars {
+  deck A: kick x ~ x ~
+  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars
+}
+section two 4 bars {
+  deck A: kick x x x x | bass c2 ~ c2 ~
+}
+arrange one two
+loop

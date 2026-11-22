@@ -1,0 +1,12 @@
+# follow: a filter and a reverb under your hands. `master: filter lp knob(1)` is the whole of "knob 1 opens the filter": a plain value that
+# names an input and has no time word is followed on every bar, and an input written alone as a cutoff covers the filter's range (60 Hz at 0,
+# 20 kHz at 1, on the filter's own curve). A knob nothing has moved rests at 1/2, so the filter starts in the middle, not shut. A line that
+# repeats inside the bar (`every 1/16 bar`) reads its input when it is due, so a turn is heard within a tenth of a bar. (An original example, CC0-1.0.)
+tempo 124
+key am
+
+deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | snare ~ ~ ~ ~ x ~ ~ ~ | hihat x*8 vel=60..90
+deck B: bass a1 ~ a1 ~ | harmony chord(am7)
+
+master: filter lp knob(1)
+every 1/16 bar: master: reverb knob(2) when held(key)

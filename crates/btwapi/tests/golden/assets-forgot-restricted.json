@@ -1,0 +1,94 @@
+{
+  "check": {
+    "ok": false,
+    "errors": 1,
+    "warnings": 0,
+    "diagnostics": [
+      {
+        "severity": "error",
+        "line": 3,
+        "col": 1,
+        "end_col": 38,
+        "start": 88,
+        "end": 125,
+        "start16": 88,
+        "end16": 125,
+        "message": "`harp` (a local sample, ~/samples/harp.wav) is restricted: the program must declare `use restricted` (or `#! visibility: private`) and stays private",
+        "expected": [],
+        "found": "",
+        "help": "add `use restricted` at the top; or give the sample a license (`license cc0`, `cc-by`, `all-rights-reserved`) if you may",
+        "render": "error: `harp` (a local sample, ~/samples/harp.wav) is restricted: the program must declare `use restricted` (or `#! visibility: private`) and stays private\n --> 3:1\n  |\n3 | sample harp from \"~/samples/harp.wav\"\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: add `use restricted` at the top; or give the sample a license (`license cc0`, `cc-by`, `all-rights-reserved`) if you may"
+      }
+    ],
+    "cid": null,
+    "canonical": null,
+    "nets": {},
+    "song_nets": null,
+    "tempo": null,
+    "key": null,
+    "swing": null,
+    "arranged": false,
+    "song_bars": null,
+    "ends": false,
+    "end_bar": null,
+    "loops": false,
+    "sections": [],
+    "decks": [],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": true,
+    "restricted": true,
+    "seconds": null
+  },
+  "fmt": {
+    "ok": false,
+    "canonical": null,
+    "cid": null,
+    "comments": [],
+    "diagnostics": [
+      {
+        "severity": "error",
+        "line": 3,
+        "col": 1,
+        "end_col": 38,
+        "start": 88,
+        "end": 125,
+        "start16": 88,
+        "end16": 125,
+        "message": "`harp` (a local sample, ~/samples/harp.wav) is restricted: the program must declare `use restricted` (or `#! visibility: private`) and stays private",
+        "expected": [],
+        "found": "",
+        "help": "add `use restricted` at the top; or give the sample a license (`license cc0`, `cc-by`, `all-rights-reserved`) if you may",
+        "render": "error: `harp` (a local sample, ~/samples/harp.wav) is restricted: the program must declare `use restricted` (or `#! visibility: private`) and stays private\n --> 3:1\n  |\n3 | sample harp from \"~/samples/harp.wav\"\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: add `use restricted` at the top; or give the sample a license (`license cc0`, `cc-by`, `all-rights-reserved`) if you may"
+      }
+    ]
+  },
+  "share": {
+    "ok": false,
+    "error": "the program has errors: `check` says where",
+    "url": null,
+    "social_url": null,
+    "beats_url": null,
+    "cid": null,
+    "chars": null,
+    "canonical": null,
+    "warnings": [],
+    "diagnostics": [
+      {
+        "severity": "error",
+        "line": 3,
+        "col": 1,
+        "end_col": 38,
+        "start": 88,
+        "end": 125,
+        "start16": 88,
+        "end16": 125,
+        "message": "`harp` (a local sample, ~/samples/harp.wav) is restricted: the program must declare `use restricted` (or `#! visibility: private`) and stays private",
+        "expected": [],
+        "found": "",
+        "help": "add `use restricted` at the top; or give the sample a license (`license cc0`, `cc-by`, `all-rights-reserved`) if you may",
+        "render": "error: `harp` (a local sample, ~/samples/harp.wav) is restricted: the program must declare `use restricted` (or `#! visibility: private`) and stays private\n --> 3:1\n  |\n3 | sample harp from \"~/samples/harp.wav\"\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: add `use restricted` at the top; or give the sample a license (`license cc0`, `cc-by`, `all-rights-reserved`) if you may"
+      }
+    ]
+  }
+}

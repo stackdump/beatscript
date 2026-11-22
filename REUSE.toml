@@ -1,0 +1,55 @@
+# REUSE (https://reuse.software) licensing, path by path. Code is MIT; BeatScript programs and all content are
+# CC0-1.0; the vendored Go fonts are BSD-3-Clause. Later annotations override earlier ones for the paths they name.
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Matt York (stackdump)"
+SPDX-License-Identifier = "MIT"
+
+# Programs: every BeatScript program and live-coding text, wherever it sits.
+[[annotations]]
+path = ["**/*.btw", "**/*.live"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Matt York (stackdump)"
+SPDX-License-Identifier = "CC0-1.0"
+
+# Content and data: docs prose, examples, the lexicon, phrasebooks and themes, the ontology, the grammar,
+# registry snapshots, and test fixtures and goldens (renders and dumps of our own programs and engine).
+[[annotations]]
+path = [
+  "README.md",
+  "docs/**",
+  "examples/**",
+  "site/examples/**",
+  "site/*.md",
+  "site/docs-src/*.md",
+  "site/testdata/**",
+  "crates/*/README.md",
+  "crates/*/*.md",
+  "crates/djengine/data/**",
+  "crates/djhost/data/**",
+  "crates/btwapi/data/**",
+  "crates/djlive/grammar.ebnf",
+  "crates/djlive/templates/**",
+  "crates/btwserve/ontology/**",
+  "crates/btwserve/testdata/**",
+  "crates/btwserve/src/mcp/testdata/**",
+  "crates/btwround/fixtures/**",
+  "crates/*/tests/fixtures/**",
+  "crates/*/tests/corpus/**",
+  "crates/*/tests/goldens/**",
+  "tools/listen/fixtures/**",
+  "tools/listen/goldens/**",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Matt York (stackdump)"
+SPDX-License-Identifier = "CC0-1.0"
+
+# The Go fonts (Bigelow & Holmes, for the Go project), drawn into share cards.
+[[annotations]]
+path = "crates/btwserve/assets/gofont/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2016 Bigelow & Holmes Inc."
+SPDX-License-Identifier = "BSD-3-Clause"

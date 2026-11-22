@@ -1,0 +1,18 @@
+#! name: start from a seed
+#! genre: techno
+# seed.btw: bootstrap from a track of the beats generator, then make it yours (CC0). Original.
+# seed(techno, 42) is the track beats.bitwrap.io makes for techno at seed 42, as BeatScript. The intro is its first four
+# bars as they are; the drop keeps its drums and bass line, puts the bass on another voice and the lead an octave up,
+# and lets the generated chords ride under it. `btwd fmt --expand` writes every reference out, to edit note by note.
+tempo 128
+key c
+
+let lead = seed(techno, 42).melody[17..20]
+
+section intro from seed(techno, 42)[1..4]
+section drop 8 bars {
+  deck A: kick seed(techno, 42)[17..18] | snare seed(techno, 42)[17..18] | hihat seed(techno, 42)[17..20]
+        | bass seed(techno, 42)[17..20] inst=fm-bass
+  deck B: melody octave(lead, 1) inst=sync-lead | harmony seed(techno, 42)[17..20] inst=warm-pad
+}
+arrange intro drop drop

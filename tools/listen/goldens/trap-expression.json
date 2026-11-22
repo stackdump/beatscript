@@ -1,0 +1,111 @@
+{
+ "cid": "z4EBG9jH3mZDLFMgrNAyFRs3LSUjWpaJKMh2ZiJn724F1QsEDNq",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -16.5,
+   "parts": [
+    "kick",
+    "snare",
+    "hihat"
+   ],
+   "peak_db": -6,
+   "rms_db": -17.9,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -15.3,
+   "parts": [
+    "bass"
+   ],
+   "peak_db": -6,
+   "rms_db": -12.8,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 130.3,
+  "bpm_confidence": 0,
+  "bpm_match": "differs",
+  "declared_bpm": 140,
+  "declared_key": "fm",
+  "key": "A major",
+  "key_confidence": 0.181,
+  "key_match": "unsure",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "lufs": -12.8,
+  "peak_db": -0.1,
+  "rms_db": -11.6
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -15.7,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -17.3,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -18.6,
+   "measured": true,
+   "part": "snare",
+   "peak_db": -6,
+   "rms_db": -25.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16.2,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -22.5,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -15.3,
+   "measured": true,
+   "part": "bass",
+   "peak_db": -6,
+   "rms_db": -12.8,
+   "silent": false,
+   "voice": "sub-bass"
+  }
+ ],
+ "sections": [
+  {
+   "bars": 16,
+   "from_bar": 1,
+   "lufs": -12.8,
+   "name": null,
+   "peak_db": -0.1,
+   "rms_db": -11.6
+  }
+ ],
+ "silent": [],
+ "version": "listen/1",
+ "warnings": [],
+ "window": {
+  "bars": 16,
+  "from_bar": 1,
+  "program_bars": 16,
+  "seconds": 27.429,
+  "section": null
+ }
+}

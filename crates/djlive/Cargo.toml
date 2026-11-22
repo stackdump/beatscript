@@ -1,0 +1,12 @@
+[package]
+name = "djlive"
+description = "The live-coding language (docs/LIVECODE.md): a small text language whose pattern lines compile to djrust Petri nets and whose control lines script the mix through the control-language registry. Pure: no I/O, no clock, the same text is the same net."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+djengine.workspace = true
+miniz_oxide = { version = "0.8", default-features = false, features = ["with-alloc"] }

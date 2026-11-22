@@ -1,0 +1,14 @@
+:root{color-scheme:light dark;--fg:#1b1b1f;--bg:#fafafa;--mut:#666;--acc:#5b5bd6;--red:#c0392b}
+@media (prefers-color-scheme:dark){:root{--fg:#e8e8ee;--bg:#141418;--mut:#9a9aa6;--acc:#8b8bf0;--red:#ff7b6b}}
+body{margin:0;font:16px/1.5 system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+main{max-width:34rem;margin:8vh auto;padding:0 1.25rem}
+h1{font-size:1.4rem}
+pre{white-space:pre-wrap;word-break:break-all;padding:.5rem .75rem;border:1px solid var(--mut);border-radius:6px;font-size:.9rem}
+.warn{color:var(--mut);font-size:.9rem}
+.err{color:var(--red)}
+.ok{color:var(--acc)}
+.row{display:flex;gap:.75rem;margin:1rem 0}
+button{font:inherit;padding:.5rem 1.1rem;border-radius:6px;border:1px solid var(--mut);background:transparent;color:inherit;cursor:pointer}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+footer.rights{margin:2rem auto 1.5rem;padding:0 1rem;max-width:72rem;font-size:.85rem;opacity:.8}

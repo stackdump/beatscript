@@ -1,0 +1,26 @@
+# perform: a track you play. knob(3), pad(5), fader(A), held(key) and held(c4) read the controllers while the program runs, at the
+# bar lines, and stand in control values and in a control line's `when` (never in a pattern: a net is compiled once). Everything
+# read is logged into a performance with its own CID, so the same program replays the same moves. (An original example, CC0-1.0.)
+tempo 124
+key am
+
+deck A: kick x ~ x ~ | snare ~ x ~ x | hihat x*8 vel=60..90
+deck B: harmony chord(am7) | bass a1 ~ a1 ~
+
+# a sweep on the third knob: 200 Hz when it is all the way down, 8 kHz when it is all the way up
+every 1 bars: master: filter lp 200 + knob(3) * 7800
+
+# deck B rides deck A's fader the other way, and a ramp that names an input reads it again on every bar line
+every 1 bars: deck B: level 1 - fader(A)
+master: reverb 0.1 -> 0.2 + knob(2) * 0.6 over 4 bars
+
+# a key held is a gate: the delay opens while any key is down, and the line fires only when it is due and the key is down
+every 1 bars: master: delay held(key) * 0.5 when held(key)
+every 2 bars: deck A: low 0 when pad(5)                  # pad 5 kills deck A's low end for the bar it is held on
+at bar 8: master: reverb 0.9 when held(c4) and knob(1) >= 0.5     # middle C and the first knob past halfway
+
+# an lfo's middle and reach are control values too (read again at every bar line: the wave goes on, round the knob), and so is the
+# end of a shaped ramp; a duck or a mix takes a `when` like any control line (it is the mix's own item that is a number set once)
+master: filter hp lfo sine 2 bars center=500 + knob(1) * 400 depth=100 + fader(B) * 100
+master: resonance 0.1 -> knob(2) over 4 bars exp
+every 8 bars: duck B under A.kick 6db when held(key)

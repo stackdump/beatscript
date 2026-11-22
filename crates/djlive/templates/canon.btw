@@ -1,0 +1,60 @@
+# from $REF: a canon at 90 in D, the phrase sung over it (templates $VERSION)
+# phrase: $PHRASE
+# vocal: $VOCAL
+# the theme, from the public-domain theme library: Pachelbel's first violin over his ground, chased by copies of itself
+tempo 90
+key d
+
+# the drums: the drm_* parts are what the arrangement changes; the kick and the shaker stay put
+let kick4 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let drm_rim = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ x ~ ~ x ~
+let shk = $SHAKER
+$THEME_PACHELBEL_GROUND
+$THEME_PACHELBEL_VIOLIN
+# the copies: a bar behind, and a beat behind; they are made of the theme's own bars, so a change to it moves them too
+let follow = <pachelbel_violin_2 pachelbel_violin_1>
+let close = rotate(pachelbel_violin, 4)
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+$VOX_LETS
+
+# lead: the theme alone over the ground
+section lead 8 bars {
+  deck A: kick kick4 kit=drums vel=75..90 | bass pachelbel_ground inst=bass vel=70..85
+  deck B: melody pachelbel_violin inst=flute vel=60..80
+}
+
+# chase: the copy a bar behind, an octave down
+section chase 8 bars {
+  deck A: kick kick4 kit=drums vel=70..84 | hihat drm_hat kit=drums vel=36..54 | bass pachelbel_ground inst=bass vel=60..74
+  deck B: melody pachelbel_violin inst=flute vel=52..70 | arp octave(follow, -1) inst=harpsichord vel=40..56
+}
+
+# round: three voices, the last a beat behind the first
+section round 8 bars {
+  deck A: kick kick4 kit=drums vel=72..86 | hihat drm_hat kit=drums vel=40..58 | snare drm_rim kit=drums-lofi vel=26..44 | bass pachelbel_ground inst=bass vel=60..74
+  deck B: melody pachelbel_violin inst=flute vel=50..68 | arp octave(follow, -1) inst=harpsichord vel=38..55 | harmony close inst=strings vel=32..45
+}
+
+# sung: the phrase over the ground, the copies buried
+section sung $BARS bars {
+  deck A: kick kick4 kit=drums vel=75..90 | hihat$CYCLE shk kit=drums vel=30..45 | bass pachelbel_ground inst=bass vel=65..80 | arp octave(follow, -1) inst=harpsichord vel=25..40
+  deck B: harmony close inst=strings vel=25..40 | melody$CYCLE $VOX inst=kalimba oct=3 vel=24..38
+  deck B: sing $LYRIC on melody voice=robot-choir
+}
+
+# the theme chases itself: whatever is done to it, its copies follow
+arrange {
+  lead
+  chase
+  ~ pachelbel_violin_* rot 2
+  round
+  ~ drm_* grow
+  sung
+  ~ pachelbel_violin_* rev | accent 0.25
+  round
+  @ vox_* xfer shk
+  sung
+  ~ pachelbel_violin_* rev
+  ~ drm_* decay
+} loop 3 then end

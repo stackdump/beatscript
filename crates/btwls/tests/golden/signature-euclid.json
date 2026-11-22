@@ -1,0 +1,14 @@
+{
+  "signatures": [
+    {
+      "label": "e(k, n, [rot])",
+      "documentation": {
+        "kind": "markdown",
+        "value": "Euclidean rhythm: k hits spread over n steps (Bjorklund), rotated by rot. One slot: `kick e(5,8)` is a bar of eight steps. 0 <= k <= n, 1 <= n <= 64."
+      },
+      "parameters": [{"label":[2,3]},{"label":[5,6]},{"label":[8,13]}]
+    }
+  ],
+  "activeSignature": 0,
+  "activeParameter": 1
+}

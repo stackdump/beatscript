@@ -1,0 +1,23 @@
+# render-controls: the control lines an offline render plays (`djctl btw render`, `btw test`). A fade, an lfo and a crossfader
+# move on the mixer are in the render, at the same values the live runtime sends at the same beats; a filter is an insert, which
+# the arrangement format has no op for, so `djctl btw render` says it is not in the render (`not in this render: 1 control line`).
+# (An original example, CC0-1.0.)
+tempo 124
+key am
+
+section intro 8 bars {
+  deck A: kick x ~ x ~ | hihat x*8 vel=50..80
+  deck B: bass a1 ~ a1 ~
+  deck B: level 0 -> 1 over 8 bars exp             # a fade-in of the bass: the render holds the same curve, step for step
+}
+
+section groove 8 bars {
+  deck A: kick x x x x | snare ~ x ~ x | hihat x*8 vel=60..100
+  deck B: bass a1 ~ a1 ~ | melody <a4 c5 e5 c5>
+  master: level lfo sine 1 bar center=0.85 depth=0.1   # a tremolo on the whole mix, to the end of the section
+  at bar 3: crossfader 0.5 -> 0.7 over 2 bars s-curve   # a move of the crossfader
+  at bar 6 for 2 beats: deck A: mute                    # a hold: muted for two beats, unmuted where it ends
+  master: filter lp 400 -> 8k over 4 bars               # an insert: not in the render
+}
+
+arrange intro groove

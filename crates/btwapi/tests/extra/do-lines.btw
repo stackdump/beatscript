@@ -1,0 +1,13 @@
+# do-lines and sugar, checked against the control registry (CC0, written for the btwapi tests).
+tempo 126
+key am
+
+deck A: kick e(5,8) | snare ~ x ~ x | hihat x*8 vel=60..90
+deck B: harmony chord(am7) | arp arp(am7, up, 8)
+
+every 16 bars: freeze phrase bars=2
+at bar 8 for 4 bars: trick on deck=A kind=stutter
+do vocoder set mix=0 -> 1 over 8 bars
+wheel sync deck=A ratio=1/4
+at bar 4: wheel interval beats=1/2 deck=A
+master: reverb 0.2

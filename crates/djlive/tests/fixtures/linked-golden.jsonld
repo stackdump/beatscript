@@ -1,0 +1,89 @@
+{
+  "@context": "https://beatscript.app/context/v1.jsonld",
+  "@id": "https://beats.bitwrap.io/p#z4EBG9j7U52cN8cS48K1rakcutXJ9Yd5qCBLoKi4Px3Yb3k2ZcQ",
+  "@type": "djrust:Program",
+  "author": "did:key:z6MkTest",
+  "cid": "z4EBG9j7U52cN8cS48K1rakcutXJ9Yd5qCBLoKi4Px3Yb3k2ZcQ",
+  "credit": [
+    {
+      "@id": "https://beats.bitwrap.io/p#z4EBG9parentparentparent",
+      "@type": "djrust:Program",
+      "author": "did:key:z6MkParent",
+      "cid": "z4EBG9parentparentparent",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "licenseId": "CC-BY-4.0",
+      "name": "night bus"
+    }
+  ],
+  "euclid": [
+    {
+      "@type": "bw:EuclideanRhythm",
+      "bw:pulses": 3,
+      "bw:rotation": 0,
+      "bw:steps": 8,
+      "name": "house snare",
+      "sameShapeAs": [
+        "https://ontology.bitwrap.io/rhythm/house-snare"
+      ],
+      "uses": 2
+    },
+    {
+      "@type": "bw:EuclideanRhythm",
+      "bw:pulses": 2,
+      "bw:rotation": 4,
+      "bw:steps": 16,
+      "sameShapeAs": [
+        "https://ontology.bitwrap.io/rhythm/blues-snare",
+        "https://ontology.bitwrap.io/rhythm/dubstep-snare",
+        "https://ontology.bitwrap.io/rhythm/edm-snare",
+        "https://ontology.bitwrap.io/rhythm/lofi-snare",
+        "https://ontology.bitwrap.io/rhythm/synthwave-snare",
+        "https://ontology.bitwrap.io/rhythm/techno-snare",
+        "https://ontology.bitwrap.io/rhythm/trance-snare",
+        "https://ontology.bitwrap.io/rhythm/trap-snare"
+      ],
+      "uses": 1
+    },
+    {
+      "@type": "bw:EuclideanRhythm",
+      "bw:pulses": 4,
+      "bw:rotation": 0,
+      "bw:steps": 16,
+      "sameShapeAs": [
+        "https://ontology.bitwrap.io/rhythm/country-kick",
+        "https://ontology.bitwrap.io/rhythm/edm-kick",
+        "https://ontology.bitwrap.io/rhythm/house-kick",
+        "https://ontology.bitwrap.io/rhythm/synthwave-kick",
+        "https://ontology.bitwrap.io/rhythm/techno-kick",
+        "https://ontology.bitwrap.io/rhythm/trance-kick"
+      ],
+      "uses": 1
+    }
+  ],
+  "forkedFrom": "https://beats.bitwrap.io/p#z4EBG9parentparentparent",
+  "genre": "https://ontology.bitwrap.io/genre/techno",
+  "key": "am",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "licenseId": "CC-BY-4.0",
+  "name": "night bus 2",
+  "sections": [
+    {
+      "@type": "djrust:Section",
+      "bars": 8,
+      "name": "intro",
+      "start": 0
+    },
+    {
+      "@type": "djrust:Section",
+      "bars": 16,
+      "name": "drop",
+      "start": 8
+    }
+  ],
+  "tag": [
+    "https://ontology.bitwrap.io/groove/four-on-floor",
+    "https://ontology.bitwrap.io/instrument/acid"
+  ],
+  "tempo": 128,
+  "visibility": "public"
+}

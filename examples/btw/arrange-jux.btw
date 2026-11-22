@@ -1,0 +1,38 @@
+#! btw 1
+#! name: arrange-jux
+#! license: CC0-1.0
+#! visibility: public
+# arrange-jux: a pattern keeps its left copy and plays a mutated copy on the right. Best on headphones.
+# `~ riff jux rev` is Tidal's `jux rev`: the arp stays where it was and a reversed copy plays hard right.
+# What comes before `jux` in a chain works on both copies, what comes after on the right copy only.
+tempo 124
+key am
+let pulse = a2 ~ a2 ~ a2 ~ e2 ~
+let riff = a3 c4 e4 a4 e4 c4 e4 c4
+let hook = a4 ~ ~ c5 ~ e5 ~ ~
+let hats = ~ x ~ x ~ x ~ x
+section intro 4 bars {
+  deck A: kick x ~ x ~ | hihat hats
+  deck B: bass pulse inst=fm-bass
+}
+section groove 8 bars {
+  deck A: kick x ~ x ~ | snare ~ x ~ x | hihat hats
+  deck B: bass pulse inst=fm-bass | arp riff
+}
+section peak 8 bars {
+  deck A: kick x ~ x ~ | snare ~ x ~ x | hihat hats
+  deck B: bass pulse inst=fm-bass | arp riff | melody hook
+}
+section outro 4 bars {
+  deck A: kick x ~ ~ ~
+  deck B: arp riff
+}
+arrange {
+  intro groove
+  ~ riff jux rev
+  groove
+  ~ hook rot 1 | jux rev | up 2
+  peak
+  ~ riff jux rot 3 | thin 0.2
+  peak
+} loop 2 then outro end

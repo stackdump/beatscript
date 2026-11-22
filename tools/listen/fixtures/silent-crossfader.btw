@@ -1,0 +1,13 @@
+#! btw 1
+#! name: silent-crossfader
+#! license: CC0-1.0
+#! visibility: public
+# Listening-test fixture: the crossfader all the way to A shuts deck B (BeatScript Android 0.3.40 started its
+# Player there; deck B's bass and pads played to nobody and nothing said so). listen must flag deck B.
+# expect: silent deck=B reason=crossfader
+# expect: heard deck=A
+tempo 124
+crossfader 0
+deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | snare ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ | hihat ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ vel=60..90
+deck B: bass a2 ~ ~ a2 ~ ~ a2 ~ ~ ~ c3 ~ e2 ~ ~ ~ inst=sub-bass | harmony chord(am) inst=warm-pad
+end at bar 8

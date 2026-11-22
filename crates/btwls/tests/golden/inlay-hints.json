@@ -1,0 +1,65 @@
+[
+  {
+    "position": {"line":18,"character":24},
+    "label": "bar 1 · 0:00",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"8 bars, bars 1–8"}
+  },
+  {
+    "position": {"line":19,"character":22},
+    "label": "4 steps",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"`kick` takes 4 steps a cycle"}
+  },
+  {
+    "position": {"line":19,"character":34},
+    "label": "8 steps",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"`hihat` takes 8 steps a cycle"}
+  },
+  {
+    "position": {"line":20,"character":19},
+    "label": "1 step",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"`bass` takes 1 steps a cycle"}
+  },
+  {
+    "position": {"line":24,"character":20},
+    "label": "bar 9 · 0:15",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"16 bars, bars 9–24"}
+  },
+  {
+    "position": {"line":25,"character":22},
+    "label": "1 step",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"`kick` takes 1 steps a cycle"}
+  },
+  {
+    "position": {"line":25,"character":38},
+    "label": "4 steps",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"`snare` takes 4 steps a cycle"}
+  },
+  {
+    "position": {"line":26,"character":19},
+    "label": "1 step",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"`bass` takes 1 steps a cycle"}
+  },
+  {
+    "position": {"line":27,"character":21},
+    "label": "4 gens",
+    "kind": 1,
+    "paddingLeft": true,
+    "tooltip": {"kind":"plaintext","value":"a generation every 4 bars over the section's 16 bars"}
+  }
+]

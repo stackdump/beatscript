@@ -1,0 +1,82 @@
+# from template(quodlibet, @psalm42_deep_calleth): a quodlibet at 96 in D, the phrase sung over it (templates v1)
+# phrase: @psalm42_deep_calleth, "Deep calleth unto deep at the noise of thy waterspouts" (King James Bible, Psalm 42:7 (first half, cut at the colon), The translators of the King James Version, 1611)
+# vocal: 14 syllables, free, straight feel, stress xx~~~x~~x~~x~x: a vocal line of 4 bars, sung over sections of 8 bars
+# themes, from the public-domain theme library: Pachelbel's ground and first violin, Beethoven's Ode to Joy and his fate motif
+tempo 96
+key d
+
+# the drums: the drm_* parts are what the arrangement changes; the timpani and the shaker stay put
+let timp = x ~ ~ ~ ~ ~ ~ ~ x ~ ~ x ~ ~ ~ ~
+let drm_snr = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let shk = x ~ x x ~ x x ~
+# the themes, each a let a bar and the alternation of them
+let pachelbel_ground_1 = d3 ~ ~ ~ a2 ~ ~ ~ b2 ~ ~ ~ f#2 ~ ~ ~
+let pachelbel_ground_2 = g2 ~ ~ ~ d2 ~ ~ ~ g2 ~ ~ ~ a2 ~ ~ ~
+let pachelbel_ground = <pachelbel_ground_1 pachelbel_ground_2>
+let pachelbel_violin_1 = f#5 ~ ~ ~ e5 ~ ~ ~ d5 ~ ~ ~ c#5 ~ ~ ~
+let pachelbel_violin_2 = b4 ~ ~ ~ a4 ~ ~ ~ b4 ~ ~ ~ c#5 ~ ~ ~
+let pachelbel_violin = <pachelbel_violin_1 pachelbel_violin_2>
+let ode_to_joy_1 = f#4 ~ ~ ~ f#4 ~ ~ ~ g4 ~ ~ ~ a4 ~ ~ ~
+let ode_to_joy_2 = a4 ~ ~ ~ g4 ~ ~ ~ f#4 ~ ~ ~ e4 ~ ~ ~
+let ode_to_joy_3 = d4 ~ ~ ~ d4 ~ ~ ~ e4 ~ ~ ~ f#4 ~ ~ ~
+let ode_to_joy_4 = f#4 ~ ~ ~ ~ ~ e4 ~ e4 ~ ~ ~ ~ ~ ~ ~
+let ode_to_joy = <ode_to_joy_1 ode_to_joy_2 ode_to_joy_3 ode_to_joy_4>
+let beethoven_fate_1 = ~ ~ g4 ~ g4 ~ g4 ~ eb4 ~ ~ ~ ~ ~ ~ ~
+let beethoven_fate_2 = ~ ~ f4 ~ f4 ~ f4 ~ d4 ~ ~ ~ ~ ~ ~ ~
+let beethoven_fate = <beethoven_fate_1 beethoven_fate_2>
+# the fate motif a semitone down, in B minor (D major's relative minor): the third line the others are pulled toward
+let fate_b_1 = transpose(beethoven_fate_1, -1)
+let fate_b_2 = transpose(beethoven_fate_2, -1)
+let fate_b = <fate_b_1 fate_b_2>
+# the ground's chords, one a quarter note
+let strings_1 = [d3, f#3, a3] ~ ~ ~ [a2, c#3, e3] ~ ~ ~ [b2, d3, f#3] ~ ~ ~ [f#2, a2, c#3] ~ ~ ~
+let strings_2 = [g2, b2, d3] ~ ~ ~ [d3, f#3, a3] ~ ~ ~ [g2, b2, d3] ~ ~ ~ [a2, c#3, e3] ~ ~ ~
+let strings = <strings_1 strings_2>
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+let vox_a = 8! ~ 5! 6 4 6 3! 4
+let vox_b = 2 ~ 3! 2 4 ~ 1! 2
+let vox_c = 1! ~ ~ ~ ~ ~ ~ ~
+
+# canon: the violin over the ground
+section canon 8 bars {
+  deck A: kick timp kit=drums vel=80..95 | hihat drm_hat kit=drums vel=35..55 | bass pachelbel_ground inst=bass vel=70..85
+  deck B: harmony strings inst=strings vel=40..55 len=4 | melody pachelbel_violin inst=flute vel=60..80
+}
+
+# ode: Beethoven takes the tune, the violin goes under it
+section ode 8 bars {
+  deck A: kick timp kit=drums vel=85..100 | clap drm_snr kit=drums vel=60..80 | hihat drm_hat kit=drums vel=45..65 | bass pachelbel_ground inst=bass vel=70..85
+  deck B: harmony strings inst=strings vel=40..55 len=4 | arp pachelbel_violin inst=harpsichord vel=40..60 | melody ode_to_joy inst=brass vel=65..85
+}
+
+# fate: the third line, the ode under it
+section fate 8 bars {
+  deck A: kick timp kit=drums vel=90..105 | clap drm_snr kit=drums vel=65..85 | hihat drm_hat kit=drums vel=45..70 | bass pachelbel_ground inst=sub-bass vel=70..85
+  deck B: harmony strings inst=strings vel=45..60 len=4 | arp ode_to_joy inst=harpsichord vel=40..55 | melody fate_b inst=trumpet vel=70..90
+}
+
+# voices: the phrase sung over the ground, the violin buried
+section voices 8 bars {
+  deck A: kick timp kit=drums vel=75..90 | hihat shk kit=drums vel=30..45 | bass pachelbel_ground inst=bass vel=65..80 | arp pachelbel_violin inst=flute vel=25..40
+  deck B: harmony strings inst=strings vel=25..40 len=4 | melody <vox_a vox_b vox_c ~> inst=kalimba oct=3 vel=24..38
+  deck B: sing "deep /k aw l ii th - uh n t oo/ deep at the noise of /dh ie - w aw t er s p ow t s/" on melody voice=robot-choir
+}
+
+# the themes take turns and cross-morph toward each other and away, in cycles; ~ persists and compounds pass on pass
+arrange {
+  canon
+  ~ ode_to_joy_* morph pachelbel_violin_1 0.25
+  ode
+  ~ pachelbel_violin_* morph ode_to_joy_1 0.25
+  fate
+  @ pachelbel_violin_* morph fate_b_1 0.3
+  voices
+  ~ ode_to_joy_* morph fate_b_2 0.2
+  ~ drm_* grow
+  canon
+  @ vox_* xfer shk
+  voices
+  ~ pachelbel_violin_* morph ode_to_joy_3 0.2
+  ~ drm_* decay
+} loop 3 then end

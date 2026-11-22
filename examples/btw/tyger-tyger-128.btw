@@ -1,0 +1,70 @@
+#! btw 1
+#! name: tyger-tyger-128
+#! license: CC0-1.0
+# Lyric: William Blake, "The Tyger" (Songs of Experience, 1794). Public domain.
+# Trochaic: the stress falls on the beat, so the words chant with the kick.
+# Known: `check` warns, once per line that sings it, that `burning` is not in the lexicon (sounded out by the rules as /b er n ii ng/).
+# The program is pinned as it is, warnings included: an escape would change its code and so its CID. Linked data:
+# tyger-tyger-128.jsonld (isBasedOn The Tyger). CID z4EBG9jB6T7bKvVFQ6ZW6UPPCYh2RQbAHx86rZ8EKczfdupgqnn (comment lines are not part of it).
+tempo 128
+key em
+
+let kick4 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let drm_clap = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let drm_roll = ~ ~ ~ ~ ~ ~ ~ ~ x ~ x ~ x x x x
+let drm_top = x x x x x x x x x x x x x x x x
+let syn_bass = ~ ~ e2 ~ ~ ~ e2 ~ ~ ~ c2 ~ ~ ~ d2 ~
+let syn_stab = [e4, g4, b4] ~ ~ [e4, g4, b4] ~ ~ [c4, e4, g4] ~ ~ ~ [d4, f#4, a4] ~ [d4, f#4, a4] ~ ~ ~
+let syn_lead = e5 ~ ~ g5 ~ ~ b5 ~ a5 ~ ~ g5 ~ ~ f#5 ~
+let syn_arp = e4 g4 b4 e5 b4 g4 c5 g4 e4 c4 d4 f#4 a4 d5 a4 f#4
+let pads = [e3, g3, b3, d4] ~ ~ ~ ~ ~ ~ ~ [c3, e3, g3, b3] ~ ~ ~ ~ ~ ~ ~
+let vox = e3 d3 ~ ~ e3 d3 ~ ~ g3 e3 ~ ~ b3 ~ ~ ~
+
+section rise 8 bars {
+  deck A: kick kick4 kit=drums-v8 vel=100..115 | hihat drm_hat kit=drums-v8 vel=65..95
+  deck B: bass syn_bass inst=sub-bass decay=180 | harmony pads inst=glass-pad vel=45..60 | melody vox
+  deck B: sing "/t ie g er/ /t ie g er/ burning /b r ie t/" on melody
+}
+section build 4 bars {
+  master: filter lp 2500 -> 14000 over 4 bars
+  deck A: kick kick4 kit=drums-v8 vel=100..115 | snare drm_roll kit=drums-v8 vel=70..120 | hihat drm_top kit=drums-v8 vel=40..80
+  deck B: arp syn_arp inst=bright-pluck vel=70..100 | harmony pads inst=glass-pad vel=50..65
+}
+section drop 8 bars {
+  deck A: kick kick4 kit=drums-v8 vel=110..125 | clap drm_clap kit=drums-v8 vel=105..125 | hihat drm_hat kit=drums-v8 vel=80..115
+  deck B: bass syn_bass inst=fm-bass decay=120 | harmony syn_stab inst=rave-organ vel=95..120 | arp syn_arp inst=bright-pluck vel=65..95 | melody syn_lead inst=sync-lead vel=100..125
+}
+section chant 8 bars {
+  deck A: kick kick4 kit=drums-v8 vel=110..125 | clap drm_clap kit=drums-v8 vel=100..120 | hihat drm_hat kit=drums-v8 vel=75..105
+  deck B: bass syn_bass inst=fm-bass decay=120 | harmony syn_stab inst=rave-organ vel=70..90 | melody vox
+  deck B: sing "/t ie g er/ /t ie g er/ burning /b r ie t/" on melody
+}
+section forest 8 bars {
+  master: reverb 0.25
+  deck A: hihat drm_hat kit=drums-v8 vel=40..60
+  deck B: harmony pads inst=glass-pad vel=45..60 | arp syn_arp inst=music-box vel=50..75 | melody vox
+  deck B: sing "in /dh uh/ /f aw r eh s t s/ of /dh uh/ night" on melody
+}
+arrange {
+  rise build drop
+  ~ syn_arp rot 1 | accent 0.3
+  ~ drm_hat euclid 7
+  chant
+  @ vox xfer kick4
+  chant
+  ~ syn_lead morph syn_arp 0.3
+  drop forest
+  ~ drm_* grow
+  build
+  @ drm_roll ratchet 0.5
+  drop
+  ~ syn_* up 1
+  @ syn_lead mirror | vel 3
+  drop chant
+  ~ syn_arp rot 1 | rev
+  ~ drm_hat swing 0.2 | fill 0.2
+  forest
+  ~ syn_* down 1
+  ~ drm_* decay
+} loop

@@ -1,0 +1,119 @@
+{
+  "about": "project-datum 6679: every shipped feature is reachable and described through MCP. One row per feature: `say` is text its tool's description or input schema must contain (tools/list, one source with the docs), `calls` are real tools/call requests and what their answers must carry. Run by mcp::tools::exposure (cargo test -p btwserve, the real Tools) and by crates/btwserve/deploy/mcp-exposure.py (live, MCP over HTTPS, in every beatscript.app deploy script). expect: [pointer, op, value]: = equal, has present and not null, ~ the value (as JSON text) contains, !~ it does not. save: {name: pointer} keeps a value for ${name} in later args. auth: needs a signed-in caller (and for eval, load and queue a tab); stores: stores a program on the site; live, both run only with a token (and a call whose ${name} was not saved is skipped). Every page in docs/btw/*.md is a row's `docs` or a `not_features` entry with its reason: a new page fails the test until it has one.",
+  "not_features": {
+    "ext-algebra.md": "the language (stack, then, silence): check compiles it; BTW.md and the cheat sheet teach it",
+    "ext-answer.md": "the language (call and response): check compiles it",
+    "ext-arith.md": "the language (arithmetic): check compiles it",
+    "ext-assert.md": "the language (assertions): check compiles it",
+    "ext-chance.md": "the language (seeded chance): check compiles it",
+    "ext-linked.md": "the language (#! genre / #! tags / JSON-LD): check compiles it; the genre-conventions row covers #! genre",
+    "ext-meter.md": "the language (Euclidean rhythms, polymeter): check compiles it",
+    "ext-mix.md": "the language (duck, mix): check compiles it",
+    "ext-perform.md": "the language (the performed tier): check compiles it",
+    "ext-ports.md": "the language (typed ports, wire): check compiles it",
+    "ext-render.md": "the offline render's control lines: render's own description says what it plays",
+    "ext-scale.md": "the language (scale degrees, Roman numerals): check compiles it",
+    "ext-shape.md": "the language (shapes, lfo): check compiles it",
+    "ext-sing.md": "the language (sing): check compiles it; the lexicon and found-phrases rows cover what MCP adds",
+    "ext-sugar.md": "the language (pattern sugar): check compiles it",
+    "ext-template.md": "the language (phrase templates): check and expand compile it",
+    "ext-tempo.md": "the language (tempo curves): check compiles it",
+    "ext-timing.md": "the language (sub-bar timing): check compiles it",
+    "showcase.md": "one example track, not a feature"
+  },
+  "features": [
+    {
+      "id": "doc-comments",
+      "datum": 6662,
+      "docs": [],
+      "say": [["check", "doc comment"], ["check", "sections[].doc"]],
+      "calls": [
+        {
+          "tool": "check",
+          "args": {"text": "tempo 120\n# drop: the kick and the bass\nsection drop 1 bars {\n  deck A: kick x ~ x ~\n}\narrange drop\n"},
+          "expect": [["/ok", "=", true], ["/sections/0/doc", "=", "the kick and the bass"], ["/docs/0/kind", "=", "section"], ["/docs/0/doc", "=", "the kick and the bass"]]
+        }
+      ]
+    },
+    {
+      "id": "lexicon-harvest",
+      "datum": 6665,
+      "docs": ["lexicon-harvest.md", "phonemes.md"],
+      "say": [
+        ["check", "lexicon"], ["eval", "lexicon"], ["load", "lexicon"], ["listen", "lexicon"], ["render", "lexicon"],
+        ["share", "lexicon"], ["queue", "lexicon"], ["genre_template", "lexicon"], ["generate", "lexicon"],
+        ["list_examples", "lexicon"]
+      ],
+      "calls": [
+        {
+          "tool": "check",
+          "args": {"text": "tempo 120\nkey am\ndeck B: melody c4 e4 g4 e4 | harmony chord(am)\ndeck B: sing \"jingle=/j ii ng g uh l/ bells\" on melody\n"},
+          "expect": [["/ok", "=", true], ["/lexicon/harvested", "has"], ["/lexicon/new", "has"], ["/diagnostics", "!~", "jingle"]]
+        },
+        {"tool": "listen", "args": {"text": "tempo 120\ndeck A: kick x ~ x ~\n", "bars": 1}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "render", "stores": true, "args": {"text": "tempo 120\n#! name: exposure check\ndeck A: kick x ~ x ~ | hihat x*8\n"}, "save": {"rendered": "/cid"}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "share", "args": {"text": "tempo 120\ndeck A: kick x ~ x ~\n"}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "genre_template", "args": {"genre": "techno"}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "generate", "stores": true, "args": {"genre": "techno", "seed": 3}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "eval", "auth": true, "args": {"text": "tempo 120\ndeck A: kick x ~ x ~\n"}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "load", "auth": true, "args": {"cid": "${rendered}"}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "queue", "auth": true, "args": {"action": "add", "items": [{"cid": "${rendered}"}]}, "expect": [["/lexicon/harvested", "has"]]},
+        {"tool": "list_examples", "args": {"lexicon": true}, "expect": [["/lexicon/words", "has"]]}
+      ]
+    },
+    {
+      "id": "embed",
+      "datum": 6664,
+      "docs": ["embed.md"],
+      "say": [["share", "embed_url"], ["share", "/embed.js"], ["share", "/oembed"], ["share", "/docs/embed"]],
+      "calls": [
+        {
+          "tool": "share",
+          "auth": true,
+          "args": {"text": "tempo 120\n#! name: exposure check\ndeck A: kick x ~ x ~ | hihat x*8\n"},
+          "save": {"cid": "/cid"},
+          "expect": [["/stored", "=", true], ["/embed_url", "~", "/embed/${cid}"]]
+        }
+      ]
+    },
+    {
+      "id": "genre-conventions",
+      "datum": 6672,
+      "docs": [],
+      "say": [["check", "style {genre, label, warnings"], ["genre_template", "drum kit"]],
+      "calls": [
+        {
+          "tool": "check",
+          "args": {"genre": "trap", "text": "tempo 140\nkey em\ndeck A: kick x ~ ~ ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ ~ kit=drums-808 | snare ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ kit=drums-808 | hihat x*16 kit=drums-808\n"},
+          "expect": [["/ok", "=", true], ["/style/genre", "=", "https://ontology.bitwrap.io/genre/trap"], ["/style/warnings", "=", []]]
+        },
+        {
+          "tool": "check",
+          "args": {"genre": "trap", "text": "tempo 140\ndeck A: kick x ~ x ~ kit=drums-cr78\n"},
+          "expect": [["/style/warnings/0/code", "=", "kit"], ["/style/warnings/0/message", "~", "drums-808"]]
+        },
+        {"tool": "genre_template", "args": {"genre": "trap"}, "expect": [["/text", "~", "kit=drums-808"], ["/genre/kit", "~", "drums-808"]]}
+      ]
+    },
+    {
+      "id": "found-phrases",
+      "datum": 6644,
+      "docs": ["found-phrases.md"],
+      "say": [["list_examples", "phrasebook"], ["genre_template", "phrase"]],
+      "calls": [
+        {"tool": "list_examples", "args": {"meter": "trochaic"}, "expect": [["/phrasebook", "~", "tyger_burning_bright"]]},
+        {"tool": "genre_template", "args": {"genre": "techno", "phrase": "tyger_burning_bright"}, "expect": [["/text", "~", "sing @tyger_burning_bright on melody"]]}
+      ]
+    },
+    {
+      "id": "forms",
+      "datum": 6653,
+      "docs": ["forms.md"],
+      "say": [["genre_template", "docs/forms.md"], ["list_examples", "themes"]],
+      "calls": [
+        {"tool": "list_examples", "args": {"composer": "bach"}, "expect": [["/themes", "~", "bach_prelude_c"]]},
+        {"tool": "genre_template", "args": {"genre": "house", "form": "rondo"}, "expect": [["/text", "~", "template(rondo,"]]}
+      ]
+    }
+  ]
+}

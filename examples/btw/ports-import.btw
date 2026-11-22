@@ -1,0 +1,25 @@
+#! skip-test: imports the saved snippet "harmony" (its text is below, in the comment); tested in crates/djlive/tests/ext_ports.rs with a fake snippet store
+# Ports across an import (F11). A saved snippet keeps its defs WITH their ports, and the program that
+# imports it wires them to its own: `import "harmony"` brings harmony_changes (out: chords) and
+# harmony_key (out: key), and the canonical text holds the snippet's CID, so the composition is of
+# exact modules. The snippet, as it was saved:
+#
+#   def harmony_changes() out: chords {
+#     emit <dm7 g7 cmaj7 fmaj7>
+#   }
+#   def harmony_key() out: key {
+#     emit am
+#   }
+#
+import "harmony"
+tempo 118
+
+def walker(oct) in: chords, key out: bass {
+  deck B: harmony $chords | melody markov($key, 0.45) oct=$oct
+  emit [a2 ~ a2 ~ e2 ~ g2 ~]
+}
+
+wire harmony_changes.out -> walker.chords
+wire harmony_key.out -> walker.key
+
+walker(4)

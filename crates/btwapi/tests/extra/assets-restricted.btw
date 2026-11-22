@@ -1,0 +1,5 @@
+# a private program: it says so and uses a restricted sample (the default license of a local file).
+use restricted
+tempo 110
+sample harp from "~/samples/harp.wav" else bright-pluck
+deck B: melody <c4 e4 g4 e4> inst=harp

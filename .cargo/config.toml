@@ -1,0 +1,7 @@
+# djrust build-time settings (stackdump/djrust README, "Build-time settings"). The on-disk format IDs keep the
+# `dj-vevr-se/...` namespace the booth app has always written, so existing files read the same; published sessions
+# keep pointing at the CDN they are mirrored to today. (DJRUST_PD705_HOST, the booth's kit-install ssh target, is
+# left at djrust's default: nothing here installs a PD-705 kit.)
+[env]
+DJRUST_FORMAT_NS = "dj-vevr-se"
+DJRUST_PUBLISH_BASE = "https://cdn.stackdump.com/ipfs/"

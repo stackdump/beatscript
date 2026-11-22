@@ -1,0 +1,26 @@
+# multi-arrange: three named arrangements. `open` plays once and goes to `set`, which loops its drop twice and falls
+# through to `close`.
+tempo 124
+key am
+
+let kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let riff = a2 ~ a2 a2 ~ c3 ~ a2 e2 ~ e2 g2 ~ e2 ~ e2
+
+section intro 2 bars {
+  deck A: kick kk
+}
+section build 2 bars {
+  deck A: kick kk | hihat hh
+}
+section drop 4 bars {
+  deck A: kick kk | hihat hh | bass riff inst=sub-bass
+}
+section outro 2 bars {
+  deck A: kick kk
+}
+
+arrange open: intro build then set
+arrange set: drop loop 2
+arrange close: outro end
+start open

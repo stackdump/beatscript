@@ -1,0 +1,19 @@
+/target
+/target-*
+/dist/
+*.wav
+*.sf2
+# the host's data: programs, render cache, cards, tokens, devices, the cap-signing key, the ip salt, logs.
+# It lives on the serving host only and never comes into git (deploy/deploy.sh never copies it).
+/data/
+# built by deploy/deploy.sh from this tree, copied to the host, never committed
+/site/web/wasm/
+/site/player/dist/
+/site/web/docs/BTW.md
+/site/web/docs/cheatsheet.md
+/site/web/docs/arrange.md
+/site/bin/
+/site/dist/
+/site/test/parity/out*/
+node_modules/
+.DS_Store

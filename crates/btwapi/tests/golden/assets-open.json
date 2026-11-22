@@ -1,0 +1,115 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 2,
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 6,
+        "col": 44,
+        "end_col": 48,
+        "start": 433,
+        "end": 437,
+        "start16": 433,
+        "end16": 437,
+        "message": "`thud` is a sample the engine cannot play yet: this part plays `sub-bass`",
+        "expected": [],
+        "found": "",
+        "help": "`else VOICE` on the sample line names the stand-in",
+        "render": "warning: `thud` is a sample the engine cannot play yet: this part plays `sub-bass`\n --> 6:44\n  |\n6 | deck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\n  |                                            ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
+      },
+      {
+        "severity": "warning",
+        "line": 7,
+        "col": 35,
+        "end_col": 39,
+        "start": 472,
+        "end": 476,
+        "start16": 472,
+        "end16": 476,
+        "message": "`harp` is a sample the engine cannot play yet: this part plays `bright-pluck`",
+        "expected": [],
+        "found": "",
+        "help": "`else VOICE` on the sample line names the stand-in",
+        "render": "warning: `harp` is a sample the engine cannot play yet: this part plays `bright-pluck`\n --> 7:35\n  |\n7 | deck B: melody <c4 e4 g4 e4> inst=harp\n  |                                   ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
+      }
+    ],
+    "cid": "z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece",
+    "canonical": "tempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "nets": {
+      "A": "z4EBG9jBFvuoqBSZy9BEo4cUDGwHGbqBcqqrDKFFh9TEWdZuy8Y",
+      "B": "z4EBG9j7nR5NNFtRkspWMGH6kYDUE9ChkoQ4CUumGqaW359Fhhd"
+    },
+    "song_nets": {
+      "A": "z4EBG9jBFvuoqBSZy9BEo4cUDGwHGbqBcqqrDKFFh9TEWdZuy8Y",
+      "B": "z4EBG9j7nR5NNFtRkspWMGH6kYDUE9ChkoQ4CUumGqaW359Fhhd"
+    },
+    "tempo": 110,
+    "key": null,
+    "swing": null,
+    "arranged": false,
+    "song_bars": null,
+    "ends": false,
+    "end_bar": null,
+    "loops": false,
+    "sections": [],
+    "decks": ["A","B"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": true,
+    "restricted": false,
+    "seconds": null
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "cid": "z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece",
+    "comments": [
+      "names two samples with open licenses and an Apple loop; no file is looked up, nothing is private."
+    ],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 6,
+        "col": 44,
+        "end_col": 48,
+        "start": 433,
+        "end": 437,
+        "start16": 433,
+        "end16": 437,
+        "message": "`thud` is a sample the engine cannot play yet: this part plays `sub-bass`",
+        "expected": [],
+        "found": "",
+        "help": "`else VOICE` on the sample line names the stand-in",
+        "render": "warning: `thud` is a sample the engine cannot play yet: this part plays `sub-bass`\n --> 6:44\n  |\n6 | deck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\n  |                                            ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
+      },
+      {
+        "severity": "warning",
+        "line": 7,
+        "col": 35,
+        "end_col": 39,
+        "start": 472,
+        "end": 476,
+        "start16": 472,
+        "end16": 476,
+        "message": "`harp` is a sample the engine cannot play yet: this part plays `bright-pluck`",
+        "expected": [],
+        "found": "",
+        "help": "`else VOICE` on the sample line names the stand-in",
+        "render": "warning: `harp` is a sample the engine cannot play yet: this part plays `bright-pluck`\n --> 7:35\n  |\n7 | deck B: melody <c4 e4 g4 e4> inst=harp\n  |                                   ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
+      }
+    ],
+    "text": "# names two samples with open licenses and an Apple loop; no file is looked up, nothing is private.\ntempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://btw.bitwrap.io/#z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece.nZDbCoMwDIbvfYof7wUVN5hsgx1epI2ditUWa2HC2LOvBwbbrYGc4CdfkkWMWqEo8sSwUUuBjs0aj1mNSE3Hyt2-PjxKyjcbYylkT2IyAkQ5hHQFn_u2WzItLQ1f8NLZ5h9cONvM5bz4BWd8jWhjecaZMYlUSiO9W47bSo6fVymYAYUmSON6jaABlxpD7_IT7-Av-Bmg0tUh9JNZTv6EqL_WGIVUzYojVRAVWh_PUeZfnHwA",
+    "social_url": "https://btw.bitwrap.io/c/z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece.nZDbCoMwDIbvfYof7wUVN5hsgx1epI2ditUWa2HC2LOvBwbbrYGc4CdfkkWMWqEo8sSwUUuBjs0aj1mNSE3Hyt2-PjxKyjcbYylkT2IyAkQ5hHQFn_u2WzItLQ1f8NLZ5h9cONvM5bz4BWd8jWhjecaZMYlUSiO9W47bSo6fVymYAYUmSON6jaABlxpD7_IT7-Av-Bmg0tUh9JNZTv6EqL_WGIVUzYojVRAVWh_PUeZfnHwA",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece.nZDbCoMwDIbvfYof7wUVN5hsgx1epI2ditUWa2HC2LOvBwbbrYGc4CdfkkWMWqEo8sSwUUuBjs0aj1mNSE3Hyt2-PjxKyjcbYylkT2IyAkQ5hHQFn_u2WzItLQ1f8NLZ5h9cONvM5bz4BWd8jWhjecaZMYlUSiO9W47bSo6fVymYAYUmSON6jaABlxpD7_IT7-Av-Bmg0tUh9JNZTv6EqL_WGIVUzYojVRAVWh_PUeZfnHwA",
+    "cid": "z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece",
+    "chars": 316,
+    "canonical": "tempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "warnings": ["the program names samples or loops: a link carries only their hashes, not the sounds"]
+  }
+}

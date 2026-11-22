@@ -1,0 +1,30 @@
+# launch: three scenes on three pads. A scene is a section (it loops until the next launch) or a named arrangement; `launch NAME on pad(N)`
+# says which pad brings which scene in, and the song as written is what you hear until a hand comes to the pads. A hit lands on the next
+# phrase line (8 bars from the song's first bar), or the line it says: `next phrase 16`, `next bar`. A host with no controller (the page, a
+# phone, the offline render) plays the written song: a verse, the drop, the breakdown, the verse again, round and round. (An original example, CC0-1.0.)
+tempo 126
+key am
+let hat = x*8
+let lead = <a4 c5 e5 g5>*4
+
+deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | hihat hat
+deck B: bass a1 ~ a1 ~ | harmony chord(am7)
+
+section verse 8 bars {
+  deck A: snare ~ ~ ~ ~ x ~ ~ ~
+}
+section drop 8 bars {
+  deck A: snare ~ ~ ~ ~ x ~ ~ ~ | clap ~ ~ x ~
+  deck B: melody lead
+}
+section breakdown 8 bars {
+  deck A: hihat hat
+  master: filter lp 400 -> 6000 over 8 bars
+}
+
+arrange verse drop breakdown verse
+loop
+
+launch verse on pad(1)
+launch drop on pad(2)
+launch breakdown on pad(3) next phrase 16

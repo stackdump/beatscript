@@ -1,0 +1,432 @@
+# BeatScript lexicon v1: English words in BeatScript phoneme set v1 (docs/btw/phonemes.md).
+# Written by hand for this repository from how the words are said; not copied or derived from any
+# dictionary file. Dedicated to the public domain: CC0 1.0 Universal
+# (https://creativecommons.org/publicdomain/zero/1.0/).
+# One word per line, lowercase (apostrophes allowed: i'm, don't), a tab or spaces, then its phonemes.
+# Sorted by word, one entry per word. Proposals: tools/lexicon/propose.py (a person reviews every line).
+version 1
+a	uh
+aah	aa
+about	uh b ow t
+above	uh b uh v
+acid	ae s ii d
+after	ae f t er
+again	uh g eh n
+against	uh g eh n s t
+ago	uh g oh
+ah	aa
+alive	uh l ie v
+all	aw l
+alone	uh l oh n
+always	aw l w ay z
+am	ae m
+an	ae n
+and	ae n d
+angel	ay n j uh l
+angels	ay n j uh l z
+another	uh n uh dh er
+any	eh n ee
+are	aa r
+around	uh r ow n d
+as	ae z
+at	ae t
+away	uh w ay
+babe	b ay b
+baby	b ay b ee
+back	b ae k
+bass	b ay s
+bassline	b ay s l ie n
+be	b ee
+beat	b ee t
+beats	b ee t s
+beautiful	b y oo t ii f uh l
+beauty	b y oo t ee
+because	b ii k uh z
+been	b ii n
+before	b ii f aw r
+being	b ee ii ng
+believe	b ii l ee v
+believing	b ii l ee v ii ng
+bells	b eh l z
+blood	b l uh d
+body	b aa d ee
+bounce	b ow n s
+break	b r ay k
+bright	b r ie t
+bring	b r ii ng
+build	b ii l d
+burn	b er n
+busy	b ii z ee
+but	b uh t
+buy	b ie
+by	b ie
+call	k aw l
+can	k ae n
+can't	k ae n t
+carry	k eh r ee
+child	ch ie l d
+children	ch ii l d r uh n
+choir	k w ie er
+city	s ii t ee
+club	k l uh b
+color	k uh l er
+come	k uh m
+could	k uu d
+crazy	k r ay z ee
+cries	k r ie z
+crowd	k r ow d
+cry	k r ie
+crying	k r ie ii ng
+da	d aa
+dance	d ae n s
+dancing	d ae n s ii ng
+darling	d aa r l ii ng
+day	d ay
+deep	d ee p
+deeper	d ee p er
+did	d ii d
+dismay	d ii s m ay
+dj	d ee j ay
+do	d oo
+does	d uh z
+don't	d oh n t
+done	d uh n
+door	d aw r
+down	d ow n
+drop	d r aa p
+dropped	d r aa p t
+drum	d r uh m
+drums	d r uh m z
+eight	ay t
+electric	ii l eh k t r ii k
+energy	eh n er j ee
+enough	ii n uh f
+even	ee v uh n
+ever	eh v er
+every	eh v r ee
+everybody	eh v r ee b aa d ee
+everyone	eh v r ee w uh n
+everything	eh v r ee th ii ng
+eye	ie
+eyes	ie z
+fall	f aw l
+falling	f aw l ii ng
+father	f aa dh er
+feel	f ee l
+fire	f ie er
+flame	f l ay m
+float	f l oh t
+floor	f l aw r
+fly	f l ie
+flying	f l ie ii ng
+for	f aw r
+forever	f er eh v er
+four	f aw r
+free	f r ee
+freedom	f r ee d uh m
+friend	f r eh n d
+friends	f r eh n d z
+from	f r uh m
+fun	f uh n
+future	f y oo ch er
+gentlemen	j eh n t uh l m uh n
+get	g eh t
+give	g ii v
+glow	g l oh
+glowing	g l oh ii ng
+go	g oh
+god	g aa d
+goes	g oh z
+going	g oh ii ng
+gold	g oh l d
+golden	g oh l d uh n
+gone	g aw n
+gonna	g uh n uh
+good	g uu d
+got	g aa t
+great	g r ay t
+groove	g r oo v
+guitar	g ii t aa r
+ha	h aa
+had	h ae d
+half	h ae f
+hands	h ae n d z
+harbor	h aa r b er
+hardcore	h aa r d k aw r
+has	h ae z
+have	h ae v
+he	h ee
+hear	h ii r
+heard	h er d
+heart	h aa r t
+heaven	h eh v uh n
+height	h ie t
+hello	h eh l oh
+her	h er
+here	h ii r
+hey	h ay
+high	h ie
+higher	h ie er
+him	h ii m
+his	h ii z
+hold	h oh l d
+home	h oh m
+honest	aa n ii s t
+honey	h uh n ee
+horse	h aw r s
+hour	ow er
+house	h ow s
+how	h ow
+huh	h uh
+hush	h uh sh
+i	ie
+i'm	ie m
+if	ii f
+in	ii n
+inside	ii n s ie d
+into	ii n t oo
+is	ii z
+island	ie l uh n d
+it	ii t
+it's	ii t s
+jingle	j ii ng g uh l
+joy	j oy
+jump	j uh m p
+jungle	j uh ng g uh l
+just	j uh s t
+kick	k ii k
+knew	n oo
+know	n oh
+la	l aa
+lady	l ay d ee
+lamps	l ae m p s
+lantern	l ae n t er n
+lanterns	l ae n t er n z
+last	l ae s t
+laugh	l ae f
+let	l eh t
+let's	l eh t s
+life	l ie f
+light	l ie t
+lightning	l ie t n ii ng
+lights	l ie t s
+like	l ie k
+listen	l ii s uh n
+lonely	l oh n l ee
+long	l aw ng
+look	l uu k
+lose	l oo z
+loud	l ow d
+louder	l ow d er
+love	l uh v
+loved	l uh v d
+lovely	l uh v l ee
+lover	l uh v er
+lovers	l uh v er z
+low	l oh
+machine	m uh sh ee n
+made	m ay d
+make	m ay k
+mama	m aa m uh
+many	m eh n ee
+me	m ee
+merry	m eh r ee
+mic	m ie k
+midnight	m ii d n ie t
+mix	m ii k s
+money	m uh n ee
+more	m aw r
+morning	m aw r n ii ng
+most	m oh s t
+mother	m uh dh er
+mountain	m ow n t uh n
+move	m oo v
+moved	m oo v d
+moving	m oo v ii ng
+music	m y oo z ii k
+my	m ie
+na	n aa
+nah	n aa
+never	n eh v er
+new	n oo
+night	n ie t
+nights	n ie t s
+no	n oh
+nobody	n oh b aa d ee
+noise	n oy z
+nope	n oh p
+not	n aa t
+nothing	n uh th ii ng
+nothingness	n uh th ii ng n eh s
+now	n ow
+ocean	oh sh uh n
+of	uh v
+off	aw f
+often	aw f uh n
+oh	oh
+okay	oh k ay
+on	aa n
+once	w uh n s
+one	w uh n
+only	oh n l ee
+ooh	oo
+open	oh p uh n
+or	aw r
+other	uh dh er
+our	ow er
+out	ow t
+outside	ow t s ie d
+over	oh v er
+party	p aa r t ee
+pass	p ae s
+people	p ee p uh l
+play	p l ay
+please	p l ee z
+put	p uu t
+rave	r ay v
+ready	r eh d ee
+remember	r ii m eh m b er
+rest	r eh s t
+rhythm	r ii dh uh m
+ride	r ie d
+right	r ie t
+rise	r ie z
+river	r ii v er
+road	r oh d
+robot	r oh b aa t
+robots	r oh b aa t s
+round	r ow n d
+said	s eh d
+say	s ay
+says	s eh z
+scream	s k r ee m
+see	s ee
+shadow	sh ae d oh
+shadows	sh ae d oh z
+shake	sh ay k
+she	sh ee
+shining	sh ie n ii ng
+should	sh uu d
+shout	sh ow t
+silver	s ii l v er
+sing	s ii ng
+singing	s ii ng ii ng
+sings	s ii ng z
+sky	s k ie
+sleep	s l ee p
+sleigh	s l ay
+slow	s l oh
+slowly	s l oh l ee
+so	s oh
+some	s uh m
+somebody	s uh m b aa d ee
+someone	s uh m w uh n
+something	s uh m th ii ng
+song	s aw ng
+songs	s aw ng z
+soul	s oh l
+sound	s ow n d
+speaker	s p ee k er
+stop	s t aa p
+storm	s t aw r m
+street	s t r ee t
+streets	s t r ee t s
+sugar	sh uu g er
+sunrise	s uh n r ie z
+sunshine	s uh n sh ie n
+sure	sh uu r
+sweet	s w ee t
+synth	s ii n th
+take	t ay k
+talk	t aw k
+tears	t ii r z
+techno	t eh k n oh
+than	dh ae n
+that	dh ae t
+the	dh uh
+their	dh eh r
+them	dh eh m
+then	dh eh n
+there	dh eh r
+these	dh ee z
+they	dh ay
+they're	dh eh r
+thing	th ii ng
+things	th ii ng z
+think	th ii ng k
+this	dh ii s
+those	dh oh z
+though	dh oh
+thought	th aw t
+three	th r ee
+through	th r oo
+thunder	th uh n d er
+time	t ie m
+times	t ie m z
+to	t oo
+today	t uh d ay
+together	t uh g eh dh er
+tomorrow	t uh m aa r oh
+tonight	t uh n ie t
+too	t oo
+touch	t uh ch
+tough	t uh f
+track	t r ae k
+trance	t r ae n s
+true	t r oo
+turn	t er n
+two	t oo
+uh	uh
+um	uh m
+up	uh p
+us	uh s
+very	v eh r ee
+view	v y oo
+voice	v oy s
+walk	w aw k
+walking	w aw k ii ng
+wanna	w aa n uh
+want	w aa n t
+was	w uh z
+water	w aw t er
+way	w ay
+we	w ee
+we're	w ii r
+weight	w ay t
+were	w er
+what	w uh t
+when	w eh n
+where	w eh r
+which	w ii ch
+who	h oo
+whoa	w oh
+whole	h oh l
+whose	h oo z
+why	w ie
+wild	w ie l d
+will	w ii l
+wings	w ii ng z
+with	w ii dh
+without	w ii dh ow t
+woman	w uu m uh n
+women	w ii m uh n
+won't	w oh n t
+wonder	w uh n d er
+wonderful	w uh n d er f uh l
+woo	w oo
+word	w er d
+words	w er d z
+work	w er k
+world	w er l d
+would	w uu d
+wow	w ow
+yay	y ay
+ye	y ee
+yeah	y eh
+yep	y eh p
+yes	y eh s
+yo	y oh
+you	y oo
+you're	y aw r
+young	y uh ng
+your	y aw r

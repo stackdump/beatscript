@@ -1,0 +1,185 @@
+{
+ "cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -15.9,
+   "parts": [
+    "kick",
+    "hihat",
+    "clap",
+    "snare",
+    "bass"
+   ],
+   "peak_db": -5.8,
+   "rms_db": -17.5,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -14.6,
+   "parts": [
+    "arp",
+    "harmony",
+    "melody"
+   ],
+   "peak_db": 1.4,
+   "rms_db": -17.1,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 138,
+  "bpm_confidence": 18.172,
+  "bpm_match": "same",
+  "declared_bpm": 138,
+  "declared_key": "am",
+  "key": "A minor",
+  "key_confidence": 0.371,
+  "key_match": "same",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 11.293,
+  "clipped_samples": 498,
+  "lufs": -12.1,
+  "peak_db": 5.5,
+  "rms_db": -14.1
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -15.7,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -5.7,
+   "rms_db": -16.5,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -22.5,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -28.9,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -19.5,
+   "measured": true,
+   "part": "clap",
+   "peak_db": -6,
+   "rms_db": -27.7,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -26.6,
+   "measured": true,
+   "part": "snare",
+   "peak_db": -12.9,
+   "rms_db": -34.1,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16.7,
+   "measured": true,
+   "part": "bass",
+   "peak_db": -6.6,
+   "rms_db": -18.6,
+   "silent": false,
+   "voice": "sub-bass"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -15.8,
+   "measured": true,
+   "part": "arp",
+   "peak_db": -6,
+   "rms_db": -20,
+   "silent": false,
+   "voice": "bright-pluck"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -14.8,
+   "measured": true,
+   "part": "harmony",
+   "peak_db": 1.4,
+   "rms_db": -16.9,
+   "silent": false,
+   "voice": "warm-pad"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -13.8,
+   "measured": true,
+   "part": "melody",
+   "peak_db": -6,
+   "rms_db": -17.3,
+   "silent": false,
+   "voice": "detuned-saw"
+  }
+ ],
+ "sections": [
+  {
+   "bars": 16,
+   "from_bar": 1,
+   "lufs": -11.8,
+   "name": "intro",
+   "peak_db": 0.5,
+   "rms_db": -13.3
+  },
+  {
+   "bars": 16,
+   "from_bar": 17,
+   "lufs": -12.7,
+   "name": "breakdown",
+   "peak_db": -0.1,
+   "rms_db": -16
+  },
+  {
+   "bars": 24,
+   "from_bar": 33,
+   "lufs": -12.1,
+   "name": "drop",
+   "peak_db": 0.2,
+   "rms_db": -14.1
+  },
+  {
+   "bars": 8,
+   "from_bar": 57,
+   "lufs": -11.3,
+   "name": "outro",
+   "peak_db": 5.5,
+   "rms_db": -13.1
+  }
+ ],
+ "silent": [],
+ "version": "listen/1",
+ "warnings": [
+  "the master clips: 498 samples over full scale"
+ ],
+ "window": {
+  "bars": 64,
+  "from_bar": 1,
+  "program_bars": 64,
+  "seconds": 111.304,
+  "section": null
+ }
+}

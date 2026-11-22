@@ -1,0 +1,9 @@
+{
+  "changes": {
+    "file:///test.btw": [
+      {"range":{"start":{"line":24,"character":8},"end":{"line":24,"character":12}},"newText":"peak"},
+      {"range":{"start":{"line":37,"character":13},"end":{"line":37,"character":17}},"newText":"peak"},
+      {"range":{"start":{"line":38,"character":10},"end":{"line":38,"character":14}},"newText":"peak"}
+    ]
+  }
+}

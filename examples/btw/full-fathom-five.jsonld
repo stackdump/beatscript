@@ -1,0 +1,28 @@
+{
+  "@context": "https://schema.org",
+  "@type": "MusicComposition",
+  "@id": "https://beats.bitwrap.io/p#z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1",
+  "identifier": "z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1",
+  "name": "Full fathom five",
+  "description": "The reference program of the passacaglia form: a fixed ground under cumulative variations, singing lines of Ariel's song from The Tempest. check warns that full and five are not in the lexicon; the program is pinned as written.",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "genre": "https://beatscript.app/ontology/concept/form-passacaglia",
+  "isBasedOn": [
+    {
+      "@type": "CreativeWork",
+      "name": "The Tempest, 1.2 (Ariel's song, \"Full fathom five thy father lies\")",
+      "author": {
+        "@type": "Person",
+        "name": "William Shakespeare"
+      },
+      "dateCreated": "1623",
+      "license": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "description": "First printed in the First Folio, 1623; the words as in the Globe edition (1864)."
+    }
+  ],
+  "subjectOf": {
+    "@type": "TechArticle",
+    "name": "Forms: arrange shapes from classical music",
+    "url": "https://beatscript.app/docs/forms"
+  }
+}

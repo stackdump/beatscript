@@ -1,0 +1,23 @@
+{
+  "name": "bitwrap-ontology",
+  "version": "0.2.0",
+  "released": "2026-11-18",
+  "namespace": "https://ontology.bitwrap.io/ns#",
+  "pack_content_sha256": "6555fd2acd31e66535f999879b131e8ffc0096cf5f926c5087ece72e4eabedb5",
+  "pack_tool_version": "2.1.0",
+  "pack_triples": 7605,
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "certificate_scope": "RDFS rules only (rdfs9, rdfs11, scm-*); OWL axioms are not covered",
+  "files": {
+    "cert/asserted.sha256": "7e2ee20739fb578cf7a7f7efe66d175783d1019b2a41b935de2c834d5213146c",
+    "cert/asserted.tsv": "258501efd91a79e7573c3a7d3a58f70ae865e13f12861eedd870feb19d994727",
+    "cert/derivations.tsv": "1411c7a7728f5f7be38d02c008bad2797914f3411b3bfc992e5cf88cef45330f",
+    "cert/scope.tsv": "2464cd751287051b9afdf7bb23ba05e2177452247a6e29fa155092434f487946",
+    "ns.jsonld": "eafdf86eb4a1baecadf2c392f2f0a2e469f9ad80ee72f35e4bd5919e7c11ba53",
+    "ns.nt": "9b724ffdd5150edc11e8cb278d27a40ac27ecfa58b9d94796192d7c66c5ac14c",
+    "ns.rdf": "dd2b4007799db54f7408e092cf01951d330c6a172997566e87506acb51df3560",
+    "ns.ttl": "746d864c51e2db7344311ccc2b1ff2f0014385a67129984930a8c30a0dcd5fe3",
+    "pack.json": "f17597df9b0fd3f236a7fa10ab5cb0682d384daf4280a7de63a0d72899afe72e"
+  }
+}

@@ -1,0 +1,16 @@
+#! skip-test: borrows from a saved program, hand-dubstep-140 v2 (z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi); tested in crates/djlive/tests/stored_ref.rs with that program as the snippet
+#! name: borrow a drop
+# borrow-a-drop.btw: take the drop of a track that is already saved, by its CID, and put your own intro in front of it (CC0). Original.
+# `section hook from z4EBG9j9....drop` is the drop of hand-dubstep-140 v2 (an example that beatscript.app keeps under that CID): its
+# drums, wobble bass, lead and pad, sixteen bars of them, in F minor. The CID is in the canonical text, so the music is that
+# program's for good, and a link to this one carries it. Its filter sweeps and its reverb are control lines: they stay behind,
+# and `check` says so; `btwd expand` writes the drop out here, to edit note by note.
+tempo 140
+key fm
+
+section intro 4 bars {
+  deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ vel=100
+  master: filter lp 300 -> 4000 over 4 bars
+}
+section hook from z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi.drop
+arrange intro hook

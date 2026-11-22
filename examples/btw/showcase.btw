@@ -1,0 +1,253 @@
+#! btw 1
+#! name: lanternfall
+#! license: CC0-1.0
+#! visibility: public
+#! author: Claude Sonnet 5.5
+#! genre: edm
+#! tags: synthwave, synthwave-1, edm-standard-1, four-on-floor, sidechained, warm-pad, sub-bass, pluck, fm-bell, euclidean-rhythm, ghost-note, buildup, drop, breakdown
+# lanternfall: a two minute track in one program (original, CC0-1.0). See docs/btw/showcase.md for which feature is where.
+#
+#   intro 8 . build 8 . drop 16 . breakdown 4 + 4 . second drop 16, a tone higher . outro 8      (64 bars, about two minutes)
+#
+# What the offline render (`djctl btw render`) plays is the notes, the sections, the tempo curve, `duck` and `mix`, so the arc
+# of the track is in the mixes: each section sets its own, and the crescendo of the build and the fade of the outro are
+# stepped mixes (a `repeat` with `$i`). The lines marked (live) are what the render does not play: filters and reverbs, the sung
+# lines, the performed inputs, and the level ramps and lfos (a render that carries those hears them as a fade-in, a swell and a
+# breath; each one starts where the mix of its section already holds the knob, so the two agree).
+let base = 122                       # the tempo the build starts from; every other tempo is written from it
+let drop_len = 16
+let half = drop_len / 2
+
+tempo base - 8
+key am
+
+# ---- the changes, written once: a def with ports, wired below to the pad, the pluck and the bass ------------------
+def changes() out: chords {
+  emit <i VI III VII>                # Am F C G, a bar each
+}
+
+# the pad plays the changes voice-led, and hands the roots on as a bass line
+def bed(oct) in: chords out: bass {
+  deck B: harmony $chords voice-lead inst=warm-pad oct=$oct len=16 vel=55..75
+  emit [$chords]
+}
+
+# the pluck arpeggiates the changes: 4 notes a bar, 8 or 16 (the chord is repeated to give it more steps)
+def sparkle(steps) in: chords {
+  deck B: arp $chords inst=pluck vel=45..70 when $steps == 4
+  deck B: arp [$chords $chords] inst=pluck vel=45..70 when $steps == 8
+  deck B: arp [$chords $chords $chords $chords] inst=pluck vel=45..70 when $steps == 16
+}
+
+def sub_long() in: bass {
+  deck A: bass $in inst=sub-bass oct=1 len=14 vel=80..90
+}
+
+# the offbeat eighths between the kicks
+def sub_pulse() in: bass {
+  deck A: bass [~ $in ~ $in ~ $in ~ $in] inst=sub-bass oct=1 len=2 vel=80..95
+}
+
+# the same, with a double-time pickup now and then (a chance: decided by a hash of the bar, so it is the same every run)
+def sub_roll() in: bass {
+  deck A: bass [~ $in ~ $in ~ $in ~ choose [$in [$in $in]] weights 3 1 seed=5] inst=sub-bass oct=1 len=2 vel=80..95
+}
+
+wire changes.out -> bed.chords
+wire changes.out -> sparkle.chords
+wire bed.out -> sub_long.in
+wire bed.out -> sub_pulse.in
+wire bed.out -> sub_roll.in
+
+# ---- the drums ----------------------------------------------------------------------------------------------------
+let tick = ~ x?0.35 x x?0.35         # a beat of hats: the offbeat sixteenth is sure, the ones round it are ghosts
+let busy = x?0.5 x?0.4 x x?0.4
+let four = e(4,16)                   # four on the floor: the ontology names it
+let backbeat = e(2,16,4)             # the snare on two and four
+let fill = ~ ~ ~ ~ x ~ ~ ~ x x x x x x x x   # a half bar of sixteenths: the fill at the end of every fourth bar
+
+def drumline(n) {
+  deck A: kick e(4,16) vel=100..115
+  deck A: snare <backbeat backbeat backbeat fill> vel=90..105
+  deck A: hihat tick tick tick tick vel=45..80 when $n < 3
+  deck A: hihat busy busy busy busy vel=45..85 when $n >= 3
+  deck A: clap e(3,8) vel=70..90 when $n >= 3
+}
+
+# ---- the hook: degrees of the key, so the second drop plays it a tone up without a note changed -------------------
+let q1 = deg(5 ~ 5 3 ~ 5 6 5)
+let q2 = deg(6 ~ 6 1' ~ 3' 2' 1')
+let q3 = deg(5 ~ 5 3 ~ 5 7 5)
+let q4 = deg(7 ~ 2' 7 ~ 5 7 2')
+let r1 = deg(4 #4 5 3 ~ 5 6 5)       # the answer starts with a chromatic step into the fifth
+let r2 = deg(6 ~ 6 1' ~ 3' 4' 3')
+let r3 = deg(7 ~ 5' 3' ~ 7 5 3)
+let r4 = deg(2' ~ 7 5 ~ 3 5 7)
+
+# two notes a bar, for the lines that are sung
+let s1 = deg(5 ~ ~ ~ 3 ~ ~ ~)
+let s2 = deg(1' ~ ~ ~ 6 ~ ~ ~)
+let s3 = deg(5 ~ ~ ~ 7 ~ ~ ~)
+let s4 = deg(2' ~ ~ ~ 7 ~ ~ ~)
+let t1 = deg(3 ~ ~ ~ 5 ~ ~ ~)
+let t2 = deg(6 ~ ~ ~ 1' ~ ~ ~)
+let t3 = deg(5 ~ ~ ~ 3' ~ ~ ~)
+let t4 = deg(7 ~ ~ ~ 2' ~ ~ ~)
+let end_fall = deg(2' ~ ~ ~ 1, ~ ~ ~)       # the last bell tolls two octaves down, on the tonic
+
+section intro 8 bars {
+  tempo base - 8 -> base over 8 bars s-curve
+  mix { A level 0.45, B level 0.3, master level 0.85 }         # the mix holds where the fade below starts
+  deck B: level 0.3 -> 0.55 over 8 bars s-curve                # (live) the pad fades in
+  deck A: hihat/12 x ~ x x ~ x vel=35..60                      # twelve steps against the bar: it comes round every three bars
+  deck A: kick <~ ~ ~ ~ four four four four> vel=65..85
+  bed(3)
+  sparkle(4)
+  master: filter lp 500 -> 9k over 8 bars exp                  # (live)
+  master: reverb 0.45 -> 0.2 over 8 bars                       # (live)
+}
+
+section build 8 bars {
+  tempo base -> base + 8 over 8 bars exp                       # the accelerando into the drop
+  mix { master level 0.85 }
+  repeat 4 every 2 bars {                                      # a crescendo in four steps: every copy is a mix held for two bars
+    at bar 0 for 2 bars: mix { A level 0.45 + $i * 0.1, B level 0.55 + $i * 0.07 }
+  }
+  deck A: kick e(4,16) vel=90..110 | hihat x*8?0.8 vel=45..85 | snare <~ ~ ~ ~ ~ ~ x*8 x*16> vel=60..110
+  sub_long()
+  bed(3)
+  sparkle(8)
+  deck B: melody <~ ~ ~ ~ q1 q2 q3 q4> inst=pwm-lead vel=70..90   # the hook arrives in the last four bars
+  duck B under A.kick 4db
+  repeat 8 {                                                   # (live) a staircase, not a ramp: a bar at a time
+    at bar $i: master: filter hp 100 + $i * $i * 60
+    at bar $i: master: reverb 0.15 + 0.4 * $i / $n when $i % 2 == 1
+  }
+  before groove 2 beats: master: reverb 0.5 -> 0.9 over 2 beats   # (live)
+  at bar 7 beat 3 for 1 beat: mix { A eq low -24, B eq low -24 }   # the breath: the bass drops out for the last beat
+}
+
+section groove drop_len bars {
+  tempo base + 8
+  mix {
+    A level 0.9
+    B level 0.85
+    B eq low -6                                                # the pad gets out of the sub's way
+    master level 0.85
+  }
+  drumline(2)
+  sub_pulse()
+  duck B under A.kick 6db attack=5ms release=120ms
+  master: filter off                                           # (live) clears the build's high-pass
+  master: reverb 0.15                                          # (live)
+  master: level lfo sine 2 bars center=0.85 depth=0.03         # (live) the master breathes a little, round the mix's 0.85
+  every 2 beats: master: filter lp 14k -> 3k + knob(3) * 6k over 1 beats exp   # (live) a half-bar pulse; the third knob sets how far it shuts
+  master: delay 0.1 + knob(2) * 0.3                            # (live) and the second knob the delay send
+  at bar 15 beat 3 for 1 beat: mix { A eq low -24 }            # drop-out before the breakdown
+}
+
+section hook_a half bars {
+  bed(3)
+  sparkle(8)
+  deck B: melody <q1 q2 q3 q4> inst=pwm-lead vel=75..95
+}
+
+section hook_b half bars {
+  bed(3)
+  sparkle(16)
+  deck B: melody <r1 r2 r3 r4> inst=pwm-lead vel=75..95
+}
+
+let drop = stack(groove, then(hook_a, hook_b))
+
+section hush 4 bars {
+  tempo base + 8 -> base - 18 over 2 bars log                  # the tempo falls away, then holds
+  mix { A level 0.3, B level 0.55, master level 0.85 }
+  deck A: hihat maybe(e(5,8), 0.75, 3) vel=30..50
+  sub_long()
+  bed(3)
+  deck B: melody <s1 s2 s3 s4> inst=fm-bell vel=70..90
+  deck B: sing "slow-ly the lan-terns float a-way" on melody voice=soprano   # (live) a control line: the render has no voice
+  master: filter lp 9k -> 1500 over 2 bars                     # (live)
+  master: reverb 0.5                                           # (live)
+}
+
+section lift 4 bars {
+  tempo base - 18 -> base + 10 over 4 bars exp                 # and it winds back up into the second drop
+  mix { B level 0.75, master level 0.85 }
+  repeat 2 every 2 bars {
+    at bar 0 for 2 bars: mix { A level 0.55 + $i * 0.25 }
+  }
+  deck A: kick e(4,16) vel=80..100 | hihat x*8 vel=40..70 | snare <~ ~ ~ x*16> vel=60..110
+  sub_long()
+  bed(3)
+  sparkle(8)
+  deck B: melody <t1 t2 t3 t4> inst=fm-bell vel=70..90
+  deck B: sing "we car-ry all the light a-long" on melody voice=soprano   # (live)
+  master: filter hp 100 -> 2500 over 4 bars exp                # (live)
+}
+
+let breakdown = then(hush, lift)
+
+section groove2 drop_len bars {
+  key bm                                                       # a tone up, said once: the hooks stack on this section, so they play in it too
+  tempo base + 10
+  mix {
+    A level 0.9
+    B level 0.85
+    B eq low -6
+    master level 0.85
+  }
+  drumline(3)
+  sub_roll()
+  duck B under A.kick 6db attack=5ms release=120ms
+  master: filter off                                           # (live)
+  master: reverb 0.15                                          # (live)
+  master: level lfo sine 2 bars center=0.85 depth=0.03         # (live)
+  repeat 4 every 4 bars {                                      # (live) a filter dip on the last two beats of every fourth bar
+    at bar 3 beat 2 for 2 beats: master: filter lp 18k -> 900 over 2 beats exp
+  }
+  at bar 15 beat 2 for 2 beats: mix { A eq low -24 }           # the bass leaves two beats early before the outro
+}
+
+section hook2_a half bars {
+  bed(3)
+  sparkle(16)
+  deck B: melody <q1 q2 q3 q4> inst=pwm-lead vel=75..95
+}
+
+section hook2_b half bars {
+  bed(3)
+  sparkle(16)
+  deck B: melody <r1 r2 r3 r4> inst=pwm-lead vel=75..95
+  deck B: sing "light it up and bring it home, the lan-terns one by one, we are the ones that glow, rise up and meet the sun" on melody key=bm voice=choir-aah   # (live) 25 syllables for the 25 notes of the answer phrase, sung twice
+}
+
+let drop2 = stack(groove2, then(hook2_a, hook2_b))
+
+section outro 8 bars {
+  tempo base + 10 -> base - 10 over 8 bars log                 # 132 down to 112
+  mix { master level 0.85 }
+  repeat 4 every 2 bars {                                      # and the fade is four steps down, each a mix held for two bars
+    at bar 0 for 2 bars: mix { A level 0.4 - $i * 0.1, B level 0.5 - $i * 0.1 }
+  }
+  master: level 0.85 -> 0.3 over 8 bars log                    # (live) and the master falls away under them
+  deck A: kick e(2,16) vel=60..80 | hihat/12 x ~ x x ~ x vel=30..50
+  bed(3)
+  sparkle(4)
+  deck B: melody <s1 s2 s3 end_fall> inst=fm-bell vel=60..80
+  deck B: sing "slow-ly the lan-terns float a-way" on melody bars=8 voice=soprano   # (live) the first line again, twice over
+  master: filter lp 9k -> 400 over 8 bars                      # (live)
+  master: reverb 0.3 -> 0.6 over 8 bars                        # (live)
+}
+
+arrange intro build drop breakdown drop2 outro
+end after outro
+
+# ---- what the program says about itself ----------------------------------------------------------------------------
+assert ends
+assert length == 2m ± 12s
+assert key == am in intro
+assert key == bm in hook2_a
+assert level A < 2 * B in groove
+assert level A < B in outro

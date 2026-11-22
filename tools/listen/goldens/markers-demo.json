@@ -1,0 +1,145 @@
+{
+ "cid": "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE",
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -15.7,
+   "parts": [
+    "kick",
+    "hihat",
+    "bass"
+   ],
+   "peak_db": -6,
+   "rms_db": -16.8,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -16.2,
+   "parts": [
+    "melody"
+   ],
+   "peak_db": -6.9,
+   "rms_db": -19.6,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 124,
+  "bpm_confidence": 33.514,
+  "bpm_match": "same",
+  "declared_bpm": 124,
+  "declared_key": "am",
+  "key": "A minor",
+  "key_confidence": 0.504,
+  "key_match": "same",
+  "tonal": false
+ },
+ "master": {
+  "clipped_ms": 0.249,
+  "clipped_samples": 11,
+  "lufs": -15.2,
+  "peak_db": 0.6,
+  "rms_db": -17.8
+ },
+ "parts": [
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -16.8,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -22.5,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -29.3,
+   "silent": false,
+   "voice": null
+  },
+  {
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -14.9,
+   "measured": true,
+   "part": "bass",
+   "peak_db": -6,
+   "rms_db": -16.4,
+   "silent": false,
+   "voice": "wobble-lead"
+  },
+  {
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -16.2,
+   "measured": true,
+   "part": "melody",
+   "peak_db": -6.9,
+   "rms_db": -19.6,
+   "silent": false,
+   "voice": "pwm-lead"
+  }
+ ],
+ "sections": [
+  {
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -20.2,
+   "name": "build",
+   "peak_db": 0.6,
+   "rms_db": -22.6
+  },
+  {
+   "bars": 4,
+   "from_bar": 9,
+   "lufs": -14.1,
+   "name": "drop",
+   "peak_db": -1.2,
+   "rms_db": -15.6
+  },
+  {
+   "bars": 4,
+   "from_bar": 13,
+   "lufs": -14.9,
+   "name": "drop",
+   "peak_db": -3.3,
+   "rms_db": -16.7
+  },
+  {
+   "bars": 4,
+   "from_bar": 17,
+   "lufs": -15.5,
+   "name": "drop",
+   "peak_db": -4.3,
+   "rms_db": -17.2
+  },
+  {
+   "bars": 4,
+   "from_bar": 21,
+   "lufs": -14.8,
+   "name": "drop",
+   "peak_db": -3.9,
+   "rms_db": -16.7
+  }
+ ],
+ "silent": [],
+ "version": "listen/1",
+ "warnings": [
+  "the master clips: 11 samples over full scale"
+ ],
+ "window": {
+  "bars": 24,
+  "from_bar": 1,
+  "program_bars": 24,
+  "seconds": 46.452,
+  "section": null
+ }
+}
