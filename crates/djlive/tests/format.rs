@@ -30,7 +30,7 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Every program of the repo's examples, docs and test fixtures.
 fn corpus() -> Vec<(String, String)> {
     let mut paths = Vec::new();
-    for dir in ["examples", "docs", "crates/btwapi/tests", "crates/djlive/tests", "crates/btwls/tests", "crates/btwround/fixtures", "tools/listen/fixtures"] {
+    for dir in ["examples", "docs", "crates/btwapi/tests", "crates/djlive/tests", "crates/beatscriptls/tests", "crates/btwround/fixtures", "tools/listen/fixtures"] {
         walk(&root().join(dir), &mut paths);
     }
     paths.sort();

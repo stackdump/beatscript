@@ -2,7 +2,7 @@
 
 mod common;
 
-use btwls::Server;
+use beatscriptls::Server;
 use common::*;
 use djengine::json::JsonValue;
 
@@ -29,7 +29,7 @@ fn utf8_is_chosen_when_offered() {
     let mut s = Server::new();
     let out = msg(&mut s, r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{"general":{"positionEncodings":["utf-8","utf-16"]}}}}"#);
     assert_eq!(out[0].get("result").and_then(|r| r.get("capabilities")).and_then(|c| c.get("positionEncoding")).and_then(JsonValue::as_str), Some("utf-8"));
-    assert_eq!(s.encoding, btwls::Encoding::Utf8);
+    assert_eq!(s.encoding, beatscriptls::Encoding::Utf8);
 }
 
 #[test]
@@ -55,7 +55,7 @@ fn diagnostics_count_utf16_after_a_wide_comment() {
     let mut s = server(text);
     let d16 = req(&mut s, "btw/diagnostics", &doc());
     let start16 = d16.at(0).unwrap().get("range").unwrap().get("start").unwrap().clone();
-    s.encoding = btwls::Encoding::Utf8;
+    s.encoding = beatscriptls::Encoding::Utf8;
     let d8 = req(&mut s, "btw/diagnostics", &doc());
     let start8 = d8.at(0).unwrap().get("range").unwrap().get("start").unwrap().clone();
     assert_eq!(start16.get("line").and_then(JsonValue::as_f64), Some(1.0));
@@ -78,7 +78,7 @@ fn every_corpus_program_analyses_without_errors() {
         let p = e.path();
         if p.extension().is_some_and(|x| x == "btw") {
             let text = std::fs::read_to_string(&p).unwrap();
-            let a = btwls::Analysis::checked(text);
+            let a = beatscriptls::Analysis::checked(text);
             let errs: Vec<_> = a.check().diagnostics.iter().filter(|d| d.is_error()).map(|d| d.message.clone()).collect();
             assert!(errs.is_empty(), "{}: {errs:?}", p.display());
             n += 1;

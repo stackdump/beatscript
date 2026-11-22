@@ -2,7 +2,7 @@
 
 mod common;
 
-use btwls::Analysis;
+use beatscriptls::Analysis;
 use common::*;
 use djengine::json::JsonValue;
 
@@ -14,13 +14,13 @@ fn rename_params(line: u32, ch: u32, new: &str) -> String {
 
 /// Apply a WorkspaceEdit's edits on the test document to its text.
 fn apply(text: &str, edit: &JsonValue) -> String {
-    let ix = btwls::LineIndex::new(text);
+    let ix = beatscriptls::LineIndex::new(text);
     let edits = edit.get("changes").and_then(|c| c.get(URI)).and_then(JsonValue::as_array).unwrap();
     let mut spans: Vec<(usize, usize, String)> = edits
         .iter()
         .map(|e| {
-            let r = btwls::json::get_range(e.get("range").unwrap()).unwrap();
-            let sp = ix.span(text, r, btwls::Encoding::Utf16);
+            let r = beatscriptls::json::get_range(e.get("range").unwrap()).unwrap();
+            let sp = ix.span(text, r, beatscriptls::Encoding::Utf16);
             (sp.start, sp.end, e.get("newText").unwrap().as_str().unwrap().to_string())
         })
         .collect();
@@ -47,12 +47,12 @@ fn definition_of_a_parameter_and_a_port() {
     let (l, c) = find(PROGRAM, "$oct", 0, 2);
     let got = req(&mut s, "textDocument/definition", &at(l, c));
     let (dl, dc) = find(PROGRAM, "def bed(oct)", 0, 8);
-    assert_eq!(btwls::json::get_range(got.get("range").unwrap()).unwrap().start, btwls::Position::new(dl, dc));
+    assert_eq!(beatscriptls::json::get_range(got.get("range").unwrap()).unwrap().start, beatscriptls::Position::new(dl, dc));
     // `bed.chords` in the wire goes to bed's in-port, not to changes' out-port of the same name
     let (l, c) = find(PROGRAM, "bed.chords", 0, 5);
     let got = req(&mut s, "textDocument/definition", &at(l, c));
     let (pl, pc) = find(PROGRAM, "in: chords", 0, 4);
-    assert_eq!(btwls::json::get_range(got.get("range").unwrap()).unwrap().start, btwls::Position::new(pl, pc));
+    assert_eq!(beatscriptls::json::get_range(got.get("range").unwrap()).unwrap().start, beatscriptls::Position::new(pl, pc));
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn renaming_a_parameter_keeps_the_dollar() {
     let (l, c) = find(PROGRAM, "$oct", 0, 1);
     // prepareRename names the range without the `$`
     let prep = req(&mut s, "textDocument/prepareRename", &at(l, c));
-    let r = btwls::json::get_range(prep.get("range").unwrap()).unwrap();
+    let r = beatscriptls::json::get_range(prep.get("range").unwrap()).unwrap();
     assert_eq!(r.end.character - r.start.character, 3);
     let edit = req(&mut s, "textDocument/rename", &rename_params(l, c, "octave_n"));
     let renamed = apply(PROGRAM, &edit);
@@ -122,7 +122,7 @@ fn renaming_a_port_renames_the_wire() {
     assert!(renamed.contains("out: chords"));
 }
 
-fn rename_err(s: &mut btwls::Server, l: u32, c: u32, new: &str) -> String {
+fn rename_err(s: &mut beatscriptls::Server, l: u32, c: u32, new: &str) -> String {
     let p = JsonValue::parse(&rename_params(l, c, new)).unwrap();
     match s.request("textDocument/rename", &p) {
         Err((_, m)) => m,

@@ -1,4 +1,4 @@
-// The BeatScript extension: the grammar colours the text; everything else is `btwd lsp` (crates/btwls), the language server
+// The BeatScript extension: the grammar colours the text; everything else is `btwd lsp` (crates/beatscriptls), the language server
 // the browser editor runs too (as wasm), so VS Code and the page say the same things.
 //
 // References (a `gen@2` call, a `seed(...)`, a stored program's `<cid>.drop.bass`, a template): the server puts two code lenses

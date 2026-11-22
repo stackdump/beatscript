@@ -1,11 +1,11 @@
 //! Check latency: how long one keystroke's analysis takes (`Analysis::new`: lex, parse, expand, compile, plus the
 //! service's own passes), on the largest programs of the corpus and on synthetic hour-long songs.
 //!
-//! `cargo run --release -p btwls --example bench [-- FILE...]`
+//! `cargo run --release -p beatscriptls --example bench [-- FILE...]`
 
 use std::time::Instant;
 
-use btwls::Analysis;
+use beatscriptls::Analysis;
 
 fn median(mut ms: Vec<f64>) -> (f64, f64, f64) {
     ms.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -23,7 +23,7 @@ fn time(name: &str, text: &str) {
         let a = Analysis::new(text);
         syn.push(t.elapsed().as_secs_f64() * 1000.0);
         let t = Instant::now();
-        let c = btwls::analysis::full_check(text);
+        let c = beatscriptls::analysis::full_check(text);
         chk.push(t.elapsed().as_secs_f64() * 1000.0);
         errs = c.diagnostics.iter().filter(|d| d.is_error()).count();
         std::hint::black_box((&a, &c));

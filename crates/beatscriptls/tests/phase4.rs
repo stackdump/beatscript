@@ -2,8 +2,8 @@
 
 mod common;
 
-use btwls::complete::{candidates, EnvNames, Item};
-use btwls::Analysis;
+use beatscriptls::complete::{candidates, EnvNames, Item};
+use beatscriptls::Analysis;
 use common::*;
 
 const PROGRAM: &str = include_str!("programs/symbols.btw");
@@ -106,9 +106,9 @@ fn after_a_parts_steps_every_param_the_parser_takes() {
     let l = labels("deck B: bass 1 3 @", None);
     for p in djlive::parse::PARAMS {
         assert!(l.contains(&format!("{p}=")), "`{p}=` is not offered: {l:?}");
-        assert!(btwls::lang::PART_PARAMS.iter().any(|(n, _, _)| *n == p), "lang::PART_PARAMS has no `{p}`");
+        assert!(beatscriptls::lang::PART_PARAMS.iter().any(|(n, _, _)| *n == p), "lang::PART_PARAMS has no `{p}`");
     }
-    for (n, _, _) in btwls::lang::PART_PARAMS {
+    for (n, _, _) in beatscriptls::lang::PART_PARAMS {
         assert!(djlive::parse::PARAMS.contains(n), "lang::PART_PARAMS offers `{n}`, which djlive does not parse");
     }
 }
@@ -163,7 +163,7 @@ fn the_lsp_answer_replaces_the_word() {
 #[test]
 fn the_parsers_expected_maps_to_candidates() {
     let a = Analysis::new("x");
-    let got: Vec<String> = btwls::complete::expected_items(&a, &["a setting (tempo, key, swing)".into(), "`deck A:`".into(), "a step".into()], 0).into_iter().map(|i| i.label).collect();
+    let got: Vec<String> = beatscriptls::complete::expected_items(&a, &["a setting (tempo, key, swing)".into(), "`deck A:`".into(), "a step".into()], 0).into_iter().map(|i| i.label).collect();
     assert_eq!(got, ["tempo", "key", "swing", "deck A:", "x", "~"]);
 }
 

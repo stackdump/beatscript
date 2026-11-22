@@ -9,7 +9,7 @@ publish.workspace = true
 
 [dependencies]
 btwapi = { path = "../btwapi" }
-btwls = { path = "../btwls" }
+beatscriptls = { path = "../beatscriptls" }
 djengine.workspace = true
 djhost.workspace = true
 djlive.workspace = true

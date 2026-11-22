@@ -1087,7 +1087,7 @@ arrange from template(rondo, @hands_up, refrain=ode_to_joy)  a form, a role boun
 - **Write it out to edit it**: `btwd fmt --expand` (or `btwd expand`, the MCP `expand` tool) gives the text a seed
   stands for, each place under a `# from seed(...)` line; `--lineage` opens it with `#! forked-from: <CID>` of the
   program as given, so a shared fork says where it came from. The written-out program plays the same as the reference.
-  In the editor (btwls), any reference hovers with its expansion, shows or hides it inline, and ejects in place: docs/btwls.md.
+  In the editor (beatscriptls), any reference hovers with its expansion, shows or hides it inline, and ejects in place: docs/beatscriptls.md.
 - **The same music, always**: seeds are versioned (`#! seeds: v1`, also what a program with no such line means). A seed
   always means the same track, so the CID of a program with references (of its text, references and all) never moves; a
   change to the generator that changed any seed would be seeds v2.

@@ -35,7 +35,7 @@ arrange {
 }
 ";
 
-fn hover(s: &mut btwls::Server, needle: &str, nth: usize, skip: u32) -> String {
+fn hover(s: &mut beatscriptls::Server, needle: &str, nth: usize, skip: u32) -> String {
     let (l, c) = find(HALL, needle, nth, skip);
     let h = req(s, "textDocument/hover", &at(l, c));
     h.get("contents").and_then(|c| c.get("value")).and_then(JsonValue::as_str).unwrap_or("").to_string()

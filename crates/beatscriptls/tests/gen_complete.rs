@@ -2,8 +2,8 @@
 //! then a name's values, `section=` the sections of the program the call prints; a part line's own params after the call; and
 //! `gen@2` offered where a call goes (`arrange from`, `section NAME from`, `let NAME =`).
 
-use btwls::complete::{candidates, EnvNames};
-use btwls::Analysis;
+use beatscriptls::complete::{candidates, EnvNames};
+use beatscriptls::Analysis;
 
 /// The labels offered with the cursor where `|` is in `text`.
 fn labels(text: &str) -> Vec<String> {

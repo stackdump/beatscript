@@ -7,7 +7,7 @@ use djengine::json::JsonValue;
 
 const PROGRAM: &str = include_str!("programs/symbols.btw");
 
-fn hover_text(s: &mut btwls::Server, text: &str, needle: &str, nth: usize, skip: u32) -> String {
+fn hover_text(s: &mut beatscriptls::Server, text: &str, needle: &str, nth: usize, skip: u32) -> String {
     let (l, c) = find(text, needle, nth, skip);
     let h = req(s, "textDocument/hover", &at(l, c));
     h.get("contents").and_then(|c| c.get("value")).and_then(JsonValue::as_str).unwrap_or("").to_string()
@@ -31,14 +31,14 @@ fn a_section_says_its_bars_and_seconds_at_the_tempo() {
 #[test]
 fn before_the_check_the_text_says_where_a_plain_arrange_puts_a_section() {
     let text = "tempo 120\nlet n = 4 * 2\nsection a n bars {\n  deck A: kick x\n}\nsection b 16 bars {\n  deck A: kick x x\n}\narrange a b a\n";
-    let a = btwls::Analysis::new(text);
+    let a = beatscriptls::Analysis::new(text);
     assert!(a.check_ready().is_none());
-    let md = btwls::hover::symbol_markdown(&a, a.symbols.named("b").next().unwrap().0);
+    let md = beatscriptls::hover::symbol_markdown(&a, a.symbols.named("b").next().unwrap().0);
     assert!(md.contains("16 bars, bars 9–24 · 0:32 long, from 0:16 to 0:48 at 120 BPM") && md.contains("from the text"), "{md}");
-    let md = btwls::hover::symbol_markdown(&a, a.symbols.named("a").find(|(_, s)| s.kind == btwls::symbols::Kind::Section).unwrap().0);
+    let md = beatscriptls::hover::symbol_markdown(&a, a.symbols.named("a").find(|(_, s)| s.kind == beatscriptls::symbols::Kind::Section).unwrap().0);
     assert!(md.contains("placed 2 times"), "{md}");
     // a let of arithmetic says what it came to
-    let md = btwls::hover::symbol_markdown(&a, a.symbols.named("n").next().unwrap().0);
+    let md = beatscriptls::hover::symbol_markdown(&a, a.symbols.named("n").next().unwrap().0);
     assert!(md.contains("let n = 4 * 2") && md.contains("= 8"), "{md}");
 }
 

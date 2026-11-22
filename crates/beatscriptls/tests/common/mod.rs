@@ -1,9 +1,9 @@
-//! Golden LSP tests: a session of requests against [`btwls::Server`], each response compared with a file under
-//! `tests/golden/`. `BTWLS_BLESS=1 cargo test -p btwls` writes the files from what the server answers now (then read the diff).
+//! Golden LSP tests: a session of requests against [`beatscriptls::Server`], each response compared with a file under
+//! `tests/golden/`. `BEATSCRIPTLS_BLESS=1 cargo test -p beatscriptls` writes the files from what the server answers now (then read the diff).
 
 #![allow(dead_code)]
 
-use btwls::Server;
+use beatscriptls::Server;
 use djengine::json::JsonValue;
 
 pub const URI: &str = "file:///test.btw";
@@ -94,16 +94,16 @@ pub fn pretty(v: &JsonValue) -> String {
     out
 }
 
-/// Compare `v` with `tests/golden/<name>.json` (write it under `BTWLS_BLESS=1`).
+/// Compare `v` with `tests/golden/<name>.json` (write it under `BEATSCRIPTLS_BLESS=1`).
 pub fn golden(name: &str, v: &JsonValue) {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden").join(format!("{name}.json"));
     let got = pretty(v);
-    if std::env::var_os("BTWLS_BLESS").is_some() {
+    if std::env::var_os("BEATSCRIPTLS_BLESS").is_some() {
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(&path, &got).unwrap();
         return;
     }
-    let want = std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("no golden file {}: run with BTWLS_BLESS=1", path.display()));
+    let want = std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("no golden file {}: run with BEATSCRIPTLS_BLESS=1", path.display()));
     if got != want {
         panic!("{name}: the response is not the golden one ({}).\n--- got\n{got}\n--- want\n{want}", path.display());
     }

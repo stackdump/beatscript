@@ -4,8 +4,8 @@
 
 mod common;
 
-use btwls::symbols::Kind;
-use btwls::Analysis;
+use beatscriptls::symbols::Kind;
+use beatscriptls::Analysis;
 use common::*;
 use djengine::json::JsonValue;
 
@@ -48,7 +48,7 @@ arrange close: outro end
 start open
 ";
 
-fn labels(s: &mut btwls::Server, text: &str, needle: &str, skip: u32) -> Vec<String> {
+fn labels(s: &mut beatscriptls::Server, text: &str, needle: &str, skip: u32) -> Vec<String> {
     let (l, c) = find(text, needle, 0, skip);
     let r = req(s, "textDocument/completion", &at(l, c));
     r.get("items").and_then(JsonValue::as_array).map(|v| v.iter().filter_map(|i| i.get("label").and_then(JsonValue::as_str).map(str::to_string)).collect()).unwrap_or_default()
@@ -57,7 +57,7 @@ fn labels(s: &mut btwls::Server, text: &str, needle: &str, skip: u32) -> Vec<Str
 #[test]
 fn the_programs_check() {
     for t in [BLOCK, NAMED] {
-        assert!(btwls::analysis::full_check(t).ok(), "{t}\n{:?}", btwls::analysis::full_check(t).diagnostics);
+        assert!(beatscriptls::analysis::full_check(t).ok(), "{t}\n{:?}", beatscriptls::analysis::full_check(t).diagnostics);
     }
 }
 
@@ -122,7 +122,7 @@ fn completion_inside_a_block_offers_sections_targets_and_operators() {
     assert!(ls.contains(&"thin".to_string()) && ls.contains(&"rot".to_string()));
     // after the block: how it ends, the words of grammar.ebnf's block_end
     let ls = labels(&mut s, BLOCK, "} loop", 2);
-    for w in btwls::lang::words_of("block_end").iter().filter(|w| w.chars().all(|c| c.is_ascii_lowercase())) {
+    for w in beatscriptls::lang::words_of("block_end").iter().filter(|w| w.chars().all(|c| c.is_ascii_lowercase())) {
         assert!(ls.contains(w), "{w}: {ls:?}");
     }
 }
@@ -130,7 +130,7 @@ fn completion_inside_a_block_offers_sections_targets_and_operators() {
 #[test]
 fn hover_says_what_an_operator_and_a_mark_do() {
     let mut s = server(BLOCK);
-    let h = |s: &mut btwls::Server, needle: &str, skip: u32| {
+    let h = |s: &mut beatscriptls::Server, needle: &str, skip: u32| {
         let (l, c) = find(BLOCK, needle, 0, skip);
         req(s, "textDocument/hover", &at(l, c)).get("contents").and_then(|c| c.get("value")).and_then(JsonValue::as_str).unwrap_or("").to_string()
     };
@@ -144,7 +144,7 @@ fn hover_says_what_an_operator_and_a_mark_do() {
 fn number_at_knows_a_mutation_argument_and_loop_n() {
     let reg = &btwapi::web_env().registry;
     let a = Analysis::new(BLOCK);
-    let k = |needle: &str, skip: usize| btwls::number::number_at(&a, BLOCK.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max));
+    let k = |needle: &str, skip: usize| beatscriptls::number::number_at(&a, BLOCK.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max));
     assert_eq!(k("rot 2", 4), Some(("mut-int", Some(-64.0), Some(64.0))));
     assert_eq!(k("thin 0.2", 5), Some(("share", Some(0.0), Some(1.0))));
     assert_eq!(k("up 2", 3), Some(("mut-int", Some(-64.0), Some(64.0))));
@@ -155,11 +155,11 @@ fn number_at_knows_a_mutation_argument_and_loop_n() {
 
 #[test]
 fn every_statement_keyword_of_the_grammar_is_offered_with_a_doc() {
-    let first = btwls::lang::first_words("statement");
+    let first = beatscriptls::lang::first_words("statement");
     // what a statement can start with that completion offers some other way: a deck's or the master's line (snippets),
     // a control word (the actions, and `drive`, which is no reserved word: a section may be named so), `for`, `duck`, `mix`, `sing` and the def calls
     let other: Vec<&str> = ["deck", "master", "for", "duck", "mix", "sing", "do", "drive"].into_iter().chain(djlive::parse::ACTION_WORDS).collect();
-    let docs: Vec<&str> = btwls::lang::STATEMENTS.iter().map(|s| s.0).collect();
+    let docs: Vec<&str> = beatscriptls::lang::STATEMENTS.iter().map(|s| s.0).collect();
     let words: Vec<&String> = first.iter().filter(|w| w.chars().next().is_some_and(|c| c.is_ascii_lowercase())).collect();
     for w in &words {
         assert!(docs.contains(&w.as_str()) || other.contains(&w.as_str()), "grammar.ebnf starts a statement with `{w}`: lang::STATEMENTS has no entry for it");
@@ -172,8 +172,8 @@ fn every_statement_keyword_of_the_grammar_is_offered_with_a_doc() {
 
 #[test]
 fn every_ending_of_the_grammar_has_a_doc() {
-    let words = btwls::lang::words_of("block_end");
-    let docs: Vec<&str> = btwls::lang::ENDINGS.iter().map(|e| e.0).collect();
+    let words = beatscriptls::lang::words_of("block_end");
+    let docs: Vec<&str> = beatscriptls::lang::ENDINGS.iter().map(|e| e.0).collect();
     for w in words.iter().filter(|w| w.chars().all(|c| c.is_ascii_lowercase())) {
         assert!(docs.contains(&w.as_str()), "block_end has `{w}`: lang::ENDINGS has no entry");
     }
@@ -181,7 +181,7 @@ fn every_ending_of_the_grammar_has_a_doc() {
 
 #[test]
 fn every_mutation_operator_has_a_signature_and_a_doc() {
-    let ops = btwls::lang::mutation_ops();
+    let ops = beatscriptls::lang::mutation_ops();
     assert_eq!(ops.len(), djlive::mutate::operator_names().len());
     for (n, sig, doc) in &ops {
         assert!(!doc.is_empty(), "docs/ARRANGE.md has no row for `{n}`");
@@ -195,14 +195,14 @@ fn a_repeated_arrangement_collapses_into_a_loop_and_is_proved() {
     let text = "section sa 4 bars {\n  deck A: kick x ~ x ~\n}\nsection sb 4 bars {\n  deck A: kick x x x x\n}\nsection outro 4 bars {\n  deck A: kick x ~ ~ ~\n}\narrange sa sb sa sb sa sb outro\n";
     let a = Analysis::checked(text);
     let at = text.find("arrange sa").unwrap() + 2;
-    let m = btwls::refactor::collapse_arrange(&a, at).expect("offered");
+    let m = beatscriptls::refactor::collapse_arrange(&a, at).expect("offered");
     assert_eq!(m.title, "Collapse into `arrange { sa sb } loop 3 then outro end`");
-    let after = btwls::refactor::apply(text, &m.edits);
+    let after = beatscriptls::refactor::apply(text, &m.edits);
     assert!(after.ends_with("arrange {\n  sa sb\n} loop 3 then outro end\n"), "{after}");
-    btwls::refactor::verify(&a, &m).expect("the same nets");
+    beatscriptls::refactor::verify(&a, &m).expect("the same nets");
     // nothing repeats: nothing offered
     let t2 = "section sa 4 bars {\n  deck A: kick x\n}\nsection sb 4 bars {\n  deck A: kick x x\n}\narrange sa sb\n";
-    assert!(btwls::refactor::collapse_arrange(&Analysis::new(t2), t2.find("arrange").unwrap()).is_none());
+    assert!(beatscriptls::refactor::collapse_arrange(&Analysis::new(t2), t2.find("arrange").unwrap()).is_none());
 }
 
 #[test]
@@ -234,12 +234,12 @@ arrange {
 
 #[test]
 fn jux_is_offered_documented_and_followed_by_the_operators_but_itself() {
-    assert!(btwls::analysis::full_check(JUX).ok(), "{:?}", btwls::analysis::full_check(JUX).diagnostics);
+    assert!(beatscriptls::analysis::full_check(JUX).ok(), "{:?}", beatscriptls::analysis::full_check(JUX).diagnostics);
     let mut s = server(JUX);
     // as an operator, with its signature as docs/ARRANGE.md has it
     let ls = labels(&mut s, JUX, "lead rot", 5);
     assert!(ls.contains(&"jux".to_string()), "{ls:?}");
-    let (_, sig, doc) = btwls::lang::mutation_ops().into_iter().find(|(n, _, _)| *n == "jux").unwrap();
+    let (_, sig, doc) = beatscriptls::lang::mutation_ops().into_iter().find(|(n, _, _)| *n == "jux").unwrap();
     assert_eq!(sig, "jux op");
     assert!(doc.contains("right copy"), "{doc}");
     // after `jux `: the operator the right copy gets, every one but `jux` itself
@@ -256,7 +256,7 @@ fn jux_is_offered_documented_and_followed_by_the_operators_but_itself() {
     // the number inside it is the inner operator's argument
     let reg = &btwapi::web_env().registry;
     let a = Analysis::new(JUX);
-    let k = |needle: &str, skip: usize| btwls::number::number_at(&a, JUX.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max));
+    let k = |needle: &str, skip: usize| beatscriptls::number::number_at(&a, JUX.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max));
     assert_eq!(k("rot 3", 4), Some(("mut-int", Some(-64.0), Some(64.0))));
     assert_eq!(k("thin 0.2", 5), Some(("share", Some(0.0), Some(1.0))));
 }

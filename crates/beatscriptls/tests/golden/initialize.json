@@ -23,6 +23,6 @@
       "codeLensProvider": {"resolveProvider":false},
       "executeCommandProvider": {"commands":["btw.expand.toggle","btw.expand.copy","btw.eject"]}
     },
-    "serverInfo": {"name":"btwls","version":"0.1.0"}
+    "serverInfo": {"name":"beatscriptls","version":"0.1.0"}
   }
 }

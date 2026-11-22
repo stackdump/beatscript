@@ -5,7 +5,7 @@
 
 mod common;
 
-use btwls::{Analysis, Encoding, LineIndex, Server};
+use beatscriptls::{Analysis, Encoding, LineIndex, Server};
 use common::*;
 use djengine::json::JsonValue;
 use djlive::refs;
@@ -59,7 +59,7 @@ fn apply(text: &str, edit: &JsonValue) -> String {
     let mut spans: Vec<(usize, usize, String)> = edits
         .iter()
         .map(|e| {
-            let r = btwls::json::get_range(e.get("range").unwrap()).unwrap();
+            let r = beatscriptls::json::get_range(e.get("range").unwrap()).unwrap();
             let sp = ix.span(text, r, Encoding::Utf16);
             (sp.start, sp.end, e.get("newText").unwrap().as_str().unwrap().to_string())
         })
@@ -74,7 +74,7 @@ fn apply(text: &str, edit: &JsonValue) -> String {
 
 /// A range as a byte span of `text`.
 fn span_of(text: &str, range: &JsonValue, enc: Encoding) -> (usize, usize) {
-    let sp = LineIndex::new(text).span(text, btwls::json::get_range(range).unwrap(), enc);
+    let sp = LineIndex::new(text).span(text, beatscriptls::json::get_range(range).unwrap(), enc);
     (sp.start, sp.end)
 }
 
@@ -116,7 +116,7 @@ fn hover_on_a_part_lines_call_and_a_seed() {
 }
 
 fn refs_expansion(s: &refs::Site) -> String {
-    btwls::refs::expansion(s).to_string()
+    beatscriptls::refs::expansion(s).to_string()
 }
 
 #[test]
@@ -136,8 +136,8 @@ fn hover_on_a_stored_reference_is_a_structural_import() {
 fn a_long_expansion_is_cut_short_and_says_how_much_was_left_out() {
     btwapi::generate::install();
     let site = &sites(WHOLE)[0];
-    let total = btwls::refs::expansion(site).split('\n').count();
-    assert!(total > btwls::refs::HOVER_LINES, "{total}");
+    let total = beatscriptls::refs::expansion(site).split('\n').count();
+    assert!(total > beatscriptls::refs::HOVER_LINES, "{total}");
     let mut s = server(WHOLE);
     let md = hover_text(&mut s, WHOLE, WHOLE.find("gen@2").unwrap());
     assert!(md.contains(&format!("({total} lines,")), "{md}");
@@ -166,7 +166,7 @@ fn expand_answers_every_reference_with_its_ranges_in_utf16() {
         assert_eq!(f("generator"), site.generator);
         assert_eq!(f("place").as_deref(), Some(site.place));
         assert_eq!(f("name"), site.name);
-        assert_eq!(f("text").as_deref(), Some(btwls::refs::expansion(site)));
+        assert_eq!(f("text").as_deref(), Some(beatscriptls::refs::expansion(site)));
         assert_eq!(f("from"), Some(refs::from_line(site)));
         assert_eq!(r.get("fitted").and_then(JsonValue::strings), Some(site.fitted.clone()));
     }
@@ -208,7 +208,7 @@ fn expand_says_what_is_wrong_and_a_program_without_references_has_none() {
     assert_eq!(req(&mut s, "textDocument/codeLens", &doc()).as_array().map(Vec::len), Some(0));
     let plain = "deck A: kick x ~ x ~ | bass c2 ~ c2 ~\n";
     let mut p = server(plain);
-    assert!(!btwls::refs::may_have(&Analysis::new(plain)));
+    assert!(!beatscriptls::refs::may_have(&Analysis::new(plain)));
     assert_eq!(req(&mut p, "btw/expand", &doc()).js_stringified(), r#"{"references":[]}"#);
 }
 
@@ -221,7 +221,7 @@ fn eject_action(s: &mut Server, text: &str, at: usize) -> (JsonValue, JsonValue)
     let eject = acts.iter().find(|a| a.get("data").and_then(|d| d.get("refactor")).and_then(JsonValue::as_str) == Some("eject")).unwrap_or_else(|| panic!("no eject at {at}: {}", list.js_stringified())).clone();
     assert!(eject.get("edit").is_none(), "made on resolve");
     assert_eq!(eject.get("kind").and_then(JsonValue::as_str), Some("refactor.inline"));
-    let copy = acts.iter().find(|a| a.get("command").and_then(|c| c.get("command")).and_then(JsonValue::as_str) == Some(btwls::refs::COPY));
+    let copy = acts.iter().find(|a| a.get("command").and_then(|c| c.get("command")).and_then(JsonValue::as_str) == Some(beatscriptls::refs::COPY));
     assert!(copy.is_some(), "a copy action: {}", list.js_stringified());
     let resolved = req(s, "codeAction/resolve", &eject.js_stringified());
     (eject, resolved)
@@ -242,8 +242,8 @@ fn eject_is_offered_and_resolves_to_what_refs_eject_writes_proved() {
             assert_eq!(got, want, "{text}\n--- ejected {}", site.call);
             // proved: the same nets (resolve refuses otherwise); and the provenance line says the call and its CID
             let a = Analysis::checked(text);
-            let made = btwls::refs::eject_made(&a, site.span.start).unwrap();
-            btwls::refactor::verify(&a, &made).unwrap();
+            let made = beatscriptls::refs::eject_made(&a, site.span.start).unwrap();
+            beatscriptls::refactor::verify(&a, &made).unwrap();
             assert!(got.contains(&refs::from_line(site)), "{got}");
         }
     }
@@ -288,20 +288,20 @@ fn code_lenses_and_their_commands_round_trip() {
     assert_eq!(titles, ["show expansion", "eject", "show expansion", "eject"]);
     for (k, site) in ss.iter().enumerate() {
         let toggle = lenses[2 * k].get("command").unwrap();
-        assert_eq!(toggle.get("command").and_then(JsonValue::as_str), Some(btwls::refs::TOGGLE));
+        assert_eq!(toggle.get("command").and_then(JsonValue::as_str), Some(beatscriptls::refs::TOGGLE));
         assert_eq!(span_of(SECTIONS, lenses[2 * k].get("range").unwrap(), Encoding::Utf16), (site.span.start, site.span.end));
         // show: the reference, as btw/expand has it at that place
         let shown = req(&mut s, "workspace/executeCommand", &toggle.js_stringified());
         let at = req(&mut s, "btw/expand", &at_byte(SECTIONS, site.span.start));
         assert_eq!(shown.js_stringified(), at.get("references").and_then(|r| r.at(0)).unwrap().js_stringified());
         // copy: what eject writes, its provenance line first
-        let copy = format!(r#"{{"command":"{}","arguments":{}}}"#, btwls::refs::COPY, toggle.get("arguments").unwrap().js_stringified());
+        let copy = format!(r#"{{"command":"{}","arguments":{}}}"#, beatscriptls::refs::COPY, toggle.get("arguments").unwrap().js_stringified());
         let copied = req(&mut s, "workspace/executeCommand", &copy);
-        assert_eq!(copied.get("text").and_then(JsonValue::as_str), Some(format!("{}\n{}", refs::from_line(site), btwls::refs::expansion(site)).as_str()));
+        assert_eq!(copied.get("text").and_then(JsonValue::as_str), Some(format!("{}\n{}", refs::from_line(site), beatscriptls::refs::expansion(site)).as_str()));
     }
     // eject over the wire: the edit is sent as workspace/applyEdit, then the answer
     let eject = lenses[1].get("command").unwrap();
-    assert_eq!(eject.get("command").and_then(JsonValue::as_str), Some(btwls::refs::EJECT));
+    assert_eq!(eject.get("command").and_then(JsonValue::as_str), Some(beatscriptls::refs::EJECT));
     let msg = JsonValue::parse(&format!(r#"{{"jsonrpc":"2.0","id":9,"method":"workspace/executeCommand","params":{}}}"#, eject.js_stringified())).unwrap();
     let out = s.handle(&msg);
     assert_eq!(out.len(), 2, "{:?}", out.iter().map(JsonValue::js_stringified).collect::<Vec<_>>());
@@ -337,6 +337,6 @@ fn the_server_says_it_has_lenses_commands_and_expand() {
     let s = server("deck A: kick x\n");
     let c = s.capabilities();
     assert_eq!(c.get("codeLensProvider").map(JsonValue::js_stringified).as_deref(), Some(r#"{"resolveProvider":false}"#));
-    assert_eq!(c.get("executeCommandProvider").and_then(|e| e.get("commands")).and_then(JsonValue::strings), Some(btwls::refs::COMMANDS.iter().map(|c| c.to_string()).collect()));
+    assert_eq!(c.get("executeCommandProvider").and_then(|e| e.get("commands")).and_then(JsonValue::strings), Some(beatscriptls::refs::COMMANDS.iter().map(|c| c.to_string()).collect()));
     assert_eq!(c.get("experimental").and_then(|e| e.get("btw")).and_then(|b| b.get("expand")).and_then(JsonValue::as_bool), Some(true));
 }

@@ -2,8 +2,8 @@
 
 mod common;
 
-use btwls::symbols::Kind;
-use btwls::Analysis;
+use beatscriptls::symbols::Kind;
+use beatscriptls::Analysis;
 use common::*;
 
 const PROGRAM: &str = include_str!("programs/symbols.btw");

@@ -190,7 +190,7 @@ impl BtwRun {
 
 // ---- the language service ----
 
-/// The language service for the editor (crates/btwls): the same server `btwd lsp` runs, with positions in UTF-16 (JS string
+/// The language service for the editor (crates/beatscriptls): the same server `btwd lsp` runs, with positions in UTF-16 (JS string
 /// offsets) and no `initialize` needed. Documents are named by any string (`"main"`).
 ///
 /// - `open(uri, text)` / `change(uri, text)` -> the parser's diagnostics (JSON array), at once: every keystroke.
@@ -200,39 +200,39 @@ impl BtwRun {
 ///   `{"error":{code,message}}`.
 /// - `handle(message)` -> every message to send back (JSON array): a whole JSON-RPC message in, as over stdio.
 #[wasm_bindgen]
-pub struct BtwLs {
-    inner: btwls::Server,
+pub struct BeatscriptLs {
+    inner: beatscriptls::Server,
 }
 
-impl Default for BtwLs {
+impl Default for BeatscriptLs {
     fn default() -> Self {
-        BtwLs::new()
+        BeatscriptLs::new()
     }
 }
 
 #[wasm_bindgen]
-impl BtwLs {
+impl BeatscriptLs {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> BtwLs {
+    pub fn new() -> BeatscriptLs {
         init();
-        let mut inner = btwls::Server::with_encoding(btwls::Encoding::Utf16);
+        let mut inner = beatscriptls::Server::with_encoding(beatscriptls::Encoding::Utf16);
         inner.deferred = true;
-        BtwLs { inner }
+        BeatscriptLs { inner }
     }
 
     /// Open or replace a document: its diagnostics as JSON.
     pub fn open(&mut self, uri: &str, text: &str) -> String {
-        btwls::wasm::open(&mut self.inner, uri, text)
+        beatscriptls::wasm::open(&mut self.inner, uri, text)
     }
 
     /// The document's whole new text: its diagnostics as JSON.
     pub fn change(&mut self, uri: &str, text: &str) -> String {
-        btwls::wasm::open(&mut self.inner, uri, text)
+        beatscriptls::wasm::open(&mut self.inner, uri, text)
     }
 
     /// The check of an open document (computed now if it is not done): its diagnostics as JSON.
     pub fn check(&mut self, uri: &str) -> String {
-        btwls::wasm::check(&mut self.inner, uri)
+        beatscriptls::wasm::check(&mut self.inner, uri)
     }
 
     pub fn close(&mut self, uri: &str) {
@@ -241,12 +241,12 @@ impl BtwLs {
 
     /// One LSP request; `params_json` is its params (with `textDocument.uri` naming an open document).
     pub fn request(&mut self, method: &str, params_json: &str) -> String {
-        btwls::wasm::request(&mut self.inner, method, params_json)
+        beatscriptls::wasm::request(&mut self.inner, method, params_json)
     }
 
     /// One JSON-RPC message in; every message out, as a JSON array.
     pub fn handle(&mut self, message_json: &str) -> String {
-        btwls::wasm::handle(&mut self.inner, message_json)
+        beatscriptls::wasm::handle(&mut self.inner, message_json)
     }
 }
 
@@ -267,29 +267,29 @@ mod tests {
 
     #[test]
     fn the_language_service_wrapper_answers_json() {
-        let mut ls = btwls::Server::with_encoding(btwls::Encoding::Utf16);
+        let mut ls = beatscriptls::Server::with_encoding(beatscriptls::Encoding::Utf16);
         ls.deferred = true;
-        let d = btwls::wasm::open(&mut ls, "main", "tempo 12x\n");
+        let d = beatscriptls::wasm::open(&mut ls, "main", "tempo 12x\n");
         assert!(d.starts_with('[') && d.contains("\"severity\":1"), "{d}");
         // an unknown voice: only the check says so
-        assert_eq!(btwls::wasm::open(&mut ls, "main", "deck A: bass a1 inst=nopenope\n"), "[]");
-        assert!(btwls::wasm::check(&mut ls, "main").contains("nopenope"));
-        let bad = btwls::wasm::request(&mut ls, "nope", "{}");
+        assert_eq!(beatscriptls::wasm::open(&mut ls, "main", "deck A: bass a1 inst=nopenope\n"), "[]");
+        assert!(beatscriptls::wasm::check(&mut ls, "main").contains("nopenope"));
+        let bad = beatscriptls::wasm::request(&mut ls, "nope", "{}");
         assert!(bad.contains("\"error\""), "{bad}");
-        let out = btwls::wasm::handle(&mut ls, r#"{"jsonrpc":"2.0","id":7,"method":"shutdown"}"#);
+        let out = beatscriptls::wasm::handle(&mut ls, r#"{"jsonrpc":"2.0","id":7,"method":"shutdown"}"#);
         assert_eq!(out, r#"[{"jsonrpc":"2.0","id":7,"result":null}]"#);
     }
 
-    /// What the page asks of a reference (docs/btwls.md "The web editor"): `btw/expand` and the copy command, in UTF-16.
+    /// What the page asks of a reference (docs/beatscriptls.md "The web editor"): `btw/expand` and the copy command, in UTF-16.
     #[test]
     fn the_language_service_answers_a_references_expansion() {
-        let mut ls = btwls::Server::with_encoding(btwls::Encoding::Utf16);
+        let mut ls = beatscriptls::Server::with_encoding(beatscriptls::Encoding::Utf16);
         ls.deferred = true;
         let text = "# é\ntempo 128\nkey c\nlet bed = gen@2 techno seed=42 section=drop part=bass\nsection groove 4 bars {\n  deck A: bass bed\n}\narrange groove\n";
-        btwls::wasm::open(&mut ls, "main", text);
-        let all = btwls::wasm::request(&mut ls, "btw/expand", r#"{"textDocument":{"uri":"main"}}"#);
+        beatscriptls::wasm::open(&mut ls, "main", text);
+        let all = beatscriptls::wasm::request(&mut ls, "btw/expand", r#"{"textDocument":{"uri":"main"}}"#);
         assert!(all.contains(r#""kind":"gen""#) && all.contains(r#""range":{"start":{"line":3,"character":10}"#) && all.contains("let bed_1 = "), "{all}");
-        let copy = btwls::wasm::request(&mut ls, "workspace/executeCommand", r#"{"command":"btw.expand.copy","arguments":[{"uri":"main","position":{"line":3,"character":12}}]}"#);
+        let copy = beatscriptls::wasm::request(&mut ls, "workspace/executeCommand", r#"{"command":"btw.expand.copy","arguments":[{"uri":"main","position":{"line":3,"character":12}}]}"#);
         assert!(copy.contains(r##""text":"# from: gen@2 techno seed=42 section=drop part=bass -> z"##), "{copy}");
     }
 

@@ -593,7 +593,7 @@ impl djlive::gen::Generator for Seeded {
 pub static SEEDED: Seeded = Seeded;
 
 /// Install the seeded generator for `gen` calls (djlive::gen::install); idempotent. [`crate::web_env`] does it, so every check
-/// btwapi makes (btwd, btwserve, the wasm page, btwls) can resolve a call.
+/// btwapi makes (btwd, btwserve, the wasm page, beatscriptls) can resolve a call.
 pub fn install() {
     djlive::gen::install(&SEEDED);
 }

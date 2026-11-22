@@ -1,6 +1,6 @@
 # BeatScript (btw) in IntelliJ IDEA and the other JetBrains IDEs
 
-The language server is `btwd lsp` (`crates/btwls`); JetBrains IDEs reach it through **LSP4IJ** (Red Hat's free LSP client
+The language server is `btwd lsp` (`crates/beatscriptls`); JetBrains IDEs reach it through **LSP4IJ** (Red Hat's free LSP client
 plugin, Community and Ultimate editions alike). No plugin of our own is needed.
 
 ## Set it up (once)
@@ -33,6 +33,6 @@ A program's references (`gen@2 techno seed=42 section=drop part=bass`, `seed(tec
 
 ## What LSP4IJ needs from the server
 
-Only stdio and the standard requests; btwls answers `initialize` with its capabilities (incremental sync, UTF-16 positions
+Only stdio and the standard requests; beatscriptls answers `initialize` with its capabilities (incremental sync, UTF-16 positions
 unless the client offers UTF-8). If something does not show, LSP4IJ's *Language Servers* tool window has a trace of the
 traffic (set the server's *Debug → Trace* to *verbose*).

@@ -1,7 +1,7 @@
 //! Grammar parity between the server and the page (project-datum 6675): the seeded generator's output, for every genre over
 //! many seeds, checked by the server (`btwapi::check_json`, what `/api/check`, the MCP `check` and btwd answer) and by the
 //! entry points the page's wasm module exports, compiled natively: `btw_check` (the page's facade, wasm.js `check`) and
-//! `BtwLs` (the editor's own diagnostics, `open` on every keystroke and `check` once the text rests). They must say the same
+//! `BeatscriptLs` (the editor's own diagnostics, `open` on every keystroke and `check` once the text rests). They must say the same
 //! thing, error for error, and the generator must only print what every one of them accepts.
 //!
 //! What this cannot see is a stale deploy: the module the page serves is built by scripts/build-web-wasm.sh and copied to the
@@ -46,7 +46,7 @@ fn server(raw: &str) -> (bool, Vec<(String, i64, i64, String)>) {
 /// The editor's diagnostics (LSP-shaped: severity 1 error, 2 warning, 3 information; `data.start`/`data.end` are byte offsets;
 /// the message has the expected and help lines under it) in the server's terms.
 fn editor(json: &str) -> Vec<(String, i64, i64, String)> {
-    let v = JsonValue::parse(json).expect("BtwLs answers JSON");
+    let v = JsonValue::parse(json).expect("BeatscriptLs answers JSON");
     v.as_array()
         .expect("an array of diagnostics")
         .iter()
@@ -68,13 +68,13 @@ fn editor(json: &str) -> Vec<(String, i64, i64, String)> {
 /// default hook back, so a failing assertion here says what failed.
 fn native_hook() {
     let _ = djweb::btw_check("");
-    let _ = djweb::BtwLs::new();
+    let _ = djweb::BeatscriptLs::new();
     let _ = std::panic::take_hook();
 }
 
 /// `facade`: also hold the page's `btw_check` to the server's answer byte for byte (one function: a sample of the programs is
 /// enough to keep the export wired to it, and each program costs a compile less without it).
-fn same_everywhere(what: &str, text: &str, ls: &mut djweb::BtwLs, facade: bool) {
+fn same_everywhere(what: &str, text: &str, ls: &mut djweb::BeatscriptLs, facade: bool) {
     let raw = btwapi::check_json(text);
     if facade {
         assert_eq!(djweb::btw_check(text), raw, "{what}: btw_check (the page) and check_json (the server) differ");
@@ -91,7 +91,7 @@ fn same_everywhere(what: &str, text: &str, ls: &mut djweb::BtwLs, facade: bool) 
 #[test]
 fn generator_output_checks_the_same_on_the_server_and_in_the_page() {
     native_hook();
-    let mut ls = djweb::BtwLs::new();
+    let mut ls = djweb::BeatscriptLs::new();
     let mut n = 0;
     for genre in btwapi::generate::genres() {
         for seed in 1..=seeds() {
@@ -121,7 +121,7 @@ fn the_reported_trap_program_and_its_numeral_arps_check_everywhere() {
     let g = btwapi::generate(&req).unwrap();
     let arps = g.text.lines().find(|l| l.starts_with("let arps = ")).expect("a let of arps");
     assert!(arps.contains("arp(i, ") && arps.contains("arp(VII, "), "{arps}");
-    let mut ls = djweb::BtwLs::new();
+    let mut ls = djweb::BeatscriptLs::new();
     same_everywhere("trap seed=54877 key=dm bpm=140", &g.text, &mut ls, true);
     // and the numerals one by one, in a program of their own, as the editor's check reads them
     for numeral in ["i", "VII", "VI", "iv", "bVII", "V7"] {

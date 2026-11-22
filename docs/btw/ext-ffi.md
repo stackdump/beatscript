@@ -82,7 +82,7 @@ dropped.
 
 ## Eject (vendoring) and provenance
 
-Eject writes one reference out in place (`refs::eject`; btwls's code action, `btwd expand`), under
+Eject writes one reference out in place (`refs::eject`; beatscriptls's code action, `btwd expand`), under
 
 ```text
 # from: gen@2 techno seed=42 section=drop part=bass -> z4EBG9j...
@@ -105,7 +105,7 @@ program's canonical text, which has no comments, so a vendored count needs the s
 
 ## Offline, missing, CC0
 
-- The generator is compiled into each host (btwapi installs it: btwd, btwserve, the page's wasm, btwls). A host with none (djlive
+- The generator is compiled into each host (btwapi installs it: btwd, btwserve, the page's wasm, beatscriptls). A host with none (djlive
   alone, the booth's djhost today) says `gen@2 is not here` at the call: hosts differ in whether it is there, never in what the
   music is. Nothing is fetched.
 - A version a build no longer has is an error naming the ones it has. A stored program's CID a host lacks is the existing

@@ -3,8 +3,8 @@
 
 mod common;
 
-use btwls::number::{self, number_at, LIMITS};
-use btwls::Analysis;
+use beatscriptls::number::{self, number_at, LIMITS};
+use beatscriptls::Analysis;
 use common::*;
 use djengine::json::JsonValue;
 
@@ -23,7 +23,7 @@ fn kind(text: &str, needle: &str, skip: usize) -> &'static str {
 }
 
 fn ok(text: &str) -> bool {
-    btwls::analysis::full_check(text).ok()
+    beatscriptls::analysis::full_check(text).ok()
 }
 
 const PROGRAM: &str = "\
@@ -47,7 +47,7 @@ repeat 4 {
 
 #[test]
 fn each_kind_of_number_says_what_it_is() {
-    assert!(ok(PROGRAM), "{:?}", btwls::analysis::full_check(PROGRAM).diagnostics);
+    assert!(ok(PROGRAM), "{:?}", beatscriptls::analysis::full_check(PROGRAM).diagnostics);
     for (needle, skip, want) in [
         ("tempo 124", 6, "tempo"),
         ("swing 0.1", 6, "swing"),
@@ -172,7 +172,7 @@ fn a_numeral_moves_through_the_degrees_of_the_key() {
     // every choice reads back as a numeral in the program
     for c in &n.choices {
         let t = format!("key am\ndeck B: harmony {c} ~\n");
-        assert!(ok(&t), "{c}: {:?}", btwls::analysis::full_check(&t).diagnostics);
+        assert!(ok(&t), "{c}: {:?}", beatscriptls::analysis::full_check(&t).diagnostics);
     }
 }
 
@@ -241,7 +241,7 @@ fn every_limit_is_what_the_checker_accepts() {
             ok(&with(lo)),
             "{}: the minimum {lo} is refused: {:?}",
             l.kind,
-            btwls::analysis::full_check(&with(lo)).diagnostics
+            beatscriptls::analysis::full_check(&with(lo)).diagnostics
         );
         // the template's literal is classified as this row
         let n = number_at(&Analysis::new(with(lo)), t.find('@').unwrap() + usize::from(lo < 0.0), reg());
@@ -253,7 +253,7 @@ fn every_limit_is_what_the_checker_accepts() {
                 ok(&with(hi)),
                 "{}: the maximum {hi} is refused: {:?}",
                 l.kind,
-                btwls::analysis::full_check(&with(hi)).diagnostics
+                beatscriptls::analysis::full_check(&with(hi)).diagnostics
             );
             assert!(!ok(&with(hi + l.step)), "{}: one step over the maximum ({}) checks clean", l.kind, hi + l.step);
         }
@@ -267,7 +267,7 @@ fn every_limit_is_what_the_checker_accepts() {
 /// literal.
 #[test]
 fn a_scrub_edits_only_its_literal_and_keeps_the_program_canonical() {
-    let canon = |t: &str| btwls::analysis::full_check(t).compiled.map(|c| c.text);
+    let canon = |t: &str| beatscriptls::analysis::full_check(t).compiled.map(|c| c.text);
     let base = canon(PROGRAM).expect("checks");
     let text = base.clone();
     let a = Analysis::new(text.clone());
@@ -298,7 +298,7 @@ fn a_scrub_edits_only_its_literal_and_keeps_the_program_canonical() {
                 n.choices[k].clone()
             };
             let edited = format!("{}{}{}", &text[..n.span.start], new, &text[n.span.end..]);
-            let c = canon(&edited).unwrap_or_else(|| panic!("{} -> {new} refused:\n{edited}\n{:?}", n.text, btwls::analysis::full_check(&edited).diagnostics));
+            let c = canon(&edited).unwrap_or_else(|| panic!("{} -> {new} refused:\n{edited}\n{:?}", n.text, beatscriptls::analysis::full_check(&edited).diagnostics));
             assert_eq!(c, edited, "{} -> {new}: the text is no longer canonical", n.text);
             // only that literal changed
             assert_eq!(&edited[..n.span.start], &text[..n.span.start]);
@@ -313,7 +313,7 @@ fn a_scrub_edits_only_its_literal_and_keeps_the_program_canonical() {
 fn the_expression_numbers_say_what_they_are() {
     // link 01's tonal params and the ratchet's count; a colon glued to a word that is no step is a spec word's
     let t = "deck A: kick x:3 x&:4 x.:2 | hihat [x x]:2 ~\ndeck B: bass 1^ 3:2 c3!:4 glide=60 decay=300 pitch-drop=12\n";
-    assert!(ok(t), "{:?}", btwls::analysis::full_check(t).diagnostics);
+    assert!(ok(t), "{:?}", beatscriptls::analysis::full_check(t).diagnostics);
     for (needle, skip, want) in [
         ("x:3", 2, "ratchet"),
         ("&:4", 2, "ratchet"),

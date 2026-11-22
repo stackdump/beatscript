@@ -1,6 +1,6 @@
 # BeatScript (btw) for VS Code
 
-Highlighting from a TextMate grammar; everything else from `btwd lsp`, the btw language server (`crates/btwls` in
+Highlighting from a TextMate grammar; everything else from `btwd lsp`, the btw language server (`crates/beatscriptls` in
 stackdump/beatscript). The browser editor at beatscript.app runs the same server as wasm, so the two say the same things.
 
 What the server gives: diagnostics (the parser's at once, the compile's after the text has rested 150 ms), quick-fixes and fix

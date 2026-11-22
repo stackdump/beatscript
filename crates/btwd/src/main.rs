@@ -40,7 +40,7 @@ usage: btwd <command> [options]
                                          for a DAW: the Standard MIDI File, or a zip of stems (a WAV per part and
                                          per deck, the master, the .mid and manifest.json), on stdout
   lsp                                    the language server (LSP over stdio): diagnostics, quick-fixes, outline, navigation,
-                                         rename, completion, hover, signature help, inlay hints, refactors (crates/btwls)
+                                         rename, completion, hover, signature help, inlay hints, refactors (crates/beatscriptls)
   listen       [--section NAME] [--bars N] [--max-bars N] [--budget SECONDS] [--sr N] [--file F | -]
                                          render offline and summarise it as JSON: loudness per deck, part and section,
                                          silent parts and why, detected tempo and key, clipping (listen.rs)

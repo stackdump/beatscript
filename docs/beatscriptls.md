@@ -1,26 +1,26 @@
-# btwls: the btw language service
+# beatscriptls: the btw language service
 
-`crates/btwls` is the editor assistant for BeatScript (btw): diagnostics, quick-fixes, the outline, navigation, rename,
+`crates/beatscriptls` is the editor assistant for BeatScript (btw): diagnostics, quick-fixes, the outline, navigation, rename,
 completion, hover, signature help, inlay hints and refactors. It is pure (no I/O, no clock), shaped like LSP, and served three
 ways:
 
 - `btwd lsp`: an LSP server on stdio, for VS Code (`editors/vscode`), IntelliJ (LSP4IJ, `editors/intellij`), Neovim, Helix.
-- djweb's `BtwLs` (wasm): the same server for the browser editor, positions in UTF-16.
-- `btwls::Server` in-process (the golden tests drive it).
+- djweb's `BeatscriptLs` (wasm): the same server for the browser editor, positions in UTF-16.
+- `beatscriptls::Server` in-process (the golden tests drive it).
 
 ## Two tiers
 
 | tier | what | when |
 |---|---|---|
 | syntax | lex, parse (`parse_with`), the symbol table | every change; everything but the compile's diagnostics needs only this |
-| check | `check_with` (expand, compile, evolve orbits) | off the keystroke path: `btwd lsp` runs it on a worker thread once the text has rested 150 ms; the page calls `BtwLs.check(uri)` |
+| check | `check_with` (expand, compile, evolve orbits) | off the keystroke path: `btwd lsp` runs it on a worker thread once the text has rested 150 ms; the page calls `BeatscriptLs.check(uri)` |
 
 Until the check of a version is in, the diagnostics shown are the parser's; a check of a version the document has moved past
 is dropped.
 
 ## Latency (phase 0)
 
-`cargo run --release -p btwls --example bench` on a shared Linux box (4 cores, shared with other builds; medians of 5 to 9 runs):
+`cargo run --release -p beatscriptls --example bench` on a shared Linux box (4 cores, shared with other builds; medians of 5 to 9 runs):
 
 | program | size | syntax | check |
 |---|---|---|---|
@@ -158,7 +158,7 @@ What each client gets:
 |---|---|---|---|---|
 | VS Code (`editors/vscode`) | yes | lens, or *Show or hide the expansion of the reference here*: a decoration after the reference (its first line, how many more, `[z…cid]`; the whole in its hover); *every reference's*; *open … beside* (a read-only document) | lens-less: the lightbulb or the palette, to the clipboard | lens, lightbulb, palette (`workspace/applyEdit`) |
 | IntelliJ (LSP4IJ) | yes (Ctrl+Q) | lens: a notification with the expansion | Alt+Enter: a notification | lens, Alt+Enter |
-| the web page (`BtwLs`) | yes | the JS below | the JS below | Alt+Enter as it is (the existing `run` resolves it) |
+| the web page (`BeatscriptLs`) | yes | the JS below | the JS below | Alt+Enter as it is (the existing `run` resolves it) |
 
 ### The web editor
 
@@ -189,15 +189,15 @@ toggleExpansion() {
 }
 ```
 
-(`.as-doc` wants a `max-height` and `overflow: auto` for a long expansion.) Positions are UTF-16 there, as `BtwLs` counts.
+(`.as-doc` wants a `max-height` and `overflow: auto` for a long expansion.) Positions are UTF-16 there, as `BeatscriptLs` counts.
 
 ## Try it
 
 - **VS Code**: `cargo build --release -p btwd`, then `editors/vscode/README.md` (`npm install`, `code
   --extensionDevelopmentPath=editors/vscode some.btw`, set `btw.server.path`).
 - **IntelliJ**: LSP4IJ pointed at `btwd lsp`, `editors/intellij/README.md`.
-- **Web**: `scripts/build-web-wasm.sh <beats>/btwsite/web/wasm` (the module now has `BtwLs`), then the beats branch
-  `feat/btwls-web` (`btwsite/web/js/assist.js`): Ctrl+Space, hover, Alt+Enter, Mod+Shift+O, F12.
+- **Web**: `scripts/build-web-wasm.sh <beats>/btwsite/web/wasm` (the module now has `BeatscriptLs`), then the page's
+  `btwsite/web/js/assist.js`: Ctrl+Space, hover, Alt+Enter, Mod+Shift+O, F12.
 - **Any client**: `btwd lsp` on stdio.
 
 ## Merging with feat/btw-fixer

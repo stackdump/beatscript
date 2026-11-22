@@ -3,7 +3,7 @@
 
 mod common;
 
-use btwls::Analysis;
+use beatscriptls::Analysis;
 use common::*;
 use djengine::json::JsonValue;
 
@@ -30,7 +30,7 @@ arrange {
 } loop 6 then outro end
 ";
 
-fn labels(s: &mut btwls::Server, text: &str, needle: &str, skip: u32) -> Vec<String> {
+fn labels(s: &mut beatscriptls::Server, text: &str, needle: &str, skip: u32) -> Vec<String> {
     let (l, c) = find(text, needle, 0, skip);
     let r = req(s, "textDocument/completion", &at(l, c));
     r.get("items").and_then(JsonValue::as_array).map(|v| v.iter().filter_map(|i| i.get("label").and_then(JsonValue::as_str).map(str::to_string)).collect()).unwrap_or_default()
@@ -38,9 +38,9 @@ fn labels(s: &mut btwls::Server, text: &str, needle: &str, skip: u32) -> Vec<Str
 
 #[test]
 fn the_program_checks_and_the_block_has_its_mutations() {
-    assert!(btwls::analysis::full_check(COUNTED).ok(), "{:?}", btwls::analysis::full_check(COUNTED).diagnostics);
+    assert!(beatscriptls::analysis::full_check(COUNTED).ok(), "{:?}", beatscriptls::analysis::full_check(COUNTED).diagnostics);
     let a = Analysis::new(COUNTED);
-    let arr = a.symbols.symbols.iter().find(|s| s.kind == btwls::symbols::Kind::Arrange).expect("the block");
+    let arr = a.symbols.symbols.iter().find(|s| s.kind == beatscriptls::symbols::Kind::Arrange).expect("the block");
     assert_eq!(arr.detail, "intro drop drop drop · 2 mutations · loop 6 then outro end");
 }
 
@@ -74,7 +74,7 @@ fn hover_says_what_the_count_is() {
 fn number_at_knows_the_count_is_one_to_256_whole_passes() {
     let reg = &btwapi::web_env().registry;
     let a = Analysis::new(COUNTED);
-    let k = |needle: &str, skip: usize| btwls::number::number_at(&a, COUNTED.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max, n.limit.integer));
+    let k = |needle: &str, skip: usize| beatscriptls::number::number_at(&a, COUNTED.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max, n.limit.integer));
     assert_eq!(k("~3 acid_a", 1), Some(("every", Some(1.0), Some(256.0), true)));
     assert_eq!(k("@4 hoov", 1), Some(("every", Some(1.0), Some(256.0), true)));
     // the arguments after it are still their operators'

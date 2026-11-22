@@ -1,5 +1,5 @@
 //! `btwd lsp`: the btw language server over stdio (the LSP base protocol: `Content-Length` headers, JSON-RPC bodies). All of the
-//! language is btwls's [`btwls::Server`]; this is only the framing.
+//! language is beatscriptls's [`beatscriptls::Server`]; this is only the framing.
 
 use std::io::{BufRead, Write};
 
@@ -84,14 +84,14 @@ pub fn serve<R: BufRead + Send + 'static>(r: R, w: &mut impl Write) -> std::io::
                 jobs.push(j);
             }
             for (uri, version, text) in jobs {
-                let c = btwls::analysis::full_check(&text);
+                let c = beatscriptls::analysis::full_check(&text);
                 if worker_tx.send(Event::Checked(uri, version, text, c)).is_err() {
                     return;
                 }
             }
         }
     });
-    let mut server = btwls::Server::new();
+    let mut server = beatscriptls::Server::new();
     server.deferred = true;
     // the host's registry: its params carry their docs (hover, completion); checks still use the site's snapshot
     server.registry = Some(&djhost::btw_env::RegistryView);
@@ -128,10 +128,10 @@ pub fn serve<R: BufRead + Send + 'static>(r: R, w: &mut impl Write) -> std::io::
                 let msg = match JsonValue::parse(&body) {
                     Ok(m) => m,
                     Err(e) => {
-                        let err = btwls::json::obj([
+                        let err = beatscriptls::json::obj([
                             ("jsonrpc", JsonValue::str("2.0")),
                             ("id", JsonValue::Null),
-                            ("error", btwls::json::obj([("code", JsonValue::int(-32700)), ("message", JsonValue::str(format!("parse error: {e}")))])),
+                            ("error", beatscriptls::json::obj([("code", JsonValue::int(-32700)), ("message", JsonValue::str(format!("parse error: {e}")))])),
                         ]);
                         write_message(w, &err)?;
                         continue;

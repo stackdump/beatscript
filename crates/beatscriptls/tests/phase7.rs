@@ -2,8 +2,8 @@
 
 mod common;
 
-use btwls::refactor::{apply, extract_let, inline_let, verify};
-use btwls::Analysis;
+use beatscriptls::refactor::{apply, extract_let, inline_let, verify};
+use beatscriptls::Analysis;
 use common::*;
 use djengine::json::JsonValue;
 use djlive::Span;

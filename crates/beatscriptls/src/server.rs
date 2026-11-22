@@ -1,5 +1,5 @@
 //! The LSP server as a pure state machine: a JSON-RPC message in, the messages to send back out (responses and
-//! notifications such as `textDocument/publishDiagnostics`). `btwd lsp` adds the stdio framing; djweb's `BtwLs` calls
+//! notifications such as `textDocument/publishDiagnostics`). `btwd lsp` adds the stdio framing; djweb's `BeatscriptLs` calls
 //! [`Server::request`] and [`Server::open`] directly.
 
 use std::collections::BTreeMap;
@@ -343,7 +343,7 @@ impl Server {
         self.encoding = if offered.iter().any(|e| e == "utf-8") { Encoding::Utf8 } else { Encoding::Utf16 };
         self.apply_edit = params.get("capabilities").and_then(|c| c.get("workspace")).and_then(|w| w.get("applyEdit")).and_then(JsonValue::as_bool).unwrap_or(false);
         self.initialized = true;
-        obj([("capabilities", self.capabilities()), ("serverInfo", obj([("name", s("btwls")), ("version", s(env!("CARGO_PKG_VERSION")))]))])
+        obj([("capabilities", self.capabilities()), ("serverInfo", obj([("name", s("beatscriptls")), ("version", s(env!("CARGO_PKG_VERSION")))]))])
     }
 
     /// What this server can do.

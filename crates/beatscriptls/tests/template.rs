@@ -3,8 +3,8 @@
 
 mod common;
 
-use btwls::complete::{candidates, EnvNames, Item};
-use btwls::Analysis;
+use beatscriptls::complete::{candidates, EnvNames, Item};
+use beatscriptls::Analysis;
 
 /// The items offered with the cursor where `|` is in `text`.
 fn offered(text: &str) -> Vec<Item> {
