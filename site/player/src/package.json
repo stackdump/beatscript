@@ -18,5 +18,5 @@
   "sideEffects": true,
   "keywords": ["beatscript", "music", "live-coding", "web-component", "webassembly", "audioworklet"],
   "homepage": "https://beatscript.app/docs/embed",
-  "license": "UNLICENSED"
+  "license": "MIT"
 }

@@ -48,8 +48,13 @@ employer**. Programs shipped as examples or put in a prompt must be his own CC0 
 `use restricted`, no `sample`/`loop` assets). Never send private or restricted assets to the model.
 
 ## Public repo (read this before committing)
-`stackdump/beats-bitwrap-io` is **public (MIT)**; the private engine repo (its BeatScript crates are this repo now) is **private and UNLICENSED**. So nothing built from or copied out of the private repo is committed here:
-`site/web/wasm/` (the wasm module and its JS glue), `site/web/docs/BTW.md`, `site/web/docs/cheatsheet.md`, `site/bin/` (the `btwd` binary) and `site/dist/` are in `.gitignore`.
+This is **stackdump/beatscript, public**: code MIT, BeatScript programs and all content CC0 (`LICENSE`, `REUSE.toml`).
+Since 2026-11-22 the language crates, the server and the wasm build are in this repo too, so nothing is private any
+more; what stays out of git is BUILD OUTPUT and the host's data:
+`site/web/wasm/` (the wasm module and its JS glue), `site/web/docs/BTW.md`, `site/web/docs/cheatsheet.md`, `site/bin/`
+(the binaries) and `site/dist/` are in `.gitignore`, and so is `data/` (programs, tokens, the signing key, the ip salt).
+(Before the move this page lived in the public beats-bitwrap-io and the engine in a private repo, which is why these
+were never committed.)
 They exist in the working tree (built or generated), tests that need them skip or use tiny fixtures when they are absent, and the deploy script copies them to the host. Never `git add -f` them.
 Hand-written code, the CC0 example programs (Matt's own, public), card PNG samples of those programs, and fixtures are fine to commit.
 
