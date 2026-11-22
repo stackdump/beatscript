@@ -313,8 +313,10 @@ fn period_of_an_evolve_is_its_cycle_in_bars() {
     assert_eq!(a[0].message, "the period of the evolve in drop is 32 bars (4 generations of 8 bars)");
     assert_eq!(a[1].line(), "assert period(drop) == 16: the period of the evolve in drop is 32 bars (4 generations of 8 bars)");
     assert_eq!((a[1].status, a[2].status, a[3].status), (Status::Fail, Status::Pass, Status::Fail));
-    // it agrees with what `check` reports for the evolve
-    assert!(c.evolve_report()[0].contains("period 32 bars"), "{:?}", c.evolve_report());
+    // it agrees with the orbit `check` analyses; the section (32 bars, generations 0 to 3) ends before it comes round, so
+    // its report says what plays and no cycle (6685)
+    assert_eq!(c.evolves[0].analysis.period_bars(), Some(32));
+    assert_eq!(c.evolve_report(), ["evolve in drop: generations 0 to 3 in 32 bars, then the section ends; no generation repeats, so it does not cycle"]);
     // a program's own evolve is `evolve`
     let c = report("deck A: kick x ~ x ~ | hihat x ~ ~ ~ ~ ~ ~ ~\nevolve every 4 bars {\n  hihat: rotate 2\n}\nassert period(evolve) == 32\nassert period(evolve) == 4\n");
     assert_eq!(c.assertions[0].status, Status::Pass, "{}", c.assertions[0].line());

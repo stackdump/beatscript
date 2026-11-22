@@ -42,7 +42,7 @@
     "sections": [],
     "decks": ["A","B"],
     "evolve": [
-      "evolve: tail 34 generations (136 bars), then it cycles: period 4 generations = period 16 bars ≈ 32s at 120"
+      "evolve: generations 0 to 7 in 32 bars, then it stops at gen 7 (its `stop`); no generation repeats, so it does not cycle"
     ],
     "lineage": [
       {

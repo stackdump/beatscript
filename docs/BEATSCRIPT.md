@@ -1048,15 +1048,23 @@ first bar. In a song, an `evolve` belongs inside the section it varies (one to a
 
 **Tail and period.** Because a rule acts on each part alone, the program's orbit is the parts' together: the longest **tail** (the
 generations before a part settles into its cycle) and the **period** (the least common multiple of the parts' periods). `check`,
-`eval` (`evolve`) and `djctl btw check` print it:
+`eval` (`evolve`) and `djctl btw check` print it when what plays comes round to it (the tail and one period fit before the
+`stop` or the section's end, or a program of its own plays its orbit through):
 
 ```text
 evolve in drop: tail 34 generations (272 bars), then it cycles: period 4 generations = period 32 bars ≈ 1m02s at 124
 ```
 
-(that is the example above with its `stop` taken out: the melody climbs until its notes reach the top of the MIDI range, the
+(that is the example above with its `stop` taken out and its section long enough to play the orbit through: the melody climbs until its notes reach the top of the MIDI range, the
 thinned hi-hat runs out of hits, and what is left comes round every four generations. A rule whose parts come round in 7, 11 and
 13 generations of 8 bars has a period of 1,001 generations, 8,008 bars, 4h18m at 124.)
+
+When the `stop` or the section's end comes first, they say what plays instead, and that it does not cycle:
+
+```text
+evolve in drop: generations 0 to 5 in 24 bars, then it stops at gen 5 (its `stop`); no generation repeats, so it does not cycle
+evolve in drop: generations 0 to 2 in 6 bars, then the section ends; no generation repeats, so it does not cycle
+```
 
 `thin` picks hits by a hash of the generation number, so a part it acts on is not a function of its state and the rule's
 clock: its only provable fixed point is the empty part (which every transform leaves empty), and a thinned part's orbit is

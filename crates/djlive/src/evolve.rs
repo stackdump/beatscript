@@ -498,6 +498,26 @@ impl Analysis {
     }
 }
 
+impl Analysis {
+    /// What plays of an evolve that does not come round within its section: "evolve in drop: generations 0 to 5 in 24 bars,
+    /// then it stops at gen 5 (its `stop`); no generation repeats, so it does not cycle". `stop` is the evolve's own last
+    /// generation, if it says one; else the section's end is what stops it.
+    pub fn text_played(&self, scope: &str, last: u32, bars: u32, stop: Option<u32>) -> String {
+        let why = match stop {
+            Some(n) if n == last => format!("then it stops at gen {n} (its `stop`)"),
+            _ => "then the section ends".to_string(),
+        };
+        format!(
+            "evolve{}: generation{} 0{} in {} bar{}, {why}; no generation repeats, so it does not cycle",
+            if scope.is_empty() { String::new() } else { format!(" in {scope}") },
+            if last == 0 { "" } else { "s" },
+            if last == 0 { String::new() } else { format!(" to {last}") },
+            group(u64::from(bars)),
+            if bars == 1 { "" } else { "s" },
+        )
+    }
+}
+
 /// 16016 as "16,016".
 pub fn group(n: u64) -> String {
     let s = n.to_string();

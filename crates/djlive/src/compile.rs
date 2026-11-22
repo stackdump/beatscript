@@ -584,6 +584,21 @@ pub struct EvolveRun {
     pub analysis: crate::evolve::Analysis,
     /// The last generation the timeline plays.
     pub last: u32,
+    /// The bars the generations play in: the section's (a program's own evolve: its timeline's).
+    pub bars: u32,
+}
+
+impl EvolveRun {
+    /// The last generation that plays: `last`, or the last to start before the section is over.
+    pub fn played_last(&self) -> u32 {
+        let fit = self.bars.saturating_sub(1) / self.block.every.max(1);
+        self.last.min(fit)
+    }
+
+    /// Whether the generations that play come back to one they have had: the orbit's tail and one period are played.
+    pub fn cycles(&self) -> bool {
+        self.analysis.period.is_some_and(|p| u64::from(self.played_last()) >= u64::from(self.analysis.tail) + p)
+    }
 }
 
 impl Compiled {
@@ -621,6 +636,12 @@ impl Compiled {
             .iter()
             .map(|r| {
                 let scope = if r.scope == "evolve" { "" } else { &r.scope };
+                // the orbit is the rule's; what plays is generations 0 to `last` in the section's bars. Its cycle is said only
+                // when the timeline plays a generation the orbit comes back to (6685: a `stop when gen == 5` in 24 bars
+                // was reported as a 26-generation tail and a cycle it never reaches)
+                if !r.cycles() {
+                    return r.analysis.text_played(scope, r.played_last(), r.bars, r.block.last.map(|(n, _)| n));
+                }
                 // with a tempo curve the seconds are the integral from where the section starts (F3)
                 match (self.tempo_map.drives(), r.analysis.period_bars()) {
                     (true, Some(pb)) => {
@@ -1417,7 +1438,7 @@ impl<'a> Compiler<'a> {
                     fit.min(crate::evolve::MAX_GENS)
                 }
             };
-            runs.push(EvolveRun { scope: seg.name.clone(), block: block.clone(), gen0: seg.decks.clone(), analysis, last });
+            runs.push(EvolveRun { scope: seg.name.clone(), block: block.clone(), gen0: seg.decks.clone(), analysis, last, bars: seg.bars });
             let mut gens: Vec<Segment> = Vec::new();
             let mut cur = seg.decks.clone();
             let mut forked: Option<String> = None;

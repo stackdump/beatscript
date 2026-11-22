@@ -73,9 +73,10 @@ fn what_the_corpus_says_about_itself() {
     assert_eq!(s(&t, "cid"), "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ");
     assert_eq!(s(&t, "song_nets.A"), "z4EBG9jG8nT2p449McscV7ZSCfmUJDiFxFU26JpZhJ9hfBFgeLD");
     assert_eq!(s(&t, "song_nets.B"), "z4EBG9j8hbXoGqrw8qMseuz7BhibdkMiee4USmUaSyPRgJjiiLJ");
-    // an evolve in a section is reported with its tail and period and its lineage, and is still one section
+    // an evolve in a section is reported with what it plays (its `stop` comes before its orbit's cycle, 6685) and its
+    // lineage, and is still one section
     let m = check(&prog("markers-demo"));
-    assert!(s(&m, "evolve.0").starts_with("evolve in drop: tail "), "{}", s(&m, "evolve.0"));
+    assert_eq!(s(&m, "evolve.0"), "evolve in drop: generations 0 to 3 in 16 bars, then it stops at gen 3 (its `stop`); no generation repeats, so it does not cycle");
     assert_eq!(get(&m, "lineage").as_array().unwrap().len(), 4);
     assert_eq!((s(&m, "lineage.1.scope"), n(&m, "lineage.1.gen")), ("drop", 1));
     assert_eq!(s(&m, "lineage.1.forkedFrom"), s(&m, "lineage.0.cid"));

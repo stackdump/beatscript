@@ -145,7 +145,7 @@
     ],
     "decks": ["A","B"],
     "evolve": [
-      "evolve in climax: tail 203 generations (812 bars), then it cycles: period 32 generations = period 128 bars ≈ 3m56s at 130"
+      "evolve in climax: generations 0 to 3 in 16 bars, then it stops at gen 3 (its `stop`); no generation repeats, so it does not cycle"
     ],
     "lineage": [
       {
