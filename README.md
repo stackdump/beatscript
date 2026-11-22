@@ -1,0 +1,60 @@
+# BeatScript
+
+BeatScript is a small, total, deterministic language for writing whole music tracks as text: one line per deck,
+16 steps a bar, sections and an arrange. The same canonical text always has the same CID and the same audio.
+This repository is everything [beatscript.app](https://beatscript.app) runs: the language, the server, the
+browser engine, the web editor, the embed player, the docs, the examples, the lexicon and the ontology, and the
+deploy with its live checks.
+
+The engine underneath is [stackdump/djrust](https://github.com/stackdump/djrust) (Petri-net patterns and the
+audio host), a git dependency pinned in `Cargo.toml`.
+
+## Layout
+
+| path | what it is |
+|---|---|
+| `crates/djlive` | the language: parse, compile to djrust nets, mutate, evolve, perform; `grammar.ebnf`, the form templates |
+| `crates/djengine` | engine modules on top of djrust: vocals and the lexicon, themes, rights, key, SMF, import (plus booth modules) |
+| `crates/btwapi` | check / fmt / open / share / highlight / marks as JSON, pure; shared by the CLI, the server and the wasm |
+| `crates/btwls` | the language service (diagnostics, completion, hover, refactors), LSP-shaped and pure |
+| `crates/djweb` | the browser module: btwapi + btwls + the djrust engine behind wasm-bindgen |
+| `crates/btwserve` | the beatscript.app server: site, docs, render (Ogg Opus), check, sign-in, cards, pairing, MCP, ontology |
+| `crates/btwseal` | sealed private pushes to a paired phone |
+| `crates/btwd` | the CLI: check, fmt, render, cheatsheet, lsp, export |
+| `crates/btwround` | the round trip: audio in, a program out that `check same_as` the original |
+| `crates/djhost` | host modules (render path, ontology vocabulary, and the booth's devices behind features) |
+| `docs/` | the language reference (`BTW.md`), arrange, schema, open data, authorship, `docs/btw/` long notes |
+| `examples/` | example and reference programs |
+| `editors/` | VS Code and IntelliJ support (`btwd lsp`) |
+| `site/` | the web editor, embed and npm player, site examples, API docs source, tests (with its history from beats-bitwrap-io) |
+| `deploy/` | `deploy.sh` (build and deploy from one commit) and `live-checks.sh` (every live check) |
+| `scripts/` | the wasm and Linux builds, the build-host picker, the public-build guard |
+| `tools/` | lexicon, listening tests, MCP catalogue, ontology, open-data dump |
+
+## Build and test
+
+```sh
+cargo test --locked -p djlive -p djengine -p btwapi -p btwls -p btwseal -p btwserve -p djweb -p btwd -p btwround
+scripts/check-public-build.sh            # what a default build may contain (below)
+node --test site/test/unit.mjs           # the page's pure-JS tests
+scripts/build-web-wasm.sh site/web/wasm  # the browser module (needs the wasm-bindgen CLI the lockfile pins)
+```
+
+Experimental and booth-only parts are off by default: djhost's `windwheel` feature (the Wheel, from
+[stackdump/windwheel-bitwrap-io](https://github.com/stackdump/windwheel-bitwrap-io)) and its `wallet` feature (signed
+set recordings, djrust-wallet). `scripts/check-public-build.sh` fails if a default build of any shipped target has
+either in its tree, or the booth's pronouncing dictionary, which is not in this repository at all.
+
+## Deploy
+
+`deploy/deploy.sh all` builds the wasm, btwserve and the docs from one commit on `main`, checks that commit out on
+the serving host, installs the artifacts, points the service at it, restarts it and runs `deploy/live-checks.sh`. It
+rolls back by itself when the restart or a check fails. Build hosts come from the environment
+(`scripts/build-host.sh`). The server's data and secrets live on the host only and never in this repository.
+
+## Licence
+
+Code is MIT (`LICENSE`). BeatScript programs and all content are CC0-1.0: every `.btw` program, the examples, the
+lexicon, phrasebooks and themes, the ontology, the test fixtures, and the docs. `REUSE.toml` says which path is
+which; `LICENSES/` holds the texts. The Go fonts under `crates/btwserve/assets/gofont` are BSD-3-Clause, with their
+licence beside them. Programs stored on beatscript.app are CC0 by default.

@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Many test binaries each linking their own debug info fill a runner's disk; panics still report file:line.
+  CARGO_PROFILE_TEST_DEBUG: "0"
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  guard:
+    name: public-build guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # default builds have no windwheel, no djrust-wallet and no booth dictionary; members as allowlisted;
+      # no dictionary data, no loop audio
+      - name: scripts/check-public-build.sh
+        run: bash scripts/check-public-build.sh
+      - name: the features still turn windwheel and the wallet on
+        run: |
+          cargo tree -q -p djhost --features windwheel,wallet -e normal --prefix none | grep -q '^windwheel '
+          cargo tree -q -p djhost --features windwheel,wallet -e normal --prefix none | grep -q '^djrust-wallet '
+      - name: no production host literal in the page, no legacy host in the API reference
+        run: bash site/scripts/btw-host-literals.sh
+
+  test:
+    name: cargo test (BeatScript crates)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo test
+        run: cargo test --locked -p djlive -p djengine -p btwapi -p btwls -p btwseal -p btwserve -p djweb -p btwd -p btwround
+      - name: djhost builds with its optional features
+        run: cargo check --locked -p djhost --features windwheel,wallet
+      - name: disk left on the runner
+        if: always()
+        run: df -h . && du -sh target
+
+  wasm:
+    name: browser module (wasm32)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --locked --release --target wasm32-unknown-unknown -p djweb
+      - run: cargo build --locked --release --target wasm32-unknown-unknown -p djengine --no-default-features
+
+  site:
+    name: site unit tests (node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test site/test/unit.mjs

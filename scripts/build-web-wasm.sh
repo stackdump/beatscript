@@ -66,6 +66,10 @@ fi
 
 sysroot=$(rustc --print sysroot)
 flags="--remap-path-prefix=$root=djweb --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=cargo --remap-path-prefix=$sysroot=rust"
+# the engine is a git dependency (Cargo.toml): its checkout under cargo's git dir becomes `djrust`, as it was when it
+# sat beside this repo, so panic locations do not carry the checkout's hash (rustc applies the last matching remap)
+djrust_dir=$(cargo metadata --locked --format-version 1 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(p["manifest_path"] for p in d["packages"] if p["name"]=="djrust").rsplit("/",1)[0])' || true)
+if [ -n "$djrust_dir" ]; then flags="$flags --remap-path-prefix=$djrust_dir=djrust"; fi
 export RUSTFLAGS="${RUSTFLAGS:-} $flags"
 export CARGO_TARGET_DIR="${BTW_WASM_TARGET_DIR:-$root/target-web}"
 
