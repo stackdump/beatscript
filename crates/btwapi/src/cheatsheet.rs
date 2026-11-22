@@ -44,16 +44,22 @@ const PLAN: &[(&str, &[Keep])] = &[
     // (the second paragraph, a tempo that moves, is the grammar's `tempo` and its examples: tempo 100 -> 130 over 8 bars exp)
     ("### Settings", &[Keep::First]),
     ("## Control", &[Keep::FirstColumn]),
-    ("### Time words", &[Keep::First, Keep::Table]),
+    // (the first paragraph, a time word then a target, is the rules' `[when:] [target:] body`)
+    ("### Time words", &[Keep::Table]),
     ("## The whole surface: `do`", &[Keep::Code]),
     ("### The wheel", &[Keep::Code, Keep::Para("A wheel line")]),
-    ("## Functions and structure", &[Keep::Code, Keep::Bullets]),
+    // (the code block is the bullets' own examples put together; the bullets keep each one)
+    ("## Functions and structure", &[Keep::Bullets]),
     ("### Ending", &[Keep::Table]),
-    ("### Evolving", &[Keep::FirstCode, Keep::Table, Keep::Para("An argument")]),
-    ("### Pattern transforms", &[Keep::All]),
+    // (the paragraph on `<a b>` arguments and `gen` guards: the code block shows both, the grammar has the guard)
+    ("### Evolving", &[Keep::FirstCode, Keep::Table]),
+    // (the opening line, what a transform takes, is the table's own first column)
+    ("### Pattern transforms", &[Keep::Table, Keep::Para("Marks touch")]),
     ("### Arrange mutations", &[Keep::FirstCode, Keep::Table, Keep::Para("Try [arrange-in-eight-lines]")]),
     ("### Start from a seed", &[Keep::FirstCode]),
     ("### Sung lyrics", &[Keep::Para("**Found phrases:**")]),
+    // (the four trims above made room for this and for the grammar's `station` productions under the 30 KB cap)
+    ("## Radio: stations", &[Keep::Para("**Radio:**")]),
     ("## Sounds", &[Keep::Table]),
 ];
 

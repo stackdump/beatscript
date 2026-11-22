@@ -2199,6 +2199,11 @@ set {
   play matrix-130
   mix 16 bars with crossfade, tempo 140 -> 130
   play deep-house-60 until 20m
+  play gen@2 techno seed=42
+  mix 16 bars with crossfade
+  next seed=+1
+  mix 16 bars with echo_out
+  next seed=~
   play yellow-rose-174
 }
 end
@@ -2207,17 +2212,25 @@ end
 - **`play NAME|CID [until WHEN]`** names a saved program (a name, in quotes if it has spaces; a CID; or the end of one, in quotes when it starts with a digit). The
   canonical text pins it by CID, as `import` does (`play zQm...`), so the set's CID covers its tracks: change a track and the
   set is a different set; a rename changes nothing. A name that matches no saved program, or two, is an error.
-- **`mix N bars with TRANSITION [, tempo A -> B]`** sits between two `play`s and overlaps the last N bars of the outgoing track
-  with the first N of the incoming one. Without a `mix` the next track starts where the last ends (a cut). `cut` is a mix of
-  no bars (it takes no overlap: N is ignored and `check` says so).
+- **`play gen@V GENRE seed=N ...`** takes a generator call as a track, besides a saved program's name or CID: the program the
+  call prints ("Call the generator"), pinned by its version.
+- **`next seed=+N [until WHEN]`** (N >= 1) or **`next seed=~`** is a track: the track before it (a `play` of a generator call, or
+  another `next`) with its seed stepped by the station rule ("Radio: stations"): `+N` counts on, `~` draws the seed from a hash
+  of the CID of the track before. A `mix` may sit between. `next` after a saved program (a name or CID) is an error: there is
+  no seed to step. The canonical text keeps `next seed=~` as written (it is structural: in the text, so in the CID); `check`
+  reports the call each `next` resolved to and its CID (`set.tracks[i].call`, `.cid`), in a note at it: `next: gen@2 techno
+  seed=43 -> z4EB... (seeded@2)`.
+- **`mix N bars with TRANSITION [, tempo A -> B]`** sits between two tracks (a `play` or a `next`) and overlaps the last N
+  bars of the outgoing track with the first N of the incoming one. Without a `mix` the next track starts where the last ends (a
+  cut). `cut` is a mix of no bars (it takes no overlap: N is ignored and `check` says so).
 - **`until WHEN`** cuts a track: a time (`20m`, `90s`, `1h`, `3m30s`, `1h30m`, read at the track's own tempo, through its tempo curve when it has one), `bar N` (of the track's own count),
   a section name (up to where that section **starts**) or `after SECTION` (after it ends). A track that is shorter than its
   `until` just ends. A track with an `end` (or an `arrange` that is not `loop`ed) plays to it; a flat or looping track with
   neither needs an `until`, and `check` says which one.
 - **`end`** after the set ends it after the last track (the default); `end at bar N` cuts the whole set; `loop` starts it over.
   `use restricted` is accepted, and required when a track uses restricted assets (a set is as restricted as its tracks).
-- A set holds the `set` block, `end`/`loop`, `use restricted` and comments, nothing else: a deck line or a `section` next to it
-  is an error that says so.
+- A set holds the `set` block (its `play`, `mix` and `next` lines), `end`/`loop`, `use restricted` and comments, nothing else: a
+  deck line, a `section` or a `station` block next to it is an error that says so.
 
 **What a mix does on two decks.** The engine has two decks, and a track plays its parts on both, so two tracks cannot each have
 a deck to themselves for the overlap. The mix therefore puts both tracks' parts on the same two decks, one bar at a time (N
@@ -2255,9 +2268,9 @@ track does (`every N bars` stops at the track's end). The playhead sits on the `
 `mix` line during a mix, so the follow-scroll goes track to track and mix to mix. What is **not** lit are tokens inside a
 track: their text is the track's, not the set's. (The window shows the set's text; the track opens with `btw load`.)
 
-**Share links.** The canonical text pins tracks by CID, so a link of a set is the set. A link carries its tracks' canonical
-texts (`*` section, each one checked against its CID on opening), however long the link is, so it opens where no track is saved
-("Share links").
+**Share links.** The canonical text pins saved tracks by CID, and a generator call or a `next` is its own text, so a link of a
+set is the set. A link carries its saved tracks' canonical texts (`*` section, each one checked against its CID on opening),
+however long the link is, so it opens where no track is saved ("Share links").
 
 **Sets and the extensions (what the two bodies of work decided together).** A set is checked by the whole compiler: each track
 is compiled as any program is, with its arithmetic, tempo curve, chance, `stack` and `then`, ports, `assert`s and `#! genre:`
@@ -2283,6 +2296,46 @@ meeting settled:
   `window` of upstream, the sub-bar ones (`every 2 beats`, `at bar 1 beat 3`) by the same window, an `lfo` stops where its
   section ends on the set's clock (or where the track ends, for a line outside a section), and a `duck` with no `for` is put back
   when its track ends.
+
+## Radio: stations
+
+A **station** is an endless, deterministic program of programs: position N of a station is always the same track. A station is
+itself a BeatScript program (CC0, with a CID) that says where the walk starts, how it steps from track to track, and the forms
+the tracks take in turn. Listeners do not steer a station; they tune it and lock its knobs.
+
+```text
+#! name: techno radio
+#! license: CC0-1.0
+tempo 128
+key am
+station {
+  from gen@2 techno seed=42
+  next seed=~
+  forms seeded passacaglia rondo fugue
+}
+```
+
+- **`from gen@V GENRE seed=N [length=L]`** is the first track's generator call, and it is required. `section=`, `part=`,
+  `bpm=` and `key=` are refused: a station's tempo and key are its `tempo` and `key` lines, and where it has none, the ones the
+  call prints.
+- **`next seed=+N`** (N >= 1) or **`next seed=~`** is the step from one track's seed to the next: `+N` counts on, `~` hashes the
+  CID of the track before's generator call (`arrange from gen@V GENRE seed=s`), so tempo, key and form do not move the walk.
+  Default `next seed=+1`.
+- **`forms NAME ...`** is the form rotation: track N plays `forms[N mod len]`, of `seeded` (the generator's own arrangement),
+  `passacaglia`, `canon`, `rondo`, `fugue`, `theme-and-variations` and `cross`; a name may come twice. Default `forms seeded`.
+  Each pass of the rotation is a chapter, and its first track's seed is the chapter's theme, bound to each form's theme role (a
+  ground, a refrain, a subject), so it recurs through the chapter while the form's other role takes the track's own seed.
+- **A track** is `tempo`, `key` and one `arrange from` line, under a `#! station:` header line (and from track 1 a `#! from:`
+  line); between two tracks a **segue** is the `cross` form of their two seeds, 192 bars. Each has a CID of its own.
+- **Knobs**: `genre`, `seed`, `step`, `forms`, `tempo`, `key`, `length`. A retune sets one and keeps the position N; one notch is
+  a neighbour (seed +-1, tempo +-2, key one step round the circle of fifths, `+1` and `~`, the forms rotated by one, length one
+  step). A lock holds a knob: a locked knob has no neighbours and is not retuned.
+- A station holds the `station` block, `tempo`, `key` and comments, nothing else, as a set does. `#! stations: v1` is the version
+  (the default; any other value is an error). The station's CID is of its canonical text; comments and `#!` lines are not in it.
+
+**Radio:** a station is an endless program, track N always the same: `station { }` holds `from gen@2 techno seed=42` (the
+first call), `next seed=~` (the step) and `forms seeded rondo fugue` (track N's form, in turn); the MCP `station` tool and
+`POST /api/station` give track `n`, its segue and its neighbours: https://beatscript.app/docs/radio.md
 
 ## Restricted sounds: local samples (design note)
 

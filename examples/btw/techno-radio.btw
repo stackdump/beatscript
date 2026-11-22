@@ -1,0 +1,17 @@
+#! skip-test: a station's tracks call the seeded generator, which tests/examples_btw.rs checks without; tested in crates/btwapi/tests/station.rs
+#! name: techno radio
+#! license: CC0-1.0
+# techno-radio.btw: a station, an endless program of techno tracks (CC0). Original. Position N is always the same track.
+# The walk starts at gen@2 techno seed=42 and steps with seed=~: each seed is a hash of the CID of the track before's generator
+# call, so turning the tempo, key or forms knob keeps the walk.
+# The forms turn in fours: the generator's own arrangement, a passacaglia, a rondo, a fugue, then round again. The first seed of
+# each four is its chapter's theme, the ground, the refrain and the subject of the three forms after it.
+# Between two tracks the segue is the cross form of their two seeds, 192 bars. The MCP station tool gives track N (n=N).
+tempo 128
+key am
+
+station {
+  from gen@2 techno seed=42
+  next seed=~
+  forms seeded passacaglia rondo fugue
+}

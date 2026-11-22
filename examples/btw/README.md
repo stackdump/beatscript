@@ -47,6 +47,7 @@ reformattings keep its CID. All of them are original and CC0-1.0. A file that ne
 | `rondo-of-passacaglias.btw` | one seed in every role of a nested form: a rondo whose refrain is the seed's melody and whose episodes are a passacaglia over its bass (`skip-test`: needs the generator; tested in `crates/btwapi/tests/forms_roles.rs`) | Phrase templates (roles) | `ext-roles.md` |
 | `such-stuff-as-dreams-122-reference.btw` | the found-phrases reference program (deep house, 122): Prospero's lines from The Tempest sung buried in `night` and forward in `spot`, crossed onto the shaker and hats; the hand-written twin of `such-stuff-as-dreams-122.btw` | Found phrases | `found-phrases.md` |
 | `tyger-tyger-128.btw` | the found-phrases reference program (EDM, 128): Blake's trochaic Tyger chanted on the kick (`@ vox xfer kick4`), pronunciation fixed with phoneme escapes | Found phrases | `found-phrases.md` |
+| `techno-radio.btw` | a station, `station { }` with `from gen@2 techno seed=42`, `next seed=~` and `forms seeded passacaglia rondo fugue`: an endless program whose track N is always the same, each chapter's first seed its theme (`skip-test`: needs the generator; tested in `crates/btwapi/tests/station.rs`) | Radio: stations | `radio.md` |
 | `showcase.btw` | a whole track that uses the features together (written beside these) | | |
 
 Try one from a shell, with no app running:
