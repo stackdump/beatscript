@@ -4,6 +4,9 @@
 //! `let`'s value; a def's signature; a generator's signature and doc; a part parameter's or a registry param's doc, types
 //! and options; a role, a control word, a statement keyword, a voice. Signature help names the parameters of the call the
 //! cursor is in (a generator, a transform, a def) and of a `do` line's verb, with the one being typed active.
+//!
+//! A reference (a generator call, a seed, a stored program's section or part, a template: refs.rs) says what it is, what it
+//! resolves to and its expansion; a `# from:` line an eject wrote says where its text came from.
 
 use djengine::json::{JsonObject, JsonValue};
 use djlive::diag::Span;
@@ -126,6 +129,10 @@ fn word_markdown(a: &Analysis, i: usize, env: &EnvNames) -> Option<String> {
             return Some(format!("{}\n\narrange mutation · {doc}", code(&sig)));
         }
     }
+    // a generator call's head (when the call cannot be worked out: a working one is hovered as a reference)
+    if crate::refs::is_gen_head(w) && matches!(next, Some(Tok::Word(_))) {
+        return Some(format!("{}\n\na call of the seeded generator (an engine call): the program it prints for the genre, the seed and the rest, pinned by its CID; `section=` and `part=` say which piece of it this is", code("gen@2 GENRE seed=N [bpm=B] [key=K] [length=short|standard|long] [section=NAME] [part=ROLE]")));
+    }
     if next == Some(&Tok::LParen) {
         if let Some(c) = lang::call(w) {
             return Some(format!("{}\n\n{}", code(&c.label()), c.doc));
@@ -234,11 +241,35 @@ fn do_word(words: &[&str], env: &EnvNames) -> Option<String> {
     None
 }
 
-/// `textDocument/hover`.
+fn markdown_at(a: &Analysis, md: String, span: Span, enc: Encoding) -> JsonValue {
+    obj([("contents", obj([("kind", s("markdown")), ("value", s(md))])), ("range", span_range(&a.index, &a.text, span, enc))])
+}
+
+/// `textDocument/hover`: a reference's own text first (refs.rs), then the word, then the statement a reference stands in.
 pub fn hover(a: &Analysis, at: usize, env: &EnvNames, enc: Encoding) -> JsonValue {
     if a.in_comment(at) {
-        return JsonValue::Null;
+        // a `# from: <call> -> <cid>` line eject wrote
+        let line = a.index.line_of(at);
+        let (ls, le) = (a.index.line_start(line), a.index.line_end(&a.text, line));
+        return match crate::refs::from_line_markdown(&a.text[ls..le]) {
+            Some(m) => markdown_at(a, m, Span::new(ls + (a.text[ls..le].len() - a.text[ls..le].trim_start().len()), le), enc),
+            None => JsonValue::Null,
+        };
     }
+    if let Some(site) = crate::refs::site_on(a, at) {
+        return markdown_at(a, crate::refs::hover_markdown(a, site), site.span, enc);
+    }
+    match word_hover(a, at, env, enc) {
+        JsonValue::Null => match crate::refs::site_at(a, at) {
+            Some(site) => markdown_at(a, crate::refs::hover_markdown(a, site), site.span, enc),
+            None => JsonValue::Null,
+        },
+        h => h,
+    }
+}
+
+/// The hover of the word or symbol at `at` (no reference).
+fn word_hover(a: &Analysis, at: usize, env: &EnvNames, enc: Encoding) -> JsonValue {
     let (md, span) = if let Some(r) = a.symbols.ref_at(at) {
         (symbol_markdown(a, r.symbol), r.span)
     } else if let Some(i) = a.token_at(at) {

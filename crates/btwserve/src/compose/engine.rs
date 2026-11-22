@@ -148,6 +148,8 @@ pub fn go_check_report(r: &Value) -> Value {
     m.insert("uses_assets".into(), b(&r["uses_assets"]));
     m.insert("restricted".into(), b(&r["restricted"]));
     m.insert("seconds".into(), opt_float(&r["seconds"]));
+    // what the recipe makes: expanded_cid, refs, resolution (btwapi::resolution), as /api/check keeps them
+    crate::public::references(&mut m, r);
     Value::Object(m)
 }
 
@@ -164,9 +166,14 @@ impl Engine {
 
     /// `Check`, charged to `owner` (the caller's address; "" for unbilled work).
     pub fn check(&self, owner: &str, text: &str) -> Result<Value, ApiError> {
+        self.check_with(owner, text, false)
+    }
+
+    /// [`Engine::check`], and with `expand` each reference's `expansion` in `refs` (the MCP check's `expand: true`).
+    pub fn check_with(&self, owner: &str, text: &str, expand: bool) -> Result<Value, ApiError> {
         match &self.checker {
-            Some(c) => self.block(c.check(owner, text)),
-            None => Ok(go_check_report(&serde_json::from_str(&btwapi::check_json(text)).unwrap_or(Value::Null))),
+            Some(c) => self.block(c.check_with(owner, text, expand)),
+            None => Ok(go_check_report(&serde_json::from_str(&btwapi::check_json_with(text, expand)).unwrap_or(Value::Null))),
         }
     }
 

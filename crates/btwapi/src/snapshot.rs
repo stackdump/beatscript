@@ -172,7 +172,11 @@ impl WebEnv {
 /// The web environment, built once.
 pub fn web_env() -> &'static WebEnv {
     static ENV: OnceLock<WebEnv> = OnceLock::new();
-    ENV.get_or_init(|| parse(SNAPSHOT_JSON).expect("data/snapshot.json is valid (a test parses it)"))
+    ENV.get_or_init(|| {
+        // a `gen` call resolves against the seeded generator: every check made here can make one (djlive::gen)
+        crate::generate::install();
+        parse(SNAPSHOT_JSON).expect("data/snapshot.json is valid (a test parses it)")
+    })
 }
 
 fn strings(v: Option<&JsonValue>) -> Vec<String> {

@@ -561,7 +561,7 @@ impl Lower<'_> {
             StmtKind::Setting(Setting::TempoRamp(r)) => TempoSpec::Ramp(r.clone()),
             _ => return,
         };
-        let line = Line { when: None, hold: None, target: None, body: Body::Action(Action::Tempo(spec)), guard: None };
+        let line = Line { when: None, hold: None, target: None, control: None, body: Body::Action(Action::Tempo(spec)), guard: None };
         self.line(st.span, &line, sc, out, segs);
     }
 }

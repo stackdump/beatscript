@@ -405,6 +405,7 @@ fn templates_v1_are_pinned() {
         ("form-fugue", "arrange from template(fugue, @tyger_burning_bright)\n"),
         ("form-theme-and-variations", "arrange from template(theme-and-variations, @dickinson_chariot_death)\n"),
         ("form-rondo-triplet", "arrange from template(rondo, @byron_assyrian_wolf)\n"),
+        ("form-cross", "arrange from template(cross, @psalm42_deep_calleth)\n"),
     ] {
         let path = format!("{}/tests/fixtures/template/{name}.btw", env!("CARGO_MANIFEST_DIR"));
         let got = expanded(src);
@@ -583,7 +584,7 @@ fn a_template_program_is_canonical_and_reformat_stable() {
 /// The registry: the names and each template's example is a program that checks.
 #[test]
 fn every_template_has_a_checking_example() {
-    assert_eq!(template::names(), ["deep-house", "quodlibet", "passacaglia", "canon", "rondo", "fugue", "theme-and-variations"].map(String::from).to_vec());
+    assert_eq!(template::names(), ["deep-house", "quodlibet", "passacaglia", "canon", "rondo", "fugue", "theme-and-variations", "cross"].map(String::from).to_vec());
     for t in &template::TEMPLATES {
         assert!(!t.summary.is_empty());
         let w = warnings(&format!("{}\n", t.example));

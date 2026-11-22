@@ -280,6 +280,19 @@ mod tests {
         assert_eq!(out, r#"[{"jsonrpc":"2.0","id":7,"result":null}]"#);
     }
 
+    /// What the page asks of a reference (docs/btwls.md "The web editor"): `btw/expand` and the copy command, in UTF-16.
+    #[test]
+    fn the_language_service_answers_a_references_expansion() {
+        let mut ls = btwls::Server::with_encoding(btwls::Encoding::Utf16);
+        ls.deferred = true;
+        let text = "# é\ntempo 128\nkey c\nlet bed = gen@2 techno seed=42 section=drop part=bass\nsection groove 4 bars {\n  deck A: bass bed\n}\narrange groove\n";
+        btwls::wasm::open(&mut ls, "main", text);
+        let all = btwls::wasm::request(&mut ls, "btw/expand", r#"{"textDocument":{"uri":"main"}}"#);
+        assert!(all.contains(r#""kind":"gen""#) && all.contains(r#""range":{"start":{"line":3,"character":10}"#) && all.contains("let bed_1 = "), "{all}");
+        let copy = btwls::wasm::request(&mut ls, "workspace/executeCommand", r#"{"command":"btw.expand.copy","arguments":[{"uri":"main","position":{"line":3,"character":12}}]}"#);
+        assert!(copy.contains(r##""text":"# from: gen@2 techno seed=42 section=drop part=bass -> z"##), "{copy}");
+    }
+
     #[test]
     fn share_default_origin_is_the_site() {
         assert_eq!(btwapi::DEFAULT_ORIGIN, "https://btw.bitwrap.io");

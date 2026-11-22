@@ -14,9 +14,11 @@ const USAGE: &str = "btwd: btw from a shell (docs/BTW.md)
 
 usage: btwd <command> [options]
 
-  check        [--file F | -] [--same-as F|LINK]  the CheckReport as JSON (errors with line, column, help; the CID; the nets);
+  check        [--file F | -] [--same-as F|LINK] [--expand]  the CheckReport as JSON (errors with line, column, help; the CID;
+                                         the nets; expanded_cid, and refs and resolution for a program with references);
                                          with --same-as, a `same_as` field: is the other program (a file, or a share link that
-                                         carries its text) the same song, by its nets
+                                         carries its text) the same song, by its nets; with --expand, each entry of refs carries
+                                         its expansion (the BeatScript the reference is written out as)
   diff         A B                       are A and B (each a file or a share link) the same song, and if not, what changed in
                                          music: same_as's report with its `diff` (song settings, arrangement, transforms, notes)
   same-as      [--file F | -]            {\"a\": text, \"b\": text} as JSON in; are they the same song (by their nets), as JSON
@@ -144,10 +146,10 @@ fn run(args: &[String]) -> Result<(), String> {
                     let t = text(&o)?;
                     match cmd {
                         "check" => match &o.same_as {
-                            None => btwapi::check_json(&t),
+                            None => btwapi::check_json_with(&t, o.expand),
                             Some(other) => {
                                 let b = other_program(other)?;
-                                let mut r = btwapi::check_report(&t);
+                                let mut r = btwapi::check_report_with(&t, o.expand);
                                 if let djengine::json::JsonValue::Object(m) = &mut r {
                                     m.set("same_as", btwapi::same_as_report(&t, &b));
                                 }

@@ -411,7 +411,7 @@ pub fn estimate_tokens(system: &str, msgs: &[super::model::Message]) -> i64 {
 // ---------- extraction ----------
 
 const STATEMENT_WORDS: &[&str] = &[
-    "tempo", "swing", "key", "let", "def", "repeat", "section", "arrange", "import", "end", "loop", "evolve", "deck", "master", "every", "on", "at", "after", "before", "for", "do", "swap", "move", "load", "queue", "play", "stop", "sync", "mute",
+    "tempo", "swing", "key", "let", "def", "repeat", "section", "arrange", "import", "end", "loop", "evolve", "deck", "master", "control", "every", "on", "at", "after", "before", "for", "do", "swap", "move", "load", "queue", "play", "stop", "sync", "mute",
     "unmute", "filter", "delay", "reverb", "crush", "level", "low", "mid", "high", "crossfader", "resonance", "sample", "use", "kick", "snare", "hihat", "clap", "bass", "melody", "harmony", "arp", "rotate", "transpose", "octave", "invert", "reverse",
     "thin",
 ];

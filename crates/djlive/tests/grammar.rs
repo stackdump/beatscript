@@ -116,6 +116,11 @@ const SEMANTIC: &[&str] = &[
     "expected a section, found a number",
     // `master` is a subject of `assert level`, and the one subject of a rule about notes cannot be (constraint.rs): the mix has no parts
     "`master` has no parts: it is the mix of both decks",
+    // which target takes which action is BTW.md's table, not the grammar's (`deck B: tempo ...`; the grammar's `tempo` action
+    // says "no target" in its note only): a walk that steers clear of the [host] productions reaches it
+    "`tempo(...)` takes no target before it",
+    // a generator call's tempo is a value in range (gen.rs), as a chance is
+    "`bpm=` is a tempo from 40 to 300",
 ];
 
 #[test]

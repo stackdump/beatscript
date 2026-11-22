@@ -33,6 +33,8 @@ pub struct Analysis {
     /// The doc comments: the `#` lines directly above a `section`, `let`, `def` or `arrange` (djlive::doc).
     pub docs: Vec<djlive::doc::DocComment>,
     check: OnceCell<Check>,
+    /// The program's references (`djlive::refs::sites`), worked out when first asked for ([`Analysis::refs`]).
+    refs: OnceCell<Result<Vec<djlive::refs::Site>, Vec<Diagnostic>>>,
 }
 
 /// The check of a text against the site's environment (`btwapi::web_env`): what `btwd check` and the page say.
@@ -59,6 +61,7 @@ impl Analysis {
             program: parsed.program,
             docs: djlive::doc::doc_comments(&text),
             check: OnceCell::new(),
+            refs: OnceCell::new(),
             text,
         }
     }
@@ -73,6 +76,17 @@ impl Analysis {
     /// The check, computed now if it has not been.
     pub fn check(&self) -> &Check {
         self.check.get_or_init(|| full_check(&self.text))
+    }
+
+    /// The program's references, resolved (a generator call is generated, so this is not free: it is done once per text, when
+    /// a hover, a lens or a code action first asks). A text with nothing a reference starts with has none at no cost; Err: what
+    /// is wrong with one of them (as `check` says it, at the reference).
+    pub fn refs(&self) -> Result<&[djlive::refs::Site], &[Diagnostic]> {
+        let r = self.refs.get_or_init(|| if crate::refs::may_have(self) { djlive::refs::sites(&self.text, &btwapi::web_env().env()) } else { Ok(Vec::new()) });
+        match r {
+            Ok(v) => Ok(v),
+            Err(e) => Err(e),
+        }
     }
 
     /// The check if it is done.

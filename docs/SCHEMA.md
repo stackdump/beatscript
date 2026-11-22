@@ -46,6 +46,8 @@ gets the context below. A browser gets this page. `https://beatscript.app/schema
 | `text` | the **canonical program text** |
 | `author` | the author's address or DID, when the program is signed in to an account |
 | `forkedFrom` | the CID of the program this one was forked from, when it was |
+| `isBasedOn` | what it is based on: each generator call, borrow and vendored part, with the CID it `resolves` to |
+| `expandsTo` | for a program with references, the CID of the program they write out to |
 | `signature` | the author's signature over the CID, when the share is signed |
 
 ### The CID is `@id`, and `text` is canonical
@@ -119,6 +121,25 @@ CID.
 <a id="author"></a>**author**: who made it: an address or a DID.
 
 <a id="forkedFrom"></a>**forkedFrom**: the CID of the program this one was forked from.
+
+<a id="isBasedOn"></a>**isBasedOn**: what the program is based on, schema.org's term: one CreativeWork for each engine call and
+borrow its text makes (`gen@2 techno seed=42 section=drop part=bass`, a seed, a stored program's section by CID) and for each
+part an eject wrote out into it (its `# from: <call> -> <cid>` line), each named by its call (`name`), with `resolves`,
+`pinnedGenerator` and `derivation`. Like the doc comments, it is outside the CID.
+
+<a id="resolves"></a>**resolves**: the CID a reference resolves to: for a generator call, the CID of the program the generator
+prints for it (its pin); for a borrow, the stored program's CID.
+
+<a id="pinnedGenerator"></a>**pinnedGenerator**: the generator and version a call names (`seeded@2`): a version always prints the
+same program for the same inputs.
+
+<a id="derivation"></a>**derivation**: how a source came in: `called` (an engine call the text makes), `borrowed` (a structural
+reference the text makes) or `vendored` (written out by an eject; the text has the notes, and the `# from:` line the call).
+
+<a id="expandsTo"></a>**expandsTo**: a recipe's written-out program (every reference written out as BeatScript): its CID. The
+same recipe always expands to the same program, and the two play the same.
+
+<a id="expandedFrom"></a>**expandedFrom**: on a written-out program, the CID of the recipe it was written out from.
 
 <a id="signature"></a>**signature**: the author's signature over the CID, opaque to everything but the wallet that
 checks it.

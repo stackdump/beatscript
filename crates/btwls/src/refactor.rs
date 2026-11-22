@@ -12,6 +12,9 @@
 //!
 //! Collapse a repeated arrangement: `arrange a b a b a b outro` is `arrange { a b } loop 3 then outro end` (an arrange block
 //! that loops N passes, then its coda), proved the same way.
+//!
+//! Eject a reference (a generator call, a seed, a stored program's section or part, a template): written out in place under its
+//! `# from:` line (`refs.rs`, `djlive::refs::eject`), proved the same way: the written-out program plays the reference's nets.
 
 use djengine::json::{JsonObject, JsonValue};
 use djlive::diag::Span;
@@ -243,6 +246,7 @@ pub fn resolve(a: &Analysis, action: &JsonValue, enc: Encoding) -> Result<JsonVa
         "extract-let" => extract_let(a, Span::new(start, end)),
         "inline-let" => inline_let(a, start),
         "collapse-arrange" => collapse_arrange(a, start),
+        "eject" => crate::refs::eject_made(a, start),
         _ => None,
     }
     .ok_or("the refactor no longer applies here")?;

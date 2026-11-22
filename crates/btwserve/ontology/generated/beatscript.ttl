@@ -214,53 +214,42 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#prefLabel> "setting"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The setting production of BeatScript's grammar (a setting reads no input: it is the program's own)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "\"tempo\" stempo | \"swing\" arith | \"key\" KEY" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"tempo\" tempo | \"swing\" arith | \"key\" KEY" ;
     <https://beatscript.app/ontology/ns#writtenAs> "setting" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Settings"@en ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-key> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-arith> ;
-    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-stempo> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-tempo> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-key> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-swing> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-tempo> .
 
-<https://beatscript.app/ontology/concept/grammar-stempo> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
-    <http://www.w3.org/2004/02/skos/core#prefLabel> "stempo"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The stempo production of BeatScript's grammar (tempo 126 tempo 100 -> 130 over 8 bars exp)."@en ;
+<https://beatscript.app/ontology/concept/grammar-tempo> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "tempo"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The tempo production of BeatScript's grammar (tempo 126 tempo 100 -> 130 over 8 bars exp)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#ebnf> "arith [ \"->\" arith \"over\" dur [ shape ] ]" ;
-    <https://beatscript.app/ontology/ns#writtenAs> "stempo" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "tempo" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Settings"@en ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-arith> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-dur> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-shape> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-arrow> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-over> .
-
-<https://beatscript.app/ontology/concept/grammar-tempo> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
-    <http://www.w3.org/2004/02/skos/core#prefLabel> "tempo"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The tempo production of BeatScript's grammar (a control's tempo (at bar 16: tempo 128 -> 140 ...))."@en ;
-    <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "value [ \"->\" value \"over\" dur [ shape ] ]" ;
-    <https://beatscript.app/ontology/ns#writtenAs> "tempo" ;
-    <https://beatscript.app/ontology/ns#grammarSection> "Settings"@en ;
-    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-dur> ;
-    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-shape> ;
-    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-value> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-arrow> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-over> .
 
 <https://beatscript.app/ontology/concept/grammar-headed> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "headed"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The headed production of BeatScript's grammar (a deck's parts: no time word before them; a def's call, a duck and a mix name their decks themselves)."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The headed production of BeatScript's grammar (a deck's parts: no time word before them; the control deck; a def's call, a duck and a mix name their decks themselves)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "\"deck\" deck \":\" parts [ guard ] | [ timing \":\" ] [ target \":\" ] control [ cguard ] | [ timing \":\" ] ( invoke | duck | mix ) [ cguard ]" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"deck\" deck \":\" parts [ guard ] | [ timing \":\" ] [ target \":\" ] control [ cguard ] | [ timing \":\" ] \"control\" \":\" ( engine | do | duck | mix ) [ cguard ] | [ timing \":\" ] ( invoke | duck | mix ) [ cguard ]" ;
     <https://beatscript.app/ontology/ns#writtenAs> "headed" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Lines: when, where, what"@en ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-cguard> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-control> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-deck> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-do> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-duck> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-engine> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-guard> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-invoke> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-mix> ;
@@ -268,6 +257,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-target> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-timing> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-colon> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-control> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-deck> .
 
 <https://beatscript.app/ontology/concept/grammar-timing> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
@@ -375,11 +365,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#prefLabel> "control"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The control production of BeatScript's grammar."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "action | do | sing" ;
+    <https://beatscript.app/ontology/ns#ebnf> "action | engine | do | sing" ;
     <https://beatscript.app/ontology/ns#writtenAs> "control" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Lines: when, where, what"@en ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-action> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-do> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-engine> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-sing> .
 
 <https://beatscript.app/ontology/concept/grammar-parts> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
@@ -715,10 +706,40 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/grammar-action> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "action"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The action production of BeatScript's grammar (hertz: 20 .. 20k; 0 .. 1: how much; deck X: / master: level; no target; no target: at bar 16: tempo 128 -> 140 over 4 bars; the booth's: the desktop app plays these)."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The action production of BeatScript's grammar (hertz: 20 .. 20k; 0 .. 1: how much; deck X: / master: level; deck X:)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "\"filter\" ( \"lp\" | \"hp\" ) change | \"filter\" ( \"off\" | \"open\" ) | ( \"delay\" | \"reverb\" | \"crush\" | \"drive\" | \"resonance\" ) change | ( \"level\" | \"low\" | \"mid\" | \"high\" ) change | \"crossfader\" change | \"tempo\" tempo | \"swap\" \"pairs\" [ \"with\" MOVE ] | \"move\" MOVE \"on\" deck [ span ] | \"load\" \"pair\" SPEC [ \"group\" INT ] | \"load\" SPEC | \"queue\" ( \"play\" | \"pause\" | \"stop\" | \"next\" | \"loop\" | \"jump\" INT | \"add\" WORD ) | \"play\" | \"stop\" | \"sync\" | \"mute\" | \"unmute\"" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"filter\" ( \"lp\" | \"hp\" ) change | \"filter\" ( \"off\" | \"open\" ) | ( \"delay\" | \"reverb\" | \"crush\" | \"drive\" | \"resonance\" ) change | ( \"level\" | \"low\" | \"mid\" | \"high\" ) change | \"load\" SPEC | \"play\" | \"stop\" | \"sync\" | \"mute\" | \"unmute\"" ;
     <https://beatscript.app/ontology/ns#writtenAs> "action" ;
+    <https://beatscript.app/ontology/ns#grammarSection> "Control: what the mix does"@en ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-lexical-spec> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-change> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-crush> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-delay> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-drive> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-filter> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-high> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-hp> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-level> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-load> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-low> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-lp> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-mid> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-mute> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-off> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-open> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-play> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-resonance> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-reverb> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-stop> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-sync> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-unmute> .
+
+<https://beatscript.app/ontology/concept/grammar-engine> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "engine"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The engine production of BeatScript's grammar (no target, or control:; at bar 16: tempo 128 -> 140 over 4 bars; the booth's: the desktop app plays these)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"crossfader\" change | \"tempo\" tempo | \"swap\" \"pairs\" [ \"with\" MOVE ] | \"move\" MOVE \"on\" deck [ span ] | \"load\" \"pair\" SPEC [ \"group\" INT ] | \"queue\" ( \"play\" | \"pause\" | \"stop\" | \"next\" | \"loop\" | \"jump\" INT | \"add\" WORD )" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "engine" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Control: what the mix does"@en ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-int> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-lexical-move> ;
@@ -730,38 +751,21 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-tempo> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-add> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-crossfader> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-crush> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-delay> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-drive> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-filter> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-group> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-high> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-hp> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-jump> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-level> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-load> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-loop> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-low> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-lp> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-mid> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-move> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-mute> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-next> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-off> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-on> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-open> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-pair> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-pairs> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-pause> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-play> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-queue> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-resonance> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-reverb> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-stop> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-swap> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-sync> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-tempo> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-unmute> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-with> .
 
 <https://beatscript.app/ontology/concept/grammar-change> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
@@ -1277,13 +1281,14 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/grammar-arrange> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "arrange"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The arrange production of BeatScript's grammar (with a NAME it is one of several arrangements; the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff))."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The arrange production of BeatScript's grammar (with a NAME it is one of several arrangements; the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff); the whole program a generator call prints: arrange from gen@2 techno seed=42)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "\"arrange\" sexpr { sexpr } | \"arrange\" NAME \":\" sexpr { sexpr } [ arr_end ] | \"arrange\" \"from\" ( seed | template )" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"arrange\" sexpr { sexpr } | \"arrange\" NAME \":\" sexpr { sexpr } [ arr_end ] | \"arrange\" \"from\" ( seed | template ) | \"arrange\" \"from\" gen" ;
     <https://beatscript.app/ontology/ns#writtenAs> "arrange" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Structure: lets, defs, sections, the arrangement"@en ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-arr-end> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-gen> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-seed> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-sexpr> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-template> ;
@@ -1454,9 +1459,10 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#prefLabel> "ref"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The ref production of BeatScript's grammar (music from elsewhere, written out as BeatScript before the program is read)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "seed | stored" ;
+    <https://beatscript.app/ontology/ns#ebnf> "seed | gen | stored" ;
     <https://beatscript.app/ontology/ns#writtenAs> "ref" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Start from a seed"@en ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-gen> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-seed> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-stored> .
 
@@ -1493,6 +1499,42 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-role> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-dot> .
 
+<https://beatscript.app/ontology/concept/grammar-gen> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "gen"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The gen production of BeatScript's grammar (gen@2 techno seed=42 section=drop part=bass: the seeded generator, called; GEN is gen@2 or a bare gen)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#ebnf> "GEN NAME \"seed\" \"=\" ( INT | NAME ) { gen_param }" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "gen" ;
+    <https://beatscript.app/ontology/ns#grammarSection> "Start from a seed"@en ;
+    <https://beatscript.app/ontology/ns#hostOnly> true ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-gen> ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-int> ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-gen-param> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-equals> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-seed> .
+
+<https://beatscript.app/ontology/concept/grammar-gen-param> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "gen_param"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The gen_param production of BeatScript's grammar."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"bpm\" \"=\" NUMBER | \"key\" \"=\" KEY | \"length\" \"=\" ( \"short\" | \"standard\" | \"long\" ) | \"section\" \"=\" NAME | \"part\" \"=\" role" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "gen_param" ;
+    <https://beatscript.app/ontology/ns#grammarSection> "Start from a seed"@en ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-key> ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-number> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-role> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-equals> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-bpm> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-key> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-length> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-long> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-part> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-section> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-short> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-standard> .
+
 <https://beatscript.app/ontology/concept/grammar-structure> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "structure"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The structure production of BeatScript's grammar (the generator's song structures; standard is the default)."@en ;
@@ -1507,14 +1549,66 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/grammar-template> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "template"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The template production of BeatScript's grammar (a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track)."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The template production of BeatScript's grammar (a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form's roles)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "\"template\" \"(\" NAME \",\" ( PHRASE | STRING ) \")\"" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"template\" \"(\" NAME \",\" ( PHRASE | STRING ) { \",\" binding } \")\"" ;
     <https://beatscript.app/ontology/ns#writtenAs> "template" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Phrase templates"@en ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-phrase> ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-string> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-binding> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-open-paren> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-close-paren> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-comma> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-template> .
+
+<https://beatscript.app/ontology/concept/grammar-binding> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "binding"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The binding production of BeatScript's grammar (a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#ebnf> "NAME \"=\" source" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "binding" ;
+    <https://beatscript.app/ontology/ns#grammarSection> "Phrase templates"@en ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-source> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-equals> .
+
+<https://beatscript.app/ontology/concept/grammar-source> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "source"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The source production of BeatScript's grammar (an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program's part or sections)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#ebnf> "gen | NAME | notes | form | stored" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "source" ;
+    <https://beatscript.app/ontology/ns#grammarSection> "Phrase templates"@en ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-form> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-gen> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-notes> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-stored> .
+
+<https://beatscript.app/ontology/concept/grammar-notes> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "notes"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The notes production of BeatScript's grammar (a bar, or bars one after another)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"[\" pattern \"]\" | \"<\" \"[\" pattern \"]\" { \"[\" pattern \"]\" } \">\"" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "notes" ;
+    <https://beatscript.app/ontology/ns#grammarSection> "Phrase templates"@en ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-pattern> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-lt> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-gt> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-open-bracket> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-close-bracket> .
+
+<https://beatscript.app/ontology/concept/grammar-form> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "form"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The form production of BeatScript's grammar (a form inside another takes no phrase: forms nest 3 deep)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"template\" \"(\" NAME { \",\" binding } \")\"" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "form" ;
+    <https://beatscript.app/ontology/ns#grammarSection> "Phrase templates"@en ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
+    <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-binding> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-open-paren> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-close-paren> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-comma> ;
@@ -2067,13 +2161,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-symbol-open-paren> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "("@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword ( of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword ( of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, form, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "(" .
 
 <https://beatscript.app/ontology/concept/keyword-symbol-close-paren> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> ")"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword ) of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword ) of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, form, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> ")" .
 
@@ -2091,7 +2185,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-symbol-comma> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> ","@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword , of BeatScript, written in: arr_gap, atom, call, cprimary, def, dleaf, doval, dstack, invoke, mix, mutation, pargs, primary, seed, set_mix, sexpr, template."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword , of BeatScript, written in: arr_gap, atom, call, cprimary, def, dleaf, doval, dstack, form, invoke, mix, mutation, pargs, primary, seed, set_mix, sexpr, template."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "," .
 
@@ -2103,7 +2197,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-symbol-arrow> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "->"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword -> of BeatScript, written in: change, doval, set_mix, stempo, tempo, wire."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword -> of BeatScript, written in: change, doval, set_mix, tempo, wire."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "->" .
 
@@ -2151,7 +2245,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-symbol-lt> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "<"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword < of BeatScript, written in: assert, atom, cmp, dterm, op."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword < of BeatScript, written in: assert, atom, cmp, dterm, notes, op."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "<" .
 
@@ -2163,7 +2257,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-symbol-equals> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "="@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword = of BeatScript, written in: arg, do, let, param."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword = of BeatScript, written in: arg, binding, do, gen, gen_param, let, param."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "=" .
 
@@ -2175,7 +2269,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-symbol-gt> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> ">"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword > of BeatScript, written in: assert, atom, bound, cmp, dterm, op."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword > of BeatScript, written in: assert, atom, bound, cmp, dterm, notes, op."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> ">" .
 
@@ -2211,13 +2305,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-symbol-open-bracket> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "["@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword [ of BeatScript, written in: arg, atom, choose, doval, dterm, seed."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword [ of BeatScript, written in: arg, atom, choose, doval, dterm, notes, seed."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "[" .
 
 <https://beatscript.app/ontology/concept/keyword-symbol-close-bracket> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "]"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword ] of BeatScript, written in: arg, atom, choose, doval, dterm, seed."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword ] of BeatScript, written in: arg, atom, choose, doval, dterm, notes, seed."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "]" .
 
@@ -2229,7 +2323,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-add> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "add"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword add of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword add of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "add" .
 
@@ -2341,6 +2435,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "beside" .
 
+<https://beatscript.app/ontology/concept/keyword-bpm> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "bpm"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword bpm of BeatScript, written in: gen_param."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "bpm" .
+
 <https://beatscript.app/ontology/concept/keyword-cc-by> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "cc-by"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword cc-by of BeatScript, written in: license."@en ;
@@ -2377,6 +2477,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "clap" .
 
+<https://beatscript.app/ontology/concept/keyword-control> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "control"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword control of BeatScript, written in: headed."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "control" .
+
 <https://beatscript.app/ontology/concept/keyword-crossfade> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "crossfade"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword crossfade of BeatScript, written in: TRANSITION."@en ;
@@ -2385,7 +2491,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-crossfader> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "crossfader"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword crossfader of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword crossfader of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "crossfader" .
 
@@ -2583,7 +2689,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-group> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "group"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword group of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword group of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "group" .
 
@@ -2643,13 +2749,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-jump> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "jump"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword jump of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword jump of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "jump" .
 
 <https://beatscript.app/ontology/concept/keyword-key> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "key"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword key of BeatScript, written in: assert, input, setting, type."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword key of BeatScript, written in: assert, gen_param, input, setting, type."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "key" .
 
@@ -2691,7 +2797,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-length> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "length"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword length of BeatScript, written in: assert."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword length of BeatScript, written in: assert, gen_param."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "length" .
 
@@ -2727,7 +2833,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-load> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "load"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword load of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword load of BeatScript, written in: action, engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "load" .
 
@@ -2737,9 +2843,15 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "log" .
 
+<https://beatscript.app/ontology/concept/keyword-long> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "long"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword long of BeatScript, written in: gen_param."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "long" .
+
 <https://beatscript.app/ontology/concept/keyword-loop> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "loop"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword loop of BeatScript, written in: action, arr_end, block_end, loop, sample, structure."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword loop of BeatScript, written in: arr_end, block_end, engine, loop, sample, structure."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "loop" .
 
@@ -2811,7 +2923,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-move> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "move"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword move of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword move of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "move" .
 
@@ -2835,7 +2947,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-next> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "next"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword next of BeatScript, written in: action, launch, when."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword next of BeatScript, written in: engine, launch, when."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "next" .
 
@@ -2865,7 +2977,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-on> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "on"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword on of BeatScript, written in: action, assert, launch, param, sing, when."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword on of BeatScript, written in: assert, engine, launch, param, sing, when."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "on" .
 
@@ -2889,7 +3001,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-over> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "over"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword over of BeatScript, written in: span, stempo, tempo."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword over of BeatScript, written in: span, tempo."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "over" .
 
@@ -2901,13 +3013,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-pair> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "pair"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword pair of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword pair of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "pair" .
 
 <https://beatscript.app/ontology/concept/keyword-pairs> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "pairs"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword pairs of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword pairs of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "pairs" .
 
@@ -2917,6 +3029,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "pan" .
 
+<https://beatscript.app/ontology/concept/keyword-part> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "part"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword part of BeatScript, written in: gen_param."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "part" .
+
 <https://beatscript.app/ontology/concept/keyword-pattern> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "pattern"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword pattern of BeatScript, written in: type."@en ;
@@ -2925,7 +3043,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-pause> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "pause"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword pause of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword pause of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "pause" .
 
@@ -2961,13 +3079,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-play> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "play"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword play of BeatScript, written in: action, set_play."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword play of BeatScript, written in: action, engine, set_play."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "play" .
 
 <https://beatscript.app/ontology/concept/keyword-queue> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "queue"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword queue of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword queue of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "queue" .
 
@@ -3057,13 +3175,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-section> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "section"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword section of BeatScript, written in: section."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword section of BeatScript, written in: gen_param, section."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "section" .
 
 <https://beatscript.app/ontology/concept/keyword-seed> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "seed"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword seed of BeatScript, written in: pname, seed."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword seed of BeatScript, written in: gen, pname, seed."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "seed" .
 
@@ -3078,6 +3196,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword set of BeatScript, written in: set."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "set" .
+
+<https://beatscript.app/ontology/concept/keyword-short> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "short"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword short of BeatScript, written in: gen_param."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "short" .
 
 <https://beatscript.app/ontology/concept/keyword-silence> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "silence"@en ;
@@ -3123,7 +3247,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-standard> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "standard"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword standard of BeatScript, written in: structure."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword standard of BeatScript, written in: gen_param, structure."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "standard" .
 
@@ -3141,13 +3265,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-stop> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "stop"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword stop of BeatScript, written in: action, bound."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword stop of BeatScript, written in: action, bound, engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "stop" .
 
 <https://beatscript.app/ontology/concept/keyword-swap> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "swap"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword swap of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword swap of BeatScript, written in: engine."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "swap" .
 
@@ -3165,13 +3289,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-template> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "template"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword template of BeatScript, written in: template."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword template of BeatScript, written in: form, template."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "template" .
 
 <https://beatscript.app/ontology/concept/keyword-tempo> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "tempo"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword tempo of BeatScript, written in: action, set_mix, setting, type."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword tempo of BeatScript, written in: engine, set_mix, setting, type."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "tempo" .
 
@@ -3267,7 +3391,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-with> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "with"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword with of BeatScript, written in: action, set_mix."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword with of BeatScript, written in: engine, set_mix."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "with" .
 
@@ -3325,6 +3449,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "DECIMAL" .
 
+<https://beatscript.app/ontology/concept/token-gen> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "GEN"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's GEN token, used in: gen."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "GEN" .
+
 <https://beatscript.app/ontology/concept/token-ghost> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "GHOST"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The lexer's GHOST token, used in: mark."@en ;
@@ -3339,19 +3469,19 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/token-int> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "INT"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's INT token, used in: SPEC, action, arg, arr_end, assert, atom, block_end, bound, choose, dleaf, dterm, end, evolve, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, term, until_when."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's INT token, used in: SPEC, arg, arr_end, assert, atom, block_end, bound, choose, dleaf, dterm, end, engine, evolve, gen, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, term, until_when."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "INT" .
 
 <https://beatscript.app/ontology/concept/token-key> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "KEY"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's KEY token, used in: arg, assert, setting, sing."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's KEY token, used in: arg, assert, gen_param, setting, sing."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "KEY" .
 
 <https://beatscript.app/ontology/concept/token-name> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "NAME"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, block_end, call, def, do, end, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, start, stored, template, until_when, when, wire."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, stored, template, until_when, when, wire."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "NAME" .
 
@@ -3369,7 +3499,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/token-number> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "NUMBER"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's NUMBER token, used in: cprimary, lfactor, lfo, mut_op, op, primary, prob, set_mix, weight."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's NUMBER token, used in: cprimary, gen_param, lfactor, lfo, mut_op, op, primary, prob, set_mix, weight."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "NUMBER" .
 
@@ -3453,7 +3583,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/token-word> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "WORD"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's WORD token, used in: action, arg, coperand, do, doval, operand, pvalue."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's WORD token, used in: arg, coperand, do, doval, engine, operand, pvalue."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "WORD" .
 
@@ -3852,6 +3982,13 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The phrase template theme-and-variations: a theme and variations at 84 in D-flat: Dvorak's New World Largo, a different transform in each section and no cross-morphs; the phrase sung in one. Written arrange from template(theme-and-variations, @dickinson_chariot_death)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "theme-and-variations" ;
+    rdfs:seeAlso <https://beatscript.app/ontology/concept/grammar-template> .
+
+<https://beatscript.app/ontology/concept/template-cross> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PhraseTemplate> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "cross"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The phrase template cross: a cross at 120 in D: two sources (two seeds, in any genres: `a=gen@1 dubstep seed=54876, b=gen@1 house seed=7`) take turns and overlap, and morph toward each other and back in cycles; the phrase sung over the crossing. Written arrange from template(cross, @psalm42_deep_calleth)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "cross" ;
     rdfs:seeAlso <https://beatscript.app/ontology/concept/grammar-template> .
 
 <https://beatscript.app/ontology/concept/voice-family-pad> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#VoiceFamily> ;
@@ -4864,6 +5001,25 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#usesMutation> <https://beatscript.app/ontology/concept/mutation-op-accent> ;
     <https://beatscript.app/ontology/ns#usesMutation> <https://beatscript.app/ontology/concept/mutation-op-grow> ;
     <https://beatscript.app/ontology/ns#usesTheme> "new_world_largo" .
+
+<https://beatscript.app/ontology/concept/form-cross> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Form> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "cross"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The cross, a form from classical music: a_leads b_leads both both sung a_leads b_leads sung: one source leads, then the other, then both at once. A quodlibet of two: `~ a_melody_* morph b_melody_1 p` paired with `~ b_bass_* morph a_bass_1 p`, an `@ ... xfer` one-shot in the overlap, then the pull turned round (`~ b_melody_* morph a_melody_1 p`, `~ a_bass_* morph b_bass_1 p`); `~` persists and compounds pass on pass (loop 3)."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "cross" ;
+    <https://beatscript.app/ontology/ns#formTemplate> <https://beatscript.app/ontology/concept/template-cross> ;
+    <https://beatscript.app/ontology/ns#formShape> "a_leads b_leads both both sung a_leads b_leads sung: one source leads, then the other, then both at once"@en ;
+    <https://beatscript.app/ontology/ns#mutationPlan> "a quodlibet of two: `~ a_melody_* morph b_melody_1 p` paired with `~ b_bass_* morph a_bass_1 p`, an `@ ... xfer` one-shot in the overlap, then the pull turned round (`~ b_melody_* morph a_melody_1 p`, `~ a_bass_* morph b_bass_1 p`); `~` persists and compounds pass on pass (loop 3)"@en ;
+    rdfs:seeAlso <https://beatscript.app/docs/forms#cross> ;
+    <https://beatscript.app/ontology/ns#usesTechnique> <https://beatscript.app/ontology/concept/technique-found-phrases> ;
+    <https://beatscript.app/ontology/ns#usesThemeLibrary> <https://beatscript.app/ontology/concept/themes-public-domain> ;
+    <https://beatscript.app/ontology/ns#usesMutation> <https://beatscript.app/ontology/concept/mutation-op-morph> ;
+    <https://beatscript.app/ontology/ns#usesMutation> <https://beatscript.app/ontology/concept/mutation-op-xfer> ;
+    <https://beatscript.app/ontology/ns#usesMutation> <https://beatscript.app/ontology/concept/mutation-op-grow> ;
+    <https://beatscript.app/ontology/ns#usesMutation> <https://beatscript.app/ontology/concept/mutation-op-decay> ;
+    <https://beatscript.app/ontology/ns#usesTheme> "ode_to_joy" ;
+    <https://beatscript.app/ontology/ns#usesTheme> "pachelbel_ground" ;
+    <https://beatscript.app/ontology/ns#usesTheme> "badinerie" .
 
 <https://beatscript.app/ontology/concept/noun-status> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#ControlNoun> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "status"@en ;
@@ -8182,14 +8338,15 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/tool-beatscript-check> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "check"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block.\n\nAnswers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}. docs is the text's doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section's, when it has one. line and col are 1-based; help says what would fix it (\"did you mean ...\"); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID).\n\nWith same_as (another program's CID or text) the answer gains same_as {same, text_same, basis, why, diffs[{section, deck, start_bar, a_cid, b_cid}], only_in_a, only_in_b, renamed, song, diff}: whether the two are the same song by their compiled nets and song-level settings, not their text. When they are not, diff says what changed in music: diff.summary is one line per change (\"tempo 124 -> 126\", \"moved outro: bar 13 -> bar 5\", \"drop2 bass = drop bass transposed +1\", \"drop bass: 1 note changed (1:7 c3 -> d3)\"), with song, arrangement (inserted, removed, moved, repeated, renamed, changed) and parts (a transform: transpose, octave, rotate, reverse, thin, fill, fast, slow; else the notes added, removed or changed at bar:step) as JSON. Use it to prove a refactor changed nothing, or to find what an edit did.\n\nThis is the loop for writing a program (there is no compose tool): read https://beatscript.app/docs/cheatsheet.md and one or two list_examples programs, call instruments, write the program, call check and fix every line:col error until ok, then eval / load to play it and share to store it. Voices come from the instruments tool: use only names from it. For a sung line, a public-domain phrasebook line (list_examples with phrasebook true) comes with its meter, stress and phoneme escapes, so that sing @id on melody checks with no unknown-word warning (https://beatscript.app/docs/found-phrases.md). A voice name with a leading digit (808-bass) cannot be written: inst=808-bass reads as 808 - bass and a quoted \"808-bass\" is refused, so pick a voice that starts with a letter (inst=sub-bass for a deep bass). Read-only, no sign-in. Limits: the text is at most 16384 bytes; about 60 calls a minute.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BTW.md \"The control deck\"): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head.\n\nAnswers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references. docs is the text's doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section's, when it has one. line and col are 1-based; help says what would fix it (\"did you mean ...\"); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID).\n\nWith same_as (another program's CID or text) the answer gains same_as {same, text_same, basis, why, diffs[{section, deck, start_bar, a_cid, b_cid}], only_in_a, only_in_b, renamed, song, diff}: whether the two are the same song by their compiled nets and song-level settings, not their text. When they are not, diff says what changed in music: diff.summary is one line per change (\"tempo 124 -> 126\", \"moved outro: bar 13 -> bar 5\", \"drop2 bass = drop bass transposed +1\", \"drop bass: 1 note changed (1:7 c3 -> d3)\"), with song, arrangement (inserted, removed, moved, repeated, renamed, changed) and parts (a transform: transpose, octave, rotate, reverse, thin, fill, fast, slow; else the notes added, removed or changed at bar:step) as JSON. Use it to prove a refactor changed nothing, or to find what an edit did.\n\nThis is the loop for writing a program (there is no compose tool): read https://beatscript.app/docs/cheatsheet.md and one or two list_examples programs, call instruments, write the program, call check and fix every line:col error until ok, then eval / load to play it and share to store it. Voices come from the instruments tool: use only names from it. For a sung line, a public-domain phrasebook line (list_examples with phrasebook true) comes with its meter, stress and phoneme escapes, so that sing @id on melody checks with no unknown-word warning (https://beatscript.app/docs/found-phrases.md). A voice name with a leading digit (808-bass) cannot be written: inst=808-bass reads as 808 - bass and a quoted \"808-bass\" is refused, so pick a voice that starts with a letter (inst=sub-bass for a deep bass). Read-only, no sign-in. Limits: the text is at most 16384 bytes; about 60 calls a minute.\n\nReferences: a program can call the seeded generator (gen@2 techno seed=42 section=drop part=bass is the program generate prints, fitted to the program's key and tempo unless it says bpm= or key=) or borrow from seed(...), template(...) or a stored program by CID. Its cid is of the text as written (the recipe), and the answer says what the recipe makes: refs lists each reference of the program (a gen@N call, a seed(...), a template(...), a <cid>.section borrowed from a stored program): its kind, half (engine or structure), call, place (part, let, section or arrange), name, line and col, resolved (the CID it is pinned to), generator, fitted (what a gen call took from the program: key, bpm) and track; expanded_cid is the CID of the program with every reference written out as plain BeatScript: cid addresses the recipe, expanded_cid the result; the same recipe always gives the same expanded_cid, and a program with no references has expanded_cid equal to cid; resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it (seeded@2), and for a gen call the key and bpm it was generated in. With expand true, each entry of refs also carries its expansion (the BeatScript it is written out as where it stands). A diagnostic of severity info at each gen call says the CID it resolved to and the key and tempo it was fitted to; the expand tool writes the whole program out.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "check" ;
-    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"genre\":{\"description\":\"Optional: a genre of the bitwrap ontology (techno, house, jazz, ... or its https://ontology.bitwrap.io/genre/ IRI); else the program's own `#! genre:` line. The answer gains style {genre, label, warnings[{severity: \\\"style\\\", code, message, line?, col?}]}: advice from the genre's conventions in the ontology (a tempo outside its range, a kit or voice the genre and its family do not use, chords far from its progressions). Style warnings never make ok false.\",\"maxLength\":200,\"type\":\"string\"},\"same_as\":{\"description\":\"Optional: another program to compare with, as its CID (stored here, or an example's), a short https://beatscript.app/p/<CID> link, or its text. The answer gains same_as: whether the two are the same song by their compiled nets and song-level settings (tempo, key, swing, length, end, loop), not their text: a let/def/repeat refactor or a renamed section is the same song; a changed note is not, and diff says what changed in music (song settings, sections moved or inserted, a part transposed or rotated, notes at bar:step).\",\"maxLength\":16384,\"type\":\"string\"},\"text\":{\"description\":\"The program text (at most 16384 bytes). Comments and blank lines are fine.\",\"maxLength\":16384,\"type\":\"string\"}},\"required\":[\"text\"],\"type\":\"object\"}" ;
+    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"expand\":{\"description\":\"Also give each entry of refs its expansion: the BeatScript the reference is written out as where it stands (default false).\",\"type\":\"boolean\"},\"genre\":{\"description\":\"Optional: a genre of the bitwrap ontology (techno, house, jazz, ... or its https://ontology.bitwrap.io/genre/ IRI); else the program's own `#! genre:` line. The answer gains style {genre, label, warnings[{severity: \\\"style\\\", code, message, line?, col?}]}: advice from the genre's conventions in the ontology (a tempo outside its range, a kit or voice the genre and its family do not use, chords far from its progressions). Style warnings never make ok false.\",\"maxLength\":200,\"type\":\"string\"},\"same_as\":{\"description\":\"Optional: another program to compare with, as its CID (stored here, or an example's), a short https://beatscript.app/p/<CID> link, or its text. The answer gains same_as: whether the two are the same song by their compiled nets and song-level settings (tempo, key, swing, length, end, loop), not their text: a let/def/repeat refactor or a renamed section is the same song; a changed note is not, and diff says what changed in music (song settings, sections moved or inserted, a part transposed or rotated, notes at bar:step).\",\"maxLength\":16384,\"type\":\"string\"},\"text\":{\"description\":\"The program text (at most 16384 bytes). Comments and blank lines are fine.\",\"maxLength\":16384,\"type\":\"string\"}},\"required\":[\"text\"],\"type\":\"object\"}" ;
     <https://beatscript.app/ontology/ns#readOnly> true ;
     <https://beatscript.app/ontology/ns#needsToken> false ;
     <https://beatscript.app/ontology/ns#toolTitle> "Check a BeatScript program"@en ;
+    <https://beatscript.app/ontology/ns#toolParameter> "expand" ;
     <https://beatscript.app/ontology/ns#toolParameter> "genre" ;
     <https://beatscript.app/ontology/ns#toolParameter> "same_as" ;
     <https://beatscript.app/ontology/ns#requiredParameter> "text" .
@@ -8222,14 +8379,15 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/tool-beatscript-expand> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "expand"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part's bars as a pattern. template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line's length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template's own. check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program's, from_cid the one you gave; with lineage true the text opens with `#! forked-from: <from_cid>`. Read-only, no sign-in."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part's bars as a pattern. template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line's length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template's own. A gen@N call (gen@2 techno seed=42 section=drop part=bass: the seeded generator, the program generate prints, pinned by its CID) is written out by where it stands: `arrange from gen@2 ...` as the whole program (under a `# from: gen@2 ... -> <cid>` line), a part line or `section X from gen@2 ... section=drop` as that section's parts, `let bed = gen@2 ... section=drop part=bass` as a let a bar (bed_1, bed_2, ..., bed = <bed_1 bed_2 ...>). check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program's, from_cid the one you gave; with lineage true the text opens with `#! forked-from: <from_cid>`. With eject \"line:col\" it writes out only the reference there, in place, under its `# from: <call> -> <cid>` line (a comment: the ejected text has the CID of the same notes typed by hand), and answers {ok, text, cid, ejected: {call, kind, half, place, name, resolved, from}}. Read-only, no sign-in."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "expand" ;
-    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"lineage\":{\"description\":\"Open the written-out text with `#! forked-from: <CID of the program as given>` (default false), so that once it is shared it says what it came from.\",\"type\":\"boolean\"},\"text\":{\"description\":\"The program text, with seed(...) or template(...) references in it.\",\"maxLength\":16384,\"type\":\"string\"}},\"required\":[\"text\"],\"type\":\"object\"}" ;
+    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"eject\":{\"description\":\"Optional: \\\"line:col\\\" (1-based) of one reference (a gen@N call, a seed(...), a <cid>.drop, a template(...)): eject it, writing just that one out in place under its `# from: <call> -> <cid>` line, the rest left as they are.\",\"maxLength\":16,\"pattern\":\"^[0-9]+:[0-9]+$\",\"type\":\"string\"},\"lineage\":{\"description\":\"Open the written-out text with `#! forked-from: <CID of the program as given>` (default false), so that once it is shared it says what it came from.\",\"type\":\"boolean\"},\"text\":{\"description\":\"The program text, with gen@N calls, seed(...) or template(...) references in it.\",\"maxLength\":16384,\"type\":\"string\"}},\"required\":[\"text\"],\"type\":\"object\"}" ;
     <https://beatscript.app/ontology/ns#readOnly> true ;
     <https://beatscript.app/ontology/ns#needsToken> false ;
     <https://beatscript.app/ontology/ns#toolTitle> "Write out a program's seeds and templates"@en ;
+    <https://beatscript.app/ontology/ns#toolParameter> "eject" ;
     <https://beatscript.app/ontology/ns#toolParameter> "lineage" ;
     <https://beatscript.app/ontology/ns#requiredParameter> "text" .
 
@@ -8247,32 +8405,37 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/tool-beatscript-generate> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "generate"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "Generate a whole BeatScript track from a seed, with no model and no sign-in: the beats generator picks the genre's rhythms (Euclidean), chord progression, instruments and song structure from the seed, and the result is printed as readable source (named lets, a def for the shared groove, sections, an arrange, filter ramps, the chords as Roman numerals and e()/arp()/markov()/every/rotate/degrade with their seeds written out, so one `key` line moves the whole song) for you to edit. Same genre, bpm, key, length and seed: the same text and CID, every time; the seed and generator are in the #! header so the track can be re-derived. The program passes check and is stored as public CC0 (source generate). Answers text, cid, name, seed, generator, url and render_url; play it with eval or load, or edit it and check again.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "Generate a whole BeatScript track from a seed, with no model and no sign-in: the beats generator picks the genre's rhythms (Euclidean), chord progression, instruments and song structure from the seed, and the result is printed as readable source (named lets, a def for the shared groove, sections, an arrange, filter ramps, the chords as Roman numerals and e()/arp()/markov()/every/rotate/degrade with their seeds written out, so one `key` line moves the whole song) for you to edit. Same genre, bpm, key, length and seed: the same text and CID, every time; the seed and generator are in the #! header so the track can be re-derived. The program passes check and is stored as public CC0 (source generate). Answers text, cid, name, seed, generator, url and render_url; play it with eval or load, or edit it and check again.\n\nThe answer also has gen, the call that is this program in BeatScript (gen@2 techno seed=42, with the bpm=, key= and length= you gave: `arrange from gen@2 techno seed=42` plays it), expanded_cid (the same as cid: a generated program has no references), and parts, so you can pick parts without reading the text: one entry a role, {role, section, sections, voice or kit, text, let, gen}, where gen is the call that is just that part (gen@2 techno seed=42 section=drop part=bass) and let is what `let drop_bass = <gen>` writes (a let a bar). Put a part's gen in a let or on a part line of your own program to layer it, mutate it in an arrange or cross it with another seed; there it is fitted to your program's key and tempo unless it says key= and bpm=, and check reports it in refs. With part (a role) the answer gains that part and its let alone; generator picks the version (1 or 2, as gen@1 and gen@2 name them); seeds (a list, or {count, start}, at most 16) answers a compact summary a seed instead of one program.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "generate" ;
-    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"bpm\":{\"description\":\"Tempo; default the genre's.\",\"maximum\":300,\"minimum\":40,\"type\":\"number\"},\"genre\":{\"description\":\"The genre whose rhythms, chords, instruments and song structure it uses (default techno).\",\"enum\":[\"techno\",\"house\",\"jazz\",\"ambient\",\"dnb\",\"edm\",\"speedcore\",\"dubstep\",\"country\",\"blues\",\"synthwave\",\"trance\",\"lofi\",\"reggae\",\"funk\",\"bossa\",\"trap\",\"garage\",\"metal\",\"electro\",\"deephouse\",\"italo\",\"acid\"],\"type\":\"string\"},\"key\":{\"description\":\"Key: am, c, f#m, d:dorian ...; default the genre's.\",\"maxLength\":16,\"type\":\"string\"},\"length\":{\"description\":\"Song length (default standard).\",\"enum\":[\"short\",\"standard\",\"long\"],\"type\":\"string\"},\"seed\":{\"description\":\"A number or a word (default 1). Same inputs, same program text and CID.\",\"type\":[\"string\",\"integer\"]}},\"required\":[],\"type\":\"object\"}" ;
+    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"bpm\":{\"description\":\"Tempo; default the genre's.\",\"maximum\":300,\"minimum\":40,\"type\":\"number\"},\"generator\":{\"description\":\"The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen) or 2 (seeded@2, the chords and arps as Roman numerals); default 2. A version always prints the same program for the same inputs.\",\"enum\":[1,2],\"type\":\"integer\"},\"genre\":{\"description\":\"The genre whose rhythms, chords, instruments and song structure it uses (default techno).\",\"enum\":[\"techno\",\"house\",\"jazz\",\"ambient\",\"dnb\",\"edm\",\"speedcore\",\"dubstep\",\"country\",\"blues\",\"synthwave\",\"trance\",\"lofi\",\"reggae\",\"funk\",\"bossa\",\"trap\",\"garage\",\"metal\",\"electro\",\"deephouse\",\"italo\",\"acid\"],\"type\":\"string\"},\"key\":{\"description\":\"Key: am, c, f#m, d:dorian ...; default the genre's.\",\"maxLength\":16,\"type\":\"string\"},\"length\":{\"description\":\"Song length (default standard).\",\"enum\":[\"short\",\"standard\",\"long\"],\"type\":\"string\"},\"part\":{\"description\":\"One part (a role): the answer gains part (that role's entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = <drop_bass_1 ...>), to paste into a program of your own.\",\"enum\":[\"kick\",\"snare\",\"hihat\",\"clap\",\"bass\",\"melody\",\"harmony\",\"arp\"],\"type\":\"string\"},\"section\":{\"description\":\"With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).\",\"maxLength\":32,\"type\":\"string\"},\"seed\":{\"description\":\"A number or a word (default 1). Same inputs, same program text and CID.\",\"type\":[\"string\",\"integer\"]},\"seeds\":{\"anyOf\":[{\"items\":{\"type\":[\"string\",\"integer\"]},\"maxItems\":16,\"minItems\":1,\"type\":\"array\"},{\"additionalProperties\":false,\"properties\":{\"count\":{\"maximum\":16,\"minimum\":1,\"type\":\"integer\"},\"start\":{\"minimum\":0,\"type\":\"integer\"}},\"required\":[\"count\"],\"type\":\"object\"}],\"description\":\"Instead of seed: many seeds, as a list ([1, 2, \\\"sunrise\\\"]) or as {count, start} (count seeds from start, default 1), at most 16. The answer is programs, one compact summary a seed in order: seed, generator, cid, name, key, tempo, bars, gen, parts (role, section, sections, voice or kit, text, gen) and url and render_url; each program is stored as one generate stores it, and nothing else is. The same seeds give the same summaries.\"}},\"required\":[],\"type\":\"object\"}" ;
     <https://beatscript.app/ontology/ns#readOnly> false ;
     <https://beatscript.app/ontology/ns#needsToken> false ;
     <https://beatscript.app/ontology/ns#toolTitle> "Generate a track from a seed (no model)"@en ;
     <https://beatscript.app/ontology/ns#toolParameter> "bpm" ;
+    <https://beatscript.app/ontology/ns#toolParameter> "generator" ;
     <https://beatscript.app/ontology/ns#toolParameter> "genre" ;
     <https://beatscript.app/ontology/ns#toolParameter> "key" ;
     <https://beatscript.app/ontology/ns#toolParameter> "length" ;
-    <https://beatscript.app/ontology/ns#toolParameter> "seed" .
+    <https://beatscript.app/ontology/ns#toolParameter> "part" ;
+    <https://beatscript.app/ontology/ns#toolParameter> "section" ;
+    <https://beatscript.app/ontology/ns#toolParameter> "seed" ;
+    <https://beatscript.app/ontology/ns#toolParameter> "seeds" .
 
 <https://beatscript.app/ontology/concept/tool-beatscript-genre-template> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "genre_template"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "A starting BeatScript program for a genre, built from the bitwrap ontology's data for it (https://ontology.bitwrap.io, CC0): its tempo, key (root and scale), swing, drum kit and Euclidean kick, snare and hihat rhythms, its bass, arp and melody voices, its first chord progression (the chords, bass, arp and melody are Roman numerals, so a `key` line moves them all), and its family's standard song structure, each section with the roles the family's section profile makes active and its usual length. Returns {text, cid, canonical, seconds, genre{genre, label, family, tempo, tempo_range, scale, kit, voices, progressions, sections}} (and phrase, warnings with a phrase). The text passes check (it is checked before it is returned) and carries a `#! genre:` line, so check reports its style against the genre. Edit it, check it, then play or share it. For vocals, pass phrase (a phrasebook id from list_examples with phrasebook true, or any words): it is sung on the melody part of each section that has one, and the answer gains phrase with its source, year, meter, stress, syllables and phoneme escapes and whether its meter fits the genre (https://beatscript.app/docs/found-phrases.md). For a classical form, pass form (quodlibet, passacaglia, canon, rondo, fugue or theme-and-variations): the program is that form's template at the genre's tempo, built from public-domain themes, with the phrase (or the form's own) sung in it, and the answer gains form (its sections, mutation plan, themes and reference track) and expanded (the program written out to edit). To borrow one theme instead, pass theme (an id from list_examples with themes true): its lets go in, moved to the genre's key, played by the part of its role. See https://beatscript.app/docs/forms.md. For a whole track made from a phrase, write `arrange from template(deep-house, \"your words\")` (see expand). Read-only, no sign-in.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "A starting BeatScript program for a genre, built from the bitwrap ontology's data for it (https://ontology.bitwrap.io, CC0): its tempo, key (root and scale), swing, drum kit and Euclidean kick, snare and hihat rhythms, its bass, arp and melody voices, its first chord progression (the chords, bass, arp and melody are Roman numerals, so a `key` line moves them all), and its family's standard song structure, each section with the roles the family's section profile makes active and its usual length. Returns {text, cid, canonical, seconds, genre{genre, label, family, tempo, tempo_range, scale, kit, voices, progressions, sections}} (and phrase, warnings with a phrase). The text passes check (it is checked before it is returned) and carries a `#! genre:` line, so check reports its style against the genre. Edit it, check it, then play or share it. For vocals, pass phrase (a phrasebook id from list_examples with phrasebook true, or any words): it is sung on the melody part of each section that has one, and the answer gains phrase with its source, year, meter, stress, syllables and phoneme escapes and whether its meter fits the genre (https://beatscript.app/docs/found-phrases.md). For a classical form, pass form (quodlibet, passacaglia, canon, rondo, fugue or theme-and-variations): the program is that form's template at the genre's tempo, built from public-domain themes, with the phrase (or the form's own) sung in it, and the answer gains form (its sections, mutation plan, themes and reference track) and expanded (the program written out to edit). To borrow one theme instead, pass theme (an id from list_examples with themes true): its lets go in, moved to the genre's key, played by the part of its role. See https://beatscript.app/docs/forms.md. For a whole track made from a phrase, write `arrange from template(deep-house, \"your words\")` (see expand). Read-only, no sign-in. The answer also has expanded_cid (the CID of the program written out: the same as cid for a program with no references) and, for a program with references (a form's template(...)), refs and resolution, as check gives them. A form takes its sources as roles (docs/btw/ext-roles.md): with form and roles, each role is bound to a source (a seed of the seeded generator, a public-domain theme, notes, a stored program's part or section, another form), and the forms include cross (a quodlibet of two sources, roles a and b): two seeds that lead in turn, overlap, and morph toward each other and back.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "genre_template" ;
-    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"form\":{\"description\":\"Optional (docs/btw/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations. The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.\",\"maxLength\":64,\"type\":\"string\"},\"genre\":{\"description\":\"A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://ontology.bitwrap.io/genre/ IRI.\",\"maxLength\":200,\"type\":\"string\"},\"phrase\":{\"description\":\"Optional, for vocals (found phrases, see docs/btw/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.\",\"maxLength\":400,\"type\":\"string\"},\"theme\":{\"description\":\"Optional (docs/btw/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre's key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.\",\"maxLength\":64,\"type\":\"string\"}},\"required\":[\"genre\"],\"type\":\"object\"}" ;
+    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"form\":{\"description\":\"Optional (docs/btw/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.\",\"maxLength\":64,\"type\":\"string\"},\"genre\":{\"description\":\"A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://ontology.bitwrap.io/genre/ IRI.\",\"maxLength\":200,\"type\":\"string\"},\"phrase\":{\"description\":\"Optional, for vocals (found phrases, see docs/btw/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.\",\"maxLength\":400,\"type\":\"string\"},\"roles\":{\"additionalProperties\":{\"maxLength\":400,\"type\":\"string\"},\"description\":\"Optional, with form (docs/btw/ext-roles.md): the form's roles, each bound to a source, {\\\"ROLE\\\": \\\"SOURCE\\\"}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program's part or section by CID, or another form (template(passacaglia, ground=gen@1 dubstep seed=54876)). cross takes a and b; passacaglia ground and upper; canon subject and ground; rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form's key and tempo and stays an engine call, pinned (see resolution).\",\"type\":\"object\"},\"theme\":{\"description\":\"Optional (docs/btw/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre's key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.\",\"maxLength\":64,\"type\":\"string\"}},\"required\":[\"genre\"],\"type\":\"object\"}" ;
     <https://beatscript.app/ontology/ns#readOnly> true ;
     <https://beatscript.app/ontology/ns#needsToken> false ;
     <https://beatscript.app/ontology/ns#toolTitle> "A starting program for a genre"@en ;
     <https://beatscript.app/ontology/ns#toolParameter> "form" ;
     <https://beatscript.app/ontology/ns#toolParameter> "phrase" ;
+    <https://beatscript.app/ontology/ns#toolParameter> "roles" ;
     <https://beatscript.app/ontology/ns#toolParameter> "theme" ;
     <https://beatscript.app/ontology/ns#requiredParameter> "genre" .
 
@@ -8334,7 +8497,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/tool-beatscript-listen> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "listen"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck's line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section's loudness, `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes and the mixer and insert moves it has ops for; `notes` names the control lines it leaves out.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck's line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section's loudness, `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a reference (a gen@2 call, a seed(...), a template, a stored program's section) says so in `from` {call, kind, resolved, place, generator, sections} (`also_from` when several made it); a gen call fitted to the program's key or tempo says so in `notes`, in check's words; and the answer gains `expanded_cid` and `resolution`, as check's. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes and the mixer and insert moves it has ops for; `notes` names the control lines it leaves out.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "listen" ;

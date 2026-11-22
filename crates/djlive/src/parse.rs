@@ -50,10 +50,25 @@ pub const EXT_WORDS: [&str; 63] = [
 /// `assert ...`, `sing "..."`, `emit ...`, an operator of a guard) that a name in its place could not be told from.
 pub const EXT_RESERVED: [&str; 17] = ["stack", "then", "silence", "wire", "assert", "sing", "under", "choose", "maybe", "deg", "lfo", "and", "or", "not", "voice-lead", "s-curve", "emit"];
 /// Every word that can start a statement: what a typo at the start of a line is compared with.
-pub const STATEMENT_WORDS: [&str; 26] = [
+pub const STATEMENT_WORDS: [&str; 27] = [
     "tempo", "swing", "key", "let", "def", "repeat", "section", "arrange", "end", "loop", "sample", "use", "set", "wire", "assert", "evolve", "import", "deck", "master", "every", "on", "at", "after", "before", "do", "launch",
+    "control",
 ];
 pub const KEY_VERBS: [&str; 6] = ["status", "detect", "set", "lock", "tempo", "compat"];
+/// What the control deck takes, after `control:` (docs/btw/ext-control.md): the engine calls that take no target.
+pub const CONTROL_DECK_WORDS: [&str; 10] = ["move", "swap pairs", "load pair", "queue", "crossfader", "tempo", "duck", "mix", "do", "a sugar noun (freeze, vocoder, wheel ...)"];
+
+/// Is a `control` with `next` after it and `prev` before it the control deck's head? Before a colon, where a line's head goes:
+/// at the start of a line, in a block, or after a time word's colon. (`after control:` names a section.)
+pub fn control_head_at(next: Option<&Tok>, prev: Option<&Tok>) -> bool {
+    next == Some(&Tok::Colon) && matches!(prev, None | Some(Tok::Newline | Tok::Colon | Tok::LBrace))
+}
+
+/// A second head on a line (`deck A: control: ...`, `control: master: ...`): a line has one.
+fn two_heads(at: Span, first: &str) -> Diagnostic {
+    Diagnostic::error(at, format!("a line has one head, and this one has `{first}:` already"))
+        .help("the control deck is a deck of its own, beside the others: `control: move echo_out on B`, `deck A: kick x ~ x ~`, `master: filter lp 2k`")
+}
 
 pub fn sugar_noun(word: &str) -> Option<&'static str> {
     SUGAR.iter().find(|(w, _)| *w == word).map(|(_, n)| *n).or((word == "mashup").then_some("mashup")).or((word == "key").then_some("key"))
@@ -216,8 +231,11 @@ fn parse_depth(src: &str, env: &Env, depth: usize) -> Parsed {
     let mut imports = Vec::new();
     let mut scalar_lets = Vec::new();
     let mut ratios = BTreeSet::new();
+    // a generator call is one word to the parser: its canonical spelling, its version written (gen.rs resolves it)
+    let (toks, gen_diags) = crate::gen::collapse(lexed.tokens);
+    diags.extend(gen_diags);
     // a seed reference is one word to the parser: its canonical spelling (seed.rs writes it out before lowering)
-    let (toks, seed_diags) = crate::seed::collapse(lexed.tokens);
+    let (toks, seed_diags) = crate::seed::collapse(toks);
     diags.extend(seed_diags);
     // and so is a template reference (`arrange from template(deep-house, @tempest_such_stuff)`, template.rs)
     let (toks, template_diags) = crate::template::collapse(toks);
@@ -375,6 +393,8 @@ pub(crate) fn is_syntax_here(w: &str, toks: &[Token], i: usize, out: &[Token], i
         "set" => next == Some(&Tok::LBrace) && matches!(prev, None | Some(Tok::Newline)),
         "until" => line_starts_with(out, "play"),
         "duck" => matches!(next, Some(Tok::Word(n)) if n == "A" || n == "B"),
+        // `control:`, the control deck's head, at the head of a line (after its time word, if it has one)
+        "control" => control_head_at(next, prev),
         // `master: drive 0.6`: the verb after a target's colon (a section, a let or a def may be named `drive` anywhere else)
         "drive" => {
             let target = out.len().checked_sub(2).map(|k| &out[k].tok);
@@ -498,7 +518,7 @@ fn prepass(toks: Vec<Token>, src: &str, env: &Env, depth: usize, diags: &mut Vec
             if let (Some(Token { tok: Tok::Word(name), span: nspan }), Some(Token { tok: Tok::Eq, .. }), Some(val)) = (toks.get(i + 1), toks.get(i + 2), toks.get(i + 3)) {
                 let ends = matches!(toks.get(i + 4).map(|t| &t.tok), None | Some(Tok::Newline | Tok::Eof));
                 // (a seed reference is one word to the parser but bars of a pattern: a pattern let, not a value)
-                let simple = matches!(&val.tok, Tok::Word(w) if !w.starts_with("seed(") && !crate::stored::is_ref_word(w)) || matches!(val.tok, Tok::Num { .. } | Tok::Str(_));
+                let simple = matches!(&val.tok, Tok::Word(w) if !crate::seed::is_ref_word(w) && !crate::stored::is_ref_word(w)) || matches!(val.tok, Tok::Num { .. } | Tok::Str(_));
                 if ends && simple {
                     let mut v = val.clone();
                     // (`let b = third` is the number `third` is, and says it as `third` does; a literal is never a ratio)
@@ -1422,7 +1442,7 @@ impl<'a> Parser<'a> {
     /// program's section too (`stored`).
     pub(crate) fn seed_word(&mut self, stored: bool) -> R<Word> {
         match self.peek() {
-            Tok::Word(w) if w.starts_with("seed(") || w.starts_with("template(") => self.word("a seed"),
+            Tok::Word(w) if crate::seed::is_ref_word(w) || w.starts_with("template(") => self.word("a seed"),
             Tok::Word(w) if stored && crate::stored::is_ref_word(w) => self.word("a stored program"),
             Tok::Word(w) if crate::stored::is_ref_word(w) => Err(Diagnostic::error(self.span(), "`arrange from` takes a seed of the generator or a template: another program as a whole is a fork").help("fork it and edit the copy, or borrow its sections: section hook from <cid>.drop")),
             _ if stored => Err(self.expected(&["seed(genre, n)", "template(name, phrase)", "a stored program's CID"], &format!("`from` takes a seed of the generator, a template or a stored program, found {}", self.found())).help("section intro from seed(techno, 42)[1..8]   section hook from <cid>.drop")),
@@ -1708,13 +1728,24 @@ impl<'a> Parser<'a> {
             let sp = s.to(self.prev_span());
             self.expect(Tok::Colon, "`:` after the target")?;
             target = Some((t, sp));
+            if self.control_head_next() {
+                return Err(two_heads(self.span(), sp.text(self.src)));
+            }
+        } else if self.control_head_next() {
+            // `control:`, the control deck: a line of engine calls only (docs/btw/ext-control.md)
+            let s = self.span();
+            self.bump();
+            self.bump();
+            let head = s.to(self.prev_span());
+            let body = self.control_deck_body(head)?;
+            return Ok(Line { when, hold, target: None, control: Some(head), body, guard: None });
         }
         if let Some(body) = self.mixmoves_body(target.map(|(_, sp)| sp))? {
-            return Ok(Line { when, hold, target, body, guard: None });
+            return Ok(Line { when, hold, target, control: None, body, guard: None });
         }
         if self.word_is("sing") {
             let s = self.sing_call()?;
-            return Ok(Line { when, hold, target, body: Body::Sing(s), guard: None });
+            return Ok(Line { when, hold, target, control: None, body: Body::Sing(s), guard: None });
         }
         // (F10: `stack(kick ..., snare ...)`, `then(...)` and `silence` over parts start a part line too)
         // (a `stack(` or `then(` with no `deck A:` before it, and no part or `stack` inside, is a call of a def of that name;
@@ -1731,16 +1762,16 @@ impl<'a> Parser<'a> {
                     .help("use `<a b>` to change over the bars, a `section` to change the pattern over the song, and a `deck A:` line with no time word"));
             }
             let parts = self.parts()?;
-            return Ok(Line { when, hold, target, body: Body::Parts(parts), guard: None });
+            return Ok(Line { when, hold, target, control: None, body: Body::Parts(parts), guard: None });
         }
         if self.word_is("do") {
             let d = self.do_call(false)?;
-            return Ok(Line { when, hold, target, body: Body::Do(d), guard: None });
+            return Ok(Line { when, hold, target, control: None, body: Body::Do(d), guard: None });
         }
         if let Tok::Word(w) = self.peek().clone() {
             if sugar_noun(&w).is_some() && !ACTION_WORDS.contains(&w.as_str()) {
                 let d = self.do_call(true)?;
-                return Ok(Line { when, hold, target, body: Body::Do(d), guard: None });
+                return Ok(Line { when, hold, target, control: None, body: Body::Do(d), guard: None });
             }
             if self.peek_n(1) == &Tok::LParen && !ACTION_WORDS.contains(&w.as_str()) && !(w == "drive" && target.is_some()) {
                 let name = self.word("a def's name")?;
@@ -1795,11 +1826,80 @@ impl<'a> Parser<'a> {
                     return Err(Diagnostic::error(tsp, format!("`{}(...)` takes no target before it", name.text)).help("pass the deck as an argument: drop(A, 8)"));
                 }
                 let span = name.span.to(self.prev_span());
-                return Ok(Line { when, hold, target, body: Body::Invoke(Invocation { name, args, span }), guard: None });
+                return Ok(Line { when, hold, target, control: None, body: Body::Invoke(Invocation { name, args, span }), guard: None });
             }
         }
         let action = self.action()?;
-        Ok(Line { when, hold, target, body: Body::Action(action), guard: None })
+        Ok(Line { when, hold, target, control: None, body: Body::Action(action), guard: None })
+    }
+
+    /// Is the next thing the control deck's head, `control:`? `control` is no reserved word: it is the head only before a
+    /// colon in the place a target takes, so `control(A)` still calls a def of that name and a section, a let or a def may
+    /// be named `control` (`after control: ...`).
+    pub(crate) fn control_head_next(&self) -> bool {
+        self.word_is("control") && self.peek_n(1) == &Tok::Colon
+    }
+
+    /// What the control deck holds, after `control:` (docs/btw/ext-control.md): an engine call that takes no target, as the
+    /// line with no head holds it: `move`, `swap pairs`, `load pair`, `queue`, `crossfader`, a timed `tempo`, a `duck`, a
+    /// `mix`, a `do` and its sugar nouns. A part, a note, a strip's action, a deck's transport, a `sing` or a def's call is an
+    /// error that says where it goes.
+    fn control_deck_body(&mut self, head: Span) -> R<Body> {
+        let Tok::Word(w) = self.peek().clone() else {
+            return Err(self
+                .expected(&CONTROL_DECK_WORDS, &format!("the control deck holds an engine call, found {}", self.found()))
+                .help("control: move echo_out on B   control: swap pairs with filter_exit   control: freeze phrase bars=2"));
+        };
+        let at = self.span();
+        let next = self.peek_n(1).clone();
+        let deck_line = "a strip's action goes on its deck or the master: `deck A:`, `deck B:` or `master:`";
+        match w.as_str() {
+            "deck" | "master" | "control" if matches!(next, Tok::Colon) || (w == "deck" && matches!(next, Tok::Word(_) | Tok::Dollar(_))) => Err(two_heads(at, head.text(self.src).trim_end_matches(':').trim())),
+            "every" | "on" | "at" | "after" | "before" | "for" if !matches!(next, Tok::LParen) => Err(Diagnostic::error(at, format!("`{w}` is a time word: it comes before the head"))
+                .help(format!("{w} ...: control: ..., as in `at bar 12: control: swap pairs with filter_exit`"))),
+            "duck" | "mix" if next != Tok::LParen => Ok(self.mixmoves_body(None)?.expect("a duck or a mix")),
+            "do" => Ok(Body::Do(self.do_call(false)?)),
+            // `key detect deck=A` is the registry's `key`; `key am` is the program's setting
+            "key" if !matches!(&next, Tok::Word(k) if KEY_VERBS.contains(&k.as_str())) => Err(Diagnostic::error(at, "`key` is a setting of the program, structure: it takes no head")
+                .help("key am   (a section's own key opens its body; the registry's `key` is `control: key detect deck=A`)")),
+            "swing" => Err(Diagnostic::error(at, "`swing` is a setting of the whole program, structure: it takes no head").help("swing 0.1")),
+            "sing" => Err(Diagnostic::error(at, "`sing` sings a deck's part, so it is no engine call: it takes no `control:`")
+                .help("deck B: sing \"robots on the road\" on melody   (or with no head: the deck that has the role)")),
+            "crossfader" | "tempo" | "swap" | "move" | "queue" => Ok(Body::Action(self.action()?)),
+            "load" if matches!(&next, Tok::Word(p) if p == "pair") && matches!(self.peek_n(2), Tok::Word(_)) => Ok(Body::Action(self.action()?)),
+            "load" | "play" | "stop" | "sync" | "mute" | "unmute" => {
+                let ex = if w == "load" { "deck B: load techno:42".to_string() } else { format!("deck A: {w}") };
+                Err(Diagnostic::error(at, format!("`{w}` is a deck's: the control deck holds the engine calls that take no deck")).help(format!("{ex}   (a pair of decks: control: load pair dnb:2602)")))
+            }
+            "filter" | "delay" | "reverb" | "crush" | "drive" | "resonance" | "level" | "low" | "mid" | "high" => {
+                let ex = match w.as_str() {
+                    "filter" => "master: filter lp 400   or   deck A: filter hp 400",
+                    "low" | "mid" | "high" => "deck A: low 0.5",
+                    "level" => "deck A: level 0.7   or   master: level 0.8",
+                    _ => "master: reverb 0.3   or   deck A: reverb 0.3",
+                };
+                let ex = ex.replace("reverb", &w);
+                Err(Diagnostic::error(at, format!("`{w}` turns a deck's or the master's strip, so it is not a line of the control deck")).help(format!("{deck_line}: {ex}")))
+            }
+            "macro" => Err(Diagnostic::error(at, "`macro` is designed and not built yet (docs/btw/ext-control.md)")
+                .help("an aux macro fires with `control: aux macro=cathedral deck=A bars=2`, a trick with `control: trick on deck=A kind=riser`")),
+            _ if ROLES.contains(&w.as_str()) || self.pexpr_next() => Err(Diagnostic::error(at, format!("the control deck holds engine calls, never parts or notes: `{w}` is a part"))
+                .help("a part goes on a note deck: `deck A: kick x ~ x ~`")),
+            _ if sugar_noun(&w).is_some() && !ACTION_WORDS.contains(&w.as_str()) => Ok(Body::Do(self.do_call(true)?)),
+            _ if next == Tok::LParen => Err(Diagnostic::error(at, format!("`{w}(...)` is a def's call: it names its decks itself, and takes no `control:` before it"))
+                .help(format!("{w}(...) with no head; inside the def, `control:` goes on its engine lines"))),
+            _ => {
+                let mut d = self.expected(&CONTROL_DECK_WORDS, &format!("`{w}` is not an engine call the control deck takes"));
+                d.found = format!("`{w}`");
+                // (the words, not the last entry, which describes the sugar nouns: they are compared one by one)
+                let words = CONTROL_DECK_WORDS[..CONTROL_DECK_WORDS.len() - 1].iter().map(|x| x.split(' ').next().unwrap_or(""));
+                let near = nearest(&w, words.chain(SUGAR.iter().map(|(s, _)| *s)));
+                Err(match near {
+                    Some(n) => d.help(format!("did you mean `{n}`?")),
+                    None => d.help("control: move echo_out on B   control: swap pairs with filter_exit   control: freeze phrase bars=2"),
+                })
+            }
+        }
     }
 
     /// `do noun [verb] [text] key=value ... [over N bars]`, or, with `sugar`, the same without `do`.
@@ -2209,7 +2309,7 @@ impl<'a> Parser<'a> {
             }
             Tok::Word(w) => {
                 // a seed reference (one word since seed::collapse): the bars of a generated part; a stored program's part, the same
-                if w.starts_with("seed(") || crate::stored::is_ref_word(&w) {
+                if crate::seed::is_ref_word(&w) || crate::stored::is_ref_word(&w) {
                     return Ok(Atom::Note(self.word("a seed")?));
                 }
                 if w == "deg" && self.peek_n(1) == &Tok::LParen {
@@ -2413,6 +2513,8 @@ impl<'a> Parser<'a> {
                     d = d.help("`emit` is a statement of the body of a def that has `out:` ports: `def walker() out: bass { emit c2 }`");
                 } else if w == "set" {
                     d = d.help("a set is `set {` with its brace on the same line, then `play` and `mix` lines: set { play NAME  mix 8 bars with crossfade  play OTHER }");
+                } else if w == "macro" {
+                    d = d.help("`macro` is designed and not built yet (docs/btw/ext-control.md): an aux macro fires with `aux macro=cathedral deck=A bars=2`, a trick with `trick on deck=A kind=riser`");
                 } else if let Some(n) = near {
                     d = d.help(format!("did you mean `{n}`?"));
                 }

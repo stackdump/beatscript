@@ -94,6 +94,7 @@ pub const STATEMENTS: &[(&str, &str, &str)] = &[
     ("set", "programs of programs: `set { play X  mix 8 bars with crossfade  play Y }`", "set {\n  play ${1:a}\n  mix ${2:8} bars with ${3:crossfade}\n  play ${4:b}\n}"),
     ("use", "`use restricted`: the program is private and may use restricted assets", "use restricted"),
     ("do", "a call on the control registry: `do noun verb key=value`", "do ${1:noun}"),
+    ("control", "the control deck, beside `deck A:`, `deck B:` and `master:`: engine calls only (`move`, `swap pairs`, `queue`, `crossfader`, a timed `tempo`, `do` and its sugar), sequenced like any line: `at bar 12: control: swap pairs with filter_exit`", "control: ${1:move echo_out on B}"),
     ("every", "a timed line: `every 4 bars: swap pairs`", "every ${1:4} bars: $0"),
     ("at", "a timed line: `at bar 16: master: filter off`", "at bar ${1:16}: $0"),
     ("on", "a timed line: `on next phrase: swap pairs`", "on next phrase: $0"),

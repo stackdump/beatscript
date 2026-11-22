@@ -38,7 +38,7 @@ pub const KITS: [&str; 6] = ["drums", "drums-808", "drums-breakbeat", "drums-cr7
 const DECK_A: [&str; 5] = ["kick", "snare", "hihat", "clap", "bass"];
 const DECK_B: [&str; 3] = ["melody", "harmony", "arp"];
 /// The most bars of changing music a part can carry (an alternation's cap).
-const MAX_PERIOD: usize = 64;
+pub(crate) const MAX_PERIOD: usize = 64;
 
 /// The genres of seeds v1: beats.bitwrap.io's, the genres of the bitwrap ontology (https://ontology.bitwrap.io/genre/...).
 /// The engine's tables have a few more (dj-only); a seed names only these, so that every seed is a beats track and
@@ -46,6 +46,12 @@ const MAX_PERIOD: usize = 64;
 pub const GENRES: [&str; 19] = [
     "ambient", "blues", "bossa", "country", "dnb", "dubstep", "edm", "funk", "garage", "house", "jazz", "lofi", "metal", "reggae", "speedcore", "synthwave", "techno", "trance", "trap",
 ];
+
+/// A word the parser reads as a reference to music the engine makes (one word since `collapse`): `seed(...)...`, or a
+/// `gen@N ...` call (gen.rs).
+pub fn is_ref_word(w: &str) -> bool {
+    w.starts_with("seed(") || crate::gen::is_call_word(w)
+}
 
 /// The genres a seed may name ([`GENRES`]).
 pub fn genres() -> Vec<String> {
@@ -431,12 +437,12 @@ fn make_track(genre: &str, n: u32, structure: &str) -> Track {
 
 // ---------------------------------------------------------------- writing it out
 
-fn is_drum(role: &str) -> bool {
+pub(crate) fn is_drum(role: &str) -> bool {
     matches!(role, "kick" | "snare" | "hihat" | "clap")
 }
 
 /// The note a drum part's `x` plays (compile.rs).
-fn drum_note(role: &str) -> u8 {
+pub(crate) fn drum_note(role: &str) -> u8 {
     match role {
         "kick" => 36,
         "snare" => 38,
@@ -504,7 +510,7 @@ fn slot_text(role: &str, slot: &[Note], accent: u8) -> String {
 }
 
 /// One bar as mini-notation, on the coarsest grid its notes sit on: `x x x x`, `c2 ~ ~ c2 ~ ~ d#2 ~`.
-fn bar_text(role: &str, bar: &[Vec<Note>; 16], accent: u8) -> String {
+pub(crate) fn bar_text(role: &str, bar: &[Vec<Note>; 16], accent: u8) -> String {
     if bar.iter().all(Vec::is_empty) {
         return "~".into();
     }
@@ -513,7 +519,7 @@ fn bar_text(role: &str, bar: &[Vec<Note>; 16], accent: u8) -> String {
 }
 
 /// The shortest run of bars the whole repeats: `a b a b` is `a b`.
-fn period(texts: &[String]) -> usize {
+pub(crate) fn period(texts: &[String]) -> usize {
     let n = texts.len();
     (1..=n).find(|p| n % p == 0 && (0..n).all(|i| texts[i] == texts[i % p])).unwrap_or(n)
 }
@@ -918,6 +924,47 @@ fn whole(t: &Track, a: usize, b: usize, roles: &[&str], refx: &str, tempo: bool,
         out.push_str("\nloop");
     }
     Ok(out)
+}
+
+/// What a `seed(...)` reference resolves to: the piece it names as a program of its own (the track's tempo and key, its lets,
+/// sections and arrange), and that program's CID, the pin. Every place the same piece stands (a part line, a `let`) resolves
+/// to the same CID, and seeds v1 always resolve as they did (`tests/seed.rs` pins the writer). `role` is a part line's own role
+/// when the reference names no part.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Resolved {
+    pub call: String,
+    /// The generated track's name.
+    pub name: String,
+    /// The generator's project hash (beats' `modelCID`).
+    pub model: String,
+    pub text: String,
+    pub cid: String,
+}
+
+pub fn resolve(word: &str, role: Option<&str>) -> Result<Resolved, Diagnostic> {
+    let toks = lex(word).tokens;
+    let Some(run) = runs(&toks).into_iter().next() else { return Err(Diagnostic::error(Span::new(0, word.len()), format!("`{word}` is no seed reference"))) };
+    let mut s = run.r?;
+    if !GENRES.contains(&s.genre.as_str()) {
+        return Err(Diagnostic::error(s.genre_span, format!("`{}` is not a genre of the generator", s.genre)));
+    }
+    if s.part.is_none() {
+        s.part = role.filter(|r| ROLES.contains(r)).map(str::to_string);
+    }
+    let t = track(&s.genre, s.n, s.structure());
+    let (a, b) = match s.bars {
+        Some((_, b)) if b > t.bars => return Err(Diagnostic::error(s.bars_span, format!("the track has {} bars", t.bars))),
+        Some((a, b)) => (a as usize - 1, b as usize),
+        None => (0, t.bars as usize),
+    };
+    let roles: Vec<&str> = match &s.part {
+        Some(p) => ROLES.iter().copied().filter(|r| r == p).collect(),
+        None => ROLES.to_vec(),
+    };
+    let call = s.text();
+    let text = whole(&t, a, b, &roles, &call, true, true, true).map_err(|(r, TooLong(p))| Diagnostic::error(s.span, format!("the {r} of {call} changes over {p} bars, more than a part can hold ({MAX_PERIOD})")))?;
+    let cid = crate::compile::program_cid(&crate::print::canonical(&crate::parse::parse(&text).program));
+    Ok(Resolved { call, name: t.name.clone(), model: t.model_sha.clone(), text, cid })
 }
 
 /// 0 is `a`, 25 `z`, 26 `aa`.

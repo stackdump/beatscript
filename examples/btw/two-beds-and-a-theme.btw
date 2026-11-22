@@ -1,0 +1,46 @@
+#! skip-test: its gen calls need the seeded generator, which btwapi installs; checked clean in crates/btwapi/tests/gen.rs
+#! name: two beds and a theme
+#! license: CC0-1.0
+# two-beds-and-a-theme.btw: two generated beds layered on one grid, and a public-domain tune over them (CC0). Original.
+# Each bed is a seed of the seeded generator called by its parameters (`gen@2 GENRE seed=N section=... part=...`): an engine
+# call, pinned by the CID of the program it resolves to, and fitted to this program's key and tempo, so the two never clash.
+# A bed's let is the notes it plays, a let a bar (`rust_bass_1` ...), so the arrange mutates and crosses them like local lets.
+# The tune is Beethoven's Ode to Joy (1824), from the public-domain theme library: structure, written in as text.
+tempo 124
+key d
+
+# the first bed: the drop of techno seed 42, its kick and its bass
+let rust_kick = gen@2 techno seed=42 section=drop part=kick
+let rust_bass = gen@2 techno seed=42 section=drop part=bass
+# the second bed: the drop of house seed 7, its chords and its arp
+let fog_pad = gen@2 house seed=7 section=drop part=harmony
+let fog_arp = gen@2 house seed=7 section=drop part=arp
+# the tune: Ode to Joy, Beethoven (1824), from the public-domain theme library (CC0), in D as the program is
+let ode_to_joy_1 = f#4 ~ ~ ~ f#4 ~ ~ ~ g4 ~ ~ ~ a4 ~ ~ ~
+let ode_to_joy_2 = a4 ~ ~ ~ g4 ~ ~ ~ f#4 ~ ~ ~ e4 ~ ~ ~
+let ode_to_joy_3 = d4 ~ ~ ~ d4 ~ ~ ~ e4 ~ ~ ~ f#4 ~ ~ ~
+let ode_to_joy_4 = f#4 ~ ~ ~ ~ ~ e4 ~ e4 ~ ~ ~ ~ ~ ~ ~
+let ode_to_joy = <ode_to_joy_1 ode_to_joy_2 ode_to_joy_3 ode_to_joy_4>
+
+# beds: the two beds alone, one on each deck
+section beds 8 bars {
+  deck A: kick rust_kick kit=drums-v8 | bass rust_bass inst=drop-bass
+  deck B: harmony fog_pad inst=glass-pad | arp fog_arp inst=pluck
+}
+# tune: the tune over both beds, the arp left out
+section tune 8 bars {
+  deck A: kick rust_kick kit=drums-v8 | bass rust_bass inst=drop-bass
+  deck B: harmony fog_pad inst=glass-pad | melody ode_to_joy inst=square-lead
+}
+arrange {
+  beds
+  # the arp leans toward the tune, a quarter of its steps a pass
+  ~ fog_arp_* morph ode_to_joy_1 0.25
+  tune
+  # the bass takes the arp's rhythm for one section
+  @ rust_bass_* xfer fog_arp_1
+  tune
+  ~ ode_to_joy_* up 2
+  beds
+  tune
+} loop 2 then end

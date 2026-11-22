@@ -9,6 +9,14 @@ all, the outline, folding, go to definition, find references, highlight, rename 
 (a section's bars and seconds at the tempo, a let's value, generator signatures, param docs), signature help, inlay hints
 (start bars, song length, evolve generations, steps), and extract / inline let (proved by the nets they compile to).
 
+References (`gen@2 techno seed=42 section=drop part=bass`, `seed(techno, 42)`, `<cid>.drop.bass`, `template(...)`): hover one
+for what it is, the CID it resolves to, the generator and what it was fitted to, and its expansion. Two code lenses sit over
+each: **show expansion** (again: **hide expansion**) puts its first line after it, the whole of it in that decoration's hover,
+and **eject** writes it out in place under a `# from:` line once the server has proved the program plays the same. The same
+eject, and *Copy the expansion*, are in the lightbulb (Ctrl+.). The palette has *Show or hide every reference's expansion* and
+*Open the expansion of the reference here beside* (a read-only BeatScript document). Which expansions are shown is this
+extension's own state; the server only answers `btw/expand`.
+
 ## Try it
 
 ```bash

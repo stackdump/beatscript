@@ -4,8 +4,9 @@
 
    Notation (ISO 14977): name = ... ;   "text" a terminal   [ x ] optional   { x } none or more   ( x ) a group
    x | y one of, and comments between round brackets and stars.  An UPPER-CASE name that is no production is a token class of the lexer:
-   NEWLINE NAME WORD INT NUMBER DECIMAL STRING PARAM NOTE PITCH KEY CHORD ROMAN SDEG UNIT TOKEN GLOB SUGAR PHRASE CID (recognize.rs
-   what each matches). Comments go away before the grammar is read, and a `#` inside a word is a sharp.
+   NEWLINE NAME WORD INT NUMBER DECIMAL STRING PARAM NOTE PITCH KEY CHORD ROMAN SDEG UNIT TOKEN GLOB SUGAR PHRASE CID GEN (recognize.rs
+   what each matches; NEWLINE also ends the program at the end of the text). Comments go away before the grammar is read,
+   and a `#` inside a word is a sharp.
    A production whose note says [host] needs a host's store to be read (saved snippets, saved programs): the
    sentence writer of the drift test leaves it out, and the example programs that use it say `#! skip-test`. *)
 
@@ -16,15 +17,15 @@ statement   = setting | headed | let | def | repeat | section | arrange | arrang
             | evolve | wire | assert | sample | use | set ;
 
 (* == Settings == *)
-setting     = "tempo" stempo
+setting     = "tempo" tempo
             | "swing" arith
             | "key" KEY ;                                     (* a setting reads no input: it is the program's own *)
-stempo      = arith [ "->" arith "over" dur [ shape ] ] ;     (* tempo 126   tempo 100 -> 130 over 8 bars exp *)
-tempo       = value [ "->" value "over" dur [ shape ] ] ;     (* a control's tempo (at bar 16: tempo 128 -> 140 ...) *)
+tempo       = arith [ "->" arith "over" dur [ shape ] ] ;     (* tempo 126   tempo 100 -> 130 over 8 bars exp *)
 
 (* == Lines: when, where, what == *)
 headed      = "deck" deck ":" parts [ guard ]                (* a deck's parts: no time word before them *)
             | [ timing ":" ] [ target ":" ] control [ cguard ]
+            | [ timing ":" ] "control" ":" ( engine | do | duck | mix ) [ cguard ]   (* the control deck *)
             | [ timing ":" ] ( invoke | duck | mix ) [ cguard ] ;   (* a def's call, a duck and a mix name their decks themselves *)
 timing      = when [ "for" dur ] | "for" dur ;
 when        = "every" dur [ "from" ( arith | pos ) ]          (* every 16 bars   every 2 beats   every 4 bars from 8 *)
@@ -40,7 +41,7 @@ guard       = "when" expr ;                                   (* kept where it h
 cguard      = "when" cexpr ;                                  (* a control line's guard may read an input *)
 target      = "deck" deck | "master" ;
 deck        = "A" | "B" | PARAM ;                              (* PARAM: in a def body, filled in when it is called *)
-control     = action | do | sing ;
+control     = action | engine | do | sing ;
 
 (* == Parts == *)
 parts       = pitem { "|" pitem } ;                           (* only after "deck X:" and with no time word *)
@@ -97,14 +98,14 @@ action      = "filter" ( "lp" | "hp" ) change                 (* hertz: 20 .. 20
             | "filter" ( "off" | "open" )
             | ( "delay" | "reverb" | "crush" | "drive" | "resonance" ) change   (* 0 .. 1: how much *)
             | ( "level" | "low" | "mid" | "high" ) change     (* deck X: / master: level *)
-            | "crossfader" change                             (* no target *)
-            | "tempo" tempo                                   (* no target: at bar 16: tempo 128 -> 140 over 4 bars *)
+            | "load" SPEC                                     (* deck X: *)
+            | "play" | "stop" | "sync" | "mute" | "unmute" ;
+engine      = "crossfader" change                             (* no target, or control: *)
+            | "tempo" tempo                                   (* at bar 16: tempo 128 -> 140 over 4 bars *)
             | "swap" "pairs" [ "with" MOVE ]                  (* the booth's: the desktop app plays these *)
             | "move" MOVE "on" deck [ span ]
             | "load" "pair" SPEC [ "group" INT ]
-            | "load" SPEC
-            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD )
-            | "play" | "stop" | "sync" | "mute" | "unmute" ;
+            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD ) ;
 change      = value                                           (* a plain value *)
             | value "->" value span [ shape ]                 (* a ramp: 2k -> 8k over 8 bars exp *)
             | lfo ;                                           (* a value that keeps moving *)
@@ -161,7 +162,8 @@ section     = "section" NAME INT "bars" "{" { line } "}"     (* 1 to 256 bars; a
             | "section" NAME "from" ref ;                     (* section intro from seed(techno, 42)[1..8]   section hook from <cid>.drop *)
 arrange     = "arrange" sexpr { sexpr }
             | "arrange" NAME ":" sexpr { sexpr } [ arr_end ]   (* with a NAME it is one of several arrangements *)
-            | "arrange" "from" ( seed | template ) ;          (* the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff) *)
+            | "arrange" "from" ( seed | template )            (* the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff) *)
+            | "arrange" "from" gen ;                          (* the whole program a generator call prints: arrange from gen@2 techno seed=42 *)
 arr_end     = "then" NAME | "loop" [ INT ] | "end" ;           (* only after a NAME: see "Several arrangements" *)
 start       = "start" NAME ;                                  (* the named arrangement that plays first; default the first written *)
 launch      = "launch" NAME "on" "pad" "(" INT ")" [ "next" ( "bar" | "phrase" [ "8" | "16" | "32" ] ) ] ;   (* a hit of the pad brings the scene, a section or an arrangement, in on that bar line: 8 bars by default *)
@@ -182,13 +184,19 @@ mut_op      = NAME { NUMBER | "-" NUMBER | NAME } ;           (* rot 2  thin 0.1
 block_end   = "end" | "loop" | "loop" INT [ "then" { NAME } "end" ] ;   (* default end; loop N: 1 to 256 passes, then a coda *)
 
 (* == Start from a seed == *)
-ref         = seed | stored ;                                 (* music from elsewhere, written out as BeatScript before the program is read *)
+ref         = seed | gen | stored ;                           (* music from elsewhere, written out as BeatScript before the program is read *)
 seed        = "seed" "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ] ;   (* a track of the beats generator: genre, seed; a part, bars from 1 *)
 stored      = CID [ "." NAME ] [ "." role ] ;                 (* a saved program's section or part, by its CID: <cid>.drop  <cid>.drop.bass; a bare <cid> is a program with no sections [host] *)
+gen         = GEN NAME "seed" "=" ( INT | NAME ) { gen_param } ;   (* gen@2 techno seed=42 section=drop part=bass: the seeded generator, called; GEN is gen@2 or a bare gen [host] *)
+gen_param   = "bpm" "=" NUMBER | "key" "=" KEY | "length" "=" ( "short" | "standard" | "long" ) | "section" "=" NAME | "part" "=" role ;
 structure   = "standard" | "loop" | "minimal" | "extended" ;  (* the generator's song structures; standard is the default *)
 
 (* == Phrase templates == *)
-template    = "template" "(" NAME "," ( PHRASE | STRING ) ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track *)
+template    = "template" "(" NAME "," ( PHRASE | STRING ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form's roles *)
+binding     = NAME "=" source ;                               (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass *)
+source      = gen | NAME | notes | form | stored ;            (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program's part or sections *)
+notes       = "[" pattern "]" | "<" "[" pattern "]" { "[" pattern "]" } ">" ;   (* a bar, or bars one after another *)
+form        = "template" "(" NAME { "," binding } ")" ;       (* a form inside another takes no phrase: forms nest 3 deep *)
 
 (* == Evolving == *)
 evolve      = "evolve" "every" INT "bars" "{" { NEWLINE } { rule NEWLINE { NEWLINE } } [ bound NEWLINE { NEWLINE } ] "}" ;   (* a rule a line; the bound last *)

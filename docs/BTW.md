@@ -61,6 +61,74 @@ kilohertz to eight kilohertz over eight bars."
   nothing reads a clock, a random source or the machine).
 - A mistake is an error with a line, a column, what was expected and the nearest name; the program is refused whole.
 
+## Two halves: structure and engine
+
+A program has two halves: its **structure** is the track's own source, and its **engine calls** ask the engine for what the text does not spell out.
+
+- **Structure** is what you write and what the track is: the settings, the parts on `deck A:` and `deck B:`, `let`, `def`,
+  `repeat`, `section`, `arrange` (and the mutations of `arrange { }`), doc comments, the phrase and form templates, and the
+  sections and parts borrowed from a stored program by its CID. It is canonical and content-addressed: the canonical text is
+  the program, the CID is the hash of that text, and anything brought in arrives as BeatScript text a person could have typed.
+- **An engine call** reaches into the engine: a generator's track, a DJ move, a verb of the control registry, a ramp on a
+  deck's or the master's strip. BeatScript treats the engine as a foreign-function interface. The text records the call,
+  never its result, so a call that makes music is pinned and versioned: `seed(techno, 42)` is the generator of seeds v1, and
+  always the same track.
+- **The two stay apart.** A part line holds notes and never a control call; a control line holds a control call and never a
+  note. An engine call that makes music (a generator's track) feeds the parts: its result is written out as structure, a
+  pattern or a section, before the program is lowered, so the browser, the phone and the booth only ever play plain BeatScript.
+
+| structure: the track's own source | engine: calls into the engine |
+|---|---|
+| `tempo 126`, `key am`, `swing 0.1` | `seed(techno, 42).bass[17..24]`: the beats generator, seeds v1, written out as text before lowering |
+| `deck A: kick x ~ x ~ \| bass c2 ~ c2 ~ inst=fm-bass`: parts, patterns, params | `master: filter lp 400 -> 8k over 8 bars`, `deck A: level 0.8`, `crossfader 0.5`: the mixer and the FX |
+| `let`, `def`, `repeat`, `stack`, `then`, `evolve` | `move echo_out on B`, `swap pairs with filter_exit`: the booth's moves |
+| `section drop 16 bars { }`, `arrange`, `arrange { }` with `~` and `@` | `do <noun> <verb> ...` and its sugar (`freeze`, `vocoder`, the wheel): the control registry |
+| doc comments: the `#` lines above a `section`, `let`, `def` or `arrange` | `sing "words" on melody`, `duck`, `mix`: the voice and the mix |
+| `arrange from template(rondo, @hands_up)`: a template is BeatScript with slots | `load`, `queue`, `play`, `stop`, `sync`, `mute`: the decks' transport |
+| `section hook from <cid>.drop`, `<cid>.drop.bass`, `import`: another program's source, by its hash | `gen@2 techno seed=42 section=drop part=bass`: the seeded generator called with its own parameters, the result pinned by its CID ("Call the generator") |
+| a form's roles, `template(rondo, @hands_up, episodes=template(passacaglia, ground=ode_to_joy))`: themes, notes, other programs' parts and sections, other forms, written in as text (a seed in a role stays an engine call); *coming:* `use <source> as NAME` | *coming:* `macro riser over 8 bars on A`, the DJ macro catalogue by name (designed: docs/btw/ext-control.md) |
+| | `control: move echo_out on B`, `at bar 12: control: swap pairs with filter_exit`: the control deck, beside `deck A:`, `deck B:` and `master:`, holds only engine calls, sequenced by sections like any deck ("The control deck") |
+
+One program that uses both:
+
+```text
+tempo 126
+key am
+
+let groove = x ~ x ~ x ~ x [x x]                          # structure: a let
+section build 8 bars {                                     # structure: a section
+  deck A: kick groove | bass seed(techno, 42).bass[17..24] inst=fm-bass   # parts; seed(): the generator, pinned
+  deck B: arp arp(am7, up, 8)
+  master: filter lp 400 -> 8k over 8 bars                 # engine: the master's filter, a ramp
+}
+section drop 8 bars {
+  deck A: kick x x x x | bass seed(techno, 42).bass[17..24] inst=fm-bass
+  deck B: arp arp(am7, up, 8)
+}
+on phrase: move echo_out on B                              # engine: a move of the booth
+arrange build drop
+```
+
+### What a reference resolves to
+
+A program's CID is of its text as written: the recipe, with its references in it. `check` (and `listen`, and the MCP tools
+`generate` and `genre_template`) also says what the recipe makes:
+
+- refs lists each reference of the program (a gen@N call, a seed(...), a template(...), a <cid>.section borrowed from a stored
+  program): its kind, half (engine or structure), call, place (part, let, section or arrange), name, line and col, resolved
+  (the CID it is pinned to), generator, fitted (what a gen call took from the program: key, bpm) and track. With `expand`
+  (`btwd check --expand`, `"expand": true` on `/api/check` and the MCP check) each one also carries its `expansion`.
+- expanded_cid is the CID of the program with every reference written out as plain BeatScript: cid addresses the recipe,
+  expanded_cid the result; the same recipe always gives the same expanded_cid, and a program with no references has
+  expanded_cid equal to cid.
+- resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it
+  (seeded@2), and for a gen call the key and bpm it was generated in. A reference written out inside another one's expansion
+  (a template's) is listed with `nested: true`; its own pin is not reported yet (the template expansion does not expose its
+  nodes).
+
+`listen` marks each part a reference made with `from` (its call, kind, resolved CID, place and the sections it made it in), and
+a gen call that was fitted to the program's key or tempo says so in its `notes`, in check's words.
+
 ## Grammar (EBNF)
 
 The grammar is [`crates/djlive/grammar.ebnf`](https://beatscript.app/grammar.ebnf), the language's one source of
@@ -81,15 +149,15 @@ statement   = setting | headed | let | def | repeat | section | arrange | arrang
             | evolve | wire | assert | sample | use | set ;
 
 (* == Settings == *)
-setting     = "tempo" stempo
+setting     = "tempo" tempo
             | "swing" arith
             | "key" KEY ;                                     (* a setting reads no input: it is the program's own *)
-stempo      = arith [ "->" arith "over" dur [ shape ] ] ;     (* tempo 126   tempo 100 -> 130 over 8 bars exp *)
-tempo       = value [ "->" value "over" dur [ shape ] ] ;     (* a control's tempo (at bar 16: tempo 128 -> 140 ...) *)
+tempo       = arith [ "->" arith "over" dur [ shape ] ] ;     (* tempo 126   tempo 100 -> 130 over 8 bars exp *)
 
 (* == Lines: when, where, what == *)
 headed      = "deck" deck ":" parts [ guard ]                (* a deck's parts: no time word before them *)
             | [ timing ":" ] [ target ":" ] control [ cguard ]
+            | [ timing ":" ] "control" ":" ( engine | do | duck | mix ) [ cguard ]   (* the control deck *)
             | [ timing ":" ] ( invoke | duck | mix ) [ cguard ] ;   (* a def's call, a duck and a mix name their decks themselves *)
 timing      = when [ "for" dur ] | "for" dur ;
 when        = "every" dur [ "from" ( arith | pos ) ]          (* every 16 bars   every 2 beats   every 4 bars from 8 *)
@@ -105,7 +173,7 @@ guard       = "when" expr ;                                   (* kept where it h
 cguard      = "when" cexpr ;                                  (* a control line's guard may read an input *)
 target      = "deck" deck | "master" ;
 deck        = "A" | "B" | PARAM ;                              (* PARAM: in a def body, filled in when it is called *)
-control     = action | do | sing ;
+control     = action | engine | do | sing ;
 
 (* == Parts == *)
 parts       = pitem { "|" pitem } ;                           (* only after "deck X:" and with no time word *)
@@ -162,14 +230,14 @@ action      = "filter" ( "lp" | "hp" ) change                 (* hertz: 20 .. 20
             | "filter" ( "off" | "open" )
             | ( "delay" | "reverb" | "crush" | "drive" | "resonance" ) change   (* 0 .. 1: how much *)
             | ( "level" | "low" | "mid" | "high" ) change     (* deck X: / master: level *)
-            | "crossfader" change                             (* no target *)
-            | "tempo" tempo                                   (* no target: at bar 16: tempo 128 -> 140 over 4 bars *)
+            | "load" SPEC                                     (* deck X: *)
+            | "play" | "stop" | "sync" | "mute" | "unmute" ;
+engine      = "crossfader" change                             (* no target, or control: *)
+            | "tempo" tempo                                   (* at bar 16: tempo 128 -> 140 over 4 bars *)
             | "swap" "pairs" [ "with" MOVE ]                  (* the booth's: the desktop app plays these *)
             | "move" MOVE "on" deck [ span ]
             | "load" "pair" SPEC [ "group" INT ]
-            | "load" SPEC
-            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD )
-            | "play" | "stop" | "sync" | "mute" | "unmute" ;
+            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD ) ;
 change      = value                                           (* a plain value *)
             | value "->" value span [ shape ]                 (* a ramp: 2k -> 8k over 8 bars exp *)
             | lfo ;                                           (* a value that keeps moving *)
@@ -226,7 +294,8 @@ section     = "section" NAME INT "bars" "{" { line } "}"     (* 1 to 256 bars; a
             | "section" NAME "from" ref ;                     (* section intro from seed(techno, 42)[1..8]   section hook from <cid>.drop *)
 arrange     = "arrange" sexpr { sexpr }
             | "arrange" NAME ":" sexpr { sexpr } [ arr_end ]   (* with a NAME it is one of several arrangements *)
-            | "arrange" "from" ( seed | template ) ;          (* the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff) *)
+            | "arrange" "from" ( seed | template )            (* the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff) *)
+            | "arrange" "from" gen ;                          (* the whole program a generator call prints: arrange from gen@2 techno seed=42 *)
 arr_end     = "then" NAME | "loop" [ INT ] | "end" ;           (* only after a NAME: see "Several arrangements" *)
 start       = "start" NAME ;                                  (* the named arrangement that plays first; default the first written *)
 launch      = "launch" NAME "on" "pad" "(" INT ")" [ "next" ( "bar" | "phrase" [ "8" | "16" | "32" ] ) ] ;   (* a hit of the pad brings the scene, a section or an arrangement, in on that bar line: 8 bars by default *)
@@ -247,13 +316,19 @@ mut_op      = NAME { NUMBER | "-" NUMBER | NAME } ;           (* rot 2  thin 0.1
 block_end   = "end" | "loop" | "loop" INT [ "then" { NAME } "end" ] ;   (* default end; loop N: 1 to 256 passes, then a coda *)
 
 (* == Start from a seed == *)
-ref         = seed | stored ;                                 (* music from elsewhere, written out as BeatScript before the program is read *)
+ref         = seed | gen | stored ;                           (* music from elsewhere, written out as BeatScript before the program is read *)
 seed        = "seed" "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ] ;   (* a track of the beats generator: genre, seed; a part, bars from 1 *)
 stored      = CID [ "." NAME ] [ "." role ] ;                 (* a saved program's section or part, by its CID: <cid>.drop  <cid>.drop.bass; a bare <cid> is a program with no sections [host] *)
+gen         = GEN NAME "seed" "=" ( INT | NAME ) { gen_param } ;   (* gen@2 techno seed=42 section=drop part=bass: the seeded generator, called; GEN is gen@2 or a bare gen [host] *)
+gen_param   = "bpm" "=" NUMBER | "key" "=" KEY | "length" "=" ( "short" | "standard" | "long" ) | "section" "=" NAME | "part" "=" role ;
 structure   = "standard" | "loop" | "minimal" | "extended" ;  (* the generator's song structures; standard is the default *)
 
 (* == Phrase templates == *)
-template    = "template" "(" NAME "," ( PHRASE | STRING ) ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track *)
+template    = "template" "(" NAME "," ( PHRASE | STRING ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form's roles *)
+binding     = NAME "=" source ;                               (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass *)
+source      = gen | NAME | notes | form | stored ;            (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program's part or sections *)
+notes       = "[" pattern "]" | "<" "[" pattern "]" { "[" pattern "]" } ">" ;   (* a bar, or bars one after another *)
+form        = "template" "(" NAME { "," binding } ")" ;       (* a form inside another takes no phrase: forms nest 3 deep *)
 
 (* == Evolving == *)
 evolve      = "evolve" "every" INT "bars" "{" { NEWLINE } { rule NEWLINE { NEWLINE } } [ bound NEWLINE { NEWLINE } ] "}" ;   (* a rule a line; the bound last *)
@@ -319,7 +394,7 @@ filter's cutoff, `filter lp 300hz`, is the number and nothing else; the hours of
 (`f#2`, `c4`, `d:dorian`, `am7`, `ii°`); `SDEG` a written degree in `deg( )` (`b3`, `#4`); `PARAM` a def's or a
 repeat's `$name`; `SUGAR` a control noun said without `do`; `STRING` a double-quoted string; `TOKEN` any token; `GLOB` a
 name with `*` in it; `CID` a saved program's id; `GHOST` a ghost's `.` and `RATCHET` a ratchet's `:N` (`x.` `x:3`). `±` may be written `+-` after
-a unit (`3m30s +- 5s`). `NEWLINE` also ends the program at the end of the text. In a lyric, `PHONES` is an escape's text:
+a unit (`3m30s +- 5s`). In a lyric, `PHONES` is an escape's text:
 `aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j`, `-` cuts a word, `_` rests,
 `:` holds a vowel, `!` accents it; `/` and a space: a phrase break.
 
@@ -343,20 +418,21 @@ examples of the feature sections below are lines of the programs in `examples/bt
 
 ### Which target takes which action
 
-| action | no target | `deck A:` / `deck B:` | `master:` |
-|---|---|---|---|
-| a part line (`kick x ~ x ~`) | — | yes (no time word) | — |
-| `swap pairs`, `move`, `load pair`, `queue`, `crossfader` | yes | — | — |
-| `load SPEC`, `play`, `stop`, `sync`, `mute`, `unmute` | — | yes | — |
-| `filter`, `delay`, `reverb`, `crush`, `resonance` | — | yes (that deck's insert) | yes (the Master's) |
-| `drive` | — | yes (that deck's drive) | yes (both decks' drive) |
-| `level`, `low`, `mid`, `high` | — | yes (the strip) | `level` only (the master level) |
-| `tempo` | yes (a place, not a repeat) | — | — |
-| `duck`, `mix` | yes (they name their decks) | — | — |
-| `sing "words" on melody` | yes (the only deck that has the role) | yes | — |
-| a `def`'s call | yes (the deck is an argument) | — | — |
+| action | no target | `deck A:` / `deck B:` | `master:` | `control:` |
+|---|---|---|---|---|
+| a part line (`kick x ~ x ~`) | — | yes (no time word) | — | — |
+| `swap pairs`, `move`, `load pair`, `queue`, `crossfader` | yes | — | — | yes |
+| `load SPEC`, `play`, `stop`, `sync`, `mute`, `unmute` | — | yes | — | — |
+| `filter`, `delay`, `reverb`, `crush`, `resonance` | — | yes (that deck's insert) | yes (the Master's) | — |
+| `drive` | — | yes (that deck's drive) | yes (both decks' drive) | — |
+| `level`, `low`, `mid`, `high` | — | yes (the strip) | `level` only (the master level) | — |
+| `tempo` | yes (a place, not a repeat) | — | — | yes (with a time word) |
+| `duck`, `mix` | yes (they name their decks) | — | — | yes |
+| `sing "words" on melody` | yes (the only deck that has the role) | yes | — | — |
+| a `def`'s call | yes (the deck is an argument) | — | — | — |
 
-A line that puts an action on a target that does not take it is an error that says which targets do.
+A line that puts an action on a target that does not take it is an error that says which targets do. `control:` is the
+control deck ("The control deck"): a head in the place of a target, for the engine calls only.
 
 ## Patterns: mini-notation
 
@@ -366,17 +442,17 @@ A pattern is one **cycle**, one bar. Its terms share the bar equally, so the ste
 kick x ~ x ~            4 terms: quarter notes, hits on 1 and 3
 kick x x x x x x x x    8 terms: eighths
 snare ~ x ~ x           hits on 2 and 4
-hihat x*8               eight hits: x*8 is x in each eighth of the bar
+hihat x*8               eight hits, one an eighth
 hihat [x x] x [x x] x   groups: two hits squeezed into one slot
 bass c2 ~ [c2 eb2] g2   notes
 bass 1 ~ 3 5            scale degrees of the key
 bass 1 ($i + 1) 5       a degree computed (inside a repeat or a def)
-melody <c4 e4 g4>       alternation: c4 on the first bar, e4 on the second, g4 on the third, then round
+melody <c4 e4 g4>       alternation: one a bar, then round
 kick e(5,8)             euclid: five hits over eight steps
 kick e(3,8,2)           the same, rotated by two
 harmony [c3,e3,g3]      a comma inside [] stacks: three notes at once
 hihat x*8?0.7           each of the eight hits kept with chance 0.7 (seeded)
-bass choose [c2 e2 g2] weights 3 1 1    one of the three a bar, c2 three times as often as e2 or g2
+bass choose [c2 e2 g2] weights 3 1 1    one of the three a bar, c2 three times as often
 melody deg(1 b3 5' ~)   degrees with accidentals and octave marks, one slot
 harmony <I V vi IV>     Roman numerals: a chord of the key a bar (bare, one a quarter); a section's own `key` re-reads them
 hihat/12 x x ~ x        a cycle of twelve sixteenths: four terms of three steps, drifting against the bar
@@ -386,23 +462,21 @@ hihat x*8?              a bare ? is ?0.5
 
 - `*n` plays its term `n` times in its slot (`n` is 1 to 64, and may be `(arithmetic)`). `<a b>*2` is `a b` inside one
   bar (the alternation advances twice).
-- A pattern with an alternation is as many bars long as the alternation needs (the least common
-  multiple of the alternations in the deck's parts, at most 64 bars). The net is that long and loops. A part with a
-  cycle of its own (`hihat/12`) or a chance in it lengthens the net too: see "How long a program can be".
-- The grid is sixteenths. A term that does not fall on a sixteenth (three in a bar, five in a bar)
-  snaps to the nearest one, and `check` says so as a warning: `x x x` does not divide 16 steps; its
-  hits snap to steps 0, 5, 11.
-- A hit in a drum part plays that drum's note. A hit in a tonal part plays the key's root in the part's
-  octave. A note plays that note. A degree plays that step of the key's scale (`1` the root, `8` the root
-  an octave up). A Roman numeral plays a chord of the key (`harmony`), or its bass tone (`bass`, `melody`), or the
-  chord one note at a time (`arp`).
+- A pattern with an alternation is as many bars long as it needs (the least common multiple of the deck's
+  alternations, at most 64 bars); the net is that long and loops. A cycle of its own (`hihat/12`) or chance lengthens
+  it too ("How long a program can be").
+- The grid is sixteenths: a term off it (three or five in a bar) snaps to the nearest step, with a warning
+  (`x x x`: steps 0, 5, 11).
+- A hit plays the drum's note in a drum part, the key's root in the part's octave in a tonal one. A note plays itself, a
+  degree that step of the key's scale (`1` the root, `8` an octave up), a Roman numeral a chord of the key (`harmony`),
+  its bass tone (`bass`, `melody`) or the chord a note at a time (`arp`).
 - Default octaves: bass 2, harmony 3, melody 4, arp 4. `oct=N` sets it.
 
 ### Generators
 
 | call | does |
 |---|---|
-| `e(k, n)` / `e(k, n, rot)` / `euclid(...)` | `k` hits over `n` steps (Bjorklund, as `djrust::gen::euclidean`), rotated by `rot`. As a term it takes one slot, so `kick e(5,8)` is a bar of eight steps and `kick x e(3,8)` puts the eight steps in the second half. `0 <= k <= n`, `1 <= n <= 64`; `check` names the rhythm when the ontology names it. |
+| `e(k, n)` / `e(k, n, rot)` / `euclid(...)` | `k` hits over `n` steps (Bjorklund, as `djrust::gen::euclidean`), rotated by `rot`. As a term it takes one slot, so `kick e(5,8)` is a bar of eight steps and `kick x e(3,8)` puts the eight steps in the second half. `0 <= k <= n`, `1 <= n <= 64` ("Euclidean rhythms and polymeter"). |
 | `markov(key, density)` / `markov(density)` / `markov(key, density, seed)` | a Markov melody of one bar in the key's scale (`djrust::gen::markov`). The key is the program's `key` (or the section's) when left out. `density` 0..1. Same seed, same notes: the seed is, when left out, taken from the text of the part. |
 | `arp(chord, mode, n)` | the chord's notes one at a time over `n` steps (default 8) in `up`, `down` or `updown`. |
 | `chord(chord)` / `chord(chord, octave)` | the chord's notes together. A chord is a symbol (`am7`) or a numeral (`V7`). |
@@ -554,6 +628,31 @@ on a move puts it back after N instead; `btw stop` and an edit that drops the li
 deck's panel says **MUTED** in red while a strip a program plays on is muted, and `btw get` has it in `warnings`.
 A `move` takes whole bars (the registry's `moves arm` takes bars): `over 2 beats` on a move is an error that says so.
 
+### The control deck
+
+`control:` is a deck of engine calls, beside `deck A:`, `deck B:` and `master:`. It takes the lines that take no target
+(`move`, `swap pairs`, `load pair`, `queue`, `crossfader`, a `tempo` at a place, `duck`, `mix`, `do` and its sugar nouns), in
+the place a target goes, and sections, repeats, defs, guards and time words sequence it like any line:
+
+```text
+section drop 16 bars {
+  deck A: kick x x x x | bass c2 ~ c2 ~
+  deck B: arp arp(am7, up, 8)
+  master: filter lp 400 -> 8k over 8 bars
+  control: move echo_out on B
+  at bar 12: control: swap pairs with filter_exit
+}
+every 16 bars: control: freeze phrase bars=2
+```
+
+A line on it compiles to exactly what the line with no head does: the same registry calls, the same key (so moving a line
+onto it, or off it, fires nothing again), the same nets. The canonical text keeps the head, so `control: move echo_out on B`
+and `move echo_out on B` are two spellings with two CIDs; both stay, and no program's CID moved. The control deck never holds
+a part or a note (`control: kick x ~ x ~` is an error that says to write it on `deck A:`), a strip's action (`control: filter lp
+400`: on `deck A:`, `deck B:` or `master:`), a deck's transport, a `sing`, a def's call or a setting (`control: tempo 140` with
+no time word is `tempo 140`). `control` is no reserved word: it is the head only before its colon. The long note is
+`docs/btw/ext-control.md`, with the design of `macro`.
+
 ## The whole surface: `do`
 
 ```text
@@ -632,22 +731,20 @@ arrange intro build drop breakdown drop2 outro
 - **`let name = ...`** at the top. One token (`8`, `c2`, `am`) is a value put in place of every later use of
   the name (so `at bar late:` and `bass root` work, and the canonical text shows the value). More tokens are a
   pattern, used as `bass kicks`, in `<a b>` alternations, in `[a, b]` stacks and as the pattern a transform
-  takes. **Arithmetic** that is the whole value is a number: `let n = 2 * 4` is 8, put in place of every later `n`
-  (an earlier scalar may be used in it: `let m = n + 1`). `let r = 3*2` is the number 6; the degree 3 twice is
-  `let r = [3 3]`. A section expression names a composition (`let verse = stack(groove, wash)`). A name cannot be a
+  takes. **Arithmetic** that is the whole value is a number: `let n = 2 * 4` is 8 (an earlier scalar may be used in
+  it: `let m = n + 1`); `let r = 3*2` is the number 6, the degree 3 twice is `let r = [3 3]`. A section expression
+  names a composition (`let verse = stack(groove, wash)`). A name cannot be a
   word of the language, a note, a chord, a key or a Roman numeral (`let kick`, `let a` and `let vi` are errors).
 - **`def name(a, b) { ... }`** is a macro: its body is lines, and `$a` is where an argument goes. A call
   `name(x, y)` is a line, with `at bar N:` / `after X:` / `before X N bars:` or none. The body is read when it
   is called, so an error in it says where in the def and which call. **A def that calls itself, directly or
-  through another def, is an error** (`ping -> pong -> ping`) found before anything runs. An argument that is
-  arithmetic keeps its grouping where it is put in place (`cuts(1 + 2)` with `at bar $a * 2` is `(1 + 2) * 2`). A def
+  through another def, is an error** (`ping -> pong -> ping`) found before anything runs. A def
   may declare a **boundary** (`def walker(oct) in: chords, key out: bass { ... }`) and be glued to others with `wire`:
   typed ports, below.
 - **`repeat N { ... }`** with `N` written out (1 to 64). `repeat 8 every 2 bars { ... }` shifts copy `i` by
   `i * 2` bars; `$i` and `$n` are the index and the count, and are put in place before an expression is read
-  (`at bar $i * 2 + 1`). Nested, a program may expand to 4096 lines, and its repeats and calls may write out about two
-  million tokens in all ("Bounds on the text"). A def's body may have a `repeat` of its own: its `$i` and `$n` are the
-  repeat's.
+  (`at bar $i * 2 + 1`). Written out, a program is at most 4096 lines ("Bounds on the text"). A def's body may have a
+  `repeat` of its own: its `$i` and `$n` are the repeat's.
 - **`when` guards** end a line (`drop(A, 8) when $i != 0`, `deck A: kick x ~ x ~ when $i % 4 == 3`): the line is kept
   in the copies where the condition holds and removed, before it is checked, in the others. They see `$i`, `$n` and a
   def's `$params` ("Guards", above).
@@ -655,9 +752,8 @@ arrange intro build drop breakdown drop2 outro
   may be named twice; without `arrange`, in the order written). A section is 1 to 256 bars, and its body is
   statements, one to a line (`{` ends the line it is on; a block of a `def` or `repeat` may be on one line, a section's
   may not). Lines outside every section apply to the whole
-  song, a section's own part of the same role wins, and a deck a section does not use is stopped there. The
-  nets of the next section are loaded a bar ahead and land on its bar line. After the last section the last
-  nets play on. `section` and `arrange` belong at the top, not inside another block. `arrange` also takes `stack(...)`,
+  song, a section's own part of the same role wins, and a deck a section does not use is stopped there. After the last
+  section the last nets play on. `section` and `arrange` belong at the top, not inside another block. `arrange` also takes `stack(...)`,
   `then(...)` and `silence` ("Composition: stack and then"). A section may open with a `key` of its own and may set a
   `tempo`.
 - **`import "name"`** or `import zQm...` brings the **lets and defs** of a saved program, with the ports of its defs
@@ -975,7 +1071,7 @@ let riff = seed(techno, 42).bass[17..20]               the same, named (say whic
 section hook from <cid>.drop                  a saved program's section (parts, key)
 deck B: bass <cid>.drop inst=hoover           its part (the line's role; .melody another)
 arrange from template(deep-house, @tempest_such_stuff)  a phrase as a track
-arrange from template(rondo, @hands_up)  a form: docs/forms.md
+arrange from template(rondo, @hands_up, refrain=ode_to_joy)  a form, a role bound: docs/forms.md
 ```
 
 - The genre is one of the bitwrap ontology's (ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal
@@ -991,6 +1087,7 @@ arrange from template(rondo, @hands_up)  a form: docs/forms.md
 - **Write it out to edit it**: `btwd fmt --expand` (or `btwd expand`, the MCP `expand` tool) gives the text a seed
   stands for, each place under a `# from seed(...)` line; `--lineage` opens it with `#! forked-from: <CID>` of the
   program as given, so a shared fork says where it came from. The written-out program plays the same as the reference.
+  In the editor (btwls), any reference hovers with its expansion, shows or hides it inline, and ejects in place: docs/btwls.md.
 - **The same music, always**: seeds are versioned (`#! seeds: v1`, also what a program with no such line means). A seed
   always means the same track, so the CID of a program with references (of its text, references and all) never moves; a
   change to the generator that changed any seed would be seeds v2.
@@ -1041,6 +1138,43 @@ deck A: kick z4EBG9jF...                        a bare CID is a program with no 
   error naming the ones it does, a role on two decks an error (borrow the section), a section written and never played an error;
   a section with control lines left behind is a warning.
 
+### Call the generator: `gen@v`
+
+`gen@2 techno seed=42` is the program the seeded generator prints for those inputs: the generator of the MCP `generate` tool,
+`POST /api/generate` and beatscript.app's compose panel ("seeded, no model"). It is an engine call ("Two halves"): opaque until
+it is resolved, then pinned by the CID of the program it resolves to. Its params are the generator's own, so a call reads like a
+function's signature:
+
+```text
+let bed = gen@2 techno seed=42 section=drop part=bass      the bass of its drop, a let a bar: bed_1 ... let bed = <bed_1 ...>
+deck B: arp gen@2 house seed=7 section=drop inst=pluck      a part of it, on this line's role; your params win
+section hook from gen@2 techno seed=42 section=drop         a section of it: its parts, never its control lines
+arrange from gen@2 techno seed=42 bpm=128 key=am            the whole program
+```
+
+- **Params**: the genre, then `seed=` (a whole number or a word; a call always says its seed), `bpm=` (40 to 300), `key=`,
+  `length=` (short, standard or long), and which piece: `section=` (one of the program's sections) and `part=` (a role).
+  `seed=42` and `seed = 42` are one call.
+- **The version is in the text**: `gen@1` is `seeded@1`, `gen@2` is `seeded@2` (a generated program's `#! generator:` line). A
+  bare `gen` is `gen@2`, and the canonical text writes the version, so it is in the CID (a `#! seeds:` line is a comment, and is
+  not). Every version stays callable: a generator that would print another program for the same inputs is a new version, and the
+  old one is kept as it was. The tests pin what a sample of calls resolves to.
+- **It fits the program**: unless the call says its own `bpm=` or `key=`, it is generated at the program's `tempo` and in its
+  `key`, so two seeds crossed with `morph` or `xfer` never clash. `check` says so at the call, with the CID: `gen@2 techno seed=42
+  section=drop part=bass -> z4EB... (seeded@2): generated in the program's key am and at its tempo 124`. The fitting is part of
+  the resolution: the same program text is the same call, the same generated program and the same CID.
+- **What it is written out as**: a part line and `section X from` borrow from the generated program as from a stored one
+  ("Borrow from a stored program": its parts and their params, never its control lines). A `let` is the notes the part plays
+  there, a let a bar (`bed_1`, `bed_2` ... and `let bed = <bed_1 bed_2>`), so `~ bed_* rot 2` mutates it as it would a local
+  let. `arrange from` is the whole program, less the `tempo` and `key` lines the program says itself.
+- **Eject**: `btwd expand`, the MCP `expand` and the editor write one reference out in place, under a `# from: <call> -> <cid>`
+  line. The line is a comment: the ejected program has the CID of the same notes typed by hand, and the line keeps where they
+  came from.
+- **No fetch**: the generator is compiled into the host (btwd, beatscript.app, the page's wasm, the editor). A host without it
+  says `gen@2 is not here` at the call. `seed(techno, 42)` is another generator (beats.bitwrap.io's, seeds v1) and stays as it was.
+- `check`: an unknown genre or section is an error with the nearest names; a `let` names one section and one part; a `bpm=`,
+  `key=` or `length=` it does not take is an error at the param. Long note: `docs/btw/ext-ffi.md`.
+
 ### Phrase templates
 
 `template(name, phrase)` compiles a phrase, a phrasebook id or any words, to a whole track. Like a seed it is written
@@ -1081,10 +1215,10 @@ arrange from template(deep-house, "robots on the road")      any words: their st
 - **The same track, always**: templates are versioned (`#! templates: v1`, also what a program with no such line means).
   A change that changed any track would be templates v2.
 
-**Forms:** six templates are classical forms (quodlibet, passacaglia, canon, rondo, fugue, theme and variations), each a
-section shape and a mutation plan built from public-domain themes (the theme library, beatscript.app/themes, CC0), the phrase
-sung in one section: `docs/btw/forms.md` (https://beatscript.app/docs/forms.md). The MCP `genre_template` takes a `form` or a
-`theme`, and `list_examples` with `themes` lists the library.
+**Forms:** six templates are classical forms (quodlibet, passacaglia, canon, rondo, fugue, theme and variations) and a seventh,
+`cross`, is a quodlibet of two sources; each is a section shape and a mutation plan built from public-domain themes (the theme
+library, beatscript.app/themes, CC0), the phrase sung in one section: `docs/btw/forms.md` (https://beatscript.app/docs/forms.md).
+The MCP `genre_template` takes a `form` or a `theme`, and `list_examples` with `themes` lists the library.
 
 | template | is | example |
 |---|---|---|
@@ -1095,6 +1229,39 @@ sung in one section: `docs/btw/forms.md` (https://beatscript.app/docs/forms.md).
 | `rondo` | a form: Joplin's Entertainer as a refrain returning mutated (A B A C A) between Bach's Prelude in C and the sung section | `examples/btw/rag-rondo.btw` (the reference) |
 | `fugue` | a form: Grieg's Mountain King as the subject, answered a fifth up and re-entering transposed while Bach's Badinerie morphs toward it | |
 | `theme-and-variations` | a form: Dvorak's New World Largo, a different one-shot transform each section (`rev`, `invert`, `stutter 2`, `oct -1`, `half`), no cross-morphs | |
+| `cross` | a form: two sources take turns (`a_leads`, `b_leads`), overlap (`both`) and morph toward each other and back in cycles (`~ a_melody_* morph b_melody_1 p`, `@ ... xfer`); unbound, Ode to Joy over Pachelbel's ground and the Badinerie in B minor | `examples/btw/cross-two-seeds.btw` |
+
+**Roles: the form is the structure, sources fill it.** After the phrase, a form takes `role=source` bindings; a role nobody
+binds keeps the form's own material, so a reference with none is the text it always was:
+
+```text
+arrange from template(passacaglia, @eccl3_season, ground=gen@1 dubstep seed=54876 part=bass, upper=ode_to_joy)
+arrange from template(cross, @psalm42_deep_calleth, a=gen@1 dubstep seed=54876, b=gen@1 house seed=7)
+arrange from template(rondo, @hands_up, refrain=gen@1 dubstep seed=54876, episodes=template(passacaglia, ground=[g1 ~ d2 ~]))
+```
+
+| form | roles: what each is (default) |
+|---|---|
+| `passacaglia` | `ground`: the bass under every section, never changed (Holst's Mars ostinato); `upper`: the line the variations change (the form's own) |
+| `canon` | `subject`: the line chased by copies of itself, a bar and a beat behind (Pachelbel's violin); `ground`: the bass (Pachelbel's ground) |
+| `rondo` | `refrain`: the tune that comes back (Joplin's Entertainer); `episodes`: a line, the episodes' figure (Bach's Prelude in C), or sections |
+| `fugue` | `subject`: entered, answered a fifth up, re-entered (Grieg's Mountain King); `counter`: drawn toward it (Bach's Badinerie) |
+| `theme-and-variations` | `theme`: the one source each variation changes (Dvorak's Largo) |
+| `cross` | `a`, `b`: two sources, each a melody, bass and chords (a whole seed; a line is the melody) |
+
+- **Sources**: a seed, `gen@1 dubstep seed=54876 [section=drop] [part=bass]` (the form fills in the role's part and the first
+  section that plays it, the drop first); a public-domain theme by id (`ode_to_joy`); notes, a bar each (`[d2 ~ a1 ~]`,
+  `<[d2 ~] [g1 ~]>`); a stored program's part (`<cid>.drop.bass`), and where a role takes sections a section of it
+  (`<cid>.drop`) or the whole of it (`<cid>`: its sections in its order); another template, with no phrase
+  (`template(passacaglia, ground=...)`): its sections under the role's prefix (`ep_ground`), its plan over the role's places.
+- **Written out as structure**: a role is a let a bar the sections and the plan read by name (`ostinato`, `subject`, `tune`,
+  `dux`, `air`, `a_melody` ...: `~ subject_* rot 2`), or sections; a seed stays a `let NAME = gen@1 ...` line for the gen
+  stage, pinned. Every section keeps a doc comment; the header says what fills each role.
+- **Key**: a source plays in the key of the sections it fills (the program's, a seed fitted to it, a theme moved into it; an
+  inner form's sections open with its own `key`, its seeds say it). The roles go in the form's order in the canonical text.
+- **Total**: forms nest 3 deep, a line is at most 16 bars, a role of sections at most 128 bars a pass; each an error at it.
+- Eject writes the form out under `# from: <the reference> -> <CID>`, the whole chain of forms and seeds; the seeds in it eject
+  in turn. Long note: `docs/btw/ext-roles.md`.
 
 Three phrases, three tracks (`examples/btw/`): `such-stuff-as-dreams-122.btw`, Shakespeare's "we are such stuff as dreams are
 made on", iambic, 20 syllables, a four-bar line in the bar; `assyrian-122.btw`, Byron's anapestic "The Assyrian came down like
@@ -2649,6 +2816,9 @@ logs are the "Decisions" of each `docs/btw/ext-*.md`.)
   as one of those positions, and never in a def's header (a def's parameter may be called as a let is: `def grv(deck, n)`). A scalar
   `let` of a number and a unit (`let atk = 5ms`) is put in place as both tokens. A scalar `let` that has the name of a def or a
   section is an error that names the let (`` `drop` is the let on line 1 (= 8): a section needs a name of its own ``).
+- `control` is no reserved word: it is the control deck's head only before a colon, at the head of a line or after a time word's
+  colon (`parse::control_head_at`), so a let, a def or a section may still be called `control` (`after control: control: queue
+  next`, `control(A)` calls a def). *No program in the repo names anything `control`, but a reservation would buy nothing.*
 - A Roman numeral that names a `let` wins in a pattern: `let v = c2 e2` then `bass v` is the let. *The author's own `i`, `v`,
   `step` are names; `V` in upper case is still the numeral.*
 - A name that cannot be used says what to write instead (`rename it, for example `pad1``); a `a`..`g` name (a note) too.

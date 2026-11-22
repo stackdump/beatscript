@@ -1,0 +1,7 @@
+gen@1 techno seed=42 -> z4EBG9jBNgdCvmsLMwooK3YK4AqYi8EXSuND5yYquEwYHBf9bav
+gen@2 techno seed=42 -> z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf
+gen@1 dubstep seed=54876 -> z4EBG9jEc16bDPSFKkPRTnE65crd8X16Jxo1YsWg2rvWvVgK8hS
+gen@2 trap seed=54877 -> z4EBG9jAdboLqgkepUrCh9Q928jS3vgubQUZ3LyFz6f5fzSsgNj
+gen@2 house seed=sunrise bpm=124 key=am -> z4EBG9j4FW9HS2yzwwJSiWZ3Nr2gjhi5B3uxPj761iRgBschG62
+gen@2 dnb seed=7 length=short -> z4EBG9jH3ezJR68JDjHXjPQmTdWYcx6RttejM9KbVWF9TfR4h4d
+gen@1 lofi seed=3 key=f#m length=long -> z4EBG9izLmPaWyZN4gZckQR3AdsUexydyiCo5st9Xuep9h8uWPe

@@ -27,9 +27,11 @@
 //! straight feel unless the stresses fall three syllables apart).
 //!
 //! **Forms** (docs/btw/forms.md): six of the templates are classical forms (quodlibet, passacaglia, canon, rondo, fugue,
-//! theme and variations), each a section shape and a mutation plan ([`Form`]) built from themes of the public-domain theme
-//! library (`djengine::themes`, filled into the template as `$THEME_<ID>` slots). The phrase is sung in the form's `sung`
-//! (or `voices`) section; the themes, the sections and the arrangement are the form's own.
+//! theme and variations) and one is a quodlibet of two sources (cross), each a section shape and a mutation plan ([`Form`])
+//! built from themes of the public-domain theme library (`djengine::themes`, filled into the template as `$THEME_<ID>`
+//! slots). The phrase is sung in the form's `sung` (or `voices`) section; the sections and the arrangement are the form's own,
+//! and its roles take its own themes unless the reference binds them to other sources (`ground=gen@1 dubstep seed=54876`:
+//! roles.rs, which rewrites the written-out text; a reference with no roles is written out exactly as before).
 //!
 //! Templates are versioned ([`VERSION`]): `#! templates: v1` (also what a program with no such line means), so a template
 //! always means the same track and the CID of a program that names one (its text, as written) never moves.
@@ -79,7 +81,7 @@ pub struct Form {
 }
 
 /// Every template, in the order the docs list them: the groove, then the forms.
-pub const TEMPLATES: [Template; 7] = [
+pub const TEMPLATES: [Template; 8] = [
     Template {
         name: "deep-house",
         summary: "deep house at 122: a night/spot cycle, the voice buried then spotlit, crossed onto the shaker; the phrase is the vocal line",
@@ -178,6 +180,21 @@ pub const TEMPLATES: [Template; 7] = [
         }),
         text: include_str!("../templates/theme-and-variations.btw"),
     },
+    Template {
+        name: "cross",
+        summary: "a cross at 120 in D: two sources (two seeds, in any genres: `a=gen@1 dubstep seed=54876, b=gen@1 house seed=7`) take turns and overlap, and morph toward each other and back in cycles; the phrase sung over the crossing",
+        example: "arrange from template(cross, @psalm42_deep_calleth)",
+        examples: &["cross-two-seeds"],
+        form: Some(Form {
+            label: "cross",
+            shape: "a_leads b_leads both both sung a_leads b_leads sung: one source leads, then the other, then both at once",
+            plan: "a quodlibet of two: `~ a_melody_* morph b_melody_1 p` paired with `~ b_bass_* morph a_bass_1 p`, an `@ ... xfer` one-shot in the overlap, then the pull turned round (`~ b_melody_* morph a_melody_1 p`, `~ a_bass_* morph b_bass_1 p`); `~` persists and compounds pass on pass (loop 3)",
+            mutations: &["morph", "xfer", "grow", "decay"],
+            themes: &["ode_to_joy", "pachelbel_ground", "badinerie"],
+            reference: None,
+        }),
+        text: include_str!("../templates/cross.btw"),
+    },
 ];
 
 /// The templates that are forms, in the docs' order.
@@ -211,13 +228,15 @@ pub enum PhraseRef {
     Text(String),
 }
 
-/// `template(name, phrase)`, as read.
+/// `template(name, phrase, role=source ...)`, as read.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TemplateRef {
     pub name: String,
     pub name_span: Span,
     pub phrase: PhraseRef,
     pub phrase_span: Span,
+    /// The roles bound after the phrase (roles.rs): `ground=gen@1 dubstep seed=54876 part=bass`.
+    pub roles: Vec<crate::roles::Binding>,
     pub span: Span,
 }
 
@@ -226,11 +245,13 @@ fn quote(s: &str) -> String {
 }
 
 impl TemplateRef {
-    /// The canonical spelling: `template(deep-house, @tempest_such_stuff)`, `template(deep-house, "robots on the road")`.
+    /// The canonical spelling: `template(deep-house, @tempest_such_stuff)`, `template(deep-house, "robots on the road")`, and
+    /// the roles after the phrase in the order the form names them: `template(passacaglia, @eccl3_season, ground=ode_to_joy)`.
     pub fn text(&self) -> String {
+        let roles = crate::roles::bindings_text(&self.name, &self.roles);
         match &self.phrase {
-            PhraseRef::Id(id) => format!("template({}, @{id})", self.name),
-            PhraseRef::Text(t) => format!("template({}, {})", self.name, quote(t)),
+            PhraseRef::Id(id) => format!("template({}, @{id}{roles})", self.name),
+            PhraseRef::Text(t) => format!("template({}, {}{roles})", self.name, quote(t)),
         }
     }
 }
@@ -276,7 +297,7 @@ pub(crate) fn runs(toks: &[Token]) -> Vec<Run> {
     out
 }
 
-const SHAPE: &str = "template(deep-house, @tempest_such_stuff) or template(deep-house, \"words in quotes\")";
+const SHAPE: &str = "template(deep-house, @tempest_such_stuff) or template(deep-house, \"words in quotes\"); a form's roles after the phrase: template(passacaglia, @eccl3_season, ground=gen@1 dubstep seed=54876 part=bass)";
 
 /// Read one reference from `toks[i]` (the word `template`): where it ends, and the reference or what is wrong with it.
 fn read_ref(toks: &[Token], i: usize) -> (usize, Result<TemplateRef, Diagnostic>) {
@@ -284,16 +305,24 @@ fn read_ref(toks: &[Token], i: usize) -> (usize, Result<TemplateRef, Diagnostic>
     let at = |j: usize| toks.get(j).map(|t| &t.tok);
     let here = |j: usize| toks.get(j).or(toks.last()).map_or(Span::new(0, 0), |t| t.span);
     let fail = |j: usize, msg: String| Diagnostic::error(toks[i].span.to(here(j.saturating_sub(1).max(i))), msg).help(SHAPE);
-    let close = |mut j: usize| {
-        // the rest of the parentheses go with the error, so that one mistake is one error
-        while j < toks.len() && !matches!(toks[j].tok, Tok::RParen | Tok::Newline | Tok::Eof) {
+    let close = |_: usize| {
+        // the rest of the parentheses go with the error (to the one that closes `template(`), so that one mistake is one error
+        let mut depth = 0usize;
+        let mut j = i + 1;
+        while j < toks.len() && !matches!(toks[j].tok, Tok::Newline | Tok::Eof) {
+            match toks[j].tok {
+                Tok::LParen => depth += 1,
+                Tok::RParen => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 {
+                        return j + 1;
+                    }
+                }
+                _ => {}
+            }
             j += 1;
         }
-        if at(j) == Some(&Tok::RParen) {
-            j + 1
-        } else {
-            j
-        }
+        j
     };
     let Some(Tok::Word(name)) = at(j).cloned().filter(|t| !matches!(t, Tok::Word(w) if w.starts_with('@'))) else {
         let d = fail(j + 1, "`template(` takes a template's name first: template(deep-house, @tempest_such_stuff)".into());
@@ -315,11 +344,40 @@ fn read_ref(toks: &[Token], i: usize) -> (usize, Result<TemplateRef, Diagnostic>
         }
     };
     j += 1;
+    // a form's roles, bound after the phrase (roles.rs)
+    let (j, roles) = match crate::roles::Reader::new(toks).bindings(j, 1) {
+        Ok(x) => x,
+        Err(d) => return (close(j), Err(d)),
+    };
     if at(j) != Some(&Tok::RParen) {
+        // a `gen` call the parser could not read took the rest of its line with its error (gen.rs): that is the one error
+        if j > 0 && matches!(&toks[j - 1].tok, Tok::Word(w) if w == "gen@0 error") {
+            return (j, Ok(TemplateRef { name, name_span, phrase, phrase_span, roles, span: Span::new(0, 0) }));
+        }
         let d = fail(j + 1, "expected `)` to close template(...)".into());
         return (close(j), Err(d));
     }
-    (j + 1, Ok(TemplateRef { name, name_span, phrase, phrase_span, span: Span::new(0, 0) }))
+    (j + 1, Ok(TemplateRef { name, name_span, phrase, phrase_span, roles, span: Span::new(0, 0) }))
+}
+
+/// `src` with every template reference blanked (its text made spaces, the places of everything else kept): what the stages
+/// after the template's read, so that a source bound to a role (`ground=gen@1 ...`) is the template's, not a reference of
+/// its own until the template is written out (refs.rs).
+pub fn masked(src: &str) -> String {
+    let toks = lex(src).tokens;
+    let rs = runs(&toks);
+    if rs.is_empty() {
+        return src.to_string();
+    }
+    let mut out = src.to_string().into_bytes();
+    for r in rs {
+        for b in &mut out[r.span.start..r.span.end.min(src.len())] {
+            if *b != b'\n' {
+                *b = b' ';
+            }
+        }
+    }
+    String::from_utf8(out).unwrap_or_else(|_| src.to_string())
 }
 
 /// Each reference made one word token (its canonical spelling) for the parser, and what is wrong with any of them.
@@ -828,7 +886,7 @@ fn says(toks: &[Token], word: &str) -> bool {
 
 /// A template written out for a program: the settings the program does not say itself (its own `tempo`, `key` and `swing`
 /// win), then the lets, sections and arrange.
-fn write_out(tpl: &Template, slots: &[(String, String)], keep: impl Fn(&str) -> bool) -> String {
+pub(crate) fn write_out(tpl: &Template, slots: &[(String, String)], keep: impl Fn(&str) -> bool) -> String {
     let text = fill(tpl.text, slots);
     let mut out = String::with_capacity(text.len());
     for l in text.lines() {
@@ -965,7 +1023,29 @@ pub fn expand(src: &str, env: &Env) -> Option<Result<Expansion, Vec<Diagnostic>>
                 if p.curated { "" } else { " (the stress is worked out from the words)" }
             ),
         ));
-        let body = write_out(tpl, &slots(&t, &src_phrase, &line), |w| !has(w));
+        let filled = slots(&t, &src_phrase, &line);
+        let mut body = write_out(tpl, &filled, |w| !has(w));
+        if !t.roles.is_empty() {
+            // the roles bound (roles.rs): in the key and at the tempo the written-out program says at its top level
+            let own = crate::gen::host_of(toks);
+            let says_line = |w: &str| tpl.text().lines().find_map(|l| l.strip_prefix(w)).map(str::trim);
+            let host = crate::gen::Host {
+                key: own.key.or_else(|| says_line("key ").map(crate::music::canonical_pitch_word)),
+                tempo: own.tempo.or_else(|| says_line("tempo ").and_then(|t| t.parse().ok())),
+            };
+            let key = host.key.clone().unwrap_or_else(|| "c".into());
+            let mut cx = crate::roles::Ctx { env, host, slots: &filled, errors: Vec::new(), notes: Vec::new() };
+            match crate::roles::bind_form(&mut cx, tpl, &body, &t.roles, "", &key, 1) {
+                Some(b) if cx.errors.is_empty() => {
+                    body = b;
+                    warnings.extend(cx.notes);
+                }
+                _ => {
+                    errors.extend(cx.errors);
+                    continue;
+                }
+            }
+        }
         pieces.push((toks[line_start].span.to(run.span), body, t.text()));
     }
     if !errors.is_empty() {

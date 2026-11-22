@@ -189,8 +189,14 @@ impl Checker {
 
     /// `Checker.Check`: the `api.CheckReport` as Go writes it.
     pub async fn check(&self, owner: &str, text: &str) -> Result<Value, ApiError> {
+        self.check_with(owner, text, false).await
+    }
+
+    /// [`Checker::check`], and with `expand` each reference's `expansion` in `refs` (`/api/check` and the MCP check with
+    /// `expand: true`).
+    pub async fn check_with(&self, owner: &str, text: &str, expand: bool) -> Result<Value, ApiError> {
         let t = text.to_string();
-        let out = self.run(owner, "check", text.len(), move || btwapi::check_json(&t)).await?;
+        let out = self.run(owner, "check", text.len(), move || btwapi::check_json_with(&t, expand)).await?;
         Ok(shape_check(&Self::parse(&out, "check")?))
     }
 
@@ -381,7 +387,22 @@ pub fn shape_check(v: &Value) -> Value {
     if let Some(a) = v.get("docs").and_then(Value::as_array).filter(|a| !a.is_empty()) {
         m.insert("docs".into(), Value::Array(a.clone()));
     }
+    references(&mut m, v);
     Value::Object(m)
+}
+
+/// What the recipe makes (btwapi::resolution), as btwapi wrote it: `expanded_cid` (a program that checks has one), and `refs`
+/// and `resolution` (a program with references has them). The MCP check's shape (compose::engine::go_check_report) keeps the
+/// same three.
+pub fn references(m: &mut Map<String, Value>, v: &Value) {
+    if let Some(e) = v.get("expanded_cid").and_then(Value::as_str) {
+        m.insert("expanded_cid".into(), json!(e));
+    }
+    for k in ["refs", "resolution"] {
+        if let Some(a) = v.get(k).and_then(Value::as_array).filter(|a| !a.is_empty()) {
+            m.insert(k.into(), Value::Array(a.clone()));
+        }
+    }
 }
 
 /// `api.FmtReport`.
@@ -936,7 +957,9 @@ async fn check(State(st): St, req: Request) -> Response<Body> {
         let b = read_body(req.into_body(), MAX_CHECK_BODY).await;
         let v = decode_body(&b, MAX_CHECK_BODY, &["text", "url", "genre"], "server.textBody", "textBody")?;
         let (text, genre) = (v[0].clone(), v[2].clone());
-        let mut rep = st.checker.check(&ip, &text).await.map_err(|e| e.response())?;
+        // `"expand": true`: each reference in refs carries its expansion (the body's one field that is not a string)
+        let expand = serde_json::from_slice::<Value>(&b).ok().and_then(|v| v.get("expand").and_then(Value::as_bool)).unwrap_or(false);
+        let mut rep = st.checker.check_with(&ip, &text, expand).await.map_err(|e| e.response())?;
         if let Some(g) = btwserve::genres::wanted(&text, Some(&genre)) {
             let t = text.clone();
             let style = tokio::task::spawn_blocking(move || btwserve::genres::installed_style(&t, &g)).await.unwrap_or(Value::Null);
@@ -978,9 +1001,22 @@ async fn generate(State(st): St, req: Request) -> Response<Body> {
         _ => None,
     };
     let greq = btwapi::GenRequest { genre: s("genre"), bpm, key: s("key"), length: s("length"), seed: s("seed") };
+    // the MCP tool's `generator` (1 or 2), `part` and `section` (one seed: `seeds` is the MCP tool's alone)
+    let mut ask = crate::mcp::tools::GenAsk::new(greq);
+    ask.version = match crate::mcp::tools::gen_version(v.get("generator").filter(|g| !g.is_null())) {
+        Ok(n) => n,
+        Err(e) => return e.response(false),
+    };
+    ask.part = Some(s("part")).filter(|p| !p.trim().is_empty());
+    ask.section = Some(s("section")).filter(|p| !p.trim().is_empty());
+    if let Some(p) = &ask.part {
+        if !djlive::parse::ROLES.contains(&p.as_str()) {
+            return ApiError::new(400, "bad_request", format!("part is a role: one of {}", djlive::parse::ROLES.join(", "))).response();
+        }
+    }
     let (app, public) = (st.app.clone(), st.public_url.clone());
     let eng = crate::compose::engine::Engine::over(app.checker.get().cloned());
-    let r = tokio::task::spawn_blocking(move || crate::mcp::tools::generate_and_store(&app, &eng, &public, &ip, &greq)).await;
+    let r = tokio::task::spawn_blocking(move || crate::mcp::tools::generate_and_store(&app, &eng, &public, &ip, &ask)).await;
     match r {
         Ok(Ok(out)) => json_resp(200, &out),
         Ok(Err(e)) => e.response(false),
@@ -1261,6 +1297,30 @@ mod tests {
         for rep in [shape_check(&bare), crate::compose::engine::go_check_report(&bare)] {
             assert!(rep.get("docs").is_none() && rep["sections"][0].get("doc").is_none(), "{rep}");
             assert_eq!(rep["cid"], raw["cid"], "one CID with and without the comment");
+        }
+    }
+
+    /// A program's references (project-datum 6668, 6680) reach a client: `/api/check` and the MCP `check` keep `refs`,
+    /// `expanded_cid` and `resolution` (with `expand`, each ref's `expansion`); a program with none has `expanded_cid` equal
+    /// to its `cid` and neither list.
+    #[test]
+    fn the_shapes_keep_references() {
+        let text = "tempo 124\nkey am\nsection drop 4 bars {\n  deck B: bass gen@2 techno seed=42 section=drop\n}\narrange drop\n";
+        let raw: Value = serde_json::from_str(&btwapi::check_json_with(text, true)).unwrap();
+        assert_eq!(raw["ok"], true, "{raw}");
+        for rep in [shape_check(&raw), crate::compose::engine::go_check_report(&raw)] {
+            assert_eq!(rep["refs"], raw["refs"], "{rep}");
+            assert_eq!(rep["resolution"], raw["resolution"]);
+            assert_eq!(rep["expanded_cid"], raw["expanded_cid"]);
+            assert_ne!(rep["expanded_cid"], rep["cid"]);
+            assert_eq!(rep["refs"][0]["kind"], "gen");
+            assert!(rep["refs"][0]["expansion"].as_str().is_some_and(|e| !e.is_empty()), "{rep}");
+            assert_eq!(rep["resolution"][0]["generator"], "seeded@2");
+        }
+        let bare: Value = serde_json::from_str(&btwapi::check_json("tempo 120\ndeck A: kick x ~ x ~\n")).unwrap();
+        for rep in [shape_check(&bare), crate::compose::engine::go_check_report(&bare)] {
+            assert!(rep.get("refs").is_none() && rep.get("resolution").is_none(), "{rep}");
+            assert_eq!(rep["expanded_cid"], rep["cid"]);
         }
     }
 }

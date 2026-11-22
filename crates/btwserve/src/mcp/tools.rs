@@ -448,11 +448,12 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
             tool(
                 "check",
                 "Check a BeatScript program",
-                fill(text::CHECK_DESC, &[p, &mp, &check_per_min.to_string()]),
+                format!("{}\n\n{}", fill(text::CHECK_DESC, &[p, &mp, &check_per_min.to_string()]), text::references()),
                 [true, false, true, false],
                 vec![
                     ("text", sprop(&format!("The program text (at most {mp} bytes). Comments and blank lines are fine."), &[("maxLength", mpv.clone())])),
                     ("genre", sprop(GENRE_ARG, &[("maxLength", json!(200))])),
+                    ("expand", json!({"type": "boolean", "description": text::EXPAND_ARG})),
                     ("same_as", sprop(&format!("Optional: another program to compare with, as its CID (stored here, or an example's), a short {p}/p/<CID> link, or its text. The answer gains same_as: whether the two are the same song by their compiled nets and song-level settings (tempo, key, swing, length, end, loop), not their text: a let/def/repeat refactor or a renamed section is the same song; a changed note is not, and diff says what changed in music (song settings, sections moved or inserted, a part transposed or rotated, notes at bar:step)."), &[("maxLength", mpv.clone())])),
                 ],
                 &["text"],
@@ -464,8 +465,9 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 text::EXPAND_DESC.into(),
                 [true, false, true, false],
                 vec![
-                    ("text", sprop("The program text, with seed(...) or template(...) references in it.", &[("maxLength", mpv.clone())])),
+                    ("text", sprop("The program text, with gen@N calls, seed(...) or template(...) references in it.", &[("maxLength", mpv.clone())])),
                     ("lineage", json!({"type": "boolean", "description": "Open the written-out text with `#! forked-from: <CID of the program as given>` (default false), so that once it is shared it says what it came from."})),
+                    ("eject", sprop(text::EXPAND_EJECT, &[("maxLength", json!(16)), ("pattern", json!("^[0-9]+:[0-9]+$"))])),
                 ],
                 &["text"],
             ),
@@ -480,6 +482,19 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                     ("key", sprop("Key: am, c, f#m, d:dorian ...; default the genre's.", &[("maxLength", json!(16))])),
                     ("length", json!({"type": "string", "enum": ["short", "standard", "long"], "description": "Song length (default standard)."})),
                     ("seed", json!({"type": ["string", "integer"], "description": "A number or a word (default 1). Same inputs, same program text and CID."})),
+                    ("generator", json!({"type": "integer", "enum": btwapi::generate::VERSIONS, "description": format!("The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen) or 2 (seeded@2, the chords and arps as Roman numerals); default {}. A version always prints the same program for the same inputs.", btwapi::generate::GENERATOR_VERSION)})),
+                    ("part", json!({"type": "string", "enum": djlive::parse::ROLES, "description": "One part (a role): the answer gains part (that role's entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = <drop_bass_1 ...>), to paste into a program of your own."})),
+                    ("section", sprop("With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).", &[("maxLength", json!(32))])),
+                    ("seeds", json!({
+                        "description": format!("Instead of seed: many seeds, as a list ([1, 2, \"sunrise\"]) or as {{count, start}} (count seeds from start, default 1), at most {MAX_SEEDS}. The answer is programs, one compact summary a seed in order: seed, generator, cid, name, key, tempo, bars, gen, parts (role, section, sections, voice or kit, text, gen) and url and render_url; each program is stored as one generate stores it, and nothing else is. The same seeds give the same summaries."),
+                        "anyOf": [
+                            {"type": "array", "minItems": 1, "maxItems": MAX_SEEDS, "items": {"type": ["string", "integer"]}},
+                            {"type": "object", "additionalProperties": false, "required": ["count"], "properties": {
+                                "count": {"type": "integer", "minimum": 1, "maximum": MAX_SEEDS},
+                                "start": {"type": "integer", "minimum": 0},
+                            }},
+                        ],
+                    })),
                 ],
                 &[],
             ),
@@ -572,12 +587,13 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
             tool(
                 "genre_template",
                 "A starting program for a genre",
-                crate::music_tools::genre_template_description(),
+                format!("{} {} {}", crate::music_tools::genre_template_description(), text::TEMPLATE_REFS, text::TEMPLATE_ROLES),
                 [true, false, true, false],
                 vec![
                     ("genre", sprop("A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://ontology.bitwrap.io/genre/ IRI.", &[("maxLength", json!(200))])),
                     ("phrase", sprop("Optional, for vocals (found phrases, see docs/btw/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.", &[("maxLength", json!(400))])),
-                    ("form", sprop("Optional (docs/btw/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations. The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.", &[("maxLength", json!(64))])),
+                    ("form", sprop("Optional (docs/btw/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.", &[("maxLength", json!(64))])),
+                    ("roles", json!({"type": "object", "additionalProperties": {"type": "string", "maxLength": 400}, "description": text::GENRE_TEMPLATE_ROLES})),
                     ("theme", sprop("Optional (docs/btw/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre's key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.", &[("maxLength", json!(64))])),
                 ],
                 &["genre"],
@@ -797,7 +813,7 @@ impl Tools {
             "devices" => self.devices(c, a).map(Text::Json),
             "queue" => self.queue_tool(c, a).map(Text::Json),
             "genre_template" => {
-                a.only(&["genre", "phrase", "form", "theme"])?;
+                a.only(&["genre", "phrase", "form", "theme", "roles"])?;
                 let g = a.str("genre", 200)?.unwrap_or_default();
                 if g.trim().is_empty() {
                     return Err(bad("argument \"genre\" is empty: name a genre (techno, house, jazz ...)"));
@@ -805,8 +821,23 @@ impl Tools {
                 let phrase = a.str("phrase", 400)?;
                 let form = a.str("form", 64)?;
                 let theme = a.str("theme", 64)?;
+                // a form's roles, each bound to a source: {"a": "gen@1 dubstep seed=54876", "b": "ode_to_joy"}
+                let mut roles: Vec<(String, String)> = Vec::new();
+                if let Some(v) = a.present("roles") {
+                    let Some(o) = v.as_object() else { return Err(bad("roles is an object: {\"ROLE\": \"SOURCE\", ...}")) };
+                    if o.len() > 8 {
+                        return Err(bad("at most 8 roles"));
+                    }
+                    for (k, v) in o {
+                        let Some(src) = v.as_str().filter(|s| s.len() <= 400 && !s.contains('\n')) else { return Err(bad(format!("roles.{k} must be a source on one line, at most 400 characters"))) };
+                        if k.is_empty() || !k.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
+                            return Err(bad(format!("{k:?} is no role name")));
+                        }
+                        roles.push((k.clone(), src.to_string()));
+                    }
+                }
                 self.limit_cpu(c)?;
-                let mut v = btwserve::genres::installed_template(&g, phrase.as_deref(), form.as_deref(), theme.as_deref(), &self.public).map_err(|m| Fail::new(404, "not_found", m))?;
+                let mut v = btwserve::genres::installed_template_roles(&g, phrase.as_deref(), form.as_deref(), theme.as_deref(), &roles, &self.public).map(with_references).map_err(|m| Fail::new(404, "not_found", m))?;
                 // the lexicon harvest of the program it answers (written out, for a form)
                 let text = v["expanded"].as_str().or(v["text"].as_str()).unwrap_or("").to_string();
                 v["lexicon"] = self.harvest(&text, None);
@@ -973,9 +1004,10 @@ impl Tools {
     // ---------- check, fmt ----------
 
     fn check(&self, c: &Caller, a: Args) -> R {
-        a.only(&["text", "same_as", "genre"])?;
+        a.only(&["text", "same_as", "genre", "expand"])?;
         let text = self.program(&a, "text")?;
         let genre = a.str("genre", 200)?;
+        let expand = a.boolean("expand")?;
         let other = match a.str("same_as", self.max_prog)? {
             None => None,
             Some(v) if v.trim().is_empty() => return Err(bad("argument \"same_as\" is empty: give a CID or a program's text")),
@@ -987,7 +1019,8 @@ impl Tools {
                 None => Some(v),
             },
         };
-        let mut rep = self.check_program(c, &text)?;
+        self.limit_cpu(c)?;
+        let mut rep = self.eng.check_with(&c.ip, &text, expand)?;
         // the genre's conventions (the argument, else the `#! genre:` line): style warnings, never errors
         if let Some(g) = btwserve::genres::wanted(&text, genre.as_deref()) {
             rep.as_object_mut().unwrap().insert("style".into(), btwserve::genres::installed_style(&text, &g));
@@ -1002,11 +1035,15 @@ impl Tools {
     }
 
     fn expand_tool(&self, c: &Caller, a: Args) -> R {
-        a.only(&["text", "lineage"])?;
+        a.only(&["text", "lineage", "eject"])?;
         let text = self.program(&a, "text")?;
         let lineage = a.boolean("lineage")?;
+        let eject = a.str("eject", 16)?;
         self.limit_cpu(c)?;
-        Ok(self.eng.expand(&text, lineage)?)
+        match eject {
+            None => Ok(self.eng.expand(&text, lineage)?),
+            Some(at) => Ok(eject_at(&text, &at)?),
+        }
     }
 
     fn fmt_tool(&self, c: &Caller, a: Args) -> R {
@@ -1019,24 +1056,70 @@ impl Tools {
     /// The seeded generator (btwapi::generate): no model, no sign-in. The program is stored like compose's (public,
     /// CC0, source "generate", its seed in the meta) and comes back with its render and share links.
     fn generate_tool(&self, c: &Caller, a: Args) -> R {
-        a.only(&["genre", "bpm", "key", "length", "seed"])?;
+        a.only(&["genre", "bpm", "key", "length", "seed", "seeds", "generator", "part", "section"])?;
+        let one_seed = |v: &Value, what: &str| match v {
+            Value::String(s) if s.len() <= 64 => Ok(s.clone()),
+            Value::Number(n) if n.as_u64().is_some() => Ok(n.to_string()),
+            _ => Err(bad(format!("{what} must be a whole number or a word (at most 64 characters)"))),
+        };
         let seed = match a.present("seed") {
             None => String::new(),
-            Some(Value::String(s)) if s.len() <= 64 => s.clone(),
-            Some(Value::Number(n)) if n.as_u64().is_some() => n.to_string(),
-            Some(_) => return Err(bad("argument \"seed\" must be a whole number or a word (at most 64 characters)")),
+            Some(v) => one_seed(v, "argument \"seed\"")?,
         };
-        let req = btwapi::GenRequest {
-            genre: a.str("genre", 32)?.unwrap_or_default(),
-            bpm: a.num("bpm", 40.0, 300.0)?,
-            key: a.str("key", 16)?.unwrap_or_default(),
-            length: a.str("length", 16)?.unwrap_or_default(),
-            seed,
+        let ask = GenAsk {
+            req: btwapi::GenRequest {
+                genre: a.str("genre", 32)?.unwrap_or_default(),
+                bpm: a.num("bpm", 40.0, 300.0)?,
+                key: a.str("key", 16)?.unwrap_or_default(),
+                length: a.str("length", 16)?.unwrap_or_default(),
+                seed,
+            },
+            version: gen_version(a.present("generator"))?,
+            part: a.str("part", 16)?.filter(|p| !p.trim().is_empty()),
+            section: a.str("section", 32)?.filter(|s| !s.trim().is_empty()),
         };
-        self.limit_cpu(c)?;
-        let mut v = generate_and_store(&self.app, &self.eng, &self.public, &c.ip, &req)?;
-        v["lexicon"] = self.harvest(v["text"].as_str().unwrap_or(""), None);
-        Ok(v)
+        if let Some(p) = &ask.part {
+            if !djlive::parse::ROLES.contains(&p.as_str()) {
+                return Err(bad(format!("argument \"part\" is a role: one of {}", djlive::parse::ROLES.join(", "))));
+            }
+        }
+        let Some(seeds) = a.present("seeds") else {
+            self.limit_cpu(c)?;
+            let mut v = generate_and_store(&self.app, &self.eng, &self.public, &c.ip, &ask)?;
+            v["lexicon"] = self.harvest(v["text"].as_str().unwrap_or(""), None);
+            return Ok(v);
+        };
+        // many seeds: a summary each, every program stored as one generate stores it, nothing else
+        if a.present("seed").is_some() {
+            return Err(bad("give seed or seeds, not both"));
+        }
+        let list: Vec<String> = match seeds {
+            Value::Array(v) if !v.is_empty() && v.len() <= MAX_SEEDS => v.iter().enumerate().map(|(i, s)| one_seed(s, &format!("seeds[{i}]"))).collect::<Result<_, _>>()?,
+            Value::Array(v) => return Err(bad(format!("argument \"seeds\" is a list of 1 to {MAX_SEEDS} seeds (it has {})", v.len()))),
+            Value::Object(o) => {
+                if let Some(k) = o.keys().find(|k| !matches!(k.as_str(), "count" | "start")) {
+                    return Err(bad(format!("argument \"seeds\" takes count and start, not {}", q(k))));
+                }
+                let count = o.get("count").and_then(Value::as_u64).filter(|n| (1..=MAX_SEEDS as u64).contains(n)).ok_or_else(|| bad(format!("seeds.count is a whole number from 1 to {MAX_SEEDS}")))?;
+                let start = match o.get("start") {
+                    None | Some(Value::Null) => 1,
+                    Some(v) => v.as_u64().filter(|s| *s <= u64::from(u32::MAX)).ok_or_else(|| bad("seeds.start is a whole number (the first seed)"))?,
+                };
+                (start..start + count).map(|s| s.to_string()).collect()
+            }
+            _ => return Err(bad(format!("argument \"seeds\" is a list of seeds, or {{count, start}} (at most {MAX_SEEDS})"))),
+        };
+        // each seed is a generate: charged as one
+        for _ in &list {
+            self.limit_cpu(c)?;
+        }
+        let mut out = Vec::new();
+        for s in list {
+            let one = GenAsk { req: btwapi::GenRequest { seed: s, ..ask.req.clone() }, ..ask.clone() };
+            out.push(generate_summary(&self.app, &self.eng, &self.public, &c.ip, &one));
+        }
+        let gen = format!("{}@{}", btwapi::generate::GENERATOR, ask.version);
+        Ok(json!({"generator": gen, "count": out.len(), "programs": out, "license": "CC0-1.0", "note": "One summary a seed, in order; each program is stored as generate stores it (url, render_url). Call generate with one seed for its text and each part's let."}))
     }
 
     // ---------- eval, load, stop, get ----------
@@ -1777,6 +1860,41 @@ fn private(rep: &Value, what: &str) -> Option<Fail> {
     None
 }
 
+/// An answer that carries a program (`text`, its `cid`) gains what the recipe makes, as check says it (btwapi::resolution):
+/// `expanded_cid`, and `refs` and `resolution` when the program has references. genre_template and generate add these.
+/// `expand` with `eject` ("line:col", 1-based): the program with the one reference there written out in place under its
+/// `# from: <call> -> <cid>` line (djlive::refs::eject), the rest as they are. Answers {ok, text, cid, ejected: {call, kind,
+/// half, place, name, resolved, from}}; the text plays as the program did.
+fn eject_at(text: &str, at: &str) -> Result<Value, Fail> {
+    let (l, c) = at.split_once(':').and_then(|(l, c)| Some((l.parse::<usize>().ok()?, c.parse::<usize>().ok()?))).ok_or_else(|| bad("eject is line:col, 1-based: 5:19"))?;
+    let norm = djlive::lex::normalise_input(text).to_string();
+    let line_start = norm.split_inclusive('\n').take(l.saturating_sub(1)).map(str::len).sum::<usize>();
+    let byte = (line_start + c.saturating_sub(1)).min(norm.len());
+    let env = btwapi::web_env().env();
+    let site = match djlive::refs::site_at(&norm, &env, byte) {
+        None => return Err(bad(format!("nothing at {at} is a reference (a gen@N call, a seed(...), a <cid>.drop or a template(...))"))),
+        Some(Err(ds)) => return Err(bad(ds.first().map_or("the references do not check".to_string(), |d| d.message.clone()))),
+        Some(Ok(s)) => s,
+    };
+    let out = djlive::refs::eject_site(&norm, &site);
+    let rep: Value = serde_json::from_str(&btwapi::check_json(&out)).unwrap_or(Value::Null);
+    Ok(json!({
+        "ok": rep["ok"],
+        "text": out,
+        "cid": rep["cid"],
+        "ejected": {"call": site.call, "kind": site.kind, "half": site.half, "place": site.place, "name": site.name, "resolved": site.resolved, "from": djlive::refs::from_line(&site)},
+        "diagnostics": rep["diagnostics"],
+    }))
+}
+
+pub fn with_references(mut v: Value) -> Value {
+    let (Some(t), Some(cid)) = (v["text"].as_str().map(str::to_string), v["cid"].as_str().filter(|c| !c.is_empty()).map(str::to_string)) else { return v };
+    for (k, x) in btwapi::resolution::fields(&t, &cid, false) {
+        v[k] = serde_json::from_str(&x.js_stringified()).unwrap_or(Value::Null);
+    }
+    v
+}
+
 /// `warningsOf`: null when there are none (a nil slice).
 fn warnings_of(rep: &Value) -> Value {
     let w: Vec<Value> = Rep(rep).diagnostics().into_iter().filter(|d| d["severity"] == "warning").collect();
@@ -1952,12 +2070,82 @@ mod tests {
     }
 }
 
+/// At most this many seeds in one `generate` call (`seeds`).
+pub const MAX_SEEDS: usize = 16;
+
+/// What a `generate` call asks for: the request, the generator's version (`gen@N`), and optionally one part (and the section
+/// it is taken from).
+#[derive(Clone, Debug)]
+pub struct GenAsk {
+    pub req: btwapi::GenRequest,
+    pub version: u32,
+    pub part: Option<String>,
+    pub section: Option<String>,
+}
+
+impl GenAsk {
+    pub fn new(req: btwapi::GenRequest) -> GenAsk {
+        GenAsk { req, version: btwapi::generate::GENERATOR_VERSION, part: None, section: None }
+    }
+}
+
+/// The `generator` argument: a version of the seeded generator (1 or 2, as `gen@1` and `gen@2` name them; `seeded@2` and
+/// `gen@2` are read too); absent, the current one.
+pub fn gen_version(v: Option<&Value>) -> Result<u32, Fail> {
+    let versions = btwapi::generate::VERSIONS;
+    let n = match v {
+        None => return Ok(btwapi::generate::GENERATOR_VERSION),
+        Some(Value::Number(n)) => n.as_u64(),
+        Some(Value::String(s)) => s.trim().trim_start_matches("seeded@").trim_start_matches("gen@").parse::<u64>().ok(),
+        Some(_) => None,
+    };
+    match n.and_then(|n| u32::try_from(n).ok()).filter(|n| versions.contains(n)) {
+        Some(n) => Ok(n),
+        None => Err(bad(format!("argument \"generator\" is a version of the seeded generator: {}", versions.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(" or ")))),
+    }
+}
+
+/// A part of the program as the answer gives it: role, section, sections, voice or kit, text, gen, and with its let, `let`
+/// (or `let_error`).
+fn part_json(p: &btwapi::generate::GenPart, with_let: bool) -> Value {
+    let mut o = json!({"role": p.role, "section": p.section, "sections": p.sections, "text": p.text, "gen": p.gen});
+    if let Some(v) = &p.voice {
+        o["voice"] = json!(v);
+    }
+    if let Some(k) = &p.kit {
+        o["kit"] = json!(k);
+    }
+    if with_let {
+        o["let"] = p.let_text.as_ref().map_or(Value::Null, |t| json!(t));
+        if let Some(e) = &p.let_error {
+            o["let_error"] = json!(e);
+        }
+    }
+    o
+}
+
+/// Store a generated program as generate always has (public, CC0, source generate, its generator and seed in the meta): its
+/// url and render_url, or why not.
+fn store_generated(app: &AppState, eng: &Engine, public: &str, ip: &str, g: &btwapi::Generated, gen: &str) -> Result<(String, String, Value), String> {
+    let meta = json!({"license": "CC0-1.0", "visibility": "public", "source": "generate", "generator": gen, "seed": g.seed, "genre": g.genre, "name": g.name});
+    match compose::put(app, eng, ip, &g.text, meta) {
+        Ok((p, rep)) => {
+            let cid = p["cid"].as_str().unwrap_or("").to_string();
+            Ok((format!("{public}/p/{cid}"), format!("{public}/api/render/{cid}?format=opus&v={}", compose::render_version("opus")), rep))
+        }
+        Err(e) => Err(e.err.message),
+    }
+}
+
 /// Generate, check and store one seeded program: the shared body of the MCP tool and `POST /api/generate`.
-/// A program that does not check (a generator bug) is answered with its diagnostics and `stored: false`.
-pub fn generate_and_store(app: &AppState, eng: &Engine, public: &str, ip: &str, req: &btwapi::GenRequest) -> R {
-    let g = btwapi::generate(req).map_err(bad)?;
+/// A program that does not check (a generator bug) is answered with its diagnostics and `stored: false`. The answer gains `gen`
+/// (the call that is this program), `parts` (each part's role, section, voice or kit, text, its own `gen` call and the let
+/// that call writes; with `part`, that part alone, and its let as `let`) and `expanded_cid` (with_references).
+pub fn generate_and_store(app: &AppState, eng: &Engine, public: &str, ip: &str, ask: &GenAsk) -> R {
+    let req = &ask.req;
+    let g = btwapi::generate::generate_version(ask.version, req).map_err(bad)?;
     let rep = eng.check(ip, &g.text)?;
-    let gen = format!("{}@{}", btwapi::generate::GENERATOR, btwapi::generate::GENERATOR_VERSION);
+    let gen = format!("{}@{}", btwapi::generate::GENERATOR, ask.version);
     let mut out = json!({
         "ok": Rep(&rep).ok(), "text": g.text, "cid": Rep(&rep).cid(), "name": g.name, "generator": gen,
         "genre": g.genre, "seed": g.seed, "bpm": g.bpm, "key": g.key, "length": g.length,
@@ -1967,16 +2155,81 @@ pub fn generate_and_store(app: &AppState, eng: &Engine, public: &str, ip: &str, 
         out["check"] = rep;
         return Ok(out);
     }
-    let meta = json!({"license": "CC0-1.0", "visibility": "public", "source": "generate", "generator": gen, "seed": g.seed, "genre": g.genre, "name": g.name});
-    match compose::put(app, eng, ip, &g.text, meta) {
-        Ok((p, _)) => {
-            let cid = p["cid"].as_str().unwrap_or("").to_string();
-            out["stored"] = json!(true);
-            out["render_url"] = json!(format!("{public}/api/render/{cid}?format=opus&v={}", compose::render_version("opus")));
-            out["url"] = json!(format!("{public}/p/{cid}"));
-        }
-        Err(e) => out["store_error"] = json!(e.err.message),
+    let call = btwapi::generate::gen_call(ask.version, req, &g, Rep(&rep).cid());
+    out["gen"] = call.as_ref().map_or(Value::Null, |c| json!(c));
+    match &call {
+        Some(call) => match btwapi::generate::parts_of(&g.text, call, true, ask.part.as_deref(), ask.section.as_deref()) {
+            Ok(parts) => {
+                if ask.part.is_some() {
+                    if let Some(p) = parts.first() {
+                        out["part"] = part_json(p, true);
+                        out["let"] = p.let_text.as_ref().map_or(Value::Null, |t| json!(t));
+                    }
+                }
+                out["parts"] = Value::Array(parts.iter().map(|p| part_json(p, true)).collect());
+            }
+            Err(e) if ask.part.is_some() || ask.section.is_some() => return Err(bad(e)),
+            Err(e) => out["parts_error"] = json!(e),
+        },
+        None => out["parts_error"] = json!("this seed cannot be written as a gen call (a seed is a whole number or one word): the parts have no call"),
     }
-    out["note"] = json!("A whole program from the seed: edit it freely (lets, defs, sections, arrange). The same inputs always give this text and CID. Play it with eval or load.");
-    Ok(out)
+    match store_generated(app, eng, public, ip, &g, &gen) {
+        Ok((url, render_url, _)) => {
+            out["stored"] = json!(true);
+            out["render_url"] = json!(render_url);
+            out["url"] = json!(url);
+        }
+        Err(e) => out["store_error"] = json!(e),
+    }
+    out["note"] = json!("A whole program from the seed: edit it freely (lets, defs, sections, arrange). The same inputs always give this text and CID. Play it with eval or load. Each part's gen is the call that is just that part: put it in a let (its let is what that writes) or on a part line of your own program, where it is fitted to your key and tempo unless it says bpm= and key=.");
+    Ok(with_references(out))
+}
+
+/// One seed of a `generate` with `seeds`: a compact summary (seed, generator, cid, name, key, tempo, bars, the parts and their
+/// voices, url, render_url), the program stored as generate stores it. A failure is the seed's own entry (`error`), so one bad
+/// seed does not lose the others.
+pub fn generate_summary(app: &AppState, eng: &Engine, public: &str, ip: &str, ask: &GenAsk) -> Value {
+    let gen = format!("{}@{}", btwapi::generate::GENERATOR, ask.version);
+    let g = match btwapi::generate::generate_version(ask.version, &ask.req) {
+        Ok(g) => g,
+        Err(e) => return json!({"seed": ask.req.seed, "generator": gen, "ok": false, "error": e}),
+    };
+    let mut out = json!({"seed": g.seed, "generator": gen, "name": g.name, "key": g.key, "tempo": g.bpm, "stored": false});
+    // the check is the store's (one check a seed); a program the store refuses is checked here to say why
+    let rep = match store_generated(app, eng, public, ip, &g, &gen) {
+        Ok((url, render_url, rep)) => {
+            out["url"] = json!(url);
+            out["render_url"] = json!(render_url);
+            out["stored"] = json!(true);
+            rep
+        }
+        Err(e) => {
+            out["store_error"] = json!(e);
+            match eng.check(ip, &g.text) {
+                Ok(rep) => rep,
+                Err(e) => {
+                    out["ok"] = json!(false);
+                    out["error"] = json!(e.message);
+                    return out;
+                }
+            }
+        }
+    };
+    if !Rep(&rep).ok() {
+        out["ok"] = json!(false);
+        out["error"] = json!("the generated program does not check");
+        return out;
+    }
+    let cid = Rep(&rep).cid().to_string();
+    out["ok"] = json!(true);
+    out["cid"] = json!(cid);
+    out["bars"] = rep["song_bars"].clone();
+    let call = btwapi::generate::gen_call(ask.version, &ask.req, &g, &cid);
+    out["gen"] = call.as_ref().map_or(Value::Null, |c| json!(c));
+    if let Some(call) = &call {
+        if let Ok(parts) = btwapi::generate::parts_of(&g.text, call, false, ask.part.as_deref(), ask.section.as_deref()) {
+            out["parts"] = Value::Array(parts.iter().map(|p| part_json(p, false)).collect());
+        }
+    }
+    out
 }

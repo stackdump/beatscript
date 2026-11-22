@@ -1,0 +1,7 @@
+{
+  "contents": {
+    "kind": "markdown",
+    "value": "```btw\ngen@2 techno seed=42 section=drop part=bass\n```\n\n`gen`: a call of the seeded generator · **engine call**: the text records the call; its result is pinned by the CID it resolves to\n\nresolves to `z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf` · generator `seeded@2` · track *techno · Rusted Spine* · fitted to the program's key `c` and its tempo 128 (the call does not say its own) · written out as the `let bed`\n\n**Expansion** (5 lines, what *Eject* writes under `# from:`):\n```btw\nlet bed_1 = b2 b2 b2 b2\nlet bed_2 = c2 g2 c2 c3\nlet bed_3 = b2 b2 f2 b3\nlet bed_4 = c2 c3 g2 c2\nlet bed = <bed_1 bed_2 bed_3 bed_4>\n```"
+  },
+  "range": {"start":{"line":2,"character":10},"end":{"line":2,"character":53}}
+}

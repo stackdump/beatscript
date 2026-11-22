@@ -114,6 +114,43 @@
         {"tool": "list_examples", "args": {"composer": "bach"}, "expect": [["/themes", "~", "bach_prelude_c"]]},
         {"tool": "genre_template", "args": {"genre": "house", "form": "rondo"}, "expect": [["/text", "~", "template(rondo,"]]}
       ]
+    },
+    {
+      "id": "gen-reference",
+      "datum": 6668,
+      "docs": ["ext-ffi.md"],
+      "say": [["check", "refs"], ["check", "expanded_cid"], ["check", "resolution"], ["check", "With expand true, each entry of refs also carries its expansion"], ["expand", "A gen@N call"], ["expand", "eject"], ["listen", "from"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "tempo 124\nkey am\nlet drop_bass = gen@2 techno seed=42 part=bass\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  deck B: bass drop_bass\n}\narrange drop\n"}, "expect": [["/ok", "=", true], ["/expanded_cid", "has"], ["/refs", "~", "gen@2 techno seed=42 part=bass"], ["/resolution", "~", "seeded@2"]]},
+        {"tool": "expand", "args": {"text": "tempo 124\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  deck B: bass gen@2 techno seed=42 section=drop\n}\narrange drop\n", "eject": "5:19"}, "expect": [["/text", "~", "# from: gen@2 techno seed=42 section=drop -> z"]]}
+      ]
+    },
+    {
+      "id": "generate-parts",
+      "datum": 6676,
+      "docs": [],
+      "say": [["generate", "generator picks the version"], ["generate", "With part (a role) the answer gains that part and its let alone"], ["generate", "seeds (a list, or {count, start}, at most 16)"]],
+      "calls": [
+        {"tool": "generate", "stores": true, "args": {"genre": "techno", "seed": 42, "part": "bass"}, "expect": [["/generator", "=", "seeded@2"], ["/part/gen", "=", "gen@2 techno seed=42 section=drop part=bass"], ["/expanded_cid", "has"]]}
+      ]
+    },
+    {
+      "id": "control-deck",
+      "datum": 6671,
+      "docs": ["ext-control.md"],
+      "say": [["check", "A `control:` line is the control deck"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "tempo 124\nsection groove 4 bars {\n  deck A: kick x ~ x ~\n  at bar 2: control: crossfader 0.5\n  control: move echo_out on B\n}\narrange groove\n"}, "expect": [["/ok", "=", true], ["/canonical", "~", "at bar 2: control: crossfader 0.5"]]}
+      ]
+    },
+    {
+      "id": "form-roles",
+      "datum": 6674,
+      "docs": ["ext-roles.md"],
+      "say": [["genre_template", "each role is bound to a source"], ["genre_template", "cross (a quodlibet of two sources, roles a and b)"], ["genre_template", "roles"]],
+      "calls": [
+        {"tool": "genre_template", "args": {"genre": "techno", "form": "cross", "roles": {"a": "gen@1 dubstep seed=54876", "b": "gen@2 trap seed=54877"}}, "expect": [["/form", "has"], ["/resolution", "~", "seeded@1"], ["/resolution", "~", "seeded@2"]]}
+      ]
     }
   ]
 }

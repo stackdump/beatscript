@@ -59,7 +59,8 @@
     "lineage": [],
     "uses_assets": true,
     "restricted": false,
-    "seconds": null
+    "seconds": null,
+    "expanded_cid": "z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece"
   },
   "fmt": {
     "ok": true,

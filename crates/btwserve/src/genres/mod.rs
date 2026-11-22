@@ -587,8 +587,14 @@ pub fn installed_style(text: &str, genre: &str) -> Value {
 
 /// [`template_answer_full`] with the installed ontology.
 pub fn installed_template(genre: &str, phrase: Option<&str>, form: Option<&str>, theme: Option<&str>, origin: &str) -> Result<Value, String> {
+    installed_template_roles(genre, phrase, form, theme, &[], origin)
+}
+
+/// [`installed_template`] with a form's roles bound: (role, source), each written `role=source` into the form's template
+/// (docs/btw/ext-roles.md: a seed `gen@1 dubstep seed=54876`, a theme id, notes, a stored program's part, another form).
+pub fn installed_template_roles(genre: &str, phrase: Option<&str>, form: Option<&str>, theme: Option<&str>, roles: &[(String, String)], origin: &str) -> Result<Value, String> {
     let g = installed();
-    template_answer_full(g.as_ref().map(|a| a.as_ref() as &dyn Graph), genre, phrase, form, theme, origin)
+    template_answer_roles(g.as_ref().map(|a| a.as_ref() as &dyn Graph), genre, phrase, form, theme, roles, origin)
 }
 
 /// The genre a check is about: the `genre` argument, else the text's `#! genre:` line. None: neither names one.
@@ -681,7 +687,16 @@ pub fn template_answer_with(g: Option<&dyn Graph>, genre: &str, phrase: Option<&
 ///
 /// A form brings its own themes, so `form` and `theme` are one or the other.
 pub fn template_answer_full(g: Option<&dyn Graph>, genre: &str, phrase: Option<&str>, form: Option<&str>, theme: Option<&str>, origin: &str) -> Result<Value, String> {
+    template_answer_roles(g, genre, phrase, form, theme, &[], origin)
+}
+
+/// [`template_answer_full`], a form's roles bound (`roles`: role, source): the program is `arrange from template(<form>,
+/// <phrase>, role=source, ...)`. Roles need a form.
+pub fn template_answer_roles(g: Option<&dyn Graph>, genre: &str, phrase: Option<&str>, form: Option<&str>, theme: Option<&str>, roles: &[(String, String)], origin: &str) -> Result<Value, String> {
     let form = form.map(str::trim).filter(|f| !f.is_empty());
+    if !roles.is_empty() && form.is_none() {
+        return Err("roles fill a form's roles: give a form too (cross, passacaglia, canon, rondo, fugue, theme-and-variations)".into());
+    }
     let theme = theme.map(str::trim).filter(|f| !f.is_empty());
     if form.is_some() && theme.is_some() {
         return Err("give form or theme, not both: a form brings its own themes (see its `themes`)".into());
@@ -723,7 +738,8 @@ pub fn template_answer_full(g: Option<&dyn Graph>, genre: &str, phrase: Option<&
     if let Some(sw) = gn.swing.filter(|x| *x > 0.0) {
         text.push_str(&format!("swing {}\n", fmt_bpm((sw / 100.0 * 100.0).round() / 100.0)));
     }
-    text.push_str(&format!("arrange from template({}, {sing})\n", t.name));
+    let bound: String = roles.iter().map(|(k, v)| format!(", {}={}", k.trim(), v.trim())).collect();
+    text.push_str(&format!("arrange from template({}, {sing}{bound})\n", t.name));
     let rep: Value = serde_json::from_str(&btwapi::check_json(&text)).map_err(|e| e.to_string())?;
     if rep["ok"] != true {
         return Err(format!("the {} for {} did not pass check: {}", f.label, gn.label, rep["diagnostics"]));

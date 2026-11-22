@@ -85,6 +85,9 @@ pub fn highlight(src: &str) -> Vec<(Span, Class)> {
             Tok::Word(w) => {
                 if crate::algebra::WORDS.contains(&w.as_str()) {
                     Class::Keyword
+                } else if w == "control" && crate::parse::control_head_at(next, prev) {
+                    // the control deck's head, as `deck` and `master` are (a `control` anywhere else is a name)
+                    Class::Keyword
                 } else if matches!(w.as_str(), "period" | "length" | "ends") && matches!(prev, Some(Tok::Word(a)) if a == "assert") {
                     // (`assert period(drop)` is the assertion's word, not a generator)
                     Class::Keyword

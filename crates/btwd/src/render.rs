@@ -507,6 +507,8 @@ pub fn check_text(text: &str) -> Result<Compiled, RenderError> {
     if text.len() > MAX_TEXT_BYTES {
         return Err(RenderError::new("usage", format!("the program is {} bytes: at most {MAX_TEXT_BYTES}", text.len())));
     }
+    // a `gen@2 ...` call resolves against the seeded generator, as the check does (btwapi installs it with its web env)
+    btwapi::generate::install();
     let mut env = BtwEnv::new(Some(&btwapi::known::Known));
     // a render sings a `sing` line as the browser does, in its deck's net (it has no vocal noun to call)
     env.voices.in_nets = true;

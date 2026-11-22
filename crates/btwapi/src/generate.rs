@@ -556,6 +556,171 @@ pub fn generate(req: &GenRequest) -> Result<Generated, String> {
     Ok(Generated { text, body: b, name, genre, seed: seed_text, seed_value: sv, bpm, key: key.text, length: length.to_string() })
 }
 
+/// The seeded generator as the language calls it: `gen@N genre seed=...` (djlive::gen, docs/btw/ext-ffi.md) is the program
+/// `seeded@N` prints. Every version it ever printed stays callable: 1 is [`crate::generate_v1`], frozen, 2 is [`generate`].
+pub struct Seeded;
+
+/// The versions `gen@N` can name, oldest first.
+pub const VERSIONS: [u32; 2] = [1, GENERATOR_VERSION];
+
+impl djlive::gen::Generator for Seeded {
+    fn name(&self) -> &str {
+        GENERATOR
+    }
+
+    fn versions(&self) -> Vec<u32> {
+        VERSIONS.to_vec()
+    }
+
+    fn genres(&self, version: u32) -> Vec<String> {
+        if version == 1 {
+            crate::generate_v1::genres()
+        } else {
+            genres()
+        }
+    }
+
+    fn generate(&self, version: u32, r: &djlive::gen::GenRequest) -> Result<String, String> {
+        match version {
+            1 => crate::generate_v1::generate(&crate::generate_v1::GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }).map(|g| g.text),
+            GENERATOR_VERSION => generate(&GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }).map(|g| g.text),
+            v => Err(format!("{GENERATOR}@{v} is not one this build has ({})", VERSIONS.iter().map(|v| format!("{GENERATOR}@{v}")).collect::<Vec<_>>().join(", "))),
+        }
+    }
+}
+
+/// The one [`Seeded`].
+pub static SEEDED: Seeded = Seeded;
+
+/// Install the seeded generator for `gen` calls (djlive::gen::install); idempotent. [`crate::web_env`] does it, so every check
+/// btwapi makes (btwd, btwserve, the wasm page, btwls) can resolve a call.
+pub fn install() {
+    djlive::gen::install(&SEEDED);
+}
+
+/// The program of `version` for a request: [`generate`] (the current one) or the frozen [`crate::generate_v1`].
+pub fn generate_version(version: u32, req: &GenRequest) -> Result<Generated, String> {
+    match version {
+        1 => crate::generate_v1::generate(&crate::generate_v1::GenRequest { genre: req.genre.clone(), bpm: req.bpm, key: req.key.clone(), length: req.length.clone(), seed: req.seed.clone() }).map(|g| Generated {
+            text: g.text,
+            body: g.body,
+            name: g.name,
+            genre: g.genre,
+            seed: g.seed,
+            seed_value: g.seed_value,
+            bpm: g.bpm,
+            key: g.key,
+            length: g.length,
+        }),
+        GENERATOR_VERSION => generate(req),
+        v => Err(format!("{GENERATOR}@{v} is not one this build has ({})", VERSIONS.iter().map(|v| format!("{GENERATOR}@{v}")).collect::<Vec<_>>().join(", "))),
+    }
+}
+
+/// The `gen@N` call that is this request (the language's spelling, djlive::gen): `gen@2 techno seed=42`, then the `bpm=`,
+/// `key=` and `length=` the request said (what it left to the genre the call leaves too). `arrange from <call>` is the whole
+/// program; a call placed in a program with its own key or tempo is fitted to them unless it says them. None when the call
+/// cannot be written (a seed that is not one word) or does not resolve to the program `cid` (never, for a generator that keeps
+/// its versions).
+pub fn gen_call(version: u32, req: &GenRequest, g: &Generated, cid: &str) -> Option<String> {
+    let mut s = format!("gen@{version} {} seed={}", g.genre, g.seed.to_lowercase());
+    if let Some(b) = req.bpm {
+        s.push_str(&format!(" bpm={}", djlive::print::num(b)));
+    }
+    if !req.key.trim().is_empty() {
+        s.push_str(&format!(" key={}", req.key.trim().to_lowercase()));
+    }
+    if !req.length.trim().is_empty() {
+        s.push_str(&format!(" length={}", g.length));
+    }
+    install();
+    let r = djlive::gen::resolve_word(&s, &djlive::gen::Host::default()).ok()?;
+    (r.cid == cid).then_some(r.call)
+}
+
+/// One part of a generated program, as `generate` answers it: its role, the section it is taken from (the drop or chorus when
+/// it plays there, else the first section it plays in) and every section it plays in, its voice or kit there, its text there,
+/// the `gen@N ... section=S part=R` call that is just that part, and the `let` that call writes (a let a bar,
+/// `let drop_bass_1 = ...` ... `let drop_bass = <drop_bass_1 ...>`), or why it cannot be one.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GenPart {
+    pub role: String,
+    pub section: String,
+    pub sections: Vec<String>,
+    pub voice: Option<String>,
+    pub kit: Option<String>,
+    pub text: String,
+    pub gen: String,
+    /// The let's name (`drop_bass`).
+    pub name: String,
+    pub let_text: Option<String>,
+    pub let_error: Option<String>,
+}
+
+/// The parts of the generated program `text`, `call` its whole-program call ([`gen_call`]); `lets`: also write each part's
+/// let (each one resolves the call again: a compile of the program per part), for the roles in `only` (all when empty).
+pub fn parts_of(text: &str, call: &str, lets: bool, only: Option<&str>, section: Option<&str>) -> Result<Vec<GenPart>, String> {
+    let env = web_env().env();
+    let c = djlive::compile::check_with(text, &env).compiled.ok_or("the generated program does not check")?;
+    let mut roles: Vec<String> = Vec::new();
+    let mut plays: Vec<(String, Vec<String>)> = Vec::new();
+    for s in c.segments.iter().filter(|s| s.header.is_some() && !s.chain && !s.name.contains('+')) {
+        for ir in s.decks.values() {
+            for p in ir.parts.iter().filter(|p| djlive::parse::ROLES.contains(&p.role.as_str()) && p.cycles.iter().any(|c| !c.is_empty())) {
+                if !roles.contains(&p.role) {
+                    roles.push(p.role.clone());
+                    plays.push((p.role.clone(), Vec::new()));
+                }
+                let e = plays.iter_mut().find(|(r, _)| *r == p.role).expect("pushed");
+                if !e.1.contains(&s.name) {
+                    e.1.push(s.name.clone());
+                }
+            }
+        }
+    }
+    if let Some(r) = only {
+        if !roles.iter().any(|x| x == r) {
+            return Err(format!("the program has no {r}; its parts are {}", roles.join(", ")));
+        }
+    }
+    let mut out = Vec::new();
+    for (role, secs) in plays {
+        if only.is_some_and(|r| r != role) {
+            continue;
+        }
+        let sec = match section {
+            Some(s) if secs.iter().any(|x| x == s) => s.to_string(),
+            Some(s) => return Err(format!("its {role} does not play in a section `{s}`; it plays in {}", secs.join(", "))),
+            None => ["drop", "chorus"].iter().find(|m| secs.iter().any(|x| x == *m)).map(|m| m.to_string()).unwrap_or_else(|| secs[0].clone()),
+        };
+        let seg = c.segments.iter().find(|s| s.header.is_some() && !s.chain && s.name == sec);
+        let part = seg.and_then(|s| s.decks.values().flat_map(|d| d.parts.iter()).find(|p| p.role == role));
+        let name = format!("{}_{role}", sec.replace(|ch: char| !ch.is_ascii_alphanumeric(), "_"));
+        out.push(GenPart {
+            gen: format!("{call} section={sec} part={role}"),
+            voice: part.and_then(|p| p.instrument.clone().or_else(|| p.sound.clone())),
+            kit: part.and_then(|p| p.kit.clone()),
+            text: part.map(|p| p.text.clone()).unwrap_or_default(),
+            role,
+            section: sec,
+            sections: secs,
+            name,
+            let_text: None,
+            let_error: None,
+        });
+    }
+    if lets {
+        for p in &mut out {
+            match djlive::stored::expand_text(&format!("let {} = {}\n", p.name, p.gen), &env) {
+                Some(Ok((body, _, _))) => p.let_text = Some(body.trim_end().to_string()),
+                Some(Err(ds)) => p.let_error = Some(ds.first().map(|d| d.message.clone()).unwrap_or_else(|| "it cannot be a let".into())),
+                None => p.let_error = Some("the call was not read".into()),
+            }
+        }
+    }
+    Ok(out)
+}
+
 /// `generate(json)` -> `{"ok", "text", "cid", "check", "name", "seed", ...}` or `{"ok": false, "error"}`.
 /// `json`: `{"genre","bpm","key","length","seed"}`, every field optional; a number seed is taken as its digits.
 pub fn generate_json(input: &str) -> String {

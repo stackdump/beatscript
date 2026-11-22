@@ -39,6 +39,11 @@ pub struct Server {
     /// The registry completion and hover read the `do` nouns, verbs and params from (None: the site's snapshot, which has
     /// no param docs; `btwd lsp` hands in the host's own, which has them). Checks always use the site's environment.
     pub registry: Option<&'static dyn djlive::env::Registry>,
+    /// The client said `workspace.applyEdit` in `initialize`: an eject run as a command is also sent to it as a
+    /// `workspace/applyEdit` request ([`Server::handle`]).
+    pub apply_edit: bool,
+    /// The requests this server has sent the client (their ids: `btw/<n>`).
+    sent: u64,
 }
 
 pub fn invalid(what: &str) -> (i64, String) {
@@ -62,7 +67,7 @@ impl Server {
         let params = msg.get("params").cloned().unwrap_or(JsonValue::Null);
         let mut out = Vec::new();
         match id {
-            // a response from the client to a request of ours (we send none): nothing to do
+            // a response from the client to a request of ours (an eject's `workspace/applyEdit`): nothing to do
             Some(_) if method.is_empty() => {}
             Some(id) => {
                 let reply = if !self.initialized && method != "initialize" {
@@ -70,6 +75,11 @@ impl Server {
                 } else {
                     self.request(&method, &params)
                 };
+                if method == "workspace/executeCommand" {
+                    if let Ok(answer) = &reply {
+                        out.extend(self.after_command(&params, answer));
+                    }
+                }
                 out.push(match reply {
                     Ok(result) => obj([("jsonrpc", s("2.0")), ("id", id), ("result", result)]),
                     Err((code, message)) => obj([("jsonrpc", s("2.0")), ("id", id), ("error", obj([("code", JsonValue::int(code)), ("message", s(message))]))]),
@@ -123,6 +133,24 @@ impl Server {
                 // the editor forgets the document's diagnostics
                 vec![obj([("jsonrpc", s("2.0")), ("method", s("textDocument/publishDiagnostics")), ("params", obj([("uri", s(uri)), ("diagnostics", arr(Vec::new()))]))])]
             }
+            _ => Vec::new(),
+        }
+    }
+
+    /// What a command run over the wire also sends the client: an eject's edit as `workspace/applyEdit` (when the client
+    /// takes it), and for a show or a copy a `window/showMessage` with the expansion, for a client that has no show/hide of its
+    /// own (LSP4IJ; the VS Code extension and the web page keep that state themselves and ask `btw/expand` instead).
+    fn after_command(&mut self, params: &JsonValue, answer: &JsonValue) -> Vec<JsonValue> {
+        let command = params.get("command").and_then(JsonValue::as_str).unwrap_or("");
+        match command {
+            crate::refs::EJECT if self.apply_edit => {
+                self.sent += 1;
+                vec![obj([("jsonrpc", s("2.0")), ("id", s(format!("btw/{}", self.sent))), ("method", s("workspace/applyEdit")), ("params", answer.clone())])]
+            }
+            crate::refs::TOGGLE | crate::refs::COPY => match crate::refs::notice(command, answer) {
+                Some(m) => vec![obj([("jsonrpc", s("2.0")), ("method", s("window/showMessage")), ("params", obj([("type", JsonValue::int(3)), ("message", s(m))]))])],
+                None => Vec::new(),
+            },
             _ => Vec::new(),
         }
     }
@@ -196,6 +224,34 @@ impl Server {
                     Some(n) => crate::number::to_json(a, &n, self.encoding),
                     None => JsonValue::Null,
                 })
+            }
+            // not LSP: the program's references (a generator call, a seed, a stored program's part or section, a template)
+            // with their ranges, what each resolves to and what it is written out as (refs.rs); the one at `position` if
+            // given. What is shown is the client's to keep.
+            "btw/expand" => {
+                let a = self.doc_of(params)?;
+                let at = match params.get("position") {
+                    Some(_) => Some(self.offset_of(a, params)?),
+                    None => None,
+                };
+                Ok(crate::refs::expand(a, at, self.encoding))
+            }
+            "textDocument/codeLens" => {
+                let a = self.doc_of(params)?;
+                let uri = get_str(params, &["textDocument", "uri"]).unwrap_or("");
+                Ok(crate::refs::code_lenses(a, uri, self.encoding))
+            }
+            "workspace/executeCommand" => {
+                let command = params.get("command").and_then(JsonValue::as_str).ok_or_else(|| invalid("command"))?;
+                if !crate::refs::COMMANDS.contains(&command) {
+                    return Err(invalid(&format!("command: {command} is not one of {}", crate::refs::COMMANDS.join(", "))));
+                }
+                let arg = params.get("arguments").and_then(|a| a.at(0)).cloned().unwrap_or(JsonValue::Null);
+                let uri = arg.get("uri").and_then(JsonValue::as_str).or_else(|| get_str(&arg, &["textDocument", "uri"])).ok_or_else(|| invalid("arguments[0].uri"))?;
+                let a = self.docs.get(uri).map(|d| &d.analysis).ok_or_else(|| (REQUEST_FAILED, format!("{uri} is not open")))?;
+                let at = self.offset_of(a, &arg).map_err(|_| invalid("arguments[0].position"))?;
+                let length = arg.get("length").and_then(JsonValue::as_f64).map(|l| l as usize);
+                crate::refs::execute(a, uri, command, at, length, self.encoding).map_err(|m| (REQUEST_FAILED, m))
             }
             "textDocument/documentSymbol" => {
                 let a = self.doc_of(params)?;
@@ -285,6 +341,7 @@ impl Server {
         // utf-8 when the client offers it (djlive's own offsets), else the LSP default
         let offered: Vec<String> = params.get("capabilities").and_then(|c| c.get("general")).and_then(|g| g.get("positionEncodings")).and_then(JsonValue::strings).unwrap_or_default();
         self.encoding = if offered.iter().any(|e| e == "utf-8") { Encoding::Utf8 } else { Encoding::Utf16 };
+        self.apply_edit = params.get("capabilities").and_then(|c| c.get("workspace")).and_then(|w| w.get("applyEdit")).and_then(JsonValue::as_bool).unwrap_or(false);
         self.initialized = true;
         obj([("capabilities", self.capabilities()), ("serverInfo", obj([("name", s("btwls")), ("version", s(env!("CARGO_PKG_VERSION")))]))])
     }
@@ -306,8 +363,11 @@ impl Server {
         c.set("documentHighlightProvider", JsonValue::Bool(true));
         c.set("renameProvider", obj([("prepareProvider", JsonValue::Bool(true))]));
         // the requests beyond LSP this server answers
-        c.set("experimental", obj([("btw", obj([("numberAt", JsonValue::Bool(true)), ("diagnostics", JsonValue::Bool(true))]))]));
+        c.set("experimental", obj([("btw", obj([("numberAt", JsonValue::Bool(true)), ("diagnostics", JsonValue::Bool(true)), ("expand", JsonValue::Bool(true))]))]));
         c.set("codeActionProvider", obj([("codeActionKinds", arr(Self::ACTION_KINDS.iter().map(|k| s(*k)).collect())), ("resolveProvider", JsonValue::Bool(true))]));
+        // over each reference: `show expansion` and `eject` (refs.rs)
+        c.set("codeLensProvider", obj([("resolveProvider", JsonValue::Bool(false))]));
+        c.set("executeCommandProvider", obj([("commands", arr(crate::refs::COMMANDS.iter().map(|k| s(*k)).collect()))]));
         JsonValue::Object(c)
     }
 
@@ -324,7 +384,9 @@ impl Server {
 
     /// The refactors offered for a range: unresolved; `codeAction/resolve` makes and proves them.
     fn refactors(&self, a: &Analysis, uri: &str, range: djlive::Span, only: &[String]) -> Vec<JsonValue> {
-        crate::refactor::actions(a, uri, range, only)
+        let mut v = crate::refactor::actions(a, uri, range, only);
+        v.extend(crate::refs::actions(a, uri, range, only, self.encoding));
+        v
     }
 
     pub fn is_shut_down(&self) -> bool {

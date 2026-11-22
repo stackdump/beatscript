@@ -256,12 +256,18 @@ fn source(cache: &mut Cache, env: &Env, cid: &str, at: Span) -> Result<Rc<Source
         return Ok(s.clone());
     }
     let missing = || Diagnostic::error(at, not_here(cid)).help(NOT_HERE_HELP);
-    let Some(snips) = env.snippets else { return Err(missing()) };
-    let text = match snips.resolve(cid) {
-        Ok((got, text)) if got == cid => text,
-        Ok(_) => return Err(Diagnostic::error(at, format!("the program {} is not the program it names: refused", short_cid(cid)))),
-        Err(e) if e.contains("not the program it names") => return Err(Diagnostic::error(at, e)),
-        Err(_) => return Err(missing()),
+    // a program a `gen` call of this check resolved to (gen.rs) is its own source; then what the host has
+    let text = match crate::gen::generated(cid) {
+        Some(t) => t,
+        None => {
+            let Some(snips) = env.snippets else { return Err(missing()) };
+            match snips.resolve(cid) {
+                Ok((got, text)) if got == cid => text,
+                Ok(_) => return Err(Diagnostic::error(at, format!("the program {} is not the program it names: refused", short_cid(cid)))),
+                Err(e) if e.contains("not the program it names") => return Err(Diagnostic::error(at, e)),
+                Err(_) => return Err(missing()),
+            }
+        }
     };
     if crate::compile::program_cid(&text) != cid {
         return Err(Diagnostic::error(at, format!("the program {} is not the program it names: refused", short_cid(cid))));
@@ -671,12 +677,28 @@ pub fn expand_text(src: &str, env: &Env) -> Option<Result<(String, Vec<String>, 
         warnings.extend(e.warnings.iter().cloned().map(|mut d| { d.span = back_through(&stages[..at], d.span); d }));
         stages.push(e);
     }
-    match expand(&text, env) {
-        None => any.then(|| Ok((text, refs, warnings))),
+    // `gen` calls: the programs they resolve to are the sources of what they write as stored references (gen.rs)
+    let mut generated: Vec<(String, String)> = Vec::new();
+    if let Some(r) = crate::gen::expand(&text) {
+        let (e, progs) = match r {
+            Ok(e) => e,
+            Err(ds) => return Some(Err(ds.into_iter().map(|mut d| { d.span = back_through(&stages, d.span); d }).collect())),
+        };
+        any = true;
+        generated = progs;
+        text = e.text.clone();
+        refs.extend(e.refs.iter().cloned());
+        let at = stages.len();
+        warnings.extend(e.warnings.iter().cloned().map(|mut d| { d.span = back_through(&stages[..at], d.span); d }));
+        stages.push(e);
+    }
+    crate::gen::with_generated(&generated, || match expand(&text, env) {
+        None => any.then(|| Ok((text.clone(), refs.clone(), warnings.clone()))),
         Some(Err(errs)) => Some(Err(errs.into_iter().map(|mut d| { d.span = back_through(&stages, d.span); d }).collect())),
         Some(Ok((e, _))) => {
+            let mut refs = refs.clone();
             refs.extend(e.refs);
-            Some(Ok((e.text, refs, warnings)))
+            Some(Ok((e.text, refs, warnings.clone())))
         }
-    }
+    })
 }

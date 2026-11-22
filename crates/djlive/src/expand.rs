@@ -823,11 +823,23 @@ impl<'a> Lower<'a> {
             self.invoke(span, l, inv, sc, out, segs);
             return;
         }
+        // the control deck's tempo is a change at a place: a tempo with no time word is the program's setting (or a section's,
+        // from its first bar), structure, written with no head (docs/btw/ext-control.md)
+        if let (Some(head), Body::Action(Action::Tempo(_)), None) = (l.control, &l.body, &l.when) {
+            let d = Diagnostic::error(head, "a tempo with no time word is a setting, structure: it takes no `control:`")
+                .help("tempo 140   (in a section, from its first bar); on the control deck a tempo is a change at a place: at bar 16: control: tempo 128 -> 140 over 4 bars");
+            if !self.diags.iter().any(|x| x.span == d.span && x.message == d.message) {
+                self.err(d);
+            }
+            return;
+        }
         if !self.budget(span) {
             return;
         }
         let Some(timing) = self.timing(l, sc, span) else { return };
         let mut line = l.clone();
+        // the control deck lowers as the line with no head: the same controls, keys and nets as `move echo_out on B` has
+        line.control = None;
         if let Body::Parts(ps) = &l.body {
             // a pattern too big once its lets are put in place is refused before it is built
             for p in ps {

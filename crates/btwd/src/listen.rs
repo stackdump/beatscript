@@ -603,11 +603,206 @@ fn key_json(mono: &[f32], sr: f64, declared: Option<djlive::music::Key>) -> Json
 // ---------------------------------------------------------------------------------------------
 // listen
 
-/// The summary of `text`'s render (see the module).
+/// The summary of `text`'s render (see the module), with what its references made ([`referenced`]).
 pub fn listen(text: &str, lo: &ListenOptions) -> Result<JsonValue, RenderError> {
     let t0 = Instant::now();
     let c = render::check_text(text)?;
-    listen_compiled(&c, lo, t0)
+    let mut v = listen_compiled(&c, lo, t0)?;
+    referenced(text, &c.cid, &mut v);
+    Ok(v)
+}
+
+// ---------------------------------------------------------------------------------------------
+// the parts a reference made
+
+/// Where a reference's notes play: a deck (None: every deck), a role (None: every role of it) and a section (None: wherever
+/// the deck plays them).
+#[derive(Clone, Debug, PartialEq)]
+struct Target {
+    deck: Option<String>,
+    role: Option<String>,
+    section: Option<String>,
+}
+
+/// The start of the line byte `at` of `src` is on.
+fn line_start(src: &str, at: usize) -> usize {
+    src[..at.min(src.len())].rfind('\n').map_or(0, |i| i + 1)
+}
+
+/// The deck a byte of `src` plays on (`deck B: ...`, a part line going on over `|` lines) and the role of the part it is in
+/// (the word after the line's `deck X:` or the `|` before it).
+fn deck_and_role_at(src: &str, at: usize) -> (Option<String>, Option<String>) {
+    let ls = line_start(src, at);
+    let before = &src[ls..at.min(src.len()).max(ls)];
+    // the part: what follows the last `|`, else the line's `deck X:`
+    let part = match before.rfind('|') {
+        Some(i) => &before[i + 1..],
+        None => {
+            let t = before.trim_start();
+            t.strip_prefix("deck ").and_then(|r| r.find(':').map(|i| &r[i + 1..])).unwrap_or(t)
+        }
+    };
+    let role = part.split_whitespace().next().filter(|w| djlive::parse::ROLES.contains(w)).map(str::to_string);
+    let mut l = ls;
+    loop {
+        let end = src[l..].find('\n').map_or(src.len(), |i| l + i);
+        let t = src[l..end].trim_start();
+        if let Some(rest) = t.strip_prefix("deck ") {
+            return (rest.split(':').next().map(|d| d.trim().to_string()).filter(|d| !d.is_empty() && !d.contains(' ')), role);
+        }
+        if t.starts_with('|') && l > 0 {
+            l = line_start(src, l - 1);
+            continue;
+        }
+        return (None, role);
+    }
+}
+
+/// The `section NAME ... { }` block byte `at` of `src` is in, if any.
+fn section_at(toks: &[djlive::lex::Token], at: usize) -> Option<String> {
+    use djlive::lex::Tok;
+    let mut stack: Vec<Option<String>> = Vec::new();
+    let mut first = 0;
+    for (i, t) in toks.iter().enumerate() {
+        if t.span.start >= at {
+            break;
+        }
+        if i == 0 || toks[i - 1].tok == Tok::Newline {
+            first = i;
+        }
+        match &t.tok {
+            Tok::LBrace => {
+                let name = match (&toks[first].tok, toks.get(first + 1).map(|t| &t.tok)) {
+                    (Tok::Word(s), Some(Tok::Word(n))) if s == "section" => Some(n.clone()),
+                    _ => None,
+                };
+                stack.push(name);
+            }
+            Tok::RBrace => {
+                stack.pop();
+            }
+            _ => {}
+        }
+    }
+    stack.into_iter().rev().flatten().next()
+}
+
+/// Where the parts that play the `let` named `name` stand: every word of a part line that is the let (or a let made of it, a
+/// few levels deep).
+fn let_targets(src: &str, toks: &[djlive::lex::Token], name: &str, depth: u32, out: &mut Vec<Target>) {
+    use djlive::lex::Tok;
+    if depth > 4 {
+        return;
+    }
+    for (i, t) in toks.iter().enumerate() {
+        let Tok::Word(w) = &t.tok else { continue };
+        if w != name {
+            continue;
+        }
+        // the let's own line (`let name = ...`) is no use of it
+        let ls = line_start(src, t.span.start);
+        let head = src[ls..t.span.start].trim_start();
+        if head == "let" || (head.is_empty() && i > 0 && matches!(&toks[i - 1].tok, Tok::Word(l) if l == "let")) {
+            continue;
+        }
+        // a let of lets: where that one plays
+        let mut words = head.split_whitespace();
+        if let (Some("let"), Some(other), Some("=")) = (words.next(), words.next(), words.next()) {
+            let other = other.to_string();
+            let_targets(src, toks, &other, depth + 1, out);
+            continue;
+        }
+        let (deck, role) = deck_and_role_at(src, t.span.start);
+        if deck.is_some() {
+            let tg = Target { deck, role, section: section_at(toks, t.span.start) };
+            if !out.contains(&tg) {
+                out.push(tg);
+            }
+        }
+    }
+}
+
+/// The parts a reference made, as targets.
+fn targets(src: &str, toks: &[djlive::lex::Token], s: &djlive::refs::Site) -> Vec<Target> {
+    match s.place {
+        // the whole program: every part
+        "arrange" => vec![Target { deck: None, role: None, section: None }],
+        // a section borrowed whole: every part of it
+        "section" => vec![Target { deck: None, role: None, section: s.name.clone() }],
+        "part" => {
+            let (deck, _) = deck_and_role_at(src, s.replaced.start);
+            vec![Target { deck, role: s.name.clone(), section: section_at(toks, s.replaced.start) }]
+        }
+        _ => {
+            let mut out = Vec::new();
+            if let Some(n) = &s.name {
+                let_targets(src, toks, n, 0, &mut out);
+            }
+            out
+        }
+    }
+}
+
+/// The answer's parts that came from a reference say so: `from` {call, kind, resolved, place, generator, sections} (and
+/// `also_from` when more than one reference made the part), a `gen` call that was fitted to the program's key or tempo says
+/// it in `notes` (in check's words), and the answer gains `expanded_cid` and `resolution` (btwapi::resolution).
+fn referenced(text: &str, cid: &str, v: &mut JsonValue) {
+    let r = btwapi::resolution::of(text, cid);
+    let JsonValue::Object(out) = v else { return };
+    out.set("expanded_cid", JsonValue::str(r.expanded_cid.clone()));
+    if r.is_empty() {
+        return;
+    }
+    let norm = djlive::lex::normalise_input(text);
+    let toks = djlive::lex::lex(&norm).tokens;
+    let made: Vec<(Vec<Target>, &djlive::refs::Site)> = r.sites.iter().map(|s| (targets(&norm, &toks, s), s)).collect();
+    if let Some(JsonValue::Array(parts)) = out.get_mut("parts") {
+        for p in parts.iter_mut() {
+            let JsonValue::Object(po) = p else { continue };
+            let deck = po.get("deck").and_then(|x| x.as_str()).unwrap_or("").to_string();
+            let role = po.get("part").and_then(|x| x.as_str()).unwrap_or("").to_string();
+            let mut froms: Vec<JsonValue> = Vec::new();
+            for (tgs, s) in &made {
+                let hits: Vec<&Target> = tgs.iter().filter(|t| t.deck.as_deref().map_or(true, |d| d == deck) && t.role.as_deref().map_or(true, |x| x == role)).collect();
+                if hits.is_empty() {
+                    continue;
+                }
+                let mut o = JsonObject::new();
+                o.set("call", JsonValue::str(s.call.clone()));
+                o.set("kind", JsonValue::str(s.kind));
+                o.set("resolved", s.resolved.clone().map_or(JsonValue::Null, JsonValue::str));
+                o.set("place", JsonValue::str(s.place));
+                o.set("generator", s.generator.clone().map_or(JsonValue::Null, JsonValue::str));
+                // the sections it made the part in; null: wherever the part plays
+                let secs: Vec<String> = hits.iter().filter_map(|t| t.section.clone()).collect();
+                o.set("sections", if hits.iter().any(|t| t.section.is_none()) { JsonValue::Null } else { JsonValue::Array(secs.into_iter().map(JsonValue::str).collect()) });
+                froms.push(JsonValue::Object(o));
+            }
+            let mut froms = froms.into_iter();
+            if let Some(f) = froms.next() {
+                po.set("from", f);
+                let rest: Vec<JsonValue> = froms.collect();
+                if !rest.is_empty() {
+                    po.set("also_from", JsonValue::Array(rest));
+                }
+            }
+        }
+    }
+    // a fitted call, as check notes it: `gen@2 ... -> <cid> (seeded@2): generated in the program's key am and at its tempo 124`
+    let host = djlive::gen::host_of(&toks);
+    let mut fitted: Vec<String> = Vec::new();
+    for s in r.sites.iter().filter(|s| s.kind == "gen" && !s.fitted.is_empty()) {
+        if let Ok(res) = djlive::gen::resolve_word(&s.call, &host) {
+            let n = res.note();
+            if !fitted.contains(&n) {
+                fitted.push(n);
+            }
+        }
+    }
+    if let Some(JsonValue::Array(notes)) = out.get_mut("notes") {
+        notes.extend(fitted.into_iter().map(JsonValue::str));
+    }
+    out.set("resolution", btwapi::resolution::resolution_json(&r, text));
 }
 
 pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<JsonValue, RenderError> {

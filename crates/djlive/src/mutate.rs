@@ -731,8 +731,53 @@ fn num_arg(args: &[MutArg], i: usize) -> f64 {
     }
 }
 
-fn pat_arg<'a>(args: &[MutArg], ctx: &'a Ctx) -> Option<&'a Seq> {
-    args.iter().find_map(|a| if let MutArg::Word(w) = a { ctx.others.get(&w.text) } else { None })
+/// The pattern a cross operator (`morph b p`, `xfer b`, `mask b`) reads its steps from: the let `b`, as its steps. A let that is
+/// one `transpose(x, n)` or `octave(x, n)` of another (`let fate_b_1 = transpose(beethoven_fate_1, -1)`) is the steps of `x`
+/// moved by that much, not one step that is a whole bar: a morph toward it takes its notes.
+fn pat_arg(args: &[MutArg], ctx: &Ctx) -> Option<Seq> {
+    let b = args.iter().find_map(|a| if let MutArg::Word(w) = a { ctx.others.get(&w.text) } else { None })?;
+    Some(played_steps(b, ctx, 0).unwrap_or_else(|| b.clone()))
+}
+
+/// `transpose(x, n)` / `octave(x, n)` alone, with `x` a pattern let or a pattern: the steps of `x`, `n` semitones (octaves) on.
+fn played_steps(b: &Seq, ctx: &Ctx, depth: usize) -> Option<Seq> {
+    let [t] = b.terms.as_slice() else { return None };
+    let Atom::Call(c) = &t.atom else { return None };
+    let per = match c.name.text.as_str() {
+        "transpose" => 1i64,
+        "octave" => 12,
+        _ => return None,
+    };
+    let n = match c.args.get(1) {
+        Some(crate::ast::Arg::Num(n)) if n.value.fract() == 0.0 => n.value as i64 * per,
+        _ => return None,
+    };
+    let inner = match c.args.first()? {
+        crate::ast::Arg::Word(w) => ctx.others.get(&w.text)?.clone(),
+        crate::ast::Arg::Pat(s) if s.terms.len() == 1 && matches!(&s.terms[0].atom, Atom::Note(w) if ctx.others.contains_key(&w.text)) => {
+            let Atom::Note(w) = &s.terms[0].atom else { return None };
+            ctx.others.get(&w.text)?.clone()
+        }
+        crate::ast::Arg::Pat(s) => s.clone(),
+        _ => return None,
+    };
+    let inner = if depth < 4 { played_steps(&inner, ctx, depth + 1).unwrap_or(inner) } else { inner };
+    Some(Seq { span: b.span, terms: inner.terms.iter().map(|x| shift_semis(x, n)).collect() })
+}
+
+/// A term with every note `n` semitones on (a degree has no semitones, and stays).
+fn shift_semis(t: &Term, n: i64) -> Term {
+    let atom = match &t.atom {
+        Atom::Group(seqs) => Atom::Group(seqs.iter().map(|s| Seq { span: s.span, terms: s.terms.iter().map(|x| shift_semis(x, n)).collect() }).collect()),
+        Atom::Alt(ts) => Atom::Alt(ts.iter().map(|x| shift_semis(x, n)).collect()),
+        a @ Atom::Note(w) => match read_pitch(a) {
+            Some(Pitch::Midi(m)) => write_pitch(Pitch::Midi(m + n as i32), w).unwrap_or_else(|| a.clone()),
+            Some(Pitch::Class(c)) => write_pitch(Pitch::Class(c + n as i32), w).unwrap_or_else(|| a.clone()),
+            _ => a.clone(),
+        },
+        a => a.clone(),
+    };
+    Term { atom, ..t.clone() }
 }
 
 /// One operator on a pattern's steps (its top-level terms).
@@ -1516,6 +1561,33 @@ fn program_key(program: &Program) -> Key {
 
 /// Tokens of a pattern's text, placed at the `let` it came from (a diagnostic in it points there). Their offsets from one
 /// another are kept: the reader tells a glued mark (`a1!`, `c2^`) from a spaced one by them.
+/// A let's value as tokens, from its pattern: [`tokens_of`] its text, except that a name with a `.` in it (`acid@2.once1`,
+/// `acid@2.R`, `theme.via1`: names only this lowering makes, which the lexer would cut at the `.`) stays one word.
+fn seq_tokens(seq: &Seq, at: Span, src_len: usize) -> Vec<Token> {
+    let mut names: Vec<String> = Vec::new();
+    let mut s = seq.clone();
+    walk_seq(&mut s, &mut |w| {
+        if w.contains('.') {
+            let k = names.iter().position(|n| n == w).unwrap_or_else(|| {
+                names.push(w.clone());
+                names.len() - 1
+            });
+            *w = format!("zzlowered{k}");
+        }
+    });
+    let mut toks = tokens_of(&seq_text(&s), at, src_len);
+    for t in &mut toks {
+        if let Tok::Word(w) = &mut t.tok {
+            if let Some(k) = w.strip_prefix("zzlowered").and_then(|k| k.parse::<usize>().ok()) {
+                if let Some(n) = names.get(k) {
+                    *w = n.clone();
+                }
+            }
+        }
+    }
+    toks
+}
+
 fn tokens_of(text: &str, at: Span, src_len: usize) -> Vec<Token> {
     let base = at.start.min(src_len.saturating_sub(text.len()));
     crate::lex::lex(text).tokens.into_iter().filter(|t| !matches!(t.tok, Tok::Newline | Tok::Eof)).map(|t| Token { span: Span::new(base + t.span.start, base + t.span.end), ..t }).collect()
@@ -1749,6 +1821,35 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         });
         reads_of.insert(name.clone(), set);
     }
+    // a let that names other pattern lets (`let theme = <theme_1 theme_2>`) is read through: a section that plays `theme` reads
+    // `theme_1` and `theme_2` too, so a mutation of the bars (`~ theme_* rot 2`) reaches the part that plays the alternation
+    // (forms.md: "a part plays the alternation; a mutation changes the bars")
+    let names_in = |s: &Seq| {
+        let mut out = BTreeSet::new();
+        let mut c = s.clone();
+        walk_seq(&mut c, &mut |w| {
+            if pats.contains_key(w.as_str()) {
+                out.insert(w.clone());
+            }
+        });
+        out
+    };
+    let inner: BTreeMap<String, BTreeSet<String>> = pats.iter().map(|(k, s)| (k.clone(), names_in(s))).collect();
+    let direct_of = reads_of.clone();
+    for set in reads_of.values_mut() {
+        let mut todo: Vec<String> = set.iter().cloned().collect();
+        while let Some(w) = todo.pop() {
+            for n in inner.get(&w).into_iter().flatten() {
+                if set.insert(n.clone()) {
+                    todo.push(n.clone());
+                }
+            }
+        }
+    }
+    // the derived lets that read through, by their text: the same reading of the same let is one let; written after the
+    // generations they read, in the order they were made (innermost first)
+    let mut via: BTreeMap<String, String> = BTreeMap::new();
+    let mut via_lets: Vec<(String, Seq)> = Vec::new();
     let mut new_lets: BTreeMap<String, Seq> = BTreeMap::new();
     // a generation that is a pair has its right copy as a let of its own (`acid@3.R`): the left name -> the right one
     let mut right_of: BTreeMap<String, String> = BTreeMap::new();
@@ -1812,6 +1913,57 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
             }
             if letname != *p {
                 reading.insert(p.clone(), letname);
+            }
+        }
+        // the lets this section writes that read lets this play has renamed: a let of their own, reading them as it has them
+        // (`theme.via1` = `<theme_1@2 theme_2@2>`), innermost first
+        let mut derived: BTreeMap<String, String> = BTreeMap::new();
+        #[allow(clippy::too_many_arguments)]
+        fn derive(q: &str, reading: &BTreeMap<String, String>, pats: &BTreeMap<String, Seq>, inner: &BTreeMap<String, BTreeSet<String>>, new_lets: &BTreeMap<String, Seq>, via: &mut BTreeMap<String, String>, via_lets: &mut Vec<(String, Seq)>, derived: &mut BTreeMap<String, String>, depth: usize) -> Option<String> {
+            if let Some(n) = derived.get(q) {
+                return (!n.is_empty()).then(|| n.clone());
+            }
+            if depth > 16 {
+                return None;
+            }
+            let mut map: BTreeMap<String, String> = BTreeMap::new();
+            for w in inner.get(q).into_iter().flatten() {
+                if w == q {
+                    continue;
+                }
+                if let Some(d) = derive(w, reading, pats, inner, new_lets, via, via_lets, derived, depth + 1) {
+                    map.insert(w.clone(), d);
+                } else if let Some(r) = reading.get(w) {
+                    map.insert(w.clone(), r.clone());
+                }
+            }
+            if map.is_empty() {
+                derived.insert(q.to_string(), String::new());
+                return None;
+            }
+            let base = reading.get(q).and_then(|n| new_lets.get(n).or_else(|| via_lets.iter().find(|(m, _)| m == n).map(|(_, s)| s))).or_else(|| pats.get(q)).cloned()?;
+            let mut seq = base;
+            walk_seq(&mut seq, &mut |w| {
+                if let Some(n) = map.get(w.as_str()) {
+                    *w = n.clone();
+                }
+            });
+            let key = format!("{q}={}", seq_text(&seq));
+            let name = match via.get(&key) {
+                Some(n) => n.clone(),
+                None => {
+                    let n = format!("{}.via{}", reading.get(q).map_or(q, String::as_str), via.len() + 1);
+                    via.insert(key, n.clone());
+                    via_lets.push((n.clone(), seq));
+                    n
+                }
+            };
+            derived.insert(q.to_string(), name.clone());
+            Some(name)
+        }
+        for q in &direct_of[&r.section] {
+            if let Some(n) = derive(q, &reading, &pats, &inner, &new_lets, &mut via, &mut via_lets, &mut derived, 0) {
+                reading.insert(q.clone(), n);
             }
         }
         let list = variants.entry(r.section.clone()).or_default();
@@ -1895,9 +2047,9 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
             }
         }
     }
-    for (name, seq) in new_lets {
-        let span = lets.get(name.split('@').next().unwrap_or(&name)).map_or(block_span, |(_, sp)| *sp);
-        program.stmts.push(Stmt { span, kind: StmtKind::Let(LetDef { name: Word { text: name, span }, value: tokens_of(&seq_text(&seq), span, src.len()), ratio: false }) });
+    for (name, seq) in new_lets.into_iter().chain(via_lets) {
+        let span = lets.get(name.split(['@', '.']).next().unwrap_or(&name)).map_or(block_span, |(_, sp)| *sp);
+        program.stmts.push(Stmt { span, kind: StmtKind::Let(LetDef { name: Word { text: name, span }, value: seq_tokens(&seq, span, src.len()), ratio: false }) });
     }
     Some(table)
 }
@@ -1905,6 +2057,14 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
 /// The generation table of a program's `arrange { }`, worked out from its text alone (None: it has none, or it does
 /// not check). The same text is the same table.
 pub fn generations(src: &str, env: &crate::env::Env) -> Option<GenTable> {
+    // a program with references (a generator's let, a borrowed section, a template): the table of what they are written out
+    // as, read as `check` reads it (compile.rs: the written-out text, with its CID's dice), so a referenced let's generations
+    // are reported like a local one's
+    if let Some(Ok((text, _, _))) = crate::stored::expand_text(src, env) {
+        if text != src {
+            return generations(&text, env);
+        }
+    }
     let mut parsed = crate::parse::parse_with(src, env);
     if parsed.diagnostics.iter().any(Diagnostic::is_error) {
         return None;

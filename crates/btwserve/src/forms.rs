@@ -49,7 +49,8 @@ mod tests {
         assert_eq!(find("quodlibet").unwrap().0.name, "quodlibet");
         assert_eq!(find("Theme and Variations").unwrap().0.name, "theme-and-variations");
         assert!(find("sonata").err().unwrap().contains("passacaglia"));
-        assert_eq!(names().len(), 6);
+        // the six classical forms and cross (6673)
+        assert_eq!(names().len(), 7);
         let (t, f) = find("rondo").unwrap();
         let j = form_json("https://beatscript.app/", t, f);
         assert_eq!(j["reference"]["cid"], "z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw");

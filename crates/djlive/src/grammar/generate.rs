@@ -58,9 +58,11 @@ pub fn sample(class: &str, rng: &mut Rng) -> String {
         "GLOB" => "acid_*".into(),
         "SUGAR" => pick(rng, &["vocoder", "freeze"]),
         "PHRASE" => pick(rng, &["@hands_up", "@feel_the_bass", "@drop_it", "@tempest_such_stuff"]),
+        "GEN" => pick(rng, &["gen@1", "gen@2", "gen"]),
         // a ghost's `.` touches its step, and nothing touches it (a `.` before a word is `A.kick`'s): marked for [`join`]
         "GHOST" => format!("{GHOST}."),
         "RATCHET" => pick(rng, &[":2", ":3", ":4"]),
+        "GEN" => pick(rng, &["gen@2", "gen@1", "gen"]),
         // the classes of a lyric's text: no program sentence reaches them (the lyric is one STRING), but a sample is cheap
         "TEXT" => pick(rng, &["la", ",", "-"]),
         "SPACE" => " ".into(),
@@ -167,15 +169,18 @@ impl<'g> Writer<'g> {
         let seen = self.visited.borrow();
         let mut r = Vec::new();
         n.refs(&mut r);
+        // (a production that needs a host is never written, so it is never new: it does not pull the walk toward it)
+        let host = |x: &str| self.g.rule(x).is_some_and(|ru| ru.source.contains("[host]"));
         r.iter().any(|x| {
-            self.g.rule(x).is_some_and(|ru| {
-                if !seen.contains(x) {
-                    return true;
-                }
-                let mut r2 = Vec::new();
-                ru.node.refs(&mut r2);
-                r2.iter().any(|y| self.g.rule(y).is_some() && !seen.contains(y))
-            })
+            !host(x)
+                && self.g.rule(x).is_some_and(|ru| {
+                    if !seen.contains(x) {
+                        return true;
+                    }
+                    let mut r2 = Vec::new();
+                    ru.node.refs(&mut r2);
+                    r2.iter().any(|y| self.g.rule(y).is_some() && !host(y) && !seen.contains(y))
+                })
         })
     }
 

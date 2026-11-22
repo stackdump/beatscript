@@ -1,0 +1,34 @@
+[
+  {
+    "range": {"start":{"line":2,"character":17},"end":{"line":2,"character":50}},
+    "command": {
+      "title": "show expansion",
+      "command": "btw.expand.toggle",
+      "arguments": [{"uri":"file:///test.btw","position":{"line":2,"character":17},"length":134}]
+    }
+  },
+  {
+    "range": {"start":{"line":2,"character":17},"end":{"line":2,"character":50}},
+    "command": {
+      "title": "eject",
+      "command": "btw.eject",
+      "arguments": [{"uri":"file:///test.btw","position":{"line":2,"character":17},"length":134}]
+    }
+  },
+  {
+    "range": {"start":{"line":3,"character":17},"end":{"line":3,"character":49}},
+    "command": {
+      "title": "show expansion",
+      "command": "btw.expand.toggle",
+      "arguments": [{"uri":"file:///test.btw","position":{"line":3,"character":17},"length":134}]
+    }
+  },
+  {
+    "range": {"start":{"line":3,"character":17},"end":{"line":3,"character":49}},
+    "command": {
+      "title": "eject",
+      "command": "btw.eject",
+      "arguments": [{"uri":"file:///test.btw","position":{"line":3,"character":17},"length":134}]
+    }
+  }
+]

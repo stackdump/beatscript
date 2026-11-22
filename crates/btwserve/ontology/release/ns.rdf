@@ -145,6 +145,26 @@
 		<ns:usesThemeLibrary rdf:resource="https://beatscript.app/ontology/concept/themes-public-domain"/>
 		<ns:writtenAs>canon</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/form-cross">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Form"/>
+		<rdfs:seeAlso rdf:resource="https://beatscript.app/docs/forms#cross"/>
+		<skos:definition xml:lang="en">The cross, a form from classical music: a_leads b_leads both both sung a_leads b_leads sung: one source leads, then the other, then both at once. A quodlibet of two: `~ a_melody_* morph b_melody_1 p` paired with `~ b_bass_* morph a_bass_1 p`, an `@ ... xfer` one-shot in the overlap, then the pull turned round (`~ b_melody_* morph a_melody_1 p`, `~ a_bass_* morph b_bass_1 p`); `~` persists and compounds pass on pass (loop 3).</skos:definition>
+		<skos:prefLabel xml:lang="en">cross</skos:prefLabel>
+		<ns:formShape xml:lang="en">a_leads b_leads both both sung a_leads b_leads sung: one source leads, then the other, then both at once</ns:formShape>
+		<ns:formTemplate rdf:resource="https://beatscript.app/ontology/concept/template-cross"/>
+		<ns:mutationPlan xml:lang="en">a quodlibet of two: `~ a_melody_* morph b_melody_1 p` paired with `~ b_bass_* morph a_bass_1 p`, an `@ ... xfer` one-shot in the overlap, then the pull turned round (`~ b_melody_* morph a_melody_1 p`, `~ a_bass_* morph b_bass_1 p`); `~` persists and compounds pass on pass (loop 3)</ns:mutationPlan>
+		<ns:status>stable</ns:status>
+		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-decay"/>
+		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-grow"/>
+		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-morph"/>
+		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-xfer"/>
+		<ns:usesTechnique rdf:resource="https://beatscript.app/ontology/concept/technique-found-phrases"/>
+		<ns:usesTheme>badinerie</ns:usesTheme>
+		<ns:usesTheme>ode_to_joy</ns:usesTheme>
+		<ns:usesTheme>pachelbel_ground</ns:usesTheme>
+		<ns:usesThemeLibrary rdf:resource="https://beatscript.app/ontology/concept/themes-public-domain"/>
+		<ns:writtenAs>cross</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/form-fugue">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Form"/>
 		<rdfs:seeAlso rdf:resource="https://beatscript.app/docs/forms#fugue"/>
@@ -328,54 +348,33 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-action">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The action production of BeatScript&apos;s grammar (hertz: 20 .. 20k; 0 .. 1: how much; deck X: / master: level; no target; no target: at bar 16: tempo 128 -&gt; 140 over 4 bars; the booth&apos;s: the desktop app plays these).</skos:definition>
+		<skos:definition xml:lang="en">The action production of BeatScript&apos;s grammar (hertz: 20 .. 20k; 0 .. 1: how much; deck X: / master: level; deck X:).</skos:definition>
 		<skos:prefLabel xml:lang="en">action</skos:prefLabel>
-		<ns:ebnf>&quot;filter&quot; ( &quot;lp&quot; | &quot;hp&quot; ) change | &quot;filter&quot; ( &quot;off&quot; | &quot;open&quot; ) | ( &quot;delay&quot; | &quot;reverb&quot; | &quot;crush&quot; | &quot;drive&quot; | &quot;resonance&quot; ) change | ( &quot;level&quot; | &quot;low&quot; | &quot;mid&quot; | &quot;high&quot; ) change | &quot;crossfader&quot; change | &quot;tempo&quot; tempo | &quot;swap&quot; &quot;pairs&quot; [ &quot;with&quot; MOVE ] | &quot;move&quot; MOVE &quot;on&quot; deck [ span ] | &quot;load&quot; &quot;pair&quot; SPEC [ &quot;group&quot; INT ] | &quot;load&quot; SPEC | &quot;queue&quot; ( &quot;play&quot; | &quot;pause&quot; | &quot;stop&quot; | &quot;next&quot; | &quot;loop&quot; | &quot;jump&quot; INT | &quot;add&quot; WORD ) | &quot;play&quot; | &quot;stop&quot; | &quot;sync&quot; | &quot;mute&quot; | &quot;unmute&quot;</ns:ebnf>
+		<ns:ebnf>&quot;filter&quot; ( &quot;lp&quot; | &quot;hp&quot; ) change | &quot;filter&quot; ( &quot;off&quot; | &quot;open&quot; ) | ( &quot;delay&quot; | &quot;reverb&quot; | &quot;crush&quot; | &quot;drive&quot; | &quot;resonance&quot; ) change | ( &quot;level&quot; | &quot;low&quot; | &quot;mid&quot; | &quot;high&quot; ) change | &quot;load&quot; SPEC | &quot;play&quot; | &quot;stop&quot; | &quot;sync&quot; | &quot;mute&quot; | &quot;unmute&quot;</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Control: what the mix does</ns:grammarSection>
 		<ns:status>stable</ns:status>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-add"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-crossfader"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-crush"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-delay"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-drive"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-filter"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-group"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-high"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-hp"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-jump"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-level"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-load"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-loop"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-low"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-lp"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-mid"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-move"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-mute"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-next"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-off"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-on"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-open"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-pair"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-pairs"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-pause"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-play"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-queue"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-resonance"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-reverb"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-stop"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-swap"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-sync"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-tempo"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-unmute"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-with"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-change"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-deck"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-lexical-move"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-lexical-spec"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-span"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-tempo"/>
-		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-int"/>
-		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-word"/>
 		<ns:writtenAs>action</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-and">
@@ -468,15 +467,16 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-arrange">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The arrange production of BeatScript&apos;s grammar (with a NAME it is one of several arrangements; the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff)).</skos:definition>
+		<skos:definition xml:lang="en">The arrange production of BeatScript&apos;s grammar (with a NAME it is one of several arrangements; the whole of a generated track: arrange from seed(techno, 42), or of a phrase: arrange from template(deep-house, @tempest_such_stuff); the whole program a generator call prints: arrange from gen@2 techno seed=42).</skos:definition>
 		<skos:prefLabel xml:lang="en">arrange</skos:prefLabel>
-		<ns:ebnf>&quot;arrange&quot; sexpr { sexpr } | &quot;arrange&quot; NAME &quot;:&quot; sexpr { sexpr } [ arr_end ] | &quot;arrange&quot; &quot;from&quot; ( seed | template )</ns:ebnf>
+		<ns:ebnf>&quot;arrange&quot; sexpr { sexpr } | &quot;arrange&quot; NAME &quot;:&quot; sexpr { sexpr } [ arr_end ] | &quot;arrange&quot; &quot;from&quot; ( seed | template ) | &quot;arrange&quot; &quot;from&quot; gen</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Structure: lets, defs, sections, the arrangement</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-arrange"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-from"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-colon"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-arr-end"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-gen"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-seed"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-sexpr"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-template"/>
@@ -560,6 +560,18 @@
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-low"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-mid"/>
 		<ns:writtenAs>band</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-binding">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The binding production of BeatScript&apos;s grammar (a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass).</skos:definition>
+		<skos:prefLabel xml:lang="en">binding</skos:prefLabel>
+		<ns:ebnf>NAME &quot;=&quot; source</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-equals"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-source"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:writtenAs>binding</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-block-end">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
@@ -756,11 +768,12 @@
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The control production of BeatScript&apos;s grammar.</skos:definition>
 		<skos:prefLabel xml:lang="en">control</skos:prefLabel>
-		<ns:ebnf>action | do | sing</ns:ebnf>
+		<ns:ebnf>action | engine | do | sing</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Lines: when, where, what</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-action"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-do"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-engine"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-sing"/>
 		<ns:writtenAs>control</ns:writtenAs>
 	</skos:Concept>
@@ -1064,6 +1077,41 @@
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
 		<ns:writtenAs>end</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-engine">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The engine production of BeatScript&apos;s grammar (no target, or control:; at bar 16: tempo 128 -&gt; 140 over 4 bars; the booth&apos;s: the desktop app plays these).</skos:definition>
+		<skos:prefLabel xml:lang="en">engine</skos:prefLabel>
+		<ns:ebnf>&quot;crossfader&quot; change | &quot;tempo&quot; tempo | &quot;swap&quot; &quot;pairs&quot; [ &quot;with&quot; MOVE ] | &quot;move&quot; MOVE &quot;on&quot; deck [ span ] | &quot;load&quot; &quot;pair&quot; SPEC [ &quot;group&quot; INT ] | &quot;queue&quot; ( &quot;play&quot; | &quot;pause&quot; | &quot;stop&quot; | &quot;next&quot; | &quot;loop&quot; | &quot;jump&quot; INT | &quot;add&quot; WORD )</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Control: what the mix does</ns:grammarSection>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-add"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-crossfader"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-group"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-jump"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-load"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-loop"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-move"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-next"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-on"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-pair"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-pairs"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-pause"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-play"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-queue"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-stop"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-swap"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-tempo"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-with"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-change"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-deck"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-lexical-move"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-lexical-spec"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-span"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-tempo"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-int"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-word"/>
+		<ns:writtenAs>engine</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-escape">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The escape production of BeatScript&apos;s grammar (PHONES (beatscript-v1): aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, &quot;_&quot; a rest, &quot;-&quot; cuts a word, &quot;:&quot; holds a vowel one more note, &quot;!&quot; accents it).</skos:definition>
@@ -1103,6 +1151,59 @@
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-or"/>
 		<ns:writtenAs>expr</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-form">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The form production of BeatScript&apos;s grammar (a form inside another takes no phrase: forms nest 3 deep).</skos:definition>
+		<skos:prefLabel xml:lang="en">form</skos:prefLabel>
+		<ns:ebnf>&quot;template&quot; &quot;(&quot; NAME { &quot;,&quot; binding } &quot;)&quot;</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-close-paren"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-comma"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-open-paren"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-template"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-binding"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:writtenAs>form</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-gen-param">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The gen_param production of BeatScript&apos;s grammar.</skos:definition>
+		<skos:prefLabel xml:lang="en">gen_param</skos:prefLabel>
+		<ns:ebnf>&quot;bpm&quot; &quot;=&quot; NUMBER | &quot;key&quot; &quot;=&quot; KEY | &quot;length&quot; &quot;=&quot; ( &quot;short&quot; | &quot;standard&quot; | &quot;long&quot; ) | &quot;section&quot; &quot;=&quot; NAME | &quot;part&quot; &quot;=&quot; role</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Start from a seed</ns:grammarSection>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-bpm"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-key"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-length"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-long"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-part"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-section"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-short"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-standard"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-equals"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-role"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-key"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-number"/>
+		<ns:writtenAs>gen_param</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-gen">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The gen production of BeatScript&apos;s grammar (gen@2 techno seed=42 section=drop part=bass: the seeded generator, called; GEN is gen@2 or a bare gen).</skos:definition>
+		<skos:prefLabel xml:lang="en">gen</skos:prefLabel>
+		<ns:ebnf>GEN NAME &quot;seed&quot; &quot;=&quot; ( INT | NAME ) { gen_param }</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Start from a seed</ns:grammarSection>
+		<ns:hostOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:hostOnly>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-seed"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-equals"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-gen-param"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-gen"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-int"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:writtenAs>gen</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-guard">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The guard production of BeatScript&apos;s grammar (kept where it holds).</skos:definition>
@@ -1116,17 +1217,20 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-headed">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The headed production of BeatScript&apos;s grammar (a deck&apos;s parts: no time word before them; a def&apos;s call, a duck and a mix name their decks themselves).</skos:definition>
+		<skos:definition xml:lang="en">The headed production of BeatScript&apos;s grammar (a deck&apos;s parts: no time word before them; the control deck; a def&apos;s call, a duck and a mix name their decks themselves).</skos:definition>
 		<skos:prefLabel xml:lang="en">headed</skos:prefLabel>
-		<ns:ebnf>&quot;deck&quot; deck &quot;:&quot; parts [ guard ] | [ timing &quot;:&quot; ] [ target &quot;:&quot; ] control [ cguard ] | [ timing &quot;:&quot; ] ( invoke | duck | mix ) [ cguard ]</ns:ebnf>
+		<ns:ebnf>&quot;deck&quot; deck &quot;:&quot; parts [ guard ] | [ timing &quot;:&quot; ] [ target &quot;:&quot; ] control [ cguard ] | [ timing &quot;:&quot; ] &quot;control&quot; &quot;:&quot; ( engine | do | duck | mix ) [ cguard ] | [ timing &quot;:&quot; ] ( invoke | duck | mix ) [ cguard ]</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Lines: when, where, what</ns:grammarSection>
 		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-control"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-deck"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-colon"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-cguard"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-control"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-deck"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-do"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-duck"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-engine"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-guard"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-invoke"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-mix"/>
@@ -1516,6 +1620,20 @@
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-compare"/>
 		<ns:writtenAs>not</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-notes">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The notes production of BeatScript&apos;s grammar (a bar, or bars one after another).</skos:definition>
+		<skos:prefLabel xml:lang="en">notes</skos:prefLabel>
+		<ns:ebnf>&quot;[&quot; pattern &quot;]&quot; | &quot;&lt;&quot; &quot;[&quot; pattern &quot;]&quot; { &quot;[&quot; pattern &quot;]&quot; } &quot;&gt;&quot;</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-close-bracket"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-gt"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-lt"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-open-bracket"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-pattern"/>
+		<ns:writtenAs>notes</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-op">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The op production of BeatScript&apos;s grammar.</skos:definition>
@@ -1761,9 +1879,10 @@
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The ref production of BeatScript&apos;s grammar (music from elsewhere, written out as BeatScript before the program is read).</skos:definition>
 		<skos:prefLabel xml:lang="en">ref</skos:prefLabel>
-		<ns:ebnf>seed | stored</ns:ebnf>
+		<ns:ebnf>seed | gen | stored</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Start from a seed</ns:grammarSection>
 		<ns:status>stable</ns:status>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-gen"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-seed"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-stored"/>
 		<ns:writtenAs>ref</ns:writtenAs>
@@ -1931,14 +2050,14 @@
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The setting production of BeatScript&apos;s grammar (a setting reads no input: it is the program&apos;s own).</skos:definition>
 		<skos:prefLabel xml:lang="en">setting</skos:prefLabel>
-		<ns:ebnf>&quot;tempo&quot; stempo | &quot;swing&quot; arith | &quot;key&quot; KEY</ns:ebnf>
+		<ns:ebnf>&quot;tempo&quot; tempo | &quot;swing&quot; arith | &quot;key&quot; KEY</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Settings</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-key"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-swing"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-tempo"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-arith"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-stempo"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-tempo"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-key"/>
 		<ns:writtenAs>setting</ns:writtenAs>
 	</skos:Concept>
@@ -1994,6 +2113,20 @@
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-phrase"/>
 		<ns:writtenAs>sing</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-source">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The source production of BeatScript&apos;s grammar (an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program&apos;s part or sections).</skos:definition>
+		<skos:prefLabel xml:lang="en">source</skos:prefLabel>
+		<ns:ebnf>gen | NAME | notes | form | stored</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
+		<ns:status>stable</ns:status>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-form"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-gen"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-notes"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-stored"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:writtenAs>source</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-span">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The span production of BeatScript&apos;s grammar.</skos:definition>
@@ -2043,20 +2176,6 @@
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-use"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-wire"/>
 		<ns:writtenAs>statement</ns:writtenAs>
-	</skos:Concept>
-	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-stempo">
-		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The stempo production of BeatScript&apos;s grammar (tempo 126 tempo 100 -&gt; 130 over 8 bars exp).</skos:definition>
-		<skos:prefLabel xml:lang="en">stempo</skos:prefLabel>
-		<ns:ebnf>arith [ &quot;-&gt;&quot; arith &quot;over&quot; dur [ shape ] ]</ns:ebnf>
-		<ns:grammarSection xml:lang="en">Settings</ns:grammarSection>
-		<ns:status>stable</ns:status>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-over"/>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-arrow"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-arith"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-dur"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-shape"/>
-		<ns:writtenAs>stempo</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-stored">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
@@ -2124,15 +2243,16 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-template">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The template production of BeatScript&apos;s grammar (a template&apos;s name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track).</skos:definition>
+		<skos:definition xml:lang="en">The template production of BeatScript&apos;s grammar (a template&apos;s name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form&apos;s roles).</skos:definition>
 		<skos:prefLabel xml:lang="en">template</skos:prefLabel>
-		<ns:ebnf>&quot;template&quot; &quot;(&quot; NAME &quot;,&quot; ( PHRASE | STRING ) &quot;)&quot;</ns:ebnf>
+		<ns:ebnf>&quot;template&quot; &quot;(&quot; NAME &quot;,&quot; ( PHRASE | STRING ) { &quot;,&quot; binding } &quot;)&quot;</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-close-paren"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-comma"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-open-paren"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-template"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-binding"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-phrase"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-string"/>
@@ -2140,16 +2260,16 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-tempo">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The tempo production of BeatScript&apos;s grammar (a control&apos;s tempo (at bar 16: tempo 128 -&gt; 140 ...)).</skos:definition>
+		<skos:definition xml:lang="en">The tempo production of BeatScript&apos;s grammar (tempo 126 tempo 100 -&gt; 130 over 8 bars exp).</skos:definition>
 		<skos:prefLabel xml:lang="en">tempo</skos:prefLabel>
-		<ns:ebnf>value [ &quot;-&gt;&quot; value &quot;over&quot; dur [ shape ] ]</ns:ebnf>
+		<ns:ebnf>arith [ &quot;-&gt;&quot; arith &quot;over&quot; dur [ shape ] ]</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Settings</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-over"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-arrow"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-arith"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-dur"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-shape"/>
-		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-value"/>
 		<ns:writtenAs>tempo</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-term">
@@ -2392,7 +2512,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-add">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword add of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword add of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">add</skos:prefLabel>
 		<ns:keywordText>add</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -2530,6 +2650,13 @@
 		<ns:keywordText>beside</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-bpm">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword bpm of BeatScript, written in: gen_param.</skos:definition>
+		<skos:prefLabel xml:lang="en">bpm</skos:prefLabel>
+		<ns:keywordText>bpm</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-cc-by">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
 		<skos:definition xml:lang="en">The keyword cc-by of BeatScript, written in: license.</skos:definition>
@@ -2572,6 +2699,13 @@
 		<ns:keywordText>clap</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-control">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword control of BeatScript, written in: headed.</skos:definition>
+		<skos:prefLabel xml:lang="en">control</skos:prefLabel>
+		<ns:keywordText>control</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-crossfade">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
 		<skos:definition xml:lang="en">The keyword crossfade of BeatScript, written in: TRANSITION.</skos:definition>
@@ -2581,7 +2715,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-crossfader">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword crossfader of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword crossfader of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">crossfader</skos:prefLabel>
 		<ns:keywordText>crossfader</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -2812,7 +2946,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-group">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword group of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword group of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">group</skos:prefLabel>
 		<ns:keywordText>group</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -2882,7 +3016,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-jump">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword jump of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword jump of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">jump</skos:prefLabel>
 		<ns:keywordText>jump</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -2896,7 +3030,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-key">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword key of BeatScript, written in: assert, input, setting, type.</skos:definition>
+		<skos:definition xml:lang="en">The keyword key of BeatScript, written in: assert, gen_param, input, setting, type.</skos:definition>
 		<skos:prefLabel xml:lang="en">key</skos:prefLabel>
 		<ns:keywordText>key</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -2938,7 +3072,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-length">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword length of BeatScript, written in: assert.</skos:definition>
+		<skos:definition xml:lang="en">The keyword length of BeatScript, written in: assert, gen_param.</skos:definition>
 		<skos:prefLabel xml:lang="en">length</skos:prefLabel>
 		<ns:keywordText>length</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -2980,7 +3114,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-load">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword load of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword load of BeatScript, written in: action, engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">load</skos:prefLabel>
 		<ns:keywordText>load</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -2992,6 +3126,13 @@
 		<ns:keywordText>log</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-long">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword long of BeatScript, written in: gen_param.</skos:definition>
+		<skos:prefLabel xml:lang="en">long</skos:prefLabel>
+		<ns:keywordText>long</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-loop-roll">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
 		<skos:definition xml:lang="en">The keyword loop_roll of BeatScript, written in: MOVE.</skos:definition>
@@ -3001,7 +3142,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-loop">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword loop of BeatScript, written in: action, arr_end, block_end, loop, sample, structure.</skos:definition>
+		<skos:definition xml:lang="en">The keyword loop of BeatScript, written in: arr_end, block_end, engine, loop, sample, structure.</skos:definition>
 		<skos:prefLabel xml:lang="en">loop</skos:prefLabel>
 		<ns:keywordText>loop</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3078,7 +3219,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-move">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword move of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword move of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">move</skos:prefLabel>
 		<ns:keywordText>move</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3106,7 +3247,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-next">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword next of BeatScript, written in: action, launch, when.</skos:definition>
+		<skos:definition xml:lang="en">The keyword next of BeatScript, written in: engine, launch, when.</skos:definition>
 		<skos:prefLabel xml:lang="en">next</skos:prefLabel>
 		<ns:keywordText>next</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3141,7 +3282,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-on">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword on of BeatScript, written in: action, assert, launch, param, sing, when.</skos:definition>
+		<skos:definition xml:lang="en">The keyword on of BeatScript, written in: assert, engine, launch, param, sing, when.</skos:definition>
 		<skos:prefLabel xml:lang="en">on</skos:prefLabel>
 		<ns:keywordText>on</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3169,7 +3310,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-over">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword over of BeatScript, written in: span, stempo, tempo.</skos:definition>
+		<skos:definition xml:lang="en">The keyword over of BeatScript, written in: span, tempo.</skos:definition>
 		<skos:prefLabel xml:lang="en">over</skos:prefLabel>
 		<ns:keywordText>over</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3183,14 +3324,14 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-pair">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword pair of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword pair of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">pair</skos:prefLabel>
 		<ns:keywordText>pair</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-pairs">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword pairs of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword pairs of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">pairs</skos:prefLabel>
 		<ns:keywordText>pairs</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3202,6 +3343,13 @@
 		<ns:keywordText>pan</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-part">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword part of BeatScript, written in: gen_param.</skos:definition>
+		<skos:prefLabel xml:lang="en">part</skos:prefLabel>
+		<ns:keywordText>part</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-pattern">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
 		<skos:definition xml:lang="en">The keyword pattern of BeatScript, written in: type.</skos:definition>
@@ -3211,7 +3359,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-pause">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword pause of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword pause of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">pause</skos:prefLabel>
 		<ns:keywordText>pause</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3253,14 +3401,14 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-play">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword play of BeatScript, written in: action, set_play.</skos:definition>
+		<skos:definition xml:lang="en">The keyword play of BeatScript, written in: action, engine, set_play.</skos:definition>
 		<skos:prefLabel xml:lang="en">play</skos:prefLabel>
 		<ns:keywordText>play</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-queue">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword queue of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword queue of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">queue</skos:prefLabel>
 		<ns:keywordText>queue</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3365,7 +3513,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-section">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword section of BeatScript, written in: section.</skos:definition>
+		<skos:definition xml:lang="en">The keyword section of BeatScript, written in: gen_param, section.</skos:definition>
 		<skos:prefLabel xml:lang="en">section</skos:prefLabel>
 		<ns:keywordText>section</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3379,7 +3527,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-seed">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword seed of BeatScript, written in: pname, seed.</skos:definition>
+		<skos:definition xml:lang="en">The keyword seed of BeatScript, written in: gen, pname, seed.</skos:definition>
 		<skos:prefLabel xml:lang="en">seed</skos:prefLabel>
 		<ns:keywordText>seed</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3389,6 +3537,13 @@
 		<skos:definition xml:lang="en">The keyword set of BeatScript, written in: set.</skos:definition>
 		<skos:prefLabel xml:lang="en">set</skos:prefLabel>
 		<ns:keywordText>set</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-short">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword short of BeatScript, written in: gen_param.</skos:definition>
+		<skos:prefLabel xml:lang="en">short</skos:prefLabel>
+		<ns:keywordText>short</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-silence">
@@ -3442,7 +3597,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-standard">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword standard of BeatScript, written in: structure.</skos:definition>
+		<skos:definition xml:lang="en">The keyword standard of BeatScript, written in: gen_param, structure.</skos:definition>
 		<skos:prefLabel xml:lang="en">standard</skos:prefLabel>
 		<ns:keywordText>standard</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3463,14 +3618,14 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-stop">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword stop of BeatScript, written in: action, bound.</skos:definition>
+		<skos:definition xml:lang="en">The keyword stop of BeatScript, written in: action, bound, engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">stop</skos:prefLabel>
 		<ns:keywordText>stop</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-swap">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword swap of BeatScript, written in: action.</skos:definition>
+		<skos:definition xml:lang="en">The keyword swap of BeatScript, written in: engine.</skos:definition>
 		<skos:prefLabel xml:lang="en">swap</skos:prefLabel>
 		<ns:keywordText>swap</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3498,7 +3653,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-arrow">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword -&gt; of BeatScript, written in: change, doval, set_mix, stempo, tempo, wire.</skos:definition>
+		<skos:definition xml:lang="en">The keyword -&gt; of BeatScript, written in: change, doval, set_mix, tempo, wire.</skos:definition>
 		<skos:prefLabel xml:lang="en">-&gt;</skos:prefLabel>
 		<ns:keywordText>-&gt;</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3540,14 +3695,14 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-close-bracket">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword ] of BeatScript, written in: arg, atom, choose, doval, dterm, seed.</skos:definition>
+		<skos:definition xml:lang="en">The keyword ] of BeatScript, written in: arg, atom, choose, doval, dterm, notes, seed.</skos:definition>
 		<skos:prefLabel xml:lang="en">]</skos:prefLabel>
 		<ns:keywordText>]</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-close-paren">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword ) of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight.</skos:definition>
+		<skos:definition xml:lang="en">The keyword ) of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, form, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight.</skos:definition>
 		<skos:prefLabel xml:lang="en">)</skos:prefLabel>
 		<ns:keywordText>)</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3561,7 +3716,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-comma">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword , of BeatScript, written in: arr_gap, atom, call, cprimary, def, dleaf, doval, dstack, invoke, mix, mutation, pargs, primary, seed, set_mix, sexpr, template.</skos:definition>
+		<skos:definition xml:lang="en">The keyword , of BeatScript, written in: arr_gap, atom, call, cprimary, def, dleaf, doval, dstack, form, invoke, mix, mutation, pargs, primary, seed, set_mix, sexpr, template.</skos:definition>
 		<skos:prefLabel xml:lang="en">,</skos:prefLabel>
 		<ns:keywordText>,</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3582,7 +3737,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-equals">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword = of BeatScript, written in: arg, do, let, param.</skos:definition>
+		<skos:definition xml:lang="en">The keyword = of BeatScript, written in: arg, binding, do, gen, gen_param, let, param.</skos:definition>
 		<skos:prefLabel xml:lang="en">=</skos:prefLabel>
 		<ns:keywordText>=</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3596,7 +3751,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-gt">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword &gt; of BeatScript, written in: assert, atom, bound, cmp, dterm, op.</skos:definition>
+		<skos:definition xml:lang="en">The keyword &gt; of BeatScript, written in: assert, atom, bound, cmp, dterm, notes, op.</skos:definition>
 		<skos:prefLabel xml:lang="en">&gt;</skos:prefLabel>
 		<ns:keywordText>&gt;</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3610,7 +3765,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-lt">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword &lt; of BeatScript, written in: assert, atom, cmp, dterm, op.</skos:definition>
+		<skos:definition xml:lang="en">The keyword &lt; of BeatScript, written in: assert, atom, cmp, dterm, notes, op.</skos:definition>
 		<skos:prefLabel xml:lang="en">&lt;</skos:prefLabel>
 		<ns:keywordText>&lt;</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3638,14 +3793,14 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-open-bracket">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword [ of BeatScript, written in: arg, atom, choose, doval, dterm, seed.</skos:definition>
+		<skos:definition xml:lang="en">The keyword [ of BeatScript, written in: arg, atom, choose, doval, dterm, notes, seed.</skos:definition>
 		<skos:prefLabel xml:lang="en">[</skos:prefLabel>
 		<ns:keywordText>[</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-open-paren">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword ( of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight.</skos:definition>
+		<skos:definition xml:lang="en">The keyword ( of BeatScript, written in: assert, atom, call, cprimary, def, degrees, dterm, form, input, invoke, launch, lfactor, pitem, primary, prob, seed, sexpr, template, term, weight.</skos:definition>
 		<skos:prefLabel xml:lang="en">(</skos:prefLabel>
 		<ns:keywordText>(</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3715,14 +3870,14 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-template">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword template of BeatScript, written in: template.</skos:definition>
+		<skos:definition xml:lang="en">The keyword template of BeatScript, written in: form, template.</skos:definition>
 		<skos:prefLabel xml:lang="en">template</skos:prefLabel>
 		<ns:keywordText>template</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-tempo">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword tempo of BeatScript, written in: action, set_mix, setting, type.</skos:definition>
+		<skos:definition xml:lang="en">The keyword tempo of BeatScript, written in: engine, set_mix, setting, type.</skos:definition>
 		<skos:prefLabel xml:lang="en">tempo</skos:prefLabel>
 		<ns:keywordText>tempo</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3834,7 +3989,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-with">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword with of BeatScript, written in: action, set_mix.</skos:definition>
+		<skos:definition xml:lang="en">The keyword with of BeatScript, written in: engine, set_mix.</skos:definition>
 		<skos:prefLabel xml:lang="en">with</skos:prefLabel>
 		<ns:keywordText>with</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -6071,6 +6226,14 @@
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>canon</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/template-cross">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PhraseTemplate"/>
+		<rdfs:seeAlso rdf:resource="https://beatscript.app/ontology/concept/grammar-template"/>
+		<skos:definition xml:lang="en">The phrase template cross: a cross at 120 in D: two sources (two seeds, in any genres: `a=gen@1 dubstep seed=54876, b=gen@1 house seed=7`) take turns and overlap, and morph toward each other and back in cycles; the phrase sung over the crossing. Written arrange from template(cross, @psalm42_deep_calleth).</skos:definition>
+		<skos:prefLabel xml:lang="en">cross</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>cross</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/template-deep-house">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PhraseTemplate"/>
 		<rdfs:seeAlso rdf:resource="https://beatscript.app/ontology/concept/grammar-template"/>
@@ -6240,6 +6403,13 @@
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>DECIMAL</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-gen">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
+		<skos:definition xml:lang="en">The lexer&apos;s GEN token, used in: gen.</skos:definition>
+		<skos:prefLabel xml:lang="en">GEN</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>GEN</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-ghost">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
 		<skos:definition xml:lang="en">The lexer&apos;s GHOST token, used in: mark.</skos:definition>
@@ -6256,21 +6426,21 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-int">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s INT token, used in: SPEC, action, arg, arr_end, assert, atom, block_end, bound, choose, dleaf, dterm, end, evolve, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, term, until_when.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s INT token, used in: SPEC, arg, arr_end, assert, atom, block_end, bound, choose, dleaf, dterm, end, engine, evolve, gen, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, term, until_when.</skos:definition>
 		<skos:prefLabel xml:lang="en">INT</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>INT</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-key">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s KEY token, used in: arg, assert, setting, sing.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s KEY token, used in: arg, assert, gen_param, setting, sing.</skos:definition>
 		<skos:prefLabel xml:lang="en">KEY</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>KEY</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-name">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, block_end, call, def, do, end, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, start, stored, template, until_when, when, wire.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, stored, template, until_when, when, wire.</skos:definition>
 		<skos:prefLabel xml:lang="en">NAME</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>NAME</ns:writtenAs>
@@ -6291,7 +6461,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-number">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s NUMBER token, used in: cprimary, lfactor, lfo, mut_op, op, primary, prob, set_mix, weight.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s NUMBER token, used in: cprimary, gen_param, lfactor, lfo, mut_op, op, primary, prob, set_mix, weight.</skos:definition>
 		<skos:prefLabel xml:lang="en">NUMBER</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>NUMBER</ns:writtenAs>
@@ -6389,29 +6559,32 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-word">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s WORD token, used in: action, arg, coperand, do, doval, operand, pvalue.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s WORD token, used in: arg, coperand, do, doval, engine, operand, pvalue.</skos:definition>
 		<skos:prefLabel xml:lang="en">WORD</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>WORD</ns:writtenAs>
 	</skos:Concept>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-check">
-		<skos:definition xml:lang="en">Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block.
+		<skos:definition xml:lang="en">Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BTW.md &quot;The control deck&quot;): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head.
 
-Answers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}. docs is the text&apos;s doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section&apos;s, when it has one. line and col are 1-based; help says what would fix it (&quot;did you mean ...&quot;); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID).
+Answers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references. docs is the text&apos;s doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section&apos;s, when it has one. line and col are 1-based; help says what would fix it (&quot;did you mean ...&quot;); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID).
 
 With same_as (another program&apos;s CID or text) the answer gains same_as {same, text_same, basis, why, diffs[{section, deck, start_bar, a_cid, b_cid}], only_in_a, only_in_b, renamed, song, diff}: whether the two are the same song by their compiled nets and song-level settings, not their text. When they are not, diff says what changed in music: diff.summary is one line per change (&quot;tempo 124 -&gt; 126&quot;, &quot;moved outro: bar 13 -&gt; bar 5&quot;, &quot;drop2 bass = drop bass transposed +1&quot;, &quot;drop bass: 1 note changed (1:7 c3 -&gt; d3)&quot;), with song, arrangement (inserted, removed, moved, repeated, renamed, changed) and parts (a transform: transpose, octave, rotate, reverse, thin, fill, fast, slow; else the notes added, removed or changed at bar:step) as JSON. Use it to prove a refactor changed nothing, or to find what an edit did.
 
 This is the loop for writing a program (there is no compose tool): read https://beatscript.app/docs/cheatsheet.md and one or two list_examples programs, call instruments, write the program, call check and fix every line:col error until ok, then eval / load to play it and share to store it. Voices come from the instruments tool: use only names from it. For a sung line, a public-domain phrasebook line (list_examples with phrasebook true) comes with its meter, stress and phoneme escapes, so that sing @id on melody checks with no unknown-word warning (https://beatscript.app/docs/found-phrases.md). A voice name with a leading digit (808-bass) cannot be written: inst=808-bass reads as 808 - bass and a quoted &quot;808-bass&quot; is refused, so pick a voice that starts with a letter (inst=sub-bass for a deep bass). Read-only, no sign-in. Limits: the text is at most 16384 bytes; about 60 calls a minute.
 
+References: a program can call the seeded generator (gen@2 techno seed=42 section=drop part=bass is the program generate prints, fitted to the program&apos;s key and tempo unless it says bpm= or key=) or borrow from seed(...), template(...) or a stored program by CID. Its cid is of the text as written (the recipe), and the answer says what the recipe makes: refs lists each reference of the program (a gen@N call, a seed(...), a template(...), a &lt;cid&gt;.section borrowed from a stored program): its kind, half (engine or structure), call, place (part, let, section or arrange), name, line and col, resolved (the CID it is pinned to), generator, fitted (what a gen call took from the program: key, bpm) and track; expanded_cid is the CID of the program with every reference written out as plain BeatScript: cid addresses the recipe, expanded_cid the result; the same recipe always gives the same expanded_cid, and a program with no references has expanded_cid equal to cid; resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it (seeded@2), and for a gen call the key and bpm it was generated in. With expand true, each entry of refs also carries its expansion (the BeatScript it is written out as where it stands). A diagnostic of severity info at each gen call says the CID it resolved to and the key and tempo it was fitted to; the expand tool writes the whole program out.
+
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">check</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;genre&quot;:{&quot;description&quot;:&quot;Optional: a genre of the bitwrap ontology (techno, house, jazz, ... or its https://ontology.bitwrap.io/genre/ IRI); else the program&apos;s own `#! genre:` line. The answer gains style {genre, label, warnings[{severity: \&quot;style\&quot;, code, message, line?, col?}]}: advice from the genre&apos;s conventions in the ontology (a tempo outside its range, a kit or voice the genre and its family do not use, chords far from its progressions). Style warnings never make ok false.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;same_as&quot;:{&quot;description&quot;:&quot;Optional: another program to compare with, as its CID (stored here, or an example&apos;s), a short https://beatscript.app/p/&lt;CID&gt; link, or its text. The answer gains same_as: whether the two are the same song by their compiled nets and song-level settings (tempo, key, swing, length, end, loop), not their text: a let/def/repeat refactor or a renamed section is the same song; a changed note is not, and diff says what changed in music (song settings, sections moved or inserted, a part transposed or rotated, notes at bar:step).&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text (at most 16384 bytes). Comments and blank lines are fine.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;text&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;expand&quot;:{&quot;description&quot;:&quot;Also give each entry of refs its expansion: the BeatScript the reference is written out as where it stands (default false).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;Optional: a genre of the bitwrap ontology (techno, house, jazz, ... or its https://ontology.bitwrap.io/genre/ IRI); else the program&apos;s own `#! genre:` line. The answer gains style {genre, label, warnings[{severity: \&quot;style\&quot;, code, message, line?, col?}]}: advice from the genre&apos;s conventions in the ontology (a tempo outside its range, a kit or voice the genre and its family do not use, chords far from its progressions). Style warnings never make ok false.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;same_as&quot;:{&quot;description&quot;:&quot;Optional: another program to compare with, as its CID (stored here, or an example&apos;s), a short https://beatscript.app/p/&lt;CID&gt; link, or its text. The answer gains same_as: whether the two are the same song by their compiled nets and song-level settings (tempo, key, swing, length, end, loop), not their text: a let/def/repeat refactor or a renamed section is the same song; a changed note is not, and diff says what changed in music (song settings, sections moved or inserted, a part transposed or rotated, notes at bar:step).&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text (at most 16384 bytes). Comments and blank lines are fine.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;text&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:readOnly>
 		<ns:requiredParameter>text</ns:requiredParameter>
 		<ns:status>stable</ns:status>
 		<ns:toolName>check</ns:toolName>
+		<ns:toolParameter>expand</ns:toolParameter>
 		<ns:toolParameter>genre</ns:toolParameter>
 		<ns:toolParameter>same_as</ns:toolParameter>
 		<ns:toolTitle xml:lang="en">Check a BeatScript program</ns:toolTitle>
@@ -6451,15 +6624,16 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Play a program in a browser tab</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-expand">
-		<skos:definition xml:lang="en">Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part&apos;s bars as a pattern. template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line&apos;s length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template&apos;s own. check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program&apos;s, from_cid the one you gave; with lineage true the text opens with `#! forked-from: &lt;from_cid&gt;`. Read-only, no sign-in.</skos:definition>
+		<skos:definition xml:lang="en">Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part&apos;s bars as a pattern. template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line&apos;s length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template&apos;s own. A gen@N call (gen@2 techno seed=42 section=drop part=bass: the seeded generator, the program generate prints, pinned by its CID) is written out by where it stands: `arrange from gen@2 ...` as the whole program (under a `# from: gen@2 ... -&gt; &lt;cid&gt;` line), a part line or `section X from gen@2 ... section=drop` as that section&apos;s parts, `let bed = gen@2 ... section=drop part=bass` as a let a bar (bed_1, bed_2, ..., bed = &lt;bed_1 bed_2 ...&gt;). check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program&apos;s, from_cid the one you gave; with lineage true the text opens with `#! forked-from: &lt;from_cid&gt;`. With eject &quot;line:col&quot; it writes out only the reference there, in place, under its `# from: &lt;call&gt; -&gt; &lt;cid&gt;` line (a comment: the ejected text has the CID of the same notes typed by hand), and answers {ok, text, cid, ejected: {call, kind, half, place, name, resolved, from}}. Read-only, no sign-in.</skos:definition>
 		<skos:prefLabel xml:lang="en">expand</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;lineage&quot;:{&quot;description&quot;:&quot;Open the written-out text with `#! forked-from: &lt;CID of the program as given&gt;` (default false), so that once it is shared it says what it came from.&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, with seed(...) or template(...) references in it.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;text&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;eject&quot;:{&quot;description&quot;:&quot;Optional: \&quot;line:col\&quot; (1-based) of one reference (a gen@N call, a seed(...), a &lt;cid&gt;.drop, a template(...)): eject it, writing just that one out in place under its `# from: &lt;call&gt; -&gt; &lt;cid&gt;` line, the rest left as they are.&quot;,&quot;maxLength&quot;:16,&quot;pattern&quot;:&quot;^[0-9]+:[0-9]+$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;lineage&quot;:{&quot;description&quot;:&quot;Open the written-out text with `#! forked-from: &lt;CID of the program as given&gt;` (default false), so that once it is shared it says what it came from.&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, with gen@N calls, seed(...) or template(...) references in it.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;text&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:readOnly>
 		<ns:requiredParameter>text</ns:requiredParameter>
 		<ns:status>stable</ns:status>
 		<ns:toolName>expand</ns:toolName>
+		<ns:toolParameter>eject</ns:toolParameter>
 		<ns:toolParameter>lineage</ns:toolParameter>
 		<ns:toolTitle xml:lang="en">Write out a program&apos;s seeds and templates</ns:toolTitle>
 	</ns:McpTool>
@@ -6478,27 +6652,33 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-generate">
 		<skos:definition xml:lang="en">Generate a whole BeatScript track from a seed, with no model and no sign-in: the beats generator picks the genre&apos;s rhythms (Euclidean), chord progression, instruments and song structure from the seed, and the result is printed as readable source (named lets, a def for the shared groove, sections, an arrange, filter ramps, the chords as Roman numerals and e()/arp()/markov()/every/rotate/degrade with their seeds written out, so one `key` line moves the whole song) for you to edit. Same genre, bpm, key, length and seed: the same text and CID, every time; the seed and generator are in the #! header so the track can be re-derived. The program passes check and is stored as public CC0 (source generate). Answers text, cid, name, seed, generator, url and render_url; play it with eval or load, or edit it and check again.
 
+The answer also has gen, the call that is this program in BeatScript (gen@2 techno seed=42, with the bpm=, key= and length= you gave: `arrange from gen@2 techno seed=42` plays it), expanded_cid (the same as cid: a generated program has no references), and parts, so you can pick parts without reading the text: one entry a role, {role, section, sections, voice or kit, text, let, gen}, where gen is the call that is just that part (gen@2 techno seed=42 section=drop part=bass) and let is what `let drop_bass = &lt;gen&gt;` writes (a let a bar). Put a part&apos;s gen in a let or on a part line of your own program to layer it, mutate it in an arrange or cross it with another seed; there it is fitted to your program&apos;s key and tempo unless it says key= and bpm=, and check reports it in refs. With part (a role) the answer gains that part and its let alone; generator picks the version (1 or 2, as gen@1 and gen@2 name them); seeds (a list, or {count, start}, at most 16) answers a compact summary a seed instead of one program.
+
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">generate</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;bpm&quot;:{&quot;description&quot;:&quot;Tempo; default the genre&apos;s.&quot;,&quot;maximum&quot;:300,&quot;minimum&quot;:40,&quot;type&quot;:&quot;number&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;The genre whose rhythms, chords, instruments and song structure it uses (default techno).&quot;,&quot;enum&quot;:[&quot;techno&quot;,&quot;house&quot;,&quot;jazz&quot;,&quot;ambient&quot;,&quot;dnb&quot;,&quot;edm&quot;,&quot;speedcore&quot;,&quot;dubstep&quot;,&quot;country&quot;,&quot;blues&quot;,&quot;synthwave&quot;,&quot;trance&quot;,&quot;lofi&quot;,&quot;reggae&quot;,&quot;funk&quot;,&quot;bossa&quot;,&quot;trap&quot;,&quot;garage&quot;,&quot;metal&quot;,&quot;electro&quot;,&quot;deephouse&quot;,&quot;italo&quot;,&quot;acid&quot;],&quot;type&quot;:&quot;string&quot;},&quot;key&quot;:{&quot;description&quot;:&quot;Key: am, c, f#m, d:dorian ...; default the genre&apos;s.&quot;,&quot;maxLength&quot;:16,&quot;type&quot;:&quot;string&quot;},&quot;length&quot;:{&quot;description&quot;:&quot;Song length (default standard).&quot;,&quot;enum&quot;:[&quot;short&quot;,&quot;standard&quot;,&quot;long&quot;],&quot;type&quot;:&quot;string&quot;},&quot;seed&quot;:{&quot;description&quot;:&quot;A number or a word (default 1). Same inputs, same program text and CID.&quot;,&quot;type&quot;:[&quot;string&quot;,&quot;integer&quot;]}},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;bpm&quot;:{&quot;description&quot;:&quot;Tempo; default the genre&apos;s.&quot;,&quot;maximum&quot;:300,&quot;minimum&quot;:40,&quot;type&quot;:&quot;number&quot;},&quot;generator&quot;:{&quot;description&quot;:&quot;The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen) or 2 (seeded@2, the chords and arps as Roman numerals); default 2. A version always prints the same program for the same inputs.&quot;,&quot;enum&quot;:[1,2],&quot;type&quot;:&quot;integer&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;The genre whose rhythms, chords, instruments and song structure it uses (default techno).&quot;,&quot;enum&quot;:[&quot;techno&quot;,&quot;house&quot;,&quot;jazz&quot;,&quot;ambient&quot;,&quot;dnb&quot;,&quot;edm&quot;,&quot;speedcore&quot;,&quot;dubstep&quot;,&quot;country&quot;,&quot;blues&quot;,&quot;synthwave&quot;,&quot;trance&quot;,&quot;lofi&quot;,&quot;reggae&quot;,&quot;funk&quot;,&quot;bossa&quot;,&quot;trap&quot;,&quot;garage&quot;,&quot;metal&quot;,&quot;electro&quot;,&quot;deephouse&quot;,&quot;italo&quot;,&quot;acid&quot;],&quot;type&quot;:&quot;string&quot;},&quot;key&quot;:{&quot;description&quot;:&quot;Key: am, c, f#m, d:dorian ...; default the genre&apos;s.&quot;,&quot;maxLength&quot;:16,&quot;type&quot;:&quot;string&quot;},&quot;length&quot;:{&quot;description&quot;:&quot;Song length (default standard).&quot;,&quot;enum&quot;:[&quot;short&quot;,&quot;standard&quot;,&quot;long&quot;],&quot;type&quot;:&quot;string&quot;},&quot;part&quot;:{&quot;description&quot;:&quot;One part (a role): the answer gains part (that role&apos;s entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = &lt;drop_bass_1 ...&gt;), to paste into a program of your own.&quot;,&quot;enum&quot;:[&quot;kick&quot;,&quot;snare&quot;,&quot;hihat&quot;,&quot;clap&quot;,&quot;bass&quot;,&quot;melody&quot;,&quot;harmony&quot;,&quot;arp&quot;],&quot;type&quot;:&quot;string&quot;},&quot;section&quot;:{&quot;description&quot;:&quot;With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).&quot;,&quot;maxLength&quot;:32,&quot;type&quot;:&quot;string&quot;},&quot;seed&quot;:{&quot;description&quot;:&quot;A number or a word (default 1). Same inputs, same program text and CID.&quot;,&quot;type&quot;:[&quot;string&quot;,&quot;integer&quot;]},&quot;seeds&quot;:{&quot;anyOf&quot;:[{&quot;items&quot;:{&quot;type&quot;:[&quot;string&quot;,&quot;integer&quot;]},&quot;maxItems&quot;:16,&quot;minItems&quot;:1,&quot;type&quot;:&quot;array&quot;},{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;count&quot;:{&quot;maximum&quot;:16,&quot;minimum&quot;:1,&quot;type&quot;:&quot;integer&quot;},&quot;start&quot;:{&quot;minimum&quot;:0,&quot;type&quot;:&quot;integer&quot;}},&quot;required&quot;:[&quot;count&quot;],&quot;type&quot;:&quot;object&quot;}],&quot;description&quot;:&quot;Instead of seed: many seeds, as a list ([1, 2, \&quot;sunrise\&quot;]) or as {count, start} (count seeds from start, default 1), at most 16. The answer is programs, one compact summary a seed in order: seed, generator, cid, name, key, tempo, bars, gen, parts (role, section, sections, voice or kit, text, gen) and url and render_url; each program is stored as one generate stores it, and nothing else is. The same seeds give the same summaries.&quot;}},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:readOnly>
 		<ns:status>stable</ns:status>
 		<ns:toolName>generate</ns:toolName>
 		<ns:toolParameter>bpm</ns:toolParameter>
+		<ns:toolParameter>generator</ns:toolParameter>
 		<ns:toolParameter>genre</ns:toolParameter>
 		<ns:toolParameter>key</ns:toolParameter>
 		<ns:toolParameter>length</ns:toolParameter>
+		<ns:toolParameter>part</ns:toolParameter>
+		<ns:toolParameter>section</ns:toolParameter>
 		<ns:toolParameter>seed</ns:toolParameter>
+		<ns:toolParameter>seeds</ns:toolParameter>
 		<ns:toolTitle xml:lang="en">Generate a track from a seed (no model)</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-genre-template">
-		<skos:definition xml:lang="en">A starting BeatScript program for a genre, built from the bitwrap ontology&apos;s data for it (https://ontology.bitwrap.io, CC0): its tempo, key (root and scale), swing, drum kit and Euclidean kick, snare and hihat rhythms, its bass, arp and melody voices, its first chord progression (the chords, bass, arp and melody are Roman numerals, so a `key` line moves them all), and its family&apos;s standard song structure, each section with the roles the family&apos;s section profile makes active and its usual length. Returns {text, cid, canonical, seconds, genre{genre, label, family, tempo, tempo_range, scale, kit, voices, progressions, sections}} (and phrase, warnings with a phrase). The text passes check (it is checked before it is returned) and carries a `#! genre:` line, so check reports its style against the genre. Edit it, check it, then play or share it. For vocals, pass phrase (a phrasebook id from list_examples with phrasebook true, or any words): it is sung on the melody part of each section that has one, and the answer gains phrase with its source, year, meter, stress, syllables and phoneme escapes and whether its meter fits the genre (https://beatscript.app/docs/found-phrases.md). For a classical form, pass form (quodlibet, passacaglia, canon, rondo, fugue or theme-and-variations): the program is that form&apos;s template at the genre&apos;s tempo, built from public-domain themes, with the phrase (or the form&apos;s own) sung in it, and the answer gains form (its sections, mutation plan, themes and reference track) and expanded (the program written out to edit). To borrow one theme instead, pass theme (an id from list_examples with themes true): its lets go in, moved to the genre&apos;s key, played by the part of its role. See https://beatscript.app/docs/forms.md. For a whole track made from a phrase, write `arrange from template(deep-house, &quot;your words&quot;)` (see expand). Read-only, no sign-in.
+		<skos:definition xml:lang="en">A starting BeatScript program for a genre, built from the bitwrap ontology&apos;s data for it (https://ontology.bitwrap.io, CC0): its tempo, key (root and scale), swing, drum kit and Euclidean kick, snare and hihat rhythms, its bass, arp and melody voices, its first chord progression (the chords, bass, arp and melody are Roman numerals, so a `key` line moves them all), and its family&apos;s standard song structure, each section with the roles the family&apos;s section profile makes active and its usual length. Returns {text, cid, canonical, seconds, genre{genre, label, family, tempo, tempo_range, scale, kit, voices, progressions, sections}} (and phrase, warnings with a phrase). The text passes check (it is checked before it is returned) and carries a `#! genre:` line, so check reports its style against the genre. Edit it, check it, then play or share it. For vocals, pass phrase (a phrasebook id from list_examples with phrasebook true, or any words): it is sung on the melody part of each section that has one, and the answer gains phrase with its source, year, meter, stress, syllables and phoneme escapes and whether its meter fits the genre (https://beatscript.app/docs/found-phrases.md). For a classical form, pass form (quodlibet, passacaglia, canon, rondo, fugue or theme-and-variations): the program is that form&apos;s template at the genre&apos;s tempo, built from public-domain themes, with the phrase (or the form&apos;s own) sung in it, and the answer gains form (its sections, mutation plan, themes and reference track) and expanded (the program written out to edit). To borrow one theme instead, pass theme (an id from list_examples with themes true): its lets go in, moved to the genre&apos;s key, played by the part of its role. See https://beatscript.app/docs/forms.md. For a whole track made from a phrase, write `arrange from template(deep-house, &quot;your words&quot;)` (see expand). Read-only, no sign-in. The answer also has expanded_cid (the CID of the program written out: the same as cid for a program with no references) and, for a program with references (a form&apos;s template(...)), refs and resolution, as check gives them. A form takes its sources as roles (docs/btw/ext-roles.md): with form and roles, each role is bound to a source (a seed of the seeded generator, a public-domain theme, notes, a stored program&apos;s part or section, another form), and the forms include cross (a quodlibet of two sources, roles a and b): two seeds that lead in turn, overlap, and morph toward each other and back.
 
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">genre_template</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;form&quot;:{&quot;description&quot;:&quot;Optional (docs/btw/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations. The program is then that form&apos;s template at the genre&apos;s tempo, arrange from template(&lt;form&gt;, &lt;phrase&gt;), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:&lt;name&gt;, or its https://ontology.bitwrap.io/genre/ IRI.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;phrase&quot;:{&quot;description&quot;:&quot;Optional, for vocals (found phrases, see docs/btw/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.&quot;,&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;description&quot;:&quot;Optional (docs/btw/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre&apos;s key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;genre&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;form&quot;:{&quot;description&quot;:&quot;Optional (docs/btw/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form&apos;s template at the genre&apos;s tempo, arrange from template(&lt;form&gt;, &lt;phrase&gt;), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:&lt;name&gt;, or its https://ontology.bitwrap.io/genre/ IRI.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;phrase&quot;:{&quot;description&quot;:&quot;Optional, for vocals (found phrases, see docs/btw/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.&quot;,&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;roles&quot;:{&quot;additionalProperties&quot;:{&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;description&quot;:&quot;Optional, with form (docs/btw/ext-roles.md): the form&apos;s roles, each bound to a source, {\&quot;ROLE\&quot;: \&quot;SOURCE\&quot;}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program&apos;s part or section by CID, or another form (template(passacaglia, ground=gen@1 dubstep seed=54876)). cross takes a and b; passacaglia ground and upper; canon subject and ground; rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form&apos;s key and tempo and stays an engine call, pinned (see resolution).&quot;,&quot;type&quot;:&quot;object&quot;},&quot;theme&quot;:{&quot;description&quot;:&quot;Optional (docs/btw/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre&apos;s key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;genre&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:readOnly>
@@ -6507,6 +6687,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolName>genre_template</ns:toolName>
 		<ns:toolParameter>form</ns:toolParameter>
 		<ns:toolParameter>phrase</ns:toolParameter>
+		<ns:toolParameter>roles</ns:toolParameter>
 		<ns:toolParameter>theme</ns:toolParameter>
 		<ns:toolTitle xml:lang="en">A starting program for a genre</ns:toolTitle>
 	</ns:McpTool>
@@ -6569,7 +6750,7 @@ Needs a bearer token: it reads the tabs of the token&apos;s account, by default 
 		<ns:toolTitle xml:lang="en">The example programs</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-listen">
-		<skos:definition xml:lang="en">Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck&apos;s line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section&apos;s loudness, `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes and the mixer and insert moves it has ops for; `notes` names the control lines it leaves out.
+		<skos:definition xml:lang="en">Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck&apos;s line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section&apos;s loudness, `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a reference (a gen@2 call, a seed(...), a template, a stored program&apos;s section) says so in `from` {call, kind, resolved, place, generator, sections} (`also_from` when several made it); a gen call fitted to the program&apos;s key or tempo says so in `notes`, in check&apos;s words; and the answer gains `expanded_cid` and `resolution`, as check&apos;s. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes and the mixer and insert moves it has ops for; `notes` names the control lines it leaves out.
 
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">listen</skos:prefLabel>

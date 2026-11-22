@@ -50,6 +50,7 @@ pub const CLASSES: &[(&str, &str)] = &[
     ("GHOST", "a `.` touching the step before it, with no word after it: a ghost note (`x.`, `c3.`)"),
     ("RATCHET", "a `:` touching the step before it and a whole number touching it: a ratchet (`x:3`)"),
     ("CID", "a saved program's CID: `z` and 20 to 80 base58 characters (`z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ`)"),
+    ("GEN", "the generator's call word, its version glued with `@` (`gen@2`, `gen@1`), or a bare `gen` (gen@2)"),
     // the classes of a lyric's text, read over characters ([`recognize_text`]), not tokens
     ("TEXT", "in a lyric: one character that is not `/`, a space and a letter alike"),
     ("SPACE", "in a lyric: one space, tab or line break"),
@@ -83,6 +84,7 @@ fn class_ends(name: &str, toks: &[Token], src: &str, at: usize) -> Vec<usize> {
         "SUGAR" => one(word(&|w| crate::parse::sugar_noun(w).is_some())),
         "PHRASE" => one(word(&|w| w.strip_prefix('@').is_some_and(|id| djengine::vocal::phoneme::phrase_lyric(id).is_some()))),
         "CID" => one(word(&crate::stored::is_cid)),
+        "GEN" => one(word(&|w: &str| w == "gen" || w.strip_prefix("gen@").is_some_and(|n| !n.is_empty() && n.bytes().all(|c| c.is_ascii_digit())))),
         "GHOST" => one(matches!(t.tok, Tok::Ghost)),
         "RATCHET" => match toks.get(at + 1) {
             Some(n) if matches!(t.tok, Tok::Colon) && matches!(n.tok, Tok::Num { int: true, .. }) && n.span.start == t.span.end && at > 0 && toks[at - 1].span.end == t.span.start => vec![at + 2],

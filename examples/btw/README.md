@@ -11,6 +11,7 @@ reformattings keep its CID. All of them are original and CC0-1.0. A file that ne
 | file | shows | BTW.md section | long note |
 |---|---|---|---|
 | `baseline.btw` | the language before the extensions: a small song of a Euclid kick, a snare, hi-hats, a bass and a chord | Patterns | |
+| `two-beds-and-a-theme.btw` | two seeds of the seeded generator (`gen@2 ... section=drop part=bass`) fitted to one key and tempo, layered on the two decks, crossed with `morph` and `xfer`, and Beethoven's Ode to Joy (a public-domain theme) over them | Call the generator | `ext-ffi.md` |
 | `arith.btw` | arithmetic in every number, `let` folding, a def's arithmetic argument, `when` guards in a `repeat` and a def | Arithmetic and guards | `ext-arith.md` |
 | `timing.btw` | `at bar 1 beat 2`, `over 2 beats`, `for 3 beats`, `every 1/2 bar from 1`, `before drop 1/2 bar` | Time finer than a bar | `ext-timing.md` |
 | `tempo.btw` | a tempo that ramps (`100 -> 128 over 8 bars s-curve`), a tempo in a section, a timed `at bar 12: tempo ...` | Tempo curves | `ext-tempo.md` |
@@ -42,6 +43,8 @@ reformattings keep its CID. All of them are original and CC0-1.0. A file that ne
 | `canon-of-fate.btw` | the QUODLIBET form's reference program: themes after Pachelbel's Canon, Beethoven's Ode to Joy and fate motif take turns and cross-morph (`~ a morph b p` paired with `~ b morph a p`); its sources in `canon-of-fate.jsonld` | Phrase templates | `forms.md` |
 | `full-fathom-five.btw` | the PASSACAGLIA form's reference program: a fixed ground under cumulative variations, singing Ariel's song (The Tempest); `check` warns of two words the lexicon lacks, pinned as written | Phrase templates | `forms.md` |
 | `rag-rondo.btw` | the RONDO form's reference program: a Joplin refrain returning mutated between contrasting strains | Phrase templates | `forms.md` |
+| `cross-two-seeds.btw` | `template(cross, ..., a=gen@1 dubstep seed=54876, b=gen@1 house seed=7)`: two seeds in different keys of their own, fitted to the program's and crossed: a leads, b leads, both, the morphs pulling one toward the other and back (`skip-test`: needs the generator; tested in `crates/btwapi/tests/forms_roles.rs`) | Phrase templates (roles) | `ext-roles.md` |
+| `rondo-of-passacaglias.btw` | one seed in every role of a nested form: a rondo whose refrain is the seed's melody and whose episodes are a passacaglia over its bass (`skip-test`: needs the generator; tested in `crates/btwapi/tests/forms_roles.rs`) | Phrase templates (roles) | `ext-roles.md` |
 | `such-stuff-as-dreams-122-reference.btw` | the found-phrases reference program (deep house, 122): Prospero's lines from The Tempest sung buried in `night` and forward in `spot`, crossed onto the shaker and hats; the hand-written twin of `such-stuff-as-dreams-122.btw` | Found phrases | `found-phrases.md` |
 | `tyger-tyger-128.btw` | the found-phrases reference program (EDM, 128): Blake's trochaic Tyger chanted on the kick (`@ vox xfer kick4`), pronunciation fixed with phoneme escapes | Found phrases | `found-phrases.md` |
 | `showcase.btw` | a whole track that uses the features together (written beside these) | | |

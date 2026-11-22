@@ -55,6 +55,11 @@ stays off the keystroke path.
 | `inlayHint` | `inlay.rs` |
 | `btw/diagnostics` (not LSP: the diagnostics as a request) | `diagnostics.rs` |
 | `btw/numberAt` (not LSP: what an editor's scrubber needs) | `number.rs` |
+| `hover` on a reference (`gen@2 ...`, `seed(...)`, `<cid>.drop.bass`, `template(...)`), and on a `# from:` line | `refs.rs` + `djlive::refs` |
+| `btw/expand` (not LSP: a document's references, their ranges and expansions) | `refs.rs` |
+| `codeLens` (`show expansion`, `eject` over each reference), `workspace/executeCommand` | `refs.rs` |
+| `codeAction` `refactor.inline` *Eject* (resolved and proved like the refactors) and *Copy the expansion* | `refs.rs`, `refactor.rs` |
+| `completion` in a `gen@2` call: genres, names, values (`section=`: the generated program's sections) | `complete.rs` |
 
 `btw/numberAt` takes `{textDocument, position}` and answers `null` or the literal there: `range` (its span, a `-` sign
 included), `text`, `value`, `kind` (`tempo`, `vel`, `oct`, `len`, `glide`, `decay`, `pitch-drop`, `ratchet`, `times`, `chance`, `hits`, `steps`, `rotation`,
@@ -86,6 +91,105 @@ made and proved on resolve like the others (the same nets).
 
 Not done: semantic tokens (the editors colour from the TextMate grammar, `editors/vscode`, checked against djlive's word lists by
 `tests/editors.rs`).
+
+## References: show, hide, copy, eject
+
+A program's references are what `djlive::refs::sites` lists: a call of the seeded generator (`gen@2 techno seed=42
+section=drop part=bass`, an engine call), a seed (`seed(techno, 42).bass[1..8]`, an engine call), a stored program's section
+or part (`<cid>.drop.bass`, a structural import) and a template (`arrange from template(...)`, a structural import). They are
+worked out once per text (`Analysis::refs`: a generator call is generated and its program compiled, a few ms), and only for a
+text with something a reference starts with in its tokens, so a program with none never pays.
+
+- **Hover** on a reference: its canonical call, which half it is, the CID it resolves to, the generator and version, the
+  track, what it was fitted to (`fitted to the program's key `am` and its tempo 124`), where it stands, and its expansion in a
+  `btw` fence, at most 24 lines or 2400 characters, then `… N more lines not shown (M in all)`. On a `# from: <call> ->
+  <cid>` line that an eject wrote, where the text came from. Nothing new for a client to do: it is `textDocument/hover`.
+- **`btw/expand`** takes `{textDocument}` (every reference) or `{textDocument, position}` (the one there: whose own text holds
+  the position, else whose statement does) and answers
+
+  ```jsonc
+  {"references": [{
+    "range": {...},          // the reference itself, in the negotiated encoding (UTF-16 unless both said utf-8)
+    "replaced": {...},       // what eject replaces: the reference, or the whole let, section or arrange line it stands in
+    "kind": "gen",           // gen | seed | stored | template
+    "half": "engine",        // engine | structure
+    "call": "gen@2 techno seed=42 section=drop part=bass",
+    "resolved": "z4EB…",     // the pinned CID (a stored reference: the CID it names)
+    "generator": "seeded@2", // null but for gen
+    "fitted": ["key", "bpm"],// what a gen call took from the program
+    "place": "let",          // part | let | section | arrange
+    "name": "bed",           // the let's or section's name, the part's role
+    "text": "let bed_1 = ...",// what eject writes in place of `replaced`
+    "from": "# from: gen@2 techno seed=42 section=drop part=bass -> z4EB…",
+    "track": "...", "model": null, "lines": 5
+  }]}
+  ```
+
+  and `{"references": [], "errors": [<LSP diagnostics>]}` when a reference cannot be worked out (the check says the same
+  at the reference). Advertised as `capabilities.experimental.btw.expand`.
+- **Code lenses** (`codeLensProvider`): over each reference `show expansion` (command `btw.expand.toggle`) and `eject`
+  (`btw.eject`), each with one argument `{uri, position, length}` (the reference's start, and the text's length in bytes: an
+  eject of a text that has changed since is refused).
+- **`workspace/executeCommand`** (`executeCommandProvider.commands`: `btw.expand.toggle`, `btw.expand.copy`, `btw.eject`),
+  arguments `[{uri, position, length?}]`:
+  - `btw.expand.toggle` answers the reference there, as one of `btw/expand`'s (`null`: none);
+  - `btw.expand.copy` answers `{text, call, resolved}`, `text` being the `from` line and the expansion: what eject would write;
+  - `btw.eject` answers `{label, edit}` (a `WorkspaceEdit`) once the edit is proved, an error with the reason otherwise; when
+    the client said `workspace.applyEdit` in `initialize`, the server also sends it the edit as a `workspace/applyEdit`
+    request (id `btw/<n>`; its answer is taken quietly).
+
+  **The show/hide state lives in the client.** The server answers what a reference stands for and keeps nothing; the VS Code
+  extension and the web page remember which expansions are shown and ask `btw/expand` (they never send `btw.expand.toggle`
+  or `btw.expand.copy` to the server). A client that runs those two on the server over stdio (LSP4IJ) gets a
+  `window/showMessage` with the call, its CID and the first lines of the expansion as well.
+- **Eject** is a `refactor.inline` code action on a reference, `Eject `<call>` into local text`, offered unresolved
+  (`data.refactor = "eject"`) and made and proved on `codeAction/resolve` like the other refactors: its edit is the one stretch
+  between the text and `djlive::refs::eject_site` of the same reference (exactly what `djlive::refs::eject` writes), and
+  `refactor::verify` must find the same nets before it is given. Beside it, `Copy the expansion of `<call>``: no edit, a
+  `command` (`btw.expand.copy`).
+- **Completion** in a `gen@2` call: after its head the installed generator's genres (`djlive::gen::generator().genres(v)`),
+  then its names (`djlive::gen::PARAMS`, `seed=` first, each once; on a part line the line's own params after them), then a
+  name's values: `length=` the lengths, `key=` the keys, `part=` the roles, `section=` the sections of the program the call
+  prints (generated and compiled there, a few ms). `arrange from`, `section NAME from` and `let NAME =` offer `gen@2`.
+
+What each client gets:
+
+| | hover | show / hide | copy | eject |
+|---|---|---|---|---|
+| VS Code (`editors/vscode`) | yes | lens, or *Show or hide the expansion of the reference here*: a decoration after the reference (its first line, how many more, `[z…cid]`; the whole in its hover); *every reference's*; *open … beside* (a read-only document) | lens-less: the lightbulb or the palette, to the clipboard | lens, lightbulb, palette (`workspace/applyEdit`) |
+| IntelliJ (LSP4IJ) | yes (Ctrl+Q) | lens: a notification with the expansion | Alt+Enter: a notification | lens, Alt+Enter |
+| the web page (`BtwLs`) | yes | the JS below | the JS below | Alt+Enter as it is (the existing `run` resolves it) |
+
+### The web editor
+
+beats-bitwrap-io `btwsite/web/js/assist.js` needs no change for the hover or for eject (it is a refactor in the Alt+Enter
+list, resolved by `run` as the others are). Showing an expansion and copying one are three small additions:
+
+```js
+// onKey, beside Alt+Enter: Alt+E shows or hides the expansion of the reference at the caret
+if (e.altKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); this.toggleExpansion(); return true; }
+
+// run(action), first: an action with a command and no edit (Copy the expansion) is the page's to carry out
+if (a.command && !a.edit && !(a.data && a.data.refactor)) {
+  const r = this.req('workspace/executeCommand', a.command);
+  if (!r || r.error) { this.toast(r && r.error ? r.error : 'Nothing to copy here.', 'warn'); return; }
+  navigator.clipboard.writeText(`${r.text}\n`).then(() => this.toast('Copied the expansion.', 'ok'));
+  return;
+}
+
+// a method: the expansion in the popup, under the reference (which one is shown is the page's state: the list)
+toggleExpansion() {
+  if (this.list && this.list.kind === 'expansion') { this.close(); return; }
+  const res = this.req('btw/expand', { position: this.caretPos() });
+  const ref = res && res.references && res.references[0];
+  if (!ref) { this.toast(res && res.errors && res.errors.length ? res.errors[0].message : 'No reference here.', 'ok'); return; }
+  const doc = `\`${ref.call}\` → \`${ref.resolved || ''}\`\n\n\`\`\`btw\n${ref.from}\n${ref.text}\n\`\`\``;
+  this.list = { kind: 'expansion', rows: [{ label: ref.kind, detail: ref.half, doc }], sel: 0, anchor: offsetOf(this.ed.text, ref.range.start) };
+  this.paint();
+}
+```
+
+(`.as-doc` wants a `max-height` and `overflow: auto` for a long expansion.) Positions are UTF-16 there, as `BtwLs` counts.
 
 ## Try it
 

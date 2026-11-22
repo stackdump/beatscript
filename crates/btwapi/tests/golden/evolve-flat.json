@@ -109,7 +109,8 @@
     ],
     "uses_assets": false,
     "restricted": false,
-    "seconds": 64
+    "seconds": 64,
+    "expanded_cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL"
   },
   "fmt": {
     "ok": true,

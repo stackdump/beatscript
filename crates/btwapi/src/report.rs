@@ -266,6 +266,12 @@ fn rights_flags(r: &RightsReport) -> (bool, bool) {
 
 /// `check(text)`: the whole report as a value.
 pub fn check_report(text: &str) -> JsonValue {
+    check_report_with(text, false)
+}
+
+/// [`check_report`], and with `expand` each reference's `expansion` in `refs` (crate::resolution): the BeatScript it is written
+/// out as where it stands (`check` with `expand: true`, `btwd check --expand`).
+pub fn check_report_with(text: &str, expand: bool) -> JsonValue {
     let env = web_env().env();
     let ix = Utf16Index::new(text);
     let chk = check_with(text, &env);
@@ -372,12 +378,20 @@ pub fn check_report(text: &str) -> JsonValue {
     if !c.plays.is_empty() {
         fields.push(("uses", strs(c.plays.iter().map(|(cid, _)| cid.clone()))));
     }
+    // what the recipe makes (crate::resolution): `expanded_cid` always (the CID itself for a program with no references), and
+    // `refs` and `resolution` when it has references
+    fields.extend(crate::resolution::fields(text, &c.cid, expand));
     JsonValue::Object(JsonObject::from_pairs(fields))
 }
 
 /// `check(text)` as the JSON string `btwd check` prints and `btw_check` returns.
 pub fn check_json(text: &str) -> String {
     check_report(text).js_stringified()
+}
+
+/// [`check_report_with`] as a JSON string: `expand` adds each reference's `expansion`.
+pub fn check_json_with(text: &str, expand: bool) -> String {
+    check_report_with(text, expand).js_stringified()
 }
 
 /// `fmt(text)`: the program formatted (`text`: the canonical form with its `#!` header lines, comments and the blank lines

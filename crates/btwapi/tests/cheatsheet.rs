@@ -100,7 +100,11 @@ fn the_grammar_is_one_block_with_the_booths_lines_left_out() {
         "call = NAME \"(\" [ arg { \",\" arg } ] \")\" ;",
         "invoke = NAME \"(\" [ tokens { \",\" tokens } ] \")\" ;",
         "headed = \"deck\" deck \":\" parts [ guard ]",
-        "control = action | do | sing ;",
+        "control = action | engine | do | sing ;",
+        // the control deck (docs/btw/ext-control.md): of its engine calls the web plays a timed tempo, read as the setting's
+        "\"control\" \":\" ( engine | do | duck | mix ) [ cguard ]",
+        "engine = \"tempo\" tempo",
+        "setting = \"tempo\" tempo",
         "action = \"filter\" ( \"lp\" | \"hp\" ) change",
         "\"resonance\" ) change",
         "term = atom [ mark ] [ \"*\" ( INT | \"(\" arith \")\" ) ] { \"?\" [ prob ] } [ \"~\" INT ]",
@@ -112,7 +116,7 @@ fn the_grammar_is_one_block_with_the_booths_lines_left_out() {
         assert!(g.contains(p), "the grammar lost `{p}`:\n{g}");
     }
     // the later definition replaced the earlier one of its name
-    for name in ["statement", "headed", "control", "when", "value", "term", "arg", "param", "target", "mut_target"] {
+    for name in ["statement", "headed", "control", "engine", "when", "value", "term", "arg", "param", "target", "mut_target"] {
         assert_eq!(g.lines().filter(|l| l.starts_with(&format!("{name} = "))).count(), 1, "{name} is defined once");
     }
     // the desktop booth's actions and the snippet import are not for the web

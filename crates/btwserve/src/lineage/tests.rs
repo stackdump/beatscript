@@ -212,3 +212,31 @@ fn the_program_page_names_its_forks() {
     assert!(page::with_fork_line(html, "zABC", 0).contains("no forks yet"));
     assert_eq!(page::with_fork_line("no main", "z", 1), "no main");
 }
+
+/// The curation signal (roadmap 6670): how many public programs call or borrow a CID or a generator call, and how many
+/// vendored it (a `# from:` line saved as `meta.based_on`). A private program counts for nothing.
+#[test]
+fn a_call_and_its_cid_count_who_draws_on_them() {
+    btwapi::generate::install();
+    let d = tempfile::tempdir().unwrap();
+    let p = d.path();
+    let call = "gen@2 techno seed=42 section=drop part=bass";
+    let calls = format!("tempo 128\nkey c\nlet bed = {call}\nsection groove 4 bars {{\n  deck A: bass bed\n}}\narrange groove\n");
+    let a = put(p, &calls, json!({"visibility": "public"}));
+    let b = put(p, &format!("{calls}deck B: arp c4 e4 g4 e4\n"), json!({"visibility": "public"}));
+    let _hidden = put(p, &format!("{calls}deck B: arp c4 ~ g4 ~\n"), json!({"visibility": "private"}));
+    let site = &djlive::refs::sites(&calls, &btwapi::web_env().env()).unwrap()[0];
+    let pin = site.resolved.clone().unwrap();
+    // one that vendored it: the notes, and the `# from:` line its save kept
+    let ej = djlive::refs::eject(&calls, &btwapi::web_env().env(), calls.find("gen@2").unwrap()).unwrap().unwrap();
+    let v = put(p, &ej, json!({"visibility": "public", "based_on": [format!("{call} -> {pin}")]}));
+    let l = Lineage::new(p, Vec::new());
+    l.refresh(true);
+    assert_eq!(l.curation(call), Curation { referenced_by: 2, vendored_from: 1 });
+    assert_eq!(l.curation(&pin), Curation { referenced_by: 2, vendored_from: 1 });
+    assert_eq!(l.curation("gen@2 techno seed=43 section=drop part=bass"), Curation::default());
+    // and a node's JSON-LD carries it (none of these is itself drawn on)
+    let n = l.node(&a).unwrap();
+    assert_eq!(n.curation, Curation::default());
+    assert!(l.node(&b).is_some() && l.node(&v).is_some());
+}

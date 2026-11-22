@@ -1,11 +1,11 @@
 {
   "name": "beatscript",
   "displayName": "BeatScript (btw)",
-  "description": "BeatScript (btw) for VS Code: highlighting, and through `btwd lsp` diagnostics, quick-fixes, the outline, go to definition, rename, completion, hover, signature help, inlay hints and refactors.",
+  "description": "BeatScript (btw) for VS Code: highlighting, and through `btwd lsp` diagnostics, quick-fixes, the outline, go to definition, rename, completion, hover, signature help, inlay hints, refactors, and a reference's expansion shown, hidden, copied or ejected.",
   "version": "0.1.0",
   "publisher": "stackdump",
   "private": true,
-  "license": "MIT",
+  "license": "UNLICENSED",
   "engines": { "vscode": "^1.82.0" },
   "categories": ["Programming Languages", "Linters"],
   "main": "./extension.js",
@@ -45,8 +45,22 @@
       }
     },
     "commands": [
-      { "command": "btw.restartServer", "title": "BeatScript: Restart the language server" }
-    ]
+      { "command": "btw.restartServer", "title": "BeatScript: Restart the language server" },
+      { "command": "btw.expand.toggle", "title": "BeatScript: Show or hide the expansion of the reference here" },
+      { "command": "btw.expand.all", "title": "BeatScript: Show or hide every reference's expansion" },
+      { "command": "btw.expand.open", "title": "BeatScript: Open the expansion of the reference here beside" },
+      { "command": "btw.expand.copy", "title": "BeatScript: Copy the expansion of the reference here" },
+      { "command": "btw.eject", "title": "BeatScript: Eject the reference here into local text" }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "btw.expand.toggle", "when": "editorLangId == btw" },
+        { "command": "btw.expand.all", "when": "editorLangId == btw" },
+        { "command": "btw.expand.open", "when": "editorLangId == btw" },
+        { "command": "btw.expand.copy", "when": "editorLangId == btw" },
+        { "command": "btw.eject", "when": "editorLangId == btw" }
+      ]
+    }
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

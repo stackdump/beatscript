@@ -4,7 +4,8 @@
 //! would take at the cursor). Candidates come from the place:
 //!
 //! - the tokens before the cursor (after `deck A:` a role or a control word; after a role, pattern terms and `vel=` ...; after
-//!   `inst=` a voice; after `arrange` a section; after `do noun` a verb and its params);
+//!   `inst=` a voice; after `arrange` a section; after `do noun` a verb and its params; in a `gen@2` call its genres, its
+//!   names and their values);
 //! - the parser's `expected` at the cursor, mapped from its prose (`` `bars` ``, "a section name", "a key like am") to
 //!   typed candidates;
 //! - the environment (voices, kits, palettes, the registry's nouns, verbs, params and their options);
@@ -390,7 +391,17 @@ fn line_items(deck: bool) -> Vec<Item> {
     v
 }
 
-/// After `arrange from`: a seed or a template; inside `template(`: the templates, then the phrasebook's ids.
+/// `gen@2`, the seeded generator's call, as an item: `what` says which piece of its program the place takes, `tail` the names
+/// the snippet goes on with.
+fn gen_item(rank: u8, what: &str, example: &str, tail: &str) -> Item {
+    let head = format!("gen@{}", djlive::gen::BARE);
+    Item::new(head.clone(), kind::SNIPPET, rank)
+        .detail(format!("the seeded generator: {what}"))
+        .doc(format!("`{example}`: an engine call, pinned by the CID of the program it prints; it takes the program's key and tempo unless it says its own"))
+        .snippet(format!("{head} ${{1:techno}} seed=${{2:42}}{tail}"))
+}
+
+/// After `arrange from`: a seed, a generator call or a template; inside `template(`: the templates, then the phrasebook's ids.
 fn from_items(toks: &[djlive::lex::Token]) -> Vec<Item> {
     let template = toks.iter().position(|t| matches!(&t.tok, Tok::Word(w) if w == "template"));
     match template {
@@ -401,6 +412,7 @@ fn from_items(toks: &[djlive::lex::Token]) -> Vec<Item> {
                 .doc("`arrange from template(deep-house, @tempest_such_stuff)`: the phrase is the vocal line of the track; any words in quotes work too")
                 .snippet("template(${1:deep-house}, ${2:@tempest_such_stuff})"),
             Item::new("seed(", kind::SNIPPET, 1).detail("a track of the beats generator").doc("`arrange from seed(techno, 42)`").snippet("seed(${1:techno}, ${2:42})"),
+            gen_item(1, "its whole program", "arrange from gen@2 techno seed=42", ""),
         ],
         Some(_) if toks.iter().any(|t| t.tok == Tok::Comma) => {
             let mut v: Vec<Item> = djengine::vocal::phoneme::pd_phrases().iter().map(|p| Item::new(format!("@{}", p.id), kind::VALUE, 0).detail(format!("{}: {}", p.family, p.text)).doc(format!("{}, {}, {}", p.work, p.author, p.year))).collect();
@@ -409,6 +421,93 @@ fn from_items(toks: &[djlive::lex::Token]) -> Vec<Item> {
         }
         Some(_) => djlive::template::TEMPLATES.iter().map(|t| Item::new(t.name, kind::VALUE, 0).detail("template").doc(t.summary)).collect(),
     }
+}
+
+/// The program a generator call prints, compiled (no environment: the music is the same on every host), for completion to
+/// read its sections from. `call`: the call's text as far as it is written. A few ms: only after `section=`.
+fn generated(a: &Analysis, call: &str) -> Option<djlive::Compiled> {
+    let r = djlive::gen::resolve_word(call.trim(), &djlive::gen::host_of(&a.tokens)).ok()?;
+    djlive::compile::check_with(&r.text, &djlive::env::Env::none()).compiled
+}
+
+/// Inside a `gen@2` call (refs.rs): after its head the genres of the installed generator; then its names (`seed=` first, it is
+/// required), each once; after a name its values: the lengths, the keys, the roles, and for `section=` the sections of the
+/// program the call prints (generated here). None when the cursor is not in a call (a `gen` of `evolve`'s, or the line's own
+/// params after the call).
+fn gen_items(a: &Analysis, toks: &[djlive::lex::Token]) -> Option<Vec<Item>> {
+    let g = toks.iter().rposition(|t| matches!(&t.tok, Tok::Word(w) if crate::refs::is_gen_head(w)))?;
+    let head = word_of(&toks[g])?;
+    let prev = g.checked_sub(1).and_then(|i| word_of(&toks[i]));
+    let on_part = prev.is_some_and(|p| djlive::parse::ROLES.contains(&p));
+    // a bare `gen` is a call only where one goes (evolve's `gen` is in a `when`)
+    if head == "gen" && !(on_part || prev == Some("from") || g.checked_sub(1).is_some_and(|i| toks[i].tok == Tok::Eq)) {
+        return None;
+    }
+    let version = head.strip_prefix("gen@").and_then(|n| n.parse::<u32>().ok()).unwrap_or(djlive::gen::BARE);
+    let after = &toks[g + 1..];
+    if after.iter().any(|t| !matches!(t.tok, Tok::Word(_) | Tok::Eq | Tok::Num { .. } | Tok::Colon)) {
+        return None;
+    }
+    if after.is_empty() {
+        let genres = djlive::gen::generator().map(|gen| gen.genres(version)).unwrap_or_default();
+        return Some(genres.into_iter().map(|n| Item::new(n, kind::VALUE, 0).detail(format!("a genre of seeded@{version}"))).collect());
+    }
+    // the names said so far; a name that is not the call's ends it (`inst=` of the part line)
+    let names: Vec<(usize, &str)> = after.windows(2).enumerate().filter(|(_, w)| w[1].tok == Tok::Eq).filter_map(|(k, w)| word_of(&w[0]).map(|n| (k, n))).collect();
+    if names.iter().any(|(_, n)| !djlive::gen::PARAMS.contains(n)) {
+        return None;
+    }
+    if after.last().map(|t| &t.tok) == Some(&Tok::Eq) {
+        let &(k, name) = names.last()?;
+        let mut v = Vec::new();
+        match name {
+            "length" => {
+                for l in djlive::gen::LENGTHS {
+                    v.push(Item::new(l, kind::ENUM_MEMBER, 0).detail(if l == "standard" { "the default" } else { "length" }));
+                }
+            }
+            "key" => v.extend(lang::KEYS.iter().map(|k| Item::new(*k, kind::VALUE, 0).detail("key (the program's own when the call says none)"))),
+            "part" => v.extend(djlive::parse::ROLES.iter().map(|r| Item::new(*r, kind::FIELD, 0).detail("role").doc(lang::role_doc(r)))),
+            "section" => {
+                // the program the call prints, as far as it is written: its sections, in the order it plays them
+                let call = &a.text[toks[g].span.start..after[k].span.start];
+                if let Some(c) = generated(a, call) {
+                    let mut seen: Vec<&str> = Vec::new();
+                    for seg in &c.segments {
+                        if seg.header.is_some() && !seg.chain && !seg.name.contains('+') && !seen.contains(&seg.name.as_str()) {
+                            seen.push(&seg.name);
+                            let roles: Vec<&str> = seg.decks.values().flat_map(|d| d.parts.iter().map(|p| p.role.as_str())).filter(|r| djlive::parse::ROLES.contains(r)).collect();
+                            v.push(Item::new(seg.name.clone(), kind::MODULE, 0).detail(format!("{} bars: {}", seg.bars, roles.join(" "))));
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+        return Some(v);
+    }
+    let mut v: Vec<Item> = djlive::gen::PARAMS
+        .iter()
+        .filter(|n| !names.iter().any(|(_, m)| m == *n))
+        .map(|n| {
+            let (rank, doc) = match *n {
+                "seed" => (0, "a whole number or a word (required)"),
+                "bpm" => (1, "a tempo, 40 to 300 (the program's own when not said)"),
+                "key" => (1, "a key (the program's own when not said)"),
+                "length" => (1, "short, standard (the default) or long"),
+                "section" => (1, "which of its sections"),
+                _ => (1, "which part (a role)"),
+            };
+            Item::new(format!("{n}="), kind::PROPERTY, rank).detail(doc).snippet(format!("{n}=$1"))
+        })
+        .collect();
+    // on a part line the line's own params may follow the call
+    if on_part {
+        for (n, d, snip) in lang::PART_PARAMS {
+            v.push(Item::new(format!("{n}="), kind::PROPERTY, 4).doc(*d).snippet(*snip));
+        }
+    }
+    Some(v)
 }
 
 /// The candidates the tokens before the cursor call for.
@@ -440,6 +539,10 @@ fn context_items(a: &Analysis, p: &Partial, at: usize, env: &EnvNames) -> Vec<It
         }
         return Vec::new();
     }
+    // in a generator call: its genres, names and values
+    if let Some(v) = gen_items(a, toks) {
+        return v;
+    }
     // `name=`: the value
     if last == Some(&Tok::Eq) && !matches!(before_last, Some(Tok::Eq | Tok::Lt | Tok::Gt | Tok::Bang)) {
         if let Some(Tok::Word(param)) = before_last {
@@ -450,6 +553,7 @@ fn context_items(a: &Analysis, p: &Partial, at: usize, env: &EnvNames) -> Vec<It
         if words.first() == Some(&"let") {
             let mut v = call_items(1, |_| true);
             v.extend(symbol_items(a, &[Kind::Let, Kind::Section], 2));
+            v.push(gen_item(3, "one part of a section of its program, a let a bar", "let bed = gen@2 techno seed=42 section=drop part=bass", " section=${3:drop} part=${4:bass}"));
             return v;
         }
     }
@@ -551,6 +655,9 @@ fn context_items(a: &Analysis, p: &Partial, at: usize, env: &EnvNames) -> Vec<It
     }
     if head == "end" && words.len() == 1 {
         return vec![Item::new("at bar", kind::KEYWORD, 0).snippet("at bar ${1:64}"), Item::new("after", kind::KEYWORD, 0).snippet("after ${1:outro}")];
+    }
+    if head == "section" && toks.len() == 3 && words.get(2) == Some(&"from") {
+        return vec![gen_item(0, "a section of its program", "section hook from gen@2 techno seed=42 section=drop", " section=${3:drop}")];
     }
     if head == "section" && words.len() == 2 && toks.len() == 3 {
         return vec![Item::new("bars", kind::KEYWORD, 0).snippet("bars {\n  $0\n}")];

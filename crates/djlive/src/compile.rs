@@ -865,9 +865,20 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
     // canonical text (and so the CID) is still the program as written, with its references (seed.rs, template.rs, stored.rs; a
     // template's expansion may hold seeds and a seed's a stored reference, which the check of it writes out in turn). What a
     // stored program's text is comes from the host's snippets; the programs it drew on are carried by the link (`plays`).
+    // a `gen` call (gen.rs) is resolved to the program the generator makes for it; its part lines and sections are then that
+    // program's, borrowed as a stored program's are, with it known for as long as this check runs (`with_generated`)
+    let mut generated: Vec<(String, String)> = Vec::new();
     let expanded = crate::template::expand(src, env)
         .or_else(|| crate::seed::expand(src))
         .map(|r| r.map(|e| (e, Vec::new())))
+        .or_else(|| {
+            crate::gen::expand(src).map(|r| {
+                r.map(|(e, progs)| {
+                    generated = progs;
+                    (e, Vec::new())
+                })
+            })
+        })
         .or_else(|| crate::stored::expand(src, env));
     if let Some(exp) = expanded {
         let (exp, uses) = match exp {
@@ -879,7 +890,7 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
             }
         };
         // (a scene of a program that holds references is the scene of what they stand for)
-        let mut chk = check_mode_in(&exp.text, env, enforce, scene);
+        let mut chk = crate::gen::with_generated(&generated, || check_mode_in(&exp.text, env, enforce, scene));
         for d in &mut chk.diagnostics {
             d.span = exp.back(d.span);
         }
@@ -893,6 +904,10 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
             c.notes = parsed.comments.iter().map(|sp| sp.text(src).trim_start_matches('#').trim().to_string()).filter(|n| !n.is_empty()).collect();
             // the programs a reference drew on go with the program
             for (cid, text) in uses {
+                // (a generated program is no program a link need carry: the call makes it again)
+                if crate::gen::generated(&cid).is_some() {
+                    continue;
+                }
                 if !c.plays.iter().any(|(x, _)| *x == cid) {
                     c.plays.push((cid, text));
                 }

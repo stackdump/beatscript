@@ -913,7 +913,7 @@ impl Docs {
         b.push_str(&format!("- Share link: {p}/#<CID>.<base64url(deflate(canonical text))>. The CID is of the canonical text, so formatting and comments never change it.\n\n"));
         b.push_str("## Docs\n");
         if self.read_doc("BTW.md").is_some() {
-            b.push_str(&format!("- [BTW.md]({p}/docs/BTW.md): the language reference: grammar (EBNF), mini-notation, control lines, evolve, canonical form, share links\n"));
+            b.push_str(&format!("- [BTW.md]({p}/docs/BTW.md): the language reference: its two halves (structure, the track's own source, and engine calls, pinned and versioned), grammar (EBNF), mini-notation, control lines, evolve, canonical form, share links\n"));
         }
         if self.cheatsheet().is_some() {
             b.push_str(&format!("- [cheatsheet.md]({p}/docs/cheatsheet.md): the compact grammar, the same text the compose prompt uses; read this first\n"));
@@ -1411,7 +1411,9 @@ mod tests {
         }
         // every theme id the page writes in backticks is a theme of the library (`word_word` that is no phrasebook line)
         for tok in FORMS_MD.split('`').skip(1).step_by(2) {
-            if tok.contains('_') && !tok.contains(' ') && !tok.contains('*') && !tok.contains('(') && !tok.contains('/') && djengine::vocal::phoneme::pd_phrase(tok.trim_start_matches('@')).is_none() && !["genre_template", "list_examples"].contains(&tok) {
+            // (a role's lets and sections are named for the role: `a_melody`, `b_leads`, `ep_ground`, docs/btw/ext-roles.md)
+            let role_name = ["a_", "b_", "ep_"].iter().any(|p| tok.starts_with(p));
+            if tok.contains('_') && !role_name && !tok.contains('=') && !tok.contains(' ') && !tok.contains('*') && !tok.contains('(') && !tok.contains('/') && djengine::vocal::phoneme::pd_phrase(tok.trim_start_matches('@')).is_none() && !["genre_template", "list_examples"].contains(&tok) {
                 let bar_of = tok.rsplit_once('_').filter(|(_, n)| n.bytes().all(|c| c.is_ascii_digit())).map(|(t, _)| t);
                 assert!(djengine::themes::theme(tok).is_some() || bar_of.is_some_and(|t| djengine::themes::theme(t).is_some()), "the page names `{tok}`, which is no theme (nor a theme's bar)");
             }

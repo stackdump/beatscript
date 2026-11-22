@@ -15,11 +15,13 @@
       "referencesProvider": true,
       "documentHighlightProvider": true,
       "renameProvider": {"prepareProvider":true},
-      "experimental": {"btw":{"numberAt":true,"diagnostics":true}},
+      "experimental": {"btw":{"numberAt":true,"diagnostics":true,"expand":true}},
       "codeActionProvider": {
         "codeActionKinds": ["quickfix","source.fixAll.btw","refactor.extract","refactor.inline","refactor.rewrite"],
         "resolveProvider": true
-      }
+      },
+      "codeLensProvider": {"resolveProvider":false},
+      "executeCommandProvider": {"commands":["btw.expand.toggle","btw.expand.copy","btw.eject"]}
     },
     "serverInfo": {"name":"btwls","version":"0.1.0"}
   }

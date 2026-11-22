@@ -64,6 +64,20 @@ struct Entry {
     forked_from: String,
     credits: Vec<String>,
     created: String,
+    /// What it is based on (djlive::refs::based_on): (the call or reference, the CID it resolves to, `called` / `borrowed` /
+    /// `vendored`). Vendored parts come from `meta.based_on` (`["<call> -> <cid>"]`, the `# from:` lines its text had when it
+    /// was saved: the canonical text has no comments).
+    bases: Vec<(String, Option<String>, &'static str)>,
+}
+
+/// How often public programs draw on a CID or a call: the curation signal (roadmap 6670): what is imported, called and vendored
+/// is what is good.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Curation {
+    /// Public programs whose text calls or borrows it.
+    pub referenced_by: usize,
+    /// Public programs that vendored it (an eject's `# from:` line).
+    pub vendored_from: usize,
 }
 
 /// What the tree shows of one program: what its rights say and what its text compiles to.
@@ -83,6 +97,8 @@ pub struct Node {
     pub fork_count: usize,
     /// The rights name a parent that may not be shown: `forked_from` is then empty, so its CID is not told.
     pub parent_hidden: bool,
+    /// How many public programs call, borrow or vendored this one (by its CID).
+    pub curation: Curation,
 }
 
 impl Node {
@@ -144,6 +160,8 @@ struct Index {
     files: HashMap<String, Option<Entry>>,
     /// parent CID -> the public files that name it (sorted, so trees are stable).
     children: HashMap<String, BTreeSet<String>>,
+    /// A CID or a call (`gen@2 techno seed=42 section=drop part=bass`) -> the public files that reference it, and that vendored it.
+    referenced: HashMap<String, (BTreeSet<String>, BTreeSet<String>)>,
 }
 
 pub struct Lineage {
@@ -215,15 +233,30 @@ fn read_file(path: &Path, cid: &str) -> Option<Entry> {
     }
     let credits = m.get("credits").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
     let forked = s("forked_from");
-    Some(Entry { name: s("name"), license: s("license"), author: s("author"), forked_from: if is_cid(&forked) { forked } else { String::new() }, credits, created: s("created") })
+    // what it is based on: the calls and borrows of its text, and what its saved `# from:` lines say it vendored
+    let notes: Vec<String> = m.get("based_on").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(|l| format!("from: {l}")).collect()).unwrap_or_default();
+    let bases = djlive::refs::based_on(text, &notes).into_iter().map(|b| (b.call, b.cid, b.how)).collect();
+    Some(Entry { name: s("name"), license: s("license"), author: s("author"), forked_from: if is_cid(&forked) { forked } else { String::new() }, credits, created: s("created"), bases })
 }
 
 impl Lineage {
     pub fn new(dir: &Path, examples: Vec<Example>) -> Lineage {
+        // a call's CID is the program the generator prints for it
+        btwapi::generate::install();
+        let examples: HashMap<String, Example> = examples.into_iter().filter(|e| is_cid(&e.cid)).map(|e| (e.cid.clone(), e)).collect();
+        // the examples draw on calls and programs too: they count like any public program
+        let mut ix = Index::default();
+        for (cid, e) in &examples {
+            for b in djlive::refs::based_on(&e.text, &[]) {
+                for k in std::iter::once(b.call).chain(b.cid) {
+                    ix.referenced.entry(k).or_default().0.insert(cid.clone());
+                }
+            }
+        }
         Lineage {
             dir: dir.to_path_buf(),
-            examples: examples.into_iter().filter(|e| is_cid(&e.cid)).map(|e| (e.cid.clone(), e)).collect(),
-            index: Mutex::new(Index::default()),
+            examples,
+            index: Mutex::new(ix),
             facts: Mutex::new(HashMap::new()),
             diffs: Mutex::new(HashMap::new()),
         }
@@ -247,6 +280,12 @@ impl Lineage {
             if let Some(en) = &ent {
                 if !en.forked_from.is_empty() && en.forked_from != cid {
                     ix.children.entry(en.forked_from.clone()).or_default().insert(cid.to_string());
+                }
+                for (call, resolves, how) in &en.bases {
+                    for k in std::iter::once(call.clone()).chain(resolves.clone()) {
+                        let e = ix.referenced.entry(k).or_default();
+                        if *how == "vendored" { e.1.insert(cid.to_string()) } else { e.0.insert(cid.to_string()) };
+                    }
                 }
             }
             ix.files.insert(cid.to_string(), ent);
@@ -303,6 +342,7 @@ impl Lineage {
         };
         let f = if example { self.facts(cid, || Some(self.examples[cid].text.clone())) } else { self.facts(cid, || self.stored_text(cid)) }?;
         let fork_count = self.forks_of(cid).len();
+        let curation = self.curation(cid);
         let parent_hidden = !ent.forked_from.is_empty() && !self.shown(&ent.forked_from);
         Some(Node {
             cid: cid.to_string(),
@@ -317,6 +357,7 @@ impl Lineage {
             tempo: f.tempo,
             key: f.key,
             fork_count,
+            curation,
         })
     }
 
@@ -339,6 +380,14 @@ impl Lineage {
         }
         let ok = matches!(self.index.lock().unwrap().files.get(cid), Some(Some(_)));
         ok && self.facts(cid, || self.stored_text(cid)).is_some()
+    }
+
+    /// How often public programs draw on `key`, a CID or a call (`gen@2 techno seed=42 section=drop part=bass`, as its canonical
+    /// text spells it): the programs that may be shown, counted once each.
+    pub fn curation(&self, key: &str) -> Curation {
+        self.refresh(false);
+        let (r, v) = self.index.lock().unwrap().referenced.get(key).cloned().unwrap_or_default();
+        Curation { referenced_by: r.iter().filter(|c| self.shown(c)).count(), vendored_from: v.iter().filter(|c| self.shown(c)).count() }
     }
 
     /// How many public programs were forked from `cid` (0 for one that may not be shown).
@@ -547,6 +596,13 @@ impl Node {
             m.insert("example".into(), json!(true));
         }
         m.insert("forkCount".into(), json!(self.fork_count));
+        // the curation signal: how many public programs call or borrow it, and vendored it
+        if self.curation.referenced_by > 0 {
+            m.insert("referencedBy".into(), json!(self.curation.referenced_by));
+        }
+        if self.curation.vendored_from > 0 {
+            m.insert("vendoredFrom".into(), json!(self.curation.vendored_from));
+        }
         Value::Object(m)
     }
 }

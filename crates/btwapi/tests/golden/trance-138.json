@@ -113,7 +113,8 @@
         "name": "deckA",
         "doc": "a deck's parts, whatever bars they have in a section"
       }
-    ]
+    ],
+    "expanded_cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ"
   },
   "fmt": {
     "ok": true,

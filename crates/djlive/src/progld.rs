@@ -128,6 +128,34 @@ pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
         d.set("section", JsonValue::Array(secs));
     }
     d.set("text", JsonValue::str(c.text.clone()));
+    // what it is based on (refs.rs `based_on`): the engine calls and borrows its text makes, each with the CID it resolves to,
+    // and what an eject vendored into it (its `# from:` lines); outside the CID, like the doc comments
+    let basis = crate::refs::based_on(&c.text, &c.notes);
+    if !basis.is_empty() {
+        let generator = crate::gen::generator().map(|g| g.name().to_string());
+        let items: Vec<JsonValue> = basis
+            .iter()
+            .map(|b| {
+                let mut o = JsonObject::from_pairs([("@type", JsonValue::str("CreativeWork")), ("name", JsonValue::str(b.call.clone()))]);
+                if let Some(cid) = &b.cid {
+                    o.set("resolves", JsonValue::str(cid.clone()));
+                }
+                if let (Some(v), Some(g)) = (b.call.strip_prefix("gen@").and_then(|r| r.split(' ').next()), &generator) {
+                    o.set("pinnedGenerator", JsonValue::str(format!("{g}@{v}")));
+                }
+                o.set("derivation", JsonValue::str(b.how));
+                JsonValue::Object(o)
+            })
+            .collect();
+        d.set("isBasedOn", JsonValue::Array(items));
+    }
+    // a recipe (a program with references) and the program it writes out to: the expanded CID (refs.rs `expanded`); a borrow
+    // needs the host's programs, so only what resolves without one is said here
+    if let Ok(Some((_, x))) = crate::refs::expanded(&c.text, &crate::env::Env::none()) {
+        if x != c.cid {
+            d.set("expandsTo", JsonValue::str(x));
+        }
+    }
     if let Some(a) = f.author.filter(|a| !a.is_empty()) {
         d.set("author", JsonValue::str(a));
     }
@@ -255,6 +283,14 @@ pub fn schema_context() -> JsonValue {
     c.set("encoding", term("schema:encoding", false));
     c.set("signature", JsonValue::str("bs:signature"));
     c.set("author", JsonValue::str("bs:author"));
+    // provenance: what a program is based on (schema.org's `isBasedOn`, each entry a CreativeWork named by its call), the CID
+    // each resolves to, the generator version pinned, and how it came in; a recipe's written-out program, and back
+    c.set("isBasedOn", JsonValue::Object(JsonObject::from_pairs([("@id", JsonValue::str("schema:isBasedOn")), ("@container", JsonValue::str("@set"))])));
+    c.set("resolves", term("bs:resolves", false));
+    c.set("pinnedGenerator", JsonValue::str("bs:pinnedGenerator"));
+    c.set("derivation", JsonValue::str("bs:derivation"));
+    c.set("expandsTo", term("bs:expandsTo", false));
+    c.set("expandedFrom", term("bs:expandedFrom", false));
     // a documented section: `name` and `description` are schema.org's
     c.set("section", JsonValue::Object(JsonObject::from_pairs([("@id", JsonValue::str("bs:section")), ("@container", JsonValue::str("@list"))])));
     JsonValue::Object(JsonObject::from_pairs([("@context", JsonValue::Object(c))]))

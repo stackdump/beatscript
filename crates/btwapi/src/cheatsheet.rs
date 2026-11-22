@@ -41,7 +41,7 @@ const PLAN: &[(&str, &[Keep])] = &[
     ("## Patterns: mini-notation", &[Keep::Code, Keep::Bullets]),
     ("### Generators", &[Keep::Table]),
     ("### Parameters", &[Keep::Table, Keep::Para("A **range**")]),
-    // (the second paragraph, a tempo that moves, is the grammar's `stempo` and its examples: tempo 100 -> 130 over 8 bars exp)
+    // (the second paragraph, a tempo that moves, is the grammar's `tempo` and its examples: tempo 100 -> 130 over 8 bars exp)
     ("### Settings", &[Keep::First]),
     ("## Control", &[Keep::FirstColumn]),
     ("### Time words", &[Keep::First, Keep::Table]),
@@ -330,7 +330,8 @@ fn merged_grammar(secs: &[Section], missing: &mut Vec<String>) -> String {
         match name.as_str() {
             // (`sample` and `use` are of a program that is never public: the page checks them, it cannot play them)
             "MOVE" | "SPEC" | "import" | "sample" | "license" | "use" => continue,
-            "action" => {
+            // (`engine` is what the control deck takes: the booth's lines, and a timed `tempo`)
+            "action" | "engine" => {
                 lines.retain(|(c, _)| !booth_alt(c));
                 // the first alternative may be gone: the next one starts the production
                 if let Some(first) = lines.first_mut() {

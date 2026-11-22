@@ -1,5 +1,6 @@
 //! btwls: the btw language service. Everything an editor asks of a language (diagnostics, quick-fixes, the outline, go to
-//! definition, references, rename, completion, hover, signature help, inlay hints, refactors) as pure functions of the text,
+//! definition, references, rename, completion, hover, signature help, inlay hints, refactors, and a program's references to a
+//! generator, a seed, a stored program or a template shown, hidden and ejected: [`refs`]) as pure functions of the text,
 //! shaped like LSP so that one [`Server`] answers both `btwd lsp` (stdio, any LSP client: VS Code, IntelliJ via LSP4IJ,
 //! Neovim, Helix) and the browser editor (djweb's `BtwLs`, the same JSON through wasm).
 //!
@@ -21,6 +22,7 @@ pub mod lang;
 pub mod nav;
 pub mod number;
 pub mod refactor;
+pub mod refs;
 pub mod server;
 pub mod text;
 pub mod timeline;
