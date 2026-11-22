@@ -11,6 +11,7 @@
 //   js/                        the editor's engine, unchanged (engine.js, its worklet and composer, the facade)
 //   wasm/btw.js                the wasm-bindgen glue    wasm/btw_bg.wasm.b64.js   the module, base64, as an ES module
 //   test/csp.html              a page under an artifact-like CSP that plays a program
+//   beatscript-track.d.ts      its types                LICENSE, LICENSES/         MIT (code), CC0-1.0 (programs, data)
 //   package.json, README.md, hashes.json (sha256 of every file, and the module's own hashes.json)
 // The module is inlined so that nothing is fetched (a page whose connect-src is 'self' cannot fetch a .wasm from a CDN,
 // but it can import a script from one). No npm, no bundler: files are copied as they are.
@@ -43,9 +44,16 @@ fs.mkdirSync(path.join(out, 'test'), { recursive: true });
 const cp = (from, to) => fs.copyFileSync(from, path.join(out, to));
 cp(path.join(here, 'src', 'beatscript-track.js'), 'beatscript-track.js');
 cp(path.join(here, 'src', 'beatscript-track.umd.js'), 'beatscript-track.umd.js');
+cp(path.join(here, 'src', 'beatscript-track.d.ts'), 'beatscript-track.d.ts');
 cp(path.join(here, 'src', 'package.json'), 'package.json');
 cp(path.join(here, 'README.md'), 'README.md');
 cp(path.join(here, 'test', 'csp.html'), 'test/csp.html');
+// the licences: the code is MIT; the bundled programs (test/csp.html's) and the engine's data (kits, voices, the sing
+// tables, built into the wasm) are CC0-1.0, as REUSE.toml says for the repository
+const repo = path.join(here, '..', '..');
+cp(path.join(repo, 'LICENSE'), 'LICENSE');
+fs.mkdirSync(path.join(out, 'LICENSES'), { recursive: true });
+for (const f of ['MIT.txt', 'CC0-1.0.txt']) cp(path.join(repo, 'LICENSES', f), `LICENSES/${f}`);
 for (const f of ENGINE) cp(path.join(web, 'js', f), `js/${f}`);
 cp(path.join(wasmDir, 'btw.js'), 'wasm/btw.js');
 const wasm = fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm'));
@@ -62,6 +70,11 @@ for (const dir of ['', 'js', 'wasm']) {
     }
     if (/https?:\/\/beatscript\.app\/(?!p\/|docs|#)/.test(src)) throw new Error(`${path.join(dir, f)} names a beatscript.app URL that is not a plain link`);
   }
+}
+
+// every path package.json's "files" names must be in the package, or npm publishes without it
+for (const f of JSON.parse(fs.readFileSync(path.join(out, 'package.json'), 'utf8')).files || []) {
+  if (f !== 'hashes.json' && !fs.existsSync(path.join(out, f))) throw new Error(`package.json files names ${f}, which the package does not have`);
 }
 
 const files = {};
