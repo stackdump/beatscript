@@ -30,7 +30,7 @@
 #
 # Environment (the defaults are the production values):
 #   PIN          the commit to deploy (default HEAD; HEAD must equal it)
-#   HOST         the serving host over ssh                       (pflow.dev)
+#   HOST         the serving host over ssh; `local`: this machine (pflow.dev)
 #   APP_DIR      the checkout there, relative to its $HOME        (Workspace/beatscript)
 #   DATA_DIR     btwserve's data dir there, relative to $HOME     (Workspace/btw-bitwrap-io/data, where it has always been)
 #   PUBLIC_URL   the public origin                                (https://beatscript.app)
@@ -62,7 +62,8 @@ SHA7=$(git rev-parse --short=7 "$PIN")
 VERSION=btwserve-$SHA7
 BIN=site/bin/btwserve-$SHA7
 
-r() { ssh -o BatchMode=yes "$HOST" "$@"; }
+# HOST=local runs the host side here, from $HOME, as ssh would (deploy/test-host.sh drives `host` that way)
+r() { if [ "$HOST" = local ]; then (cd "$HOME" && bash -c "$*"); else ssh -o BatchMode=yes "$HOST" "$@"; fi; }
 say() { printf '\n== deploy %s: %s\n' "$VERSION" "$*"; }
 
 preflight() {
@@ -96,11 +97,25 @@ set -euo pipefail
 test -d "$DATA" || { echo "deploy: no data dir $DATA on the host" >&2; exit 1; }
 if [ ! -d "$APP/.git" ]; then git clone -q --no-checkout "$REPO" "$APP"; fi
 cd "$APP"
-if [ -n "$(git status --porcelain --untracked-files=no 2>/dev/null)" ]; then echo "deploy: $APP has local changes: refusing" >&2; git status --short >&2; exit 1; fi
 git fetch -q origin main
 git cat-file -e "$PIN^{commit}"
-git checkout -q --detach "$PIN"
+if [ ! -e .git/index ]; then
+  # never checked out: the --no-checkout clone just made, or one a failed deploy left behind. It has no index, so
+  # `git status` lists every tracked file as a staged deletion: that is not a local change, and checking the pin out
+  # is safe, but only into a work tree that holds nothing but .git.
+  stray=$(ls -A | grep -vx '\.git' || true)
+  [ -z "$stray" ] || { echo "deploy: $APP was never checked out but holds files: refusing" >&2; printf '%s\n' "$stray" | head -20 >&2; exit 1; }
+  # (with PIN = HEAD a bare `checkout` moves nothing and leaves the index empty: reset fills index and work tree)
+  git checkout -q --detach "$PIN"
+  git reset -q --hard
+else
+  if [ -n "$(git status --porcelain --untracked-files=no)" ]; then echo "deploy: $APP has local changes: refusing" >&2; git status --short | head -40 >&2; exit 1; fi
+  git checkout -q --detach "$PIN"
+fi
 test "$(git rev-parse HEAD)" = "$PIN"
+# the checkout is PIN, whole: no tracked file missing or changed
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then echo "deploy: $APP is not a clean checkout of $PIN after checkout" >&2; git status --short | head -40 >&2; exit 1; fi
+test -f deploy/deploy.sh || { echo "deploy: $APP has no deploy/deploy.sh at $PIN: the work tree is not populated" >&2; exit 1; }
 test ! -e data || { echo "deploy: $APP/data exists; btwserve's data is $DATA (absolute), never inside the checkout" >&2; exit 1; }
 mkdir -p site/bin site/web/wasm site/web/docs
 echo "host checkout $(git log -1 --format='%h %s')"

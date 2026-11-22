@@ -27,7 +27,7 @@ audio host), a git dependency pinned in `Cargo.toml`.
 | `examples/` | example and reference programs |
 | `editors/` | VS Code and IntelliJ support (`btwd lsp`) |
 | `site/` | the web editor, embed and npm player, site examples, API docs source, tests (with its history from beats-bitwrap-io) |
-| `deploy/` | `deploy.sh` (build and deploy from one commit) and `live-checks.sh` (every live check) |
+| `deploy/` | `deploy.sh` (build and deploy from one commit), `live-checks.sh` (every live check) and `test-host.sh` (the host checkout step against scratch dirs, in CI) |
 | `scripts/` | the wasm and Linux builds, the build-host picker, the public-build guard |
 | `tools/` | lexicon, listening tests, MCP catalogue, ontology, open-data dump |
 

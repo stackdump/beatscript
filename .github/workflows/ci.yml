@@ -66,3 +66,11 @@ jobs:
         with:
           node-version: 22
       - run: node --test site/test/unit.mjs
+
+  deploy:
+    name: deploy host checkout (shell)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash -n deploy/deploy.sh && bash -n deploy/live-checks.sh
+      - run: bash deploy/test-host.sh
