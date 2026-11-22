@@ -9,15 +9,44 @@
 # 6672/6679/6689/6690); they are copied here verbatim, only the paths changed for this one repo. After them:
 # crates/btwserve/deploy/mcp-exposure.py (the MCP exposure table live, 6679), site/deploy/deploy.sh
 # verify-beatscript, and the live smoke steps 5, 13 and 14 in headless Chrome (CHROME, default /usr/bin/google-chrome).
-set -e
+#
+# A failing check names itself: the ERR trap prints "LIVE CHECK FAILED: line N (exit C): <command>" on stderr, and the
+# script exits with that command's code. (The second cutover, 2026-11-22, rolled back on a curl that timed out, exit
+# 28, inside `EH=$(curl ...)`: set -e alone exits there without a word, so no check said FAIL.) -E carries the trap
+# into the functions below, where a bare set -e exits silently too.
+#
+# curl retries a transport failure, and only that: no answer at all (exit 6 resolve, 7 connect, 28 timeout, 35 TLS,
+# 52 empty reply, 55 send, 56 receive) is tried again up to LIVE_CHECK_RETRIES times (default 3), LIVE_CHECK_RETRY_S
+# apart (default 5), which rides out a short network gap on the ops machine's side. Any answer the server gives, of
+# any status, is judged exactly as before; a check never passes on a retry that a single good answer would fail.
+set -eE
 cd "$(dirname "$0")/.."
+# (only the main shell says it: a $(...) that fails is reported once, as the command that holds it)
+trap 'rc=$?; [ "$BASHPID" != $$ ] || echo "LIVE CHECK FAILED: deploy/live-checks.sh line $LINENO (exit $rc): $BASH_COMMAND" >&2' ERR
 # the live smoke writes its screenshots over the tracked site/test/shots/*.png: put them back, so a deploy leaves the
 # checkout clean (the next deploy's preflight refuses a dirty tree)
 trap 'git checkout -q -- site/test/shots 2>/dev/null; git clean -qf -- site/test/shots >/dev/null 2>&1' EXIT
+curl() {
+  local t rc n=0
+  t=$(mktemp)
+  while :; do
+    command curl "$@" >"$t" && rc=0 || rc=$?
+    case $rc in 6|7|28|35|52|55|56) ;; *) break ;; esac
+    [ "$n" -lt "${LIVE_CHECK_RETRIES:-3}" ] || break
+    n=$((n + 1))
+    echo "live-checks: curl exit $rc, no answer (transport): retry $n of ${LIVE_CHECK_RETRIES:-3} in ${LIVE_CHECK_RETRY_S:-5} s: curl $*" >&2
+    sleep "${LIVE_CHECK_RETRY_S:-5}"
+  done
+  # (`curl ... | grep -q` closes the pipe at its first match: a cat cut short there is not a failed check)
+  cat "$t" 2>/dev/null || :
+  rm -f "$t"
+  return "$rc"
+}
 U=${1:-https://beatscript.app}
 V=${2:?usage: deploy/live-checks.sh <public url> <btwserve version, e.g. btwserve-abc1234>}
-for i in $(seq 1 30); do curl -s -m 5 $U/healthz | grep -q $V && break; sleep 2; done
-curl -s -m 10 $U/healthz | tee /dev/stderr | grep -q $V
+for i in $(seq 1 30); do command curl -s -m 5 $U/healthz | grep -q $V && break; sleep 2; done
+# (shown on stderr without `tee /dev/stderr`, which reopens a redirected stderr file and truncates the log)
+HZ=$(curl -s -m 10 $U/healthz); printf '%s\n' "$HZ" >&2; printf '%s' "$HZ" | grep -q $V
 for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /embed.js /js/embed-player.js; do
   c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U$p); echo "$p $c"; test "$c" = 200
 done

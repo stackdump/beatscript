@@ -72,5 +72,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash -n deploy/deploy.sh && bash -n deploy/live-checks.sh
+      - run: bash -n deploy/deploy.sh && bash -n deploy/live-checks.sh && bash -n deploy/test-live-checks.sh
       - run: bash deploy/test-host.sh
+      - run: bash deploy/test-live-checks.sh

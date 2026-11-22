@@ -20,6 +20,9 @@
 #   deploy/deploy.sh status       the host checkout, the btw-rust entry, /healthz, the deploy log's tail
 #
 # `all` rolls back by itself when restart or check fails (NO_ROLLBACK=1 leaves the new version up to look at).
+# Every failure names itself on stderr: the step, and the line, command and exit code that stopped it; `all` ends a
+# rollback with "deploy: ROLLED BACK ... step <step> failed (exit <code>)" and exits with that code. (The second
+# cutover, 2026-11-22, rolled back after a live check exited 28 without a word, so nothing said which step or why.)
 # A rollback after the cutover from the old layout restores the old entry exactly (its dir is untouched); after
 # later deploys it puts back the previous CMD and its own binary, but the checkout and the wasm stay at the new pin:
 # for a full return, deploy the previous pin.
@@ -41,9 +44,13 @@
 #   BTWD_BUILD_DIR, BTW_WASM_BUILD_DIR  the build host's scratch dirs (beatscript-web-build, beatscript-wasm-build)
 #   CHROME       Chrome for the live smoke                        (/usr/bin/google-chrome)
 #   NO_ROLLBACK  1: `all` leaves a failed deploy up
-set -euo pipefail
+set -eEuo pipefail
 cd "$(dirname "$0")/.."
 root=$(pwd -P)
+STEP=start
+# -E: the trap runs inside the step functions too. Inside `if restart && check` it does not run (bash suppresses ERR
+# there, as it does set -e): `all` reports that pair itself. Only the main shell says it, once per failure.
+trap 'rc=$?; [ "$BASHPID" != $$ ] || echo "deploy: FAILED in step $STEP: deploy/deploy.sh line $LINENO (exit $rc): $BASH_COMMAND" >&2' ERR
 
 HOST=${HOST:-pflow.dev}
 APP_DIR=${APP_DIR:-Workspace/beatscript}
@@ -64,7 +71,7 @@ BIN=site/bin/btwserve-$SHA7
 
 # HOST=local runs the host side here, from $HOME, as ssh would (deploy/test-host.sh drives `host` that way)
 r() { if [ "$HOST" = local ]; then (cd "$HOME" && bash -c "$*"); else ssh -o BatchMode=yes "$HOST" "$@"; fi; }
-say() { printf '\n== deploy %s: %s\n' "$VERSION" "$*"; }
+say() { STEP=$1; printf '\n== deploy %s: %s\n' "$VERSION" "$*"; }
 
 preflight() {
   say "preflight"
@@ -91,7 +98,7 @@ build() {
 }
 
 host() {
-  say "host checkout"
+  say host "checkout"
   r "APP=\$HOME/$APP_DIR DATA=\$HOME/$DATA_DIR PIN=$PIN REPO=$REPO_URL bash -s" <<'EOS'
 set -euo pipefail
 test -d "$DATA" || { echo "deploy: no data dir $DATA on the host" >&2; exit 1; }
@@ -181,14 +188,16 @@ restart() {
   say "restart"
   # (called inside `if` by `all`: the last line decides)
   r "~/services restart $SERVICE >/dev/null; for i in \$(seq 1 60); do curl -sf -m 2 http://127.0.0.1:$PORT/healthz | grep -q '\"version\":\"$VERSION\"' && break; sleep 1; done; curl -s -m 5 http://127.0.0.1:$PORT/healthz; echo"
-  r "curl -sf -m 5 http://127.0.0.1:$PORT/healthz | grep -q '\"version\":\"$VERSION\"'" || { echo "deploy: :$PORT/healthz does not report $VERSION" >&2; return 1; }
+  local rc
+  r "curl -sf -m 5 http://127.0.0.1:$PORT/healthz | grep -q '\"version\":\"$VERSION\"'" || { rc=$?; echo "deploy: :$PORT/healthz does not report $VERSION (exit $rc)" >&2; return "$rc"; }
 }
 
 check() {
-  say "live checks"
+  say check "(the live checks)"
   # (called inside `if` by `all`, where set -e is off: every step returns its own failure)
-  r "cd \$HOME/$APP_DIR && test \"\$(git rev-parse HEAD)\" = $PIN && echo \"host checkout $SHA7\"" || return 1
-  CHROME=${CHROME:-/usr/bin/google-chrome} deploy/live-checks.sh "$PUBLIC_URL" "$VERSION" || return 1
+  local rc
+  r "cd \$HOME/$APP_DIR && test \"\$(git rev-parse HEAD)\" = $PIN && echo \"host checkout $SHA7\"" || { rc=$?; echo "deploy: the host checkout is not $SHA7 (exit $rc)" >&2; return "$rc"; }
+  CHROME=${CHROME:-/usr/bin/google-chrome} deploy/live-checks.sh "$PUBLIC_URL" "$VERSION" || { rc=$?; echo "deploy: deploy/live-checks.sh exited $rc (its LIVE CHECK FAILED line above says which check)" >&2; return "$rc"; }
 }
 
 record() {
@@ -239,9 +248,15 @@ all)
     record
     echo; echo "DEPLOYED $VERSION ($PIN) to $PUBLIC_URL from stackdump/beatscript"
   else
-    echo "deploy: restart or a live check failed for $VERSION" >&2
-    if [ "${NO_ROLLBACK:-0}" != 1 ]; then rollback; fi
-    exit 1
+    rc=$? failed=$STEP
+    echo "deploy: step $failed failed (exit $rc) for $VERSION" >&2
+    if [ "${NO_ROLLBACK:-0}" != 1 ]; then
+      rollback
+      echo "deploy: ROLLED BACK $VERSION: step $failed failed (exit $rc)" >&2
+    else
+      echo "deploy: NO_ROLLBACK=1: $VERSION left up; step $failed failed (exit $rc)" >&2
+    fi
+    exit "$rc"
   fi
   ;;
 *) sed -n '2,40p' "$0"; exit 2 ;;
