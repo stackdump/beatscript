@@ -104,6 +104,14 @@ pub fn stmt_lines(s: &Stmt, depth: usize) -> Vec<PrintedLine> {
             text.push_str(&format!("\n{pad}}}"));
             whole(text, s, &mut out);
         }
+        StmtKind::Station(b) => {
+            let mut text = format!("{pad}station {{");
+            for it in &b.items {
+                text.push_str(&format!("\n{pad}  {}", station_item(it)));
+            }
+            text.push_str(&format!("\n{pad}}}"));
+            whole(text, s, &mut out);
+        }
         _ => whole(format!("{pad}{}", stmt(s)), s, &mut out),
     }
     out
@@ -387,7 +395,7 @@ pub fn stmt(s: &Stmt) -> String {
                 }
             }
         }
-        StmtKind::Def(_) | StmtKind::Repeat(_) | StmtKind::Section(_) | StmtKind::Evolve(_) | StmtKind::Set(_) => stmt_block(s, 0),
+        StmtKind::Def(_) | StmtKind::Repeat(_) | StmtKind::Section(_) | StmtKind::Evolve(_) | StmtKind::Set(_) | StmtKind::Station(_) => stmt_block(s, 0),
     }
 }
 
@@ -395,8 +403,17 @@ pub fn stmt(s: &Stmt) -> String {
 fn set_item(it: &SetItem) -> String {
     match it {
         SetItem::Play(p) => {
-            let mut s = format!("play {}", import_word(&p.what.text));
+            // (a generator call is written bare: it is a call, not a name in quotes)
+            let what = if crate::gen::is_call_word(&p.what.text) { p.what.text.clone() } else { import_word(&p.what.text) };
+            let mut s = format!("play {what}");
             if let Some((u, _)) = &p.until {
+                s.push_str(&format!(" until {}", until_word(u)));
+            }
+            s
+        }
+        SetItem::Next(n) => {
+            let mut s = format!("next {}", step_word(n.step));
+            if let Some((u, _)) = &n.until {
                 s.push_str(&format!(" until {}", until_word(u)));
             }
             s
@@ -408,6 +425,23 @@ fn set_item(it: &SetItem) -> String {
             }
             s
         }
+    }
+}
+
+/// A station's line: `from gen@2 techno seed=42`, `next seed=~`, `forms seeded rondo`.
+fn station_item(it: &StationItem) -> String {
+    match it {
+        StationItem::From(w, _) => format!("from {}", w.text),
+        StationItem::Next(step, _) => format!("next {}", step_word(*step)),
+        StationItem::Forms(names, _) => format!("forms {}", names.iter().map(|w| w.text.as_str()).collect::<Vec<_>>().join(" ")),
+    }
+}
+
+/// `seed=+1`, `seed=~`.
+pub fn step_word(step: SeedStep) -> String {
+    match step {
+        SeedStep::By(n) => format!("seed=+{n}"),
+        SeedStep::Hash => "seed=~".to_string(),
     }
 }
 

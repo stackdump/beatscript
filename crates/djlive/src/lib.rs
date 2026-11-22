@@ -53,6 +53,7 @@ pub mod set;
 pub mod shape;
 pub mod share;
 pub mod sing;
+pub mod station;
 pub mod stored;
 pub mod sugar;
 pub mod tempo;

@@ -329,6 +329,22 @@ fn key_of(c: &Compiled) -> Option<Key> {
     c.key
 }
 
+/// A track of a set as its block says it: where it stands, where it is cut, and what makes it.
+struct TrackItem<'a> {
+    span: Span,
+    until: &'a Option<(UntilWhen, Span)>,
+    what: TrackWhat,
+}
+
+enum TrackWhat {
+    /// A saved program, pinned by the reader (`parsed.plays`).
+    Stored,
+    /// A generator call: `play gen@2 techno seed=42`.
+    Gen(String),
+    /// `next seed=+1`: the call before it, its seed stepped.
+    Next(SeedStep),
+}
+
 /// Compile a parsed program that holds a `set`. None when there are errors (they are in `diags`).
 pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags: &mut Vec<Diagnostic>) -> Option<Compiled> {
     let mut block: Option<(&SetBlock, Span)> = None;
@@ -349,7 +365,7 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
     }
     let (block, set_span) = block?;
     // the shape: play, (mix,) play ...
-    let mut plays: Vec<&PlayItem> = Vec::new();
+    let mut plays: Vec<TrackItem> = Vec::new();
     let mut mixes: Vec<Option<&MixItem>> = Vec::new();
     let mut pending_mix: Option<&MixItem> = None;
     for it in &block.items {
@@ -358,7 +374,16 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
                 if !plays.is_empty() {
                     mixes.push(pending_mix.take());
                 }
-                plays.push(p);
+                let what = if crate::gen::is_call_word(&p.what.text) { TrackWhat::Gen(p.what.text.clone()) } else { TrackWhat::Stored };
+                plays.push(TrackItem { span: p.span, until: &p.until, what });
+            }
+            SetItem::Next(n) => {
+                if plays.is_empty() {
+                    diags.push(Diagnostic::error(n.span, "`next` steps the seed of the track before it: `play` a generator call first").help("set {\n  play gen@2 techno seed=42\n  next seed=+1\n}"));
+                    continue;
+                }
+                mixes.push(pending_mix.take());
+                plays.push(TrackItem { span: n.span, until: &n.until, what: TrackWhat::Next(n.step) });
             }
             SetItem::Mix(m) => {
                 if plays.is_empty() {
@@ -376,14 +401,62 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
     if plays.is_empty() {
         diags.push(Diagnostic::error(set_span, "an empty `set`: `play` a program").help("set { play my-track }"));
     }
-    if plays.len() != parsed.plays.len() {
+    if plays.iter().filter(|p| matches!(p.what, TrackWhat::Stored)).count() != parsed.plays.len() {
         // a play that did not resolve is already an error
         return None;
+    }
+    // the tracks a generator call or a `next` makes (station.rs steps the seed), with the stored ones in their places
+    let mut resolved: Vec<crate::parse::Played> = Vec::new();
+    let mut generated: Vec<bool> = Vec::new();
+    {
+        let mut stored = parsed.plays.iter();
+        let mut prev: Option<String> = None;
+        for p in &plays {
+            let call = match &p.what {
+                TrackWhat::Stored => {
+                    if let Some(pl) = stored.next() {
+                        resolved.push(pl.clone());
+                        generated.push(false);
+                    }
+                    prev = None;
+                    continue;
+                }
+                TrackWhat::Gen(c) => c.clone(),
+                TrackWhat::Next(step) => match &prev {
+                    Some(c) => match crate::station::stepped_call(c, *step) {
+                        Ok(n) => n,
+                        Err(e) => {
+                            diags.push(Diagnostic::error(p.span, e));
+                            return None;
+                        }
+                    },
+                    None => {
+                        diags.push(Diagnostic::error(p.span, "`next` steps the seed of a generator call: the track before it is a saved program, which has none").help("play gen@2 techno seed=42   next seed=+1"));
+                        return None;
+                    }
+                },
+            };
+            match crate::gen::resolve_word(&call, &crate::gen::Host::default()) {
+                Ok(r) => {
+                    if matches!(p.what, TrackWhat::Next(_)) {
+                        diags.push(Diagnostic::info(p.span, format!("next: {call} -> {} ({})", r.cid, r.generator)));
+                    }
+                    resolved.push(crate::parse::Played { cid: r.cid.clone(), text: r.text.clone(), span: p.span });
+                    generated.push(true);
+                }
+                Err(mut d) => {
+                    d.span = p.span;
+                    diags.push(d);
+                    return None;
+                }
+            }
+            prev = Some(call);
+        }
     }
     // the tracks
     let mut tls: Vec<Tl> = Vec::new();
     let mut texts: Vec<(String, String)> = Vec::new();
-    for (i, (p, played)) in plays.iter().zip(&parsed.plays).enumerate() {
+    for (i, (p, played)) in plays.iter().zip(&resolved).enumerate() {
         let c = crate::compile::check_with(&played.text, env);
         let Some(comp) = c.compiled else {
             let n = c.diagnostics.iter().filter(|d| d.is_error()).count();
@@ -396,7 +469,8 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
                 texts.push((c.clone(), t.clone()));
             }
         }
-        if !texts.iter().any(|(x, _)| *x == played.cid) {
+        // (a generated track is no program a link need carry: the call makes it again)
+        if !generated[i] && !texts.iter().any(|(x, _)| *x == played.cid) {
             texts.push((played.cid.clone(), played.text.clone()));
         }
         let Some((segs, len)) = timeline(&comp, p.until.as_ref(), p.span, diags) else { continue };
@@ -506,8 +580,8 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
         let k = key_of(&tl.comp);
         let sp = tl.comp.source.lines().find(|l| l.trim_start().starts_with('#')).map(|l| l.trim_start_matches(['#', '!', ' ']).trim().to_string());
         report.tracks.push(SetTrack {
-            cid: parsed.plays[i].cid.clone(),
-            label: env.snippets.and_then(|s| s.label(&parsed.plays[i].cid)).or_else(|| tl.comp.notes.first().cloned()).or(sp).unwrap_or_else(|| djengine::rights::short_cid(&parsed.plays[i].cid)),
+            cid: resolved[i].cid.clone(),
+            label: env.snippets.and_then(|s| s.label(&resolved[i].cid)).or_else(|| tl.comp.notes.first().cloned()).or(sp).unwrap_or_else(|| djengine::rights::short_cid(&resolved[i].cid)),
             start: bases[i],
             bars: tl.len,
             head_mix: head,
@@ -628,7 +702,7 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
     for (i, tl) in tls.iter().enumerate() {
         for a in &tl.comp.rights.assets {
             let mut a = a.clone();
-            a.via_import = Some(parsed.plays[i].cid.clone());
+            a.via_import = Some(resolved[i].cid.clone());
             a.span = plays[i].span;
             uses.push(a);
         }
@@ -675,6 +749,7 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
         lineage: Vec::new(),
         evolves: Vec::new(),
         set: Some(report),
+        station: None,
         plays: texts,
         section_keys,
         // a set has no sections of its own to export and no `assert` (a set holds nothing but its tracks)

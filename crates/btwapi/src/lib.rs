@@ -3,7 +3,7 @@
 //!
 //! Every function takes the program text (or a link) and answers a JSON string:
 //! [`check_json`], [`fmt_json`], [`open_json`], [`share_json`], [`generation_json`], [`nets_json`],
-//! [`same_as_json`], [`instruments_json`], [`highlight_json`] / [`highlight_json_utf16`], and [`cheatsheet`] (markdown).
+//! [`same_as_json`], [`instruments_json`], [`highlight_json`] / [`highlight_json_utf16`], [`station_json`] (radio), and [`cheatsheet`] (markdown).
 //! Programs are checked against [`web_env`]: the control registry and the engine's instrument names as a
 //! static snapshot of djhost's, with no file lookups and no snippet store of names: an `import` is resolved from the programs
 //! the host knows by CID ([`known`]).
@@ -20,6 +20,7 @@ pub mod run;
 pub mod same;
 pub mod share;
 pub mod snapshot;
+pub mod station;
 pub mod utf16;
 
 pub use cheatsheet::cheatsheet;
@@ -29,4 +30,5 @@ pub use report::{check_json, check_json_with, check_report, check_report_with, d
 pub use same::{same_as_json, same_as_json_pair, same_as_report};
 pub use share::{open_json, share_json, DEFAULT_ORIGIN};
 pub use snapshot::{web_env, WebEnv};
+pub use station::{station_answer, station_json, StationAsk};
 pub use utf16::{add_utf16_spans, Utf16Index};

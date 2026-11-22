@@ -32,6 +32,9 @@ usage: btwd <command> [options]
   share        [--file F | -] [--sig S] [--notes] [--origin URL]   the self-sealing link, as JSON
   open         <url | cid | #fragment | ->  decode a link, recompile, verify its CID, as JSON
   generation   [--file F | -] [--scope NAME] -n N    the CID of generation N of an evolve, as JSON
+  station      [--file F | -] [-n N]     a station (radio, docs/btw/radio.md): its track N and the segue to N+1, as JSON; or
+                                         a station request as JSON (station, n, count, segue, check, retune, locks,
+                                         neighbours)
   instruments                            the voices, family words, kits and palettes, as JSON
   cheatsheet                             the compact grammar generated from docs/BTW.md (markdown)
   render       [--sr N] [--format s16le|f32le] [--chunk-ms N] [--max-bars N] [--from-bar N] [--file F | -]
@@ -170,6 +173,20 @@ fn run(args: &[String]) -> Result<(), String> {
                 }
             };
             out(&result)
+        }
+        "station" => {
+            // a station request as JSON (docs/btw/radio.md), or a station program and `-n N`
+            let o = parse_opts(rest)?;
+            let t = text(&o)?;
+            let req = if t.trim_start().starts_with('{') {
+                t
+            } else {
+                let mut r = djengine::json::JsonObject::new();
+                r.set("station", djengine::json::JsonValue::str(t));
+                r.set("n", djengine::json::JsonValue::int(o.n.unwrap_or(0) as i64));
+                djengine::json::JsonValue::Object(r).js_stringified()
+            };
+            out(&btwapi::station_json(&req))
         }
         "diff" => {
             let o = parse_opts(rest)?;

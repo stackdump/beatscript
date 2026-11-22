@@ -44,6 +44,9 @@ pub enum StmtKind {
     UseRestricted,
     /// `set { play X  mix 8 bars with crossfade  play Y }`: programs of programs (set.rs).
     Set(SetBlock),
+    /// `station { from gen@2 techno seed=42  next seed=~  forms seeded rondo }`: radio, an endless and deterministic run of
+    /// tracks, position N always the same track (station.rs).
+    Station(StationBlock),
     /// `evolve every 8 bars { melody: rotate 1 ... stop when gen == 12 }`.
     Evolve(EvolveBlock),
     /// `wire changes.out -> walker.chords`: an output of one def glued to an input of another (ports.rs).
@@ -277,6 +280,39 @@ pub struct SetBlock {
 pub enum SetItem {
     Play(PlayItem),
     Mix(MixItem),
+    /// `next seed=+1`: the track before it with its seed stepped (station.rs).
+    Next(NextItem),
+}
+
+/// `next seed=+N [until WHEN]` in a set: the next track is the track before it (a generator call) with its seed stepped.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NextItem {
+    pub step: SeedStep,
+    pub until: Option<(UntilWhen, Span)>,
+    pub span: Span,
+}
+
+/// A step from a track to the next: `seed=+N` counts on, `seed=~` draws a seed from a hash of the CID of the track before.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SeedStep {
+    By(u32),
+    Hash,
+}
+
+/// `station { ... }`: its lines, in order.
+#[derive(Clone, Debug, PartialEq)]
+pub struct StationBlock {
+    pub items: Vec<StationItem>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum StationItem {
+    /// `from gen@2 techno seed=42`: the first track's call (one word, as the reader collapsed it).
+    From(Word, Span),
+    /// `next seed=~`.
+    Next(SeedStep, Span),
+    /// `forms seeded passacaglia rondo`: the forms, in turn.
+    Forms(Vec<Word>, Span),
 }
 
 /// `play NAME [until WHEN]`: a saved program. Canonical text holds its CID.

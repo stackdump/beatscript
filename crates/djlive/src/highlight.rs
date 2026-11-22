@@ -27,9 +27,8 @@ pub enum Class {
     Word,
 }
 
-const KEYWORDS: [&str; 35] = [
-    "deck", "master", "every", "on", "at", "bar", "bars", "phrase", "over", "tempo", "key", "swing", "with", "pairs", "pair", "group", "bpm", "wire", "emit", "in", "out", "chords", "drums", "rhythm", "pattern", "when", "and", "or", "not", "beat", "beats", "from", "sing", "set", "until",
-];
+const KEYWORDS: [&str; 38] = [
+    "deck", "master", "every", "on", "at", "bar", "bars", "phrase", "over", "tempo", "key", "swing", "with", "pairs", "pair", "group", "bpm", "wire", "emit", "in", "out", "chords", "drums", "rhythm", "pattern", "when", "and", "or", "not", "beat", "beats", "from", "sing", "set", "until", "station", "forms", "next"];
 
 /// Every token's class, in text order (comments included, whitespace left out).
 pub fn highlight(src: &str) -> Vec<(Span, Class)> {

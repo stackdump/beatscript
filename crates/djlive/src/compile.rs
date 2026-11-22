@@ -522,6 +522,8 @@ pub struct Compiled {
     pub assertions: Vec<crate::assertion::Checked>,
     /// A set (set.rs): its tracks, mixes and length.
     pub set: Option<crate::set::SetReport>,
+    /// A station (station.rs): its knobs, the walk and the first tracks. A station compiles to its track 0.
+    pub station: Option<crate::station::StationReport>,
     /// The programs this one draws on, for a link to carry: the tracks a set plays and the snippets an `import` brings, each with
     /// what it draws on in turn, the ones a program needs before the one that needs them: (CID, canonical text), each once.
     pub plays: Vec<(String, String)>,
@@ -924,6 +926,15 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
     if let Some(o) = env.ontology {
         diags.extend(crate::linked::check_headers(src, o, crate::diag::Severity::Warning).1);
     }
+    // a station is radio: it compiles to its track 0, with the station's report (station.rs)
+    if parsed.program.stmts.iter().any(|s| matches!(s.kind, StmtKind::Station(_))) {
+        let compiled = crate::station::check(&parsed, src, env, &mut diags);
+        diags.sort_by_key(|d| (d.span.start, d.severity == crate::diag::Severity::Warning));
+        return match compiled {
+            Some(c) if !diags.iter().any(Diagnostic::is_error) => Check { compiled: Some(c), diagnostics: diags },
+            _ => Check { compiled: None, diagnostics: diags },
+        };
+    }
     // a set is a program of programs: composed from its tracks, not lowered from sections
     if parsed.program.stmts.iter().any(|s| matches!(s.kind, StmtKind::Set(_))) {
         let compiled = crate::set::check(&parsed, src, env, rights, &mut diags);
@@ -1009,6 +1020,7 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
         source: src.to_string(),
         rights,
         set: None,
+        station: None,
         plays: parse::closure_of(&parsed.imports),
         sing: c.sing_lines,
         launches: crate::launch::Launches { table: lowered.launches.clone(), scenes: Default::default() },

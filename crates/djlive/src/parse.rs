@@ -41,18 +41,18 @@ pub const SUGAR: [(&str, &str); 14] = [
 /// section as they did before the extensions, and the places where the language reads them as syntax are told apart by
 /// position (`reserved`, `prepass`; docs/BTW.md "Decisions"). A feature that adds a word adds it here, and to
 /// [`EXT_RESERVED`] only if it starts a construct that a name could not be told from.
-pub const EXT_WORDS: [&str; 63] = [
+pub const EXT_WORDS: [&str; 65] = [
     "stack", "then", "silence", "wire", "assert", "sing", "duck", "under", "mix", "choose", "maybe", "weights", "deg", "lfo", "sine", "tri", "square", "saw", "exp", "log", "step", "beat", "beats", "in", "out", "ends", "period",
     "length", "knob", "pad", "fader", "held", "min", "max", "and", "or", "not", "voice-lead", "voice", "genre", "tags", "replay", "test", "eq", "attack", "release", "center", "depth", "phase", "tempo", "s-curve", "linear", "emit", "chords", "drums", "rhythm", "pattern", "set", "until", "drive",
-    "never", "beside", "during",
+    "never", "beside", "during", "station", "forms",
 ];
 /// The words of the extensions that stay reserved: each starts a construct (`stack(`, `choose [`, `lfo sine`, `wire a.out`,
 /// `assert ...`, `sing "..."`, `emit ...`, an operator of a guard) that a name in its place could not be told from.
 pub const EXT_RESERVED: [&str; 17] = ["stack", "then", "silence", "wire", "assert", "sing", "under", "choose", "maybe", "deg", "lfo", "and", "or", "not", "voice-lead", "s-curve", "emit"];
 /// Every word that can start a statement: what a typo at the start of a line is compared with.
-pub const STATEMENT_WORDS: [&str; 27] = [
+pub const STATEMENT_WORDS: [&str; 28] = [
     "tempo", "swing", "key", "let", "def", "repeat", "section", "arrange", "end", "loop", "sample", "use", "set", "wire", "assert", "evolve", "import", "deck", "master", "every", "on", "at", "after", "before", "do", "launch",
-    "control",
+    "control", "station",
 ];
 pub const KEY_VERBS: [&str; 6] = ["status", "detect", "set", "lock", "tempo", "compat"];
 /// What the control deck takes, after `control:` (docs/btw/ext-control.md): the engine calls that take no target.
@@ -262,6 +262,10 @@ fn parse_depth(src: &str, env: &Env, depth: usize) -> Parsed {
         let StmtKind::Set(block) = &mut st.kind else { continue };
         for it in &mut block.items {
             let SetItem::Play(pl) = it else { continue };
+            // (a generator call is a track the set's check resolves: the call is its own pin)
+            if crate::gen::is_call_word(&pl.what.text) {
+                continue;
+            }
             match &env.snippets {
                 None => diagnostics.push(Diagnostic::error(pl.what.span, "there are no saved programs here to play").help("a set plays programs from the app's store (`btw save` first)")),
                 Some(snips) => match snips.resolve(&pl.what.text) {
@@ -391,7 +395,10 @@ pub(crate) fn is_syntax_here(w: &str, toks: &[Token], i: usize, out: &[Token], i
         "mix" => next == Some(&Tok::LBrace) || (matches!(next, Some(Tok::Num { .. })) && matches!(prev, None | Some(Tok::Newline | Tok::LBrace))),
         // `set {` at the start of a statement, and an `until` on a set's `play` line
         "set" => next == Some(&Tok::LBrace) && matches!(prev, None | Some(Tok::Newline)),
-        "until" => line_starts_with(out, "play"),
+        // `station {` at the start of a statement, and its `forms` line (station.rs)
+        "station" => next == Some(&Tok::LBrace) && matches!(prev, None | Some(Tok::Newline)),
+        "forms" => matches!(prev, None | Some(Tok::Newline | Tok::LBrace)) && matches!(next, Some(Tok::Word(_))),
+        "until" => line_starts_with(out, "play") || line_starts_with(out, "next"),
         "duck" => matches!(next, Some(Tok::Word(n)) if n == "A" || n == "B"),
         // `control:`, the control deck's head, at the head of a line (after its time word, if it has one)
         "control" => control_head_at(next, prev),
@@ -1250,6 +1257,11 @@ impl<'a> Parser<'a> {
                 let block = self.set_block(start)?;
                 return Ok(Stmt { span: start.to(self.prev_span()), kind: StmtKind::Set(block) });
             }
+            "station" if matches!(self.peek_n(1), Tok::LBrace) => {
+                self.bump();
+                let block = self.station_block(start)?;
+                return Ok(Stmt { span: start.to(self.prev_span()), kind: StmtKind::Station(block) });
+            }
             "use" => {
                 self.bump();
                 let w = self.word("`restricted`")?;
@@ -1347,7 +1359,7 @@ impl<'a> Parser<'a> {
                             let span = self.bump().span;
                             Word { text, span }
                         }
-                        _ => self.word("a saved program's name or CID")?,
+                        _ => self.word("a saved program's name or CID, or a generator call")?,
                     };
                     let mut until = None;
                     if self.word_is("until") {
@@ -1375,9 +1387,19 @@ impl<'a> Parser<'a> {
                     }
                     items.push(SetItem::Mix(MixItem { bars, bars_span, with, tempo, span: istart.to(self.prev_span()) }));
                 }
+                Tok::Word(w) if w == "next" => {
+                    let istart = self.bump().span;
+                    let step = self.seed_step()?;
+                    let mut until = None;
+                    if self.word_is("until") {
+                        let us = self.bump().span;
+                        until = Some(self.until_when(us)?);
+                    }
+                    items.push(SetItem::Next(NextItem { step, until, span: istart.to(self.prev_span()) }));
+                }
                 other => {
                     let _ = other;
-                    return Err(self.expected(&["`play`", "`mix`", "`}`"], &format!("a set holds `play` and `mix` lines, found {}", self.found())));
+                    return Err(self.expected(&["`play`", "`mix`", "`next`", "`}`"], &format!("a set holds `play`, `mix` and `next` lines, found {}", self.found())));
                 }
             }
             if !matches!(self.peek(), Tok::Newline | Tok::RBrace | Tok::Eof) {
@@ -1385,6 +1407,74 @@ impl<'a> Parser<'a> {
             }
         }
         Ok(SetBlock { items })
+    }
+
+    /// `seed=+N` or `seed=~`: the step from a track to the next (`next` in a set or a station).
+    fn seed_step(&mut self) -> R<SeedStep> {
+        if !self.word_is("seed") {
+            return Err(self.expected(&["`seed=+1`", "`seed=~`"], &format!("`next` takes a step, `seed=+1` or `seed=~`, found {}", self.found())).help("next seed=+1   next seed=~"));
+        }
+        self.bump();
+        self.expect(Tok::Eq, "`=`")?;
+        match self.peek().clone() {
+            Tok::Tilde => {
+                self.bump();
+                Ok(SeedStep::Hash)
+            }
+            Tok::Plus => {
+                self.bump();
+                let (n, sp) = self.int_lit("a whole number of seeds to count on")?;
+                if n == 0 {
+                    return Err(Diagnostic::error(sp, "`seed=+0` steps nowhere: count on by 1 or more").help("next seed=+1"));
+                }
+                Ok(SeedStep::By(n))
+            }
+            _ => Err(self.expected(&["`+`", "`~`"], &format!("a step is `seed=+N` (count on) or `seed=~` (a hash of the track before), found {}", self.found())).help("next seed=+1   next seed=~")),
+        }
+    }
+
+    /// `{ from gen@2 techno seed=42  next seed=~  forms seeded rondo }` (the `station` is read).
+    fn station_block(&mut self, start: Span) -> R<StationBlock> {
+        self.expect(Tok::LBrace, "`{`")?;
+        let mut items = Vec::new();
+        loop {
+            while self.peek() == &Tok::Newline {
+                self.at += 1;
+            }
+            match self.peek().clone() {
+                Tok::RBrace => {
+                    self.bump();
+                    break;
+                }
+                Tok::Eof => return Err(Diagnostic::error(start, "the `{` of this `station` is never closed")),
+                Tok::Word(w) if w == "from" => {
+                    let istart = self.bump().span;
+                    let what = self.word("the first track's generator call: gen@2 techno seed=42")?;
+                    items.push(StationItem::From(what, istart.to(self.prev_span())));
+                }
+                Tok::Word(w) if w == "next" => {
+                    let istart = self.bump().span;
+                    let step = self.seed_step()?;
+                    items.push(StationItem::Next(step, istart.to(self.prev_span())));
+                }
+                Tok::Word(w) if w == "forms" => {
+                    let istart = self.bump().span;
+                    let mut names = Vec::new();
+                    while let Tok::Word(_) = self.peek() {
+                        names.push(self.word("a form")?);
+                    }
+                    if names.is_empty() {
+                        return Err(self.expected(&["a form"], &format!("`forms` names the forms in turn, found {}", self.found())).help("forms seeded passacaglia rondo fugue"));
+                    }
+                    items.push(StationItem::Forms(names, istart.to(self.prev_span())));
+                }
+                _ => return Err(self.expected(&["`from`", "`next`", "`forms`", "`}`"], &format!("a station holds `from`, `next` and `forms` lines, found {}", self.found())).help("station {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia rondo\n}")),
+            }
+            if !matches!(self.peek(), Tok::Newline | Tok::RBrace | Tok::Eof) {
+                return Err(self.expected(&["the end of the line"], &format!("expected the end of the line, found {}", self.found())));
+            }
+        }
+        Ok(StationBlock { items })
     }
 
     /// The seconds the number at the cursor is, when its unit (`h`, `m`, `s`) touches it: `20m` is 1200.

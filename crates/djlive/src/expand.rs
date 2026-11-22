@@ -528,7 +528,7 @@ impl<'a> Lower<'a> {
         let mut globals = Vec::new();
         for st in &parsed.program.stmts {
             match &st.kind {
-                StmtKind::Section(_) | StmtKind::Arrange(_) | StmtKind::ArrangeExpr(_) | StmtKind::ArrangeNamed(_) | StmtKind::Start(_) | StmtKind::Launch(_) | StmtKind::LetSection(_) | StmtKind::Let(_) | StmtKind::Def(_) | StmtKind::Import(_) | StmtKind::Setting(_) | StmtKind::End(_) | StmtKind::Loop | StmtKind::Sample(_) | StmtKind::UseRestricted | StmtKind::Wire(_) | StmtKind::Assert(_) | StmtKind::Set(_) | StmtKind::Seed(_) => {}
+                StmtKind::Section(_) | StmtKind::Arrange(_) | StmtKind::ArrangeExpr(_) | StmtKind::ArrangeNamed(_) | StmtKind::Start(_) | StmtKind::Launch(_) | StmtKind::LetSection(_) | StmtKind::Let(_) | StmtKind::Def(_) | StmtKind::Import(_) | StmtKind::Setting(_) | StmtKind::End(_) | StmtKind::Loop | StmtKind::Sample(_) | StmtKind::UseRestricted | StmtKind::Wire(_) | StmtKind::Assert(_) | StmtKind::Set(_) | StmtKind::Station(_) | StmtKind::Seed(_) => {}
                 StmtKind::Evolve(b) => {
                     if self.arranged && !timeline.is_empty() && timeline[0].0 == "evolve" {
                         self.evolves.push((0, b.clone()));
@@ -763,6 +763,7 @@ impl<'a> Lower<'a> {
             StmtKind::LetSection(l) => self.err(Diagnostic::error(l.name.span, "a `let` belongs at the top of the program, outside blocks")),
             StmtKind::Import(_) => self.err(Diagnostic::error(st.span, "`import` belongs at the top of the program")),
             StmtKind::Set(_) => self.err(Diagnostic::error(st.span, "a `set` is a whole program: it belongs at the top, with nothing else but `end` and `loop`")),
+            StmtKind::Station(_) => self.err(Diagnostic::error(st.span, "a `station` is a whole program: it belongs at the top, with its `tempo` and `key`")),
             StmtKind::Sample(_) | StmtKind::UseRestricted => self.err(Diagnostic::error(st.span, "`sample`, `loop \"...\" as` and `use restricted` belong at the top of the program")),
             StmtKind::End(_) | StmtKind::Loop => self.err(Diagnostic::error(st.span, "`end` and `loop` belong at the top of the program")),
             StmtKind::Wire(_) => self.err(Diagnostic::error(st.span, "a `wire` belongs at the top of the program, outside blocks")),

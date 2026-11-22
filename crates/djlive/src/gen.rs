@@ -474,6 +474,8 @@ enum Form {
     Section,
     /// `arrange from gen ...`: from the `arrange` word, the whole program.
     Arrange { from: usize },
+    /// `play gen ...` in a set, `from gen ...` in a station: a track, which the set's or the station's check resolves (station.rs).
+    Track,
 }
 
 fn form_of(toks: &[Token], run: &Run) -> Result<Form, Diagnostic> {
@@ -484,6 +486,7 @@ fn form_of(toks: &[Token], run: &Run) -> Result<Form, Diagnostic> {
         [s, Tok::Word(_), f] if word(s, "section") && word(f, "from") => return Ok(Form::Section),
         [a, f] if word(a, "arrange") && word(f, "from") => return Ok(Form::Arrange { from: line_start }),
         [l, Tok::Word(name), Tok::Eq] if word(l, "let") => return Ok(Form::Let { name: name.clone(), from: line_start }),
+        [p] if word(p, "play") || word(p, "from") => return Ok(Form::Track),
         _ => {}
     }
     if let Some(Tok::Word(w)) = run.start.checked_sub(1).map(|i| &toks[i].tok) {
@@ -626,6 +629,9 @@ pub fn expand(src: &str) -> Option<Result<(Expansion, Vec<(String, String)>), Ve
                 continue;
             }
         };
+        if matches!(form, Form::Track) {
+            continue;
+        }
         let r = match resolve(&c, &host) {
             Ok(r) => r,
             Err(d) => {
@@ -654,6 +660,7 @@ pub fn expand(src: &str) -> Option<Result<(Expansion, Vec<(String, String)>), Ve
                     Err(d) => errors.push(d),
                 }
             }
+            Form::Track => {}
             Form::Part | Form::Section => {
                 let have = sections_of(&r.text);
                 match &c.section {
@@ -675,6 +682,10 @@ pub fn expand(src: &str) -> Option<Result<(Expansion, Vec<(String, String)>), Ve
     if !errors.is_empty() {
         errors.sort_by_key(|d| d.span.start);
         return Some(Err(errors));
+    }
+    // (only tracks of a set or a station: nothing to write out here)
+    if pieces.is_empty() {
+        return None;
     }
     let mut text = String::with_capacity(src.len() * 2);
     let mut edits = Vec::new();
