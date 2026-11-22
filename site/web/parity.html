@@ -8,7 +8,7 @@
 <pre id="out"></pre>
 <script type="module">
 // parity.html: the in-browser engine (js/engine.js + js/engine-calls.js + the djweb wasm), rendered into an
-// OfflineAudioContext instead of the speakers, for btwsite/test/parity/run.mjs.
+// OfflineAudioContext instead of the speakers, for site/test/parity/run.mjs.
 //
 // The page's real loop is: every ~25 ms, `engine.apply(run.service(engine.grid()))`. Here the context is suspended
 // every STEP frames (~21 ms) and the same loop body runs while it is suspended, so the runtime sees the clock the

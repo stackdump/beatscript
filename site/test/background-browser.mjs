@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // background-browser.mjs: does the page keep time when it is hidden?
 //
-//   node btwsite/test/background-browser.mjs [--seconds 30] [--mode hidden|frozen] [--without-pump]
+//   node site/test/background-browser.mjs [--seconds 30] [--mode hidden|frozen] [--without-pump]
 //
 // Headless Chrome plays a looping program on the in-page engine (real wasm, mock server), then the page is hidden for
 // --seconds: a second tab is opened and activated, so document.hidden is true and Chrome throttles the page the way it does a
@@ -35,7 +35,7 @@ const BPM = 120; // 2 s a bar
 // a null audio sink that still runs the AudioContext's clock: no sound card is opened (the machine may be playing something else)
 const AUDIO_ARGS = ['--disable-audio-output'];
 
-if (!fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP background-browser: no built module in btwsite/web/wasm'); process.exit(0); }
+if (!fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP background-browser: no built module in site/web/wasm'); process.exit(0); }
 if (!fs.existsSync(CHROME)) { console.log(`SKIP background-browser: no Chrome at ${CHROME}`); process.exit(0); }
 
 // 2-bar sections of 4 s each, alternating, enough of them to outlast the test: every section change is the runtime loading the next net into the engine

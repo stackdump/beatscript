@@ -1,25 +1,25 @@
 # Browser smoke run
 
-`node btwsite/test/smoke.mjs` executes this file: headless Chrome driven by a 100-line CDP client
+`node site/test/smoke.mjs` executes this file: headless Chrome driven by a 100-line CDP client
 (`cdp.mjs`, no npm: Node's global `fetch` and `WebSocket`) against `mock-server.mjs`, a stand-in for the Go
 service that speaks the routes of DESIGN.md "HTTP API" (and runs the **real wasm** for check/fmt/share/open when
-`btwsite/web/wasm/` is built, else the page's JS mock). Screenshots land in `btwsite/test/shots/`.
+`site/web/wasm/` is built, else the page's JS mock). Screenshots land in `site/test/shots/`.
 
 ```
-node btwsite/test/smoke.mjs                            everything, against the mock server
-node btwsite/test/smoke.mjs --only 2,3                 only those steps
-node btwsite/test/smoke.mjs --mock-wasm                page and server on the JS mock of the wasm (?mock=1)
-node btwsite/test/smoke.mjs --server http://127.0.0.1:18199   against a real btwserve (djrust-vevr-se crates/btwserve);
+node site/test/smoke.mjs                            everything, against the mock server
+node site/test/smoke.mjs --only 2,3                 only those steps
+node site/test/smoke.mjs --mock-wasm                page and server on the JS mock of the wasm (?mock=1)
+node site/test/smoke.mjs --server http://127.0.0.1:18199   against a real btwserve (crates/btwserve);
                                                        the compose error cases (FAIL, LIMIT, NOKEY prompts) and the
                                                        pushed-event checks are the mock's, the real server gets the
                                                        MCP JSON-RPC variant of step 7
-node --test btwsite/test/unit.mjs                      the pure-JS unit tests (no browser)
-node btwsite/test/mobile.mjs [--shots DIR]             the phone layout (412 x 915, touch) and that the desktop one is unchanged
-node btwsite/test/mobile-shots.mjs --prefix before     screenshots of the page as a phone shows it, for before/after
-node btwsite/test/background-browser.mjs [--seconds 30] [--mode frozen] [--without-pump]
+node --test site/test/unit.mjs                      the pure-JS unit tests (no browser)
+node site/test/mobile.mjs [--shots DIR]             the phone layout (412 x 915, touch) and that the desktop one is unchanged
+node site/test/mobile-shots.mjs --prefix before     screenshots of the page as a phone shows it, for before/after
+node site/test/background-browser.mjs [--seconds 30] [--mode frozen] [--without-pump]
                                                        a hidden tab keeps time (see DESIGN.md "A phone, and the page in the background")
 BTW_CHROME_ARGS="--disable-audio-output" ...           extra Chrome flags for every launch: a null audio sink when the sound card is busy
-node btwsite/test/mock-server.mjs --port 18197         the mock alone, to open the page by hand
+node site/test/mock-server.mjs --port 18197         the mock alone, to open the page by hand
 ```
 
 Chrome is `/Applications/Google Chrome.app/...` (override with `CHROME=`), started with

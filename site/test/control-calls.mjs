@@ -1,5 +1,5 @@
 // control-calls.mjs: every control command BtwRun.service() hands the page, on a fake 25 ms clock, between two bars.
-//   node btwsite/test/control-calls.mjs <wasm dir: btw.js + btw_bg.wasm> <file.btw> <fromBar> <toBar>
+//   node site/test/control-calls.mjs <wasm dir: btw.js + btw_bg.wasm> <file.btw> <fromBar> <toBar>
 // What found the riser bug: at a section line the old ramps last values came after the section own `filter off`.
 import fs from 'node:fs';
 const [dir, file, fromBar = '0', toBar = '999'] = process.argv.slice(2);

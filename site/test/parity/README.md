@@ -2,7 +2,7 @@
 
 beatscript.app plays a program two ways (`pickSource`, `web/js/app.js`):
 
-- **stream**: `GET /api/render/<cid>`, which pipes `btwd render` (djrust-vevr-se `crates/btwd`) through a WAV header or ffmpeg.
+- **stream**: `GET /api/render/<cid>`, which pipes `btwd render` (`crates/btwd`) through a WAV header or ffmpeg.
 - **engine**: `web/js/engine.js` + `web/js/engine-calls.js` driving djrust's wasm facade (`Dj`) in an AudioWorklet.
 
 This directory renders both from the same text, headlessly, and compares them bar by bar. Findings, ranked:
@@ -10,14 +10,14 @@ This directory renders both from the same text, headlessly, and compares them ba
 
 ```
 make parity                                   # repros + site examples, then the loop check (BTWD= the btwd binary)
-node btwsite/test/parity/run.mjs --corpus repros,examples,<dir>... [--only REGEX] [--keep-wav] [--out DIR]
-node btwsite/test/parity/loop.mjs             # `loop` in the engine vs the same arrangement written out
-node btwsite/test/parity/loop-status.mjs [file.btw]   # the header's numbers through a looping program (Node only)
+node site/test/parity/run.mjs --corpus repros,examples,<dir>... [--only REGEX] [--keep-wav] [--out DIR]
+node site/test/parity/loop.mjs             # `loop` in the engine vs the same arrangement written out
+node site/test/parity/loop-status.mjs [file.btw]   # the header's numbers through a looping program (Node only)
 PARITY_WASM_DIR=<dir with btw.js, btw_bg.wasm> ...    # test another build of the module (the deployed one, say)
 ```
 
-Needs `btwsite/web/wasm/` (djrust-vevr-se `scripts/build-web-wasm.sh btwsite/web/wasm`), Chrome (`CHROME=`, default
-`/usr/bin/google-chrome` or the macOS path) and btwd (`--btwd`, `BTWD_BIN`, or `btwsite/bin/btwd`). Each script prints
+Needs `site/web/wasm/` (`scripts/build-web-wasm.sh site/web/wasm`), Chrome (`CHROME=`, default
+`/usr/bin/google-chrome` or the macOS path) and btwd (`--btwd`, `BTWD_BIN`, or `site/bin/btwd`). Each script prints
 SKIP and exits 0 when one is missing. Chrome must be able to open its DevTools port: inside a network sandbox that
 blocks it, the launch fails with "Chrome did not come up".
 

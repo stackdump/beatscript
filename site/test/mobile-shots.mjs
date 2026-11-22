@@ -2,8 +2,8 @@
 // mobile-shots.mjs: screenshots of the page the way an Android phone shows it (412 x 915 css px, touch, a
 // 2x pixel ratio), for before/after comparisons of the narrow-screen layout.
 //
-//   node btwsite/test/mobile-shots.mjs --prefix before     writes btwsite/test/shots/mobile/before-*.png
-//   node btwsite/test/mobile-shots.mjs --prefix after [--width 412 --height 915] [--out DIR]
+//   node site/test/mobile-shots.mjs --prefix before     writes site/test/shots/mobile/before-*.png
+//   node site/test/mobile-shots.mjs --prefix after [--width 412 --height 915] [--out DIR]
 //
 // Runs against mock-server.mjs (real wasm when built). Plays the first section on the engine, so the bar shows
 // what it shows while music plays. Exit code 1 if the page logged a console error.

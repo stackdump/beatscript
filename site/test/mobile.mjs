@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // mobile.mjs: the narrow-screen layout (an Android phone: 412 x 915 css px, touch) and a check that the desktop layout is the same.
 //
-//   node btwsite/test/mobile.mjs [--shots DIR]
+//   node site/test/mobile.mjs [--shots DIR]
 //
 // Headless Chrome with touch emulation against mock-server.mjs (real wasm when built). Taps, not clicks. Checks, at 412 x 915:
 //   - the bar is one row: stop/play, a short status (an icon and a word), the problems as a dot and a count, and the caret

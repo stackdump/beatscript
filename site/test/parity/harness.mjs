@@ -1,4 +1,4 @@
-// harness.mjs: what run.mjs and loop.mjs share: the page's server (btwsite/ plus POST /upload/<name>), headless
+// harness.mjs: what run.mjs and loop.mjs share: the page's server (site/ plus POST /upload/<name>), headless
 // Chrome on web/parity.html, and one engine render through it.
 import fs from 'node:fs';
 import http from 'node:http';
@@ -16,14 +16,14 @@ export const wasmDir = () => WASM_DIR || path.join(site, 'web', 'wasm');
 
 /** Why the harness cannot run here, or null. */
 export function missing(btwd) {
-    if (!fs.existsSync(path.join(wasmDir(), 'btw_bg.wasm'))) return 'no built module in btwsite/web/wasm (djrust-vevr-se: scripts/build-web-wasm.sh <btwsite>/web/wasm)';
+    if (!fs.existsSync(path.join(wasmDir(), 'btw_bg.wasm'))) return 'no built module in site/web/wasm (scripts/build-web-wasm.sh <btwsite>/web/wasm)';
     if (!fs.existsSync(CHROME)) return `no Chrome at ${CHROME}`;
-    if (btwd !== undefined && (!btwd || !fs.existsSync(btwd))) return 'no btwd (--btwd PATH, BTWD_BIN, or btwsite/bin/btwd)';
+    if (btwd !== undefined && (!btwd || !fs.existsSync(btwd))) return 'no btwd (--btwd PATH, BTWD_BIN, or site/bin/btwd)';
     return null;
 }
 
 export function findBtwd(argValue) {
-    return argValue || process.env.BTWD_BIN || [path.join(site, 'bin', 'btwd'), path.resolve(site, '..', '..', 'djrust-vevr-se', 'target', 'release', 'btwd')].find((p) => fs.existsSync(p));
+    return argValue || process.env.BTWD_BIN || [path.join(site, 'bin', 'btwd'), path.resolve(site, '..', 'target', 'release', 'btwd')].find((p) => fs.existsSync(p));
 }
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json', '.btw': 'text/plain', '.css': 'text/css' };

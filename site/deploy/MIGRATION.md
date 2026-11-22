@@ -20,7 +20,7 @@ for the OLD origin (export it from the sign-in panel before the old name goes da
 ## Order
 
 1. **New name ready.** DNS, a certificate, an nginx vhost. The vhost is the old one with the name replaced:
-   `sed 's/btw\.bitwrap\.io/NEW/g' btwsite/deploy/nginx/btw.bitwrap.io.conf`.
+   `sed 's/btw\.bitwrap\.io/NEW/g' site/deploy/nginx/btw.bitwrap.io.conf`.
 2. **Phones first.** Ship the djandroid build that trusts the new origin and follows a `moved` event
    (it verifies that `NEW/.well-known/btw-site` names the same `site_id` before it switches). Do not take the
    old name down before enough phones have it.
@@ -45,6 +45,6 @@ A phone that never got the new build re-pairs by QR code (one scan; its key is k
 
 ## Checks that fail loudly
 
-- btwserve's tests pin the move behaviour (djrust-vevr-se crates/btwserve; they were the retired Go server's
-  `internal/btwsite/server` Portable/Moved/PairV/SiteDoc/AltOrigins tests).
+- btwserve's tests pin the move behaviour (crates/btwserve; they were the retired Go server's
+  `internal/site/server` Portable/Moved/PairV/SiteDoc/AltOrigins tests).
 - No host literal may be added outside tests, docs and the `-public-url` default: `scripts/btw-host-literals.sh`.

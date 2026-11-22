@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Play one CID through the stream source in headless Chrome and log what the player does: state, seconds ahead,
-// underruns, stall, and the stack of every app.stop(). node btwsite/test/stream-probe.mjs <base> <cid> [seconds] [source]
+// underruns, stall, and the stack of every app.stop(). node site/test/stream-probe.mjs <base> <cid> [seconds] [source]
 import { launch, sleep } from './cdp.mjs';
 const [base = 'https://beatscript.app', cid, secs = '30', src = 'stream'] = process.argv.slice(2);
 const page = await launch({});

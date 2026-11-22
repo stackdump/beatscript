@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // audio-perf.mjs: how the in-page engine (real wasm, AudioWorklet) holds up while the real page plays a program.
 //
-//   node btwsite/test/audio-perf.mjs [--program hand-dubstep-140-v4] [--seconds 30] [--server URL] [--json out.json]
+//   node site/test/audio-perf.mjs [--program hand-dubstep-140-v4] [--seconds 30] [--server URL] [--json out.json]
 //                                    [--sink null|device] [--query latency=interactive] [--max-overruns-per-min N] [--max-underruns N]
 //                                    [--parity out/report.json]
 //
@@ -24,7 +24,7 @@
 //   - where it happened: every 50 ms the page's audio time, section, bar and underrun count are sampled, so each slow block
 //     (by its worklet time) and each underrun gets a section and bar, and is marked when it falls within a bar of a section
 //     change (where nets are installed and land). Every slow block is kept as it is reported (stats.slow holds only 200).
-//     With btwsite/test/parity (its report.json, --parity FILE), the bars the parity run flagged for this program are listed
+//     With site/test/parity (its report.json, --parity FILE), the bars the parity run flagged for this program are listed
 //     beside the bars with slow blocks or underruns.
 // Prints a table and exits 1 when a --max-* threshold is given and broken. Skips (exit 0) without the wasm or Chrome.
 //
@@ -49,7 +49,7 @@ const MAX_UNDERRUNS = arg('max-underruns', null);
 const QUERY = String(arg('query', ''));
 const PARITY = arg('parity', null);
 
-if (!SERVER && !fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP audio-perf: no built module in btwsite/web/wasm'); process.exit(0); }
+if (!SERVER && !fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP audio-perf: no built module in site/web/wasm'); process.exit(0); }
 if (!fs.existsSync(CHROME)) { console.log(`SKIP audio-perf: no Chrome at ${CHROME}`); process.exit(0); }
 
 let base = SERVER;

@@ -3,7 +3,7 @@
 // Node (no browser, no sound): BtwRun.service() with a grid that runs at the tempo, `play` echoed as the stream's virtual
 // clock does. Prints, per bar, what header-model.js would show: "section N/M · name" and "bar song_bar/song_bars".
 //
-//   node btwsite/test/parity/loop-status.mjs [file.btw ...]    (default: the cases below)
+//   node site/test/parity/loop-status.mjs [file.btw ...]    (default: the cases below)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -11,7 +11,7 @@ import { headerModel } from '../../web/js/header-model.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const wasmDir = process.env.PARITY_WASM_DIR ? path.resolve(process.env.PARITY_WASM_DIR) : path.resolve(here, '..', '..', 'web', 'wasm');
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) { console.log('SKIP loop-status: no built module in btwsite/web/wasm'); process.exit(0); }
+if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) { console.log('SKIP loop-status: no built module in site/web/wasm'); process.exit(0); }
 const glue = await import(pathToFileURL(path.join(wasmDir, 'btw.js')).href);
 glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm')) });
 

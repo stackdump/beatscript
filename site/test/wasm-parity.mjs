@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // wasm-parity.mjs: the browser engine's code, run in Node against the built module (no browser, no npm).
 //
-//   node btwsite/test/wasm-parity.mjs            (re-runs itself with --experimental-vm-modules)
+//   node site/test/wasm-parity.mjs            (re-runs itself with --experimental-vm-modules)
 //
-// The module (btwsite/web/wasm/) is built from a private repo and is not in git: with the directory empty this
+// The module (site/web/wasm/) is built from a private repo and is not in git: with the directory empty this
 // prints SKIP and exits 0. What it checks:
 //   1. the TextEncoder / TextDecoder polyfill agrees with Node's, on awkward text and on bad bytes
 //   2. engine-calls.js: what each registry call the runtime makes becomes in the engine, honoured or ignored
@@ -13,8 +13,8 @@
 //   4. engine.js end to end with a fake AudioContext driven by the wall clock: a real BtwRun evaluates a song, its
 //      commands go through createEngine, both decks start together, each section's nets land on their bar line, and
 //      the runtime counts the same bars the audio plays
-//   5. the module's check of every btwsite/examples/*.btw: the CID the examples index names, and byte for byte what
-//      `btwd check` prints when BTWD_BIN (or btwsite/bin/btwd) is there
+//   5. the module's check of every site/examples/*.btw: the CID the examples index names, and byte for byte what
+//      `btwd check` prints when BTWD_BIN (or site/bin/btwd) is there
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -28,7 +28,7 @@ const wasmDir = path.join(site, 'web', 'wasm');
 const jsDir = path.join(site, 'web', 'js');
 
 if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm')) || !fs.existsSync(path.join(wasmDir, 'btw.js'))) {
-    console.log(`SKIP wasm-parity: no built module in ${wasmDir} (it is built from the private djrust-vevr-se repo: scripts/build-web-wasm.sh <that directory>)`);
+    console.log(`SKIP wasm-parity: no built module in ${wasmDir} (scripts/build-web-wasm.sh <that directory> builds it)`);
     process.exit(0);
 }
 if (!process.execArgv.includes('--experimental-vm-modules')) {

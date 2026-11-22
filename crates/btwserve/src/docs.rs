@@ -649,10 +649,11 @@ impl Docs {
         std::fs::read(self.src_dir.as_ref()?.join(rel)).ok()
     }
 
-    /// api.md with the site's origin filled in (Go: at Mount).
+    /// api.md with the site's origin filled in (Go: at Mount). The file writes https://beatscript.app (older copies
+    /// https://btw.bitwrap.io); either becomes this server's -public-url.
     fn api_md(&self) -> Option<String> {
         let b = self.src("api.md")?;
-        Some(String::from_utf8_lossy(&b).replace("https://btw.bitwrap.io", &self.public))
+        Some(String::from_utf8_lossy(&b).replace("https://btw.bitwrap.io", &self.public).replace("https://beatscript.app", &self.public))
     }
 
     /// `-docs`/cheatsheet.md, else the engine's own (`btwapi::cheatsheet`, cached ten minutes as Go caches its btwd's).

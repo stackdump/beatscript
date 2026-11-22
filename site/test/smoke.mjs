@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-// The browser smoke run of btwsite/test/smoke.md: headless Chrome (a tiny CDP client, no npm) against a server.
+// The browser smoke run of site/test/smoke.md: headless Chrome (a tiny CDP client, no npm) against a server.
 //
-//   node btwsite/test/smoke.mjs                       start the mock server (real wasm if built), run everything
-//   node btwsite/test/smoke.mjs --server http://127.0.0.1:18097   run against a real server instead (compose and
+//   node site/test/smoke.mjs                       start the mock server (real wasm if built), run everything
+//   node site/test/smoke.mjs --server http://127.0.0.1:18097   run against a real server instead (compose and
 //                                                     session steps that need the mock's test routes are skipped)
-//   node btwsite/test/smoke.mjs --only 3,5            run only steps whose number is listed
+//   node site/test/smoke.mjs --only 3,5            run only steps whose number is listed
 //   --mock-wasm                                       the mock server and the page both use the JS mock (?mock=1)
 //   --strict-csp                                      the mock server sends the tightest Content-Security-Policy the page can live
 //                                                     with (mock-server.mjs STRICT_CSP): a violation is a console error, so the whole
 //                                                     run is the proof that the policy is enough
 //
-// Screenshots go to btwsite/test/shots/. Exit code 1 if any check failed or the page logged a console error.
+// Screenshots go to site/test/shots/. Exit code 1 if any check failed or the page logged a console error.
 
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';

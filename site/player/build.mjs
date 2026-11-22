@@ -1,10 +1,10 @@
 // build.mjs: assemble the self-contained player package (project-datum 6669) into one directory, publish-ready.
 //
-//   node btwsite/player/build.mjs [--wasm <dir>] [--out <dir>]
+//   node site/player/build.mjs [--wasm <dir>] [--out <dir>]
 //
-// --wasm: the browser module (btw.js + btw_bg.wasm, from djrust-vevr-se scripts/build-web-wasm.sh); default
-//         btwsite/web/wasm. --out: default btwsite/player/dist (git-ignored: the wasm is built from a private repo, as
-//         btwsite/web/wasm is, so the package is assembled, never committed).
+// --wasm: the browser module (btw.js + btw_bg.wasm, from scripts/build-web-wasm.sh); default
+//         site/web/wasm. --out: default site/player/dist (git-ignored: the wasm is built from a private repo, as
+//         site/web/wasm is, so the package is assembled, never committed).
 //
 // The output is the npm package and also the files to put beside a page:
 //   beatscript-track.js        the element (ESM)        beatscript-track.umd.js   a classic-script loader of it
@@ -31,7 +31,7 @@ const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-
 
 for (const f of ['btw.js', 'btw_bg.wasm']) {
   if (!fs.existsSync(path.join(wasmDir, f))) {
-    console.error(`build.mjs: ${path.join(wasmDir, f)} is missing: build it with djrust-vevr-se scripts/build-web-wasm.sh ${wasmDir}`);
+    console.error(`build.mjs: ${path.join(wasmDir, f)} is missing: build it with scripts/build-web-wasm.sh ${wasmDir}`);
     process.exit(2);
   }
 }

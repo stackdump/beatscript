@@ -1,26 +1,25 @@
 #!/usr/bin/env bash
-# Generate btwsite/web/docs/BTW.md, arrange.md and cheatsheet.md for btw.bitwrap.io.
+# Generate site/web/docs/BTW.md, arrange.md and cheatsheet.md, the copies beatscript.app serves from -docs.
 #
-# Both come from the PRIVATE, UNLICENSED stackdump/djrust-vevr-se, and this repo is public, so they are in
-# .gitignore (btwsite/DESIGN.md "Public repo"): run this before a deploy (the deploy script copies the result
-# to the host) and never `git add -f` its output.
+# They are made from this repo's docs/BTW.md, docs/ARRANGE.md and `btwd cheatsheet` at deploy time, so they are in
+# .gitignore: deploy/deploy.sh runs this before it copies them to the host. Never `git add -f` its output.
 #
-#   scripts/btw-gen-docs.sh                         copy docs/BTW.md; keep the cheatsheet.md that is there
-#   BTWD_BIN=/path/to/btwd scripts/btw-gen-docs.sh  also write cheatsheet.md from `btwd cheatsheet`
-#   BTWD_BIN=/path/to/btwd scripts/btw-gen-docs.sh --check
+#   site/scripts/btw-gen-docs.sh                         copy docs/BTW.md; keep the cheatsheet.md that is there
+#   BTWD_BIN=/path/to/btwd site/scripts/btw-gen-docs.sh  also write cheatsheet.md from `btwd cheatsheet`
+#   BTWD_BIN=/path/to/btwd site/scripts/btw-gen-docs.sh --check
 #                                                   change nothing; exit 1 if cheatsheet.md or BTW.md is stale
 #
 # Environment:
-#   DJRUST_DIR  the engine checkout with docs/BTW.md   (required)
-#   OUT_DIR     where the files go                      (default btwsite/web/docs next to this script's repo root)
+#   DJRUST_DIR  the tree with docs/BTW.md                (default: this repo)
+#   OUT_DIR     where the files go                      (default site/web/docs)
 #   BTWD_BIN    the btwd binary; without it cheatsheet.md is not regenerated. If no cheatsheet.md exists at
-#               all the server answers /docs/cheatsheet.md from its live btwd instead, so nothing is broken
+#               all the server answers /docs/cheatsheet.md from its own engine instead, so nothing is broken
 #               by running without it.
 set -euo pipefail
 
-root=$(cd "$(dirname "$0")/.." && pwd)
-src=${DJRUST_DIR:?set DJRUST_DIR to the engine checkout that holds docs/BTW.md}
-out=${OUT_DIR:-$root/btwsite/web/docs}
+root=$(cd "$(dirname "$0")/../.." && pwd)
+src=${DJRUST_DIR:-$root}
+out=${OUT_DIR:-$root/site/web/docs}
 check=0
 [ "${1:-}" = "--check" ] && check=1
 

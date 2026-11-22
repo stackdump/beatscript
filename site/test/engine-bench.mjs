@@ -2,7 +2,7 @@
 // engine-bench.mjs: what each thing the worklet does in a render quantum costs, measured in Node against the built module
 // (same V8, same wasm; performance.now, which an AudioWorkletGlobalScope does not have). No browser, no npm.
 //
-//   node btwsite/test/engine-bench.mjs [--program hand-dubstep-140-v4] [--budget 12288] [--seconds 20]
+//   node site/test/engine-bench.mjs [--program hand-dubstep-140-v4] [--budget 12288] [--seconds 20]
 //
 // A real BtwRun evaluates the program on a fake clock; every load_net it asks for is prepared by a DjComposer and installed in a
 // Dj with begin_install / install_step(budget) a quantum at a time, between render() calls, as engine-worklet.js does. Prints,
@@ -17,7 +17,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const site = path.resolve(here, '..');
 const wasmDir = path.join(site, 'web', 'wasm');
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i < 0 ? d : process.argv[i + 1]; };
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) { console.log('SKIP engine-bench: no built module in btwsite/web/wasm'); process.exit(0); }
+if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) { console.log('SKIP engine-bench: no built module in site/web/wasm'); process.exit(0); }
 const PROGRAM = arg('program', 'hand-dubstep-140-v4');
 const BUDGET = Number(arg('budget', 12 * 1024));
 const SECONDS = Number(arg('seconds', 20));

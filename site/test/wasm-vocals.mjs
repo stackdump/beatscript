@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // wasm-vocals.mjs: BeatScript vocals and the vocoder in the browser engine, headless (Node, the built module, no browser).
 //
-//   node btwsite/test/wasm-vocals.mjs [wasm dir]          (default btwsite/web/wasm; SKIP when it is not built)
+//   node site/test/wasm-vocals.mjs [wasm dir]          (default site/web/wasm; SKIP when it is not built)
 //
 // 1. engine-calls.js: the vocoder's set / swap / add / remove and the vocoder_handoff move become live ops; a timed
 //    `vocal` call is ignored (and named)
@@ -18,7 +18,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const wasmDir = path.resolve(process.argv[2] || path.join(here, '..', 'web', 'wasm'));
 if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) {
-    console.log(`SKIP wasm-vocals: no built module in ${wasmDir} (scripts/build-web-wasm.sh <dir> in djrust-vevr-se)`);
+    console.log(`SKIP wasm-vocals: no built module in ${wasmDir} (scripts/build-web-wasm.sh <dir>)`);
     process.exit(0);
 }
 const glue = await import(pathToFileURL(path.join(wasmDir, 'btw.js')).href);

@@ -2,7 +2,7 @@
 
 The BeatScript Android app (beatscript-app, formerly djandroid; `app.beatscript`) connects to the btw site by scanning a QR
 code. Once paired, the site (and an assistant over its MCP) can send btw programs to the phone and
-play them there, and the site sees what the phone plays. Server: btwserve `crates/btwserve/src/hub/pair.rs` in djrust-vevr-se (ported from the retired Go `internal/btwsite/server/pair.go`).
+play them there, and the site sees what the phone plays. Server: btwserve `crates/btwserve/src/hub/pair.rs` in this repo (ported from the retired Go `internal/site/server/pair.go`).
 Phone: djandroid `rust/src/btwpair.rs` (the protocol core, `network` feature only) and
 `app/src/network/java/.../btw/BtwPairingImpl.kt` (the transport). The phone's side is in djandroid
 `docs/BTW-PAIR.md`.
@@ -43,7 +43,7 @@ sends a `moved` event (`{moved_to, site_id, from}`) right after `hello` on every
 `NEW/.well-known/btw-site`, check that `site_id` is the one it has stored, and only then switch its origin; it keeps its
 device id and key and signs v2 as before, so nothing is re-scanned. A phone that was away finds out the same way when
 it next connects (the old name redirects with 308 and keeps answering the well-known document). The runbook is
-`btwsite/deploy/MIGRATION.md`.
+`site/deploy/MIGRATION.md`.
 
 ## What is signed
 
@@ -61,11 +61,11 @@ name: <device name>                   ts: <unix ms>
 ts: <unix ms>                         body: <hex sha256(body)>   (of the empty string when there is none)
 ```
 
-`btwsite/testdata/pair/vectors.json` pins both texts and signatures for a fixed key (seed = 32 bytes
+`site/testdata/pair/vectors.json` pins both texts and signatures for a fixed key (seed = 32 bytes
 of 0x01). `pair_test.go TestPairVectors` makes it, and djandroid's `btwpair.rs` tests reproduce it
 byte for byte, so the two sides cannot drift.
 
-`btwsite/testdata/pair/qr-golden.json` pins one whole pairing QR payload as the site makes it
+`site/testdata/pair/qr-golden.json` pins one whole pairing QR payload as the site makes it
 (`PairLink`, `https://beatscript.app/pair#<22>.<22>`, with `-` and `_` in the token) and the v1 claim a
 phone signs for it. `pair_qr_golden_test.go` makes it and checks that a live offer's link is `PairLink`'s;
 beatscript-app copies it to `rust/tests/btw_pair_qr_golden.json`, and its `btwpair.rs` test parses the payload

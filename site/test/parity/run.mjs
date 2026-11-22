@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// run.mjs: does the page's ENGINE sound like the server's STREAM? (btwsite/test/parity/README.md)
+// run.mjs: does the page's ENGINE sound like the server's STREAM? (site/test/parity/README.md)
 //
-//   node btwsite/test/parity/run.mjs [--corpus repros,examples,DIR...] [--only REGEX] [--out DIR] [--gate REGEX]
+//   node site/test/parity/run.mjs [--corpus repros,examples,DIR...] [--only REGEX] [--out DIR] [--gate REGEX]
 //                                    [--btwd PATH] [--keep-wav] [--jobs N]
 //
 // For each program:

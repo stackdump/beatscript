@@ -12,7 +12,7 @@ const seg = (re, what) => (v) => {
 };
 const cidSeg = seg(CID_RE, 'a CID');
 const nameSeg = seg(EXAMPLE_RE, 'an example name');
-// what the server's renderer is (btwserve service::RENDER_VERSION, djrust-vevr-se crates/btwserve; it was Go internal/btwsite/api RenderVersion): part of every render URL, so a renderer change is a new URL
+// what the server's renderer is (btwserve service::RENDER_VERSION, crates/btwserve; it was Go internal/site/api RenderVersion): part of every render URL, so a renderer change is a new URL
 export const RENDER_VERSION = 'r2';
 export const EXPORT_VERSION = 'x1';
 export const EXPORT_FORMATS = ['midi', 'stems', 'stems-opus'];
@@ -69,7 +69,7 @@ export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
     // v= is the server's api.RenderVersion: renders are cached immutable, so a renderer change must change the URL (bump both)
     renderUrl: (cid, format = 'wav', sr = 44100) => `${base}/api/render/${cidSeg(cid)}?format=${format === 'opus' ? 'opus' : 'wav'}${format === 'opus' ? '' : `&sr=${Number(sr) === 48000 ? 48000 : 44100}`}&v=${RENDER_VERSION}`,
     renderStatus: rejecting((cid) => req('GET', `/api/render/${cidSeg(cid)}/status`)),
-    // for a DAW (docs/EXPORT.md in djrust-vevr-se): midi, stems (a zip of WAVs), stems-opus; a stems URL answers 202 while it is made
+    // for a DAW (docs/EXPORT.md in this repo): midi, stems (a zip of WAVs), stems-opus; a stems URL answers 202 while it is made
     exportUrl: (cid, format = 'midi') => `${base}/api/render/${cidSeg(cid)}?format=${EXPORT_FORMATS.includes(format) ? format : 'midi'}&v=${RENDER_VERSION}.${EXPORT_VERSION}`,
     compose: (body, signal) => req('POST', '/api/compose', { json: body, signal }),
     // the seeded generator on the server (no sign-in, no model): the fallback when the wasm has no btw_generate
@@ -90,7 +90,7 @@ export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
     queueGet: rejecting((id) => req('GET', `/api/session/${sidSeg(id)}/queue`)),
     queueNext: rejecting((id, body) => req('POST', `/api/session/${sidSeg(id)}/queue/next`, { json: body })),
     eventsUrl: (id) => `${base}/api/session/${sidSeg(id)}/events`,
-    // pairing a phone (btwsite/PAIRING.md): a QR offer, its state, the paired devices, and pushing to one
+    // pairing a phone (site/PAIRING.md): a QR offer, its state, the paired devices, and pushing to one
     pairNew: () => req('POST', '/api/pair', { json: {} }),
     pairState: rejecting((id) => req('GET', `/api/pair/${sidSeg(id)}`)),
     // the Android beta sign-up (no sign-in): a request, whether an address has been added (then the Play link), and taking it off

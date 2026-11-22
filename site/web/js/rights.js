@@ -1,4 +1,4 @@
-// Who authored a program and what rights it has: one text, served by btwserve at /authorship (djrust-vevr-se
+// Who authored a program and what rights it has: one text, served by btwserve at /authorship (the engine repo
 // docs/AUTHORSHIP.md). The share dialog shows one line and links it; the Android app's share page says the same
 // (beatscript-app SiteLinks.RIGHTS_LINE). Neither repeats the text.
 

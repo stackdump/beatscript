@@ -1,33 +1,30 @@
 #!/usr/bin/env bash
-# Deploy beatscript.app (and btw.bitwrap.io) to pflow.dev, in idempotent steps. The server is btwserve (Rust,
-# djrust-vevr-se crates/btwserve), the ~/services entry btw-rust on 127.0.0.1:18099; the Go btwsite server
-# (btw-bitwrap, :18097) is retired. btwserve runs from its own checkout of THIS repo (~/Workspace/btw-bitwrap-io,
-# BRANCH, default main) for what it reads: btwsite/web (+ wasm), btwsite/examples, btwsite/web/docs and
-# internal/btwsite/docs (-docs-src). The main-push webhook (which only touches ~/Workspace/beats-bitwrap-io) is not
-# involved: deploying is this script plus cutover.sh, not a push.
+# One-time host steps for beatscript.app (and btw.bitwrap.io) on pflow.dev: nginx vhosts, certificates, the
+# btw_front upstream, and the retired Go server's clean-up. A DEPLOY is not here: it is deploy/deploy.sh at the root
+# of this repo (build, ship, ~/services, restart, live checks, all from one pin). The steps below that shipped files
+# from the old three-repo layout (host, artifacts, docs) now refuse and point there.
 #
-#   btwsite/deploy/deploy.sh host        checkout $BRANCH (default main) into ~/Workspace/btw-bitwrap-io on the host
-#   btwsite/deploy/deploy.sh artifacts   copy what is built from the PRIVATE repo (wasm + sidecars, docs); never in git
-#   btwsite/deploy/deploy.sh docs        copy only btwsite/web/docs (BTW.md redacted by scripts/btw-gen-docs.sh, cheatsheet.md)
-#   btwsite/deploy/deploy.sh restart     restart btw-rust only, /healthz on :18099
-#   btwsite/deploy/deploy.sh upstream    install conf.d/btw-front.conf (upstream btw_front -> :18099) if it is missing
-#   btwsite/deploy/deploy.sh retire-go         one time: stop the Go server, drop its btw-bitwrap entry from ~/services
+#   site/deploy/deploy.sh host        checkout $BRANCH (default main) into ~/Workspace/btw-bitwrap-io on the host
+#   site/deploy/deploy.sh artifacts   copy what is built from the PRIVATE repo (wasm + sidecars, docs); never in git
+#   site/deploy/deploy.sh docs        copy only btwsite/web/docs (BTW.md redacted by scripts/btw-gen-docs.sh, cheatsheet.md)
+#   site/deploy/deploy.sh restart     restart btw-rust only, /healthz on :18099
+#   site/deploy/deploy.sh upstream    install conf.d/btw-front.conf (upstream btw_front -> :18099) if it is missing
+#   site/deploy/deploy.sh retire-go         one time: stop the Go server, drop its btw-bitwrap entry from ~/services
 #                                               (backup first; refuses unless btw_front -> :18099 and btwserve is healthy)
-#   btwsite/deploy/deploy.sh retire-go-binary  one time, after retire-go: delete the old Go binary ./btw-bitwrap-io
-#   btwsite/deploy/deploy.sh nginx-http  port-80 vhost only (ACME), reload
-#   btwsite/deploy/deploy.sh cert        certbot (webroot) for btw.bitwrap.io
-#   btwsite/deploy/deploy.sh nginx-full  the real btw.bitwrap.io vhost (443 + proxy to btw_front), nginx -t, reload
-#   btwsite/deploy/deploy.sh verify      curl the public URL
-#   btwsite/deploy/deploy.sh nginx-http-beatscript   beatscript.app + www, port-80 vhost only (ACME), reload
-#   btwsite/deploy/deploy.sh cert-beatscript         certbot (webroot), one cert for beatscript.app + www (CERT_NAMES="-d beatscript.app" for apex only; re-run later to --expand); needs DNS A -> this host
-#   btwsite/deploy/deploy.sh nginx-full-beatscript   the real beatscript.app vhost (443 + proxy to btw_front), nginx -t, reload
-#   btwsite/deploy/deploy.sh verify-beatscript       curl https://beatscript.app
-#   btwsite/deploy/deploy.sh nginx-redirect-btw      btw.bitwrap.io becomes a 301 to beatscript.app, except /api/, /mcp, /context/
+#   site/deploy/deploy.sh retire-go-binary  one time, after retire-go: delete the old Go binary ./btw-bitwrap-io
+#   site/deploy/deploy.sh nginx-http  port-80 vhost only (ACME), reload
+#   site/deploy/deploy.sh cert        certbot (webroot) for btw.bitwrap.io
+#   site/deploy/deploy.sh nginx-full  the real btw.bitwrap.io vhost (443 + proxy to btw_front), nginx -t, reload
+#   site/deploy/deploy.sh verify      curl the public URL
+#   site/deploy/deploy.sh nginx-http-beatscript   beatscript.app + www, port-80 vhost only (ACME), reload
+#   site/deploy/deploy.sh cert-beatscript         certbot (webroot), one cert for beatscript.app + www (CERT_NAMES="-d beatscript.app" for apex only; re-run later to --expand); needs DNS A -> this host
+#   site/deploy/deploy.sh nginx-full-beatscript   the real beatscript.app vhost (443 + proxy to btw_front), nginx -t, reload
+#   site/deploy/deploy.sh verify-beatscript       curl https://beatscript.app
+#   site/deploy/deploy.sh nginx-redirect-btw      btw.bitwrap.io becomes a 301 to beatscript.app, except /api/, /mcp, /context/
 #                                                    (nginx/btw.bitwrap.io.redirect.conf), nginx -t, reload; restores on failure
 #
-# The btwserve binary itself is built on workbit (djrust-vevr-se: BTWD_PKG=btwserve scripts/build-btwd-linux.sh) and
-# installed by djrust-vevr-se crates/btwserve/deploy/cutover.sh install, which also owns btw-rust's ~/services CMD.
-# A full deploy: host, artifacts, then cutover.sh install, then restart (or cutover's own start), then verify-beatscript.
+# The btwserve binary, the wasm and the docs are built and installed by deploy/deploy.sh, which also owns btw-rust's
+# ~/services CMD and runs the live checks.
 # `build` is kept as a no-op so an older runbook that calls it still runs; `services` and `public-url` (which wrote
 # the Go server's ~/services entry) refuse.
 #
@@ -54,37 +51,15 @@ run() { ssh -o BatchMode=yes "$HOST" "$@"; }
 
 case "$step" in
 host)
-  run bash -s <<EOS
-set -euo pipefail
-D=$REMOTE_DIR
-if [ ! -d "\$D/.git" ]; then git clone --no-checkout https://github.com/stackdump/beats-bitwrap-io.git "\$D"; fi
-cd "\$D"
-git fetch origin "$BRANCH"
-git checkout -B "$BRANCH" "origin/$BRANCH"
-mkdir -p btwsite/bin btwsite/web/wasm btwsite/web/docs data
-ls internal/btwsite/docs
-git log --oneline -1
-EOS
-  ;;
+  echo "host: retired: deploy/deploy.sh (repo root) builds, ships and checks beatscript.app from one pin" >&2; exit 1 ;;
 build)
-  echo "build: nothing to build on the host. The Go btwsite server is retired; btwserve is built on workbit"
-  echo "(djrust-vevr-se: BTWD_PKG=btwserve scripts/build-btwd-linux.sh) and installed by its cutover.sh install."
+  echo "build: nothing to build on the host: deploy/deploy.sh (repo root) builds and installs btwserve."
   ;;
 artifacts)
-  [ -f "$GO/btwsite/web/wasm/btw_bg.wasm" ] || { echo "no wasm in $GO/btwsite/web/wasm (scripts/build-web-wasm.sh in the Rust worktree)"; exit 1; }
-  # precompressed sidecars (6.75 MB -> ~2 MB): btwserve sends btw_bg.wasm.br / .gz with Content-Encoding to a
-  # browser that accepts it, and ignores a sidecar older than the wasm. pflow.dev has no brotli, so they are made here.
-  W="$GO/btwsite/web/wasm/btw_bg.wasm"
-  gzip -9 -n -k -f "$W"
-  if command -v brotli >/dev/null; then brotli -q 11 -k -f "$W"; else rm -f "$W.br"; echo "no brotli here: gzip sidecar only"; fi
-  ls -l "$W" "$W".*
-  rsync -az --delete "$GO/btwsite/web/wasm/" "$HOST:Workspace/btw-bitwrap-io/btwsite/web/wasm/"
-  rsync -az "$GO/btwsite/web/docs/" "$HOST:Workspace/btw-bitwrap-io/btwsite/web/docs/"
-  run "cd $REMOTE_DIR && chmod -R a+rX btwsite/web/docs btwsite/web/wasm && sha256sum btwsite/web/wasm/btw_bg.wasm && ls btwsite/web/docs btwsite/web/wasm"
-  ;;
+  echo "artifacts: retired: deploy/deploy.sh (repo root) builds, ships and checks beatscript.app from one pin" >&2; exit 1 ;;
 services|public-url)
   echo "$step: retired with the Go server (it wrote the btw-bitwrap entry in ~/services). btw-rust's entry is" >&2
-  echo "written by djrust-vevr-se crates/btwserve/deploy/cutover.sh install." >&2
+  echo "written by deploy/deploy.sh (repo root)." >&2
   exit 1 ;;
 retire-go)
   # One time: stop the retired Go server and take its btw-bitwrap entry out of ~/services (backup first). Refuses
@@ -135,9 +110,7 @@ if sudo -n nginx -t; then sudo -n systemctl reload nginx && echo "nginx reloaded
 EOS
   ;;
 docs)
-  rsync -az "$GO/btwsite/web/docs/" "$HOST:Workspace/btw-bitwrap-io/btwsite/web/docs/"
-  run "cd $REMOTE_DIR && chmod -R a+rX btwsite/web/docs && ls -l btwsite/web/docs && grep -c '/Users/' btwsite/web/docs/BTW.md || true"
-  ;;
+  echo "docs: retired: deploy/deploy.sh (repo root) builds, ships and checks beatscript.app from one pin" >&2; exit 1 ;;
 restart)
   run "~/services stop $SERVICE; sleep 1; ~/services start $SERVICE; sleep 3; curl -s -m 5 http://127.0.0.1:$PORT/healthz; echo"
   ;;

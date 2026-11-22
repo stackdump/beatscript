@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // A small stand-in for the btw.bitwrap.io server, to develop and smoke-test the page against (no npm:
-// node:http only). It speaks the routes of btwsite/DESIGN.md "HTTP API" well enough for the page:
-// static files, /api/info, examples, check/fmt/share/open (through the REAL wasm when btwsite/web/wasm is
+// node:http only). It speaks the routes of site/DESIGN.md "HTTP API" well enough for the page:
+// static files, /api/info, examples, check/fmt/share/open (through the REAL wasm when site/web/wasm is
 // built, else the page's JS mock), programs (PUT verifies the CID), a render stream (a synthesised click
 // track as a streaming WAV: a kick on every beat, a hat on the off-beat, a bass note a bar), auth (any
 // signature is accepted), compose (canned programs), sessions (SSE + reports) and two test-only routes
 // (/__push/<id>, /__state/<id>).
 //
-//   node btwsite/test/mock-server.mjs [--port 18197] [--web btwsite/web] [--examples btwsite/examples] [--mock-wasm] [--csp strict|<policy>]
+//   node site/test/mock-server.mjs [--port 18197] [--web site/web] [--examples site/examples] [--mock-wasm] [--csp strict|<policy>]
 //
 // --csp sets that Content-Security-Policy (and X-Frame-Options: DENY) on every response. `strict` is the policy the page
 // needs and no more (see STRICT_CSP): the smoke run under it (`smoke.mjs --strict-csp`) is the proof that the server's

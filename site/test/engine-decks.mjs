@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // engine-decks.mjs: each deck is heard on its own through js/engine.js.
 //
-//   node btwsite/test/engine-decks.mjs [--seconds 4]
+//   node site/test/engine-decks.mjs [--seconds 4]
 //
-// Plays btwsite/testdata/engine/deck-a-kick.btw (a kick on deck A only) and deck-b-kick.btw (the same kick on deck B
+// Plays site/testdata/engine/deck-a-kick.btw (a kick on deck A only) and deck-b-kick.btw (the same kick on deck B
 // only) in headless Chrome through web/engine-test.html, and checks that both are loud and about as loud as each other.
 // The regression it guards: the wasm `Dj` starts with its crossfader at 0 (all A), and the desktop centres it when its
 // audio starts (djapp audio_io.rs) but the worklet did not, so everything on deck B was faded out (trance-138's arp,
@@ -21,7 +21,7 @@ const site = path.resolve(here, '..');
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i < 0 ? d : process.argv[i + 1]; };
 const SECONDS = Number(arg('seconds', 4));
 
-if (!fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP engine-decks: no built module in btwsite/web/wasm'); process.exit(0); }
+if (!fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP engine-decks: no built module in site/web/wasm'); process.exit(0); }
 if (!fs.existsSync(CHROME)) { console.log(`SKIP engine-decks: no Chrome at ${CHROME}`); process.exit(0); }
 
 const port = await new Promise((res) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); });

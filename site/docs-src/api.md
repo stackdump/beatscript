@@ -1,8 +1,8 @@
 # BeatScript API
 
-`https://btw.bitwrap.io` is a code-centric web view of **BeatScript**, AI-assisted algorithmic composition: a small language for writing whole music tracks as text
-(reference: [BTW.md](https://btw.bitwrap.io/docs/BTW.md), compact grammar: [cheatsheet.md](https://btw.bitwrap.io/docs/cheatsheet.md),
-index for models: [llms.txt](https://btw.bitwrap.io/llms.txt)). This page documents everything the service answers: the HTTP routes,
+`https://beatscript.app` is a code-centric web view of **BeatScript**, AI-assisted algorithmic composition: a small language for writing whole music tracks as text
+(reference: [BTW.md](https://beatscript.app/docs/BTW.md), compact grammar: [cheatsheet.md](https://beatscript.app/docs/cheatsheet.md),
+index for models: [llms.txt](https://beatscript.app/llms.txt)). This page documents everything the service answers: the HTTP routes,
 sign-in, composing with a model, streaming renders, driving a browser tab, and the MCP server.
 
 Conventions. Bodies are JSON unless noted; programs are plain UTF-8 text. A program is at most **16384 bytes**. Every program the
@@ -57,7 +57,7 @@ Ask for `retry_after` seconds and try again; do not loop.
 Identity is a key, not an account: an Ethereum wallet (`personal_sign`, EIP-191) or a browser-local Ed25519 key. The same wallet identity
 works on beats.bitwrap.io. Sign-in is challenge and response:
 
-1. `GET /api/auth/challenge` gives `{"nonce": "...", "message": "btw.bitwrap.io sign-in\nnonce: ...\nissued: ...\nexpires: ...", "expires": "..."}`.
+1. `GET /api/auth/challenge` gives `{"nonce": "...", "message": "beatscript.app sign-in\nnonce: ...\nissued: ...\nexpires: ...", "expires": "..."}`.
    The nonce is single use and lives 5 minutes.
 2. Sign `message` (its UTF-8 bytes). Ethereum: `personal_sign(message)`. Ed25519: the raw signature over the bytes.
 3. `POST /api/auth/login` with `{"type": "eth", "address": "0x...", "signature": "0x...", "nonce": "..."}`
@@ -95,7 +95,7 @@ error at its line:col**; a program with an error is refused whole.
 - `POST /api/share` `{"text"}` gives `{"ok", "url", "social_url", "beats_url", "cid", "chars", "canonical", "warnings"}`, see [Share links](#share-links).
 
 ```bash
-curl -s https://btw.bitwrap.io/api/check -H 'content-type: application/json' \
+curl -s https://beatscript.app/api/check -H 'content-type: application/json' \
   -d '{"text":"tempo 126\nkey am\ndeck A: kick x ~ x ~ | snare ~ x ~ x\n"}'
 ```
 
@@ -108,13 +108,13 @@ curl -s https://btw.bitwrap.io/api/check -H 'content-type: application/json' \
 
 ## What we store
 
-btw.bitwrap.io only stores Creative Commons programs. Users can do whatever they want on their own devices.
+beatscript.app only stores Creative Commons programs. Users can do whatever they want on their own devices.
 
 - **Stored:** a program that checks, is public, names no `sample` or `loop` and does not `use restricted`, under a Creative Commons
   licence: `CC0-1.0` (the default) or a CC BY family id such as `CC-BY-4.0`, `CC-BY-SA-4.0`, `CC-BY-NC-4.0`. Every write path (`PUT
   /api/programs`, `PUT /api/shares` from the page or a phone, a render from a `<cid>.<packed>` link, MCP `share`, `render` and `record`,
   playlist items and queue items) goes through the same check, and anything else is refused with `422 not_creative_commons`
-  ("btw.bitwrap.io only stores Creative Commons programs; keep this one local") or `422 restricted`.
+  ("beatscript.app only stores Creative Commons programs; keep this one local") or `422 restricted`.
 - **Never stored:** private programs (`#! visibility:` anything but public), programs with samples or `use restricted`, and anything
   under another licence (all rights reserved, MIT, a cover's rights). They stay on your devices. The self-sealing link still works:
   the program is in the link, not on the server.
@@ -144,7 +144,7 @@ with a warning that it plays the family's generic voice.
 and the service has a daily spend cap.
 
 ```bash
-curl -s https://btw.bitwrap.io/api/compose -H 'Authorization: Bearer btw_...' -H 'content-type: application/json' \
+curl -s https://beatscript.app/api/compose -H 'Authorization: Bearer btw_...' -H 'content-type: application/json' \
   -d '{"prompt": "dark techno at 128 with an acid line and a long breakdown", "genre": "techno", "bpm": 128, "key": "am", "length": "medium"}'
 ```
 
@@ -159,7 +159,7 @@ Response 200:
  "attempts": [{"n": 1, "ok": false, "errors": 2, "diagnostics": [], "tokens_in": 4100, "tokens_out": 900}, {"n": 2, "ok": true, "errors": 0}],
  "model": "gemini-3.8-flash", "forkedFrom": null, "license": "CC0-1.0", "composedBy": "gemini-3.8-flash",
  "header": ["#! license: CC0-1.0", "#! composed-by: gemini-3.8-flash"],
- "render_url": "/api/render/z4EBG9j...?format=opus", "share_url": "https://btw.bitwrap.io/#z4EBG9j....<packed>",
+ "render_url": "/api/render/z4EBG9j...?format=opus", "share_url": "https://beatscript.app/#z4EBG9j....<packed>",
  "cost_usd": 0.0007, "usage": {"in": 4100, "out": 1700}}
 ```
 
@@ -188,8 +188,8 @@ come within about a second for a typical program and the response is chunked, so
 - `GET /api/render/<cid>/status` says how far a render is.
 
 ```bash
-curl -s https://btw.bitwrap.io/api/examples | head -c 300          # find a CID
-curl -sL 'https://btw.bitwrap.io/api/render/z4EBG9j...?format=opus' -o track.opus
+curl -s https://beatscript.app/api/examples | head -c 300          # find a CID
+curl -sL 'https://beatscript.app/api/render/z4EBG9j...?format=opus' -o track.opus
 ```
 
 ## Sessions
@@ -214,11 +214,11 @@ lifts a pause. The queue never composes or renders anything, holds at most 50 it
 
 ## MCP
 
-`https://btw.bitwrap.io/mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server over streamable HTTP (stateless: each request stands alone, there is no event stream: a `GET` that asks for one gets 405).
+`https://beatscript.app/mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server over streamable HTTP (stateless: each request stands alone, there is no event stream: a `GET` that asks for one gets 405).
 A browser `GET` shows a page that lists the tools.
 
 ```bash
-claude mcp add --transport http beatscript https://btw.bitwrap.io/mcp --header 'Authorization: Bearer btw_...'
+claude mcp add --transport http beatscript https://beatscript.app/mcp --header 'Authorization: Bearer btw_...'
 ```
 
 The server's name in a client is yours to choose; these docs call it `beatscript` (older installs may show `btw`: the same server).
@@ -226,10 +226,10 @@ The token keeps its `btw_` prefix.
 
 Without the header the read tools still work; `eval`, `load`, `get`, `stop`, `devices` and `queue` answer an MCP tool error `auth_required` that says how to get a token
 (sign in on the page and press **Create an MCP token**). Other clients take the same URL and header, for example
-`{"mcpServers": {"beatscript": {"type": "http", "url": "https://btw.bitwrap.io/mcp", "headers": {"Authorization": "Bearer btw_..."}}}}`.
+`{"mcpServers": {"beatscript": {"type": "http", "url": "https://beatscript.app/mcp", "headers": {"Authorization": "Bearer btw_..."}}}}`.
 
 There is **no `compose` tool**: an MCP client is already a model, so it writes the program itself ([Compose](#compose) is the web app's).
-The loop: read [cheatsheet.md](https://btw.bitwrap.io/docs/cheatsheet.md) and one or two `list_examples` programs, call `instruments`, write the program, call `check`
+The loop: read [cheatsheet.md](https://beatscript.app/docs/cheatsheet.md) and one or two `list_examples` programs, call `instruments`, write the program, call `check`
 and fix every `line:col` error until `ok`, then `eval` / `load` to play it and `share` to store it. A voice whose name starts with a digit
 (`808-bass`) cannot be written: `inst=808-bass` reads as the sum `808 - bass` and a quoted `inst="808-bass"` is refused ("expected a number or a
 name"), so use a voice that starts with a letter (`inst=sub-bass` for a deep bass).
@@ -241,7 +241,7 @@ name"), so use a voice that starts with a letter (`inst=sub-bass` for a deep bas
 | `share` | for the short links | `text`, `license`, `forked_from`, `credits`, `name` | the self-sealing link, the social link, the CID; with a token also stores the program and gives the CID-only `short_url`, `short_social_url`, `short_beats_url` and `fetch_url` |
 | `open` | | `url` | decode a link (self-sealing or CID-only: `/p/<CID>`, `/c/<CID>`, `#<CID>`, a bare CID), verified, with its rights |
 | `render` | | `text` or `cid` or `example`, `format` | store the program and answer `stream_url`, `status_url`, `cid`, `seconds` |
-| `record` | | `text` or `cid` or `example` | store the program and answer the demo-recording setup: `record_url` (the page in record mode), `record_url_manual_clock` (a fake clock a script steps frame by frame), `audio_url`, and the `recipe` for `btwsite/tools/record-demo.mjs` (captures nothing itself) |
+| `record` | | `text` or `cid` or `example` | store the program and answer the demo-recording setup: `record_url` (the page in record mode), `record_url_manual_clock` (a fake clock a script steps frame by frame), `audio_url`, and the `recipe` for `site/tools/record-demo.mjs` (captures nothing itself) |
 | `list_examples` | | `name` | the example programs (and one's text) |
 | `instruments` | | | voices, families, kits, palettes |
 | `eval` | yes | `text`, `play`, `session` | send a program to a browser tab, as Cmd+Enter; lands on the next bar |
@@ -252,7 +252,7 @@ name"), so use a voice that starts with a letter (`inst=sub-bass` for a deep bas
 | `push_private` | yes | `device`, `text` or `sealed`, `load`, `play` | send a private program (a cover, local samples, `use restricted`) to one of your paired phones, end-to-end encrypted and never stored: see [What we store](#what-we-store) |
 | `queue` | yes | `action` (list, add, remove, clear, skip), `items`, `item`, `session` | an up-next list on a tab of programs that already exist (`{cid}`, `{example}`, `{url}`, with `bars` or `minutes`); never composes; advances only while a listener is present, else `paused_reason` |
 
-What `eval`, `load`, `queue`, `share` and `push_private` send on is formatted on the way in, as `fmt` prints it (header lines and comments kept, the CID the same). `eval`, `load`, `stop` and `get` need a browser tab open at https://btw.bitwrap.io (signed in as the token's account), or the session id from
+What `eval`, `load`, `queue`, `share` and `push_private` send on is formatted on the way in, as `fmt` prints it (header lines and comments kept, the CID the same). `eval`, `load`, `stop` and `get` need a browser tab open at https://beatscript.app (signed in as the token's account), or the session id from
 the page's MCP panel; with no tab connected they answer `no_session` and say so. Tool failures are MCP tool results with `isError: true`
 whose text is the error body above (`{"error": {"code", "message", "retry_after", "details"}}`), so a client reads the code and the words.
 Calls to the checker are limited per client (about 60 a minute), programs for `render` per hour.
@@ -260,7 +260,7 @@ Calls to the checker are limited per client (about 60 a minute), programs for `r
 A raw call, to see the wire:
 
 ```bash
-curl -s https://btw.bitwrap.io/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+curl -s https://beatscript.app/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"check","arguments":{"text":"tempo 126\ndeck A: kick x ~ x ~\n"}}}'
 ```
 
@@ -269,11 +269,11 @@ curl -s https://btw.bitwrap.io/mcp -H 'content-type: application/json' -H 'accep
 A program is also published as linked data, in the same convention as pflow.xyz: a stable, versioned `@context` URL.
 
 ```text
-https://btw.bitwrap.io/context/v1.jsonld      the @context (application/ld+json, CORS *, immutable; a change is a new version, v2)
-https://btw.bitwrap.io/context.jsonld         the latest version (cached five minutes)
-https://btw.bitwrap.io/c/<CID>.jsonld         a program: @id, @type djrust:Program, cid, name, key, tempo, sections, licenseId, license,
-                                              credit, forkedFrom / isBasedOn (as stored), usageInfo (https://btw.bitwrap.io/authorship)
-https://btw.bitwrap.io/c/<CID>.<packed>.jsonld   the same for a program the site has not stored (the link carries it)
+https://beatscript.app/context/v1.jsonld      the @context (application/ld+json, CORS *, immutable; a change is a new version, v2)
+https://beatscript.app/context.jsonld         the latest version (cached five minutes)
+https://beatscript.app/c/<CID>.jsonld         a program: @id, @type djrust:Program, cid, name, key, tempo, sections, licenseId, license,
+                                              credit, forkedFrom / isBasedOn (as stored), usageInfo (https://beatscript.app/authorship)
+https://beatscript.app/c/<CID>.<packed>.jsonld   the same for a program the site has not stored (the link carries it)
 ```
 
 A stored program's `@context` is `[v1, {schema.org's usageInfo and isBasedOn}]`: v1 stays as published. Its rights statement is the
@@ -289,11 +289,11 @@ The public-domain phrasebook is open data too: lines of verse, scripture, speech
 source and its meter as a step pattern, to sing by id (`sing @tempest_such_stuff on melody`). One corpus, in several views:
 
 ```text
-https://btw.bitwrap.io/phrasebook                  the page: every line with its year, meter, stress as a step pattern and a sing example
-https://btw.bitwrap.io/phrasebook.txt              the corpus as shipped (text/plain, CC0)
-https://btw.bitwrap.io/phrasebook.jsonld           the same as linked data (application/ld+json), one node a line, in the BeatScript ontology's terms
-https://btw.bitwrap.io/phrasebook/<CID>.txt        the file, by CID (immutable)
-https://btw.bitwrap.io/phrasebook/<CID>.jsonld     the linked data, by CID
+https://beatscript.app/phrasebook                  the page: every line with its year, meter, stress as a step pattern and a sing example
+https://beatscript.app/phrasebook.txt              the corpus as shipped (text/plain, CC0)
+https://beatscript.app/phrasebook.jsonld           the same as linked data (application/ld+json), one node a line, in the BeatScript ontology's terms
+https://beatscript.app/phrasebook/<CID>.txt        the file, by CID (immutable)
+https://beatscript.app/phrasebook/<CID>.jsonld     the linked data, by CID
 ```
 
 The corpus's CID is a program's CID function over the file's text. The two CID routes answer only for the CID the server ships and are `404`
@@ -302,23 +302,23 @@ for any other: a new version of the corpus is a new CID. All are public reads, c
 ## Share links
 
 ```text
-https://btw.bitwrap.io/#<CID>.<base64url(deflate(canonical text))>
+https://beatscript.app/#<CID>.<base64url(deflate(canonical text))>
 https://beats.bitwrap.io/p#<CID>.<base64url(deflate(canonical text))>      (the same sealed part on beats.bitwrap.io)
-https://btw.bitwrap.io/c/<CID>.<base64url(deflate(canonical text))>        (for posts: link unfurlers can fetch it, and it has a card image)
+https://beatscript.app/c/<CID>.<base64url(deflate(canonical text))>        (for posts: link unfurlers can fetch it, and it has a card image)
 ```
 
 The program is **in** the link: nothing is stored for it to work, and whoever opens it recomputes the CID from the text and refuses a link
 where they differ. Optional `~<base64url(deflate(notes))>` after the sealed part carries the comments, which are in neither the CID nor the
 signature and are shown as unverified; an optional `.<sig>` is the author's signature over the CID. Links over about 2000 characters
 may be cut by some apps; `POST /api/share` and the MCP `share` tool report `chars`. `GET /c/<CID>` shows a card for a program the site has stored.
-Who authored a program and what rights it has, in plain language: [/authorship](https://btw.bitwrap.io/authorship).
+Who authored a program and what rights it has, in plain language: [/authorship](https://beatscript.app/authorship).
 
 **CID-only short links** keep the program on the site instead of in the link:
 
 ```text
-https://btw.bitwrap.io/p/<CID>        (opens the page; it fetches the program and checks it against the CID)
+https://beatscript.app/p/<CID>        (opens the page; it fetches the program and checks it against the CID)
 https://beats.bitwrap.io/p/<CID>      (the same, on beats.bitwrap.io)
-https://btw.bitwrap.io/c/<CID>        (for posts: the link-preview page of a stored program)
+https://beatscript.app/c/<CID>        (for posts: the link-preview page of a stored program)
 ```
 
 Store one with `PUT /api/shares/<CID>` (signed in with a cookie or `Authorization: Bearer btw_...`, or from a paired phone), body
@@ -331,6 +331,6 @@ reader recomputes the CID from the text and refuses a mismatch, exactly as for a
 
 ## For models
 
-Start at [llms.txt](https://btw.bitwrap.io/llms.txt) (or [llms-full.txt](https://btw.bitwrap.io/llms-full.txt), which has the cheat-sheet and the grammar inlined),
-read the [cheat-sheet](https://btw.bitwrap.io/docs/cheatsheet.md) and two or three [examples](https://btw.bitwrap.io/api/examples), take the voices from
-[`/api/instruments`](https://btw.bitwrap.io/api/instruments), write, `check`, fix, then `share` or `render`.
+Start at [llms.txt](https://beatscript.app/llms.txt) (or [llms-full.txt](https://beatscript.app/llms-full.txt), which has the cheat-sheet and the grammar inlined),
+read the [cheat-sheet](https://beatscript.app/docs/cheatsheet.md) and two or three [examples](https://beatscript.app/api/examples), take the voices from
+[`/api/instruments`](https://beatscript.app/api/instruments), write, `check`, fix, then `share` or `render`.

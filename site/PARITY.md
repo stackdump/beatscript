@@ -1,14 +1,14 @@
 # Engine vs stream: what differs, and why
 
 beatscript.app plays a program two ways (`pickSource`, `web/js/app.js`): the **stream** is `GET /api/render/<cid>`, which
-pipes `btwd render` (djrust-vevr-se `crates/btwd/src/render.rs`); the **engine** is `web/js/engine.js` +
+pipes `btwd render` (`crates/btwd/src/render.rs`); the **engine** is `web/js/engine.js` +
 `web/js/engine-calls.js` driving djrust's wasm facade in an AudioWorklet. On auto, a program that is **loaded** (opened,
 composed) plays on the stream, and an **edit** (Cmd+Enter) plays on the engine. So the first listen of a composed track
 is the stream, and the next one, after any edit, is the engine. That switch is where the difference is heard.
 
-The harness is `btwsite/test/parity/` (`make parity`; its README says how it works). This report is from its runs on
-2026-11-19: djrust-vevr-se `b22bb96` (main) built on valoper for the repros, then the full corpus on workbit with
-djrust-vevr-se `val/parity-c8ae6943` (main plus the loop fix) and with the deployed wasm (`4444a54`).
+The harness is `site/test/parity/` (`make parity`; its README says how it works). This report is from its runs on
+2026-11-19: the engine repo `b22bb96` (main) built on the ops host for the repros, then the full corpus on the build Mac with
+the engine repo `val/parity-c8ae6943` (main plus the loop fix) and with the deployed wasm (`4444a54`).
 
 **The reference is btwd's render** (Matt: the stream sounds right). Every difference below is the engine straying from the
 render, ranked by how far (the mean score, under Corpus). In practice almost every difference is a control line the
@@ -37,7 +37,7 @@ and a silent outro in `assert.btw` (both sides).
 
 ## Ranked differences (by audibility), each with a minimal repro
 
-Each repro is `btwsite/test/parity/repros/NN-*.btw`: one 8-bar groove (kick, hats, clap on A; sub bass and pad on B, 128
+Each repro is `site/test/parity/repros/NN-*.btw`: one 8-bar groove (kick, hats, clap on A; sub bass and pad on B, 128
 BPM, `end at bar 8`) plus the one line shown. The numbers are per program: bars flagged (of 8), engine minus stream
 integrated loudness, mean log-mel distance, and engine true peak (the stream's is +0.0 dBTP throughout). They are after
 the fixes. "Before" is the engine as deployed.
@@ -78,9 +78,9 @@ A program in the store hits several of these at once: a filter ramp per section,
 
 ## Corpus
 
-**112 programs, 108 compared.** Run on workbit (M4 Pro) on 2026-11-19: btwd and the wasm built from djrust-vevr-se
+**112 programs, 108 compared.** Run on the build Mac (M4 Pro) on 2026-11-19: btwd and the wasm built from the engine repo
 `val/parity-c8ae6943` (`89fdc3f`, main plus the loop fix), with this branch's page JS. The corpus is the 29 repros, the 8 site
-examples, 42 `.btw` files from djrust-vevr-se (`crates/btwapi/tests/{corpus,extra}`, `crates/djlive/tests/fixtures`,
+examples, 42 `.btw` files from the engine repo (`crates/btwapi/tests/{corpus,extra}`, `crates/djlive/tests/fixtures`,
 `docs/btw`, `examples`, `examples/btw`), and the 33 programs in a read-only copy of the beatscript.app store. Four are not
 compared: two do not check (`extra/assets-forgot-restricted`, `examples/btw/ports-import`, which needs an import store) and
 btwd refuses two (`assets-open`: samples; `assets-restricted`: private). Some programs appear in more than one set (the
@@ -90,7 +90,7 @@ site examples are also in djrust's corpus and in the store), so the 108 rows hol
 |---|---|---|---|---|---|
 | repros | 29 | 29 | 15 | 91 / 232 | 0.73 |
 | site examples | 8 | 8 | 1 | 321 / 356 | 3.10 |
-| djrust-vevr-se `.btw` | 42 | 38 | 10 | 1345 / 1697 | 2.05 |
+| the engine repo `.btw` | 42 | 38 | 10 | 1345 / 1697 | 2.05 |
 | store | 33 | 33 | 0 | 2291 / 2416 | 2.73 |
 
 The **mean score** measures how far the engine strays from the render (btwd, the reference). For each bar it takes the
@@ -114,7 +114,7 @@ side sounds. Every store program strays (median score 2.73, median integrated lo
 |---|---|---|---|---|---|---|
 | djrust `examples/btw/tempo.btw` | 5.15 | 40/40 | -2.6 | 19.7 | 2 / 7 | the engine follows the tempo curves and btwd holds 100 BPM, so the engine ends 18 s early (silent for the render's last bars); also the master filter |
 | djrust `examples/btw/showcase.btw` | 4.16 | 64/64 | -6.2 | 19.4 | 10 / 10 | a tempo curve (as `tempo.btw`), the master filter, and trick, delay and vocal ignored |
-| djrust `btwapi/tests/extra/sections-end.btw` | 4.15 | 12/20 | +0.7 | 12.9 | 2 / 7 | **render bug**: btwd ignored `end after bridge` and rendered 20 bars where the program (and the engine) stop at 12. Fixed in btwd (djrust-vevr-se `677e8c7`) |
+| djrust `btwapi/tests/extra/sections-end.btw` | 4.15 | 12/20 | +0.7 | 12.9 | 2 / 7 | **render bug**: btwd ignored `end after bridge` and rendered 20 bars where the program (and the engine) stop at 12. Fixed in btwd (the engine repo `677e8c7`) |
 | store `z4EBG9jEr93n...` | 3.23 | 128/128 | -3.9 | 15.3 | 406 / 17 | master filter per section |
 | `hand-dubstep-140-v4` (site) | 3.10 | 68/68 | -3.1 | 17.4 | 8 / 7 | master filter, wheel, moves, filter.res |
 | `markers-demo` (site) | 3.19 | 24/24 | -5.0 | 17.0 | 2 / 8 | master filter and reverb |
@@ -206,7 +206,7 @@ From `engine-calls.js` and from the `ignored` events and console lines captured 
 
 ## `loop`
 
-`node btwsite/test/parity/loop.mjs` plays each case on the engine for three passes. It compares the result with btwd's
+`node site/test/parity/loop.mjs` plays each case on the engine for three passes. It compares the result with btwd's
 render of the same arrangement written out three times without `loop`, which is what a loop means. Each bar is
 identified against reference bars (p1 = one kick, p2 = two, p3 = three, `four` = four on the floor).
 
@@ -219,7 +219,7 @@ identified against reference bars (p1 = one kick, p2 = two, p3 = three, `four` =
 | two sections `arrange one two` + loop | p1 p2 four four, ×3 | the same | same: 2+ sections loop correctly |
 | no sections, `end at bar 4` (reference) | p1 p2 p3 p1 | the same | same |
 
-- **Engine, single section: fixed** (djrust-vevr-se `89fdc3f`, same branch name). When the lap turned, the runtime did
+- **Engine, single section: fixed** (the engine repo `89fdc3f`, same branch name). When the lap turned, the runtime did
   not reload the section's net: `sync_nets` saw the same load key on the deck, so the net ran on with its own phase,
   which sounds right only when every pattern's cycle divides the section length. Now a section's first bar loads its
   nets again, once per bar line, unless the stretch is a `chain` (the later stretch of a `stack(...)` or of a section
@@ -233,7 +233,7 @@ identified against reference bars (p1 = one kick, p2 = two, p3 = three, `four` =
   (`loop-status.mjs`) and in the real engine. That covered 2-, 3-, 8-, 16- and 32-bar sections, evolve, a chain of
   nets, evaluating over another program, and re-evaluating. The header prints "section · NAME" without "n/m" only when
   `song_bar` falls outside every section, so something sent a `song_bar` past `song_bars`. Next step: run the actual
-  program with `node btwsite/test/parity/loop-status.mjs that.btw`. It exits 1 and prints the beat where the header
+  program with `node site/test/parity/loop-status.mjs that.btw`. It exits 1 and prints the beat where the header
   would read past the section.
 - **Stream.** The stream is a finite render of one pass (btwd's note: "the song loops: the render is one pass through
   its sections"). On auto a loaded program goes to the stream, so a looping program played one pass, ended, and after
@@ -253,8 +253,8 @@ identified against reference bars (p1 = one kick, p2 = two, p3 = three, `four` =
   says "No problems" over it (smoke step 3 checks it). `pickSource` moved to `source-model.js` (unit-tested), and a
   looping program goes to the engine.
 - `e30d55d` the harness, `make parity`.
-- djrust-vevr-se `89fdc3f` (branch `val/parity-c8ae6943`): the single-section `loop` restart (above).
-- djrust-vevr-se `677e8c7`: btwd honours `end at bar N` / `end after SECTION` in an arranged program (it rendered every
+- the engine repo `89fdc3f` (branch `val/parity-c8ae6943`): the single-section `loop` restart (above).
+- the engine repo `677e8c7`: btwd honours `end at bar N` / `end after SECTION` in an arranged program (it rendered every
   section past the end; `sections-end.btw` streamed 20 bars where the program ends at 12).
 - the harness records the worklet's slow blocks (`?perf=1`, `stats.slow`) in every run and ties them to bars, flagged
   bars and section starts; `test/audio-perf.mjs` places each real-time slow block and underrun in its section and bar.

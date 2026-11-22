@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Deterministic demo recorder for btw.bitwrap.io: no screen capture, no system audio, no wall clock.
 //
-//   node btwsite/tools/record-demo.mjs --server http://127.0.0.1:18097 --btwd target/release/btwd \
+//   node site/tools/record-demo.mjs --server http://127.0.0.1:18097 --btwd target/release/btwd \
 //        --cid z4EBG9jB3vwMeCJNSp8WJLWDRM7ADEWxi23HyNSij5cHBL94r7v --out ./promo
 //
 // How: headless Chrome loads the page in ?record=1&clock=manual (window.__btw, DESIGN.md / W1): the page has

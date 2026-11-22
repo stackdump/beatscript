@@ -1,6 +1,6 @@
 // Unit tests for the page's pure JavaScript (no npm: node:test and node:assert).
-//   node --test btwsite/test/unit.mjs
-// Where the real wasm is built (btwsite/web/wasm, which is never in git) the follow-scroll, the markers and the
+//   node --test site/test/unit.mjs
+// Where the real wasm is built (site/web/wasm, which is never in git) the follow-scroll, the markers and the
 // highlighter are tested against the real runtime; without it those tests run on the page's JS mock.
 
 import test from 'node:test';
@@ -1900,7 +1900,7 @@ test('mixer: the engine\'s Dj.mixer() JSON is reported while the engine plays, n
 test('the share dialog says one line on rights and links /authorship', () => {
   assert.equal(AUTHORSHIP_PATH, '/authorship');
   assert.equal(SHARE_RIGHTS.href, '/authorship');
-  // the approved text's first sentence (djrust-vevr-se docs/AUTHORSHIP.md), not the whole of it
+  // the approved text's first sentence (docs/AUTHORSHIP.md), not the whole of it
   assert.equal(SHARE_RIGHTS.text, 'Programs here are CC0: anyone can use them for anything.');
   assert.ok(SHARE_RIGHTS.link.length > 0 && !SHARE_RIGHTS.text.includes('\n'));
   const panels = fs.readFileSync(path.join(web, 'js', 'panels.js'), 'utf8');
@@ -1914,7 +1914,7 @@ test('the share dialog says one line on rights and links /authorship', () => {
 // ---------------------------------------------------------------------------------------------------------------
 // the name is BeatScript: no page says "btw" where a person reads it (product imperative BeatScript #11). Code is
 // exempt (`#! btw 1`, `.btw`, `btw_` tokens, data-btw, css/btw.css, btw.bitwrap.io): only prose, titles and meta.
-// btwserve's own pages have the same check (djrust-vevr-se crates/btwserve/src/docs.rs).
+// btwserve's own pages have the same check (crates/btwserve/src/docs.rs).
 // ---------------------------------------------------------------------------------------------------------------
 
 // a following '.' joins only a host or a file name (btw.bitwrap.io, btw.css), not a sentence's end
@@ -1942,7 +1942,7 @@ test('no page a person reads says "btw": the name is BeatScript', () => {
   for (const page of ['index.html', 'privacy/index.html', 'delete-account/index.html', 'parity.html', 'engine-test.html']) {
     look(page, visibleText(fs.readFileSync(path.join(web, page), 'utf8')));
   }
-  look('internal/btwsite/docs/api.md', visibleMarkdown(fs.readFileSync(path.join(here, '..', '..', 'internal', 'btwsite', 'docs', 'api.md'), 'utf8')));
+  look('site/docs-src/api.md', visibleMarkdown(fs.readFileSync(path.join(here, '..', 'docs-src', 'api.md'), 'utf8')));
   assert.deepEqual(hits, []);
   // and the check itself sees what it should, and leaves code alone
   assert.equal([...visibleText('<title>btw</title><p>a <code>#! btw 1</code> line, <a href="css/btw.css">btw.css</a>, BTW.</p>').matchAll(STANDALONE_BTW)].length, 2);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // loop.mjs: what `loop` does in the engine, against what it should do.
 //
-//   node btwsite/test/parity/loop.mjs [--passes 3] [--out DIR]
+//   node site/test/parity/loop.mjs [--passes 3] [--out DIR]
 //
 // For each case the engine plays the looping program for `passes` passes of its arrangement, and btwd renders the
 // same program with the arrangement written out that many times and no `loop` (`arrange a b` + loop -> `arrange a b a b

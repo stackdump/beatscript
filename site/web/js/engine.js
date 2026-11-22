@@ -1,5 +1,5 @@
 /**
- * engine.js: the in-browser sound for btw programs (btwsite/DESIGN.md, "Engine in the browser").
+ * engine.js: the in-browser sound for btw programs (site/DESIGN.md, "Engine in the browser").
  *
  *   import { createEngine } from './js/engine.js';
  *   const engine = await createEngine({ context, destination });      // after a user gesture started `context`

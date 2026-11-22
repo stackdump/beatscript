@@ -355,7 +355,7 @@ export class Panels {
     return box;
   }
 
-  // ---- phone: pair the BeatScript Android app by a QR code (btwsite/PAIRING.md) ----------------------------------------------------------
+  // ---- phone: pair the BeatScript Android app by a QR code (site/PAIRING.md) ----------------------------------------------------------
 
   phoneStop() {
     clearTimeout(this.phoneTimer);

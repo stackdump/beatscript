@@ -8,7 +8,7 @@ capabilities that a client (the Android app, the page, an MCP client) can check 
 allowlist (and the existing limits and spend cap) on every request, whatever grant the client holds. A forged or
 stale grant can only show a button that the server then refuses (`403 capability_required`).
 
-Implementation: djrust-vevr-se `crates/btwserve/src/caps.rs`. Test vectors: `crates/btwserve/src/caps/vectors.json`.
+Implementation: `crates/btwserve/src/caps.rs`. Test vectors: `crates/btwserve/src/caps/vectors.json`.
 
 ## The published keys
 

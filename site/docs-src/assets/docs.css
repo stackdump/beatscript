@@ -1,4 +1,4 @@
-/* BeatScript docs: the editor's look (btwsite/web/css/btw.css) on a scrolling page. The variables and the
+/* BeatScript docs: the editor's look (site/web/css/btw.css) on a scrolling page. The variables and the
    c-* highlight classes are the editor's; html_test.go fails when a variable here drifts from btw.css. */
 
 :root {

@@ -1,6 +1,6 @@
-// The self-contained player (btwsite/player, project-datum 6669) under a Claude-artifact-like CSP, in headless Chrome.
+// The self-contained player (site/player, project-datum 6669) under a Claude-artifact-like CSP, in headless Chrome.
 //
-//   node btwsite/test/player-csp.mjs        (needs btwsite/web/wasm, or BTW_WASM=<dir>; skips without it)
+//   node site/test/player-csp.mjs        (needs site/web/wasm, or BTW_WASM=<dir>; skips without it)
 //
 // Builds the package, then plays player/test/csp.html's program (drums on an 808 kit, a melody, a sung line) three ways:
 //   files   the package beside the page (one origin)
@@ -21,7 +21,7 @@ import { launch, sleep } from './cdp.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const wasm = process.env.BTW_WASM || path.join(here, '..', 'web', 'wasm');
 if (!fs.existsSync(path.join(wasm, 'btw_bg.wasm'))) {
-  console.log(`# skip: no ${wasm}/btw_bg.wasm (djrust-vevr-se scripts/build-web-wasm.sh ${wasm})`);
+  console.log(`# skip: no ${wasm}/btw_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
   process.exit(0);
 }
 const dist = fs.mkdtempSync(path.join(os.tmpdir(), 'btw-player-'));

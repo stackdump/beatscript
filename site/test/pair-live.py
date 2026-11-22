@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""pair-live.py: the btw-pair/1 flow end to end against a running server (btwsite/PAIRING.md).
+"""pair-live.py: the btw-pair/1 flow end to end against a running server (site/PAIRING.md).
 
-    python3 btwsite/test/pair-live.py [https://btw.bitwrap.io]
+    python3 site/test/pair-live.py [https://btw.bitwrap.io]
 
 A throwaway browser-key user signs in, shows a pairing code, a throwaway phone key claims it, opens the
 device stream, the "page" pushes a program and a stop, the phone reports, the page sees it, the page
