@@ -38,6 +38,7 @@
 #   STATE_DIR    on the host: the rollback record                 (.local/state/beatscript)
 #   DEPLOY_LOG   on the host: one line per clean deploy           ($STATE_DIR/deploys.log)
 #   BUILD_HOST, BUILD_HOSTS, BUILD_HOST_ALIASES, BTWD_SMOKE_HOST   scripts/build-host.sh, scripts/build-btwd-linux.sh
+#   BTWD_BUILD_DIR, BTW_WASM_BUILD_DIR  the build host's scratch dirs (beatscript-web-build, beatscript-wasm-build)
 #   CHROME       Chrome for the live smoke                        (/usr/bin/google-chrome)
 #   NO_ROLLBACK  1: `all` leaves a failed deploy up
 set -euo pipefail
@@ -53,6 +54,8 @@ STATE_DIR=${STATE_DIR:-.local/state/beatscript}
 DEPLOY_LOG=${DEPLOY_LOG:-$STATE_DIR/deploys.log}
 SERVICE=btw-rust
 PORT=18099
+# the build hosts' scratch dirs, apart from anything else that builds there
+export BTWD_BUILD_DIR=${BTWD_BUILD_DIR:-beatscript-web-build} BTW_WASM_BUILD_DIR=${BTW_WASM_BUILD_DIR:-beatscript-wasm-build}
 PIN=${PIN:-$(git rev-parse HEAD)}
 PIN=$(git rev-parse "$PIN^{commit}")
 SHA7=$(git rev-parse --short=7 "$PIN")
