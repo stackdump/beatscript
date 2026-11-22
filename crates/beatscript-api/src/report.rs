@@ -92,9 +92,11 @@ pub(crate) fn diagnostics_json(ds: &[Diagnostic], text: &str, ix: &Utf16Index) -
     JsonValue::Array(ds.iter().map(|d| diagnostic_json(d, text, ix)).collect())
 }
 
-fn counts(ds: &[Diagnostic]) -> (usize, usize) {
-    let errors = ds.iter().filter(|d| d.severity == Severity::Error).count();
-    (errors, ds.len() - errors)
+/// Errors, warnings and infos (6685: an info, what the check found out with nothing wrong to say about it, is not a
+/// warning; counting it as one made every generated program look like it had problems).
+fn counts(ds: &[Diagnostic]) -> (usize, usize, usize) {
+    let n = |s: Severity| ds.iter().filter(|d| d.severity == s).count();
+    (n(Severity::Error), n(Severity::Warning), n(Severity::Info))
 }
 
 /// The sections of an arranged song; a section's later generations (and the stretches of one too long for a
@@ -281,7 +283,7 @@ pub fn check_report_with(text: &str, expand: bool) -> JsonValue {
     let env = web_env().env();
     let ix = Utf16Index::new(text);
     let chk = check_with(text, &env);
-    let (errors, warnings) = counts(&chk.diagnostics);
+    let (errors, warnings, infos) = counts(&chk.diagnostics);
     let diagnostics = diagnostics_json(&chk.diagnostics, text, &ix);
     let Some(c) = chk.compiled else {
         let (uses_assets, restricted) = rights_flags(&assets::rights_of_text(text, &env));
@@ -290,6 +292,7 @@ pub fn check_report_with(text: &str, expand: bool) -> JsonValue {
             ("ok", JsonValue::Bool(false)),
             ("errors", int(errors)),
             ("warnings", int(warnings)),
+            ("infos", int(infos)),
             ("diagnostics", diagnostics),
             ("cid", JsonValue::Null),
             ("canonical", JsonValue::Null),
@@ -347,6 +350,7 @@ pub fn check_report_with(text: &str, expand: bool) -> JsonValue {
         ("ok", JsonValue::Bool(true)),
         ("errors", int(errors)),
         ("warnings", int(warnings)),
+        ("infos", int(infos)),
         ("diagnostics", diagnostics),
         ("cid", JsonValue::str(c.cid.clone())),
         ("canonical", JsonValue::str(c.text.clone())),

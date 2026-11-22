@@ -3,6 +3,7 @@
     "ok": true,
     "errors": 0,
     "warnings": 0,
+    "infos": 0,
     "diagnostics": [],
     "cid": "z4EBG9jEdNLJPBwCMQoZDwzTSERG4vS2cr61Dc1iJeE11WTS42G",
     "canonical": "tempo 100\nkey c\nlet k = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nsection verse 4 bars {\n  deck A: kick k\n  deck B: harmony chord(c) inst=warm-pad\n}\nsection bridge 8 bars {\n  deck A: kick k | hihat x*8\n  deck B: melody <c4 e4 g4 e4> inst=pwm-lead\n  at bar 4: master: filter lp 500 -> 8000 over 4 bars\n}\nsection tag 4 bars {\n  deck A: hihat x ~ x ~\n}\narrange verse bridge verse tag\nend after bridge\n",

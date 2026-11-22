@@ -3,6 +3,7 @@
     "ok": true,
     "errors": 0,
     "warnings": 0,
+    "infos": 0,
     "diagnostics": [],
     "cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
     "canonical": "tempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",

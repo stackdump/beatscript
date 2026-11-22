@@ -1240,7 +1240,7 @@ impl Tools {
         // (checked as it was sent, so an error is at the line and column the sender wrote; it arrives formatted)
         let n = self.push(c, &session, SessionEvent { kind: "eval", text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), cid: r.cid().into(), play })?;
         Ok(sorted(json!({
-            "sent": true, "delivered": n, "cid": r.cid(), "play": play, "warnings": r.warnings(), "lexicon": self.harvest(&text, Some(&rep)),
+            "sent": true, "delivered": n, "cid": r.cid(), "play": play, "warnings": r.warnings(), "infos": r.infos(), "lexicon": self.harvest(&text, Some(&rep)),
             "warning_diagnostics": warnings_of(&rep),
             "note": "Sent. The tab evaluates it like Cmd+Enter: the change lands on the next bar. Call get to see what is playing and any diagnostics the page reports.",
         })))
@@ -2017,7 +2017,7 @@ fn err_result(mut e: Fail) -> Value {
 fn needs_fixing(rep: &Value, what: &str) -> Fail {
     let r = Rep(rep);
     let mut e = Fail::new(422, "bad_request", format!("the program has {} error(s), so {what}. Fix each at its line:col (the help line says how; render is the caret form) and call check again.", r.errors()));
-    e.details = Some(json!({"diagnostics": r.diagnostics(), "errors": r.errors(), "warnings": r.warnings()}));
+    e.details = Some(json!({"diagnostics": r.diagnostics(), "errors": r.errors(), "warnings": r.warnings(), "infos": r.infos()}));
     e
 }
 

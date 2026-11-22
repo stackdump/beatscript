@@ -3,6 +3,7 @@
     "ok": true,
     "errors": 0,
     "warnings": 0,
+    "infos": 0,
     "diagnostics": [],
     "cid": "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE",
     "canonical": "tempo 124\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet riff = a2 ~ a2 a2 ~ c3 ~ a2 e2 ~ e2 g2 ~ e2 ~ e2\nlet lead = <[e5 ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ a4 ~ ~ ~] [~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~]>\ndef groove(deck, bars) {\n  deck $deck: kick kk | hihat hh vel=70..95 | bass riff inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection build 8 bars {\n  deck A: kick kk | hihat hh\n  master: filter hp 100 -> 5000 over 8 bars\n}\nsection drop 16 bars {\n  groove(A, 16)\n  deck B: melody lead inst=pwm-lead\n  evolve every 4 bars {\n    melody: rotate 2 | transpose <0 5 7 0>\n    stop when gen == 3\n  }\n  at bar 2: master: reverb 0.3\n}\narrange build drop\n",

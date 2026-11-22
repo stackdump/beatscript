@@ -3,6 +3,7 @@
     "ok": true,
     "errors": 0,
     "warnings": 19,
+    "infos": 0,
     "diagnostics": [
       {
         "severity": "warning",

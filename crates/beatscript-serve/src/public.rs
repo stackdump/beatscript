@@ -363,6 +363,7 @@ pub fn shape_check(v: &Value) -> Value {
     m.insert("ok".into(), json!(b_of(v, "ok")));
     m.insert("errors".into(), json!(i_of(v, "errors")));
     m.insert("warnings".into(), json!(i_of(v, "warnings")));
+    m.insert("infos".into(), json!(i_of(v, "infos")));
     m.insert("diagnostics".into(), Value::Array(diags(v)));
     m.insert("cid".into(), json!(s_of(v, "cid")));
     m.insert("canonical".into(), json!(s_of(v, "canonical")));
@@ -1026,7 +1027,7 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
     if got != cid {
         return ApiError::new(422, "cid_mismatch", format!("that text is program {got}, not {cid}")).response();
     }
-    let warnings = i_of(&rep, "warnings");
+    let (warnings, infos) = (i_of(&rep, "warnings"), i_of(&rep, "infos"));
     // a recipe's expansion is stored beside it (compose::expansion_beside, under the checker's budget): the answer says what
     // became of it
     let expansion = |meta: Value| {
@@ -1042,7 +1043,7 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
         }
     };
     let reply = |status: u16, created: bool, meta: Value, expanded: Option<crate::store::Outcome>| {
-        let v = crate::compose::with_expansion(json!({"cid": got, "created": created, "meta": meta, "warnings": warnings}), expanded.as_ref());
+        let v = crate::compose::with_expansion(json!({"cid": got, "created": created, "meta": meta, "warnings": warnings, "infos": infos}), expanded.as_ref());
         json_resp(status, &v)
     };
     if let Some(m) = st.app.store.file_meta(&cid) {
@@ -1471,7 +1472,7 @@ mod tests {
     fn shapes() {
         let rep = shape_check(&serde_json::from_str(&beatscript_api::check_json("tempo 120\ndeck A: kick x ~ x ~\n")).unwrap());
         let keys: Vec<&String> = rep.as_object().unwrap().keys().collect();
-        assert_eq!(keys[..6], ["ok", "errors", "warnings", "diagnostics", "cid", "canonical"]);
+        assert_eq!(keys[..7], ["ok", "errors", "warnings", "infos", "diagnostics", "cid", "canonical"]);
         assert_eq!(clip("ab€".into(), 3), "ab…");
     }
 

@@ -3,6 +3,7 @@
     "ok": true,
     "errors": 0,
     "warnings": 0,
+    "infos": 0,
     "diagnostics": [],
     "cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
     "canonical": "tempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",

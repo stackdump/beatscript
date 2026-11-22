@@ -3,6 +3,7 @@
     "ok": true,
     "errors": 0,
     "warnings": 0,
+    "infos": 0,
     "diagnostics": [],
     "cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
     "canonical": "tempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",

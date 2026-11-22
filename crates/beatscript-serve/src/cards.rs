@@ -1565,6 +1565,7 @@ fn go_check_report(v: &Value) -> Value {
     m.insert("ok".into(), json!(v["ok"] == true));
     m.insert("errors".into(), json!(v["errors"].as_i64().unwrap_or(0)));
     m.insert("warnings".into(), json!(v["warnings"].as_i64().unwrap_or(0)));
+    m.insert("infos".into(), json!(v["infos"].as_i64().unwrap_or(0)));
     let diags = match v["diagnostics"].as_array() {
         None => Value::Null,
         Some(a) => Value::Array(
@@ -1841,6 +1842,7 @@ async fn put_share(State(c): State<Arc<Cards>>, req: Request) -> Response<Body> 
             m.insert("short_social_url".into(), json!(format!("{site}/c/{cid}")));
             m.insert("short_url".into(), json!(format!("{site}/p/{cid}")));
             m.insert("warnings".into(), json!(rep["warnings"].as_i64().unwrap_or(0)));
+            m.insert("infos".into(), json!(rep["infos"].as_i64().unwrap_or(0)));
             Response::builder()
                 .status(if created { 201 } else { 200 })
                 .header(header::CONTENT_TYPE, "application/json; charset=utf-8")

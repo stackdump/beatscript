@@ -97,6 +97,8 @@ pub fn go_check_report(r: &Value) -> Value {
     m.insert("ok".into(), b(&r["ok"]));
     m.insert("errors".into(), i(&r["errors"]));
     m.insert("warnings".into(), i(&r["warnings"]));
+    // infos are not warnings (6685): counted on their own
+    m.insert("infos".into(), i(&r["infos"]));
     m.insert("diagnostics".into(), diagnostics(&r["diagnostics"]));
     m.insert("cid".into(), json!(s(&r["cid"])));
     m.insert("canonical".into(), json!(s(&r["canonical"])));
@@ -350,6 +352,10 @@ impl Rep<'_> {
     }
     pub fn warnings(&self) -> i64 {
         self.0["warnings"].as_i64().unwrap_or(0)
+    }
+    /// The diagnostics of severity info: notes, not warnings (6685).
+    pub fn infos(&self) -> i64 {
+        self.0["infos"].as_i64().unwrap_or(0)
     }
     pub fn sections(&self) -> usize {
         self.0["sections"].as_array().map_or(0, Vec::len)

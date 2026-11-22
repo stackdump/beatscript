@@ -681,6 +681,7 @@ pub fn template_answer_with(g: Option<&dyn Graph>, genre: &str, phrase: Option<&
     if let Some(s) = sung {
         out["phrase"] = s;
         out["warnings"] = rep["warnings"].clone();
+        out["infos"] = rep["infos"].clone();
     }
     Ok(out)
 }
@@ -726,6 +727,7 @@ pub fn template_answer_roles(g: Option<&dyn Graph>, genre: &str, phrase: Option<
             out["text"] = json!(text);
             out["theme"] = j;
             out["warnings"] = rep["warnings"].clone();
+            out["infos"] = rep["infos"].clone();
         }
         return Ok(out);
     };
@@ -754,7 +756,7 @@ pub fn template_answer_roles(g: Option<&dyn Graph>, genre: &str, phrase: Option<
         return Err(format!("the {} for {} did not pass check: {}", f.label, gn.label, rep["diagnostics"]));
     }
     let expanded: Value = serde_json::from_str(&beatscript_api::expand_json(&text, false)).map_err(|e| e.to_string())?;
-    let mut out = json!({"text": text, "cid": rep["cid"], "canonical": rep["canonical"], "seconds": rep["seconds"], "genre": summary(g, &gn), "form": crate::forms::form_json(origin, t, f), "expanded": expanded["text"], "warnings": rep["warnings"]});
+    let mut out = json!({"text": text, "cid": rep["cid"], "canonical": rep["canonical"], "seconds": rep["seconds"], "genre": summary(g, &gn), "form": crate::forms::form_json(origin, t, f), "expanded": expanded["text"], "warnings": rep["warnings"], "infos": rep["infos"]});
     if let Some(s) = sung {
         out["phrase"] = s;
     }
