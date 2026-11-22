@@ -11,6 +11,9 @@
 # verify-beatscript, and the live smoke steps 5, 13 and 14 in headless Chrome (CHROME, default /usr/bin/google-chrome).
 set -e
 cd "$(dirname "$0")/.."
+# the live smoke writes its screenshots over the tracked site/test/shots/*.png: put them back, so a deploy leaves the
+# checkout clean (the next deploy's preflight refuses a dirty tree)
+trap 'git checkout -q -- site/test/shots 2>/dev/null; git clean -qf -- site/test/shots >/dev/null 2>&1' EXIT
 U=${1:-https://beatscript.app}
 V=${2:?usage: deploy/live-checks.sh <public url> <btwserve version, e.g. btwserve-abc1234>}
 for i in $(seq 1 30); do curl -s -m 5 $U/healthz | grep -q $V && break; sleep 2; done
