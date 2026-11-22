@@ -257,7 +257,8 @@ lyrics ──► words ──► phones ───────► syllables ─�
   out are reported (`check` warns with the rules' spelling; `vocal create` answers `warnings`; the Vocal window shows them in
   amber). Respell (`ro-bo-tic`), escape, or propose the word for the lexicon (`tools/lexicon/propose.py`).
 - **The booth only:** the desktop app links `crates/djlexicon-booth`, the CMU Pronouncing Dictionary (BSD-2-Clause, its notice
-  in that crate), consulted after the BeatScript lexicon and before the rules. Public tools are CC0 everywhere: no public build
+  in that crate), consulted after the BeatScript lexicon and before the rules. It is not in the public repo (code MIT, programs and
+  content CC0): no public build
   (the browser wasm, beatscript.app's server, the public crate) can link it (its `build.rs` and `scripts/check-public-build.sh`).
 - **Numbers** are spelled (`140` is "one hundred forty"); a comma, full stop or line break ends a
   phrase; `_` is a rest.
@@ -361,7 +362,7 @@ in the lyrics pipeline must allow that, with no voice cloning and no likeness ri
 | **misaki** G2P (hexgrad) | Apache-2.0 (reported; confirm the LICENSE file) | **Yes**, without its fallback. Its out-of-vocabulary fallback is espeak-ng, so it must run dictionary-only, or with our own fallback rules |
 | **espeak-ng** | GPL-3.0 | **No.** Not vendored, not linked, not called |
 | **voice-g2p** (Rust port of misaki's English pipeline) | MIT | **Yes**, dictionary path. Its espeak-ng fallback is optional and must stay off. Check the provenance of its dictionaries |
-| **CMU Pronouncing Dictionary** | BSD-2-Clause (the CMU notice) | **Not in any public build** (2026-11-21: public tools are CC0 everywhere). Kept for the desktop booth only, in the private crate `djlexicon-booth`; a permissive data licence, and a phoneme sequence carries no voice. The notice is kept with the data; the audio is unaffected |
+| **CMU Pronouncing Dictionary** | BSD-2-Clause (the CMU notice) | **Not in any public build** (2026-11-21; the public repo is MIT code and CC0 content). Kept for the desktop booth only, in the private crate `djlexicon-booth`; a permissive data licence, and a phoneme sequence carries no voice. The notice is kept with the data; the audio is unaffected |
 | **Our formant voice** (this doc) | MIT, our code, no data | **Yes**: no recordings, no speakers, no likeness. Its output can be CC0 |
 | Piper and its voices | Not verified here. The newer piper1 is GPL-3.0, and each voice's dataset has its own licence | **Assume no** until checked voice by voice |
 

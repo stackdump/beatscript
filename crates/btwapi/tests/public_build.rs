@@ -1,5 +1,6 @@
-//! Public tools are CC0 everywhere: no public target links the booth's private dictionary (CMUdict), and
-//! that crate's guard refuses a public build (scripts/check-public-build.sh, which this runs).
+//! What a default build may contain (scripts/check-public-build.sh, which this runs): code is MIT, programs and
+//! content CC0; no shipped target links the booth's private dictionary (CMUdict, not in this repo), windwheel or
+//! the wallet.
 
 #[test]
 fn a_public_build_cannot_include_the_booth_dictionary() {

@@ -119,7 +119,7 @@ so you can respell it (`har-ber`), escape it with its word (`harbour=/h aa r - b
 programs' lyrics and lists the words the lexicon lacks, with the rules' guess, for a person to review and add by hand; it never
 adds anything itself.
 
-Public tools are CC0 everywhere: the browser's engine, beatscript.app and the public crate use only the lexicon and the rules
+The public tools (MIT code, CC0 lexicon): the browser's engine, beatscript.app and the public crates use only the lexicon and the rules
 above. (The desktop booth may add a larger dictionary of its own behind a private crate; no public build can link it:
 `scripts/check-public-build.sh`.)
 
