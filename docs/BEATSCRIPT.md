@@ -569,6 +569,14 @@ The tempo can move. `tempo 100 -> 130 over 8 bars exp` ramps it from the program
 A section may also begin with a `key` of its own, which re-reads its degrees and numerals ("Degrees, numerals, a key a
 section"). `swing` stays a setting of the whole program.
 
+`swing s` is how late the off-step plays: every second sixteenth of every deck sounds `s / 2` of a sixteenth after its
+place. So `swing 0.6` is 0.3 of a sixteenth (37.5 ms at 120 BPM), and `swing 1`, the most, is half a sixteenth, a dotted
+3:1 (a triplet feel is about `swing 0.67`). The scale is the beats generator's own 0..100 read as 0..1: `gen@N` and
+`seed@2(...)` write a genre's swing this way (jazz 0.6, house 0.2), and it reaches the engine as beats' 60 or 20. It moves when
+the notes sound, never where they are: the steps, the bar lines, a pattern's text and its net stay as written. The arrange op
+`swing amt` ("Arrange mutations") is another thing: it rewrites a pattern, moving every second step `amt` of a step later on the
+sixteenth grid (a step of two sixteenths or more), so it changes the notes and the net, and only that pattern's.
+
 ## Control
 
 Every control line compiles to calls on the **control-language registry** (docs/CONTROL.md), the same

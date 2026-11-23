@@ -272,7 +272,10 @@ impl DeckIr {
             o.set("tempo", JsonValue::Number(t));
         }
         if let Some(s) = self.swing {
-            o.set("swing", JsonValue::Number(s));
+            // the setting is 0..1 and djrust's project swing 0..100, the share of half a sixteenth each off-step is late
+            // (wave/runner.rs: swing / 100 * sixteenth * 0.5): `swing 0.6` is beats' 60, 0.3 of a sixteenth (BEATSCRIPT.md, Settings)
+            // (rounded to 1e-9 so that 0.15 is 15, not 15.000000000000002, in the envelope and its CID)
+            o.set("swing", JsonValue::Number((s * 100.0 * 1e9).round() / 1e9));
         }
         if let Some(k) = self.key {
             o.set("key", JsonValue::str(k.text()));

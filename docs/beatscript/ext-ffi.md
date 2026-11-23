@@ -175,19 +175,39 @@ and of the same bare seeds). Example: `examples/beatscript/swung-seed.beatscript
 **Not done.**
 - `seed@2` does not carry the beats project's `humanize`. BeatScript has no song-wide setting for it: `humanize()` is a pattern's
   velocity function.
-- **A `swing` line is not heard (measured 2026-11-22).** The review rendered programs with `beatscript render` at 48 kHz, groove on, 4
-  bars: a kick on the off-sixteenths only (`deck A: kick ~ x ~ x ...`), and `hihat x*16`. It took the onsets by threshold
-  (`scratchpad/gen3-review/onsets.py`). At 120 BPM, `swing 0.6` delays every off-step by exactly 18 samples (0.375 ms, 0.0030
-  of a sixteenth; the minimum equals the maximum over 32 hits). `swing 1` delays them by 30 samples (0.625 ms, 0.0050). At 90 BPM,
-  `swing 0.6` gives 24 samples (0.500 ms, again 0.0030 of a sixteenth). The hats give a mean of 19.4 samples on odd steps and 0
-  on even ones. That is djrust's runner formula, `swing / 100 * sixteenth * 0.5`, applied to the unscaled 0..1 value that
-  `DeckIr::envelope` hands it. beats' own jazz (60) is 0.3 of a sixteenth (37.5 ms at 120 BPM), so a program's `swing 0.6`
-  is 1/100 of it.
+- **Was: a `swing` line was not heard (measured 2026-11-22, fixed by the next Decision).** The review rendered programs with
+  `beatscript render` at 48 kHz, groove on, 4 bars: a kick on the off-sixteenths only (`deck A: kick ~ x ~ x ...`), and `hihat x*16`.
+  It took the onsets by threshold (`scratchpad/gen3-review/onsets.py`). At 120 BPM, `swing 0.6` delayed every off-step by
+  exactly 18 samples (0.375 ms, 0.0030 of a sixteenth; the minimum equalled the maximum over 32 hits). `swing 1` delayed them by
+  30 samples (0.625 ms, 0.0050). At 90 BPM, `swing 0.6` gave 24 samples (0.500 ms, again 0.0030 of a sixteenth). That is
+  djrust's runner formula, `swing / 100 * sixteenth * 0.5`, applied to the unscaled 0..1 value that `DeckIr::envelope` handed it.
+  beats' own jazz (60) is 0.3 of a sixteenth, so a program's `swing 0.6` was 1/100 of it.
+
+**Decision (2026-11-22): a swing line is heard (taste call, one commit).** `DeckIr::envelope` (djlive/src/compile.rs) now hands
+djrust the setting as its 0..100: `swing * 100`, rounded to 1e-9 so that 0.15 is 15. So `swing 0.6` is beats' 60, which is 0.3 of
+a sixteenth: the off-step sounds `s / 2` of a sixteenth late (BEATSCRIPT.md, "Settings", defines it). That is the mapping gen@N and
+seed@2 already write. The same probes, re-rendered from this tree (`scratchpad/gen3-measure/`):
+
+| program | tempo | off-step delay | of a sixteenth |
+|---|---|---|---|
+| `kick ~ x ~ x ...`, `swing 0.6` | 120 | 1800 samples, 37.500 ms (min = max over 32 hits) | 0.3000 |
+| `kick ~ x ~ x ...`, `swing 1` | 120 | 3000 samples, 62.500 ms | 0.5000 |
+| `kick ~ x ~ x ...`, `swing 0.6` | 90 | 2400 samples, 50.000 ms | 0.3000 |
+| `hihat x*16`, `swing 0.6` | 120 | mean 1799.3 samples (1785 to 1810), 37.49 ms | 0.2999 |
+| `hihat x*16`, `swing 1` | 120 | mean 2999.6 samples, 62.49 ms | 0.4999 |
+
+The even steps stay within a few samples of where they were (the onset threshold meets the tail of the step before). This
+**changes the audio of every existing program that has a `swing` line**, hand-written or generated: the deep-house template's
+`swing 0.12`, the forms' (`swing 0.08`, `0.18`), every gen@N of a swung genre. No program's text or CID moves. The nets and
+envelope pins that moved are those of the programs with a swing line. In `crates/beatscript-api/tests/cid-pins.json` they are
+`extra/swing-settings.beatscript`, `examples/beatscript/arith.beatscript`, `deep-house-60.beatscript`, `full-fathom-five.beatscript`, `rag-rondo.beatscript`,
+`rondo-of-passacaglias.beatscript`, `such-stuff-as-dreams-122-reference.beatscript` and `swung-seed.beatscript` (their `nets`, `song_nets` and
+`envelopes`; each `cid` is the same). The nets in `crates/beatscript-api/tests/golden/swing-settings.json` moved too. It is one commit,
+so it can be dropped alone. Measured with `beatscript render` only: the page and the booth play the same envelope through the same
+runner, but were not measured.
 
 **Proposals.**
-- Scale the setting where it enters the engine (`DeckIr::envelope`, `swing * 100`), so that `swing 0.6` is beats' 60, which
-  is 0.3 of a sixteenth. That is the mapping gen@N and seed@2 already write. It changes the audio and the nets' envelope pins of
-  every program with a `swing` line, but no program's text or CID.
+- Measure the setting in the page and the booth as well (the same envelope and runner; only `beatscript render` was measured).
 
 ## Offline, missing, CC0
 

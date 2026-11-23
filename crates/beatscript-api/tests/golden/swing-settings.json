@@ -9,12 +9,12 @@
     "version": 1,
     "renamed_cid": "z4EBG9jFaQc3BsDa61Vr4MRSVcYyqyhosdcwLz1tZFtcJNuZZLL",
     "nets": {
-      "A": "z4EBG9izY25BmNLxiYaiUzrKGaYwumgCMmMKM62WHXDMGFGAr9T",
-      "B": "z4EBG9j9r4qm81y5LHg3KcHhomfiTuwMdaFEQMDZiK3yaSfSr7D"
+      "A": "z4EBG9jEDTsAqcnsCq8skri69g4mhq9v4qNPGqZ4DGnMb27hEuL",
+      "B": "z4EBG9j7nZEogv4hhoMg6y9XmVBPBVNvJrD6DNQQSaVcbUwqzaY"
     },
     "song_nets": {
-      "A": "z4EBG9izY25BmNLxiYaiUzrKGaYwumgCMmMKM62WHXDMGFGAr9T",
-      "B": "z4EBG9j9r4qm81y5LHg3KcHhomfiTuwMdaFEQMDZiK3yaSfSr7D"
+      "A": "z4EBG9jEDTsAqcnsCq8skri69g4mhq9v4qNPGqZ4DGnMb27hEuL",
+      "B": "z4EBG9j7nZEogv4hhoMg6y9XmVBPBVNvJrD6DNQQSaVcbUwqzaY"
     },
     "tempo": 87.5,
     "key": "d:minpent",
