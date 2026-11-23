@@ -124,7 +124,8 @@ phrasebook line, the genre templates).
 exact grid from the program's tempo map (bar 1 at frame 0), sliced by bars from 1 inclusive (`[17..24]`, the slice
 `seed(techno, 42).bass[17..24]` already uses), its audio SHA-256 recorded, made by `render@1`. It refuses a program that is
 not CC0 and public, or that uses restricted assets. It also renders the program's four DJ stems exactly (below). The
-booth's `deck load` takes `spec=render:<cid>` and `render:<cid>[a..b]`.
+registry's `deck load` documents `spec=render:<cid>` and `render:<cid>[a..b]` (`djhost::clip_source`); the booth's handler
+that loads one on a sample deck is still to be wired.
 
 **Proposed.** Programs need no new source word (rule 7): a slice on `use`, and a source name as the spec of `load`
 (taste call 3). Outside audio gains one function, `stem(SOURCE, STEM)` (taste call 4):
@@ -170,8 +171,10 @@ control deck, `key detect deck=A`, `key lock deck=A on=true`, `key status` (each
 not mix), `key compat a=8A b=3B` for two keys, the Perform window's harmonic hint (same, fifth, relative, clash), and a
 set's `check`, which gives each track's Camelot key and warns where neighbours clash or their tempos are more than 8% apart.
 
-**Built tonight.** Every analysis result names its analyzer and version (`beatgrid@1` DSP, `beatgrid@2` neural with its
-model hash, `key@1`), and the analysis cache is keyed by it, so a changed detector misses instead of returning an old grid.
+**Built tonight.** Every analysis result names its analyzer and version (`beatgrid@1` DSP, `beatgrid@2:<model sha256>` the
+neural grid), and the analysis cache (schema `djrust/beatgrid/v2`) is keyed by it, so a changed detector misses instead of
+returning an old grid. `key@1` is defined beside them; the public analysis does not compute keys yet (the booth's key
+detection does).
 
 **Proposed (taste call 5).** A sample line takes its grid analyzer and the numbers that override detection:
 
@@ -208,7 +211,9 @@ net deck's), and `trick on kind=stutter` a beat repeat.
 action log; and loops on a net deck, so a generated track can be held and rolled like a sample (the limits are in the
 engine's notes). The engine pin moved to that build. The registry has `do deck jump deck=A beats=-8`, `deck loop` says it
 works on a net deck, and the loop roll on a net deck is now the net's own loop, live and in the offline render, its halves
-and its release in the action log (docs/PERFORM.md). The booth's socket handler for `jump` is the booth's.
+and its release in the action log (docs/PERFORM.md). The booth's socket handler for `jump` is the booth's. Known: a roll
+whose release falls on the next section's line comes out about a beat out of phase (that section's net reaches the deck two
+beats early and ends the loop); docs/PERFORM.md says so, and the fix is an engine call.
 
 **Proposed (taste calls 6 and 7).** A cue point is a named position in a source. A program's cue points are its sections,
 so `hook.drop` needs no declaration. A sample declares them:
@@ -267,7 +272,9 @@ the first three (a net deck's harmony, melody and any other role). On a net deck
 stems to slots; the deck action `stemMute` mutes one; `do deck role deck=A role=bass on=false` turns a net deck's role off.
 The outside-audio splitter is a stub in the public engine.
 
-**Built tonight.** The four DJ stems of a program's render, exact, and CC0 when the program is.
+**Built tonight.** The four DJ stems of a program's render, exact, and CC0 when the program is: a stem is rendered with the
+mix's own limiter gains replayed, as `beatscript export` makes its stems, so the four add up to the mix within float rounding.
+A riser into a drop, a stinger and the control nets are in no stem.
 
 **Proposed (taste call 8).**
 
@@ -300,7 +307,10 @@ its text. A **set** program (`set { play <cid> ... mix N bars with ... }`) is th
   program is a comment line that keeps the timeline honest.
 - **the take** (`djrust.set-take`): the action log, the tracklist and the recording's CID, named by the program's CID
   exactly as a performance names its program, with a CID of its own. The program is the readable score; the take is the
-  exact replay. `beatscript set-program <recording>` writes both; the booth's `record program id=...` is the same call.
+  exact replay. `beatscript set-program <recording>` writes both; the booth's `record program id=...` is the same call
+  (its handler is the booth's, still to be wired). The set is BeatScript 2. Two things the booth must add for real recordings:
+  a `record mark kind=track cid=<program cid>` when it evaluates or loads a program (today a live-coded track appears only as
+  net loads, written as a gap comment), and the configured author in the recording (else `$DJ_AUTHOR` is used).
 
 **Proposed (taste call 9).** A set may declare outside sources and `play` them by name (a booth set instead of comments),
 and `mix N bars with bass_swap`, the one move a set's check can prove (a set mix already swaps a role both tracks share at
