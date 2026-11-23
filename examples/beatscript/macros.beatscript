@@ -1,3 +1,4 @@
+#! beatscript 2
 # macro: the DJ macro catalogue by name (docs/beatscript/ext-control.md). A riser into the drop, a ping-pong on the lead, a breakdown
 # with the pad in a cathedral, a tape stop to end on. Each starts on the bar its line names (the call goes a beat ahead: the
 # engine starts an effect on the next bar line); `render` and `listen` play them, a browser tab lists them as not played here.
@@ -20,7 +21,9 @@ section build 8 bars {
   deck B: harmony changes inst=warm-pad | melody lead inst=pwm-lead
   # eight bars of rising noise, from the build's first bar to the drop's; it is loud, so the build's master is down
   control: macro riser on A over 8 bars
-  mix { master level 0.6 }
+  mix {
+    master level 0.6
+  }
 }
 
 section drop 16 bars {
