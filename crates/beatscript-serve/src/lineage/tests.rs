@@ -336,3 +336,46 @@ fn the_pages_say_renamed() {
     assert!(page::with_renamed_line(base, &f.root, &twin, true).contains(&format!("href=\"/p/{twin}\"")));
     assert!(page::with_renamed_line(base, &twin, &f.root, false).contains("Renamed from BeatScript 1"));
 }
+
+/// The save round trip (6670 item 4): a program saved through the storage gate keeps the `# from:` lines of the text as sent
+/// in `meta.based_on` (gate::write_program; the stored text is canonical), and lineage counts it as vendoring what they name:
+/// by call and by CID, on the source's node and in its JSON-LD. A `# from:` line that pins nothing is a comment.
+#[test]
+fn a_save_keeps_the_from_lines_and_the_source_counts_the_vendoring() {
+    let d = tempfile::tempdir().unwrap();
+    let p = d.path();
+    let src = put(p, ROOT, json!({"visibility": "public", "name": "the source"}));
+    let line = format!("{src}.drop -> {src}");
+    let text = format!("#! name: vendored\n# from: {line}\n# from: a comment that pins nothing\n{UP}# from: {line}\n");
+    let a = crate::gate::admit(&text, "", "").unwrap();
+    assert_eq!(a.based_on(), [line.clone()]);
+    assert!(crate::gate::write_program(p, &a, json!({"license": "CC0-1.0", "visibility": "public", "name": "vendored"}), |v| v.to_string()).unwrap().is_some());
+    let file: Value = serde_json::from_slice(&std::fs::read(p.join(format!("{}.json", a.cid()))).unwrap()).unwrap();
+    assert_eq!(file["meta"]["based_on"], json!([line]));
+    assert!(!file["text"].as_str().unwrap().contains('#'), "the stored text is canonical: {file}");
+    let l = Lineage::new(p, Vec::new());
+    l.refresh(true);
+    assert_eq!(l.curation(&src), Curation { referenced_by: 0, vendored_from: 1 });
+    assert_eq!(l.curation(&format!("{src}.drop")), Curation { referenced_by: 0, vendored_from: 1 });
+    assert_eq!(l.curation("a comment that pins nothing"), Curation::default());
+    let n = l.node(&src).unwrap();
+    assert_eq!(n.json_ld("https://beatscript.app")["vendoredFrom"], 1);
+    assert!(n.json_ld("https://beatscript.app").get("referencedBy").is_none());
+    // the same notes saved again with no lines: first write wins, the kept lines stay
+    let again = crate::gate::admit(UP, "", "").unwrap();
+    assert_eq!(again.cid(), a.cid());
+    assert!(crate::gate::write_program(p, &again, json!({}), |v| v.to_string()).unwrap().is_none());
+    let file: Value = serde_json::from_slice(&std::fs::read(p.join(format!("{}.json", a.cid()))).unwrap()).unwrap();
+    assert_eq!(file["meta"]["based_on"], json!([line]));
+}
+
+/// An example's file is its text as written: its own `# from:` lines count as vendoring, as a stored program's kept ones do.
+#[test]
+fn an_examples_own_from_lines_count_as_vendoring() {
+    let d = tempfile::tempdir().unwrap();
+    let src = put(d.path(), ROOT, json!({"visibility": "public"}));
+    let text = format!("#! name: borrowed and written out\n# from: {src}.drop -> {src}\n{FAST}");
+    let (ex, _) = canon(&text);
+    let l = Lineage::new(d.path(), vec![Example { cid: ex, name: "written-out".into(), license: "CC0-1.0".into(), text }]);
+    assert_eq!(l.curation(&src), Curation { referenced_by: 0, vendored_from: 1 });
+}

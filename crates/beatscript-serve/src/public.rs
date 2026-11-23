@@ -510,6 +510,8 @@ pub fn shape_meta(v: &Value) -> Value {
     for k in ["prompt_sha256", "author", "created", "source", "renamed_at"] {
         put_s(&mut m, k, s_of(v, k), true);
     }
+    // what the text as saved said it vendored (its `# from:` lines), the stored text being canonical (gate::write_program)
+    put_strs(&mut m, "based_on", strs_of(v, "based_on"));
     Value::Object(m)
 }
 
@@ -816,7 +818,8 @@ async fn ld_preflight() -> Response<Body> {
 
 // programs
 
-/// `beatscriptFile`: the `.beatscript` download, the `#!` header lines (rights, provenance) in front of the text.
+/// `beatscriptFile`: the `.beatscript` download, the `#!` header lines (rights, provenance) in front of the text, then the `# from:`
+/// lines its save kept (`meta.based_on`), so the file says what it vendored and a save of it keeps them again.
 fn beatscript_file(cid: &str, text: &str, meta: &Value) -> String {
     let mut b = String::new();
     let one = |s: String| s.replace(['\n', '\r'], " ");
@@ -824,6 +827,9 @@ fn beatscript_file(cid: &str, text: &str, meta: &Value) -> String {
         if !v.is_empty() {
             b.push_str(&format!("#! {k}: {}\n", one(v)));
         }
+    }
+    for l in strs_of(meta, "based_on") {
+        b.push_str(&format!("# from: {}\n", one(l)));
     }
     b.push_str(text);
     if !text.ends_with('\n') {
@@ -1012,12 +1018,18 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
     }
     meta.insert("created".into(), json!(store::rfc3339_now()));
     meta.insert("source".into(), json!("put"));
+    // the text's `# from:` lines (an eject's provenance): the canonical text has no comments, so they are kept beside it, as
+    // gate::write_program keeps them from the text sent
+    let based_on = djlive::refs::from_lines(&text);
+    if !based_on.is_empty() {
+        meta.insert("based_on".into(), json!(based_on));
+    }
     let meta = Value::Object(meta);
     let size = go_encode(&json!({"cid": cid, "text": canonical, "meta": meta})).len() as i64;
     if st.store_total.load(Ordering::Relaxed) + size > st.store_cap {
         return ApiError::new(507, "store_full", "the programs store is full").retry(3600).response();
     }
-    match st.app.store.put_new(&cid, &canonical, meta.clone(), go_encode) {
+    match st.app.store.put_new(&cid, &text, meta.clone(), go_encode) {
         Ok(Some(n)) => {
             st.store_total.fetch_add(n as i64, Ordering::Relaxed);
             reply(201, true, meta)

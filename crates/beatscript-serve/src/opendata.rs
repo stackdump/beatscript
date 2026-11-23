@@ -30,6 +30,9 @@ pub struct Entry {
     pub created: String,
     /// The doc comments of the text as it was shared (the meta's `docs`: kind, name, doc); the canonical text has none.
     pub docs: Vec<(String, String, String)>,
+    /// The `# from:` lines of the text as it was shared (the meta's `based_on`: `<call> -> <cid>`): its JSON-LD's vendored
+    /// `isBasedOn` entries.
+    pub based_on: Vec<String>,
 }
 
 /// `^z[1-9A-HJ-NP-Za-km-z]{20,80}$`, as the store's names are.
@@ -81,7 +84,8 @@ pub fn read_entry(path: &Path) -> Option<Entry> {
                 .collect()
         })
         .unwrap_or_default();
-    Some(Entry { cid: cid.to_string(), text: text.to_string(), name: s("name"), author: s("author"), forked_from: s("forked_from"), created, docs })
+    let based_on = m.get("based_on").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
+    Some(Entry { cid: cid.to_string(), text: text.to_string(), name: s("name"), author: s("author"), forked_from: s("forked_from"), created, docs, based_on })
 }
 
 /// Every public CC0 program in `dir`, newest first (then by CID, so the order is total).
@@ -259,6 +263,7 @@ pub fn block_json(e: &Entry, ontology: Option<&dyn djlive::linked::Ontology>) ->
         .collect();
     let f = djlive::progld::Facts {
         docs: &docs,
+        based_on: &e.based_on,
         name: Some(e.name.as_str()).filter(|s| !s.is_empty()),
         license: Some("CC0-1.0"),
         author: Some(e.author.as_str()).filter(|s| !s.is_empty()),

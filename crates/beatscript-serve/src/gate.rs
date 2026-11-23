@@ -10,7 +10,9 @@
 //! - it names no sample or loop asset and does not `use restricted`.
 //!
 //! An [`Admitted`] can only be made here, and [`write_program`] (the only code that writes `programs/<cid>.json`)
-//! takes one, so a write path that skips the gate does not compile. `tests/storage_gate.rs` also reads the source
+//! takes one, so a write path that skips the gate does not compile. It also carries what the text as sent says it
+//! vendored (its `# from: <call> -> <cid>` lines, [`Admitted::based_on`]), which `write_program` keeps in `meta.based_on`:
+//! the stored text is canonical and has no comments, so every write path keeps the provenance the same way. `tests/storage_gate.rs` also reads the source
 //! tree and fails if anything else writes into the programs directory.
 //!
 //! Write paths (each calls [`admit`]; `tests/storage_gate.rs` enumerates them):
@@ -61,6 +63,7 @@ pub struct Admitted {
     cid: String,
     canonical: String,
     license: String,
+    based_on: Vec<String>,
 }
 
 impl Admitted {
@@ -73,6 +76,11 @@ impl Admitted {
     /// The licence as stored: the SPDX spelling of the CC id.
     pub fn license(&self) -> &str {
         &self.license
+    }
+    /// The provenance lines of the text as sent (`djlive::refs::from_lines`: each `# from: <call> -> <cid>` comment as
+    /// `<call> -> <cid>`, in order, each once), what [`write_program`] keeps as `meta.based_on`. Empty for a canonical text.
+    pub fn based_on(&self) -> &[String] {
+        &self.based_on
     }
 }
 
@@ -141,7 +149,7 @@ pub fn admit(text: &str, license: &str, visibility: &str) -> Result<Admitted, Re
     if declares_not_public(canonical) {
         return Err(Refusal::new(422, "restricted", "a program that says it is not public (`#! visibility:`) is not stored on this site"));
     }
-    Ok(Admitted { cid: cid.to_string(), canonical: canonical.to_string(), license: lic })
+    Ok(Admitted { cid: cid.to_string(), canonical: canonical.to_string(), license: lic, based_on: djlive::refs::from_lines(text) })
 }
 
 /// A stored file's verdict: its text and meta run through [`admit`] again (what `tests/storage_gate.rs` and
@@ -188,8 +196,9 @@ pub fn audit_dir(dir: &Path) -> Vec<(String, String)> {
 }
 
 /// The only write of `programs/<cid>.json`: `{"cid","text","meta"}` with the admitted licence and `public` forced
-/// into `meta`, through a temp file and link(2) (first write wins; a race with another server stores once).
-/// Ok(Some(bytes)) when this call stored it, Ok(None) when the file was already there.
+/// into `meta`, and `meta.based_on` the admitted text's provenance lines (none: no key; a caller's own is replaced, so
+/// the text as sent is its only source), through a temp file and link(2) (first write wins; a race with another server
+/// stores once). Ok(Some(bytes)) when this call stored it, Ok(None) when the file was already there.
 ///
 /// A BeatScript 1 program (old clients still send the old spelling) is stored with its BeatScript 2 twin, whether this call
 /// stored it or it was already there and has no twin yet ([`write_twin`]): the map from old CIDs to new stays complete. A twin
@@ -271,6 +280,13 @@ fn write_file(dir: &Path, a: &Admitted, meta: Value, encode: &impl Fn(&Value) ->
     };
     meta.insert("license".into(), json!(a.license));
     meta.insert("visibility".into(), json!("public"));
+    if a.based_on.is_empty() {
+        if meta.contains_key("based_on") {
+            meta = meta.into_iter().filter(|(k, _)| k != "based_on").collect();
+        }
+    } else {
+        meta.insert("based_on".into(), json!(a.based_on));
+    }
     let mut m = serde_json::Map::new();
     m.insert("cid".into(), json!(a.cid));
     m.insert("text".into(), json!(a.canonical));
@@ -395,5 +411,31 @@ mod tests {
         assert_eq!(admit_twin(&djlive::compile::program_cid(&v2), &v2, &json!({})).unwrap_err().code, "not_beatscript_1");
         // the gate still decides: a licence it does not take is refused for the twin too
         assert_eq!(admit_twin(x.cid(), x.canonical(), &json!({"license": "all-rights-reserved"})).unwrap_err().code, "not_creative_commons");
+    }
+
+    /// The text as sent says what it vendored (its `# from: <call> -> <cid>` lines): the write keeps them in `meta.based_on`
+    /// beside the canonical text, which has none. The text is their only source: a caller's own `based_on` is replaced.
+    #[test]
+    fn the_write_keeps_the_from_lines_of_the_text_as_sent() {
+        let pin = "z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf";
+        let line = format!("gen@2 techno seed=42 section=drop part=bass -> {pin}");
+        let sent = format!("# from: {line}\n# from: no pin\n{OK}# from: {line}\n");
+        let a = admit(&sent, "", "").unwrap();
+        assert_eq!(a.based_on(), [line.clone()]);
+        assert_eq!(a.cid(), admit(OK, "", "").unwrap().cid(), "the comments are not in the CID");
+        assert!(admit(a.canonical(), "", "").unwrap().based_on().is_empty(), "the canonical text has no comments");
+        let d = tempfile::tempdir().unwrap();
+        let read = |cid: &str| -> Value { serde_json::from_slice(&std::fs::read(d.path().join(format!("{cid}.json"))).unwrap()).unwrap() };
+        assert!(write_program(d.path(), &a, json!({"license": "", "visibility": "", "name": "kept", "based_on": ["forged -> zforged"]}), |v| v.to_string()).unwrap().is_some());
+        let v = read(a.cid());
+        assert_eq!(v["text"], json!(OK));
+        assert_eq!(v["meta"]["based_on"], json!([line]));
+        assert_eq!(v["meta"]["name"], "kept");
+        // a text with no lines: no key, and a caller's is dropped
+        let plain = admit("tempo 121\ndeck A: kick x ~ x ~\n", "", "").unwrap();
+        write_program(d.path(), &plain, json!({"based_on": ["forged -> zforged"], "name": "plain"}), |v| v.to_string()).unwrap();
+        let v = read(plain.cid());
+        assert!(v["meta"].get("based_on").is_none(), "{v}");
+        assert_eq!(v["meta"]["name"], "plain");
     }
 }

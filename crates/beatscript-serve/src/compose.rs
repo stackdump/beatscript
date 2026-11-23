@@ -111,7 +111,7 @@ fn fail(status: u16, code: &str, msg: impl Into<String>) -> Fail {
 
 // ---------- the stored programs, as compose and MCP read and write them ----------
 
-/// `api.Meta` as encoding/json writes it.
+/// `api.Meta` as encoding/json writes it, then `based_on` (the text's `# from:` lines its save kept, gate::write_program).
 pub fn go_meta(m: &Value) -> Value {
     let s = |k: &str| m[k].as_str().unwrap_or("").to_string();
     let mut o = Map::new();
@@ -129,6 +129,9 @@ pub fn go_meta(m: &Value) -> Value {
         if !s(k).is_empty() {
             o.insert(k.into(), json!(s(k)));
         }
+    }
+    if let Some(b) = m["based_on"].as_array().filter(|b| !b.is_empty()) {
+        o.insert("based_on".into(), Value::Array(b.iter().filter_map(Value::as_str).map(|l| json!(l)).collect()));
     }
     Value::Object(o)
 }
@@ -170,7 +173,8 @@ fn header_name(text: &str) -> String {
 }
 
 /// `programStore.Put`: checks `text`, refuses what the store refuses, stores the canonical text under its CID with
-/// `meta` (first meta wins: an existing program is returned as it is). Answers `{cid, text, meta}` and the report.
+/// `meta` and the text's `# from:` lines as `meta.based_on` (first meta wins: an existing program is returned as it is).
+/// Answers `{cid, text, meta}` and the report.
 pub fn put(app: &crate::App, eng: &Engine, owner: &str, text: &str, meta: Value) -> Result<(Value, Value), Fail> {
     let max = app.cfg.max_program_bytes;
     if text.len() > max {
@@ -215,13 +219,17 @@ pub fn put(app: &crate::App, eng: &Engine, owner: &str, text: &str, meta: Value)
     set_default(&mut meta, "created", gojson::rfc3339(gojson::now().0));
     set_default(&mut meta, "source", "put".into());
     set_default(&mut meta, "name", header_name(text));
-    // the storage gate: only Creative Commons, public, sample-free programs are stored
-    let adm = beatscript_serve::gate::admit(&canonical, meta["license"].as_str().unwrap_or(""), meta["visibility"].as_str().unwrap_or("")).map_err(|r| fail(r.status, r.code, r.message))?;
+    // the storage gate: only Creative Commons, public, sample-free programs are stored. It reads the text as sent, so what it
+    // admits carries the text's `# from:` lines (the canonical text has no comments): kept as meta.based_on
+    let adm = beatscript_serve::gate::admit(text, meta["license"].as_str().unwrap_or(""), meta["visibility"].as_str().unwrap_or("")).map_err(|r| fail(r.status, r.code, r.message))?;
     if adm.cid() != cid {
         return Err(fail(500, "internal", "the checker answered no usable CID"));
     }
     meta["license"] = json!(adm.license());
     meta["visibility"] = json!("public");
+    if !adm.based_on().is_empty() {
+        meta["based_on"] = json!(adm.based_on());
+    }
     let prog = json!({"cid": cid, "text": canonical, "meta": go_meta(&meta)});
     if app.cfg.programs_readonly {
         let _ = app.store.put_canonical(&cid, &canonical);

@@ -153,6 +153,10 @@ struct Meta {
     /// text, as `name` is from its `#! name:`: the canonical text the store keeps has no comments, so they are kept
     /// beside it. The program's JSON-LD gives each documented section its `description` from them.
     docs: Vec<(String, String, String)>,
+    /// What the text as shared said it vendored: its `# from: <call> -> <cid>` lines as `<call> -> <cid>` (gate::Admitted's
+    /// `based_on`, which gate::write_program keeps). The program's JSON-LD lists each in `isBasedOn` as `vendored`, and
+    /// lineage counts them (`vendoredFrom`).
+    based_on: Vec<String>,
 }
 
 impl Meta {
@@ -181,6 +185,7 @@ impl Meta {
                         .collect()
                 })
                 .unwrap_or_default(),
+            based_on: v.get("based_on").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default(),
         }
     }
     /// The doc comments of the text as it was shared (`meta.docs`), as djlive's (they have no place in the canonical text:
@@ -225,6 +230,9 @@ impl Meta {
         opt("source", &self.source);
         if !self.docs.is_empty() {
             m.insert("docs".into(), Value::Array(self.docs.iter().map(|(k, n, d)| json!({"kind": k, "name": n, "doc": d})).collect()));
+        }
+        if !self.based_on.is_empty() {
+            m.insert("based_on".into(), json!(self.based_on));
         }
         Value::Object(m)
     }
@@ -931,7 +939,7 @@ fn program_iri(cid: &str) -> String {
 /// is the block's `@id`, and the rights and provenance its meta keeps. The editor loads it, the phone and the MCP read
 /// it. None when the text does not compile to its CID (then there is nothing to vouch for).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn program_view_of(cid: &str, canonical: &str, name: &str, license: &str, author: &str, forked_from: &str, sig: Option<&str>, docs: &[djlive::doc::DocComment]) -> Option<String> {
+pub(crate) fn program_view_of(cid: &str, canonical: &str, name: &str, license: &str, author: &str, forked_from: &str, sig: Option<&str>, docs: &[djlive::doc::DocComment], based_on: &[String]) -> Option<String> {
     let c = djlive::compile::check(canonical).compiled?;
     if c.cid != cid {
         return None;
@@ -940,12 +948,12 @@ pub(crate) fn program_view_of(cid: &str, canonical: &str, name: &str, license: &
     let (name, license, author, forked) = (some(name), some(license), some(author), some(forked_from));
     // the key's scale and the instruments linked to the bitwrap ontology (the host's snapshot of it)
     let onto: &dyn djlive::linked::Ontology = djhost::ontology::vocabulary();
-    let f = djlive::progld::Facts { name: name.as_deref(), license: license.as_deref(), author: author.as_deref(), forked_from: forked.as_deref(), signature: sig, ontology: Some(onto), docs, ..Default::default() };
+    let f = djlive::progld::Facts { name: name.as_deref(), license: license.as_deref(), author: author.as_deref(), forked_from: forked.as_deref(), signature: sig, ontology: Some(onto), docs, based_on, ..Default::default() };
     Some(djlive::progld::view_html(&djlive::progld::document(&c, &f), true, "bar"))
 }
 
 fn program_view(p: &Prog, sig: Option<&str>) -> Option<String> {
-    program_view_of(&p.cid, &p.canonical, &p.label(), &p.meta.license, &p.meta.author, &p.meta.forked_from, sig, &p.meta.doc_comments())
+    program_view_of(&p.cid, &p.canonical, &p.label(), &p.meta.license, &p.meta.author, &p.meta.forked_from, sig, &p.meta.doc_comments(), &p.meta.based_on)
 }
 
 /// The `<beatscript-view>` block of a stored public program, for the editor's own page (`/?cid=`). None: not stored,
@@ -955,7 +963,7 @@ pub(crate) fn stored_view(dir: &std::path::Path, cid: &str) -> Option<String> {
     if !meta.visibility.is_empty() && meta.visibility != "public" {
         return None;
     }
-    program_view_of(cid, &text, &meta.name, &meta.license, &meta.author, &meta.forked_from, None, &meta.doc_comments())
+    program_view_of(cid, &text, &meta.name, &meta.license, &meta.author, &meta.forked_from, None, &meta.doc_comments(), &meta.based_on)
 }
 
 /// What `Accept` asks `/p/<cid>` for first.
@@ -1679,12 +1687,14 @@ impl Cards {
         }
         // the doc comments of the text as shared: the canonical text the store keeps has none
         meta.docs = djlive::doc::doc_comments(text).into_iter().map(|d| (d.kind.to_string(), d.name, d.doc)).collect();
-        // the storage gate: only Creative Commons, public, sample-free programs are stored
-        let adm = match beatscript_serve::gate::admit(&canonical, &meta.license, &meta.visibility) {
+        // the storage gate: only Creative Commons, public, sample-free programs are stored. It reads the text as shared, so
+        // what it admits carries the text's `# from:` lines, which the write keeps as meta.based_on
+        let adm = match beatscript_serve::gate::admit(text, &meta.license, &meta.visibility) {
             Ok(a) if a.cid() == cid => a,
             Ok(_) => return api(502, "checker_error", "the checker failed; try again".into()),
             Err(r) => return api(r.status, r.code, r.message),
         };
+        meta.based_on = adm.based_on().to_vec();
         meta.license = adm.license().to_string();
         meta.visibility = "public".into();
         let body = go_json(&json!({"cid": cid, "text": canonical, "meta": meta.to_json()}));
@@ -2039,7 +2049,7 @@ mod tests {
             height: 630,
         };
         let plain = page_html(&mk(None));
-        let block = program_view_of(&djlive::compile::program_cid("tempo 128\n"), "tempo 128\n", "night bus", "", "", "", Some("0xsig"), &[]).unwrap();
+        let block = program_view_of(&djlive::compile::program_cid("tempo 128\n"), "tempo 128\n", "night bus", "", "", "", Some("0xsig"), &[], &[]).unwrap();
         let with = page_html(&mk(Some(block.clone())));
         let head = |s: &str| s[..s.find("</head>").unwrap()].to_string();
         assert_eq!(head(&with), head(&plain));

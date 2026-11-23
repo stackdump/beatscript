@@ -78,7 +78,7 @@ struct Entry {
     renamed: bool,
     /// What it is based on (djlive::refs::based_on): (the call or reference, the CID it resolves to, `called` / `borrowed` /
     /// `vendored`). Vendored parts come from `meta.based_on` (`["<call> -> <cid>"]`, the `# from:` lines its text had when it
-    /// was saved: the canonical text has no comments).
+    /// was saved, gate::write_program: the canonical text has no comments).
     bases: Vec<(String, Option<String>, &'static str)>,
 }
 
@@ -280,12 +280,15 @@ impl Lineage {
         for e in legacy {
             examples.entry(e.cid.clone()).or_insert(e);
         }
-        // the examples draw on calls and programs too: they count like any public program
+        // the examples draw on calls and programs too: they count like any public program (an example's file is its text as
+        // written, so its own `# from:` lines say what it vendored)
         let mut ix = Index::default();
         for (cid, e) in &examples {
-            for b in djlive::refs::based_on(&e.text, &[]) {
+            let notes: Vec<String> = djlive::refs::from_lines(&e.text).into_iter().map(|l| format!("from: {l}")).collect();
+            for b in djlive::refs::based_on(&e.text, &notes) {
                 for k in std::iter::once(b.call).chain(b.cid) {
-                    ix.referenced.entry(k).or_default().0.insert(cid.clone());
+                    let r = ix.referenced.entry(k).or_default();
+                    if b.how == "vendored" { r.1.insert(cid.clone()) } else { r.0.insert(cid.clone()) };
                 }
             }
         }

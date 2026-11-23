@@ -11,6 +11,10 @@
 //!   refused.
 //! - `*_arrive_formatted`: what eval, load, queue, share and push_private (and the phone push route) hand on is the text
 //!   `fmt` prints (header lines and comments kept), with the CID of the text sent; what does not read goes on unchanged.
+//! - `write_paths_keep_the_from_lines`: the save round trip of a text with `# from:` lines (an eject's provenance), over
+//!   `PUT /api/shares`, `PUT /api/programs` and MCP `share`: the canonical text is stored, the lines are kept as
+//!   `meta.based_on` and read back (`GET /api/programs`, its `.beatscript`, MCP `open`, the page's JSON-LD `isBasedOn`), and lineage
+//!   counts each save as vendoring what the lines name (`vendoredFrom`).
 //!
 //! `cargo test -p beatscript-serve --test storage_gate`.
 
@@ -681,4 +685,68 @@ fn a_queued_link_item_is_formatted_text_with_the_cid_of_the_link() {
     assert_eq!(item["cid"], cid_of(LOOSE));
     // it is the canonical text, which is what the formatter leaves as it is
     assert_eq!(beatscript_serve::autoformat::autoformat(item["text"].as_str().unwrap(), 16384), item["text"].as_str().unwrap());
+}
+
+/// The save round trip of `# from:` lines (6670 item 4): each write path keeps the lines of the text as sent in
+/// `meta.based_on` (the stored text is canonical: it has no comments), every read gives them back, and lineage counts each
+/// saved program as vendoring the program the lines name.
+#[test]
+fn write_paths_keep_the_from_lines() {
+    let s = start();
+    let text_plain = ("Content-Type", "text/plain".to_string());
+    // the source: a program kept here, whose drop three others wrote out (ejected) under `# from:` lines
+    let source = "tempo 124\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~ | bass a1 ~ c2 ~\n}\narrange drop\n";
+    let src = cid_of(source);
+    assert_eq!(s.call("PUT", &format!("/api/programs/{src}"), &[text_plain.clone()], source.as_bytes()).status, 201);
+    let line = format!("{src}.drop -> {src}");
+    let vendored = |name: &str, notes: &str| format!("#! name: {name}\n# from: {line}\n# from: a comment that pins nothing\ntempo 124\nkey am\nsection drop 4 bars {{\n  # from: {line}\n  deck A: kick x ~ x ~ | bass {notes}\n}}\narrange drop\n");
+    let want = json!([line]);
+
+    // PUT /api/shares/<cid> (signed in)
+    let by_share = vendored("by share", "a1 ~ c2 e2");
+    let cid1 = cid_of(&by_share);
+    let r = s.call("PUT", &format!("/api/shares/{cid1}"), &[Server::bearer(TOKEN_A), ("Content-Type", "application/json".into())], json!({"text": by_share}).to_string().as_bytes());
+    assert_eq!(r.status, 201, "{}", r.body);
+    assert_eq!(r.json()["meta"]["based_on"], want, "{}", r.body);
+    // PUT /api/programs/<cid> (anonymous)
+    let by_put = vendored("by put", "a1 ~ e2 c2");
+    let cid2 = cid_of(&by_put);
+    let r = s.call("PUT", &format!("/api/programs/{cid2}"), &[text_plain.clone()], by_put.as_bytes());
+    assert_eq!(r.status, 201, "{}", r.body);
+    assert_eq!(r.json()["meta"]["based_on"], want, "{}", r.body);
+    // MCP share (signed in)
+    let by_mcp = vendored("by mcp", "c2 ~ a1 e2");
+    let (err, v) = s.mcp(TOKEN_A, "share", json!({"text": by_mcp}));
+    assert!(!err && v["stored"] == true, "{v}");
+    let cid3 = v["cid"].as_str().unwrap().to_string();
+    assert_eq!(cid3, cid_of(&by_mcp));
+    assert_eq!(v["meta"]["based_on"], want, "{v}");
+
+    for cid in [&cid1, &cid2, &cid3] {
+        // the file: the canonical text, and the lines beside it
+        let f: Value = serde_json::from_slice(&std::fs::read(s.dir.path().join("programs").join(format!("{cid}.json"))).unwrap()).unwrap();
+        assert!(!f["text"].as_str().unwrap().contains('#'), "{f}");
+        assert_eq!(f["meta"]["based_on"], want, "{f}");
+        // read back: the JSON, the `.beatscript` download (whose save keeps them again), MCP open
+        let r = s.call("GET", &format!("/api/programs/{cid}"), &[], b"");
+        assert_eq!(r.json()["meta"]["based_on"], want, "{}", r.body);
+        let btw = s.call("GET", &format!("/api/programs/{cid}.beatscript"), &[], b"").body;
+        assert!(beatscript.contains(&format!("\n# from: {line}\n")), "{btw}");
+        assert_eq!(cid_of(&btw), *cid, "the download is the same program");
+        let (_, o) = s.mcp(TOKEN_A, "open", json!({"url": cid}));
+        assert_eq!(o["meta"]["based_on"], want, "{o}");
+    }
+    // stored once: the same notes saved again with no lines keep the first meta (the store is append-only)
+    let canonical = s.call("GET", &format!("/api/programs/{cid1}"), &[], b"").json()["text"].as_str().unwrap().to_string();
+    let r = s.call("PUT", &format!("/api/programs/{cid1}"), &[text_plain.clone()], canonical.as_bytes());
+    assert_eq!(r.status, 200, "{}", r.body);
+    assert_eq!(r.json()["meta"]["based_on"], want, "{}", r.body);
+    // the page's linked data says what it vendored, from the kept lines
+    let page = s.call("GET", &format!("/p/{cid1}"), &[("Accept", "text/html".into())], b"").body;
+    assert!(page.contains(&format!(r#""name":"{src}.drop","resolves":"{src}","derivation":"vendored""#)), "no vendored isBasedOn in the page");
+    // and lineage counts the three as vendoring the source (none of them calls or borrows it in its text)
+    let t = s.call("GET", &format!("/api/lineage/{src}"), &[], b"").json();
+    assert_eq!(t["programs"][0]["@id"], json!(src), "{t}");
+    assert_eq!(t["programs"][0]["vendoredFrom"], 3, "{t}");
+    assert!(t["programs"][0].get("referencedBy").is_none(), "{t}");
 }

@@ -178,10 +178,11 @@ impl Store {
     }
 
     /// `programStore.put`'s write: `{"cid","text","meta"}` (meta as given, already in Go's field order) through a
-    /// temp file and link(2), so a race with the other server stores once. Ok(Some(bytes)) when this call stored it,
-    /// Ok(None) when the file was already there.
-    pub fn put_new(&self, cid: &str, canonical: &str, meta: Value, encode: impl Fn(&Value) -> String) -> std::io::Result<Option<usize>> {
-        let a = admit_as(cid, canonical, meta["license"].as_str().unwrap_or(""), meta["visibility"].as_str().unwrap_or(""))?;
+    /// temp file and link(2), so a race with the other server stores once. `text` is the program as sent: the canonical
+    /// text is stored, and its `# from:` lines are kept as `meta.based_on` (gate::write_program). Ok(Some(bytes)) when
+    /// this call stored it, Ok(None) when the file was already there.
+    pub fn put_new(&self, cid: &str, text: &str, meta: Value, encode: impl Fn(&Value) -> String) -> std::io::Result<Option<usize>> {
+        let a = admit_as(cid, text, meta["license"].as_str().unwrap_or(""), meta["visibility"].as_str().unwrap_or(""))?;
         if self.readonly {
             let mut l = self.links.lock().unwrap();
             if l.contains_key(cid) {
@@ -190,8 +191,8 @@ impl Store {
             if l.len() >= MAX_LINKS {
                 l.clear();
             }
-            l.insert(cid.to_string(), Program { cid: cid.to_string(), text: canonical.to_string() });
-            hold_twin(&mut l, cid, canonical, &meta);
+            l.insert(cid.to_string(), Program { cid: cid.to_string(), text: a.canonical().to_string() });
+            hold_twin(&mut l, cid, a.canonical(), &meta);
             return Ok(Some(0));
         }
         beatscript_serve::gate::write_program(&self.dir, &a, meta, encode)
@@ -248,11 +249,11 @@ fn hold_twin(l: &mut HashMap<String, Program>, cid: &str, canonical: &str, meta:
     }
 }
 
-/// The storage gate's verdict for a program a caller has already checked, as an io::Error (PermissionDenied) when
-/// it is refused or is not the CID the caller named.
-pub fn admit_as(cid: &str, canonical: &str, license: &str, visibility: &str) -> std::io::Result<beatscript_serve::gate::Admitted> {
+/// The storage gate's verdict for a program a caller has already checked (`text`: as sent, or canonical), as an
+/// io::Error (PermissionDenied) when it is refused or is not the CID the caller named.
+pub fn admit_as(cid: &str, text: &str, license: &str, visibility: &str) -> std::io::Result<beatscript_serve::gate::Admitted> {
     let denied = |m: String| std::io::Error::new(std::io::ErrorKind::PermissionDenied, m);
-    let a = beatscript_serve::gate::admit(canonical, license, visibility).map_err(|r| denied(r.message))?;
+    let a = beatscript_serve::gate::admit(text, license, visibility).map_err(|r| denied(r.message))?;
     if a.cid() != cid {
         return Err(denied(format!("that text is program {}, not {cid}", a.cid())));
     }
