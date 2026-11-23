@@ -730,9 +730,9 @@ fn write_paths_keep_the_from_lines() {
         // read back: the JSON, the `.beatscript` download (whose save keeps them again), MCP open
         let r = s.call("GET", &format!("/api/programs/{cid}"), &[], b"");
         assert_eq!(r.json()["meta"]["based_on"], want, "{}", r.body);
-        let btw = s.call("GET", &format!("/api/programs/{cid}.beatscript"), &[], b"").body;
-        assert!(beatscript.contains(&format!("\n# from: {line}\n")), "{btw}");
-        assert_eq!(cid_of(&btw), *cid, "the download is the same program");
+        let file = s.call("GET", &format!("/api/programs/{cid}.beatscript"), &[], b"").body;
+        assert!(file.contains(&format!("\n# from: {line}\n")), "{file}");
+        assert_eq!(cid_of(&file), *cid, "the download is the same program");
         let (_, o) = s.mcp(TOKEN_A, "open", json!({"url": cid}));
         assert_eq!(o["meta"]["based_on"], want, "{o}");
     }

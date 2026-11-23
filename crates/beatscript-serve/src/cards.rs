@@ -1992,7 +1992,7 @@ mod tests {
             assert_eq!(ctx["@context"][t], format!("bs:{t}"));
         }
         // the block says the same IRI
-        let v = program_view_of(&c2, "#! beatscript 2\ntempo 128\nkey am\ndeck A: kick x ~ x ~\n", "night bus", "CC0-1.0", "", "", None, &[]).expect("a block");
+        let v = program_view_of(&c2, "#! beatscript 2\ntempo 128\nkey am\ndeck A: kick x ~ x ~\n", "night bus", "CC0-1.0", "", "", None, &[], &[]).expect("a block");
         let r = djlive::progld::read_view(&v, true).unwrap();
         assert_eq!(r.cid, c2);
         assert_eq!(r.doc.get("@id").and_then(djengine::json::JsonValue::as_str), Some(v2["@id"].as_str().unwrap()));
