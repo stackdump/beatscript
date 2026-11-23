@@ -446,7 +446,7 @@ filter's cutoff, `filter lp 300hz`, is the number and nothing else; the hours of
 `until`). `NOTE`, `PITCH` (a note with its octave), `KEY`, `CHORD` and `ROMAN` are pitch words read as one token
 (`f#2`, `c4`, `d:dorian`, `am7`, `ii°`); `SDEG` a written degree in `deg( )` (`b3`, `#4`); `PARAM` a def's or a
 repeat's `$name`; `SUGAR` a control noun said without `do`; `STRING` a double-quoted string; `TOKEN` any token; `GLOB` a
-name with `*` in it; `CID` a saved program's id; `SEED` a seed's head (`seed`, `seed@2`); `GHOST` a ghost's `.` and
+name with `*` in it; `CID` a saved program's id; `SEED` `seed` or `seed@2`; `GHOST` a ghost's `.` and
 `RATCHET` a ratchet's `:N` (`x.` `x:3`). `±` may be written `+-` after
 a unit (`3m30s +- 5s`). In a lyric, `PHONES` is an escape's text:
 `aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j`, `-` cuts a word, `_` rests,
@@ -1163,7 +1163,7 @@ arrange from seed(techno, 42)                          the whole track
 section intro from seed(techno, 42)[1..8]              bars 1 to 8 as a section
 deck B: bass seed(techno, 42).bass[17..24] inst=fm-bass    a part's bars; your params win
 let riff = seed(techno, 42).bass[17..20]               the same, named (say which part)
-arrange from seed@2(jazz, 7)                           seeds v2: the track and its swing
+arrange from seed@2(jazz, 7)                           seeds v2: the track, swung
 section hook from <cid>.drop                  a saved program's section (parts, key)
 deck B: bass <cid>.drop inst=hoover           its part (the line's role; .melody another)
 arrange from template(deep-house, @tempest_such_stuff)  a phrase as a track
