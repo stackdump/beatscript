@@ -1,7 +1,7 @@
 {
   "name": "@stackdump/beatscript-player",
-  "version": "0.1.0",
-  "description": "<beatscript-track>: a BeatScript program and its player in one self-contained element. The engine (WebAssembly, inlined), its kits, voices and sing tables are bundled; nothing is fetched from beatscript.app. Plays from a click.",
+  "version": "0.2.0",
+  "description": "<beatscript-track>: a BeatScript program and its player in one self-contained element. The engine (WebAssembly, inlined), its kits, voices and sing tables are bundled; nothing is fetched from beatscript.app. Plays live from a click, or renders the whole track offline first (mode=\"render\") and plays it with a seek bar.",
   "type": "module",
   "main": "./beatscript-track.umd.js",
   "module": "./beatscript-track.js",
@@ -14,11 +14,13 @@
       "default": "./beatscript-track.umd.js"
     },
     "./umd": "./beatscript-track.umd.js",
+    "./render": { "types": "./beatscript-track.d.ts", "import": "./beatscript-render.js" },
+    "./render-model": "./render-model.js",
     "./package.json": "./package.json"
   },
   "jsdelivr": "./beatscript-track.js",
   "unpkg": "./beatscript-track.umd.js",
-  "files": ["beatscript-track.js", "beatscript-track.umd.js", "beatscript-track.d.ts", "js/", "wasm/", "test/", "README.md", "LICENSE", "LICENSES/", "hashes.json"],
+  "files": ["beatscript-track.js", "beatscript-track.umd.js", "beatscript-track.d.ts", "beatscript-render.js", "render-worker.js", "render-model.js", "js/", "wasm/", "test/", "README.md", "LICENSE", "LICENSES/", "hashes.json"],
   "sideEffects": true,
   "keywords": ["beatscript", "music", "live-coding", "web-component", "webassembly", "audioworklet"],
   "homepage": "https://beatscript.app/docs/embed",

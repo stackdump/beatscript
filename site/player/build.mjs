@@ -8,6 +8,8 @@
 //
 // The output is the npm package and also the files to put beside a page:
 //   beatscript-track.js        the element (ESM)        beatscript-track.umd.js   a classic-script loader of it
+//   beatscript-render.js       the offline render (mode="render"; also usable on its own, in a page, a Worker or Node)
+//   render-worker.js           that render in a Worker  render-model.js           its arithmetic and the WAV writer
 //   js/                        the editor's engine, unchanged (engine.js, its worklet and composer, the facade)
 //   wasm/btw.js                the wasm-bindgen glue    wasm/btw_bg.wasm.b64.js   the module, base64, as an ES module
 //   test/csp.html              a page under an artifact-like CSP that plays a program
@@ -28,7 +30,11 @@ const wasmDir = path.resolve(arg('--wasm', path.join(web, 'wasm')));
 const out = path.resolve(arg('--out', path.join(here, 'dist')));
 
 // the engine's own files, and nothing of the editor: what engine.js, its worklet and composer import, and the facade
-const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'embed-model.js'];
+// (station-model.js: wasm-mock.js imports it; highlight.js and util.js: the editor's syntax highlighting, for the
+// `highlight` attribute)
+const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'embed-model.js', 'station-model.js', 'highlight.js', 'util.js'];
+// the player's own files, at the package's top level
+const OWN = ['beatscript-track.js', 'beatscript-track.umd.js', 'beatscript-track.d.ts', 'beatscript-render.js', 'render-worker.js', 'render-model.js', 'package.json'];
 
 for (const f of ['btw.js', 'btw_bg.wasm']) {
   if (!fs.existsSync(path.join(wasmDir, f))) {
@@ -42,10 +48,7 @@ fs.mkdirSync(path.join(out, 'js'), { recursive: true });
 fs.mkdirSync(path.join(out, 'wasm'), { recursive: true });
 fs.mkdirSync(path.join(out, 'test'), { recursive: true });
 const cp = (from, to) => fs.copyFileSync(from, path.join(out, to));
-cp(path.join(here, 'src', 'beatscript-track.js'), 'beatscript-track.js');
-cp(path.join(here, 'src', 'beatscript-track.umd.js'), 'beatscript-track.umd.js');
-cp(path.join(here, 'src', 'beatscript-track.d.ts'), 'beatscript-track.d.ts');
-cp(path.join(here, 'src', 'package.json'), 'package.json');
+for (const f of OWN) cp(path.join(here, 'src', f), f);
 cp(path.join(here, 'README.md'), 'README.md');
 cp(path.join(here, 'test', 'csp.html'), 'test/csp.html');
 // the licences: the code is MIT; the bundled programs (test/csp.html's) and the engine's data (kits, voices, the sing

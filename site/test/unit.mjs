@@ -2161,6 +2161,61 @@ test('embed: the doc line is the playing section\'s doc comment, from the progra
 });
 
 // ---------------------------------------------------------------------------------------------------------------
+// the player's render mode (site/player/src/render-model.js): one pass, the caps, the WAV, the position line
+// ---------------------------------------------------------------------------------------------------------------
+
+const renderModel = await import(pathToFileURL(path.join(here, '..', 'player', 'src', 'render-model.js')).href);
+
+test('player render: one pass is btwd render\'s plan (a song once, `end at bar N`, else 16), capped at 256 bars and 600 s', () => {
+  const plan = renderModel.renderPlan;
+  assert.deepEqual([plan({ tempo: 120, arranged: true, song_bars: 32 }).bars, plan({ tempo: 120, arranged: true, song_bars: 32 }).cut], [32, null]);
+  assert.equal(plan({ tempo: 120, arranged: true, song_bars: 32, end_bar: 10 }).bars, 10, 'an end cuts the song');
+  assert.equal(plan({ tempo: 120, arranged: false, end_bar: 7 }).bars, 7);
+  assert.equal(plan({ tempo: 120, arranged: false }).bars, 16, 'no end: 16 bars');
+  assert.equal(plan({ arranged: false }).bpm, 120, 'no tempo: 120');
+  const loop = plan({ tempo: 128, arranged: true, song_bars: 24, loops: true });
+  assert.equal(loop.bars, 24);
+  assert.equal(loop.loops, true, 'a looping song is rendered once and looped');
+  const long = plan({ tempo: 174, arranged: true, song_bars: 400 });
+  assert.deepEqual([long.bars, long.cut], [256, 'bars']);
+  const slow = plan({ tempo: 60, arranged: true, song_bars: 200 });
+  assert.deepEqual([slow.bars, slow.cut], [150, 'seconds'], '200 bars at 60 is 800 s: 600 s is 150 bars');
+  assert.equal(plan({ tempo: 120, arranged: true, song_bars: 32 }, { maxBars: 8, maxSeconds: 600 }).bars, 8);
+  assert.equal(slow.seconds, 600);
+});
+
+test('player render: frames are btwd\'s frame_of; 16-bit samples round half away from zero and clamp', () => {
+  assert.equal(renderModel.framesOf(4, 120, 44100), 352800);
+  assert.equal(renderModel.framesOf(4, 128, 44100), 330750);
+  assert.equal(renderModel.framesOf(1, 140, 48000), Math.round((240 / 140) * 48000));
+  assert.deepEqual([1, -1, 2, -2, 0.5, -0.5, 0, NaN].map(renderModel.s16), [32767, -32768, 32767, -32768, 16384, -16384, 0, 0]);
+});
+
+test('player render: the WAV is RIFF/WAVE, 16-bit stereo PCM, little-endian, the samples interleaved', () => {
+  const L = new Float32Array([0, 1, -1]);
+  const R = new Float32Array([0.5, -0.5, 0]);
+  const w = renderModel.wav(L, R, 44100);
+  const v = new DataView(w.buffer);
+  const tag = (at) => String.fromCharCode(...w.subarray(at, at + 4));
+  assert.equal(w.length, 44 + 3 * 4);
+  assert.deepEqual([tag(0), tag(8), tag(12), tag(36)], ['RIFF', 'WAVE', 'fmt ', 'data']);
+  assert.deepEqual([v.getUint32(4, true), v.getUint16(20, true), v.getUint16(22, true), v.getUint32(24, true), v.getUint32(28, true), v.getUint16(32, true), v.getUint16(34, true), v.getUint32(40, true)], [36 + 12, 1, 2, 44100, 176400, 4, 16, 12]);
+  assert.deepEqual([0, 1, 2, 3, 4, 5].map((i) => v.getInt16(44 + 2 * i, true)), [0, 16384, 32767, -16384, -32768, 0]);
+});
+
+test('player render: the position line at a time in the render, in the runtime\'s status words', () => {
+  const plan = renderModel.renderPlan({ tempo: 120, arranged: true, song_bars: 12 });
+  const secs = [{ name: 'intro', start: 0, bars: 4 }, { name: 'drop', start: 4, bars: 8 }];
+  // a bar at 120 is 2 s
+  assert.deepEqual(renderModel.statusAt(0, plan, secs), { song_bar: 1, section: 'intro', section_bar: 1, section_bars: 4 });
+  assert.deepEqual(renderModel.statusAt(9.5, plan, secs), { song_bar: 5, section: 'drop', section_bar: 1, section_bars: 8 });
+  assert.deepEqual(embedModel.positionModel(renderModel.statusAt(23.99, plan, secs), secs, true), { sec: 'drop 2/2', bar: 'bar 8/8' });
+  assert.deepEqual(renderModel.statusAt(5, renderModel.renderPlan({ tempo: 120 }), []), { song_bar: 3, song_bars: 16 });
+  assert.equal(renderModel.clock(0), '0:00');
+  assert.equal(renderModel.clock(125.9), '2:05');
+});
+
+// ---------------------------------------------------------------------------------------------------------------
 // <beatscript-player> (embed.js): a classic script, run here in a vm with just enough of a DOM
 // ---------------------------------------------------------------------------------------------------------------
 

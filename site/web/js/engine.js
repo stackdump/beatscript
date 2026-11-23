@@ -72,13 +72,16 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
     // 2. the audio node
     await context.audioWorklet.addModule(new URL('./engine-worklet.js', import.meta.url));
     const options = { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { installBudget, perf: !!perf } };
+    // a context may make the node itself (the player's offline render, beatscript-render.js: the processor in this realm, on
+    // its own clock); every real AudioContext gets an AudioWorkletNode
+    const makeNode = (opts) => (typeof context.createBtwNode === 'function' ? context.createBtwNode('btw-engine', opts) : new AudioWorkletNode(context, 'btw-engine', opts));
     let node;
     let viaMessage = false;
     try {
-        node = new AudioWorkletNode(context, 'btw-engine', { ...options, processorOptions: { ...options.processorOptions, module } });
+        node = makeNode({ ...options, processorOptions: { ...options.processorOptions, module } });
     } catch {
         // a browser that will not clone a Module into a worklet gets the bytes in a message and compiles there
-        node = new AudioWorkletNode(context, 'btw-engine', options);
+        node = makeNode(options);
         viaMessage = true;
     }
     const gain = context.createGain();
