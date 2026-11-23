@@ -1223,7 +1223,7 @@ impl Compiler<'_> {
         let undo = vec![plan.off_call()];
         // a `when held(key)` after it is read while the program plays (F13): the line is the duck, decided when it is due
         let Some(effect) = self.performed(fl, Effect::Duck(plan)) else { return };
-        self.controls.push(Control { key: format!("{}{}", fl.path, crate::print::line(&fl.line)), timing: fl.timing, effect, span: fl.span, hold, undo, restore: None, via: fl.via.clone(), notice: None, window: None });
+        self.controls.push(Control { key: format!("{}{}", fl.path, crate::print::line(&fl.line)), timing: fl.timing, effect, span: fl.span, hold, undo, restore: None, via: fl.via.clone(), notice: None, window: None, lead: None });
     }
 
     /// An item's number, evaluated.
@@ -1344,7 +1344,7 @@ impl Compiler<'_> {
             return;
         }
         let Some(effect) = self.performed(fl, Effect::Mix(MixPlan { items: sets, restore })) else { return };
-        self.controls.push(Control { key: format!("{}{}", fl.path, crate::print::line(&fl.line)), timing: fl.timing, effect, span: fl.span, hold, undo: Vec::new(), restore: None, via: fl.via.clone(), notice: None, window: None });
+        self.controls.push(Control { key: format!("{}{}", fl.path, crate::print::line(&fl.line)), timing: fl.timing, effect, span: fl.span, hold, undo: Vec::new(), restore: None, via: fl.via.clone(), notice: None, window: None, lead: None });
     }
 }
 

@@ -113,6 +113,11 @@ pub fn browser_plays(noun: &str, p: &JsonValue) -> Result<(), String> {
             _ => Err(format!("the `{}` move (of the moves the browser plays vocoder_handoff only)", s("kind").or(s("name")).unwrap_or("?"))),
         },
         "vocal" => Err("a timed or performed `sing` line, or a `do vocal` line: the browser sings a `sing` line that starts with its section or the program".into()),
+        // a `macro` line (docs/beatscript/ext-control.md): named as the line names it, as the page's "not played here" does
+        "effects" => match (s("action"), s("id")) {
+            (Some("fire" | "release"), Some(id)) => Err(format!("`macro {id}` (the browser plays none of the DJ macro catalogue; render and listen do)")),
+            (a, _) => Err(format!("`effects {}` (the Effects window is the booth's)", a.unwrap_or("?"))),
+        },
         other => Err(format!("`{other}` (the browser's engine has no such unit)")),
     }
 }

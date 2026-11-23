@@ -87,8 +87,10 @@ fn build(c: &Compiled, own_lines: bool) -> (JsonValue, f64, NotInRender) {
                 // a bar ahead, so the net lands on the section's bar line
                 let at = f64::from(*start) * 4.0 - 2.0;
                 events.push(ArrangeEvent { at, bpm, op: ArrangeOp::Deck(DeckAction::Load { deck: d.name().to_string(), source: src }), via: "btw".into(), text: format!("section at bar {start}: deck {}", d.name()) });
+                // a deck that comes in starts on the section's bar line: one that is not playing starts its net the moment it
+                // plays, so started a beat ahead (as it was) its notes and its bars fell a beat early, and so did a macro on it
                 if !prev.contains(d) {
-                    events.push(ArrangeEvent { at: f64::from(*start) * 4.0 - 1.0, bpm, op: ArrangeOp::Deck(DeckAction::Play { deck: d.name().to_string(), on: true }), via: "btw".into(), text: format!("deck {} in", d.name()) });
+                    events.push(ArrangeEvent { at: f64::from(*start) * 4.0, bpm, op: ArrangeOp::Deck(DeckAction::Play { deck: d.name().to_string(), on: true }), via: "btw".into(), text: format!("deck {} in", d.name()) });
                 }
             }
         }
@@ -817,7 +819,7 @@ pub fn apply_event(e: &mut djengine::host::deck::engine::Engine, ev: &Event) -> 
             e.trick(deck, k, *on, args, TrickQuant::Now)
         }
         // a `macro` line (docs/beatscript/ext-control.md): the registry's `effects fire` / `release`, as the booth runs them
-        Event::Fire { target, id, bars } => crate::fx_view::fire(e, target, id, *bars, false),
+        Event::Fire { target, id, bars, latch } => crate::fx_view::fire(e, target, id, *bars, *latch),
         Event::Release { target, id } => crate::fx_view::release(e, target, id),
     }
 }
@@ -846,6 +848,14 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
     let want = (arr.seconds_at(beats) * sample_rate).round().max(0.0) as usize;
     let (mut left, mut right) = (Vec::with_capacity(want), Vec::with_capacity(want));
     let (mut next, mut applied) = (0, 0);
+    // a macro's call on a deck that does not play yet (one that comes in on the bar the macro starts on) waits for it: made just
+    // before the deck starts (the engine starts an engagement on a deck that does not play at once, so it starts with the deck), or
+    // at that bar if the deck never comes. (the frame of that bar, the net event)
+    let mut deferred: Vec<(i64, usize)> = Vec::new();
+    let fire = |e: &mut djengine::host::deck::engine::Engine, i: usize, applied: &mut usize, refused: &mut Vec<(f64, String)>| match apply_event(e, &ev[i].1) {
+        Ok(()) => *applied += 1,
+        Err(why) => refused.push((ev[i].0 as f64 / 4.0, why)),
+    };
     while left.len() < want {
         let frame = cond.engine().frame();
         while next < tl.len() && tl[next].0 <= frame {
@@ -854,6 +864,17 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
             let e = cond.engine_mut();
             if kind == 0 {
                 let at = arr.events[i].at;
+                if let ArrangeOp::Deck(DeckAction::Play { deck, on: true }) = &arr.events[i].op {
+                    let mut k = 0;
+                    while k < deferred.len() {
+                        if matches!(&ev[deferred[k].1].1, Event::Fire { target, .. } if target == deck) {
+                            let (_, j) = deferred.remove(k);
+                            fire(e, j, &mut applied, &mut refused);
+                        } else {
+                            k += 1;
+                        }
+                    }
+                }
                 match &arr.events[i].op {
                     ArrangeOp::Live { method, params } => {
                         if let Err(why) = e.apply_live_op(method, params) {
@@ -867,15 +888,32 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
                     }
                 }
             } else {
-                match apply_event(e, &ev[i].1) {
-                    Ok(()) => applied += 1,
-                    Err(why) => refused.push((ev[i].0 as f64 / 4.0, why)),
+                if let Event::Fire { target, .. } = &ev[i].1 {
+                    if e.deck(target).is_some_and(|d| !d.playing) {
+                        let b = ev[i].0 as f64 / 16.0;
+                        let bar = if (b - b.round()).abs() < 1e-9 { b.round() + 1.0 } else { b.ceil() };
+                        deferred.push((frame_of(bar * 4.0), i));
+                        continue;
+                    }
                 }
+                fire(e, i, &mut applied, &mut refused);
+            }
+        }
+        let mut k = 0;
+        while k < deferred.len() {
+            if deferred[k].0 <= frame {
+                let (_, j) = deferred.remove(k);
+                fire(cond.engine_mut(), j, &mut applied, &mut refused);
+            } else {
+                k += 1;
             }
         }
         let mut n = (want - left.len()).min(OfflineConductor::BLOCK_FRAMES);
         if let Some(t) = tl.get(next) {
             n = n.min((t.0 - frame).max(1) as usize);
+        }
+        if let Some(d) = deferred.iter().map(|(f, _)| *f).min() {
+            n = n.min((d - frame).max(1) as usize);
         }
         let (l, r) = cond.step_frames(n);
         left.extend_from_slice(l);

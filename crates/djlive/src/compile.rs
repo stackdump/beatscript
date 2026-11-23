@@ -433,6 +433,9 @@ pub struct Control {
     pub notice: Option<String>,
     /// A track's line in a set runs only on these program bars (from, to: to is the first bar it does not).
     pub window: Option<(u32, u32)>,
+    /// How far ahead of its line's time the call is made, in bars (a `macro`'s beat: macros.rs `lead`); None for a call made
+    /// on its line's time. What is judged against the line's place (a section's end, a set track's window) is `timing` + this.
+    pub lead: Option<Rat>,
 }
 
 /// One stretch of an arranged song: the decks' nets for it.
@@ -873,10 +876,13 @@ fn capability_warnings(c: &Compiler, diags: &mut Vec<Diagnostic>) {
         for (noun, params) in calls {
             if let Err(why) = reg.plays(noun, params) {
                 if seen.insert((ctl.span.start, why.clone())) {
-                    diags.push(
-                        Diagnostic::warning(ctl.span, format!("{} does not play this: {why}", reg.engine_name()))
-                            .help("it checks, and plays in the BeatScript app (the booth); here the line does nothing"),
-                    );
+                    // (a macro line plays in the offline render and listen: the booth has not got `effects fire` yet)
+                    let help = if noun == "effects" && matches!(params.get("action").and_then(JsonValue::as_str), Some("fire" | "release")) {
+                        "it checks, and `render` and `listen` play it; here the line does nothing"
+                    } else {
+                        "it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+                    };
+                    diags.push(Diagnostic::warning(ctl.span, format!("{} does not play this: {why}", reg.engine_name())).help(help));
                 }
             }
         }
@@ -1456,7 +1462,7 @@ impl<'a> Compiler<'a> {
         }
         calls.push(Call::new("td3", [("action", "step".into()), ("active", JsonValue::int(16))]));
         let label = section.map_or(String::new(), |s| format!("[{s}] "));
-        self.controls.push(Control { key: format!("{label}route td3 deck {} {}", deck.name(), part.role), timing, effect: Effect::Calls(calls), span: Span::default(), hold: None, undo: Vec::new(), restore: None, via: Vec::new(), notice: None, window: None });
+        self.controls.push(Control { key: format!("{label}route td3 deck {} {}", deck.name(), part.role), timing, effect: Effect::Calls(calls), span: Span::default(), hold: None, undo: Vec::new(), restore: None, via: Vec::new(), notice: None, window: None, lead: None });
     }
 
     /// L-15: a line in a section whose time comes after the section ends (`at bar 9` in a 4-bar section, an `every 8 bars` that
@@ -1490,6 +1496,8 @@ impl<'a> Compiler<'a> {
                 Timing::EveryPos { from, .. } => (from, true),
                 _ => continue,
             };
+            // (a macro's call goes a beat ahead: its line's own time is what the section has or has not)
+            let first = c.lead.and_then(|l| first.add(l).ok()).unwrap_or(first);
             if first >= e {
                 if !counted {
                     continue;
@@ -2089,28 +2097,34 @@ impl<'a> Compiler<'a> {
             restore = Some(len);
             undo.push(Call::new("mixer", [("deck", deck.into()), ("mute", false.into())]));
         }
-        // a macro: its call a beat ahead of a bar-line time (the engine starts it on the next bar line), and a held one-shot let
-        // go after its bars
-        let (mut timing, mut hold) = (fl.timing, fl.hold);
+        // a macro (macros.rs): its call a beat ahead of a bar-line time (the engine starts it on the next bar line), a held one-shot
+        // let go after its bars, and `every N bars from 0` two controls (its first fire has no beat before it; the rest are led)
         if let Body::Action(Action::Macro { version, id, over, .. }) = &l.body {
-            timing = crate::macros::lead(fl.timing);
-            if let Ok(e) = crate::macros::find(*version, &id.text) {
-                if let crate::macros::Length::Held(n) = e.length {
-                    let n = over.and_then(|(o, _)| o.whole_bars()).unwrap_or(n);
-                    let wait = crate::macros::wait_to_bar(fl.timing, timing);
-                    hold = Rat::int(i64::from(n)).add(wait).ok().and_then(Dur::from_bars);
-                    // (the calls under a performed guard too: the release is the fire's, whatever decided it)
-                    if let Effect::Calls(cs) = effect.base() {
-                        undo.extend(cs.iter().map(|c| {
-                            let mut p = c.params.clone();
-                            if let JsonValue::Object(o) = &mut p {
-                                o.set("action", JsonValue::str("release"));
-                            }
-                            Call { noun: c.noun.clone(), params: p }
-                        }));
-                    }
-                }
+            let key = format!("{}{}", fl.path, print::line(l));
+            let held = crate::macros::find(*version, &id.text).ok().and_then(|e| match e.length {
+                crate::macros::Length::Held(n) => Some(over.and_then(|(o, _)| o.whole_bars()).unwrap_or(n)),
+                _ => None,
+            });
+            // (the calls under a performed guard too: the release is the fire's, whatever decided it)
+            let release: Vec<Call> = match (held, effect.base()) {
+                (Some(_), Effect::Calls(cs)) => cs
+                    .iter()
+                    .map(|c| {
+                        let mut p = c.params.clone();
+                        if let JsonValue::Object(o) = &mut p {
+                            o.set("action", JsonValue::str("release"));
+                        }
+                        Call { noun: c.noun.clone(), params: p }
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            };
+            for (k, (timing, lead)) in crate::macros::calls(fl.timing).into_iter().enumerate() {
+                let hold = held.and_then(|n| Rat::int(i64::from(n)).add(crate::macros::wait_to_bar(timing, lead)).ok()).and_then(Dur::from_bars);
+                let key = if k == 0 { key.clone() } else { format!("{key} (from bar {})", crate::macros::later_from(fl.timing)) };
+                self.controls.push(Control { key, timing, effect: effect.clone(), span: fl.span, hold, undo: release.clone(), restore: None, via: fl.via.clone(), notice: notice.clone(), window: None, lead });
             }
+            return;
         }
         if let Some(n) = fl.hold {
             undo.extend(docall::derive_undo(&effect));
@@ -2123,7 +2137,7 @@ impl<'a> Compiler<'a> {
                 return;
             }
         }
-        self.controls.push(Control { key: format!("{}{}", fl.path, print::line(l)), timing, effect, span: fl.span, hold, undo, restore, via: fl.via.clone(), notice, window: None });
+        self.controls.push(Control { key: format!("{}{}", fl.path, print::line(l)), timing: fl.timing, effect, span: fl.span, hold: fl.hold, undo, restore, via: fl.via.clone(), notice, window: None, lead: None });
     }
 
     pub(crate) fn need_target(&mut self, what: &str, target: Option<Target>, span: Span, want: &str) -> bool {
@@ -2298,17 +2312,26 @@ impl<'a> Compiler<'a> {
                 self.err(Diagnostic::error(*osp, format!("`{}` is a one-shot: it runs its own length, so it takes no `over`", e.id)).help(format!("{written} {} on {}", e.id, deck.name())));
                 return None;
             }
-            Some((o, osp)) => match o.whole_bars() {
-                Some(n) if (1..=macros::MAX_BARS).contains(&n) => Some(n),
-                Some(n) => {
-                    self.err(Diagnostic::error(*osp, format!("a macro runs 1 to {} bars, not {n}", macros::MAX_BARS)).found(o.canonical()).help(format!("{written} {} on {} over {} bars", e.id, deck.name(), n.clamp(1, macros::MAX_BARS))));
-                    return None;
+            Some((o, osp)) => {
+                let n = o.whole_bars();
+                match n {
+                    Some(n) if (1..=macros::MAX_BARS).contains(&n) => Some(n),
+                    // (a whole number of bars, out of range: none, or more than a count holds, is not a fraction)
+                    _ if n.is_some() || o.as_bars().is_int() => {
+                        let near = if n == Some(0) { "1 bar".to_string() } else { format!("{} bars", macros::MAX_BARS) };
+                        self.err(
+                            Diagnostic::error(*osp, format!("a macro runs 1 to {} bars, not {}", macros::MAX_BARS, o.canonical()))
+                                .found(o.canonical())
+                                .help(format!("{written} {} on {} over {near}", e.id, deck.name())),
+                        );
+                        return None;
+                    }
+                    _ => {
+                        self.err(Diagnostic::error(*osp, "a macro takes whole bars").found(o.canonical()).help(format!("{written} {} on {} over 4 bars", e.id, deck.name())));
+                        return None;
+                    }
                 }
-                None => {
-                    self.err(Diagnostic::error(*osp, "a macro takes whole bars").found(o.canonical()).help(format!("{written} {} on {} over 4 bars", e.id, deck.name())));
-                    return None;
-                }
-            },
+            }
             None => e.length.default_bars(),
         };
         let mut pairs = vec![("action", JsonValue::str("fire")), ("target", JsonValue::str(deck.name())), ("id", JsonValue::str(e.id))];

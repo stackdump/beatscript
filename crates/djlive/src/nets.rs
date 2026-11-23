@@ -66,7 +66,7 @@ pub enum Event {
     Trick { deck: String, kind: String, on: bool, amount: Option<f64>, bars: Option<f64>, beats: Option<f64> },
     /// An entry of the DJ macro catalogue engaged on a deck's next bar line, for whole bars or its own length (`effects fire`, a
     /// `macro` line: macros.rs).
-    Fire { target: String, id: String, bars: Option<u32> },
+    Fire { target: String, id: String, bars: Option<u32>, latch: bool },
     /// A held one (a tape stop) let go (`effects release`).
     Release { target: String, id: String },
 }
@@ -96,9 +96,10 @@ impl Event {
                 }
                 s
             }
-            Event::Fire { target, id, bars } => match bars {
-                Some(n) => format!("fire {target} {id} bars={n}"),
-                None => format!("fire {target} {id}"),
+            Event::Fire { target, id, bars, latch } => match (bars, latch) {
+                (Some(n), _) => format!("fire {target} {id} bars={n}"),
+                (None, true) => format!("fire {target} {id} latch"),
+                (None, false) => format!("fire {target} {id}"),
             },
             Event::Release { target, id } => format!("release {target} {id}"),
         }
@@ -130,10 +131,11 @@ impl Event {
                 }
                 Ok(Event::Trick { deck: d.to_string(), kind: k.to_string(), on: on(o)?, amount, bars, beats })
             }
-            ["fire", t, id] => Ok(Event::Fire { target: t.to_string(), id: id.to_string(), bars: None }),
+            ["fire", t, id] => Ok(Event::Fire { target: t.to_string(), id: id.to_string(), bars: None, latch: false }),
+            ["fire", t, id, "latch"] => Ok(Event::Fire { target: t.to_string(), id: id.to_string(), bars: None, latch: true }),
             ["fire", t, id, b] => {
-                let n = b.strip_prefix("bars=").and_then(|n| n.parse::<u32>().ok()).ok_or_else(|| format!("`{b}` is not bars=N"))?;
-                Ok(Event::Fire { target: t.to_string(), id: id.to_string(), bars: Some(n) })
+                let n = b.strip_prefix("bars=").and_then(|n| n.parse::<u32>().ok()).ok_or_else(|| format!("`{b}` is not bars=N or latch"))?;
+                Ok(Event::Fire { target: t.to_string(), id: id.to_string(), bars: Some(n), latch: false })
             }
             ["release", t, id] => Ok(Event::Release { target: t.to_string(), id: id.to_string() }),
             _ => Err(format!("`{s}` is not an event")),
@@ -170,7 +172,7 @@ pub fn call_events(c: &Call) -> Option<Vec<Event>> {
         },
         // a macro line (macros.rs): the catalogue entry fired, and a held one let go
         "effects" => match s("action")? {
-            "fire" => Some(vec![Event::Fire { target: s("target")?.into(), id: s("id")?.into(), bars: n("bars").map(|v| v as u32) }]),
+            "fire" => Some(vec![Event::Fire { target: s("target")?.into(), id: s("id")?.into(), bars: n("bars").map(|v| v as u32), latch: b("latch") == Some(true) || matches!(s("latch"), Some("true" | "on")) }]),
             "release" => Some(vec![Event::Release { target: s("target")?.into(), id: s("id")?.into() }]),
             _ => None,
         },
@@ -291,11 +293,10 @@ fn triggers(t: Timing, h: i64) -> Result<Vec<i64>, String> {
                 b += i64::from(n);
             }
         }
+        // once, on the first bar that is a multiple of n (the runtime fires it once, and so does the render's arrangement)
         Timing::NextMult(n) => {
-            let mut b = 0;
-            while b * TICKS_PER_BAR < h && n > 0 {
-                v.push(b * TICKS_PER_BAR);
-                b += i64::from(n);
+            if n > 0 {
+                v.push(0);
             }
         }
         // sub-bar times (`at bar 2 beat 3`, `every 2 beats`): a tick is a sixteenth, so a time on a sixteenth is a place in the
@@ -515,11 +516,18 @@ impl ControlNet {
     /// with the program has its last value) and list what fired, tick by tick: the event stream of the
     /// performance. Tick `t` is the sixteenth `t` after the program's first bar line.
     pub fn events(&self, ticks: Option<i64>) -> Vec<(i64, Event)> {
+        self.events_keyed(ticks).into_iter().map(|(t, _, e)| (t, e)).collect()
+    }
+
+    /// [`events`](Self::events), each with the control line it is of (its `Control::key`, from [`ControlNet::lines`]): who made
+    /// a call, when two lines make the same one (`listen`'s macros say which line).
+    pub fn events_keyed(&self, ticks: Option<i64>) -> Vec<(i64, Option<String>, Event)> {
+        let owner: BTreeMap<&str, &str> = self.lines.iter().flat_map(|(k, ts)| ts.iter().map(move |t| (t.as_str(), k.as_str()))).collect();
         let mut g = self.graph();
         let mut out = Vec::new();
         for t in 0..ticks.unwrap_or(self.ticks + 1) {
             g.advance();
-            out.extend(fired(&g, t));
+            out.extend(fired(&g, t).into_iter().map(|(tick, tid, e)| (tick, owner.get(tid.as_str()).map(|k| k.to_string()), e)));
         }
         out
     }
@@ -541,7 +549,7 @@ impl ControlNet {
 }
 
 /// The events of the advance a graph just made (`tick` is the 0-based tick it was).
-fn fired(g: &WaveGraph, tick: i64) -> Vec<(i64, Event)> {
+fn fired(g: &WaveGraph, tick: i64) -> Vec<(i64, String, Event)> {
     let mut v = Vec::new();
     for i in (0..g.control_count).step_by(2) {
         let (ni, t) = (g.controls[i] as usize, g.controls[i + 1] as usize);
@@ -551,7 +559,7 @@ fn fired(g: &WaveGraph, tick: i64) -> Vec<(i64, Event)> {
             continue;
         }
         match parse_label(&cb.target_net) {
-            Ok(ev) => v.extend(ev.into_iter().map(|e| (tick, e))),
+            Ok(ev) => v.extend(ev.into_iter().map(|e| (tick, net.trans_ids[t].to_string(), e))),
             Err(e) => debug_assert!(false, "bad event label: {e}"),
         }
     }
@@ -595,7 +603,7 @@ impl Runner {
     /// Advance one sixteenth; the events that fired on it.
     pub fn step(&mut self) -> Vec<Event> {
         self.g.advance();
-        let v = fired(&self.g, self.tick).into_iter().map(|(_, e)| e).collect();
+        let v = fired(&self.g, self.tick).into_iter().map(|(_, _, e)| e).collect();
         self.tick += 1;
         v
     }

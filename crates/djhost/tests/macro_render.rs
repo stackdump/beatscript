@@ -51,3 +51,22 @@ fn a_macro_at_the_first_bar_starts_where_the_engine_can() {
     let at = first_diff_bars(&now.audio.left, &p.audio.left).expect("heard");
     assert!((1.0..1.25).contains(&at), "a macro with no time word starts on bar 1 (the engine's next bar line), not {at:.3}");
 }
+
+const ENTERS: &str = "tempo 120\nsection intro 4 bars {\n  deck A: kick x ~ x ~ x ~ x ~\n}\nsection drop 4 bars {\n  deck A: kick x ~ x ~ x ~ x ~\n  deck B: bass c2 ~ c2 ~ c2 ~ c2 ~\n}\narrange intro drop\n";
+
+/// A deck that comes in on a later section starts on that section's bar line, its notes and its bars with it (it used to start a
+/// beat ahead: its notes fell a beat early, and a macro on it, which starts on the deck's own bar line, three beats late).
+#[test]
+fn a_deck_that_comes_in_later_plays_from_its_bar_and_a_macro_on_it_starts_there() {
+    let silent_a = ENTERS.replace("kick x ~ x ~ x ~ x ~", "kick ~ ~ ~ ~");
+    let r = rendered(&silent_a);
+    let first = r.audio.left.iter().position(|x| x.abs() > 1e-4).expect("deck B sounds") as f64 / (2.0 * SR);
+    assert!((4.0..4.05).contains(&first), "deck B's first note is on bar 4, not {first:.3}");
+    let plain = rendered(ENTERS);
+    for (line, bar) in [("macro wash on B over 2 bars", 4.0), ("at bar 1: macro filter on B over 2 bars", 5.0)] {
+        let with = rendered(&ENTERS.replace("arrange intro drop\n", "").replace("  deck B: bass c2 ~ c2 ~ c2 ~ c2 ~\n}", &format!("  deck B: bass c2 ~ c2 ~ c2 ~ c2 ~\n  {line}\n}}\narrange intro drop")));
+        assert!(with.refused.is_empty(), "{line}: {:?}", with.refused);
+        let at = first_diff_bars(&with.audio.left, &plain.audio.left).expect("heard");
+        assert!((bar..bar + 0.25).contains(&at), "`{line}` starts on bar {bar}, not {at:.3}");
+    }
+}

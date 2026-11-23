@@ -241,8 +241,9 @@ impl<'a> Sections<'a> {
             for (d, ir) in nets.iter() {
                 let src = DeckSource::RawNets(ir.envelope(0));
                 self.pending.push_back(ArrangeEvent { at: f64::from(start) * 4.0 - 2.0, bpm, op: ArrangeOp::Deck(DeckAction::Load { deck: d.name().to_string(), source: src }), via: "btw".into(), text: format!("section at bar {start}: deck {}", d.name()) });
+                // (on the section's bar line, as djhost::beatscript_render's: a deck that is not playing starts its net when it plays)
                 if !prev.contains_key(d) {
-                    self.pending.push_back(ArrangeEvent { at: f64::from(start) * 4.0 - 1.0, bpm, op: ArrangeOp::Deck(DeckAction::Play { deck: d.name().to_string(), on: true }), via: "btw".into(), text: format!("deck {} in", d.name()) });
+                    self.pending.push_back(ArrangeEvent { at: f64::from(start) * 4.0, bpm, op: ArrangeOp::Deck(DeckAction::Play { deck: d.name().to_string(), on: true }), via: "btw".into(), text: format!("deck {} in", d.name()) });
                 }
             }
             for d in prev.keys() {
@@ -287,14 +288,15 @@ pub fn full_arrangement(c: &Compiled) -> (Arrangement, f64) {
 // the control lines
 
 /// One control event on the render's timeline.
+#[derive(Clone)]
 enum Move {
     /// A mixer, transport, duck or mix move, as `djhost::beatscript_render::control_events` makes it for the desktop's render: a
     /// strip's level, EQ and mute, the master level, the crossfader, ramps and lfos sampled the way the runtime sends them.
     Arrange(ArrangeEvent),
     /// What the program's control net fires (`djlive::nets`, as `djhost::beatscript_render::render` plays it): inserts (filter,
     /// reverb, delay, crush) set and switched, their ramps a sixteenth of a bar at a time, the two moves the net holds, and a
-    /// `macro` line's `effects fire` / `release`. With the beat it is on.
-    Net(djlive::nets::Event, f64),
+    /// `macro` line's `effects fire` / `release`. With the beat it is on and the line (its control's key) it is of.
+    Net(djlive::nets::Event, f64, Option<String>),
 }
 
 /// A `macro` line's call as the render made it (docs/beatscript/ext-control.md): `listen` reports each one, with what the engine said.
@@ -302,23 +304,59 @@ enum Move {
 pub struct MacroCall {
     /// The beat the call was made on (a beat ahead of the bar line its line names: the engine starts it on the next one).
     pub beat: f64,
+    /// The beat the engine starts it on: the target deck's next bar line after the call, read off the deck's own clock when the call
+    /// is made (what `engage` does), so a deck whose bars are not the program's would show here.
+    pub start_beat: f64,
     pub target: String,
     pub id: String,
     pub bars: Option<u32>,
-    /// The line of the program text (1-based) and its text.
+    pub latch: bool,
+    /// A held one-shot (a tape stop): the beat it was let go on.
+    pub released_beat: Option<f64>,
+    /// The line of the program text (1-based) and its text, and its control's key.
     pub line: usize,
     pub text: String,
+    pub key: String,
     /// Why the engine refused it, when it did (a net macro on a deck that plays no net).
     pub refused: Option<String>,
 }
 
 impl MacroCall {
-    /// The program bar (0-based) the engine starts it on: the next bar line after its call.
-    pub fn starts_bar(&self) -> u32 {
-        let b = self.beat / 4.0;
-        let next = if (b - b.round()).abs() < 1e-9 { b.round() + 1.0 } else { b.ceil() };
-        next.max(0.0) as u32
+    /// The program bar the engine starts it on, in bars (whole when the deck's bars are the program's). A call the engine refused
+    /// starts nowhere: this is the bar it asked for, the program's next bar line after the call.
+    pub fn starts_at(&self) -> f64 {
+        if self.refused.is_some() {
+            let b = self.beat / 4.0;
+            return if (b - b.round()).abs() < 1e-9 { b.round() + 1.0 } else { b.ceil() };
+        }
+        self.start_beat / 4.0
     }
+
+    /// The program bar (0-based) it starts in.
+    pub fn starts_bar(&self) -> u32 {
+        (self.starts_at() + 1e-6).floor().max(0.0) as u32
+    }
+
+    /// How many bars a held one-shot was held (from its start to its release).
+    pub fn held_bars(&self) -> Option<f64> {
+        self.released_beat.map(|r| (r - self.start_beat) / 4.0)
+    }
+}
+
+/// The beat (on the render's own clock, `bpm`) the engine starts an engagement asked for at `frame` on `deck`: its next bar line at
+/// least the engine's lead ahead (`deck_grid_frame`'s rule), or at once when it is not playing.
+fn engagement_start(engine: &djengine::host::deck::engine::Engine, deck: &str, frame: i64, bpm: f64) -> f64 {
+    const LEAD_FRAMES: f64 = 384.0;
+    let sr = engine.sample_rate;
+    let at = |f: f64| f / (60.0 / bpm * sr);
+    let Some(d) = engine.deck(deck) else { return at(frame as f64) };
+    let Some(s) = d.beat_state(sr).filter(|s| s.bpm > 0.0 && d.playing) else { return at(frame as f64) };
+    let fpb = 60.0 * sr / s.bpm;
+    let mut ahead = ((s.beat / 4.0).ceil() * 4.0 - s.beat) * fpb;
+    if ahead < LEAD_FRAMES {
+        ahead += 4.0 * fpb;
+    }
+    at(frame as f64 + ahead.round())
 }
 
 /// The program's control lines as one timeline, in frames: the arrangement's control moves first on a tie, then the net's.
@@ -329,10 +367,22 @@ pub struct Controls {
     next: usize,
     /// Control lines the render does not hear (neither the arrangement nor the net carries them): for the start event's notes.
     unheard: Vec<String>,
-    /// A macro line's place for its call: (target, id, bars) to (line, text).
-    macro_lines: Vec<((String, String, Option<u32>), (usize, String))>,
+    /// A macro line's place for its call: its control's key to (line, text).
+    macro_lines: BTreeMap<String, (usize, String)>,
+    /// The tempo the render's clock runs at (a frame is a beat at it).
+    bpm: f64,
     /// The macro calls made so far, with what the engine said.
     pub macros: Vec<MacroCall>,
+    /// Macro calls on a deck that did not play yet when they came due (a deck that comes in on the bar the macro starts on): the
+    /// frame of that bar, and the move. Made just before the deck starts (the engine starts an engagement on a deck that does not
+    /// play at once, so it starts with the deck), or at that bar if the deck never comes.
+    deferred: Vec<(i64, usize)>,
+}
+
+/// The program's next bar line after `beat`, in beats (a bar line itself: the next one).
+fn next_bar_beat(beat: f64) -> f64 {
+    let b = beat / 4.0;
+    4.0 * if (b - b.round()).abs() < 1e-9 { b.round() + 1.0 } else { b.ceil() }
 }
 
 impl Controls {
@@ -341,14 +391,14 @@ impl Controls {
         let bpm = c.tempo.unwrap_or(120.0);
         let mut moves: Vec<(i64, u8, usize, Move)> = Vec::new();
         if c.controls.is_empty() {
-            return Controls { moves, next: 0, unheard: Vec::new(), macro_lines: Vec::new(), macros: Vec::new() };
+            return Controls { moves, next: 0, unheard: Vec::new(), macro_lines: BTreeMap::new(), bpm, macros: Vec::new(), deferred: Vec::new() };
         }
         let (arr, left_out) = djhost::beatscript_render::control_events(c, bpm, beats, true);
         for (i, e) in arr.into_iter().enumerate() {
             moves.push((frame_of(e.at), 0, i, Move::Arrange(e)));
         }
         let net = djlive::nets::control_net(c, program_bars);
-        for (i, (tick, e)) in net.events(None).into_iter().enumerate() {
+        for (i, (tick, key, e)) in net.events_keyed(None).into_iter().enumerate() {
             // the mixer's fields are the arrangement's (sampled and thinned as the runtime sends them): not set twice
             if let djlive::nets::Event::Set { param, .. } = &e {
                 if matches!(param.as_str(), "volume" | "low" | "mid" | "high" | "master" | "crossfader") {
@@ -359,42 +409,74 @@ impl Controls {
             if beat >= beats {
                 continue;
             }
-            moves.push((frame_of(beat), 1, i, Move::Net(e, beat)));
+            moves.push((frame_of(beat), 1, i, Move::Net(e, beat, key)));
         }
         moves.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
         // unheard: a line the arrangement leaves out that the net does not hold either
         let residual: BTreeSet<&str> = net.residual.iter().map(|(k, _)| k.as_str()).collect();
         let lines: BTreeSet<usize> = c.controls.iter().filter(|ctl| residual.contains(ctl.key.as_str())).map(|ctl| djlive::diag::line_col(&c.source, ctl.span.start).0).collect();
         let unheard = left_out.lines.iter().filter(|l| lines.contains(&l.line)).map(|l| format!("line {} `{}` ({})", l.line, l.text, l.kind)).collect();
-        let mut macro_lines = Vec::new();
-        for ctl in &c.controls {
-            let djlive::compile::Effect::Calls(cs) = &ctl.effect else { continue };
-            for call in cs.iter().filter(|x| x.noun == "effects") {
-                if let Some(vec) = djlive::nets::call_events(call) {
-                    for e in vec {
-                        if let djlive::nets::Event::Fire { target, id, bars } = e {
-                            let line = djlive::diag::line_col(&c.source, ctl.span.start).0;
-                            let text = ctl.span.text(&c.source).lines().next().unwrap_or("").trim().to_string();
-                            macro_lines.push(((target, id, bars), (line, text)));
-                        }
-                    }
-                }
-            }
+        let mut macro_lines = BTreeMap::new();
+        for ctl in c.controls.iter().filter(|ctl| matches!(ctl.effect.base(), djlive::compile::Effect::Calls(cs) if cs.iter().any(|x| x.noun == "effects"))) {
+            let line = djlive::diag::line_col(&c.source, ctl.span.start).0;
+            let text = ctl.span.text(&c.source).lines().next().unwrap_or("").trim().to_string();
+            macro_lines.insert(ctl.key.clone(), (line, text));
         }
-        Controls { moves, next: 0, unheard, macro_lines, macros: Vec::new() }
+        Controls { moves, next: 0, unheard, macro_lines, bpm, macros: Vec::new(), deferred: Vec::new() }
     }
 
     fn peek(&self) -> Option<i64> {
-        self.moves.get(self.next).map(|m| m.0)
+        let d = self.deferred.iter().map(|(f, _)| *f).min();
+        match (self.moves.get(self.next).map(|m| m.0), d) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        }
     }
 
     /// Apply every move due at or before `frame`.
     fn apply_due(&mut self, frame: i64, engine: &mut djengine::host::deck::engine::Engine) {
-        while let Some((f, _, _, m)) = self.moves.get(self.next) {
+        while let Some((f, ..)) = self.moves.get(self.next) {
             if *f > frame {
                 break;
             }
-            match m {
+            let i = self.next;
+            self.next += 1;
+            // a macro on a deck that does not play yet waits for it (`deferred`)
+            if let Move::Net(djlive::nets::Event::Fire { target, .. }, beat, _) = &self.moves[i].3 {
+                if engine.deck(target).is_some_and(|d| !d.playing) {
+                    let deadline = (next_bar_beat(*beat) * 60.0 / self.bpm * engine.sample_rate).round() as i64;
+                    self.deferred.push((deadline, i));
+                    continue;
+                }
+            }
+            self.apply_move(i, frame, engine);
+        }
+        self.apply_deferred(None, frame, engine);
+    }
+
+    /// The deferred macro calls on `deck`, just before it starts to play; with None, those whose bar has come (the deck never did).
+    pub fn apply_deferred(&mut self, deck: Option<&str>, frame: i64, engine: &mut djengine::host::deck::engine::Engine) {
+        let mut k = 0;
+        while k < self.deferred.len() {
+            let (deadline, i) = self.deferred[k];
+            let hit = match deck {
+                Some(d) => matches!(&self.moves[i].3, Move::Net(djlive::nets::Event::Fire { target, .. }, ..) if target == d),
+                None => deadline <= frame,
+            };
+            if hit {
+                self.deferred.remove(k);
+                self.apply_move(i, frame, engine);
+            } else {
+                k += 1;
+            }
+        }
+    }
+
+    fn apply_move(&mut self, i: usize, frame: i64, engine: &mut djengine::host::deck::engine::Engine) {
+        let m = self.moves[i].3.clone();
+        {
+            let f = &frame;
+            match &m {
                 // refusals are not the listener's business (the desktop's render counts them; a stream has no report)
                 Move::Arrange(e) => match &e.op {
                     ArrangeOp::Live { method, params } => {
@@ -404,17 +486,29 @@ impl Controls {
                         let _ = engine.apply_arrange_op(op);
                     }
                 },
-                Move::Net(e, beat) => {
+                Move::Net(e, beat, key) => {
+                    // a macro's call is kept, with where the engine starts it and what it said, for `listen`; a held one's release too
+                    let start = match e {
+                        djlive::nets::Event::Fire { target, .. } => Some(engagement_start(engine, target, *f, self.bpm)),
+                        _ => None,
+                    };
                     let r = djhost::beatscript_render::apply_event(engine, e);
-                    // a macro's call is kept, with what the engine said, for `listen`
-                    if let djlive::nets::Event::Fire { target, id, bars } = e {
-                        let key = (target.clone(), id.clone(), *bars);
-                        let (line, text) = self.macro_lines.iter().find(|(k, _)| *k == key).map(|(_, v)| v.clone()).unwrap_or_default();
-                        self.macros.push(MacroCall { beat: *beat, target: target.clone(), id: id.clone(), bars: *bars, line, text, refused: r.err() });
+                    let key = key.clone().unwrap_or_default();
+                    match e {
+                        djlive::nets::Event::Fire { target, id, bars, latch } => {
+                            let (line, text) = self.macro_lines.get(&key).cloned().unwrap_or_default();
+                            let start_beat = start.unwrap_or(*beat);
+                            self.macros.push(MacroCall { beat: *beat, start_beat, target: target.clone(), id: id.clone(), bars: *bars, latch: *latch, released_beat: None, line, text, key, refused: r.err() });
+                        }
+                        djlive::nets::Event::Release { target, id } => {
+                            if let Some(m) = self.macros.iter_mut().rev().find(|m| m.key == key && &m.target == target && &m.id == id && m.released_beat.is_none()) {
+                                m.released_beat = Some(*beat);
+                            }
+                        }
+                        _ => {}
                     }
                 }
             }
-            self.next += 1;
         }
     }
 }
@@ -689,6 +783,10 @@ pub fn drive(c: &Compiled, plan: &Plan, sr: f64, want: i64, ctls: &mut Controls,
                 break;
             }
             let (_, e) = next_ev.take().expect("just matched");
+            // a deck that comes in: the macros waiting for it first (on a deck that does not play yet they start at once)
+            if let ArrangeOp::Deck(DeckAction::Play { deck, on: true }) = &e.op {
+                ctls.apply_deferred(Some(deck), frame, cond.engine_mut());
+            }
             match &e.op {
                 ArrangeOp::Live { method, params } => {
                     // refusals (the closing `cue`) are not the listener's business

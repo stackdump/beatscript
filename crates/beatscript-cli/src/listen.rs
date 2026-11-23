@@ -17,7 +17,8 @@
 //!   chroma key detection) next to the declared ones, with a verdict for each.
 //! - **sections**: each section's loudness and a per-bar loudness curve; **clipping** on the master.
 //! - **macros** (only when the program has a `macro` line): each call in the window, the bar the engine starts it on (`at_bar`,
-//!   counted as the time words count), and whether it `played`, with the engine's reason when it was `refused` (also a warning).
+//!   counted as the time words count, read off the target deck's own clock), `held_bars` for a held one-shot, and whether it
+//!   `played`, with the engine's reason when it was `refused` (also a warning).
 //!
 //! What the offline render leaves out (some control lines) is in `notes`, as `render` says it. The render runs at [`SR`]
 //! (22.05 kHz), not the site's 44.1 kHz.
@@ -1059,11 +1060,18 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
             o.set("id", JsonValue::str(m.id.clone()));
             o.set("deck", JsonValue::str(m.target.clone()));
             o.set("bars", m.bars.map_or(JsonValue::Null, |n| JsonValue::int(i64::from(n))));
-            o.set("at_bar", JsonValue::int(i64::from(m.starts_bar())));
+            if let Some(h) = m.held_bars() {
+                o.set("held_bars", r3(h));
+            }
+            if m.latch {
+                o.set("latch", JsonValue::Bool(true));
+            }
+            // where the engine starts it, read off the deck's own clock (whole when the deck's bars are the program's)
+            o.set("at_bar", r3(m.starts_at()));
             o.set("played", JsonValue::Bool(m.refused.is_none()));
             if let Some(why) = &m.refused {
                 o.set("refused", JsonValue::str(why.clone()));
-                warnings.push(JsonValue::str(format!("line {} `{}`: the engine did not play it at bar {}: {why}", m.line, m.text, m.starts_bar())));
+                warnings.push(JsonValue::str(format!("line {} `{}`: the engine did not play it at bar {}: {why}", m.line, m.text, r3(m.starts_at()).js_stringified())));
             }
             list.push(JsonValue::Object(o));
         }
@@ -1185,6 +1193,15 @@ mod tests {
         assert_eq!(m[1].get("played").and_then(JsonValue::as_bool), Some(false));
         assert!(m[1].get("refused").and_then(JsonValue::as_str).is_some_and(|w| w.contains("net deck")), "{}", m[1].js_stringified());
         assert!(j.get("warnings").map(|w| w.js_stringified()).is_some_and(|w| w.contains("the engine did not play it at bar 4")), "{}", j.js_stringified());
+        // two lines that make the same call are each named; a held one says how long it was held; a deck that comes in later
+        // starts it on the bar its line names; `every N bars from 0` starts on 1 (no beat before bar 0), then on 4 and 8
+        let text = "tempo 120\nsection intro 4 bars {\n  deck A: kick x ~ x ~\n  at bar 2: macro filter on A over 1 bar\n}\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  deck B: bass c2 ~ c2 ~\n  at bar 2: macro filter on A over 1 bar\n  macro verb_freeze on B over 2 bars\n}\narrange intro drop\n";
+        let j = listen(text, &ListenOptions { budget_seconds: 0.0, ..Default::default() }).unwrap();
+        let m: Vec<String> = j.get("macros").and_then(JsonValue::as_array).unwrap().iter().map(|m| format!("{} {} {} {}", m.get("line").unwrap().js_stringified(), m.get("id").and_then(JsonValue::as_str).unwrap(), m.get("at_bar").unwrap().js_stringified(), m.get("held_bars").map_or("-".into(), |h| h.js_stringified()))).collect();
+        assert_eq!(m, ["4 filter 2 -", "10 verb_freeze 4 2", "9 filter 6 -"], "{}", j.js_stringified());
+        let e = listen("tempo 120\ndeck A: kick x ~ x ~\nevery 4 bars from 0: macro filter on A over 1 bar\nend at bar 12\n", &ListenOptions { budget_seconds: 0.0, ..Default::default() }).unwrap();
+        let at: Vec<String> = e.get("macros").and_then(JsonValue::as_array).unwrap().iter().map(|m| m.get("at_bar").unwrap().js_stringified()).collect();
+        assert_eq!(at, ["1", "4", "8"], "{}", e.js_stringified());
         // a program with none has no `macros` (every other summary is the one it was)
         let plain = listen("tempo 120\ndeck A: kick x ~ x ~\nend at bar 2\n", &ListenOptions { budget_seconds: 0.0, ..Default::default() }).unwrap();
         assert!(plain.get("macros").is_none());

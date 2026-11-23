@@ -509,3 +509,14 @@ fn a_macro_line_is_heard_from_its_bar_and_the_render_stays_deterministic() {
     let d = rms_db(&a.pcm, 120.0, 44_100, 5, 7) - rms_db(&p.pcm, 120.0, 44_100, 5, 7);
     assert!(d.abs() > 0.5, "the riser changes bars 5 and 6: {d:.2} dB");
 }
+
+/// The same through the stream: a macro on a deck that comes in on a later section starts on the bar its line names.
+#[test]
+fn a_macro_on_a_deck_that_comes_in_later_starts_on_its_bar() {
+    let plain = "tempo 120\nsection intro 4 bars {\n  deck A: kick x ~ x ~ x ~ x ~\n}\nsection drop 4 bars {\n  deck A: kick x ~ x ~ x ~ x ~\n  deck B: bass c2 ~ c2 ~ c2 ~ c2 ~\n}\narrange intro drop\n";
+    let with = plain.replace("  deck B: bass c2 ~ c2 ~ c2 ~ c2 ~\n}\narrange", "  deck B: bass c2 ~ c2 ~ c2 ~ c2 ~\n  macro wash on B over 2 bars\n}\narrange");
+    let (a, p) = (run(&with, &opts()), run(plain, &opts()));
+    let bar = bar_frames(1, 120.0, 44_100);
+    let first = a.pcm.chunks_exact(4).zip(p.pcm.chunks_exact(4)).position(|(x, y)| x != y).expect("the macro is heard");
+    assert!(first >= 4 * bar && first < 4 * bar + bar / 4, "the wash starts on bar 4, not bar {:.3}", first as f64 / bar as f64);
+}

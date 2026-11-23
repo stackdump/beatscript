@@ -2649,6 +2649,12 @@ impl<'a> Parser<'a> {
                     return Err(Diagnostic::error(self.span(), format!("`{} {}` says its deck twice", head.span.text(self.src), id.text)).help(format!("macro {} on A over 4 bars", id.text)));
                 }
                 self.bump();
+                // (a macro fires on a deck: the master and the Wheel are the booth's targets, not a program's)
+                if let Tok::Word(w) = self.peek().clone() {
+                    if w != "A" && w != "B" {
+                        return Err(Diagnostic::error(self.span(), format!("a macro fires on a deck, `A` or `B`, not `{w}`")).help(format!("macro {} on A", id.text)));
+                    }
+                }
                 deck = Some(self.deck_word()?);
             } else if self.word_is("over") {
                 if over.is_some() {

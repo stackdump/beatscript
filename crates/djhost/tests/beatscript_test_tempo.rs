@@ -134,7 +134,9 @@ fn what_is_measured_is_the_sound_between_the_maps_seconds() {
 
 /// The same, where the sound changes at the section line (deck A in the verse only, deck B in the chorus only): the clock a
 /// curve-blind reading would use (four bars at the first tempo, 9.6 s) puts 1.1 s of the chorus into the verse, so the number it
-/// gives for B in the verse is far from the one the map gives, and the report's is the map's. The agreement is not by luck.
+/// gives for B in the verse is far from the one the map gives, and the report's is the map's. The agreement is not by luck. (B
+/// comes in on the chorus's bar line, so the map's verse hears none of it; it came in a beat early before docs/beatscript/ext-control.md's
+/// macro work, and the verse heard that beat.)
 #[test]
 fn a_window_that_ignored_the_curve_would_hear_the_next_section() {
     let src = "tempo 100 -> 140 over 6 bars\nsection verse 4 bars {\n  deck A: bass c2 len=16\n}\nsection chorus 4 bars {\n  deck B: bass c2 len=16\n}\narrange verse chorus\nassert level B > 0 in verse\nassert level A > 0 in verse\nassert level B > 0 in chorus\n";
@@ -146,12 +148,12 @@ fn a_window_that_ignored_the_curve_would_hear_the_next_section() {
     let (a, b) = (stem("A"), stem("B"));
     let (by_map, naive) = (rms(&b, at(&c, 0), at(&c, 4)), rms(&b, 0.0, 4.0 * 4.0 * 60.0 / 100.0));
     let got = r.outcomes[0].measured[0].1;
-    assert!((got / by_map - 1.0).abs() < 0.005, "the report measured {got}, the stem over the map's seconds is {by_map}");
-    assert!(naive > 1.15 * by_map, "a window at the first tempo hears the chorus: {naive} against {by_map}");
+    assert!((got - by_map).abs() <= 0.005 * by_map + 1e-9, "the report measured {got}, the stem over the map's seconds is {by_map}");
+    assert!(naive > 1.15 * by_map && naive > 1e-3, "a window at the first tempo hears the chorus: {naive} against {by_map}");
     // and the rest of it: A is the verse's, B the chorus's
     assert!((r.outcomes[1].measured[0].1 / rms(&a, at(&c, 0), at(&c, 4)) - 1.0).abs() < 0.005);
     assert!((r.outcomes[2].measured[0].1 / rms(&b, at(&c, 4), at(&c, 8)) - 1.0).abs() < 0.005);
-    assert!(r.outcomes[1].measured[0].1 > 2.0 * got, "deck A is the verse's sound, deck B only comes in at its end: {} against {got}", r.outcomes[1].measured[0].1);
+    assert!(r.outcomes[1].measured[0].1 > 2.0 * got, "deck A is the verse's sound, deck B the chorus's: {} against {got}", r.outcomes[1].measured[0].1);
 }
 
 /// The duck and the mix are in the render, so a level assertion reads them under a curve: deck B is down in the chorus after A's

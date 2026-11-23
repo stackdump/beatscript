@@ -118,6 +118,11 @@ fn the_call_goes_a_beat_ahead_of_a_bar_line_time() {
     assert_eq!(c.controls[2].timing, Timing::EveryPos { step: Rat::int(4), from: q(31, 4) });
     assert_eq!(c.controls[3].timing, Timing::AtPos(q(7, 2)));
     assert_eq!(c.controls[4].timing, Timing::Now);
+    assert_eq!(c.controls.iter().map(|c| c.lead).collect::<Vec<_>>(), [Some(q(1, 4)), Some(q(1, 4)), Some(q(1, 4)), None, None]);
+    // `every N bars from 0`: its first time has no beat before it (a call of its own, on bar 0), the others are led
+    let z = compiled(&format!("{K}every 4 bars from 0: macro pump on A\nend at bar 12\n"));
+    assert_eq!(z.controls.iter().map(|c| (c.timing, c.lead)).collect::<Vec<_>>(), [(Timing::At(0), None), (Timing::EveryPos { step: Rat::int(4), from: q(15, 4) }, Some(q(1, 4)))]);
+    assert_eq!(z.controls[1].key, format!("{} (from bar 4)", z.controls[0].key));
     // a section's first bar (a song with sections: `at bar 0` of it is the song's bar 8)
     let s = compiled("section intro 8 bars {\n  deck A: kick x ~ x ~\n}\nsection drop 8 bars {\n  deck A: kick x x x x\n  macro breakdown on A over 4 bars\n}\narrange intro drop\n");
     assert_eq!(s.controls[0].timing, Timing::AtPos(q(31, 4)));
@@ -149,9 +154,22 @@ fn the_control_net_fires_it() {
     assert!(ev.contains(&"60 fire A riser bars=8".to_string()), "{ev:?}");
     assert!(ev.contains(&"124 fire B tape_stop".to_string()), "{ev:?}");
     assert!(ev.contains(&"144 release B tape_stop".to_string()), "{ev:?}");
-    for e in ["fire A riser bars=8", "fire B tape_stop", "release B tape_stop"] {
+    for e in ["fire A riser bars=8", "fire B tape_stop", "release B tape_stop", "fire A filter latch"] {
         assert_eq!(djlive::nets::Event::parse(e).unwrap().text(), e);
     }
+    // the registry verb written out keeps its latch
+    let l = compiled(&format!("{K}control: do effects fire id=filter target=A latch=true\n"));
+    let ev: Vec<String> = djlive::nets::control_net(&l, 4).events(None).into_iter().map(|(t, e)| format!("{t} {}", e.text())).collect();
+    assert_eq!(ev, ["0 fire A filter latch"]);
+    // `on next phrase` fires once, as the runtime and the render's arrangement fire it
+    let p = compiled(&format!("{K}on next phrase: macro filter on A over 1 bar\n"));
+    let ev = djlive::nets::control_net(&p, 32).events(None);
+    assert_eq!(ev.iter().filter(|(_, e)| matches!(e, djlive::nets::Event::Fire { .. })).count(), 1, "{ev:?}");
+    // two lines that make the same call are told apart by their line
+    let two = compiled(&format!("{K}at bar 2: macro filter on A over 2 bars\nat bar 6: macro filter on A over 2 bars\n"));
+    let keyed = djlive::nets::control_net(&two, 8).events_keyed(None);
+    let keys: Vec<&str> = keyed.iter().filter_map(|(_, k, _)| k.as_deref()).collect();
+    assert_eq!(keys, ["at bar 2: macro filter on A over 2 bars", "at bar 6: macro filter on A over 2 bars"]);
 }
 
 #[test]
@@ -172,6 +190,13 @@ fn what_a_macro_line_refuses_says_what_would_work() {
     assert!(m.contains("a macro takes whole bars") && h.contains("over 4 bars"), "{m} / {h}");
     let (m, h) = error(&format!("{K}macro breakdown on A over 65 bars\n"));
     assert!(m.contains("1 to 64 bars") && h.contains("over 64 bars"), "{m} / {h}");
+    let (m, h) = error(&format!("{K}macro breakdown on A over 0 bars\n"));
+    assert!(m.contains("1 to 64 bars") && h.ends_with("over 1 bar"), "{m} / {h}");
+    let (m, h) = error(&format!("{K}macro breakdown on A over 4294967296 bars\n"));
+    assert!(m.contains("1 to 64 bars") && h.ends_with("over 64 bars"), "{m} / {h}");
+    // a deck, never the master
+    let (m, h) = error(&format!("{K}macro filter on master\n"));
+    assert!(m.contains("a macro fires on a deck, `A` or `B`, not `master`") && h == "macro filter on A", "{m} / {h}");
     // a one-shot that runs its own length takes no `over`
     let (m, h) = error(&format!("{K}macro cut on A over 2 bars\n"));
     assert!(m.contains("`cut` is a one-shot: it runs its own length") && h == "macro cut on A", "{m} / {h}");
@@ -191,6 +216,15 @@ fn what_a_macro_line_refuses_says_what_would_work() {
 
 /// `macro` is no reserved word (like `control` and `drive`): a let, a section or a def may still be called `macro`, and a scalar
 /// `let` named like an id does not take the id's place.
+/// A line due at a section's end is said to fire after it (L-15) for a macro as for any line: its own time is judged, not its call's.
+#[test]
+fn a_macro_past_its_section_is_said_to_fire_after_it() {
+    let c = check("section intro 8 bars {\n  deck A: kick x ~ x ~\n  at bar 8: macro filter on A over 1 bar\n}\nsection drop 8 bars {\n  deck A: kick x x x x\n}\narrange intro drop\n");
+    assert!(c.diagnostics.iter().any(|d| !d.is_error() && d.message.contains("does not fire in the section")), "{:?}", c.diagnostics);
+    let c = check("section intro 8 bars {\n  deck A: kick x ~ x ~\n  at bar 7: macro filter on A over 1 bar\n}\nsection drop 8 bars {\n  deck A: kick x x x x\n}\narrange intro drop\n");
+    assert!(!c.diagnostics.iter().any(|d| d.message.contains("does not fire in the section")), "{:?}", c.diagnostics);
+}
+
 #[test]
 fn macro_is_a_free_name() {
     compiled("let macro = x ~ x ~\ndeck A: kick macro\n");

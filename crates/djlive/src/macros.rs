@@ -217,22 +217,39 @@ pub fn lead_bars() -> Rat {
 /// bars from 8`, a section's first bar) a beat earlier, so the macro starts on the bar the line names. A time between bar lines is
 /// kept (the macro starts on the next bar line, as a pad does), and so is a time with no beat before it: the song's first bar, a
 /// line with no time word outside a section (it fires when the program is applied, in the bar before the one it lands on), and
-/// `on next phrase`, which waits for its bar.
+/// `on next phrase`, which waits for its bar. (`every N bars from 0` is two calls: [`calls`].)
 pub fn lead(t: Timing) -> Timing {
+    calls(t).last().map_or(t, |(c, _)| *c)
+}
+
+/// The calls a macro line with time `t` makes, each with how far ahead of its line's time it goes ([`lead_bars`], or None): one,
+/// except `every N bars from 0`, whose first time (bar 0) has no beat before it and is a call of its own, unled, and whose
+/// others (N, 2N ...) are led as `every N bars` is.
+pub fn calls(t: Timing) -> Vec<(Timing, Option<Rat>)> {
     let early = |b: u32| Rat::int(i64::from(b)).sub(lead_bars()).ok().filter(|r| !r.is_neg());
+    let led = |c: Option<Timing>| c.map_or((t, None), |c| (c, Some(lead_bars())));
     match t {
-        Timing::At(b) if b >= 1 => early(b).map_or(t, Timing::AtPos),
-        Timing::Every(n) if n >= 1 => early(n).map_or(t, |from| Timing::EveryPos { step: Rat::int(i64::from(n)), from }),
-        Timing::EveryFrom(n, f) if n >= 1 && f >= 1 => early(f).map_or(t, |from| Timing::EveryPos { step: Rat::int(i64::from(n)), from }),
-        other => other,
+        Timing::At(b) if b >= 1 => vec![led(early(b).map(Timing::AtPos))],
+        Timing::Every(n) if n >= 1 => vec![led(early(n).map(|from| Timing::EveryPos { step: Rat::int(i64::from(n)), from }))],
+        Timing::EveryFrom(n, f) if n >= 1 && f >= 1 => vec![led(early(f).map(|from| Timing::EveryPos { step: Rat::int(i64::from(n)), from }))],
+        Timing::EveryFrom(n, 0) if n >= 1 => vec![(Timing::At(0), None), led(early(n).map(|from| Timing::EveryPos { step: Rat::int(i64::from(n)), from }))],
+        other => vec![(other, None)],
     }
 }
 
-/// How long after its call (made at `called`, a line written at `written`) the engine starts the macro: a beat when the call was
-/// led ([`lead`]); to the next bar line from a time between two; a whole bar from a bar line (the engine's next bar).
-pub fn wait_to_bar(written: Timing, called: Timing) -> Rat {
-    if written != called {
-        return lead_bars();
+/// The bar the second call of `every N bars from 0` starts on (N), for its key; 0 for any other time.
+pub fn later_from(t: Timing) -> u32 {
+    match t {
+        Timing::EveryFrom(n, 0) => n,
+        _ => 0,
+    }
+}
+
+/// How long after a call (made at `called`, `lead` ahead of its line's time) the engine starts the macro: the lead when it has
+/// one; to the next bar line from a time between two; a whole bar from a bar line (the engine's next bar).
+pub fn wait_to_bar(called: Timing, lead: Option<Rat>) -> Rat {
+    if let Some(l) = lead {
+        return l;
     }
     let to_line = |p: Rat| Rat::int(p.ceil()).sub(p).ok().filter(|w| !w.is_zero()).unwrap_or(Rat::ONE);
     match called {

@@ -1198,8 +1198,10 @@ impl Live {
         for (i, it) in run.items.iter().enumerate() {
             match it.control.timing {
                 Timing::AtPos(p) if !it.fired => {
-                    // (a track's line in a set is only due while the track plays)
-                    if it.control.window.is_some_and(|(a, b)| p.to_f64() + EPS < f64::from(a) || p.to_f64() + EPS >= f64::from(b)) {
+                    // (a track's line in a set is only due while the track plays: judged on the line's own time, a macro's call
+                    // being a beat ahead of it)
+                    let lead = it.control.lead.map_or(0.0, |l| l.to_f64());
+                    if it.control.window.is_some_and(|(a, b)| p.to_f64() + lead + EPS < f64::from(a) || p.to_f64() + lead + EPS >= f64::from(b)) {
                         continue;
                     }
                     let t = off + p.to_f64();
@@ -1216,7 +1218,7 @@ impl Live {
                     }
                     // the k-th time is f + k s: those after the last pass (prev), up to now, not before the line began (and, for a
                     // track's line in a set, before the track ends: the first time that is not before it ends is not one)
-                    let end = it.control.window.map_or(f64::INFINITY, |(_, b)| off + f64::from(b));
+                    let end = it.control.window.map_or(f64::INFINITY, |(_, b)| off + f64::from(b) - it.control.lead.map_or(0.0, |l| l.to_f64()));
                     let hi = ((now + EPS - f) / s).floor().min(((end - f) / s - EPS).ceil() - 1.0);
                     let after_prev = if prev + EPS >= f { ((prev + EPS - f) / s).floor() + 1.0 } else { 0.0 };
                     let after_start = ((it.start_line as f64 - EPS - f) / s).ceil().max(0.0);

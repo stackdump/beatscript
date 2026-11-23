@@ -888,10 +888,10 @@ impl Compiler<'_> {
         // a host that sings in the nets (the browser): the line is a part of the deck's own net, through its strip and fader
         if let Some(sp) = self.sung_part(fl, &effect, &pick, &notes, &lay, cover, deck, ir, key_text.as_deref(), later.is_empty()) {
             self.sung.push(sp);
-            self.controls.push(Control { key, timing: fl.timing, effect: Effect::Calls(Vec::new()), span: fl.span, hold: None, undo: Vec::new(), restore: None, via: fl.via.clone(), notice: pick.notice, window: None });
+            self.controls.push(Control { key, timing: fl.timing, effect: Effect::Calls(Vec::new()), span: fl.span, hold: None, undo: Vec::new(), restore: None, via: fl.via.clone(), notice: pick.notice, window: None, lead: None });
             return;
         }
-        self.controls.push(Control { key, timing: fl.timing, effect, span: fl.span, hold: None, undo: Vec::new(), restore: None, via: fl.via.clone(), notice: pick.notice, window: None });
+        self.controls.push(Control { key, timing: fl.timing, effect, span: fl.span, hold: None, undo: Vec::new(), restore: None, via: fl.via.clone(), notice: pick.notice, window: None, lead: None });
     }
 }
 
