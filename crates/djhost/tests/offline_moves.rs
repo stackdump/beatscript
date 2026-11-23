@@ -26,8 +26,10 @@ fn example(name: &str) -> String {
     std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript").join(name)).unwrap()
 }
 
-/// `examples/beatscript/mix.beatscript` (no move), rendered with its control net at 22.05 kHz.
-const PIN_NO_MOVE: &str = "8fe55bde26ded6b86c0ebce47b9e75ce0a8ffbedea896395602a49e997b79176";
+/// `examples/beatscript/mix.beatscript` (no move), rendered with its control net at 22.05 kHz. Re-pinned on main of 2026-11-23
+/// (a deck that comes in at a later section now starts on its bar line): origin/main, which has no moves at all, renders this
+/// hash too (8fe55bde26ded6b86c0ebce47b9e75ce0a8ffbedea896395602a49e997b79176 was the older base's).
+const PIN_NO_MOVE: &str = "39c0767b3d64e45237cae21401f91d046f75a8141f45717904b9d50f648a00fb";
 /// The program of `nets_render.rs`'s move test: the control net plays its filter exit, before the change and after.
 const PIN_NET_FILTER_EXIT: &str = "f7951d198e78ea1cfee00b29854383d4405362c0168eaee7c0bf7993e5b7da6f";
 const NET_FILTER_EXIT: &str = "tempo 120\ndeck A: hihat x*16 | bass c2 c2 c2 c2 | kick x ~ x ~\nat bar 2: move filter_exit on A over 2 bars\n";
