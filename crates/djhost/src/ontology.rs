@@ -24,7 +24,7 @@ pub fn vocabulary() -> &'static StaticOntology {
     V.get_or_init(|| StaticOntology::from_json(SNAPSHOT).expect("crates/djhost/data/beatscript-ontology.json is a snapshot (a test reads it)"))
 }
 
-/// One line on where the vocabulary is from: `BeatScript ontology 0.3.0, 265 terms, taken 2026-11-22, checked against the
+/// One line on where the vocabulary is from: `BeatScript ontology 0.4.0, 277 terms, taken 2026-11-23, checked against the
 /// release's checksums`.
 pub fn describe() -> String {
     let v = vocabulary();
@@ -66,9 +66,9 @@ mod tests {
     #[test]
     fn the_snapshot_reads_and_says_where_it_is_from() {
         let v = vocabulary();
-        assert_eq!(v.terms().len(), 265);
+        assert_eq!(v.terms().len(), 277);
         assert!(v.verified, "the committed snapshot was checked against the release's checksums");
-        assert_eq!(v.version, "0.3.0");
+        assert_eq!(v.version, "0.4.0");
         assert!(v.fetched.len() == 10 && v.fetched.starts_with("20"), "{}", v.fetched);
         assert!(describe().contains("checked against the release's checksums"), "{}", describe());
     }
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn the_vocabulary_has_what_a_tag_may_name_and_the_euclidean_class() {
         let v = vocabulary();
-        for (kind, n) in [("genre", 19), ("scale", 9), ("groove", 7), ("instrument", 30), ("section", 10), ("role", 8), ("family", 4), ("rhythm", 57)] {
+        for (kind, n) in [("genre", 23), ("scale", 9), ("groove", 7), ("instrument", 30), ("section", 10), ("role", 8), ("family", 4), ("rhythm", 57)] {
             assert_eq!(v.terms().iter().filter(|t| t.kind == kind).count(), n, "{kind}");
         }
         assert_eq!(v.euclid_class(), Some("https://beatscript.app/ontology/ns#EuclideanRhythm"));
@@ -113,9 +113,9 @@ mod tests {
     #[test]
     fn terms_are_listed_by_kind_and_a_wrong_kind_says_the_kinds() {
         let all = terms_json(None).unwrap();
-        assert_eq!(all.get("count").and_then(JsonValue::as_f64), Some(265.0));
+        assert_eq!(all.get("count").and_then(JsonValue::as_f64), Some(277.0));
         let g = terms_json(Some("genre")).unwrap();
-        assert_eq!(g.get("count").and_then(JsonValue::as_f64), Some(19.0));
+        assert_eq!(g.get("count").and_then(JsonValue::as_f64), Some(23.0));
         assert!(g.get("terms").and_then(JsonValue::as_array).unwrap().iter().any(|t| t.get("iri").and_then(JsonValue::as_str) == Some("https://beatscript.app/ontology/genre/techno")));
         assert!(terms_json(Some("flavour")).unwrap_err().contains("one of genre, instrument"));
     }

@@ -13,8 +13,8 @@ It is small and deterministic: the terms an author may name (genres, genre famil
 instrument roles, song sections, song structures, Euclidean rhythms, chord progressions, engine concepts), sorted by
 IRI, one per line, with their local name, label and kind; a Euclidean rhythm also has its pulses, steps and rotation
 (so a program's e(k,n,rot) can be linked to the rhythms that have the same shape). Only the music terms the release
-carries from its upstream (those with a prov:wasDerivedFrom) are kept: the BeatScript vocabulary's own individuals (the
-grammar, voices, tools) are not header terms. Nothing else of the ontology is kept. Python standard library only.
+carries from its upstream (those with a prov:wasDerivedFrom) and the genres, rhythms and progressions it generates from the
+generator's own tables (not their rhythms: djlive::meter::EUCLID_TABLE names those) are kept: the BeatScript vocabulary's other individuals (the grammar, voices, tools) are not header terms. Nothing else of the ontology is kept. Python standard library only.
 """
 
 import argparse
@@ -49,6 +49,12 @@ KINDS = {
     NS + "EngineConcept": "concept",
 }
 
+# The music individuals the release generates from the generator's own tables (the genres bitwrap 0.2.0 does not have,
+# since 0.4.0): header terms like the ones carried from upstream, though they have no prov:wasDerivedFrom. Their Euclidean
+# rhythms are not: the snapshot's rhythms are held equal to djlive::meter::EUCLID_TABLE (F6's names), which has the
+# upstream genres' rhythms only.
+GENERATED = {NS + "Genre", NS + "ChordProgression"}
+
 TRIPLE = re.compile(r'^(<[^>]*>|_:\S+)\s+<([^>]*)>\s+(.*?)\s*\.$')
 LITERAL = re.compile(r'^"((?:[^"\\]|\\.)*)"(?:@[A-Za-z-]+|\^\^<[^>]*>)?$')
 
@@ -82,7 +88,7 @@ def parse(nt_text):
             lm = LITERAL.match(o)
             if lm and lm.group(1).lstrip("-").isdigit():
                 ints.setdefault(s, {})[p[len(NS):]] = int(lm.group(1))
-    return {k: v for k, v in types.items() if k in derived}, labels, ints
+    return {k: v for k, v in types.items() if k in derived or v & GENERATED}, labels, ints
 
 
 def terms(types, labels, ints):

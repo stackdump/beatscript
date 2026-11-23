@@ -21,6 +21,19 @@
   `pick`), and the MCP `queue` tool has `move` (`item`, `to`) and `skip` to an `item`. The editor's "Up next" strip links to
   the player.
 
+### The ontology knows every genre the generator knows (ontology 0.4.0, 2026-11-23)
+
+- The BeatScript ontology has the generator's own genres, acid, deephouse, electro and italo, generated from djrust's genre
+  tables (tempo, scale, root, groove, family, drum rhythms and variants, chord progressions, the voices and kits the generator
+  picks per role), each `ns:followsRulesOf` the beats genre whose musicality rules it follows, with a usual tempo range.
+  `#! genre: acid` resolves, and `check` gives acid real style advice instead of "the BeatScript ontology has no genre".
+- The genres are structural: `ontology/build.sh` reads the generator's genre table, and the drift test
+  (`ontology_matches_beatscript_serve`) fails when the generator and the ontology disagree on the set of genres or a genre's
+  tempo, root, scale, family, groove, drum rhythms or progressions. It also holds the instrument roles to `djlive::parse::ROLES`
+  and the part parameters (new `ns:PartParameter` terms) to `djlive::parse::PARAMS`.
+- Each voice family says its generic sound (`ns:familyWave`: soft, sine, saw, bell or square), from the engine's tonal voice.
+- The MCP fixtures are re-recorded as `mcp-0.4.0.json` (with `get_genre acid`); the header snapshot has 277 terms.
+
 ## v0.1.0 (2026-11-22): the first public release, and BeatScript 2
 
 The first release of stackdump/beatscript as the single upstream of BeatScript and beatscript.app.

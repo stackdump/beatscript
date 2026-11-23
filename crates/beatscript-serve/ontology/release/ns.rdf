@@ -6194,6 +6194,83 @@
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>world</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-decay">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter decay, written decay=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">decay</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>decay=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-glide">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter glide, written glide=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">glide</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>glide=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-inst">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter inst, written inst=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">inst</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>inst=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-kit">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter kit, written kit=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">kit</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>kit=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-len">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter len, written len=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">len</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>len=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-oct">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter oct, written oct=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">oct</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>oct=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-pitch-drop">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter pitch-drop, written pitch-drop=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">pitch-drop</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>pitch-drop=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-route">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter route, written route=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">route</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>route=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-seed">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter seed, written seed=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">seed</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>seed=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-sound">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter sound, written sound=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">sound</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>sound=</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/part-param-vel">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#PartParameter"/>
+		<skos:definition xml:lang="en">The part parameter vel, written vel=VALUE after a part&apos;s pattern.</skos:definition>
+		<skos:prefLabel xml:lang="en">vel</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>vel=</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/pattern-endofunctor">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#CategoricalConcept"/>
 		<skos:definition xml:lang="en">Pattern as a functor from notes to notes: a function on single notes lifts to a function on patterns of them, and lifting respects composition and identity.</skos:definition>
@@ -9513,6 +9590,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The 808 family: an inst= name containing 808 plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">808</skos:prefLabel>
+		<ns:familyWave>sine</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>808</ns:writtenAs>
 	</skos:Concept>
@@ -9520,6 +9598,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The acid family: an inst= name containing acid plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">acid</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>acid</ns:writtenAs>
 	</skos:Concept>
@@ -9527,6 +9606,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The bass family: an inst= name containing bass plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">bass</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>bass</ns:writtenAs>
 	</skos:Concept>
@@ -9534,6 +9614,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The bell family: an inst= name containing bell plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">bell</skos:prefLabel>
+		<ns:familyWave>bell</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>bell</ns:writtenAs>
 	</skos:Concept>
@@ -9541,6 +9622,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The chiptune family: an inst= name containing chiptune plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">chiptune</skos:prefLabel>
+		<ns:familyWave>square</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>chiptune</ns:writtenAs>
 	</skos:Concept>
@@ -9548,6 +9630,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The choir family: an inst= name containing choir plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">choir</skos:prefLabel>
+		<ns:familyWave>soft</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>choir</ns:writtenAs>
 	</skos:Concept>
@@ -9555,6 +9638,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The clav family: an inst= name containing clav plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">clav</skos:prefLabel>
+		<ns:familyWave>square</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>clav</ns:writtenAs>
 	</skos:Concept>
@@ -9569,6 +9653,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The glass family: an inst= name containing glass plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">glass</skos:prefLabel>
+		<ns:familyWave>bell</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>glass</ns:writtenAs>
 	</skos:Concept>
@@ -9576,6 +9661,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The guitar family: an inst= name containing guitar plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">guitar</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>guitar</ns:writtenAs>
 	</skos:Concept>
@@ -9583,6 +9669,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The harpsi family: an inst= name containing harpsi plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">harpsi</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>harpsi</ns:writtenAs>
 	</skos:Concept>
@@ -9597,6 +9684,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The kalimba family: an inst= name containing kalimba plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">kalimba</skos:prefLabel>
+		<ns:familyWave>bell</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>kalimba</ns:writtenAs>
 	</skos:Concept>
@@ -9611,6 +9699,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The marimba family: an inst= name containing marimba plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">marimba</skos:prefLabel>
+		<ns:familyWave>bell</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>marimba</ns:writtenAs>
 	</skos:Concept>
@@ -9618,6 +9707,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The music-box family: an inst= name containing music-box plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">music-box</skos:prefLabel>
+		<ns:familyWave>bell</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>music-box</ns:writtenAs>
 	</skos:Concept>
@@ -9625,6 +9715,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The organ family: an inst= name containing organ plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">organ</skos:prefLabel>
+		<ns:familyWave>soft</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>organ</ns:writtenAs>
 	</skos:Concept>
@@ -9632,6 +9723,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The pad family: an inst= name containing pad plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">pad</skos:prefLabel>
+		<ns:familyWave>soft</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>pad</ns:writtenAs>
 	</skos:Concept>
@@ -9639,6 +9731,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The piano family: an inst= name containing piano plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">piano</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>piano</ns:writtenAs>
 	</skos:Concept>
@@ -9646,6 +9739,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The pluck family: an inst= name containing pluck plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">pluck</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>pluck</ns:writtenAs>
 	</skos:Concept>
@@ -9653,6 +9747,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The pwm family: an inst= name containing pwm plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">pwm</skos:prefLabel>
+		<ns:familyWave>square</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>pwm</ns:writtenAs>
 	</skos:Concept>
@@ -9660,6 +9755,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The reese family: an inst= name containing reese plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">reese</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>reese</ns:writtenAs>
 	</skos:Concept>
@@ -9674,6 +9770,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The square family: an inst= name containing square plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">square</skos:prefLabel>
+		<ns:familyWave>square</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>square</ns:writtenAs>
 	</skos:Concept>
@@ -9681,6 +9778,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The stab family: an inst= name containing stab plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">stab</skos:prefLabel>
+		<ns:familyWave>saw</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>stab</ns:writtenAs>
 	</skos:Concept>
@@ -9688,6 +9786,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The steel family: an inst= name containing steel plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">steel</skos:prefLabel>
+		<ns:familyWave>bell</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>steel</ns:writtenAs>
 	</skos:Concept>
@@ -9695,6 +9794,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The strings family: an inst= name containing strings plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">strings</skos:prefLabel>
+		<ns:familyWave>soft</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>strings</ns:writtenAs>
 	</skos:Concept>
@@ -9702,6 +9802,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The sub family: an inst= name containing sub plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">sub</skos:prefLabel>
+		<ns:familyWave>sine</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>sub</ns:writtenAs>
 	</skos:Concept>
@@ -9709,6 +9810,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
 		<skos:definition xml:lang="en">The vibes family: an inst= name containing vibes plays its generic voice.</skos:definition>
 		<skos:prefLabel xml:lang="en">vibes</skos:prefLabel>
+		<ns:familyWave>bell</ns:familyWave>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>vibes</ns:writtenAs>
 	</skos:Concept>
@@ -9732,6 +9834,50 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:definition xml:lang="en">Song-form genres. Songs are built from verse, chorus and bridge.</skos:definition>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/family/song"/>
 	</ns:GenreFamily>
+	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/acid">
+		<rdfs:label xml:lang="en">acid</rdfs:label>
+		<skos:definition xml:lang="en">acid: a genre the seeded generator (generate, gen@N) knows (djrust&apos;s own genre, beyond beats&apos; catalogue, following techno&apos;s musicality rules), as its tables give it: 125 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 10, chords 1-1-7-1 or 1-4-1-4.</skos:definition>
+		<ns:bassDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.75</ns:bassDensity>
+		<ns:bassDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">100</ns:bassDuration>
+		<ns:bpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">125</ns:bpm>
+		<ns:defaultGroove rdf:resource="https://beatscript.app/ontology/groove/four-on-floor"/>
+		<ns:defaultScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
+		<ns:durationVariation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.2</ns:durationVariation>
+		<ns:followsRulesOf rdf:resource="https://beatscript.app/ontology/genre/techno"/>
+		<ns:genreId>acid</ns:genreId>
+		<ns:ghostNotes rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.3</ns:ghostNotes>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/acid-hihat-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/acid-hihat-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/acid-kick-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/acid-kick-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/acid-snare-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/acid-snare-c"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/acid-1"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/acid-2"/>
+		<ns:hihatRhythm rdf:resource="https://beatscript.app/ontology/rhythm/acid-hihat"/>
+		<ns:humanize rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</ns:humanize>
+		<ns:inFamily rdf:resource="https://beatscript.app/ontology/family/edm"/>
+		<ns:kickRhythm rdf:resource="https://beatscript.app/ontology/rhythm/acid-kick"/>
+		<ns:maxBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">140</ns:maxBpm>
+		<ns:melodyDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.25</ns:melodyDensity>
+		<ns:melodyDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">90</ns:melodyDuration>
+		<ns:minBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">118</ns:minBpm>
+		<ns:rootNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">45</ns:rootNote>
+		<ns:snareRhythm rdf:resource="https://beatscript.app/ontology/rhythm/acid-snare"/>
+		<ns:swing rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</ns:swing>
+		<ns:syncopation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.3</ns:syncopation>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/acid"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/dark-pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/strings"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/warm-pad"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums-v8"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/edm-stab"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/organ"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/rave-organ"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/rave-stab"/>
+	</ns:Genre>
 	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/ambient">
 		<rdfs:label xml:lang="en">ambient</rdfs:label>
 		<skos:closeMatch rdf:resource="http://www.wikidata.org/entity/Q193207"/>
@@ -9893,6 +10039,52 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/acoustic-guitar"/>
 		<ns:walkingBass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:walkingBass>
 	</ns:Genre>
+	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/deephouse">
+		<rdfs:label xml:lang="en">deephouse</rdfs:label>
+		<skos:definition xml:lang="en">deephouse: a genre the seeded generator (generate, gen@N) knows (djrust&apos;s own genre, beyond beats&apos; catalogue, following house&apos;s musicality rules), as its tables give it: 122 BPM, dorian from MIDI note 45, the sidechained groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 15, chords 1-4-1-4 or 1-7-4-5.</skos:definition>
+		<ns:bassDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</ns:bassDensity>
+		<ns:bassDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">220</ns:bassDuration>
+		<ns:bpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">122</ns:bpm>
+		<ns:defaultGroove rdf:resource="https://beatscript.app/ontology/groove/sidechained"/>
+		<ns:defaultScale rdf:resource="https://beatscript.app/ontology/scale/dorian"/>
+		<ns:durationVariation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.25</ns:durationVariation>
+		<ns:followsRulesOf rdf:resource="https://beatscript.app/ontology/genre/house"/>
+		<ns:genreId>deephouse</ns:genreId>
+		<ns:ghostNotes rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.35</ns:ghostNotes>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/deephouse-hihat-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/deephouse-hihat-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/deephouse-kick-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/deephouse-kick-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/deephouse-snare-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/deephouse-snare-c"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/deephouse-1"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/deephouse-2"/>
+		<ns:hihatRhythm rdf:resource="https://beatscript.app/ontology/rhythm/deephouse-hihat"/>
+		<ns:humanize rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</ns:humanize>
+		<ns:inFamily rdf:resource="https://beatscript.app/ontology/family/edm"/>
+		<ns:kickRhythm rdf:resource="https://beatscript.app/ontology/rhythm/deephouse-kick"/>
+		<ns:maxBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">126</ns:maxBpm>
+		<ns:melodyDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.35</ns:melodyDensity>
+		<ns:melodyDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">160</ns:melodyDuration>
+		<ns:minBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">115</ns:minBpm>
+		<ns:rootNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">45</ns:rootNote>
+		<ns:snareRhythm rdf:resource="https://beatscript.app/ontology/rhythm/deephouse-snare"/>
+		<ns:swing rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</ns:swing>
+		<ns:syncopation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.25</ns:syncopation>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/bass"/>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/sub-bass"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/am-pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/glass-pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/strings"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/warm-pad"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums-v8"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/electric-piano"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/organ"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/piano"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/vibes"/>
+	</ns:Genre>
 	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/dnb">
 		<rdfs:label xml:lang="en">dnb</rdfs:label>
 		<skos:closeMatch rdf:resource="http://www.wikidata.org/entity/Q188994"/>
@@ -10016,6 +10208,55 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:syncopation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.15</ns:syncopation>
 		<ns:tensionCurve rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:tensionCurve>
 	</ns:Genre>
+	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/electro">
+		<rdfs:label xml:lang="en">electro</rdfs:label>
+		<skos:definition xml:lang="en">electro: a genre the seeded generator (generate, gen@N) knows (djrust&apos;s own genre, beyond beats&apos; catalogue, following edm&apos;s musicality rules), as its tables give it: 118 BPM, minor from MIDI note 45, the breakbeat groove, kick E(5,16), snare E(2,16) rotated 4, hihat E(8,16), swing 8, chords 1-7-6-7 or 1-4-1-5.</skos:definition>
+		<ns:bassDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.65</ns:bassDensity>
+		<ns:bassDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">140</ns:bassDuration>
+		<ns:bpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">118</ns:bpm>
+		<ns:defaultGroove rdf:resource="https://beatscript.app/ontology/groove/breakbeat"/>
+		<ns:defaultScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
+		<ns:durationVariation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.15</ns:durationVariation>
+		<ns:followsRulesOf rdf:resource="https://beatscript.app/ontology/genre/edm"/>
+		<ns:genreId>electro</ns:genreId>
+		<ns:ghostNotes rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.2</ns:ghostNotes>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/electro-hihat-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/electro-hihat-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/electro-kick-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/electro-kick-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/electro-snare-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/electro-snare-c"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/electro-1"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/electro-2"/>
+		<ns:hihatRhythm rdf:resource="https://beatscript.app/ontology/rhythm/electro-hihat"/>
+		<ns:humanize rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</ns:humanize>
+		<ns:inFamily rdf:resource="https://beatscript.app/ontology/family/edm"/>
+		<ns:kickRhythm rdf:resource="https://beatscript.app/ontology/rhythm/electro-kick"/>
+		<ns:maxBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">135</ns:maxBpm>
+		<ns:melodyDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.4</ns:melodyDensity>
+		<ns:melodyDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">110</ns:melodyDuration>
+		<ns:minBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">105</ns:minBpm>
+		<ns:rootNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">45</ns:rootNote>
+		<ns:snareRhythm rdf:resource="https://beatscript.app/ontology/rhythm/electro-snare"/>
+		<ns:swing rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</ns:swing>
+		<ns:syncopation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.45</ns:syncopation>
+		<ns:typicalArp rdf:resource="https://beatscript.app/ontology/instrument/chiptune"/>
+		<ns:typicalArp rdf:resource="https://beatscript.app/ontology/instrument/muted-pluck"/>
+		<ns:typicalArp rdf:resource="https://beatscript.app/ontology/instrument/pluck"/>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/bass"/>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/fm-bass"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/am-pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/strings"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/warm-pad"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums-808"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums-cr78"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/chiptune"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/edm-stab"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/pwm-lead"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/square-lead"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/sync-lead"/>
+	</ns:Genre>
 	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/funk">
 		<rdfs:label xml:lang="en">funk</rdfs:label>
 		<skos:closeMatch rdf:resource="http://www.wikidata.org/entity/Q164444"/>
@@ -10133,6 +10374,58 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:snareRhythm rdf:resource="https://beatscript.app/ontology/rhythm/house-snare"/>
 		<ns:swing rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20</ns:swing>
 		<ns:syncopation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.2</ns:syncopation>
+	</ns:Genre>
+	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/italo">
+		<rdfs:label xml:lang="en">italo</rdfs:label>
+		<skos:definition xml:lang="en">italo: a genre the seeded generator (generate, gen@N) knows (djrust&apos;s own genre, beyond beats&apos; catalogue, following synthwave&apos;s musicality rules), as its tables give it: 120 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, chords 1-6-3-7 or 1-4-7-3.</skos:definition>
+		<ns:bassDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.8</ns:bassDensity>
+		<ns:bassDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">110</ns:bassDuration>
+		<ns:bpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</ns:bpm>
+		<ns:defaultGroove rdf:resource="https://beatscript.app/ontology/groove/four-on-floor"/>
+		<ns:defaultScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
+		<ns:durationVariation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.15</ns:durationVariation>
+		<ns:followsRulesOf rdf:resource="https://beatscript.app/ontology/genre/synthwave"/>
+		<ns:genreId>italo</ns:genreId>
+		<ns:ghostNotes rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.15</ns:ghostNotes>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/italo-hihat-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/italo-hihat-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/italo-kick-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/italo-kick-c"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/italo-snare-b"/>
+		<ns:hasDrumVariant rdf:resource="https://beatscript.app/ontology/variant/italo-snare-c"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/italo-1"/>
+		<ns:hasProgression rdf:resource="https://beatscript.app/ontology/progression/italo-2"/>
+		<ns:hihatRhythm rdf:resource="https://beatscript.app/ontology/rhythm/italo-hihat"/>
+		<ns:humanize rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</ns:humanize>
+		<ns:inFamily rdf:resource="https://beatscript.app/ontology/family/song"/>
+		<ns:kickRhythm rdf:resource="https://beatscript.app/ontology/rhythm/italo-kick"/>
+		<ns:maxBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">130</ns:maxBpm>
+		<ns:melodyDensity rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.45</ns:melodyDensity>
+		<ns:melodyDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">150</ns:melodyDuration>
+		<ns:minBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">110</ns:minBpm>
+		<ns:rootNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">45</ns:rootNote>
+		<ns:snareRhythm rdf:resource="https://beatscript.app/ontology/rhythm/italo-snare"/>
+		<ns:swing rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:swing>
+		<ns:syncopation rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.1</ns:syncopation>
+		<ns:tensionCurve rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:tensionCurve>
+		<ns:typicalArp rdf:resource="https://beatscript.app/ontology/instrument/bright-pluck"/>
+		<ns:typicalArp rdf:resource="https://beatscript.app/ontology/instrument/edm-pluck"/>
+		<ns:typicalArp rdf:resource="https://beatscript.app/ontology/instrument/pluck"/>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/bass"/>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/fm-bass"/>
+		<ns:typicalBass rdf:resource="https://beatscript.app/ontology/instrument/sub-bass"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/choir"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/glass-pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/pad"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/strings"/>
+		<ns:typicalInstrument rdf:resource="https://beatscript.app/ontology/instrument/warm-pad"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums-v8"/>
+		<ns:typicalKit rdf:resource="https://beatscript.app/ontology/instrument/drums"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/brass"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/duo-lead"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/pwm-lead"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/square-lead"/>
+		<ns:typicalMelody rdf:resource="https://beatscript.app/ontology/instrument/tape-lead"/>
 	</ns:Genre>
 	<ns:Genre rdf:about="https://beatscript.app/ontology/genre/jazz">
 		<rdfs:label xml:lang="en">jazz</rdfs:label>
@@ -11594,6 +11887,12 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:categoricalReading rdf:resource="https://beatscript.app/ontology/concept/monoidal-product"/>
 		<ns:status>in-development</ns:status>
 	</owl:Class>
+	<owl:Class rdf:about="https://beatscript.app/ontology/ns#PartParameter">
+		<rdfs:comment xml:lang="en">A NAME=VALUE setting written after a part&apos;s pattern (inst=, kit=, vel=, oct=, ...): djlive&apos;s part parameters.</rdfs:comment>
+		<rdfs:label xml:lang="en">part parameter</rdfs:label>
+		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#LanguageTerm"/>
+		<ns:status>stable</ns:status>
+	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#PatternGenerator">
 		<rdfs:comment xml:lang="en">A call that makes a pattern from its arguments, such as e(5,8), markov(0.6), chord(am) or choose.</rdfs:comment>
 		<rdfs:label xml:lang="en">pattern generator</rdfs:label>
@@ -12123,6 +12422,14 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#energy"/>
 	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#familyWave">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+		<rdfs:comment xml:lang="en">The oscillator shape of the engine&apos;s generic voice for the family: what an inst= name containing the family word plays when it has no voice of its own (soft for pads, sine for sub and 808, saw for basses and plucks, bell, square). The drum words pick no tonal sound and have none.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#VoiceFamily"/>
+		<rdfs:label xml:lang="en">family wave</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>in-development</ns:status>
+	</owl:DatatypeProperty>
 	<owl:ObjectProperty rdf:about="https://beatscript.app/ontology/ns#feel">
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#PhrasebookEntry"/>
 		<rdfs:label xml:lang="en">feel</rdfs:label>
@@ -12151,6 +12458,14 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#gYear"/>
 		<ns:status>stable</ns:status>
 	</owl:DatatypeProperty>
+	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#followsRulesOf">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+		<rdfs:comment xml:lang="en">The genre whose musicality rules (echo, chord colour, arp figure, voice design, beat style, ducking) the generator applies to this one: a genre of the generator&apos;s own, beyond beats&apos; catalogue, follows a beats genre.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#Genre"/>
+		<rdfs:label xml:lang="en">follows the rules of</rdfs:label>
+		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#Genre"/>
+		<ns:status>in-development</ns:status>
+	</owl:FunctionalProperty>
 	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#forFamily">
 		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
 		<rdfs:label xml:lang="en">for family</rdfs:label>
@@ -13124,7 +13439,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 	</owl:DatatypeProperty>
 	<rdf:Description rdf:about="https://beatscript.app/ontology/ns">
 		<dct:creator>stackdump</dct:creator>
-		<dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2026-11-22</dct:issued>
+		<dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2026-11-23</dct:issued>
 		<dct:license rdf:resource="https://creativecommons.org/publicdomain/zero/1.0/"/>
 		<dct:publisher rdf:resource="https://beatscript.app"/>
 		<dct:rights xml:lang="en">Dedicated to the public domain under CC0 1.0 Universal.</dct:rights>
@@ -13132,9 +13447,9 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
 		<rdfs:comment xml:lang="en">The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the BeatScript language itself (its versions, its grammar&apos;s productions and keywords, voices, kits, control nouns and verbs, operators and both MCP servers&apos; tools), generated from the code that implements them. Forked from the bitwrap ontology 0.2.0, whose terms it carries under this namespace, each linked to the bitwrap term it came from by prov:wasDerivedFrom; it evolves on its own from here.</rdfs:comment>
 		<rdfs:seeAlso rdf:resource="https://ontology.pflow.xyz/ns"/>
-		<owl:priorVersion rdf:resource="https://beatscript.app/ontology/0.2.0"/>
-		<owl:versionIRI rdf:resource="https://beatscript.app/ontology/0.3.0"/>
-		<owl:versionInfo>0.3.0</owl:versionInfo>
+		<owl:priorVersion rdf:resource="https://beatscript.app/ontology/0.3.0"/>
+		<owl:versionIRI rdf:resource="https://beatscript.app/ontology/0.4.0"/>
+		<owl:versionInfo>0.4.0</owl:versionInfo>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/release/bitwrap-ontology-0.2.0.tar"/>
 	</rdf:Description>
 	<ns:SectionProfile rdf:about="https://beatscript.app/ontology/profile/chill-breakdown">
@@ -13683,6 +13998,18 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:status>in-development</ns:status>
 		<ns:tempoBpm rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">138</ns:tempoBpm>
 	</ns:Program>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/acid-1">
+		<rdfs:label xml:lang="en">acid progression 1: 1-1-7-1</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 1 7 1</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/acid-2">
+		<rdfs:label xml:lang="en">acid progression 2: 1-4-1-4</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 4 1 4</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
 	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/ambient-1">
 		<rdfs:label xml:lang="en">ambient progression 1: 1-3-6-4</rdfs:label>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/progression/ambient-1"/>
@@ -13725,6 +14052,18 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:degrees>1 6 4 5</ns:degrees>
 		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
 	</ns:ChordProgression>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/deephouse-1">
+		<rdfs:label xml:lang="en">deephouse progression 1: 1-4-1-4</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 4 1 4</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/deephouse-2">
+		<rdfs:label xml:lang="en">deephouse progression 2: 1-7-4-5</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 7 4 5</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
 	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/dnb-1">
 		<rdfs:label xml:lang="en">dnb progression 1: 1-6-3-5</rdfs:label>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/progression/dnb-1"/>
@@ -13751,6 +14090,18 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/progression/edm-2"/>
 		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
 		<ns:degrees>1 7 6 5</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/electro-1">
+		<rdfs:label xml:lang="en">electro progression 1: 1-7-6-7</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 7 6 7</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/electro-2">
+		<rdfs:label xml:lang="en">electro progression 2: 1-4-1-5</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 4 1 5</ns:degrees>
 		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
 	</ns:ChordProgression>
 	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/funk-1">
@@ -13793,6 +14144,18 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/progression/house-2"/>
 		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
 		<ns:degrees>1 4 6 7</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/italo-1">
+		<rdfs:label xml:lang="en">italo progression 1: 1-6-3-7</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 6 3 7</ns:degrees>
+		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
+	</ns:ChordProgression>
+	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/italo-2">
+		<rdfs:label xml:lang="en">italo progression 2: 1-4-7-3</rdfs:label>
+		<ns:chordCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:chordCount>
+		<ns:degrees>1 4 7 3</ns:degrees>
 		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
 	</ns:ChordProgression>
 	<ns:ChordProgression rdf:about="https://beatscript.app/ontology/progression/jazz-1">
@@ -13907,6 +14270,30 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:degrees>1 4 1 7</ns:degrees>
 		<ns:stepsPerChord rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:stepsPerChord>
 	</ns:ChordProgression>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/acid-hihat">
+		<rdfs:label xml:lang="en">acid hihat: E(4,16) rotation 2</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">42</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/acid-kick">
+		<rdfs:label xml:lang="en">acid kick: E(4,16) rotation 0</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">36</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/acid-snare">
+		<rdfs:label xml:lang="en">acid snare: E(2,16) rotation 4</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">38</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
 	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/ambient-hihat">
 		<rdfs:label xml:lang="en">ambient hihat: E(3,16) rotation 0</rdfs:label>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/rhythm/ambient-hihat"/>
@@ -14015,6 +14402,30 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotation>
 		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
 	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/deephouse-hihat">
+		<rdfs:label xml:lang="en">deephouse hihat: E(4,16) rotation 2</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">42</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/deephouse-kick">
+		<rdfs:label xml:lang="en">deephouse kick: E(4,16) rotation 0</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">36</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/deephouse-snare">
+		<rdfs:label xml:lang="en">deephouse snare: E(2,16) rotation 4</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">38</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
 	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/dnb-hihat">
 		<rdfs:label xml:lang="en">dnb hihat: E(7,8) rotation 0</rdfs:label>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/rhythm/dnb-hihat"/>
@@ -14092,6 +14503,30 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/rhythm/edm-snare"/>
 		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
 		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">40</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/electro-hihat">
+		<rdfs:label xml:lang="en">electro hihat: E(8,16) rotation 0</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">42</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/electro-kick">
+		<rdfs:label xml:lang="en">electro kick: E(5,16) rotation 0</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">36</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/electro-snare">
+		<rdfs:label xml:lang="en">electro snare: E(2,16) rotation 4</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">38</ns:midiNote>
 		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:pulses>
 		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotation>
 		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
@@ -14176,6 +14611,30 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns:pulses>
 		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:rotation>
 		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/italo-hihat">
+		<rdfs:label xml:lang="en">italo hihat: E(4,16) rotation 2</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">42</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/italo-kick">
+		<rdfs:label xml:lang="en">italo kick: E(4,16) rotation 0</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">36</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
+	</ns:EuclideanRhythm>
+	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/italo-snare">
+		<rdfs:label xml:lang="en">italo snare: E(2,16) rotation 4</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:midiNote rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">38</ns:midiNote>
+		<ns:pulses rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:pulses>
+		<ns:rotation rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotation>
+		<ns:steps rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</ns:steps>
 	</ns:EuclideanRhythm>
 	<ns:EuclideanRhythm rdf:about="https://beatscript.app/ontology/rhythm/jazz-hihat">
 		<rdfs:label xml:lang="en">jazz hihat: E(5,12) rotation 0</rdfs:label>
@@ -17936,6 +18395,54 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:sectionCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</ns:sectionCount>
 		<ns:templateKind>standard</ns:templateKind>
 	</ns:SongStructure>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/acid-hihat-b">
+		<rdfs:label xml:lang="en">acid hihat variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/acid-hihat-c">
+		<rdfs:label xml:lang="en">acid hihat variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/acid-kick-b">
+		<rdfs:label xml:lang="en">acid kick variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/acid-kick-c">
+		<rdfs:label xml:lang="en">acid kick variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/acid-snare-b">
+		<rdfs:label xml:lang="en">acid snare variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/acid-snare-c">
+		<rdfs:label xml:lang="en">acid snare variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
 	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/ambient-hihat-b">
 		<rdfs:label xml:lang="en">ambient hihat variant B</rdfs:label>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/variant/ambient-hihat-b"/>
@@ -18152,6 +18659,54 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
 		<ns:variantLabel>C</ns:variantLabel>
 	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/deephouse-hihat-b">
+		<rdfs:label xml:lang="en">deephouse hihat variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/deephouse-hihat-c">
+		<rdfs:label xml:lang="en">deephouse hihat variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/deephouse-kick-b">
+		<rdfs:label xml:lang="en">deephouse kick variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/deephouse-kick-c">
+		<rdfs:label xml:lang="en">deephouse kick variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/deephouse-snare-b">
+		<rdfs:label xml:lang="en">deephouse snare variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/deephouse-snare-c">
+		<rdfs:label xml:lang="en">deephouse snare variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
 	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/dnb-hihat-b">
 		<rdfs:label xml:lang="en">dnb hihat variant B</rdfs:label>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/variant/dnb-hihat-b"/>
@@ -18332,6 +18887,54 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
 		<ns:variantLabel>C</ns:variantLabel>
 	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/electro-hihat-b">
+		<rdfs:label xml:lang="en">electro hihat variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/electro-hihat-c">
+		<rdfs:label xml:lang="en">electro hihat variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/electro-kick-b">
+		<rdfs:label xml:lang="en">electro kick variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/electro-kick-c">
+		<rdfs:label xml:lang="en">electro kick variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/electro-snare-b">
+		<rdfs:label xml:lang="en">electro snare variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/electro-snare-c">
+		<rdfs:label xml:lang="en">electro snare variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
 	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/funk-hihat-b">
 		<rdfs:label xml:lang="en">funk hihat variant B</rdfs:label>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/variant/funk-hihat-b"/>
@@ -18492,6 +19095,54 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-1</ns:hitsAdd>
 		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
 		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/italo-hihat-b">
+		<rdfs:label xml:lang="en">italo hihat variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/italo-hihat-c">
+		<rdfs:label xml:lang="en">italo hihat variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/hihat"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/italo-kick-b">
+		<rdfs:label xml:lang="en">italo kick variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/italo-kick-c">
+		<rdfs:label xml:lang="en">italo kick variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/kick"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>C</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/italo-snare-b">
+		<rdfs:label xml:lang="en">italo snare variant B</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:rotationAdd>
+		<ns:variantLabel>B</ns:variantLabel>
+	</ns:DrumVariant>
+	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/italo-snare-c">
+		<rdfs:label xml:lang="en">italo snare variant C</rdfs:label>
+		<ns:forRole rdf:resource="https://beatscript.app/ontology/role/snare"/>
+		<ns:hitsAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-1</ns:hitsAdd>
+		<ns:hitsMul rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:hitsMul>
+		<ns:rotationAdd rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns:rotationAdd>
 		<ns:variantLabel>C</ns:variantLabel>
 	</ns:DrumVariant>
 	<ns:DrumVariant rdf:about="https://beatscript.app/ontology/variant/jazz-hihat-b">

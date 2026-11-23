@@ -24,10 +24,10 @@
 
 <https://beatscript.app/ontology/ns> a owl:Ontology ;
     dct:title "BeatScript ontology"@en ;
-    owl:versionInfo "0.3.0" ;
-    owl:versionIRI <https://beatscript.app/ontology/0.3.0> ;
-    owl:priorVersion <https://beatscript.app/ontology/0.2.0> ;
-    dct:issued "2026-11-22"^^xsd:date ;
+    owl:versionInfo "0.4.0" ;
+    owl:versionIRI <https://beatscript.app/ontology/0.4.0> ;
+    owl:priorVersion <https://beatscript.app/ontology/0.3.0> ;
+    dct:issued "2026-11-23"^^xsd:date ;
     dct:creator "stackdump" ;
     dct:publisher <https://beatscript.app> ;
     dct:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
@@ -74,6 +74,17 @@ concept:product-beatscript-language a skos:Concept, ns:ProgrammingLanguage ; sko
     ns:fileExtension ".beatscript" ; ns:legacyFileExtension ".btw" ;
     ns:mediaType "text/beatscript" ; ns:legacyMediaType "text/x-beatscript", "text/btw" ;
     rdfs:seeAlso ns:Program .
+
+# --- conventions for the generator's own genres -----------------------------------------------------------------
+# The genres djrust's generator has beyond beats' catalogue (acid, deephouse, electro, italo) are generated from its
+# tables (generated/beatscript.ttl, since 0.4.0). What the tables do not say is a convention, written here as bitwrap's
+# conventions module writes its own (hand-authored from general musical practice, CC0): a usual tempo range, which always
+# contains the genre's ns:bpm. Advice, never a rule: check's style warns outside it.
+
+<https://beatscript.app/ontology/genre/acid>      ns:minBpm "118"^^xsd:integer ; ns:maxBpm "140"^^xsd:integer .
+<https://beatscript.app/ontology/genre/deephouse> ns:minBpm "115"^^xsd:integer ; ns:maxBpm "126"^^xsd:integer .
+<https://beatscript.app/ontology/genre/electro>   ns:minBpm "105"^^xsd:integer ; ns:maxBpm "135"^^xsd:integer .
+<https://beatscript.app/ontology/genre/italo>     ns:minBpm "110"^^xsd:integer ; ns:maxBpm "130"^^xsd:integer .
 
 # --- BeatScript 1, the language when it was called btw ----------------------------------------------------------
 # (the versions themselves, concept:beatscript-1 and concept:beatscript-2, are generated from djlive::version)

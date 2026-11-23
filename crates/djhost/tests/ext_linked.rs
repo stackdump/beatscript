@@ -11,7 +11,8 @@ use djhost::live_store::{LinkEdit, LiveStore, Object};
 use djlive::linked::{self, Links};
 
 const TECHNO: &str = "https://beatscript.app/ontology/genre/techno";
-const ACID: &str = "https://beatscript.app/ontology/instrument/acid";
+// a bare `acid` is the acid genre since ontology 0.4.0 (a word two kinds both have is the genre: djlive::linked::KIND_ORDER)
+const ACID: &str = "https://beatscript.app/ontology/genre/acid";
 const FLOOR: &str = "https://beatscript.app/ontology/groove/four-on-floor";
 const DROP: &str = "https://beatscript.app/ontology/section/drop";
 
@@ -48,7 +49,7 @@ fn header_lines_are_saved_as_full_iris_and_come_back_on_load_and_list() {
     let (s, dir) = store("save");
     let (e, w) = s.save_with("night bus", &headed("#! genre: Techno\n#! tags: four on floor, acid, drop\n"), None).unwrap();
     assert!(w.is_empty(), "{w:?}");
-    assert_eq!(e.links, Links { genre: Some(TECHNO.into()), tags: vec![FLOOR.into(), ACID.into(), DROP.into()] }, "full IRIs, sorted: a set");
+    assert_eq!(e.links, Links { genre: Some(TECHNO.into()), tags: vec![ACID.into(), FLOOR.into(), DROP.into()] }, "full IRIs, sorted: a set");
     assert_eq!(s.list()[0].links, e.links);
     let snip = s.load("night bus").unwrap();
     assert_eq!(snip.links, e.links);
@@ -62,7 +63,7 @@ fn the_same_links_in_any_spelling_or_order_are_the_same_object() {
     let (s, dir) = store("spelling");
     let a = s.save_with("p", &headed("#! genre: bw:Techno\n#! tags: acid, drop\n"), None).unwrap().0;
     let (s2, dir2) = store("spelling2");
-    let b = s2.save_with("p", &headed(&format!("#! genre: {TECHNO}\n#! tags: section:drop\n#! tags: instrument:acid, Acid\n")), None).unwrap().0;
+    let b = s2.save_with("p", &headed(&format!("#! genre: {TECHNO}\n#! tags: section:drop\n#! tags: genre:acid, Acid\n")), None).unwrap().0;
     assert_eq!(a.links, b.links);
     assert_eq!(a.object, b.object, "the same object: the links are what is addressed, not how they were typed");
     let _ = std::fs::remove_dir_all(dir);
@@ -158,7 +159,7 @@ fn an_unknown_genre_or_tag_is_an_error_in_save_and_import_with_a_did_you_mean_an
     let e = s.save_with("x", &headed("#! genre: tehcno\n"), None).unwrap_err();
     assert!(e.starts_with("btw: not saved, unknown genre `tehcno` (line 1, column 11): did you mean `techno`?"), "{e}");
     let e = s.save_with("x", &headed("#! genre: techno\n#! tags: acid, acidd, nonesuch\n"), None).unwrap_err();
-    assert!(e.contains("unknown tag `acidd` (line 2, column 16): did you mean `acid`?") && e.contains("unknown tag `nonesuch`"), "{e}");
+    assert!(e.contains("unknown tag `acidd` (line 2, column 16): did you mean `acid`") && e.contains("unknown tag `nonesuch`"), "{e}");
     let e = s.save_with("x", &headed("#! genre: groove:four-on-floor\n"), None).unwrap_err();
     assert!(e.contains("is a groove, not a genre"), "{e}");
     assert!(s.list().is_empty(), "nothing was kept");
@@ -245,7 +246,7 @@ fn jsonld_of_a_text_takes_its_links_and_its_rights_from_its_header_only() {
     let file = headed("#! btw 1\n#! name: night bus\n#! license: CC-BY-4.0\n#! author: matt\n#! genre: genre:techno\n#! tags: acid, four on floor\n");
     let doc = s.jsonld_text(&file).unwrap();
     assert_eq!((text_of(&doc, "name"), text_of(&doc, "genre"), text_of(&doc, "licenseId"), text_of(&doc, "author")), (Some("night bus"), Some(TECHNO), Some("CC-BY-4.0"), Some("matt")));
-    assert_eq!(doc.get("tag").unwrap().strings().unwrap(), [FLOOR, ACID]);
+    assert_eq!(doc.get("tag").unwrap().strings().unwrap(), [ACID, FLOOR]);
     // the same file saved and asked for by id is the same document
     s.import_text(&file, "x").unwrap();
     assert_eq!(linked::pretty(&s.jsonld("night bus").unwrap()), linked::pretty(&doc));
@@ -287,7 +288,7 @@ fn a_skip_test_line_among_the_header_lines_confuses_neither_the_rights_nor_the_l
     // a mistake in a link is said at its own line, which counts the skip line
     let bad = format!("{skip}#! name: x\n#! tags: acid, acidd\n{PROGRAM}");
     let msg = s.import_text(&bad, "x").unwrap_err();
-    assert!(msg.contains("unknown tag `acidd` (line 3, column 16): did you mean `acid`?"), "{msg}");
+    assert!(msg.contains("unknown tag `acidd` (line 3, column 16): did you mean `acid`"), "{msg}");
     let c = s.check(&bad);
     let at: Vec<usize> = about_the_header(&c, &bad).iter().map(|d| d.position(&bad).0).collect();
     assert_eq!(at, [3]);
@@ -327,7 +328,7 @@ fn a_file_edited_by_hand_is_not_listed_and_one_with_a_withdrawn_term_is_still_re
 #[test]
 fn the_vocabulary_is_in_the_binary_and_says_where_it_is_from() {
     let d = djhost::ontology::describe();
-    assert!(d.starts_with("BeatScript ontology 0.3.0, 265 terms, taken 20"), "{d}");
+    assert!(d.starts_with("BeatScript ontology 0.4.0, 277 terms, taken 20"), "{d}");
     // BeatScript's own environment has it, so any check through the host does
     let be = djhost::beatscript_env::BeatscriptEnv::new(None);
     assert!(be.env().ontology.is_some());

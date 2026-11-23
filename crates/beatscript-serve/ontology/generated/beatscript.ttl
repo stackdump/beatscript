@@ -27,6 +27,8 @@ ns:MutationOperator a owl:Class ; rdfs:subClassOf ns:PatternTransform ; rdfs:lab
     rdfs:comment "An operator of an arrange mutation: it changes a let pattern from one point of the arrangement (~) or for one section (@)."@en .
 ns:PhraseTemplate a owl:Class ; rdfs:subClassOf ns:MusicConcept ; rdfs:label "phrase template"@en ; ns:status "stable" ;
     rdfs:comment "A template that compiles a phrase to a whole track: arrange from template(NAME, PHRASE). The phrase is the vocal line (its syllables the line's length, its stress the accents and the beats, its meter the subdivision); the arrangement is the template's own."@en .
+ns:PartParameter a owl:Class ; rdfs:subClassOf ns:LanguageTerm ; rdfs:label "part parameter"@en ; ns:status "stable" ;
+    rdfs:comment "A NAME=VALUE setting written after a part's pattern (inst=, kit=, vel=, oct=, ...): djlive's part parameters."@en .
 ns:BeatScriptVoice a owl:Class ; rdfs:subClassOf ns:Instrument ; rdfs:label "BeatScript voice"@en ; ns:status "stable" ;
     rdfs:comment "A voice a BeatScript part may name with inst=NAME: what /api/instruments lists."@en .
 ns:DrumKit a owl:Class ; rdfs:subClassOf ns:Instrument ; rdfs:label "drum kit"@en ; ns:status "stable" ;
@@ -52,6 +54,10 @@ ns:writtenAs a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "writte
     rdfs:comment "How the term is spelled in a BeatScript program."@en .
 ns:markedBy a owl:ObjectProperty ; rdfs:range ns:Keyword ; rdfs:label "marked by"@en ; ns:status "stable" .
 ns:inVoiceFamily a owl:ObjectProperty ; rdfs:domain ns:BeatScriptVoice ; rdfs:range ns:VoiceFamily ; rdfs:label "in voice family"@en ; ns:status "stable" .
+ns:familyWave a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:VoiceFamily ; rdfs:range xsd:string ; rdfs:label "family wave"@en ; ns:status "in-development" ;
+    rdfs:comment "The oscillator shape of the engine's generic voice for the family: what an inst= name containing the family word plays when it has no voice of its own (soft for pads, sine for sub and 808, saw for basses and plucks, bell, square). The drum words pick no tonal sound and have none."@en .
+ns:followsRulesOf a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:Genre ; rdfs:range ns:Genre ; rdfs:label "follows the rules of"@en ; ns:status "in-development" ;
+    rdfs:comment "The genre whose musicality rules (echo, chord colour, arp figure, voice design, beat style, ducking) the generator applies to this one: a genre of the generator's own, beyond beats' catalogue, follows a beats genre."@en .
 ns:acceptsVerb a owl:ObjectProperty ; owl:inverseOf ns:actsOn ; rdfs:label "accepts verb"@en ; ns:status "stable" .
 ns:defaultVerb a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:ControlNoun ; rdfs:range ns:ControlVerb ; rdfs:label "default verb"@en ; ns:status "stable" .
 ns:controlParameter a owl:DatatypeProperty ; rdfs:domain ns:ControlNoun ; rdfs:range xsd:string ; rdfs:label "control parameter"@en ; ns:status "stable" .
@@ -4125,6 +4131,72 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "jux" .
 
+<https://beatscript.app/ontology/concept/part-param-vel> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "vel"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter vel, written vel=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "vel=" .
+
+<https://beatscript.app/ontology/concept/part-param-oct> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "oct"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter oct, written oct=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "oct=" .
+
+<https://beatscript.app/ontology/concept/part-param-len> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "len"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter len, written len=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "len=" .
+
+<https://beatscript.app/ontology/concept/part-param-inst> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "inst"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter inst, written inst=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "inst=" .
+
+<https://beatscript.app/ontology/concept/part-param-seed> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "seed"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter seed, written seed=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "seed=" .
+
+<https://beatscript.app/ontology/concept/part-param-kit> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "kit"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter kit, written kit=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "kit=" .
+
+<https://beatscript.app/ontology/concept/part-param-sound> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "sound"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter sound, written sound=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "sound=" .
+
+<https://beatscript.app/ontology/concept/part-param-route> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "route"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter route, written route=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "route=" .
+
+<https://beatscript.app/ontology/concept/part-param-glide> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "glide"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter glide, written glide=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "glide=" .
+
+<https://beatscript.app/ontology/concept/part-param-decay> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "decay"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter decay, written decay=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "decay=" .
+
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PartParameter> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "pitch-drop"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The part parameter pitch-drop, written pitch-drop=VALUE after a part's pattern."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "pitch-drop=" .
+
 <https://beatscript.app/ontology/concept/template-deep-house> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#PhraseTemplate> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "deep-house"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The phrase template deep-house: deep house at 122: a night/spot cycle, the voice buried then spotlit, crossed onto the shaker; the phrase is the vocal line. Written arrange from template(deep-house, @tempest_such_stuff)."@en ;
@@ -4918,6 +4990,575 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The toybox palette."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "toybox" .
+
+<https://beatscript.app/ontology/concept/voice-family-pad> <https://beatscript.app/ontology/ns#familyWave> "soft" .
+
+<https://beatscript.app/ontology/concept/voice-family-strings> <https://beatscript.app/ontology/ns#familyWave> "soft" .
+
+<https://beatscript.app/ontology/concept/voice-family-choir> <https://beatscript.app/ontology/ns#familyWave> "soft" .
+
+<https://beatscript.app/ontology/concept/voice-family-organ> <https://beatscript.app/ontology/ns#familyWave> "soft" .
+
+<https://beatscript.app/ontology/concept/voice-family-sub> <https://beatscript.app/ontology/ns#familyWave> "sine" .
+
+<https://beatscript.app/ontology/concept/voice-family-808> <https://beatscript.app/ontology/ns#familyWave> "sine" .
+
+<https://beatscript.app/ontology/concept/voice-family-bass> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/concept/voice-family-reese> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/concept/voice-family-acid> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/concept/voice-family-bell> <https://beatscript.app/ontology/ns#familyWave> "bell" .
+
+<https://beatscript.app/ontology/concept/voice-family-vibes> <https://beatscript.app/ontology/ns#familyWave> "bell" .
+
+<https://beatscript.app/ontology/concept/voice-family-marimba> <https://beatscript.app/ontology/ns#familyWave> "bell" .
+
+<https://beatscript.app/ontology/concept/voice-family-kalimba> <https://beatscript.app/ontology/ns#familyWave> "bell" .
+
+<https://beatscript.app/ontology/concept/voice-family-music-box> <https://beatscript.app/ontology/ns#familyWave> "bell" .
+
+<https://beatscript.app/ontology/concept/voice-family-steel> <https://beatscript.app/ontology/ns#familyWave> "bell" .
+
+<https://beatscript.app/ontology/concept/voice-family-glass> <https://beatscript.app/ontology/ns#familyWave> "bell" .
+
+<https://beatscript.app/ontology/concept/voice-family-square> <https://beatscript.app/ontology/ns#familyWave> "square" .
+
+<https://beatscript.app/ontology/concept/voice-family-chiptune> <https://beatscript.app/ontology/ns#familyWave> "square" .
+
+<https://beatscript.app/ontology/concept/voice-family-pwm> <https://beatscript.app/ontology/ns#familyWave> "square" .
+
+<https://beatscript.app/ontology/concept/voice-family-clav> <https://beatscript.app/ontology/ns#familyWave> "square" .
+
+<https://beatscript.app/ontology/concept/voice-family-pluck> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/concept/voice-family-stab> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/concept/voice-family-piano> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/concept/voice-family-guitar> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/concept/voice-family-harpsi> <https://beatscript.app/ontology/ns#familyWave> "saw" .
+
+<https://beatscript.app/ontology/genre/electro> a <https://beatscript.app/ontology/ns#Genre> ;
+    rdfs:label "electro"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "electro: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following edm's musicality rules), as its tables give it: 118 BPM, minor from MIDI note 45, the breakbeat groove, kick E(5,16), snare E(2,16) rotated 4, hihat E(8,16), swing 8, chords 1-7-6-7 or 1-4-1-5."@en ;
+    <https://beatscript.app/ontology/ns#genreId> "electro" ;
+    <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/edm> ;
+    <https://beatscript.app/ontology/ns#bpm> "118"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/minor> ;
+    <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/breakbeat> ;
+    <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/electro-kick> ;
+    <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/electro-snare> ;
+    <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/electro-hihat> ;
+    <https://beatscript.app/ontology/ns#bassDensity> "0.65"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#bassDuration> "140"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#durationVariation> "0.15"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#ghostNotes> "0.2"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#humanize> "6"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#melodyDensity> "0.4"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#melodyDuration> "110"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#swing> "8"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#syncopation> "0.45"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/edm> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/electro-1> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/electro-2> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-hihat-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-hihat-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-kick-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-kick-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-snare-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-snare-c> ;
+    <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/muted-pluck> ;
+    <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/pluck> ;
+    <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/chiptune> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/fm-bass> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/bass> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/am-pad> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-808> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-cr78> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/square-lead> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/pwm-lead> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/sync-lead> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/edm-stab> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/chiptune> .
+
+<https://beatscript.app/ontology/rhythm/electro-kick> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "electro kick: E(5,16) rotation 0"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#pulses> "5"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/electro-snare> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "electro snare: E(2,16) rotation 4"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/electro-hihat> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "electro hihat: E(8,16) rotation 0"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#pulses> "8"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/electro-1> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "electro progression 1: 1-7-6-7"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 7 6 7" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/electro-2> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "electro progression 2: 1-4-1-5"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 4 1 5" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/electro-hihat-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "electro hihat variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/electro-hihat-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "electro hihat variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/electro-kick-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "electro kick variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/electro-kick-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "electro kick variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/electro-snare-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "electro snare variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/electro-snare-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "electro snare variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/genre/deephouse> a <https://beatscript.app/ontology/ns#Genre> ;
+    rdfs:label "deephouse"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "deephouse: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following house's musicality rules), as its tables give it: 122 BPM, dorian from MIDI note 45, the sidechained groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 15, chords 1-4-1-4 or 1-7-4-5."@en ;
+    <https://beatscript.app/ontology/ns#genreId> "deephouse" ;
+    <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/edm> ;
+    <https://beatscript.app/ontology/ns#bpm> "122"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/dorian> ;
+    <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/sidechained> ;
+    <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/deephouse-kick> ;
+    <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/deephouse-snare> ;
+    <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/deephouse-hihat> ;
+    <https://beatscript.app/ontology/ns#bassDensity> "0.5"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#bassDuration> "220"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#durationVariation> "0.25"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#ghostNotes> "0.35"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#humanize> "12"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#melodyDensity> "0.35"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#melodyDuration> "160"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#swing> "15"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#syncopation> "0.25"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/house> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/deephouse-1> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/deephouse-2> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-hihat-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-hihat-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-kick-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-kick-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-snare-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-snare-c> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/sub-bass> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/bass> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/glass-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/am-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-v8> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/electric-piano> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/organ> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/piano> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/vibes> .
+
+<https://beatscript.app/ontology/rhythm/deephouse-kick> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "deephouse kick: E(4,16) rotation 0"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/deephouse-snare> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "deephouse snare: E(2,16) rotation 4"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "deephouse hihat: E(4,16) rotation 2"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/deephouse-1> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "deephouse progression 1: 1-4-1-4"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 4 1 4" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/deephouse-2> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "deephouse progression 2: 1-7-4-5"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 7 4 5" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "deephouse hihat variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "deephouse hihat variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/deephouse-kick-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "deephouse kick variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/deephouse-kick-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "deephouse kick variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/deephouse-snare-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "deephouse snare variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/deephouse-snare-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "deephouse snare variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/genre/italo> a <https://beatscript.app/ontology/ns#Genre> ;
+    rdfs:label "italo"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "italo: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following synthwave's musicality rules), as its tables give it: 120 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, chords 1-6-3-7 or 1-4-7-3."@en ;
+    <https://beatscript.app/ontology/ns#genreId> "italo" ;
+    <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/song> ;
+    <https://beatscript.app/ontology/ns#bpm> "120"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/minor> ;
+    <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/four-on-floor> ;
+    <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/italo-kick> ;
+    <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/italo-snare> ;
+    <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/italo-hihat> ;
+    <https://beatscript.app/ontology/ns#bassDensity> "0.8"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#bassDuration> "110"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#durationVariation> "0.15"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#ghostNotes> "0.15"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#humanize> "5"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#melodyDensity> "0.45"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#melodyDuration> "150"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#swing> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#syncopation> "0.1"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#tensionCurve> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+    <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/synthwave> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/italo-1> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/italo-2> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-hihat-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-hihat-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-kick-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-kick-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-snare-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-snare-c> ;
+    <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/bright-pluck> ;
+    <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/pluck> ;
+    <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/edm-pluck> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/fm-bass> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/bass> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/sub-bass> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/glass-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/choir> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-v8> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/duo-lead> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/tape-lead> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/brass> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/square-lead> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/pwm-lead> .
+
+<https://beatscript.app/ontology/rhythm/italo-kick> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "italo kick: E(4,16) rotation 0"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/italo-snare> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "italo snare: E(2,16) rotation 4"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/italo-hihat> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "italo hihat: E(4,16) rotation 2"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/italo-1> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "italo progression 1: 1-6-3-7"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 6 3 7" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/italo-2> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "italo progression 2: 1-4-7-3"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 4 7 3" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/italo-hihat-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "italo hihat variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/italo-hihat-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "italo hihat variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/italo-kick-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "italo kick variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/italo-kick-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "italo kick variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/italo-snare-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "italo snare variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/italo-snare-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "italo snare variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/genre/acid> a <https://beatscript.app/ontology/ns#Genre> ;
+    rdfs:label "acid"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "acid: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following techno's musicality rules), as its tables give it: 125 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 10, chords 1-1-7-1 or 1-4-1-4."@en ;
+    <https://beatscript.app/ontology/ns#genreId> "acid" ;
+    <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/edm> ;
+    <https://beatscript.app/ontology/ns#bpm> "125"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/minor> ;
+    <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/four-on-floor> ;
+    <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/acid-kick> ;
+    <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/acid-snare> ;
+    <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/acid-hihat> ;
+    <https://beatscript.app/ontology/ns#bassDensity> "0.75"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#bassDuration> "100"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#durationVariation> "0.2"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#ghostNotes> "0.3"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#humanize> "8"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#melodyDensity> "0.25"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#melodyDuration> "90"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#swing> "10"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#syncopation> "0.3"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
+    <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/techno> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/acid-1> ;
+    <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/acid-2> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-hihat-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-hihat-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-kick-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-kick-c> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-snare-b> ;
+    <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-snare-c> ;
+    <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/acid> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/dark-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> ;
+    <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums> ;
+    <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-v8> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/rave-stab> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/edm-stab> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/rave-organ> ;
+    <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/organ> .
+
+<https://beatscript.app/ontology/rhythm/acid-kick> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "acid kick: E(4,16) rotation 0"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/acid-snare> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "acid snare: E(2,16) rotation 4"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/rhythm/acid-hihat> a <https://beatscript.app/ontology/ns#EuclideanRhythm> ;
+    rdfs:label "acid hihat: E(4,16) rotation 2"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotation> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/acid-1> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "acid progression 1: 1-1-7-1"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 1 7 1" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/progression/acid-2> a <https://beatscript.app/ontology/ns#ChordProgression> ;
+    rdfs:label "acid progression 2: 1-4-1-4"@en ;
+    <https://beatscript.app/ontology/ns#degrees> "1 4 1 4" ;
+    <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/acid-hihat-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "acid hihat variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/acid-hihat-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "acid hihat variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/acid-kick-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "acid kick variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/acid-kick-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "acid kick variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/acid-snare-b> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "acid snare variant B"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "B" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+<https://beatscript.app/ontology/variant/acid-snare-c> a <https://beatscript.app/ontology/ns#DrumVariant> ;
+    rdfs:label "acid snare variant C"@en ;
+    <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> ;
+    <https://beatscript.app/ontology/ns#variantLabel> "C" ;
+    <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+    <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
 
 <https://beatscript.app/ontology/concept/phrasebook-public-domain> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Phrasebook> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "public-domain phrasebook"@en ;

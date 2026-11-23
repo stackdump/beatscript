@@ -30,6 +30,7 @@ CALLS = [
     ("get_genre", {"genre": "jazz"}),
     ("get_genre", {"genre": "Lofi "}),
     ("get_genre", {"genre": "polka"}),
+    ("get_genre", {"genre": "acid"}),
     ("describe_term", {"term": "Genre"}),
     ("describe_term", {"term": "genre:techno"}),
     ("describe_term", {"term": "bpm"}),

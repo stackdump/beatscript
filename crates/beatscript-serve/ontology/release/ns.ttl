@@ -3577,6 +3577,61 @@
 	skos:prefLabel "world"@en ;
 	ns:status "stable" ;
 	ns:writtenAs "world" .
+<https://beatscript.app/ontology/concept/part-param-decay> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter decay, written decay=VALUE after a part's pattern."@en ;
+	skos:prefLabel "decay"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "decay=" .
+<https://beatscript.app/ontology/concept/part-param-glide> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter glide, written glide=VALUE after a part's pattern."@en ;
+	skos:prefLabel "glide"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "glide=" .
+<https://beatscript.app/ontology/concept/part-param-inst> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter inst, written inst=VALUE after a part's pattern."@en ;
+	skos:prefLabel "inst"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "inst=" .
+<https://beatscript.app/ontology/concept/part-param-kit> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter kit, written kit=VALUE after a part's pattern."@en ;
+	skos:prefLabel "kit"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "kit=" .
+<https://beatscript.app/ontology/concept/part-param-len> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter len, written len=VALUE after a part's pattern."@en ;
+	skos:prefLabel "len"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "len=" .
+<https://beatscript.app/ontology/concept/part-param-oct> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter oct, written oct=VALUE after a part's pattern."@en ;
+	skos:prefLabel "oct"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "oct=" .
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter pitch-drop, written pitch-drop=VALUE after a part's pattern."@en ;
+	skos:prefLabel "pitch-drop"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "pitch-drop=" .
+<https://beatscript.app/ontology/concept/part-param-route> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter route, written route=VALUE after a part's pattern."@en ;
+	skos:prefLabel "route"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "route=" .
+<https://beatscript.app/ontology/concept/part-param-seed> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter seed, written seed=VALUE after a part's pattern."@en ;
+	skos:prefLabel "seed"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "seed=" .
+<https://beatscript.app/ontology/concept/part-param-sound> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter sound, written sound=VALUE after a part's pattern."@en ;
+	skos:prefLabel "sound"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "sound=" .
+<https://beatscript.app/ontology/concept/part-param-vel> a skos:Concept , ns:PartParameter ;
+	skos:definition "The part parameter vel, written vel=VALUE after a part's pattern."@en ;
+	skos:prefLabel "vel"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "vel=" .
 <https://beatscript.app/ontology/concept/pattern-endofunctor> a skos:Concept , ns:CategoricalConcept ;
 	skos:definition "Pattern as a functor from notes to notes: a function on single notes lifts to a function on patterns of them, and lifting respects composition and identity."@en ;
 	skos:prefLabel "Pattern endofunctor"@en ;
@@ -5784,36 +5839,43 @@
 <https://beatscript.app/ontology/concept/voice-family-808> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The 808 family: an inst= name containing 808 plays its generic voice."@en ;
 	skos:prefLabel "808"@en ;
+	ns:familyWave "sine" ;
 	ns:status "stable" ;
 	ns:writtenAs "808" .
 <https://beatscript.app/ontology/concept/voice-family-acid> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The acid family: an inst= name containing acid plays its generic voice."@en ;
 	skos:prefLabel "acid"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "acid" .
 <https://beatscript.app/ontology/concept/voice-family-bass> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The bass family: an inst= name containing bass plays its generic voice."@en ;
 	skos:prefLabel "bass"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "bass" .
 <https://beatscript.app/ontology/concept/voice-family-bell> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The bell family: an inst= name containing bell plays its generic voice."@en ;
 	skos:prefLabel "bell"@en ;
+	ns:familyWave "bell" ;
 	ns:status "stable" ;
 	ns:writtenAs "bell" .
 <https://beatscript.app/ontology/concept/voice-family-chiptune> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The chiptune family: an inst= name containing chiptune plays its generic voice."@en ;
 	skos:prefLabel "chiptune"@en ;
+	ns:familyWave "square" ;
 	ns:status "stable" ;
 	ns:writtenAs "chiptune" .
 <https://beatscript.app/ontology/concept/voice-family-choir> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The choir family: an inst= name containing choir plays its generic voice."@en ;
 	skos:prefLabel "choir"@en ;
+	ns:familyWave "soft" ;
 	ns:status "stable" ;
 	ns:writtenAs "choir" .
 <https://beatscript.app/ontology/concept/voice-family-clav> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The clav family: an inst= name containing clav plays its generic voice."@en ;
 	skos:prefLabel "clav"@en ;
+	ns:familyWave "square" ;
 	ns:status "stable" ;
 	ns:writtenAs "clav" .
 <https://beatscript.app/ontology/concept/voice-family-drums> a skos:Concept , ns:VoiceFamily ;
@@ -5824,16 +5886,19 @@
 <https://beatscript.app/ontology/concept/voice-family-glass> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The glass family: an inst= name containing glass plays its generic voice."@en ;
 	skos:prefLabel "glass"@en ;
+	ns:familyWave "bell" ;
 	ns:status "stable" ;
 	ns:writtenAs "glass" .
 <https://beatscript.app/ontology/concept/voice-family-guitar> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The guitar family: an inst= name containing guitar plays its generic voice."@en ;
 	skos:prefLabel "guitar"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "guitar" .
 <https://beatscript.app/ontology/concept/voice-family-harpsi> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The harpsi family: an inst= name containing harpsi plays its generic voice."@en ;
 	skos:prefLabel "harpsi"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "harpsi" .
 <https://beatscript.app/ontology/concept/voice-family-hat> a skos:Concept , ns:VoiceFamily ;
@@ -5844,6 +5909,7 @@
 <https://beatscript.app/ontology/concept/voice-family-kalimba> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The kalimba family: an inst= name containing kalimba plays its generic voice."@en ;
 	skos:prefLabel "kalimba"@en ;
+	ns:familyWave "bell" ;
 	ns:status "stable" ;
 	ns:writtenAs "kalimba" .
 <https://beatscript.app/ontology/concept/voice-family-kick> a skos:Concept , ns:VoiceFamily ;
@@ -5854,41 +5920,49 @@
 <https://beatscript.app/ontology/concept/voice-family-marimba> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The marimba family: an inst= name containing marimba plays its generic voice."@en ;
 	skos:prefLabel "marimba"@en ;
+	ns:familyWave "bell" ;
 	ns:status "stable" ;
 	ns:writtenAs "marimba" .
 <https://beatscript.app/ontology/concept/voice-family-music-box> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The music-box family: an inst= name containing music-box plays its generic voice."@en ;
 	skos:prefLabel "music-box"@en ;
+	ns:familyWave "bell" ;
 	ns:status "stable" ;
 	ns:writtenAs "music-box" .
 <https://beatscript.app/ontology/concept/voice-family-organ> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The organ family: an inst= name containing organ plays its generic voice."@en ;
 	skos:prefLabel "organ"@en ;
+	ns:familyWave "soft" ;
 	ns:status "stable" ;
 	ns:writtenAs "organ" .
 <https://beatscript.app/ontology/concept/voice-family-pad> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The pad family: an inst= name containing pad plays its generic voice."@en ;
 	skos:prefLabel "pad"@en ;
+	ns:familyWave "soft" ;
 	ns:status "stable" ;
 	ns:writtenAs "pad" .
 <https://beatscript.app/ontology/concept/voice-family-piano> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The piano family: an inst= name containing piano plays its generic voice."@en ;
 	skos:prefLabel "piano"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "piano" .
 <https://beatscript.app/ontology/concept/voice-family-pluck> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The pluck family: an inst= name containing pluck plays its generic voice."@en ;
 	skos:prefLabel "pluck"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "pluck" .
 <https://beatscript.app/ontology/concept/voice-family-pwm> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The pwm family: an inst= name containing pwm plays its generic voice."@en ;
 	skos:prefLabel "pwm"@en ;
+	ns:familyWave "square" ;
 	ns:status "stable" ;
 	ns:writtenAs "pwm" .
 <https://beatscript.app/ontology/concept/voice-family-reese> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The reese family: an inst= name containing reese plays its generic voice."@en ;
 	skos:prefLabel "reese"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "reese" .
 <https://beatscript.app/ontology/concept/voice-family-snare> a skos:Concept , ns:VoiceFamily ;
@@ -5899,31 +5973,37 @@
 <https://beatscript.app/ontology/concept/voice-family-square> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The square family: an inst= name containing square plays its generic voice."@en ;
 	skos:prefLabel "square"@en ;
+	ns:familyWave "square" ;
 	ns:status "stable" ;
 	ns:writtenAs "square" .
 <https://beatscript.app/ontology/concept/voice-family-stab> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The stab family: an inst= name containing stab plays its generic voice."@en ;
 	skos:prefLabel "stab"@en ;
+	ns:familyWave "saw" ;
 	ns:status "stable" ;
 	ns:writtenAs "stab" .
 <https://beatscript.app/ontology/concept/voice-family-steel> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The steel family: an inst= name containing steel plays its generic voice."@en ;
 	skos:prefLabel "steel"@en ;
+	ns:familyWave "bell" ;
 	ns:status "stable" ;
 	ns:writtenAs "steel" .
 <https://beatscript.app/ontology/concept/voice-family-strings> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The strings family: an inst= name containing strings plays its generic voice."@en ;
 	skos:prefLabel "strings"@en ;
+	ns:familyWave "soft" ;
 	ns:status "stable" ;
 	ns:writtenAs "strings" .
 <https://beatscript.app/ontology/concept/voice-family-sub> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The sub family: an inst= name containing sub plays its generic voice."@en ;
 	skos:prefLabel "sub"@en ;
+	ns:familyWave "sine" ;
 	ns:status "stable" ;
 	ns:writtenAs "sub" .
 <https://beatscript.app/ontology/concept/voice-family-vibes> a skos:Concept , ns:VoiceFamily ;
 	skos:definition "The vibes family: an inst= name containing vibes plays its generic voice."@en ;
 	skos:prefLabel "vibes"@en ;
+	ns:familyWave "bell" ;
 	ns:status "stable" ;
 	ns:writtenAs "vibes" .
 <https://beatscript.app/ontology/family/chill> a ns:GenreFamily ;
@@ -5942,6 +6022,36 @@
 	rdfs:label "song family"@en ;
 	skos:definition "Song-form genres. Songs are built from verse, chorus and bridge."@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/family/song> .
+<https://beatscript.app/ontology/genre/acid> a ns:Genre ;
+	rdfs:label "acid"@en ;
+	skos:definition "acid: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following techno's musicality rules), as its tables give it: 125 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 10, chords 1-1-7-1 or 1-4-1-4."@en ;
+	ns:bassDensity 0.75 ;
+	ns:bassDuration 100 ;
+	ns:bpm 125 ;
+	ns:defaultGroove <https://beatscript.app/ontology/groove/four-on-floor> ;
+	ns:defaultScale <https://beatscript.app/ontology/scale/minor> ;
+	ns:durationVariation 0.2 ;
+	ns:followsRulesOf <https://beatscript.app/ontology/genre/techno> ;
+	ns:genreId "acid" ;
+	ns:ghostNotes 0.3 ;
+	ns:hasDrumVariant <https://beatscript.app/ontology/variant/acid-hihat-b> , <https://beatscript.app/ontology/variant/acid-hihat-c> , <https://beatscript.app/ontology/variant/acid-kick-b> , <https://beatscript.app/ontology/variant/acid-kick-c> , <https://beatscript.app/ontology/variant/acid-snare-b> , <https://beatscript.app/ontology/variant/acid-snare-c> ;
+	ns:hasProgression <https://beatscript.app/ontology/progression/acid-1> , <https://beatscript.app/ontology/progression/acid-2> ;
+	ns:hihatRhythm <https://beatscript.app/ontology/rhythm/acid-hihat> ;
+	ns:humanize 8 ;
+	ns:inFamily <https://beatscript.app/ontology/family/edm> ;
+	ns:kickRhythm <https://beatscript.app/ontology/rhythm/acid-kick> ;
+	ns:maxBpm 140 ;
+	ns:melodyDensity 0.25 ;
+	ns:melodyDuration 90 ;
+	ns:minBpm 118 ;
+	ns:rootNote 45 ;
+	ns:snareRhythm <https://beatscript.app/ontology/rhythm/acid-snare> ;
+	ns:swing 10 ;
+	ns:syncopation 0.3 ;
+	ns:typicalBass <https://beatscript.app/ontology/instrument/acid> ;
+	ns:typicalInstrument <https://beatscript.app/ontology/instrument/dark-pad> , <https://beatscript.app/ontology/instrument/pad> , <https://beatscript.app/ontology/instrument/strings> , <https://beatscript.app/ontology/instrument/warm-pad> ;
+	ns:typicalKit <https://beatscript.app/ontology/instrument/drums-v8> , <https://beatscript.app/ontology/instrument/drums> ;
+	ns:typicalMelody <https://beatscript.app/ontology/instrument/edm-stab> , <https://beatscript.app/ontology/instrument/organ> , <https://beatscript.app/ontology/instrument/rave-organ> , <https://beatscript.app/ontology/instrument/rave-stab> .
 <https://beatscript.app/ontology/genre/ambient> a ns:Genre ;
 	rdfs:label "ambient"@en ;
 	skos:closeMatch <http://www.wikidata.org/entity/Q193207> ;
@@ -6077,6 +6187,36 @@
 	ns:typicalKit <https://beatscript.app/ontology/instrument/drums> ;
 	ns:typicalMelody <https://beatscript.app/ontology/instrument/acoustic-guitar> ;
 	ns:walkingBass true .
+<https://beatscript.app/ontology/genre/deephouse> a ns:Genre ;
+	rdfs:label "deephouse"@en ;
+	skos:definition "deephouse: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following house's musicality rules), as its tables give it: 122 BPM, dorian from MIDI note 45, the sidechained groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 15, chords 1-4-1-4 or 1-7-4-5."@en ;
+	ns:bassDensity 0.5 ;
+	ns:bassDuration 220 ;
+	ns:bpm 122 ;
+	ns:defaultGroove <https://beatscript.app/ontology/groove/sidechained> ;
+	ns:defaultScale <https://beatscript.app/ontology/scale/dorian> ;
+	ns:durationVariation 0.25 ;
+	ns:followsRulesOf <https://beatscript.app/ontology/genre/house> ;
+	ns:genreId "deephouse" ;
+	ns:ghostNotes 0.35 ;
+	ns:hasDrumVariant <https://beatscript.app/ontology/variant/deephouse-hihat-b> , <https://beatscript.app/ontology/variant/deephouse-hihat-c> , <https://beatscript.app/ontology/variant/deephouse-kick-b> , <https://beatscript.app/ontology/variant/deephouse-kick-c> , <https://beatscript.app/ontology/variant/deephouse-snare-b> , <https://beatscript.app/ontology/variant/deephouse-snare-c> ;
+	ns:hasProgression <https://beatscript.app/ontology/progression/deephouse-1> , <https://beatscript.app/ontology/progression/deephouse-2> ;
+	ns:hihatRhythm <https://beatscript.app/ontology/rhythm/deephouse-hihat> ;
+	ns:humanize 12 ;
+	ns:inFamily <https://beatscript.app/ontology/family/edm> ;
+	ns:kickRhythm <https://beatscript.app/ontology/rhythm/deephouse-kick> ;
+	ns:maxBpm 126 ;
+	ns:melodyDensity 0.35 ;
+	ns:melodyDuration 160 ;
+	ns:minBpm 115 ;
+	ns:rootNote 45 ;
+	ns:snareRhythm <https://beatscript.app/ontology/rhythm/deephouse-snare> ;
+	ns:swing 15 ;
+	ns:syncopation 0.25 ;
+	ns:typicalBass <https://beatscript.app/ontology/instrument/bass> , <https://beatscript.app/ontology/instrument/sub-bass> ;
+	ns:typicalInstrument <https://beatscript.app/ontology/instrument/am-pad> , <https://beatscript.app/ontology/instrument/glass-pad> , <https://beatscript.app/ontology/instrument/pad> , <https://beatscript.app/ontology/instrument/strings> , <https://beatscript.app/ontology/instrument/warm-pad> ;
+	ns:typicalKit <https://beatscript.app/ontology/instrument/drums-v8> , <https://beatscript.app/ontology/instrument/drums> ;
+	ns:typicalMelody <https://beatscript.app/ontology/instrument/electric-piano> , <https://beatscript.app/ontology/instrument/organ> , <https://beatscript.app/ontology/instrument/piano> , <https://beatscript.app/ontology/instrument/vibes> .
 <https://beatscript.app/ontology/genre/dnb> a ns:Genre ;
 	rdfs:label "dnb"@en ;
 	skos:closeMatch <http://www.wikidata.org/entity/Q188994> ;
@@ -6179,6 +6319,37 @@
 	ns:swing 0 ;
 	ns:syncopation 0.15 ;
 	ns:tensionCurve true .
+<https://beatscript.app/ontology/genre/electro> a ns:Genre ;
+	rdfs:label "electro"@en ;
+	skos:definition "electro: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following edm's musicality rules), as its tables give it: 118 BPM, minor from MIDI note 45, the breakbeat groove, kick E(5,16), snare E(2,16) rotated 4, hihat E(8,16), swing 8, chords 1-7-6-7 or 1-4-1-5."@en ;
+	ns:bassDensity 0.65 ;
+	ns:bassDuration 140 ;
+	ns:bpm 118 ;
+	ns:defaultGroove <https://beatscript.app/ontology/groove/breakbeat> ;
+	ns:defaultScale <https://beatscript.app/ontology/scale/minor> ;
+	ns:durationVariation 0.15 ;
+	ns:followsRulesOf <https://beatscript.app/ontology/genre/edm> ;
+	ns:genreId "electro" ;
+	ns:ghostNotes 0.2 ;
+	ns:hasDrumVariant <https://beatscript.app/ontology/variant/electro-hihat-b> , <https://beatscript.app/ontology/variant/electro-hihat-c> , <https://beatscript.app/ontology/variant/electro-kick-b> , <https://beatscript.app/ontology/variant/electro-kick-c> , <https://beatscript.app/ontology/variant/electro-snare-b> , <https://beatscript.app/ontology/variant/electro-snare-c> ;
+	ns:hasProgression <https://beatscript.app/ontology/progression/electro-1> , <https://beatscript.app/ontology/progression/electro-2> ;
+	ns:hihatRhythm <https://beatscript.app/ontology/rhythm/electro-hihat> ;
+	ns:humanize 6 ;
+	ns:inFamily <https://beatscript.app/ontology/family/edm> ;
+	ns:kickRhythm <https://beatscript.app/ontology/rhythm/electro-kick> ;
+	ns:maxBpm 135 ;
+	ns:melodyDensity 0.4 ;
+	ns:melodyDuration 110 ;
+	ns:minBpm 105 ;
+	ns:rootNote 45 ;
+	ns:snareRhythm <https://beatscript.app/ontology/rhythm/electro-snare> ;
+	ns:swing 8 ;
+	ns:syncopation 0.45 ;
+	ns:typicalArp <https://beatscript.app/ontology/instrument/chiptune> , <https://beatscript.app/ontology/instrument/muted-pluck> , <https://beatscript.app/ontology/instrument/pluck> ;
+	ns:typicalBass <https://beatscript.app/ontology/instrument/bass> , <https://beatscript.app/ontology/instrument/fm-bass> ;
+	ns:typicalInstrument <https://beatscript.app/ontology/instrument/am-pad> , <https://beatscript.app/ontology/instrument/pad> , <https://beatscript.app/ontology/instrument/strings> , <https://beatscript.app/ontology/instrument/warm-pad> ;
+	ns:typicalKit <https://beatscript.app/ontology/instrument/drums-808> , <https://beatscript.app/ontology/instrument/drums-cr78> ;
+	ns:typicalMelody <https://beatscript.app/ontology/instrument/chiptune> , <https://beatscript.app/ontology/instrument/edm-stab> , <https://beatscript.app/ontology/instrument/pwm-lead> , <https://beatscript.app/ontology/instrument/square-lead> , <https://beatscript.app/ontology/instrument/sync-lead> .
 <https://beatscript.app/ontology/genre/funk> a ns:Genre ;
 	rdfs:label "funk"@en ;
 	skos:closeMatch <http://www.wikidata.org/entity/Q164444> ;
@@ -6276,6 +6447,38 @@
 	ns:snareRhythm <https://beatscript.app/ontology/rhythm/house-snare> ;
 	ns:swing 20 ;
 	ns:syncopation 0.2 .
+<https://beatscript.app/ontology/genre/italo> a ns:Genre ;
+	rdfs:label "italo"@en ;
+	skos:definition "italo: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following synthwave's musicality rules), as its tables give it: 120 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, chords 1-6-3-7 or 1-4-7-3."@en ;
+	ns:bassDensity 0.8 ;
+	ns:bassDuration 110 ;
+	ns:bpm 120 ;
+	ns:defaultGroove <https://beatscript.app/ontology/groove/four-on-floor> ;
+	ns:defaultScale <https://beatscript.app/ontology/scale/minor> ;
+	ns:durationVariation 0.15 ;
+	ns:followsRulesOf <https://beatscript.app/ontology/genre/synthwave> ;
+	ns:genreId "italo" ;
+	ns:ghostNotes 0.15 ;
+	ns:hasDrumVariant <https://beatscript.app/ontology/variant/italo-hihat-b> , <https://beatscript.app/ontology/variant/italo-hihat-c> , <https://beatscript.app/ontology/variant/italo-kick-b> , <https://beatscript.app/ontology/variant/italo-kick-c> , <https://beatscript.app/ontology/variant/italo-snare-b> , <https://beatscript.app/ontology/variant/italo-snare-c> ;
+	ns:hasProgression <https://beatscript.app/ontology/progression/italo-1> , <https://beatscript.app/ontology/progression/italo-2> ;
+	ns:hihatRhythm <https://beatscript.app/ontology/rhythm/italo-hihat> ;
+	ns:humanize 5 ;
+	ns:inFamily <https://beatscript.app/ontology/family/song> ;
+	ns:kickRhythm <https://beatscript.app/ontology/rhythm/italo-kick> ;
+	ns:maxBpm 130 ;
+	ns:melodyDensity 0.45 ;
+	ns:melodyDuration 150 ;
+	ns:minBpm 110 ;
+	ns:rootNote 45 ;
+	ns:snareRhythm <https://beatscript.app/ontology/rhythm/italo-snare> ;
+	ns:swing 0 ;
+	ns:syncopation 0.1 ;
+	ns:tensionCurve true ;
+	ns:typicalArp <https://beatscript.app/ontology/instrument/bright-pluck> , <https://beatscript.app/ontology/instrument/edm-pluck> , <https://beatscript.app/ontology/instrument/pluck> ;
+	ns:typicalBass <https://beatscript.app/ontology/instrument/bass> , <https://beatscript.app/ontology/instrument/fm-bass> , <https://beatscript.app/ontology/instrument/sub-bass> ;
+	ns:typicalInstrument <https://beatscript.app/ontology/instrument/choir> , <https://beatscript.app/ontology/instrument/glass-pad> , <https://beatscript.app/ontology/instrument/pad> , <https://beatscript.app/ontology/instrument/strings> , <https://beatscript.app/ontology/instrument/warm-pad> ;
+	ns:typicalKit <https://beatscript.app/ontology/instrument/drums-v8> , <https://beatscript.app/ontology/instrument/drums> ;
+	ns:typicalMelody <https://beatscript.app/ontology/instrument/brass> , <https://beatscript.app/ontology/instrument/duo-lead> , <https://beatscript.app/ontology/instrument/pwm-lead> , <https://beatscript.app/ontology/instrument/square-lead> , <https://beatscript.app/ontology/instrument/tape-lead> .
 <https://beatscript.app/ontology/genre/jazz> a ns:Genre ;
 	rdfs:label "jazz"@en ;
 	skos:closeMatch <http://www.wikidata.org/entity/Q8341> ;
@@ -7476,6 +7679,11 @@ ns:PartLine a owl:Class ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/ns#PartLine> ;
 	ns:categoricalReading <https://beatscript.app/ontology/concept/monoidal-product> ;
 	ns:status "in-development" .
+ns:PartParameter a owl:Class ;
+	rdfs:comment "A NAME=VALUE setting written after a part's pattern (inst=, kit=, vel=, oct=, ...): djlive's part parameters."@en ;
+	rdfs:label "part parameter"@en ;
+	rdfs:subClassOf ns:LanguageTerm ;
+	ns:status "stable" .
 ns:PatternGenerator a owl:Class ;
 	rdfs:comment "A call that makes a pattern from its arguments, such as e(5,8), markov(0.6), chord(am) or choose."@en ;
 	rdfs:label "pattern generator"@en ;
@@ -7915,6 +8123,12 @@ ns:energy a owl:DatatypeProperty , owl:FunctionalProperty ;
 	rdfs:label "energy"@en ;
 	rdfs:range xsd:decimal ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/ns#energy> .
+ns:familyWave a owl:DatatypeProperty , owl:FunctionalProperty ;
+	rdfs:comment "The oscillator shape of the engine's generic voice for the family: what an inst= name containing the family word plays when it has no voice of its own (soft for pads, sine for sub and 808, saw for basses and plucks, bell, square). The drum words pick no tonal sound and have none."@en ;
+	rdfs:domain ns:VoiceFamily ;
+	rdfs:label "family wave"@en ;
+	rdfs:range xsd:string ;
+	ns:status "in-development" .
 ns:feel a owl:ObjectProperty ;
 	rdfs:domain ns:PhrasebookEntry ;
 	rdfs:label "feel"@en ;
@@ -7938,6 +8152,12 @@ ns:firstPublished a owl:DatatypeProperty ;
 	rdfs:label "first published"@en ;
 	rdfs:range xsd:gYear ;
 	ns:status "stable" .
+ns:followsRulesOf a owl:FunctionalProperty , owl:ObjectProperty ;
+	rdfs:comment "The genre whose musicality rules (echo, chord colour, arp figure, voice design, beat style, ducking) the generator applies to this one: a genre of the generator's own, beyond beats' catalogue, follows a beats genre."@en ;
+	rdfs:domain ns:Genre ;
+	rdfs:label "follows the rules of"@en ;
+	rdfs:range ns:Genre ;
+	ns:status "in-development" .
 ns:forFamily a owl:FunctionalProperty , owl:ObjectProperty ;
 	rdfs:label "for family"@en ;
 	rdfs:range ns:GenreFamily ;
@@ -8728,7 +8948,7 @@ ns:writtenAs a owl:DatatypeProperty ;
 	rdfs:range xsd:string ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/ns> dct:creator "stackdump" ;
-	dct:issued "2026-11-22"^^xsd:date ;
+	dct:issued "2026-11-23"^^xsd:date ;
 	dct:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
 	dct:publisher <https://beatscript.app> ;
 	dct:rights "Dedicated to the public domain under CC0 1.0 Universal."@en ;
@@ -8736,9 +8956,9 @@ ns:writtenAs a owl:DatatypeProperty ;
 	a owl:Ontology ;
 	rdfs:comment "The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the BeatScript language itself (its versions, its grammar's productions and keywords, voices, kits, control nouns and verbs, operators and both MCP servers' tools), generated from the code that implements them. Forked from the bitwrap ontology 0.2.0, whose terms it carries under this namespace, each linked to the bitwrap term it came from by prov:wasDerivedFrom; it evolves on its own from here."@en ;
 	rdfs:seeAlso <https://ontology.pflow.xyz/ns> ;
-	owl:priorVersion <https://beatscript.app/ontology/0.2.0> ;
-	owl:versionIRI <https://beatscript.app/ontology/0.3.0> ;
-	owl:versionInfo "0.3.0" ;
+	owl:priorVersion <https://beatscript.app/ontology/0.3.0> ;
+	owl:versionIRI <https://beatscript.app/ontology/0.4.0> ;
+	owl:versionInfo "0.4.0" ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/release/bitwrap-ontology-0.2.0.tar> .
 <https://beatscript.app/ontology/profile/chill-breakdown> a ns:SectionProfile ;
 	rdfs:label "breakdown in chill"@en ;
@@ -9116,6 +9336,16 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:programCid "z4EBG9jAvjcLHFS4BspK2EHUDEJQuYQswLkEzp49aWpSE3zi9JC" ;
 	ns:status "in-development" ;
 	ns:tempoBpm 138 .
+<https://beatscript.app/ontology/progression/acid-1> a ns:ChordProgression ;
+	rdfs:label "acid progression 1: 1-1-7-1"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 1 7 1" ;
+	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/progression/acid-2> a ns:ChordProgression ;
+	rdfs:label "acid progression 2: 1-4-1-4"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 4 1 4" ;
+	ns:stepsPerChord 4 .
 <https://beatscript.app/ontology/progression/ambient-1> a ns:ChordProgression ;
 	rdfs:label "ambient progression 1: 1-3-6-4"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/progression/ambient-1> ;
@@ -9152,6 +9382,16 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:chordCount 4 ;
 	ns:degrees "1 6 4 5" ;
 	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/progression/deephouse-1> a ns:ChordProgression ;
+	rdfs:label "deephouse progression 1: 1-4-1-4"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 4 1 4" ;
+	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/progression/deephouse-2> a ns:ChordProgression ;
+	rdfs:label "deephouse progression 2: 1-7-4-5"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 7 4 5" ;
+	ns:stepsPerChord 4 .
 <https://beatscript.app/ontology/progression/dnb-1> a ns:ChordProgression ;
 	rdfs:label "dnb progression 1: 1-6-3-5"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/progression/dnb-1> ;
@@ -9175,6 +9415,16 @@ ns:writtenAs a owl:DatatypeProperty ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/progression/edm-2> ;
 	ns:chordCount 4 ;
 	ns:degrees "1 7 6 5" ;
+	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/progression/electro-1> a ns:ChordProgression ;
+	rdfs:label "electro progression 1: 1-7-6-7"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 7 6 7" ;
+	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/progression/electro-2> a ns:ChordProgression ;
+	rdfs:label "electro progression 2: 1-4-1-5"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 4 1 5" ;
 	ns:stepsPerChord 4 .
 <https://beatscript.app/ontology/progression/funk-1> a ns:ChordProgression ;
 	rdfs:label "funk progression 1: 1-1-4-1"@en ;
@@ -9211,6 +9461,16 @@ ns:writtenAs a owl:DatatypeProperty ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/progression/house-2> ;
 	ns:chordCount 4 ;
 	ns:degrees "1 4 6 7" ;
+	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/progression/italo-1> a ns:ChordProgression ;
+	rdfs:label "italo progression 1: 1-6-3-7"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 6 3 7" ;
+	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/progression/italo-2> a ns:ChordProgression ;
+	rdfs:label "italo progression 2: 1-4-7-3"@en ;
+	ns:chordCount 4 ;
+	ns:degrees "1 4 7 3" ;
 	ns:stepsPerChord 4 .
 <https://beatscript.app/ontology/progression/jazz-1> a ns:ChordProgression ;
 	rdfs:label "jazz progression 1: 2-5-1-6"@en ;
@@ -9308,6 +9568,27 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:chordCount 4 ;
 	ns:degrees "1 4 1 7" ;
 	ns:stepsPerChord 4 .
+<https://beatscript.app/ontology/rhythm/acid-hihat> a ns:EuclideanRhythm ;
+	rdfs:label "acid hihat: E(4,16) rotation 2"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:midiNote 42 ;
+	ns:pulses 4 ;
+	ns:rotation 2 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/acid-kick> a ns:EuclideanRhythm ;
+	rdfs:label "acid kick: E(4,16) rotation 0"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:midiNote 36 ;
+	ns:pulses 4 ;
+	ns:rotation 0 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/acid-snare> a ns:EuclideanRhythm ;
+	rdfs:label "acid snare: E(2,16) rotation 4"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:midiNote 38 ;
+	ns:pulses 2 ;
+	ns:rotation 4 ;
+	ns:steps 16 .
 <https://beatscript.app/ontology/rhythm/ambient-hihat> a ns:EuclideanRhythm ;
 	rdfs:label "ambient hihat: E(3,16) rotation 0"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/rhythm/ambient-hihat> ;
@@ -9404,6 +9685,27 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:pulses 4 ;
 	ns:rotation 4 ;
 	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> a ns:EuclideanRhythm ;
+	rdfs:label "deephouse hihat: E(4,16) rotation 2"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:midiNote 42 ;
+	ns:pulses 4 ;
+	ns:rotation 2 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> a ns:EuclideanRhythm ;
+	rdfs:label "deephouse kick: E(4,16) rotation 0"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:midiNote 36 ;
+	ns:pulses 4 ;
+	ns:rotation 0 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> a ns:EuclideanRhythm ;
+	rdfs:label "deephouse snare: E(2,16) rotation 4"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:midiNote 38 ;
+	ns:pulses 2 ;
+	ns:rotation 4 ;
+	ns:steps 16 .
 <https://beatscript.app/ontology/rhythm/dnb-hihat> a ns:EuclideanRhythm ;
 	rdfs:label "dnb hihat: E(7,8) rotation 0"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/rhythm/dnb-hihat> ;
@@ -9473,6 +9775,27 @@ ns:writtenAs a owl:DatatypeProperty ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/rhythm/edm-snare> ;
 	ns:forRole <https://beatscript.app/ontology/role/snare> ;
 	ns:midiNote 40 ;
+	ns:pulses 2 ;
+	ns:rotation 4 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/electro-hihat> a ns:EuclideanRhythm ;
+	rdfs:label "electro hihat: E(8,16) rotation 0"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:midiNote 42 ;
+	ns:pulses 8 ;
+	ns:rotation 0 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/electro-kick> a ns:EuclideanRhythm ;
+	rdfs:label "electro kick: E(5,16) rotation 0"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:midiNote 36 ;
+	ns:pulses 5 ;
+	ns:rotation 0 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/electro-snare> a ns:EuclideanRhythm ;
+	rdfs:label "electro snare: E(2,16) rotation 4"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:midiNote 38 ;
 	ns:pulses 2 ;
 	ns:rotation 4 ;
 	ns:steps 16 .
@@ -9548,6 +9871,27 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:pulses 3 ;
 	ns:rotation 0 ;
 	ns:steps 8 .
+<https://beatscript.app/ontology/rhythm/italo-hihat> a ns:EuclideanRhythm ;
+	rdfs:label "italo hihat: E(4,16) rotation 2"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:midiNote 42 ;
+	ns:pulses 4 ;
+	ns:rotation 2 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/italo-kick> a ns:EuclideanRhythm ;
+	rdfs:label "italo kick: E(4,16) rotation 0"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:midiNote 36 ;
+	ns:pulses 4 ;
+	ns:rotation 0 ;
+	ns:steps 16 .
+<https://beatscript.app/ontology/rhythm/italo-snare> a ns:EuclideanRhythm ;
+	rdfs:label "italo snare: E(2,16) rotation 4"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:midiNote 38 ;
+	ns:pulses 2 ;
+	ns:rotation 4 ;
+	ns:steps 16 .
 <https://beatscript.app/ontology/rhythm/jazz-hihat> a ns:EuclideanRhythm ;
 	rdfs:label "jazz hihat: E(5,12) rotation 0"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/rhythm/jazz-hihat> ;
@@ -12437,6 +12781,48 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:hasSlot <https://beatscript.app/ontology/slot/song-standard-3-1> , <https://beatscript.app/ontology/slot/song-standard-3-2> , <https://beatscript.app/ontology/slot/song-standard-3-3> , <https://beatscript.app/ontology/slot/song-standard-3-4> , <https://beatscript.app/ontology/slot/song-standard-3-5> , <https://beatscript.app/ontology/slot/song-standard-3-6> , <https://beatscript.app/ontology/slot/song-standard-3-7> ;
 	ns:sectionCount 7 ;
 	ns:templateKind "standard" .
+<https://beatscript.app/ontology/variant/acid-hihat-b> a ns:DrumVariant ;
+	rdfs:label "acid hihat variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd 2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 1 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/acid-hihat-c> a ns:DrumVariant ;
+	rdfs:label "acid hihat variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/acid-kick-b> a ns:DrumVariant ;
+	rdfs:label "acid kick variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd 0 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/acid-kick-c> a ns:DrumVariant ;
+	rdfs:label "acid kick variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/acid-snare-b> a ns:DrumVariant ;
+	rdfs:label "acid snare variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd 1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/acid-snare-c> a ns:DrumVariant ;
+	rdfs:label "acid snare variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd -1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 3 ;
+	ns:variantLabel "C" .
 <https://beatscript.app/ontology/variant/ambient-hihat-b> a ns:DrumVariant ;
 	rdfs:label "ambient hihat variant B"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/variant/ambient-hihat-b> ;
@@ -12629,6 +13015,48 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:hitsMul 0.5 ;
 	ns:rotationAdd 2 ;
 	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> a ns:DrumVariant ;
+	rdfs:label "deephouse hihat variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd 2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 1 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> a ns:DrumVariant ;
+	rdfs:label "deephouse hihat variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> a ns:DrumVariant ;
+	rdfs:label "deephouse kick variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd 0 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> a ns:DrumVariant ;
+	rdfs:label "deephouse kick variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> a ns:DrumVariant ;
+	rdfs:label "deephouse snare variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd 1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> a ns:DrumVariant ;
+	rdfs:label "deephouse snare variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd -1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 3 ;
+	ns:variantLabel "C" .
 <https://beatscript.app/ontology/variant/dnb-hihat-b> a ns:DrumVariant ;
 	rdfs:label "dnb hihat variant B"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/variant/dnb-hihat-b> ;
@@ -12789,6 +13217,48 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:hitsMul 1 ;
 	ns:rotationAdd 4 ;
 	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/electro-hihat-b> a ns:DrumVariant ;
+	rdfs:label "electro hihat variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd 2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 1 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/electro-hihat-c> a ns:DrumVariant ;
+	rdfs:label "electro hihat variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/electro-kick-b> a ns:DrumVariant ;
+	rdfs:label "electro kick variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd 0 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/electro-kick-c> a ns:DrumVariant ;
+	rdfs:label "electro kick variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/electro-snare-b> a ns:DrumVariant ;
+	rdfs:label "electro snare variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd 1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/electro-snare-c> a ns:DrumVariant ;
+	rdfs:label "electro snare variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd -1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 3 ;
+	ns:variantLabel "C" .
 <https://beatscript.app/ontology/variant/funk-hihat-b> a ns:DrumVariant ;
 	rdfs:label "funk hihat variant B"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/variant/funk-hihat-b> ;
@@ -12932,6 +13402,48 @@ ns:writtenAs a owl:DatatypeProperty ;
 	ns:hitsAdd -1 ;
 	ns:hitsMul 1 ;
 	ns:rotationAdd 3 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/italo-hihat-b> a ns:DrumVariant ;
+	rdfs:label "italo hihat variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd 1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/italo-hihat-c> a ns:DrumVariant ;
+	rdfs:label "italo hihat variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/hihat> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 3 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/italo-kick-b> a ns:DrumVariant ;
+	rdfs:label "italo kick variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd 0 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/italo-kick-c> a ns:DrumVariant ;
+	rdfs:label "italo kick variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/kick> ;
+	ns:hitsAdd -2 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "C" .
+<https://beatscript.app/ontology/variant/italo-snare-b> a ns:DrumVariant ;
+	rdfs:label "italo snare variant B"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd 1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 2 ;
+	ns:variantLabel "B" .
+<https://beatscript.app/ontology/variant/italo-snare-c> a ns:DrumVariant ;
+	rdfs:label "italo snare variant C"@en ;
+	ns:forRole <https://beatscript.app/ontology/role/snare> ;
+	ns:hitsAdd -1 ;
+	ns:hitsMul 1 ;
+	ns:rotationAdd 4 ;
 	ns:variantLabel "C" .
 <https://beatscript.app/ontology/variant/jazz-hihat-b> a ns:DrumVariant ;
 	rdfs:label "jazz hihat variant B"@en ;

@@ -3,9 +3,11 @@
 What `/ontology/` on beatscript.app serves (`src/ontology.rs`): the vocabulary behind BeatScript as Turtle,
 JSON-LD, N-Triples and RDF/XML, a read-only SPARQL endpoint and an MCP server, CC0.
 
-It is the **BeatScript ontology**, version 0.3.0 (`owl:versionIRI https://beatscript.app/ontology/0.3.0`). 0.2.0 was
+It is the **BeatScript ontology**, version 0.4.0 (`owl:versionIRI https://beatscript.app/ontology/0.4.0`). 0.2.0 was
 the release of BeatScript 2, the language's second version, with the name BeatScript where bitwrap's wording said btw;
-0.3.0 adds bitwrap's genre conventions module, re-homed, so that everything BeatScript links to is here. Its
+0.3.0 adds bitwrap's genre conventions module, re-homed, so that everything BeatScript links to is here; 0.4.0 has every
+genre the seeded generator knows: the ones beats' catalogue has come from bitwrap, and djrust's own (acid, deephouse,
+electro, italo) are generated from the generator's tables, so `#! genre: acid` and check's style advice know them. Its
 namespace is `https://beatscript.app/ontology/ns#`. It was **derived from the bitwrap ontology 0.2.0**
 (ontology.bitwrap.io, CC0) and **evolves on its own** from here. ontology.bitwrap.io and its repository are not
 touched by anything in this directory, and nothing here is fetched from them, at build or at serve time.
@@ -19,7 +21,7 @@ A release is built from four inputs:
 | `upstream/bitwrap-0.2.0/ns.nt` (+ `manifest.json`, pinned by `upstream.lock`) | the bitwrap 0.2.0 release, vendored by `sync.sh upstream` |
 | `upstream/bitwrap-conventions/conventions.ttl` (pinned by `conventions.lock`) | bitwrap's genre conventions module (tempo ranges, usual kits and voices, section lengths), CC0; re-homed and linked back like the 0.2.0 terms. `beatscript_serve::genres` (check's style, `genre_template`) reads it from the release |
 | `fork.ttl` | the fork's own module: its `owl:Ontology` header (title, version, version IRI, issued, creator, licence, `prov:wasDerivedFrom` the bitwrap release) and the few terms it adds by hand (the products its MCP tools belong to) |
-| `generated/beatscript.ttl` | the BeatScript vocabulary, generated from beatscript-serve's own code: every production and keyword of `crates/djlive/grammar.ebnf`, the voices, kits, families and palettes (`beatscript_api::instruments_json()`), the control registry's nouns and verbs, djlive's generators, transforms and evolve and mutation operators, and both MCP servers' tools |
+| `generated/beatscript.ttl` | the BeatScript vocabulary, generated from beatscript-serve's own code: every production and keyword of `crates/djlive/grammar.ebnf`, the voices, kits, families and palettes (`beatscript_api::instruments_json()`) and each family word's generic sound (djrust `wave::synth::tonal_voice`), the control registry's nouns and verbs, djlive's generators, transforms and evolve and mutation operators, both MCP servers' tools, and the seeded generator's genres that bitwrap 0.2.0 does not have (`vocab::generator_genres`, from djrust's genre tables: tempo, scale, root, groove, family, drum rhythms and variants, chord progressions, the voices and kits it picks per role) |
 
 `src/ontology/fork.rs` assembles them:
 
@@ -59,9 +61,12 @@ crates/beatscript-serve/ontology/sync.sh check # every file against release.lock
 ```
 
 - A change to the grammar, the instruments, the control registry, the language's versions (`djlive::version`, listed in
-  `vocab::VERSIONS`) or either MCP server's tools changes the vocabulary: run `build.sh` and commit `generated/`,
-  `release/` and `release.lock` with the change. `ontology::vocab::tests::ontology_matches_beatscript_serve` fails until
-  you do.
+  `vocab::VERSIONS`), either MCP server's tools or the generator's genre tables (a djrust bump that adds a genre or moves
+  a genre's tempo, scale, rhythm or progressions) changes the vocabulary: run `build.sh`, then `tools/ontology/refresh.py`
+  (the header snapshot `#! genre:` reads), and commit `generated/`, `release/`, `release.lock` and the snapshot with the
+  change. `ontology::vocab::tests::ontology_matches_beatscript_serve` fails until you do. A genre bitwrap 0.2.0 already
+  has is not regenerated: if the generator moves one of its values, the test names it, and the fix is a decision (see the
+  fork's open questions), not a rebuild.
 - A change to the ontology's own terms goes in `fork.ttl` (never in `upstream/`), then `build.sh`. A release that
   changes what the ontology says is a new version: bump `owl:versionInfo`, `owl:versionIRI` (and `owl:priorVersion`)
   and `dct:issued` first, and the version `ontology::tests` expects. Only the current release is served: the version

@@ -510,7 +510,7 @@ fn real() -> StaticOntology {
 fn the_cached_snapshot_is_what_the_published_ontology_said() {
     let o = real();
     assert!(o.verified, "the snapshot says it was checked against the release's checksums");
-    assert_eq!(o.terms().iter().filter(|t| t.kind == "genre").count(), 19);
+    assert_eq!(o.terms().iter().filter(|t| t.kind == "genre").count(), 23);
     assert_eq!(o.euclid_class(), Some(linked::EUCLID_CLASS));
     assert!(o.terms().iter().all(|t| t.iri.starts_with(linked::BW_BASE) && t.iri.ends_with(&t.local)));
     for k in linked::KIND_ORDER {
@@ -543,8 +543,8 @@ fn the_example_validates_against_the_real_vocabulary_and_typos_get_the_real_sugg
     assert_eq!(
         links.tags,
         [
+            "https://beatscript.app/ontology/genre/acid",
             "https://beatscript.app/ontology/groove/four-on-floor",
-            "https://beatscript.app/ontology/instrument/acid",
             "https://beatscript.app/ontology/instrument/supersaw",
             "https://beatscript.app/ontology/section/drop"
         ]
