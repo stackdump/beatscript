@@ -1,3 +1,4 @@
+// rename-to-beatscript: keep (the djrust registry noun is spelled btw)
 //! `do noun verb key=value ...` (and the sugar for it) compiled against the control-language
 //! registry: the noun and verb must exist, every param must be one the noun takes, with the right
 //! type and (where the registry lists them) one of the allowed words, and what a verb needs it must
@@ -191,7 +192,7 @@ pub fn compile_do(d: &DoCall, env: &Env, src: &str, diags: &mut Vec<Diagnostic>,
     // `btw` verbs that act on the running program cannot be called by it (R-11): the runtime holds the program while its lines run, so
     // the call would act on an empty placeholder and be written over: `at bar 4: do btw stop` checked clean and did nothing, `do btw
     // eval` changed the window's text and not what plays
-    if matches!(canonical_noun.as_str(), "btw" | "live" | "livecode") {
+    if matches!(canonical_noun.as_str(), "btw" | "live" | "livecode" | "beatscript") {
         if let Some(v) = verb.as_deref().filter(|v| MOVES_THE_PROGRAM.contains(v)) {
             let at = d.verb.as_ref().map_or(noun_word.span, |w| w.span);
             diags.push(

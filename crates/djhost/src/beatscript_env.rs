@@ -209,6 +209,8 @@ mod tests {
         assert!(n.param("lyrics").is_some());
         // aliases resolve
         assert_eq!(reg.noun("livecode").unwrap().name, "btw");
+        // the language's name since the rename is an alias of the noun, which keeps its upstream spelling
+        assert_eq!(reg.noun("beatscript").unwrap().name, "btw");
         assert_eq!(reg.noun("live").unwrap().name, "btw");
         for n in control_registry::nouns().iter().filter(|n| !n.local) {
             assert!(reg.noun(n.name).is_some(), "{}", n.name);

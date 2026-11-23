@@ -1907,7 +1907,7 @@ pub(super) const NOUNS: &[Noun] = &[
               replay {id} plays it back call for call. The same text is the same CIDs.",
         schema: "",
         params: &[],
-        aliases: &["live", "livecode"],
+        aliases: &["live", "livecode", "beatscript"],
         local: false,
     },
     Noun {
