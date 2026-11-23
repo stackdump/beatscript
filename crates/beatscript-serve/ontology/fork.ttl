@@ -6,13 +6,14 @@
 @prefix prov:  <http://www.w3.org/ns/prov#> .
 @prefix ns:    <https://beatscript.app/ontology/ns#> .
 @prefix concept: <https://beatscript.app/ontology/concept/> .
+@prefix program: <https://beatscript.app/ontology/program/> .
 
 # The BeatScript ontology's own hand-written module. A release is three inputs (src/ontology/fork.rs builds it):
 #
 #   upstream/bitwrap-0.2.0/ns.nt   the bitwrap ontology 0.2.0 (CC0), re-homed from https://ontology.bitwrap.io/ into
 #                                  https://beatscript.app/ontology/, each term with one prov:wasDerivedFrom to the
 #                                  bitwrap IRI it came from; its owl:Ontology header is replaced by the one below
-#   fork.ttl                       this file: the header, and the terms the fork adds by hand
+#   fork.ttl                       this file: the header, the terms the fork adds by hand, and the wording it restates
 #   generated/beatscript.ttl       the BeatScript vocabulary, generated from beatscript-serve's own code (tools/ontology/beatscript.py)
 #
 # From here the ontology evolves on its own: a change is made here (or in BeatScript's code, for the vocabulary),
@@ -20,16 +21,17 @@
 
 <https://beatscript.app/ontology/ns> a owl:Ontology ;
     dct:title "BeatScript ontology"@en ;
-    owl:versionInfo "0.1.0" ;
-    owl:versionIRI <https://beatscript.app/ontology/0.1.0> ;
-    dct:issued "2026-11-21"^^xsd:date ;
+    owl:versionInfo "0.2.0" ;
+    owl:versionIRI <https://beatscript.app/ontology/0.2.0> ;
+    owl:priorVersion <https://beatscript.app/ontology/0.1.0> ;
+    dct:issued "2026-11-22"^^xsd:date ;
     dct:creator "stackdump" ;
     dct:publisher <https://beatscript.app> ;
     dct:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
     dct:rights "Dedicated to the public domain under CC0 1.0 Universal."@en ;
     prov:wasDerivedFrom <https://ontology.bitwrap.io/release/bitwrap-ontology-0.2.0.tar> ;
     rdfs:seeAlso <https://ontology.pflow.xyz/ns> ;
-    rdfs:comment "The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the BeatScript language itself (its grammar's productions and keywords, voices, kits, control nouns and verbs, operators and both MCP servers' tools), generated from the code that implements them. Forked from the bitwrap ontology 0.2.0, whose terms it carries under this namespace, each linked to the bitwrap term it came from by prov:wasDerivedFrom; it evolves on its own from here."@en .
+    rdfs:comment "The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the BeatScript language itself (its versions, its grammar's productions and keywords, voices, kits, control nouns and verbs, operators and both MCP servers' tools), generated from the code that implements them. Forked from the bitwrap ontology 0.2.0, whose terms it carries under this namespace, each linked to the bitwrap term it came from by prov:wasDerivedFrom; it evolves on its own from here."@en .
 
 # --- products: the few the BeatScript vocabulary names ------------------------------------------------------------
 # (bitwrap 0.2.0 has no product terms; the vocabulary's MCP tools are provided by an ns:McpServer.)
@@ -41,9 +43,19 @@ ns:ProductFamily a owl:Class ; rdfs:subClassOf ns:Product ; rdfs:label "product 
     rdfs:comment "One name shared by several products that are used together."@en .
 ns:McpServer a owl:Class ; rdfs:subClassOf ns:Product ; rdfs:label "MCP server"@en ; ns:status "stable" ;
     rdfs:comment "A Model Context Protocol server: tools an AI assistant such as Claude can call to use a product."@en .
+ns:ProgrammingLanguage a owl:Class ; rdfs:subClassOf ns:Product ; rdfs:label "programming language"@en ; ns:status "stable" ;
+    rdfs:comment "A text language whose documents are programs a product runs. Its versions (ns:LanguageVersion) are in the generated vocabulary, from the code that reads them."@en .
 ns:inProductFamily a owl:ObjectProperty ; rdfs:domain ns:Product ; rdfs:range ns:ProductFamily ; rdfs:label "in product family"@en ; ns:status "stable" ;
     rdfs:comment "The family whose name this product carries."@en .
 ns:homepage a owl:DatatypeProperty ; rdfs:domain ns:Product ; rdfs:range xsd:anyURI ; rdfs:label "homepage"@en ; ns:status "stable" .
+ns:fileExtension a owl:DatatypeProperty ; rdfs:domain ns:ProgrammingLanguage ; rdfs:range xsd:string ; rdfs:label "file extension"@en ; ns:status "stable" ;
+    rdfs:comment "The extension a program file in the language is written with, with its dot."@en .
+ns:legacyFileExtension a owl:DatatypeProperty ; rdfs:domain ns:ProgrammingLanguage ; rdfs:range xsd:string ; rdfs:label "legacy file extension"@en ; ns:status "stable" ;
+    rdfs:comment "An extension program files in the language had under an earlier name: such a file is still opened and imported, and never written."@en .
+ns:mediaType a owl:DatatypeProperty ; rdfs:domain ns:ProgrammingLanguage ; rdfs:range xsd:string ; rdfs:label "media type"@en ; ns:status "stable" ;
+    rdfs:comment "The media (MIME) type a program text in the language is served and accepted as."@en .
+ns:legacyMediaType a owl:DatatypeProperty ; rdfs:domain ns:ProgrammingLanguage ; rdfs:range xsd:string ; rdfs:label "legacy media type"@en ; ns:status "stable" ;
+    rdfs:comment "Another media type a program text is still accepted as (in Accept and Content-Type), never the one it is served as."@en .
 
 concept:product-beatscript a skos:Concept, ns:ProductFamily ; skos:prefLabel "BeatScript"@en ; ns:status "stable" ;
     skos:definition "The name shared by a music language, the Android app that plays it, the website beatscript.app and its MCP servers. Write or generate a program, send it to the phone, hear it."@en ;
@@ -51,3 +63,38 @@ concept:product-beatscript a skos:Concept, ns:ProductFamily ; skos:prefLabel "Be
 concept:product-beatscript-mcp a skos:Concept, ns:McpServer ; skos:prefLabel "BeatScript MCP server"@en ; ns:status "stable" ;
     skos:definition "Tools that let an AI assistant such as Claude use BeatScript: check, format and render programs, and play them on a paired phone."@en ;
     ns:inProductFamily concept:product-beatscript ; ns:homepage "https://beatscript.app/mcp"^^xsd:anyURI .
+concept:product-beatscript-language a skos:Concept, ns:ProgrammingLanguage ; skos:prefLabel "BeatScript language"@en ;
+    skos:altLabel "BeatScript"@en ; skos:hiddenLabel "btw"@en ; ns:status "stable" ;
+    skos:definition "The language of BeatScript: whole tracks written as text, one line per deck, compiled to the Petri nets a deck runs. Small, total and deterministic: the same canonical text always has the same CID. Its documents are programs, written as .beatscript files."@en ;
+    skos:historyNote "Called btw, its files .btw, before language version 2 (BeatScript 2, 2026-11-22). A btw program is a BeatScript 1 program: it is still read, and keeps its meaning and its CID."@en ;
+    ns:inProductFamily concept:product-beatscript ;
+    ns:fileExtension ".beatscript" ; ns:legacyFileExtension ".btw" ;
+    ns:mediaType "text/beatscript" ; ns:legacyMediaType "text/x-beatscript", "text/btw" ;
+    rdfs:seeAlso ns:Program .
+
+# --- BeatScript 1, the language when it was called btw ----------------------------------------------------------
+# (the versions themselves, concept:beatscript-1 and concept:beatscript-2, are generated from djlive::version)
+
+concept:beatscript-1 skos:altLabel "btw"@en ;
+    skos:historyNote "The name of the language before language version 2 was btw: BeatScript 1 is the language as it was written then. Every BeatScript 1 program, link and CID keeps its meaning; fmt upgrades a program to BeatScript 2, which plays the same under a new CID."@en .
+
+# The example programs bitwrap 0.2.0 names are BeatScript 1 programs (their CIDs are of BeatScript 1 canonical texts).
+program:trance-138-story ns:inLanguageVersion concept:beatscript-1 .
+program:dark-techno-122 ns:inLanguageVersion concept:beatscript-1 .
+program:acid-rave-138 ns:inLanguageVersion concept:beatscript-1 .
+program:hand-proghouse-124 ns:inLanguageVersion concept:beatscript-1 .
+program:hand-dubstep-140 ns:inLanguageVersion concept:beatscript-1 .
+
+# --- wording restated from bitwrap 0.2.0 ------------------------------------------------------------------------
+# A value given here for a bitwrap term's rdfs:label, rdfs:comment, skos:prefLabel, skos:definition or skos:scopeNote, in
+# the language of bitwrap's, replaces bitwrap's (src/ontology/fork.rs RESTATABLE; the old wording stays at the bitwrap IRI
+# the term's prov:wasDerivedFrom names). A replaced label is kept as the term's skos:hiddenLabel, or the build refuses.
+
+ns:Program rdfs:label "BeatScript program"@en ; skos:hiddenLabel "btw program"@en ;
+    rdfs:comment "A piece written in BeatScript: lines of text that compile to the Petri nets of a DJ deck. Identified by the CID of its canonical text, so a BeatScript 1 program and its upgrade to BeatScript 2, which play the same, are two programs: the upgrade is prov:wasRevisionOf the original, and each has its own ns:programCid and ns:inLanguageVersion."@en ;
+    skos:historyNote "Before language version 2 (2026-11-22) the language was called btw, and a program was a btw program."@en .
+ns:ProgramLine rdfs:comment "One line of a BeatScript program. The kind of line says what it declares."@en .
+ns:CanonicalForm rdfs:comment "The normal form of a BeatScript program: whitespace, numbers, note spelling and comments are normalised, so two spellings of one program have one canonical text and therefore one CID. A BeatScript 2 canonical text begins with its version line, #! beatscript 2; a BeatScript 1 canonical text has no #! line, so the first line alone tells the version."@en .
+ns:ContentId skos:scopeNote "pflow's modelCID is the content identifier of a net model; ProgramCID and NetCID are the same kind of name for a BeatScript program and for the net a deck runs."@en .
+ns:reachesVerb rdfs:comment "The control verb a BeatScript do line runs."@en .
+concept:fmt skos:definition "The formatter: rewrites a BeatScript program into its canonical form without changing what it plays. The fmt a person or an agent asks for also upgrades a BeatScript 1 program to BeatScript 2, a new CID for the same music; the formatting a program gets on its way in (eval, load, share, queue, push) keeps its version, so its CID never moves."@en .

@@ -9,7 +9,7 @@ crates/beatscript-serve/ontology/upstream/bitwrap-0.2.0/ns.nt (pass it with --fr
     python3 tools/ontology/refresh.py                       # fetch https://ontology.bitwrap.io/ns.nt (needs network)
     python3 tools/ontology/refresh.py --from ns.nt --fetched 2026-11-18   # offline, from a saved copy of ns.nt
 
-The snapshot is what `btw`'s `#! genre:` / `#! tags:` header lines are validated against (docs/beatscript/ext-linked.md).
+The snapshot is what a BeatScript program's `#! genre:` / `#! tags:` header lines are validated against (docs/beatscript/ext-linked.md).
 It is small and deterministic: the terms an author may name (genres, genre families, scales, grooves, instruments,
 instrument roles, song sections, song structures, Euclidean rhythms, chord progressions, engine concepts), sorted by
 IRI, one per line, with their local name, label and kind; a Euclidean rhythm also has its pulses, steps and rotation

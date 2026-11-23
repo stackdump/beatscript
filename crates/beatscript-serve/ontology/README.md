@@ -3,8 +3,9 @@
 What `/ontology/` on beatscript.app serves (`src/ontology.rs`): the vocabulary behind BeatScript as Turtle,
 JSON-LD, N-Triples and RDF/XML, a read-only SPARQL endpoint and an MCP server, CC0.
 
-It is the **BeatScript ontology**, version 0.1.0 (`owl:versionIRI https://beatscript.app/ontology/0.1.0`),
-namespace `https://beatscript.app/ontology/ns#`. It was **derived from the bitwrap ontology 0.2.0**
+It is the **BeatScript ontology**, version 0.2.0 (`owl:versionIRI https://beatscript.app/ontology/0.2.0`, after 0.1.0:
+0.2.0 is the release of BeatScript 2, the language's second version, with the name BeatScript where bitwrap's wording
+said btw), namespace `https://beatscript.app/ontology/ns#`. It was **derived from the bitwrap ontology 0.2.0**
 (ontology.bitwrap.io, CC0) and **evolves on its own** from here. ontology.bitwrap.io and its repository are not
 touched by anything in this directory, and nothing here is fetched from them, at build or at serve time.
 
@@ -23,6 +24,12 @@ A release is built from three inputs:
 - **Re-homing.** Every bitwrap IRI under `https://ontology.bitwrap.io/` moves under `https://beatscript.app/ontology/`:
   `…/ns#Genre` becomes `https://beatscript.app/ontology/ns#Genre`, `…/genre/techno` becomes
   `https://beatscript.app/ontology/genre/techno`. bitwrap's own header is dropped; the fork has its own.
+- **Restated wording.** Where `fork.ttl` gives a bitwrap term an `rdfs:label`, `rdfs:comment`, `skos:prefLabel`,
+  `skos:definition` or `skos:scopeNote` in the language of bitwrap's, the fork's replaces bitwrap's (`fork::RESTATABLE`,
+  `fork::restated`); nothing else of bitwrap's is replaced, only added to. A replaced label must be kept as the term's
+  `skos:hiddenLabel` (or `skos:altLabel`), or the build refuses, so a search for the old name still finds the term. This
+  is how `ns:Program` became "BeatScript program" (hidden label "btw program") and the wording that said btw says
+  BeatScript; the old wording stays at the bitwrap IRI the term's `prov:wasDerivedFrom` names.
 - **Derivation links.** Each term that came from bitwrap gets exactly one `prov:wasDerivedFrom` to the bitwrap IRI
   it came from, and the ontology itself is `prov:wasDerivedFrom <https://ontology.bitwrap.io/release/bitwrap-ontology-0.2.0.tar>`
   (bitwrap 0.2.0 states no `owl:versionIRI`, and its header's `owl:versionInfo` still reads 0.1.0, so its versioned
@@ -49,11 +56,18 @@ crates/beatscript-serve/ontology/build.sh      # dump beatscript-serve's vocabul
 crates/beatscript-serve/ontology/sync.sh check # every file against release.lock, manifest.json and upstream.lock (offline)
 ```
 
-- A change to the grammar, the instruments, the control registry or either MCP server's tools changes the
-  vocabulary: run `build.sh` and commit `generated/`, `release/` and `release.lock` with the change.
-  `ontology::vocab::tests::ontology_matches_beatscript_serve` fails until you do.
+- A change to the grammar, the instruments, the control registry, the language's versions (`djlive::version`, listed in
+  `vocab::VERSIONS`) or either MCP server's tools changes the vocabulary: run `build.sh` and commit `generated/`,
+  `release/` and `release.lock` with the change. `ontology::vocab::tests::ontology_matches_beatscript_serve` fails until
+  you do.
 - A change to the ontology's own terms goes in `fork.ttl` (never in `upstream/`), then `build.sh`. A release that
-  changes what the ontology says is a new version: bump `owl:versionInfo`, `owl:versionIRI` and `dct:issued` first.
+  changes what the ontology says is a new version: bump `owl:versionInfo`, `owl:versionIRI` (and `owl:priorVersion`)
+  and `dct:issued` first, and the version `ontology::tests` expects. Only the current release is served: the version
+  IRI of an earlier one names it, and its bytes are in git.
+- A program's upgrade to a later language version is a second program, never a second CID of the first:
+  `ns:programCid` is functional, so the upgrade is its own individual with its own `ns:programCid` and
+  `ns:inLanguageVersion`, `prov:wasRevisionOf` the original (`ontology::tests::functional_properties_have_one_value`
+  refuses two values of a functional property).
 - Merging a later bitwrap release in is deliberate: `sync.sh upstream REF` vendors it beside 0.2.0, then
   `src/ontology/fork.rs` is pointed at it and the commit says why.
 - `fixtures.py` records the ontology MCP's answers from a running beatscript-serve into `fixtures/mcp-<version>.json`
@@ -61,9 +75,9 @@ crates/beatscript-serve/ontology/sync.sh check # every file against release.lock
 
 `cargo test -p beatscript-serve --bin beatscript-serve ontology` checks the rest (`ontology::tests::fork_integrity`): the served files
 are the vendored ones, the vendored ones are what the inputs build, the lock and manifest hashes match, the version is
-0.1.0 and derived from bitwrap 0.2.0, every IRI is in the fork's namespace except the declared derivation links,
-every bitwrap 0.2.0 term and triple has its counterpart, the serializations are one graph, the certificate replays to
-the pack's graph, and the vocabulary has no drift.
+0.2.0 and derived from bitwrap 0.2.0, every IRI is in the fork's namespace except the declared derivation links,
+every bitwrap 0.2.0 term and triple has its counterpart (or is wording `fork.ttl` restates, and the restatement is in),
+the serializations are one graph, the certificate replays to the pack's graph, and the vocabulary has no drift.
 
 ## What still reads bitwrap
 

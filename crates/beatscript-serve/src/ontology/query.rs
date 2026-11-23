@@ -311,7 +311,7 @@ fn evaluate(store: &Store, q: &str, token: CancellationToken, deadline: Instant)
 // ---------- the workers ----------
 
 /// Set in a worker's environment: the process answers queries on stdin/stdout and does nothing else.
-pub const WORKER_ENV: &str = "BTWSERVE_ONTOLOGY_WORKER";
+pub const WORKER_ENV: &str = "BEATSCRIPT_SERVE_ONTOLOGY_WORKER";
 /// A worker's answers follow this mark, so anything else a process prints (a test harness, which writes a test's name
 /// with no newline before running it) is skipped.
 const MARK: &str = "\u{1e}ow ";

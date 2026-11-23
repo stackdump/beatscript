@@ -8,8 +8,8 @@
 //!   `https://beatscript.app/ontology/genre/techno`), its `owl:Ontology` header is dropped, and every term it describes
 //!   gets one `prov:wasDerivedFrom` to the bitwrap IRI it came from. That is the only link back: no `owl:sameAs` or
 //!   equivalence, so reasoning over the fork never pulls bitwrap's IRIs in.
-//! - `fork.ttl`: the fork's header (version, version IRI, `prov:wasDerivedFrom` the bitwrap 0.2.0 release) and the
-//!   terms it adds by hand.
+//! - `fork.ttl`: the fork's header (version, version IRI, `prov:wasDerivedFrom` the bitwrap 0.2.0 release), the terms
+//!   it adds by hand, and the wording it restates for terms it took from bitwrap ([`RESTATABLE`], [`restated`]).
 //! - `generated/beatscript.ttl`: the BeatScript vocabulary, generated from beatscript-serve's own code (`vocab.rs` dumps it,
 //!   `tools/ontology/beatscript.py` writes the Turtle; `vocab::drift` holds the release to the code).
 //!
@@ -54,6 +54,22 @@ pub const VOCAB_TTL: &str = include_str!("../../ontology/generated/beatscript.tt
 const RDF: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const RDFS: &str = "http://www.w3.org/2000/01/rdf-schema#";
 const OWL: &str = "http://www.w3.org/2002/07/owl#";
+
+/// The annotations `fork.ttl` may restate for a term it took from bitwrap: a value it gives the term for one of these, in a
+/// language the bitwrap value is also in, replaces the bitwrap value (the fork evolves on its own; the old wording stays
+/// readable at the bitwrap IRI the term's `prov:wasDerivedFrom` names). Nothing else of bitwrap's is ever replaced: a
+/// class, a domain, a range or a value of any other property that fork.ttl gives is added beside bitwrap's.
+pub const RESTATABLE: [&str; 5] = [
+    "http://www.w3.org/2000/01/rdf-schema#label",
+    "http://www.w3.org/2000/01/rdf-schema#comment",
+    "http://www.w3.org/2004/02/skos/core#prefLabel",
+    "http://www.w3.org/2004/02/skos/core#definition",
+    "http://www.w3.org/2004/02/skos/core#scopeNote",
+];
+/// The labels among them (rdfs:label, skos:prefLabel).
+const LABELS: [&str; 2] = [RESTATABLE[0], RESTATABLE[2]];
+/// A label fork.ttl replaces is kept as one of these on the same term, so a search for the old name still finds it.
+const KEEPS_A_LABEL: [&str; 2] = ["http://www.w3.org/2004/02/skos/core#hiddenLabel", "http://www.w3.org/2004/02/skos/core#altLabel"];
 /// The serializations' prefixes. No prefix for bitwrap's base: its IRIs (the `prov:wasDerivedFrom` objects) are written
 /// out whole, a path such as `genre/techno` being no Turtle local name.
 const PREFIXES: [(&str, &str); 9] = [
@@ -125,9 +141,9 @@ pub fn nt(t: &Triple) -> String {
     format!("{t} .")
 }
 
-/// The fork's asserted graph: the re-homed upstream with its derivation links, `fork.ttl` and the vocabulary, keyed and
-/// sorted by N-Triples line.
-pub fn assemble(upstream_nt: &[u8], fork_ttl: &str, vocab_ttl: &str) -> Result<BTreeMap<String, Triple>, String> {
+/// The upstream release re-homed, keyed and sorted by N-Triples line, without bitwrap's header; and the bitwrap IRIs of
+/// the terms it describes.
+fn rehomed(upstream_nt: &[u8]) -> Result<(BTreeMap<String, Triple>, BTreeSet<String>), String> {
     let header = format!("{UPSTREAM_BASE}ns");
     let mut g = BTreeMap::new();
     let mut terms = BTreeSet::new();
@@ -143,15 +159,70 @@ pub fn assemble(upstream_nt: &[u8], fork_ttl: &str, vocab_ttl: &str) -> Result<B
         let r = rehome_triple(&t);
         g.insert(nt(&r), r);
     }
+    Ok((g, terms))
+}
+
+/// What `fork.ttl` restates: each re-homed upstream triple it replaces, as its N-Triples line, with the line of the fork's
+/// triple that replaces it. A fork triple replaces an upstream one when both have the same subject and a predicate in
+/// [`RESTATABLE`], and their objects are literals in the same language (or both in none) that differ. Refused: two fork
+/// values for what one upstream value said (which would replace it?), and a replaced label that the term does not keep
+/// as its skos:hiddenLabel or skos:altLabel.
+pub fn restated(upstream: &BTreeMap<String, Triple>, fork: &[Triple]) -> Result<BTreeMap<String, String>, String> {
+    let lit = |t: &Term| match t {
+        Term::Literal(l) => Some((l.language().map(str::to_string), l.value().to_string())),
+        _ => None,
+    };
+    let fork_lines: BTreeSet<String> = fork.iter().map(nt).collect();
+    let mut out = BTreeMap::new();
+    for f in fork.iter().filter(|f| RESTATABLE.contains(&f.predicate.as_str())) {
+        let Some((lang, _)) = lit(&f.object) else { continue };
+        for (line, u) in upstream {
+            if u.subject != f.subject || u.predicate != f.predicate || fork_lines.contains(line) {
+                continue;
+            }
+            let Some((ulang, old)) = lit(&u.object) else { continue };
+            if ulang != lang {
+                continue;
+            }
+            if let Some(other) = out.insert(line.clone(), nt(f)) {
+                return Err(format!("fork.ttl restates {line} twice: {other} and {}", nt(f)));
+            }
+            if LABELS.contains(&f.predicate.as_str()) {
+                let kept = KEEPS_A_LABEL.iter().any(|k| fork_lines.contains(&nt(&Triple::new(f.subject.clone(), NamedNode::new_unchecked(*k), u.object.clone()))));
+                if !kept {
+                    return Err(format!("fork.ttl replaces the label {old:?} of {}: keep it as its skos:hiddenLabel (or skos:altLabel), so a search for the old name still finds it", f.subject));
+                }
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// [`restated`] from the raw inputs (the release's `fork_integrity` test reads it).
+pub fn restatements(upstream_nt: &[u8], fork_ttl: &str) -> Result<BTreeMap<String, String>, String> {
+    let (up, _) = rehomed(upstream_nt)?;
+    let fork = parse(RdfFormat::Turtle, fork_ttl.as_bytes(), Some("f")).map_err(|e| format!("fork.ttl: {e}"))?;
+    restated(&up, &fork)
+}
+
+/// The fork's asserted graph: the re-homed upstream with its derivation links (less what `fork.ttl` restates), `fork.ttl`
+/// and the vocabulary, keyed and sorted by N-Triples line.
+pub fn assemble(upstream_nt: &[u8], fork_ttl: &str, vocab_ttl: &str) -> Result<BTreeMap<String, Triple>, String> {
+    let (mut g, terms) = rehomed(upstream_nt)?;
+    let fork = parse(RdfFormat::Turtle, fork_ttl.as_bytes(), Some("f")).map_err(|e| format!("fork.ttl: {e}"))?;
+    for old in restated(&g, &fork)?.keys() {
+        g.remove(old);
+    }
     let derived = NamedNode::new_unchecked(PROV_DERIVED);
     for s in terms {
         let t = Triple::new(NamedNode::new_unchecked(rehome(&s)), derived.clone(), NamedNode::new_unchecked(s));
         g.insert(nt(&t), t);
     }
-    for (doc, px, name) in [(fork_ttl, "f", "fork.ttl"), (vocab_ttl, "v", "generated/beatscript.ttl")] {
-        for t in parse(RdfFormat::Turtle, doc.as_bytes(), Some(px)).map_err(|e| format!("{name}: {e}"))? {
-            g.insert(nt(&t), t);
-        }
+    for t in fork {
+        g.insert(nt(&t), t);
+    }
+    for t in parse(RdfFormat::Turtle, vocab_ttl.as_bytes(), Some("v")).map_err(|e| format!("generated/beatscript.ttl: {e}"))? {
+        g.insert(nt(&t), t);
     }
     Ok(g)
 }
@@ -623,6 +694,42 @@ mod tests {
         let named = |s: &BTreeSet<String>| s.iter().filter(|l| !l.contains("_:")).cloned().collect::<BTreeSet<_>>();
         assert_eq!(got.len(), want.len());
         assert_eq!(named(&got), named(&want), "our closure, their graph");
+    }
+
+    /// fork.ttl restates a bitwrap term's wording and nothing else: a comment in the same language replaces bitwrap's, a
+    /// label too when the old one is kept as a hidden label, any other statement is added beside bitwrap's.
+    #[test]
+    fn fork_restates_wording_only() {
+        let up = br#"<https://ontology.bitwrap.io/ns#X> <http://www.w3.org/2000/01/rdf-schema#label> "old x"@en .
+<https://ontology.bitwrap.io/ns#X> <http://www.w3.org/2000/01/rdf-schema#comment> "old comment"@en .
+<https://ontology.bitwrap.io/ns#X> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://ontology.bitwrap.io/ns#Y> .
+"#;
+        let px = "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n@prefix ns: <https://beatscript.app/ontology/ns#> .\n";
+        let has = |g: &BTreeMap<String, Triple>, s: &str| g.contains_key(s);
+        let x = "<https://beatscript.app/ontology/ns#X>";
+        let line = |p: &str, o: &str| format!("{x} <{p}> {o} .");
+        let (label, comment, hidden) = (format!("{RDFS}label"), format!("{RDFS}comment"), "http://www.w3.org/2004/02/skos/core#hiddenLabel");
+
+        let g = assemble(up, &format!("{px}ns:X rdfs:comment \"new comment\"@en, \"une remarque\"@fr ; rdfs:subClassOf ns:Z ."), "").unwrap();
+        assert!(!has(&g, &line(&comment, "\"old comment\"@en")) && has(&g, &line(&comment, "\"new comment\"@en")));
+        assert!(has(&g, &line(&comment, "\"une remarque\"@fr")), "another language is added");
+        assert!(has(&g, &line(&format!("{RDFS}subClassOf"), "<https://beatscript.app/ontology/ns#Y>")), "a class is never replaced");
+        assert!(has(&g, &line(&format!("{RDFS}subClassOf"), "<https://beatscript.app/ontology/ns#Z>")));
+        assert!(has(&g, &line(&label, "\"old x\"@en")), "what fork.ttl does not restate stays");
+        assert!(has(&g, &format!("{x} <{PROV_DERIVED}> <https://ontology.bitwrap.io/ns#X> .")), "and the term keeps its derivation link");
+
+        let e = assemble(up, &format!("{px}ns:X rdfs:label \"new x\"@en ."), "").unwrap_err();
+        assert!(e.contains("hiddenLabel"), "{e}");
+        let ttl = format!("{px}ns:X rdfs:label \"new x\"@en ; skos:hiddenLabel \"old x\"@en .");
+        let g = assemble(up, &ttl, "").unwrap();
+        assert!(!has(&g, &line(&label, "\"old x\"@en")) && has(&g, &line(&label, "\"new x\"@en")) && has(&g, &line(hidden, "\"old x\"@en")));
+        let r = restatements(up, &ttl).unwrap();
+        assert_eq!(r.into_iter().collect::<Vec<_>>(), [(line(&label, "\"old x\"@en"), line(&label, "\"new x\"@en"))]);
+
+        let e = assemble(up, &format!("{px}ns:X rdfs:comment \"one\"@en, \"two\"@en ."), "").unwrap_err();
+        assert!(e.contains("twice"), "{e}");
+        // restating bitwrap's own value replaces nothing
+        assert!(restatements(up, &format!("{px}ns:X rdfs:comment \"old comment\"@en .")).unwrap().is_empty());
     }
 
     #[test]

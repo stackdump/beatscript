@@ -12,6 +12,8 @@ The input is the dump beatscript-serve (the beatscript.app server) writes from i
 `ONTOLOGY_VOCAB_OUT=... cargo test -p beatscript-serve --bin beatscript-serve vocab_dump`), so nothing here is typed by hand twice:
 
   grammar_ebnf     the language's one grammar (grammar.ebnf in the BeatScript engine): a term per production, keyword and token class
+  versions         the language's versions (djlive::version): a term each, with its version line, what its program CIDs are
+                   the CIDs of and the version it revises, and the language's current version
   instruments      what /api/instruments and the instruments tool answer: voices, kits,
                    families, palettes
   control_nouns    the snapshot of the DJ app's control registry: the nouns `do` reaches and the verbs each accepts
@@ -190,6 +192,10 @@ class Out:
         self.blocks = []
         self.count = {}
 
+    def facts(self, subject, facts):
+        """Facts about a subject written by hand elsewhere (fork.ttl): no types, label or definition."""
+        self.blocks.append(f"{subject} " + " ;\n    ".join(f"{p} {o}" for p, o in facts) + " .")
+
     def term(self, subject, types, label, definition, facts, kind):
         """One subject: types, label and definition (left out when they are already written by hand), then facts."""
         lines = [f"{subject} a {', '.join(types)}"]
@@ -273,6 +279,24 @@ ns:needsToken a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:Mc
 
 [] a owl:AllDisjointClasses ;
     owl:members ( ns:LanguageTerm ns:VoiceFamily ns:Palette ns:Genre ns:Scale ns:Instrument ns:PatternTerm ) .
+"""
+
+VERSIONS = """
+# --- the language's versions ------------------------------------------------------------------------------------
+
+ns:LanguageVersion a owl:Class ; rdfs:subClassOf ns:ProgrammingLanguage ; rdfs:label "language version"@en ; ns:status "stable" ;
+    rdfs:comment "One version of a language: the version line that says a text is in it, how its programs are canonicalized and what their CIDs are the CIDs of. A later version is prov:wasRevisionOf the one before it, and a program written in the earlier one keeps its meaning and its CID."@en .
+ns:versionOf a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:LanguageVersion ; rdfs:range ns:ProgrammingLanguage ; rdfs:label "version of"@en ; ns:status "stable" .
+ns:currentVersion a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:ProgrammingLanguage ; rdfs:range ns:LanguageVersion ; rdfs:label "current version"@en ; ns:status "stable" ;
+    rdfs:comment "The version new text is written in: what fmt upgrades a program to and what the generators write."@en .
+ns:versionLine a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:LanguageVersion ; rdfs:range xsd:string ; rdfs:label "version line"@en ; ns:status "stable" ;
+    rdfs:comment "The header line (a leading #! line) that says a text is in this version."@en .
+ns:programCidFormat a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:LanguageVersion ; rdfs:range xsd:integer ; rdfs:label "program CID format"@en ; ns:status "stable" ;
+    rdfs:comment "The format of the document a program CID of this version is the CID of: {\\"format\\": this number, \\"text\\": the canonical text, \\"type\\": the version's ns:programCidType}."@en .
+ns:programCidType a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:LanguageVersion ; rdfs:range xsd:string ; rdfs:label "program CID type"@en ; ns:status "stable" ;
+    rdfs:comment "The type of the document a program CID of this version is the CID of."@en .
+ns:inLanguageVersion a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:Program ; rdfs:range ns:LanguageVersion ; rdfs:label "in language version"@en ; ns:status "stable" ;
+    rdfs:comment "The version the program is written in, which the first line of its canonical text tells. A program and its upgrade to a later version play the same but are two texts with two CIDs, so two programs: the upgrade is prov:wasRevisionOf the original, and each has one ns:programCid."@en .
 """
 
 PHRASEBOOK = """
@@ -445,6 +469,26 @@ def main():
     if any(p[0] == "mutation" and "INT" in rhs_symbols(p[1])[1] for p in prods):
         out.term(c("mutation-every-nth-pass"), [skos_concept, nsx("LanguageTerm")], "mutation count (~N, @N)", "An arrange mutation written ~N target op (or @N target op) fires only on every Nth pass of its arrange block, on passes N, 2N, 3N and so on counted from 1; with no count it fires on every pass.", [(nsx("markedBy"), c("token-int")), (nsx("writtenAs"), lit("~N", None))], "MutationSigil")
 
+    # the language's versions, oldest first: each a revision of the one before it
+    versions = src.get("versions", [])
+    language = c("product-beatscript-language")
+    prev = None
+    for v in versions:
+        n, line, head = v["number"], v["line"], v["canonical_head"]
+        definition = (f"BeatScript {n}: a text is in it when its header block has the version line {line}" + (", or no version line at all" if v.get("default") else "")
+                      + f". Its canonical text {'begins with ' + head.rstrip() if head else 'has no #! line'}, and its program CID is the CID of the document "
+                      + json.dumps({"format": v["cid_format"], "text": "<canonical text>", "type": v["cid_type"]}, sort_keys=True, separators=(",", ":"))
+                      + "." + (" The current version: what fmt upgrades a program to and what the generators write." if v["current"] else ""))
+        facts = [(nsx("versionOf"), language), (nsx("versionLine"), lit(line, None)), (nsx("programCidFormat"), typed(v["cid_format"], "integer")),
+                 (nsx("programCidType"), lit(v["cid_type"], None))]
+        if prev:
+            facts.append(("<http://www.w3.org/ns/prov#wasRevisionOf>", prev))
+        prev = c(f"beatscript-{n}")
+        out.term(prev, [skos_concept, nsx("LanguageVersion")], f"BeatScript {n}", definition, facts, "LanguageVersion")
+    for v in versions:
+        if v["current"]:
+            out.facts(language, [(nsx("currentVersion"), c(f"beatscript-{v['number']}"))])
+
     # language registries
     lang = src["language"]
     for g in lang["generators"] + [x for x in ("choose", "deg") if x in keywords]:
@@ -595,6 +639,8 @@ ns:VocalLine rdfs:seeAlso ns:PhonemeSet .
             out.term(c("phoneme-" + slug(ph["name"]) + "-" + (slug(p["symbol"]) if p["symbol"] != "_" else "rest")), [skos_concept, nsx("Phoneme")], p["symbol"], p.get("definition") or f"The phoneme {p['symbol']} ({p['class']}).", facts, "Phoneme")
 
     source = src.get("source", {})
+    if versions:
+        extra = VERSIONS + extra
     if pb:
         extra += PHRASEBOOK
     if src.get("themes") or lang.get("forms"):

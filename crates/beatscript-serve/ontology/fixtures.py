@@ -68,6 +68,17 @@ CALLS_VOCAB = [
     ("sparql_query", {"query": "SELECT ?c (COUNT(?x) AS ?n) WHERE { VALUES ?c { <%sGrammarProduction> <%sKeyword> <%sBeatScriptVoice> <%sControlNoun> <%sControlVerb> <%sMutationOperator> } ?x a ?c } GROUP BY ?c ORDER BY ?c" % ((NS,) * 6)}),
 ]
 
+# BeatScript 2 (the BeatScript ontology's 0.2.0): the language's versions, and the name btw kept as a former name.
+CALLS_VERSIONS = [
+    ("describe_term", {"term": "concept:beatscript-2", "format": "json"}),
+    ("describe_term", {"term": "concept:beatscript-1"}),
+    ("describe_term", {"term": "concept:product-beatscript-language", "format": "json"}),
+    ("describe_term", {"term": "Program", "format": "json"}),
+    ("search_terms", {"text": "btw", "limit": 30}),
+    ("sparql_query", {"query": "SELECT ?v ?line ?format ?type ?revises WHERE { ?v a <%sLanguageVersion> ; <%sversionLine> ?line ; <%sprogramCidFormat> ?format ; <%sprogramCidType> ?type OPTIONAL { ?v <http://www.w3.org/ns/prov#wasRevisionOf> ?revises } } ORDER BY ?v" % ((NS,) * 4)}),
+    ("sparql_query", {"query": "SELECT ?p ?cid ?version WHERE { ?p a <%sProgram> ; <%sprogramCid> ?cid OPTIONAL { ?p <%sinLanguageVersion> ?version } } ORDER BY ?p" % ((NS,) * 3)}),
+]
+
 
 calls_made = []
 
@@ -85,7 +96,7 @@ def main():
     if live != vendored:
         sys.exit(f"{URL} serves {live}, ontology/release/ is {vendored}: record against the server for the vendored release")
     out = []
-    calls = CALLS + CALLS_VOCAB
+    calls = CALLS + CALLS_VOCAB + CALLS_VERSIONS
     for c in calls:
         name, args = c[0], c[1]
         for _ in range(20):

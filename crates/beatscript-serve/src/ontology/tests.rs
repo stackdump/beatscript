@@ -1,7 +1,8 @@
 //! /ontology/: the fork's integrity (the served release is the vendored one, the vendored one is what its inputs
-//! build, it is 0.1.0 and derived from bitwrap 0.2.0, its IRIs are its own, every bitwrap term has its counterpart, the
-//! certificate replays, the vocabulary matches the code), content negotiation, the routes, the MCP tools against
-//! recorded answers (`fixtures/`, written by `ontology/fixtures.py`), and genre conventions read the same from the fork.
+//! build, it is 0.2.0 and derived from bitwrap 0.2.0, its IRIs are its own, every bitwrap term has its counterpart, the
+//! certificate replays, the vocabulary matches the code, no functional property has two values), the language versions,
+//! content negotiation, the routes, the MCP tools against recorded answers (`fixtures/`, written by
+//! `ontology/fixtures.py`), and genre conventions read the same from the fork.
 
 use std::sync::{Arc, OnceLock};
 
@@ -62,12 +63,13 @@ fn fork_integrity() {
         assert_eq!(hex(b), sum, "upstream {name} differs from upstream.lock");
     }
 
-    // version 0.1.0, its version IRI, derived from the bitwrap 0.2.0 release
+    // version 0.2.0, its version IRI, the version before it, derived from the bitwrap 0.2.0 release
     let g = &o.graph;
     let onto_iri = format!("{}ns", fork::BASE);
-    assert_eq!(o.version, "0.1.0");
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionInfo")), "0.1.0");
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionIRI")), format!("{}0.1.0", fork::BASE));
+    assert_eq!(o.version, "0.2.0");
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionInfo")), "0.2.0");
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionIRI")), format!("{}0.2.0", fork::BASE));
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}priorVersion")), format!("{}0.1.0", fork::BASE));
     assert_eq!(g.first(&onto_iri, fork::PROV_DERIVED), fork::UPSTREAM_RELEASE);
     assert!(fork::UPSTREAM_RELEASE.contains(&format!("-{}.", fork::UPSTREAM_VERSION)));
     let up: Value = serde_json::from_str(fork::UPSTREAM_MANIFEST).unwrap();
@@ -89,8 +91,13 @@ fn fork_integrity() {
             }
         }
     }
-    // every bitwrap 0.2.0 term (and every triple but its header) has its counterpart, linked back
+    // every bitwrap 0.2.0 term (and every triple but its header) has its counterpart, linked back, or is wording fork.ttl
+    // restates (fork::RESTATABLE), replaced by fork.ttl's
     let have: BTreeSet<String> = fork_g.iter().map(fork::nt).collect();
+    let restated = fork::restatements(fork::UPSTREAM_NT, fork::FORK_TTL).unwrap();
+    for (old, new) in &restated {
+        assert!(!have.contains(old) && have.contains(new), "{old} is restated as {new}");
+    }
     let mut terms = BTreeSet::new();
     for t in fork::parse(RdfFormat::NTriples, fork::UPSTREAM_NT, Some("b")).unwrap() {
         let s = t.subject.to_string();
@@ -98,7 +105,7 @@ fn fork_integrity() {
             continue;
         }
         let r = fork::nt(&t).replace(&format!("<{}", fork::UPSTREAM_BASE), &format!("<{}", fork::BASE));
-        assert!(have.contains(&r), "bitwrap's {t} has no counterpart");
+        assert!(have.contains(&r) || restated.contains_key(&r), "bitwrap's {t} has no counterpart");
         if s.starts_with('<') {
             terms.insert(s);
         }
@@ -140,6 +147,61 @@ fn fork_integrity() {
     // and the BeatScript vocabulary in it is the code's
     let errs = vocab::drift(g);
     assert!(errs.is_empty(), "{}", errs.join("\n"));
+}
+
+/// The release is consistent where OWL 2 RL would look first and the certificate's schema rules do not: in the
+/// materialized graph no subject has two values of an owl:FunctionalProperty (two literals would be a contradiction,
+/// two IRIs would make them owl:sameAs). This is why a program's BeatScript 2 CID is never a second ns:programCid of the
+/// BeatScript 1 program: the BeatScript 2 program is its own individual, `prov:wasRevisionOf` the first.
+#[test]
+fn functional_properties_have_one_value() {
+    let pack: Value = serde_json::from_slice(file("pack.json").unwrap()).unwrap();
+    let triples = fork::parse(oxigraph::io::RdfFormat::NTriples, pack["graph"].as_str().unwrap().as_bytes(), None).unwrap();
+    let functional: BTreeSet<String> = triples
+        .iter()
+        .filter(|t| t.predicate.as_str() == graph::RDF_TYPE && t.object.to_string() == format!("<{OWL}FunctionalProperty>"))
+        .map(|t| t.subject.to_string())
+        .collect();
+    assert!(functional.len() > 30, "{}", functional.len());
+    let mut values: std::collections::BTreeMap<(String, String), BTreeSet<String>> = Default::default();
+    for t in &triples {
+        let p = t.predicate.to_string();
+        if functional.contains(&p) {
+            values.entry((t.subject.to_string(), p)).or_default().insert(t.object.to_string());
+        }
+    }
+    let clashes: Vec<String> = values.iter().filter(|(_, v)| v.len() > 1).map(|((s, p), v)| format!("{s} {p} {v:?}")).collect();
+    assert!(clashes.is_empty(), "functional properties with two values:\n{}", clashes.join("\n"));
+}
+
+/// The language's versions are data, generated from djlive::version: BeatScript 2 is a revision of BeatScript 1, each
+/// with its version line and what its program CIDs are the CIDs of; the language has its file extensions and media types.
+#[test]
+fn language_versions_are_data() {
+    use djlive::version::{Version, CURRENT, LEGACY_LINE, LINE};
+    let g = &onto().graph;
+    let c = |s: &str| format!("{}concept/{s}", fork::BASE);
+    let n = |p: &str| format!("{NS}{p}");
+    let (v1, v2, lang) = (c("beatscript-1"), c("beatscript-2"), c("product-beatscript-language"));
+    assert_eq!(g.of_type(&n("LanguageVersion")), [v1.clone(), v2.clone()]);
+    assert_eq!(g.first(&v2, "http://www.w3.org/ns/prov#wasRevisionOf"), v1);
+    assert_eq!(g.first(&v1, "http://www.w3.org/ns/prov#wasRevisionOf"), "");
+    for (iri, v, line) in [(&v1, Version::V1, LEGACY_LINE), (&v2, Version::V2, LINE)] {
+        assert_eq!(g.first(iri, &n("versionOf")), lang);
+        assert_eq!(g.first(iri, &n("versionLine")), line);
+        assert_eq!(g.first(iri, &n("programCidFormat")), v.format().to_string());
+        assert_eq!(g.first(iri, &n("programCidType")), v.doc_type());
+        assert_eq!(g.label(iri), format!("BeatScript {}", v.number()));
+    }
+    assert_eq!(g.first(&lang, &n("currentVersion")), if CURRENT == Version::V2 { v2.clone() } else { v1.clone() });
+    assert_eq!(g.first(&lang, &n("fileExtension")), ".beatscript");
+    assert_eq!(g.all(&lang, &n("legacyFileExtension")), [".btw"]);
+    assert_eq!(g.first(&lang, &n("mediaType")), "text/beatscript");
+    // what was called btw is found by that name, and says it is the name before version 2
+    assert_eq!(g.label(&n("Program")), "BeatScript program");
+    assert_eq!(g.all(&n("Program"), "http://www.w3.org/2004/02/skos/core#hiddenLabel"), ["btw program"]);
+    assert!(g.all(&v1, "http://www.w3.org/2004/02/skos/core#altLabel").contains(&"btw".to_string()));
+    assert!(g.first(&v1, "http://www.w3.org/2004/02/skos/core#historyNote").contains("before language version 2"));
 }
 
 #[test]
@@ -200,7 +262,7 @@ async fn routes_serve_the_release_bytes() {
     assert!(!page.contains("style=") && !page.contains("<style"), "no inline styles: the site's CSP is style-src 'self'");
     assert_eq!(send(get("/ontology", "")).await.0, 308);
     // the version IRI is the release
-    let (s, _, b) = send(get("/ontology/0.1.0", "text/turtle")).await;
+    let (s, _, b) = send(get("/ontology/0.2.0", "text/turtle")).await;
     assert_eq!((s.as_u16(), b.as_slice()), (200, file("ns.ttl").unwrap()));
     // a term's IRI answers with its triples
     let (s, h, b) = send(get("/ontology/genre/techno", "text/turtle")).await;

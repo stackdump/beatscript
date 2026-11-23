@@ -6,6 +6,8 @@
 //! - the instruments: `beatscript_api::instruments_json()`, what `/api/instruments` and the `instruments` tool answer;
 //! - the control registry: beatscript-api's snapshot of the DJ app's nouns and their verbs;
 //! - djlive's registries: generators, pattern transforms, evolve and mutation operators, sugar words;
+//! - the language's versions (`djlive::version`): each one's version line and what its program CIDs are the CIDs of, and
+//!   which is current;
 //! - both MCP servers' tools/list: BeatScript's (`crate::mcp`, with the production defaults) and the ontology's;
 //! - the public-domain phrasebook's closed vocabularies (`djengine::vocal::phoneme`'s meter families and feels), and the terms
 //!   its linked data names (`beatscript_serve::phrasebook::CONTEXT_TERMS`): the lines themselves are data, not vocabulary.
@@ -32,6 +34,19 @@ pub fn beatscript_tools() -> Vec<Value> {
     crate::mcp::tools::tool_list(PUBLIC, 16384, 60, 30, (50, 20, 30, 8, 30))
 }
 
+/// Every version of the language, oldest first (a version djlive adds goes here too: `language_versions_are_data`
+/// names them).
+pub const VERSIONS: [djlive::version::Version; 2] = [djlive::version::Version::V1, djlive::version::Version::V2];
+
+/// The language's versions as the dump writes them (`default`: the version of a text with no version line).
+pub fn versions() -> Vec<Value> {
+    use djlive::version::{Version, CURRENT};
+    VERSIONS
+        .iter()
+        .map(|v| json!({"number": v.number(), "line": v.line(), "canonical_head": v.canonical_head(), "cid_format": v.format(), "cid_type": v.doc_type(), "current": *v == CURRENT, "default": *v == Version::default()}))
+        .collect()
+}
+
 /// The dump tools/ontology/beatscript.py reads.
 pub fn sources() -> Value {
     let snapshot: Value = serde_json::from_str(beatscript_api::snapshot::SNAPSHOT_JSON).expect("snapshot.json");
@@ -39,8 +54,9 @@ pub fn sources() -> Value {
     let tools = beatscript_tools();
     let auth: Vec<&str> = tools.iter().filter_map(|t| t["name"].as_str()).filter(|n| crate::mcp::tools::auth_tool(n)).collect();
     gojson::sorted_deep(json!({
-        "source": {"repo": "beatscript-serve (beatscript.app)", "commit": option_env!("BTWSERVE_COMMIT").unwrap_or("working tree")},
+        "source": {"repo": "beatscript-serve (beatscript.app)", "commit": option_env!("BEATSCRIPT_SERVE_COMMIT").unwrap_or("working tree")},
         "grammar_ebnf": GRAMMAR,
+        "versions": versions(),
         "instruments": instruments,
         "control_nouns": snapshot["nouns"],
         "language": {
@@ -153,6 +169,24 @@ pub fn drift(g: &Index) -> Vec<String> {
     }
     let kw: BTreeSet<String> = prods.iter().flat_map(|p| terminals(&p.1)).collect();
     same("keyword", kw, by(g, "Keyword", "keywordText").into_keys(), &mut errs);
+
+    // the language's versions: each with its version line and its CID document's format and type, and the current one
+    let versions = src["versions"].as_array().unwrap();
+    let have_v = by(g, "LanguageVersion", "versionLine");
+    same("language version", versions.iter().map(|v| v["line"].as_str().unwrap().to_string()).collect(), have_v.keys().cloned(), &mut errs);
+    for v in versions {
+        let line = v["line"].as_str().unwrap();
+        let Some(s) = have_v.get(line) else { continue };
+        for (p, want) in [("programCidFormat", v["cid_format"].to_string()), ("programCidType", v["cid_type"].as_str().unwrap().to_string())] {
+            let got = g.first(s, &format!("{NS}{p}"));
+            if got != want {
+                errs.push(format!("language version {line}: the ontology's {p} is {got:?}, djlive's {want:?}"));
+            }
+        }
+        if v["current"] == json!(true) && g.first(&format!("{SITE_BASE}/concept/product-beatscript-language"), &format!("{NS}currentVersion")) != *s {
+            errs.push(format!("the current language version is {line} in djlive, not in the ontology"));
+        }
+    }
 
     // instruments
     let inst = &src["instruments"];
