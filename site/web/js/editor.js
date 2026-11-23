@@ -74,7 +74,8 @@ function measureRows(nodes, text, a, b) {
 
 export class Editor {
   /**
-   * root: the .ed element. handlers: {onInput(text), onEval(), onStop(), onCursor(line, col), onToggleFollow()}
+   * root: the .ed element. handlers: {onInput(text), onEval(), onStop(), onCursor(line, col), onToggleFollow(), onKey(e),
+   * onHoverInfo(line, vcol), onHoverTarget(element) (a note drawn over the code: its hover, {html} or null), onLayout()}
    */
   constructor(root, handlers = {}) {
     this.root = root;
@@ -451,12 +452,18 @@ export class Editor {
 
   _hover(e) {
     const r = this.code.getBoundingClientRect();
-    const at = hit(this.wrap, e.clientX - r.left, e.clientY - r.top);
+    // a note the assistant draws over the code (a shown expansion, assist.js) has its own hover, before the text's
+    const own = this.on.onHoverTarget ? this.on.onHoverTarget(e.target) : null;
+    const at = own ? null : hit(this.wrap, e.clientX - r.left, e.clientY - r.top);
     const line = at ? at.line : -1;
     const vcol = at ? at.vcol : -1;
     const d = at && this.diags.length ? this.diagAt(line, vcol) : null;
     const er = this.root.getBoundingClientRect();
-    if (!d) {
+    if (own) {
+      this._hoverKey = null;
+      this.tip.innerHTML = own.html; // built from escaped text by assist-model.mdToHtml
+      this.tip.classList.add('as-hover');
+    } else if (!d) {
       // what the word under the pointer is (assist.js), asked once per cell
       const key = `${line}:${vcol}`;
       if (this._hoverKey !== key) {
@@ -480,7 +487,7 @@ export class Editor {
   }
 
   _key(e) {
-    // the assistant's keys first (assist.js: completion, Alt+Enter, Mod+Shift+O, F12, and Esc while one of its lists is open)
+    // the assistant's keys first (assist.js: completion, Alt+Enter, Mod+Shift+O, F12, Alt+E, and Esc while one of its lists is open)
     if (this.on.onKey && this.on.onKey(e)) return;
     const mod = e.metaKey || e.ctrlKey;
     if (mod && e.key === 'Enter') {

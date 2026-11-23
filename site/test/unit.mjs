@@ -1736,6 +1736,168 @@ test('assist: the real module answers completion, hover and fixes (BeatscriptLs)
   assert.equal(fix[0].title, '`kcik` -> `kick`');
 });
 
+// ---- expansion-model.js: a reference's expansion shown or hidden, every one's, copied, ejected (assist.js draws it) -------
+const xm = await J('expansion-model.js');
+
+const CID1 = 'z4EBqPNxZm8nYzR3TK8kpSA1wW3a7cNquHRvjvF5Kq9pR9DU';
+const rng = (l0, c0, l1, c1) => ({ start: { line: l0, character: c0 }, end: { line: l1, character: c1 } });
+const xref = (o = {}) => ({
+  range: rng(3, 10, 3, 53), replaced: rng(3, 0, 3, 53), kind: 'gen', half: 'engine', call: 'gen@2 techno seed=42 section=drop part=bass',
+  resolved: CID1, generator: 'seeded@2', fitted: ['key', 'bpm'], place: 'let', name: 'bed', lines: 3,
+  text: 'let bed_1 = a1 ~ ~ ~ c2 ~ ~ ~\nlet bed_2 = bed_1 inst=reese\nlet bed = bed_2', from: `# from: gen@2 techno seed=42 section=drop part=bass -> ${CID1}`, ...o,
+});
+
+test('expansion: the shown set is keyed by kind, call, place and name, so an edit that moves a reference keeps it shown', () => {
+  const shown = new Set();
+  const r = xref();
+  assert.equal(xm.toggleOne(shown, r), true);
+  assert.ok(shown.has(xm.refKey(xref({ range: rng(9, 10, 9, 53) }))), 'moved by an edit: the same reference');
+  assert.ok(!shown.has(xm.refKey(xref({ name: 'pad' }))), 'another let: another reference');
+  assert.ok(!shown.has(xm.refKey(xref({ call: 'gen@2 techno seed=43 section=drop part=bass' }))));
+  assert.equal(xm.refKey(xref({ name: null })), xm.refKey(xref({ name: '' })));
+  assert.equal(xm.toggleOne(shown, r), false);
+  assert.equal(shown.size, 0);
+});
+
+test('expansion: every reference is shown, or all are hidden when any is', () => {
+  const a = xref();
+  const b = xref({ kind: 'seed', call: 'seed(trance, 42)[17..20]', place: 'part', name: 'arp' });
+  const shown = new Set();
+  assert.equal(xm.toggleAll(shown, [a, b]), true);
+  assert.deepEqual([...shown], [xm.refKey(a), xm.refKey(b)]);
+  xm.toggleOne(shown, a);
+  assert.equal(xm.toggleAll(shown, [a, b]), false, 'one still shown: hide them all');
+  assert.equal(shown.size, 0);
+  shown.add('stale|key||');
+  assert.equal(xm.toggleAll(shown, [a, b]), true, 'a key of a reference that is gone does not count as shown');
+  assert.equal(xm.toggleAll(new Set(), []), false);
+});
+
+test('expansion: notes go at the end of the line a reference ends on, grouped by line, a lens only for a hidden one', () => {
+  const text = 'tempo 128\nkey c\nsection groove 4 bars {\n  deck A: kick x x x x\n        | bass gen@2 techno seed=42 inst=reese\n  deck B: arp seed(trance, 42)[17..20] | pad seed(trance, 42).harmony\n}\n';
+  const gen = xref({ range: rng(4, 15, 4, 42), place: 'part', name: 'bass' });
+  const arp = xref({ kind: 'seed', call: 'seed(trance, 42)[17..20]', range: rng(5, 14, 5, 38), place: 'part', name: 'arp' });
+  const pad = xref({ kind: 'seed', call: 'seed(trance, 42).harmony', range: rng(5, 45, 5, 69), place: 'part', name: 'pad' });
+  const shown = new Set([xm.refKey(pad), xm.refKey(gen)]);
+  const g = xm.decorations(text, [gen, arp, pad], shown);
+  assert.deepEqual(g.map((x) => [x.line, x.end, x.items.map((i) => i.ref.name)]), [[4, text.indexOf('\n  deck B'), ['bass']], [5, text.indexOf('\n}'), ['pad']]]);
+  // the caret on arp (hidden): its lens joins pad's line, in text order; on gen (shown): no lens
+  const withLens = xm.decorations(text, [gen, arp, pad], shown, arp);
+  assert.deepEqual(withLens[1].items.map((i) => [i.ref.name, i.lens]), [['arp', true], ['pad', false]]);
+  assert.equal(xm.decorations(text, [gen, arp, pad], shown, gen).flatMap((x) => x.items).filter((i) => i.lens).length, 0);
+  assert.deepEqual(xm.decorations(text, [], new Set(), arp).map((x) => x.line), [5], 'a lens with nothing shown');
+});
+
+test('expansion: the note says the first line, how many more and the CID, and is cut to fit', () => {
+  const r = xref();
+  assert.equal(xm.label(r), `⇒ let bed_1 = a1 ~ ~ ~ c2 ~ ~ ~  … 2 more lines  [z…Kq9pR9DU]`);
+  assert.equal(xm.label(xref({ text: 'let bed = a1 ~', resolved: null })), '⇒ let bed = a1 ~', 'one line, no CID: just the line');
+  assert.equal(xm.label(xref({ text: 'a\nb' })), '⇒ a  … 1 more line  [z…Kq9pR9DU]');
+  const narrow = xm.label(r, 44);
+  assert.equal([...narrow].length, 44);
+  assert.equal(narrow, '⇒ let bed_1 =…  … 2 more lines  [z…Kq9pR9DU]', 'the first line is cut first');
+  assert.equal(xm.label(r, 24), '⇒ 3 lines  [z…Kq9pR9DU]');
+  assert.equal(xm.label(r, 12), '⇒ 3 lines');
+  assert.equal(xm.label(r, 3), '⇒');
+  assert.ok([...xm.label(xref({ text: 'x'.repeat(200) }))].length < 90, 'a long first line is cut at 72');
+  assert.equal(xm.lensLabel(), '⇒ show expansion');
+  assert.equal(xm.lensLabel(5), '⇒');
+  assert.equal(xm.shortCid(CID1), 'z…Kq9pR9DU');
+  assert.equal(xm.shortCid('zShort'), 'zShort');
+  assert.equal(xm.shortCall(`${CID1}.drop.bass`), 'z…Kq9pR9DU.drop.bass');
+  assert.equal(xm.shortCall('gen@2 techno seed=42'), 'gen@2 techno seed=42');
+});
+
+test('expansion: the hover is cut short with a count, the whole has everything, copy is what eject writes', () => {
+  const long = xref({ text: Array.from({ length: 40 }, (_, i) => `let l${i} = c2 ~`).join('\n') });
+  const md = xm.hoverMarkdown(long);
+  assert.ok(md.startsWith(`\`${long.call}\` → \`${CID1}\` (gen, engine)`), md);
+  assert.ok(md.includes(`\`\`\`\n${long.from}\nlet l0 = c2 ~\n`), md);
+  assert.ok(md.includes('let l10 = c2 ~') && !md.includes('let l11 '), 'the from line and 11 more: 12 lines');
+  assert.ok(md.includes('… 29 more lines (41 in all): click it to see the whole'), md);
+  const short = xm.hoverMarkdown(xref());
+  assert.ok(!short.includes('more line'), short);
+  assert.ok(short.includes('Alt+E'));
+  const whole = xm.wholeMarkdown(long);
+  assert.ok(whole.includes('let l39 = c2 ~') && whole.includes(long.from));
+  assert.equal(xm.copyText(xref()), `${xref().from}\n${xref().text}\n`);
+  assert.deepEqual(xm.truncate('a\nbb\nccc', 9, 4), { text: 'a\nbb', left: 1, total: 3 });
+  assert.deepEqual(xm.truncate('x'.repeat(50), 9, 4), { text: 'x'.repeat(50), left: 0, total: 1 }, 'one line at least');
+  // the hover markdown is safe html (the expansion is text, never markup)
+  assert.ok(!am.mdToHtml(xm.hoverMarkdown(xref({ text: '<img src=x onerror=alert(1)>' }))).includes('<img'));
+  assert.equal(xm.spoken(xref()), 'Expansion of gen@2 techno seed=42 section=drop part=bass shown: let bed_1 = a1 ~ ~ ~ c2 ~ ~ ~, and 2 more lines.');
+});
+
+test('expansion: the service\'s commands route as the VS Code extension routes them (show/hide and copy the page\'s, eject the service\'s)', () => {
+  const caret = { uri: 'main', position: { line: 3, character: 12 } };
+  const lens = { uri: 'main', position: { line: 1, character: 4 }, length: 99 };
+  assert.deepEqual(xm.route({ command: xm.TOGGLE, arguments: [lens] }, caret), { run: 'toggle', at: lens });
+  assert.deepEqual(xm.route({ command: xm.COPY, arguments: [] }, caret), { run: 'copy', at: caret }, 'no argument: the caret');
+  assert.deepEqual(xm.route({ command: xm.EJECT }, caret), { run: 'eject', at: caret });
+  assert.deepEqual(xm.route({ command: 'beatscript.nope', arguments: [lens] }, caret), { run: null, at: null });
+  assert.deepEqual(xm.route(null, caret), { run: null, at: null });
+  assert.deepEqual([xm.TOGGLE, xm.COPY, xm.EJECT], ['beatscript.expand.toggle', 'beatscript.expand.copy', 'beatscript.eject'], 'the service\'s executeCommandProvider.commands (crates/beatscriptls/src/refs.rs COMMANDS)');
+});
+
+test('expansion: the Alt+Enter rows and the popup rows follow what is shown', () => {
+  const a = xref();
+  const b = xref({ kind: 'stored', call: `${CID1}.drop.bass`, place: 'let', name: 'riff' });
+  const shown = new Set();
+  assert.deepEqual(xm.referenceRows(b, shown, [a, b]).map((r) => [r.id, r.label, r.detail]), [
+    ['toggle', 'Show the expansion of `z…Kq9pR9DU.drop.bass`', 'Alt+E'],
+    ['all', 'Show every reference\'s expansion', 'Alt+Shift+E'],
+    ['open', 'Open the whole expansion of `z…Kq9pR9DU.drop.bass`', '3 lines'],
+  ]);
+  xm.toggleOne(shown, a);
+  assert.deepEqual(xm.referenceRows(b, shown, [a, b]).map((r) => r.label.split(' ')[0]), ['Show', 'Hide', 'Open'], 'another one is shown: hide every one');
+  assert.deepEqual(xm.referenceRows(a, shown, [a]).map((r) => r.id), ['toggle', 'open'], 'one reference: no "every"');
+  assert.equal(xm.referenceRows(a, shown, [a])[0].label, `Hide the expansion of \`${a.call}\``);
+  assert.deepEqual(xm.popupRows(a, shown).map((r) => r.id), ['toggle', 'copy', 'eject']);
+  assert.equal(xm.popupRows(a, shown)[0].label, 'Hide the expansion');
+  assert.equal(xm.popupRows(b, shown)[0].label, 'Show the expansion');
+  assert.equal(xm.popupRows(b, shown)[2].label, 'Eject `z…Kq9pR9DU.drop.bass` into local text');
+});
+
+test('expansion: the real module answers beatscript/expand, and eject by command and by refactor write the same proved edit (BeatscriptLs)', { skip: !realWasm || !facade.ls ? 'no built module with BeatscriptLs' : false }, () => {
+  const ls = facade.ls();
+  // a comment whose characters count differently in UTF-8 and UTF-16 before the reference: the positions are UTF-16 (JS offsets)
+  const text = '# é𝄞 a bed\ntempo 128\nkey c\nlet bed = gen@2 techno seed=42 section=drop part=bass\nsection groove 4 bars {\n  deck A: kick x x x x | bass bed\n}\narrange groove groove\n';
+  ls.open('main', text);
+  const req = (m, p) => JSON.parse(ls.request(m, JSON.stringify({ textDocument: { uri: 'main' }, ...p })));
+  const refs = req('beatscript/expand', {}).references;
+  assert.equal(refs.length, 1);
+  const r = refs[0];
+  assert.equal(r.kind, 'gen');
+  assert.equal(am.offsetOf(text, r.range.start), text.indexOf('gen@2'));
+  assert.equal(am.offsetOf(text, r.range.end), text.indexOf('\nsection'));
+  const shown = new Set();
+  xm.toggleOne(shown, r);
+  assert.deepEqual(xm.decorations(text, refs, shown).map((g) => [g.line, g.end]), [[3, text.indexOf('\nsection')]]);
+  assert.match(xm.label(r), /^⇒ let bed_1 = .*\[z…[1-9A-HJ-NP-Za-km-z]{8}\]$/);
+  // the caret on the let's name: the same reference (its statement holds the caret)
+  const at = req('beatscript/expand', { position: am.lspPos(text, text.indexOf('bed =')) }).references[0];
+  assert.equal(xm.refKey(at), xm.refKey(r));
+  assert.deepEqual(req('beatscript/expand', { position: am.lspPos(text, text.indexOf('kick')) }).references, [], 'nothing at a plain part');
+  // copying, as the page does it out of beatscript/expand, is the service's copy command's text
+  const copied = req('workspace/executeCommand', { command: xm.COPY, arguments: [{ uri: 'main', position: r.range.start }] });
+  assert.equal(xm.copyText(r), `${copied.text}\n`);
+  // eject as the note's popup does it (the command, the service proves it) and as Alt+Enter does (the refactor, resolved)
+  const ej = req('workspace/executeCommand', { command: xm.EJECT, arguments: [{ uri: 'main', position: r.range.start }] });
+  const out = am.mergeEdits(text, ej.edit.changes.main).text;
+  assert.ok(out.includes(r.from) && out.includes(r.text) && !out.includes('= gen@2'), out);
+  const acts = req('textDocument/codeAction', { range: { start: r.range.start, end: r.range.start }, context: { diagnostics: [] } });
+  const copyAct = acts.find((a) => a.command && a.command.command === xm.COPY);
+  assert.equal(xm.route(copyAct.command, null).run, 'copy', 'the copy action is the page\'s to carry out');
+  const eject = acts.find((a) => a.data && a.data.refactor === 'eject');
+  const resolved = JSON.parse(ls.request('codeAction/resolve', JSON.stringify(eject)));
+  assert.equal(am.mergeEdits(text, resolved.edit.changes.main).text, out);
+  // off a reference eject is refused with the reason; after the eject there is nothing left to expand
+  const off = req('workspace/executeCommand', { command: xm.EJECT, arguments: [{ uri: 'main', position: am.lspPos(text, text.indexOf('kick')) }] });
+  assert.match(off.error.message, /no reference here/);
+  ls.change('main', out);
+  assert.deepEqual(req('beatscript/expand', {}).references, []);
+});
+
 // ---- scrub-model.js: number and range scrubbing (the pure side of scrub.js) ------------------------------------------
 const sc = await J('scrub-model.js');
 

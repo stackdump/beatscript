@@ -95,6 +95,14 @@ browser. Exit code 1 if any check fails or the page logs a console error.
    notch (128 to 130) and keeps position 1; a locked tempo's notches are off and Scan turns another knob, still at 1; the
    page's link opens the same station at the same position, and a stored station opens by CID. A short, fast station plays:
    track 0, its segue, then track 1, with N moved on by itself; Stop stops it.
+17. **A reference's expansion** (assist.js and expansion-model.js over the module's `beatscript/expand`; real module only). With the
+   caret on `let bed = gen@2 techno seed=42 section=drop part=bass`, `⇒ show expansion` stands at the end of its line; Alt+E
+   shows the expansion there as a note (`⇒ let bed_1 = …  … N more lines  [z…cid]`, the textarea's text untouched, a screen
+   reader told); hovering it shows the expansion under its `# from:` line; a click opens the whole with *Hide*, *Copy* and
+   *Eject*; Copy puts the `# from:` line and the text on the clipboard; an edit that moves the reference keeps it shown at its
+   new line; Alt+E again hides it, Alt+Shift+E shows and hides every one's; Alt+Enter lists eject, copy, show and open; Eject
+   from Alt+Enter (the refactor) and from the note's popup (the `beatscript.eject` command) write the same text, which checks, and one
+   Undo takes it back.
 
 ## What it does not cover
 

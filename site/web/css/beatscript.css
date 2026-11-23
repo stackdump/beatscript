@@ -400,7 +400,16 @@ button.link { background: none; border: 0; padding: 0; font: inherit; color: inh
 .ed-tip.as-hover .as-code { margin: 0 0 4px; font: 12px/1.45 var(--mono); color: var(--amber); white-space: pre-wrap; }
 .as-bulb { position: absolute; z-index: 15; border: 0; background: none; padding: 0 2px; font-size: 12px; line-height: var(--lh, 21px); cursor: pointer; opacity: .85; }
 .as-bulb:hover { opacity: 1; }
-html.record .as-pop, html.record .as-bulb { display: none !important; }
+/* a reference's expansion, shown (Alt+E): a read-only note at the end of its line; the lens of the caret's reference */
+.as-exps { position: absolute; inset: 0; pointer-events: none; z-index: 14; }
+.as-exp-line { position: absolute; white-space: pre; overflow: hidden; font: italic var(--fs) / var(--lh) var(--mono); font-variant-ligatures: none; color: var(--dim); }
+.as-exp { pointer-events: auto; cursor: pointer; border-radius: 3px; }
+.as-exp:hover { color: var(--ink); background: rgba(255,255,255,.06); }
+.as-exp.as-lens { font-style: normal; color: var(--faint); }
+.as-doc.as-whole { max-height: min(50vh, 420px); overflow: auto; }
+.as-doc .as-code { margin: 2px 0; font: 12px/1.45 var(--mono); color: var(--amber); white-space: pre; }
+.as-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+html.record .as-pop, html.record .as-bulb, html.record .as-exps { display: none !important; }
 
 /* number and range scrubbing (scrub.js) */
 .sc-handle { position: absolute; z-index: 16; border: 0; background: #2a3358; color: var(--amber, #e5c07b); border-radius: 3px; padding: 0 3px; font: 10px/12px var(--mono); height: 12px; cursor: ew-resize; opacity: .85; touch-action: none; user-select: none; box-shadow: 0 1px 3px rgba(0,0,0,.4); }

@@ -96,6 +96,9 @@ export class App {
       // an open list of the assistant's keeps its keys; then the scrubber (Alt+↑/↓ on a number), then the assistant
       onKey: (e) => !!(this.assist && this.assist.list ? this.assist.onKey(e) : (this.scrub && this.scrub.onKey(e)) || (this.assist && this.assist.onKey(e))),
       onHoverInfo: (l, c) => (this.assist ? this.assist.hoverAt(l, c) : null),
+      // a shown expansion's note says its own hover; the notes move when the text wraps again
+      onHoverTarget: (el) => (this.assist ? this.assist.hoverTarget(el) : null),
+      onLayout: () => this.assist && this.assist.onLayout(),
     });
     this.painter = new MarkerPainter(this.editor);
     this.wire();
@@ -507,6 +510,7 @@ export class App {
     this.reportText = text;
     this.editor.setDiagnostics(r.diagnostics || []);
     this.renderProblems();
+    if (this.assist) this.assist.onChecked();
     this.emit('check');
     return r;
   }

@@ -930,6 +930,97 @@ try {
     check('stop stops it', (await R('r.playing')) === false);
   }
 
+  // ---- 17. a reference's expansion: shown and hidden (Alt+E, the lens, every one's), hovered, opened whole, copied, ejected --------------------------
+  step = 17;
+  if (want() && !MOCKWASM) {
+    await fresh(url());
+    await ready();
+    await page.waitFor('!!__app.assist', 8000).catch(() => null);
+    if (!(await page.eval('!!__app.assist'))) {
+      check('the assistant is on (a module with the language service)', false, 'no __app.assist: build the module (scripts/build-web-wasm.sh site/web/wasm)');
+    } else {
+      const PROG = 'tempo 128\nkey c\nlet bed = gen@2 techno seed=42 section=drop part=bass\nsection groove 4 bars {\n  deck A: kick x x x x | bass bed\n}\narrange groove groove\n';
+      await setText(PROG);
+      await sleep(400);
+      const caretAt = (needle, k = 0) => page.eval(`(()=>{const ta=document.querySelector(".ed-ta"); const i=__app.editor.text.indexOf(${JSON.stringify(needle)})+${k}; ta.focus(); ta.setSelectionRange(i,i); document.dispatchEvent(new Event("selectionchange")); return i})()`);
+      const alt = async (key, { shift = false, code, vk } = {}) => {
+        const modifiers = 1 | (shift ? 8 : 0);
+        await page.cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', key, code: code || `Key${key.toUpperCase()}`, windowsVirtualKeyCode: vk || key.toUpperCase().charCodeAt(0), modifiers });
+        await page.cdp('Input.dispatchKeyEvent', { type: 'keyUp', key, code: code || `Key${key.toUpperCase()}`, windowsVirtualKeyCode: vk || key.toUpperCase().charCodeAt(0), modifiers });
+        await sleep(120);
+      };
+      const note = () => page.eval('(()=>{const e=document.querySelector(".as-exps:not([hidden]) .as-exp:not(.as-lens)"); if(!e) return null; const r=e.getBoundingClientRect(); const c=document.querySelector(".ed-code").getBoundingClientRect(); return {text:e.textContent, x:r.left-c.left, y:r.top-c.top, cx:r.left+r.width/2, cy:r.top+r.height/2}})()');
+      const lineTop = (l) => page.eval(`__app.editor.wrap.lines[${l}].top`);
+      const ref = await page.eval('(()=>{const r=JSON.parse(__app.assist.ls.request("beatscript/expand", JSON.stringify({textDocument:{uri:"main"}}))).references[0]; return r})()');
+      check('the module answers the program\'s reference (beatscript/expand)', !!ref && ref.kind === 'gen' && /^let bed_1 = /.test(ref.text), JSON.stringify(ref && ref.call));
+      // the caret on the reference: its lens stands at its line's end until the expansion is shown
+      await caretAt('bed =', 1);
+      await sleep(400);
+      check('the caret on a reference: `⇒ show expansion` at the end of its line', (await q('.as-exps:not([hidden]) .as-lens')) === '⇒ show expansion', await q('.as-exps'));
+      await alt('e');
+      const n1 = await note();
+      check('Alt+E shows the expansion as a note: its first line, how many more, its CID', !!n1 && n1.text.startsWith('⇒ let bed_1 = ') && /more lines?  \[z…[1-9A-HJ-NP-Za-km-z]{8}\]$/.test(n1.text), JSON.stringify(n1));
+      check('the note sits on the reference\'s line, after its end, and the lens is gone', !!n1 && Math.abs(n1.y - (await lineTop(2))) <= 1 && n1.x > (await page.eval('__app.editor.metrics.padLeft + 52 * __app.editor.metrics.charW')) && (await count('.as-lens')) === 0, JSON.stringify(n1));
+      check('a screen reader is told', /^Expansion of gen@2 techno seed=42 section=drop part=bass shown: let bed_1 = /.test(await q('.as-live')), await q('.as-live'));
+      check('the textarea keeps the text: the note is drawn, not written', (await text()) === PROG);
+      // hover: the call, the CID, the expansion under its # from: line
+      await page.hover(n1.cx, n1.cy);
+      await sleep(120);
+      const tip = await page.eval('(()=>{const t=document.querySelector(".ed-tip"); return t.hidden ? null : t.textContent})()');
+      check('hovering the note shows the expansion under its # from: line', !!tip && tip.includes(ref.from) && tip.includes(ref.text.split('\n')[0]), String(tip).slice(0, 200));
+      await shot(17, 'reference-shown');
+      // click: the whole, with show/hide, copy and eject
+      await page.click('.as-exp:not(.as-lens)');
+      await sleep(120);
+      const rows = await page.eval('[...document.querySelectorAll(".as-pop:not([hidden]) .as-row .as-l")].map((e)=>e.textContent)');
+      const whole = await q('.as-pop .as-doc.as-whole');
+      check('a click on the note opens the whole expansion: hide, copy, eject', rows.join('|') === 'Hide the expansion|Copy the expansion|Eject `gen@2 techno seed=42 section=drop part=bass` into local text' && !!whole && whole.includes(ref.text.split('\n').pop()), `${rows.join('|')} / ${String(whole).slice(0, 80)}`);
+      // copy (the clipboard stubbed: headless has no user gesture to grant it)
+      await page.eval('window.__copied = null; Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } })');
+      await page.click('.as-pop .as-row[data-i="1"]');
+      await sleep(120);
+      check('Copy the expansion puts what eject would write on the clipboard: the # from: line, then the text', (await page.eval('window.__copied')) === `${ref.from}\n${ref.text}\n` && /Copied the expansion/.test(await q('#toasts')), String(await page.eval('window.__copied')).slice(0, 80));
+      // an edit that moves the reference keeps it shown: drawn again at its new line once the text rests
+      await caretAt('tempo');
+      await page.type('# moved down a line\n');
+      await sleep(700);
+      const n2 = await note();
+      check('an edit that moves the reference keeps its expansion shown, at its new line', !!n2 && Math.abs(n2.y - (await lineTop(3))) <= 1, JSON.stringify(n2));
+      // Alt+E again hides it; Alt+Shift+E shows every reference's, then hides them
+      await caretAt('gen@2', 2);
+      await alt('e');
+      check('Alt+E again hides it (the lens is back)', (await note()) === null && (await count('.as-exps:not([hidden]) .as-lens')) === 1);
+      await alt('E', { shift: true, code: 'KeyE', vk: 69 });
+      check('Alt+Shift+E shows every reference\'s expansion', !!(await note()) && (await page.eval('__app.assist.shown.size')) === 1);
+      await alt('E', { shift: true, code: 'KeyE', vk: 69 });
+      check('and again hides them all', (await note()) === null && (await page.eval('__app.assist.shown.size')) === 0);
+      // Alt+Enter on the reference: the service's eject and copy, then the page's show, open
+      await alt('Enter', { code: 'Enter', vk: 13 });
+      const acts = await page.eval('[...document.querySelectorAll(".as-pop:not([hidden]) .as-row .as-l")].map((e)=>e.textContent)');
+      check('Alt+Enter on a reference lists eject, copy, show and open', ['Eject `gen@2 techno seed=42 section=drop part=bass` into local text', 'Copy the expansion of `gen@2 techno seed=42 section=drop part=bass`', 'Show the expansion of `gen@2 techno seed=42 section=drop part=bass`', 'Open the whole expansion of `gen@2 techno seed=42 section=drop part=bass`'].every((l) => acts.includes(l)), acts.join(' | '));
+      // eject by the refactor (Alt+Enter), proved by the service: the reference written out under its # from: line
+      const before = await text();
+      const k = acts.indexOf('Eject `gen@2 techno seed=42 section=drop part=bass` into local text');
+      await page.click(`.as-pop .as-row[data-i="${k}"]`);
+      await sleep(200);
+      const byRefactor = await text();
+      check('Eject (Alt+Enter) writes the reference out under its # from: line, and the program checks', byRefactor.includes(`${ref.from}\n`) && byRefactor.includes(ref.text) && !byRefactor.includes('= gen@2') && (await page.eval('__app.beatscript.check(__app.editor.text).ok')) === true, byRefactor.slice(0, 200));
+      await page.eval('document.querySelector(".ed-ta").focus(); document.execCommand("undo")');
+      await sleep(100);
+      check('one Undo puts the reference back', (await text()) === before, (await text()).slice(0, 120));
+      // eject from the note's popup (the service's beatscript.eject command, as VS Code's lens runs it): the same text
+      await caretAt('gen@2', 2);
+      await alt('e');
+      await page.click('.as-exp:not(.as-lens)');
+      await sleep(120);
+      await page.click('.as-pop .as-row[data-i="2"]');
+      await sleep(200);
+      check('Eject from the note\'s popup (the beatscript.eject command) writes the same text', (await text()) === byRefactor, (await text()).slice(0, 200));
+      await sleep(400);
+      check('after the eject there is no reference left: no note, no lens', (await count('.as-exps:not([hidden]) .as-exp')) === 0, await q('.as-exps'));
+    }
+  }
+
   // ---- 10. no console errors anywhere ----------------------------------------------------------------------------------------------------------------
   step = 10;
   const errors = page.errors().filter((e) => !/wasm=off|switched off by/.test(e.text) && !/Failed to load resource.*\/api\/compose/.test(e.text) && !/Failed to load resource.*\/api\/programs\/z2222/.test(e.text)); // the compose error cases above answer 422/429/503 on purpose, and step 15 asks for a program that is not there
