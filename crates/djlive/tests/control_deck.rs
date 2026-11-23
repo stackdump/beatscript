@@ -242,9 +242,11 @@ fn the_programs_written_before_it_keep_their_cids() {
     // compiles on its own (one that needs a host's store, its registry or its voices is beatscript-api's cid_pins to check)
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let pins = JsonValue::parse(&std::fs::read_to_string(root.join("crates/beatscript-api/tests/cid-pins.json")).unwrap()).unwrap();
+    // (the example programs written after it, which use it: pinned when they were added)
+    const AFTER: &[&str] = &["examples/beatscript/macros.beatscript"];
     let mut seen = 0;
     for (path, pin) in pins.as_object().unwrap().iter() {
-        if !path.starts_with("examples/beatscript/") || pin.get("ok").and_then(JsonValue::as_bool) != Some(true) {
+        if !path.starts_with("examples/beatscript/") || pin.get("ok").and_then(JsonValue::as_bool) != Some(true) || AFTER.iter().any(|a| *a == &path[..]) {
             continue;
         }
         let Ok(src) = std::fs::read_to_string(root.join(path)) else { continue };

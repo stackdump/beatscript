@@ -2099,7 +2099,8 @@ impl<'a> Compiler<'a> {
                     let n = over.and_then(|(o, _)| o.whole_bars()).unwrap_or(n);
                     let wait = crate::macros::wait_to_bar(fl.timing, timing);
                     hold = Rat::int(i64::from(n)).add(wait).ok().and_then(Dur::from_bars);
-                    if let Effect::Calls(cs) = &effect {
+                    // (the calls under a performed guard too: the release is the fire's, whatever decided it)
+                    if let Effect::Calls(cs) = effect.base() {
                         undo.extend(cs.iter().map(|c| {
                             let mut p = c.params.clone();
                             if let JsonValue::Object(o) = &mut p {
