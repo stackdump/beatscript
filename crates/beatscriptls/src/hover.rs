@@ -133,6 +133,22 @@ fn word_markdown(a: &Analysis, i: usize, env: &EnvNames) -> Option<String> {
     if crate::refs::is_gen_head(w) && matches!(next, Some(Tok::Word(_))) {
         return Some(format!("{}\n\na call of the seeded generator (an engine call): the program it prints for the genre, the seed and the rest, pinned by its CID; `section=` and `part=` say which piece of it this is", code("gen@2 GENRE seed=N [bpm=B] [key=K] [length=short|standard|long] [section=NAME] [part=ROLE]")));
     }
+    // a macro line: its head, and the id after it (macros.rs)
+    let line_head = |p: Option<&Tok>| matches!(p, None | Some(Tok::Newline | Tok::Colon | Tok::LBrace));
+    if let Some(v) = djlive::macros::head_version(w).filter(|_| line_head(prev) && matches!(next, Some(Tok::Word(_)))) {
+        return Some(format!(
+            "{}\n\nfires an entry of the DJ macro catalogue ({}) on a deck's bar line: the registry's `effects fire`. A bare `macro` is macro@1; the `macros` list has every id",
+            code("macro ID on A [over N bars]"),
+            djlive::macros::head_text(v)
+        ));
+    }
+    if let Some(Tok::Word(h)) = prev {
+        if let (Some(v), true) = (djlive::macros::head_version(h), line_head(if i >= 2 { Some(&t[i - 2].tok) } else { None })) {
+            if let Ok(e) = djlive::macros::find(v, w) {
+                return Some(lang::macro_doc(e));
+            }
+        }
+    }
     if next == Some(&Tok::LParen) {
         if let Some(c) = lang::call(w) {
             return Some(format!("{}\n\n{}", code(&c.label()), c.doc));

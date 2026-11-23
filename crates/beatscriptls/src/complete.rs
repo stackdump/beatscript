@@ -391,6 +391,31 @@ fn line_items(deck: bool) -> Vec<Item> {
     v
 }
 
+/// What comes next on a macro line, after its head: an id of the version's table, then `on` (a deck) and `over` (whole bars), each
+/// once, in either order.
+fn macro_items(rest: &[djlive::lex::Token], version: u32) -> Vec<Item> {
+    let Some(table) = djlive::macros::table(version) else { return Vec::new() };
+    if rest.is_empty() {
+        return table.iter().map(|e| Item::new(e.id, kind::ENUM_MEMBER, 0).detail(format!("{} · {}", e.category, e.family)).doc(lang::macro_doc(e))).collect();
+    }
+    let words: Vec<&str> = rest.iter().filter_map(word_of).collect();
+    if words.last() == Some(&"on") {
+        return ["A", "B"].iter().map(|d| Item::new(*d, kind::FIELD, 0).detail("the deck it fires on")).collect();
+    }
+    if words.last() == Some(&"over") {
+        return Vec::new();
+    }
+    let mut v = Vec::new();
+    if !words.contains(&"on") {
+        v.push(Item::new("on", kind::KEYWORD, 0).detail("the deck it fires on").snippet("on ${1|A,B|}"));
+    }
+    let own = table.iter().find(|e| Some(&e.id) == words.first()).is_some_and(|e| e.length == djlive::macros::Length::Own);
+    if !words.contains(&"over") && !own {
+        v.push(Item::new("over", kind::KEYWORD, 1).detail("how many whole bars").snippet("over ${1:4} bars"));
+    }
+    v
+}
+
 /// `gen@2`, the seeded generator's call, as an item: `what` says which piece of its program the place takes, `tail` the names
 /// the snippet goes on with.
 fn gen_item(rank: u8, what: &str, example: &str, tail: &str) -> Item {
@@ -676,6 +701,12 @@ fn context_items(a: &Analysis, p: &Partial, at: usize, env: &EnvNames) -> Vec<It
     if head == "wire" && matches!(last, Some(Tok::Arrow)) || (head == "wire" && toks.len() == 1) {
         let out = toks.len() == 1;
         return a.symbols.symbols.iter().filter(|s| s.kind == Kind::Def).map(|s| Item::new(s.name.clone(), kind::FUNCTION, 0).detail(format!("def {}{}", s.name, s.detail)).snippet(format!("{}.{}", s.name, if out { "out" } else { "$1" }))).collect();
+    }
+    // a macro line (`macro riser on A over 8 bars`, after `control:` or a time word's colon too): the ids of its version, then
+    // `on` and a deck, `over`
+    let mstart = toks.iter().rposition(|t| t.tok == Tok::Colon).map_or(0, |c| c + 1);
+    if let Some(v) = toks.get(mstart).and_then(word_of).and_then(djlive::macros::head_version) {
+        return macro_items(&toks[mstart + 1..], v);
     }
     let present: BTreeSet<String> = toks.windows(2).filter(|w| w[1].tok == Tok::Eq).filter_map(|w| word_of(&w[0]).map(str::to_string)).collect();
     if head == "do" || (djlive::parse::sugar_noun(head).is_some() && head != "key" && !toks.iter().any(|t| t.tok == Tok::Colon)) {

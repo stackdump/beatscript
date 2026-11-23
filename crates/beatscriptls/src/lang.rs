@@ -127,6 +127,19 @@ pub fn role_doc(role: &str) -> &'static str {
     }
 }
 
+/// What a macro of the catalogue is and does (completion and hover): its category, family and length.
+pub fn macro_doc(e: &djlive::macros::MacroEntry) -> String {
+    use djlive::macros::Length;
+    let len = match e.length {
+        Length::Bars(n) => format!("runs `over N bars` (1 to {}), {n} when the line says none", djlive::macros::MAX_BARS),
+        Length::Sweep(n) => format!("a one-shot that rises over `over N bars`, {n} when the line says none"),
+        Length::Held(n) => format!("a one-shot held `over N bars` and let go, {n} when the line says none"),
+        Length::Own => "a one-shot that runs its own length: no `over`".to_string(),
+    };
+    let net = if e.needs_net { "; works a net deck's parts" } else { "" };
+    format!("**{}** ({}, {}): {len}{net}. `macro {} on A`", e.label, e.category, e.family, e.id)
+}
+
 /// What a control word does on a `master:` or deck line.
 pub fn action_doc(w: &str) -> &'static str {
     match w {
