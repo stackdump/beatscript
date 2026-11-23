@@ -213,14 +213,43 @@ pub fn read_from_line(line: &str) -> Option<(String, Option<String>)> {
     })
 }
 
-/// A comment that is provenance, `# from: <call> -> <cid>`, as a save keeps it in `meta.based_on`: `<call> -> <cid>`. None for any
-/// other comment, and for a `# from:` line that names no pin (no ` -> ` and a CID after it): a line that pins nothing is a comment
-/// like any other, so the save, the JSON-LD's `isBasedOn` and lineage all leave it out (docs/beatscript/ext-ffi.md, "Saved").
-pub fn vendored_line(line: &str) -> Option<String> {
-    match read_from_line(line)? {
-        (call, Some(cid)) => Some(format!("{call} -> {cid}")),
-        _ => None,
+/// A comment that is provenance, read back as (the call, the CID that pins it) (docs/beatscript/ext-ffi.md, "Saved"):
+///
+/// - eject's line, `# from: <call> -> <cid>`;
+/// - the line expand writes over a section it borrowed from a stored program, `# from <cid>.<section>[.<role>]` (no colon: the
+///   reference names its own pin).
+///
+/// A call that names a stored program (`<cid>`, `<cid>.<section>`, ...) must be pinned by that program, so a line names one
+/// program at most. Any number of `#` may open it. None for every other comment: a `# from:` line with no pin, prose, an
+/// expansion's `# from seed(...)` or `# from template(...)` line (their pins are not written).
+fn pinned(line: &str) -> Option<(String, String)> {
+    let body = line.trim().strip_prefix('#')?.trim_start_matches('#').trim_start();
+    let (call, cid) = if let Some(rest) = body.strip_prefix("from:") {
+        let (call, cid) = rest.trim().rsplit_once(" -> ")?;
+        (call.trim(), cid.trim())
+    } else {
+        let r = body.strip_prefix("from ")?.trim();
+        let (lead, tail) = r.split_once('.')?;
+        let word = |w: &str| !w.is_empty() && w.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
+        if !tail.split('.').all(word) {
+            return None;
+        }
+        (r, lead)
+    };
+    if call.is_empty() || !crate::stored::is_cid(cid) {
+        return None;
     }
+    let lead = call.split('.').next().unwrap_or("");
+    if crate::stored::is_cid(lead) && lead != cid {
+        return None;
+    }
+    Some((call.to_string(), cid.to_string()))
+}
+
+/// A comment that is provenance ([`pinned`]), as a save keeps it in `meta.based_on`: `<call> -> <cid>`. None for any other
+/// comment, so the save, the JSON-LD's `isBasedOn` and lineage all leave it out.
+pub fn vendored_line(line: &str) -> Option<String> {
+    pinned(line).map(|(call, cid)| format!("{call} -> {cid}"))
 }
 
 /// The provenance lines among the comments of `src` ([`vendored_line`]), in the order they are written, each once: what a save
@@ -319,8 +348,8 @@ pub struct Basis {
 }
 
 /// What a program is based on, from its canonical text and its comments (`Compiled.notes`, or a stored program's `meta.based_on`
-/// lines as `from: <call> -> <cid>`): the calls and borrows it makes, then the ones it vendored, each once (a `# from:` line with
-/// no pin is not one: [`vendored_line`]). Resolving a `gen` call needs the generator (none: its CID is left out). The provenance a
+/// lines as `from: <call> -> <cid>`): the calls and borrows it makes, then the ones it vendored, each once (only a comment that
+/// is provenance with its pin counts: [`pinned`]). Resolving a `gen` call needs the generator (none: its CID is left out). The provenance a
 /// program's JSON-LD carries as `isBasedOn` (progld.rs) and lineage counts.
 pub fn based_on(text: &str, notes: &[String]) -> Vec<Basis> {
     let mut out: Vec<Basis> = Vec::new();
@@ -342,7 +371,7 @@ pub fn based_on(text: &str, notes: &[String]) -> Vec<Basis> {
         out.push(Basis { call: cid.clone(), cid: Some(cid), how: "borrowed" });
     }
     for n in notes {
-        if let Some((call, Some(cid))) = read_from_line(&format!("# {n}")) {
+        if let Some((call, cid)) = pinned(&format!("# {n}")) {
             let cid = Some(cid);
             if !out.iter().any(|b| b.call == call && b.cid == cid) {
                 out.push(Basis { call, cid, how: "vendored" });
@@ -363,8 +392,17 @@ mod provenance_tests {
         let call = "gen@2 techno seed=42 section=drop part=bass";
         assert_eq!(vendored_line(&format!("# from: {call} -> {PIN}")), Some(format!("{call} -> {PIN}")));
         assert_eq!(vendored_line(&format!("    #   from:   {call}   ->   {PIN}  ")), Some(format!("{call} -> {PIN}")), "spacing around the parts");
+        assert_eq!(vendored_line(&format!("## from: {call} -> {PIN}")), Some(format!("{call} -> {PIN}")), "as the notes read it: any number of `#`");
         // no pin, a pin that is no CID, prose, an expansion's own `# from seed(...)` line, a header line
         for l in [format!("# from: {call}"), format!("# from: {call} -> zNOTaCID"), "# from: my friend's idea".into(), "# from seed(techno, 42)[17..20]".into(), format!("#! from: {call} -> {PIN}"), "# from:".into()] {
+            assert_eq!(vendored_line(&l), None, "{l}");
+        }
+        // a borrow names its own pin: expand's line over a borrowed section counts, and a borrow pinned by another program does not
+        let other = "z4EBG9j9np3XWihrjc8J6Pm3UaJtbMRqxCyT5QtXK87KVFexdQh";
+        assert_eq!(vendored_line(&format!("# from {PIN}.drop")), Some(format!("{PIN}.drop -> {PIN}")));
+        assert_eq!(vendored_line(&format!("  # from {PIN}.drop.bass")), Some(format!("{PIN}.drop.bass -> {PIN}")));
+        assert_eq!(vendored_line(&format!("# from: {PIN}.drop -> {PIN}")), Some(format!("{PIN}.drop -> {PIN}")));
+        for l in [format!("# from: {PIN}.drop -> {other}"), format!("# from: {PIN} -> {other}"), format!("# from {PIN}"), format!("# from {PIN}.drop and more"), format!("# from {PIN}..drop"), "# from zNOTaCID.drop".into()] {
             assert_eq!(vendored_line(&l), None, "{l}");
         }
     }
