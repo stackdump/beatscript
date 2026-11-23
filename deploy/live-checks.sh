@@ -47,25 +47,25 @@ V=${2:?usage: deploy/live-checks.sh <public url> <btwserve version, e.g. btwserv
 for i in $(seq 1 30); do command curl -s -m 5 $U/healthz | grep -q $V && break; sleep 2; done
 # (shown on stderr without `tee /dev/stderr`, which reopens a redirected stderr file and truncates the log)
 HZ=$(curl -s -m 10 $U/healthz); printf '%s\n' "$HZ" >&2; printf '%s' "$HZ" | grep -q $V
-for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /embed.js /js/embed-player.js; do
+for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /embed.js /js/embed-player.js /radio /js/station.js /js/station-model.js; do
   c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U$p); echo "$p $c"; test "$c" = 200
 done
-for p in /grammar.css /lineage.css /mcp.css /card/card.css /css/btw.css /docs/assets/docs.css /css/embed.css; do
+for p in /grammar.css /lineage.css /mcp.css /card/card.css /css/btw.css /docs/assets/docs.css /css/embed.css /css/station.css; do
   c=$(curl -s -o /dev/null -m 20 -w '%{http_code} %{content_type}' $U$p); echo "$p $c"
   case "$c" in '200 text/css'*) ;; *) echo "$p: want 200 text/css"; exit 1;; esac
 done
-for p in / /docs/ /docs/cheatsheet /docs/found-phrases /docs/forms /themes /phrasebook /schema /mcp /grammar /authorship /privacy; do
+for p in / /docs/ /docs/cheatsheet /docs/found-phrases /docs/forms /themes /phrasebook /schema /mcp /grammar /authorship /privacy /radio; do
   if curl -s -m 20 $U$p | grep -qiE '<style| style='; then echo "$p has an inline style"; exit 1; fi
 done
-echo 'no inline styles on / /docs/ /docs/cheatsheet /docs/found-phrases /docs/forms /themes /phrasebook /schema /mcp /grammar /authorship /privacy'
+echo 'no inline styles on / /docs/ /docs/cheatsheet /docs/found-phrases /docs/forms /themes /phrasebook /schema /mcp /grammar /authorship /privacy /radio'
 # --- wave 1 / authorship (from wave2-deploy-beatscript.sh) ---
 A=$(curl -s -m 20 $U/authorship)
 curl -s -o /dev/null -m 20 -w '%{content_type}' $U/authorship | grep -q '^text/html'; echo '/authorship is text/html'
 printf '%s' "$A" | grep -q "prompts alone don't make you its author"; printf '%s' "$A" | grep -q 'href="https://www.copyright.gov/ai/"'; printf '%s' "$A" | grep -q 'This is plain language, not legal advice.'; echo '/authorship: the approved text, its source and the disclaimer'
 curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/authorship</loc>"; echo 'sitemap lists /authorship'
 curl -s -m 20 $U/llms.txt | grep -q "$U/authorship"; echo 'llms.txt lists /authorship'
-for p in / /docs/ /grammar /schema /mcp /ontology/ /privacy /delete-account; do curl -s -m 20 $U$p | grep -q 'href="/authorship"' || { echo "$p: no link to /authorship"; exit 1; }; done
-echo 'the footer links /authorship on / /docs/ /grammar /schema /mcp /ontology/ /privacy /delete-account'
+for p in / /docs/ /grammar /schema /mcp /ontology/ /privacy /delete-account /radio; do curl -s -m 20 $U$p | grep -q 'href="/authorship"' || { echo "$p: no link to /authorship"; exit 1; }; done
+echo 'the footer links /authorship on / /docs/ /grammar /schema /mcp /ontology/ /privacy /delete-account /radio'
 C=$(curl -s -m 20 $U/sitemap.xml | grep -o '/p/z[1-9A-HJ-NP-Za-km-z]*' | head -1)
 if [ -n "$C" ]; then curl -s -m 20 $U$C.jsonld | grep -q "\"usageInfo\": \"$U/authorship\""; echo "$C.jsonld: usageInfo -> /authorship"; else echo 'no stored public program in the sitemap: usageInfo not checked live'; fi
 mcp() { curl -s -m 30 -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$1" $U/mcp; }

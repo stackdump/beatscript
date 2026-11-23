@@ -83,8 +83,8 @@ try {
   await tap('#btn-menu');
   await sleep(150);
   const items = (await boxes('#tools .tb')).filter((b) => b.shown);
-  check(`the menu lists the eight tools, each with its label, 44 px high, on screen (${items.map((b) => b.text.replace(/\s+/g, ' ')).join(', ')})`,
-    items.length === 8 && items.every((b) => b.h >= 44 && b.x >= 0 && b.right <= W + 0.5 && /[a-z]{2,}/.test(b.text)), JSON.stringify(items.map((b) => [b.id, b.text, b.h])));
+  check(`the menu lists the eleven tools, each with its label, 44 px high, on screen (${items.map((b) => b.text.replace(/\s+/g, ' ')).join(', ')})`,
+    items.length === 11 && items.every((b) => b.h >= 44 && b.x >= 0 && b.right <= W + 0.5 && /[a-z]{2,}/.test(b.text)), JSON.stringify(items.map((b) => [b.id, b.text, b.h])));
   await shot('menu');
   await tap('#btn-menu');
   await sleep(100);
