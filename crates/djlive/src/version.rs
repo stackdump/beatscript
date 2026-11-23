@@ -192,6 +192,18 @@ pub fn legacy_canonical(canonical: &str) -> &str {
     canonical.strip_prefix(CANONICAL_HEAD).unwrap_or(canonical)
 }
 
+/// `src` with its version line taken out of its header block (the line and its newline), wherever in the block it is; `src`
+/// itself when it has none or one that does not read.
+pub fn without_version_line(src: &str) -> String {
+    match find(src) {
+        Ok(Some(l)) => {
+            let end = if src[l.span.end..].starts_with('\n') { l.span.end + 1 } else { l.span.end };
+            format!("{}{}", &src[..l.span.start], &src[end..])
+        }
+        _ => src.to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -236,5 +248,8 @@ mod tests {
         assert_eq!(legacy_canonical("#! beatscript 2\ntempo 120\n"), "tempo 120\n");
         assert_eq!(legacy_canonical("tempo 120\n"), "tempo 120\n");
         assert_eq!(upgrade_canonical(&upgrade_canonical("tempo 1\n")), upgrade_canonical("tempo 1\n"));
+        assert_eq!(without_version_line("#! name: a\n#! beatscript 2\ntempo 1\n"), "#! name: a\ntempo 1\n");
+        assert_eq!(without_version_line("#! btw 1\ntempo 1\n"), "tempo 1\n");
+        assert_eq!(without_version_line("tempo 1\n"), "tempo 1\n");
     }
 }

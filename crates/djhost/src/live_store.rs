@@ -123,7 +123,11 @@ impl Object {
 
     /// The `.beatscript` file's text: the header, then the program.
     pub fn to_file(&self) -> String {
-        let mut s = String::from("#! btw 1\n");
+        // the version line first: a BeatScript 2 program's own (taken off its text, said once), else the old spelling's, as
+        // every file this wrote before the rename began (djlive::version)
+        let v2 = djlive::version::of_source(&self.text) == djlive::version::Version::V2;
+        let body = if v2 { djlive::version::without_version_line(&self.text) } else { self.text.clone() };
+        let mut s = format!("{}\n", if v2 { djlive::version::LINE } else { djlive::version::LEGACY_LINE });
         s.push_str(&format!("#! name: {}\n", self.name.replace('\n', " ")));
         s.push_str(&format!("#! license: {}\n", self.rights.license.id()));
         s.push_str(&format!("#! visibility: {}\n", self.rights.visibility.id()));
@@ -137,7 +141,7 @@ impl Object {
             s.push_str(&format!("#! credit: {} | {} | {} | {}\n", c.cid, c.author.clone().unwrap_or_default(), c.license.id(), c.name.clone().unwrap_or_default()));
         }
         s.push_str(&self.links.header_text());
-        s.push_str(&self.text);
+        s.push_str(&body);
         s
     }
 
@@ -183,7 +187,11 @@ impl Object {
                 _ => {}
             }
         }
-        let text = file[body_from..].to_string();
+        // a BeatScript 2 file's version line is part of its program (djlive::version), so it stays with the text
+        let text = match djlive::version::of_source(&file[..body_from]) {
+            djlive::version::Version::V2 => format!("{}\n{}", djlive::version::LINE, &file[body_from..]),
+            djlive::version::Version::V1 => file[body_from..].to_string(),
+        };
         Ok((Object { name, text, rights: Rights { license, visibility, author, forked_from, credits }, links: Links::new(genre, tags) }, file[..body_from].to_string()))
     }
 }

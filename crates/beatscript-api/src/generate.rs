@@ -23,8 +23,10 @@ use crate::snapshot::web_env;
 /// `#! generator:` names this; bump the version whenever the same inputs would print a different program.
 /// 2: the chords and arps are Roman numerals, read in the key in force, so one `key` line moves the whole song; the pad
 /// voice-leads; a stored program keeps its text and CID.
+/// 3: the program 2 prints, in BeatScript 2: `#! beatscript 2` first (djlive::version), so the same music has its new CID.
+/// 2 prints what it always printed (BeatScript 1), so every `gen@2` pin keeps its CID.
 pub const GENERATOR: &str = "seeded";
-pub const GENERATOR_VERSION: u32 = 2;
+pub const GENERATOR_VERSION: u32 = 3;
 
 /// What a caller may set. Empty / `None` fields take the genre's own.
 #[derive(Clone, Debug, Default)]
@@ -336,6 +338,11 @@ fn cutoff(open: f64) -> i64 {
 
 /// Build the program.
 pub fn generate(req: &GenRequest) -> Result<Generated, String> {
+    generate_as(req, GENERATOR_VERSION)
+}
+
+/// What `seeded@version` prints for `req`, for the versions this generator's body is (2 and 3: 3 is 2 in BeatScript 2).
+fn generate_as(req: &GenRequest, version: u32) -> Result<Generated, String> {
     let t = BeatsTables::shared();
     let genre = if req.genre.trim().is_empty() { "techno".to_string() } else { req.genre.trim().to_lowercase() };
     let def = t.genres.get(&genre).filter(|d| !d.kick.is_empty()).ok_or_else(|| format!("unknown genre {genre:?}; one of: {}", genres().join(", ")))?;
@@ -547,8 +554,11 @@ pub fn generate(req: &GenRequest) -> Result<Generated, String> {
 
     let name = generate_track_name(&genre, sv as f64);
     let mut text = String::new();
+    if version >= 3 {
+        let _ = writeln!(text, "{}", djlive::version::LINE);
+    }
     let _ = writeln!(text, "#! name: {name}");
-    let _ = writeln!(text, "#! generator: {GENERATOR}@{GENERATOR_VERSION}");
+    let _ = writeln!(text, "#! generator: {GENERATOR}@{version}");
     let _ = writeln!(text, "#! seed: {seed_text}");
     let _ = writeln!(text, "#! genre: {genre}");
     let _ = writeln!(text, "#! length: {length}");
@@ -557,11 +567,12 @@ pub fn generate(req: &GenRequest) -> Result<Generated, String> {
 }
 
 /// The seeded generator as the language calls it: `gen@N genre seed=...` (djlive::gen, docs/beatscript/ext-ffi.md) is the program
-/// `seeded@N` prints. Every version it ever printed stays callable: 1 is [`crate::generate_v1`], frozen, 2 is [`generate`].
+/// `seeded@N` prints. Every version it ever printed stays callable: 1 is [`crate::generate_v1`], frozen, 2 is the program 3
+/// prints without its version line (BeatScript 1, as it always printed), 3 is [`generate`].
 pub struct Seeded;
 
 /// The versions `gen@N` can name, oldest first.
-pub const VERSIONS: [u32; 2] = [1, GENERATOR_VERSION];
+pub const VERSIONS: [u32; 3] = [1, 2, GENERATOR_VERSION];
 
 impl djlive::gen::Generator for Seeded {
     fn name(&self) -> &str {
@@ -583,7 +594,7 @@ impl djlive::gen::Generator for Seeded {
     fn generate(&self, version: u32, r: &djlive::gen::GenRequest) -> Result<String, String> {
         match version {
             1 => crate::generate_v1::generate(&crate::generate_v1::GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }).map(|g| g.text),
-            GENERATOR_VERSION => generate(&GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }).map(|g| g.text),
+            2 | GENERATOR_VERSION => generate_as(&GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }, version).map(|g| g.text),
             v => Err(format!("{GENERATOR}@{v} is not one this build has ({})", VERSIONS.iter().map(|v| format!("{GENERATOR}@{v}")).collect::<Vec<_>>().join(", "))),
         }
     }
@@ -612,7 +623,7 @@ pub fn generate_version(version: u32, req: &GenRequest) -> Result<Generated, Str
             key: g.key,
             length: g.length,
         }),
-        GENERATOR_VERSION => generate(req),
+        2 | GENERATOR_VERSION => generate_as(req, version),
         v => Err(format!("{GENERATOR}@{v} is not one this build has ({})", VERSIONS.iter().map(|v| format!("{GENERATOR}@{v}")).collect::<Vec<_>>().join(", "))),
     }
 }

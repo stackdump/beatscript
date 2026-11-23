@@ -795,6 +795,18 @@ fn settle(diags: &mut Vec<Diagnostic>, lowered: &expand::Lowered, src: &str) {
     }
 }
 
+/// A program's notes: its comments, `#` off. BeatScript 2's version line is not one (it is part of the program: version.rs);
+/// BeatScript 1's `#! btw 1`, a comment then as now, still is, so nothing a BeatScript 1 program says moves.
+fn notes_of(comments: &[Span], src: &str) -> Vec<String> {
+    comments
+        .iter()
+        .map(|sp| sp.text(src))
+        .filter(|t| t.trim() != crate::version::LINE)
+        .map(|t| t.trim_start_matches('#').trim().to_string())
+        .filter(|n| !n.is_empty())
+        .collect()
+}
+
 /// The CID of a program's canonical text. The text says its version (version.rs): a BeatScript 2 canonical text (it starts
 /// `#! beatscript 2`) is hashed as `{"format":2,"text":...,"type":"beatscript"}`, and any other as BeatScript 1 always was,
 /// `{"format":1,"text":...,"type":"djrust.live"}`, so every CID made before the rename is the same CID.
@@ -923,7 +935,7 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
             c.cid = program_cid(&c.text);
             c.warnings = chk.diagnostics.clone();
             // the comments are the program's own, not the `# from seed(...)` lines of its expansion
-            c.notes = parsed.comments.iter().map(|sp| sp.text(src).trim_start_matches('#').trim().to_string()).filter(|n| !n.is_empty()).collect();
+            c.notes = notes_of(&parsed.comments, src);
             // the programs a reference drew on go with the program
             for (cid, text) in uses {
                 // (a generated program is no program a link need carry: the call makes it again)
@@ -1047,7 +1059,7 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
         sing: c.sing_lines,
         launches: crate::launch::Launches { table: lowered.launches.clone(), scenes: Default::default() },
         flat_lines: lowered.globals.iter().flat_map(|f| std::iter::once(f.span).chain(f.via.iter().copied())).collect(),
-        notes: parsed.comments.iter().map(|sp| sp.text(src).trim_start_matches('#').trim().to_string()).filter(|n| !n.is_empty()).collect(),
+        notes: notes_of(&parsed.comments, src),
     };
     // F12: the assertions. A name that is nowhere is an error; a false static one is one too when enforcing; a level one is a note
     // (a scene is not judged: its assertions are the program's, about the song as written)

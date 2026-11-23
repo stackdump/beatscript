@@ -582,7 +582,7 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
             controls.push(c);
         }
         let k = key_of(&tl.comp);
-        let sp = tl.comp.source.lines().find(|l| l.trim_start().starts_with('#')).map(|l| l.trim_start_matches(['#', '!', ' ']).trim().to_string());
+        let sp = tl.comp.source.lines().find(|l| l.trim_start().starts_with('#') && l.trim() != crate::version::LINE).map(|l| l.trim_start_matches(['#', '!', ' ']).trim().to_string());
         report.tracks.push(SetTrack {
             cid: resolved[i].cid.clone(),
             label: env.snippets.and_then(|s| s.label(&resolved[i].cid)).or_else(|| tl.comp.notes.first().cloned()).or(sp).unwrap_or_else(|| djengine::rights::short_cid(&resolved[i].cid)),

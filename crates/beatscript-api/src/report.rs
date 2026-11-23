@@ -287,6 +287,8 @@ pub fn check_report_with(text: &str, expand: bool) -> JsonValue {
             ("diagnostics", diagnostics),
             ("cid", JsonValue::Null),
             ("canonical", JsonValue::Null),
+            ("version", int(djlive::version::of_source(text).number() as usize)),
+            ("renamed_cid", JsonValue::Null),
             ("nets", JsonValue::Object(JsonObject::new())),
             ("song_nets", JsonValue::Null),
             ("tempo", JsonValue::Null),
@@ -342,6 +344,10 @@ pub fn check_report_with(text: &str, expand: bool) -> JsonValue {
         ("diagnostics", diagnostics),
         ("cid", JsonValue::str(c.cid.clone())),
         ("canonical", JsonValue::str(c.text.clone())),
+        // the language version (djlive::version): 2 for a text that says `#! beatscript 2`, 1 for the old spelling; and the CID
+        // the program has in the other version (a BeatScript 1 program's BeatScript 2 CID, and the other way round)
+        ("version", int(djlive::version::of_canonical(&c.text).number() as usize)),
+        ("renamed_cid", JsonValue::str(djlive::compile::renamed_cid(&c.text))),
         ("nets", str_map(&c.net_cids())),
         ("song_nets", song_nets_json(&c)),
         ("tempo", opt_num(c.tempo)),
@@ -399,9 +405,12 @@ pub fn check_json_with(text: &str, expand: bool) -> String {
     check_report_with(text, expand).js_stringified()
 }
 
-/// `fmt(text)`: the program formatted (`text`: the canonical form with its `#!` header lines, comments and the blank lines
-/// between blocks kept, the one `eval`, `load`, `share`, `queue` and `push_private` put in front of the user), the canonical
-/// text (`canonical`: no comments, what the CID is of), the CID, and the comments. Formatting never changes the CID.
+/// `fmt(text)`: the program formatted and in BeatScript 2 (`text`: the canonical form with its `#!` header lines, comments and
+/// the blank lines between blocks kept, and the version line `#! beatscript 2` first; the one the editor's fmt, the `fmt` tool
+/// and `beatscript fmt` put in front of the user), its canonical text (`canonical`: no comments, what the CID is of), its CID
+/// (`cid`), its `version` (2), and the comments. A BeatScript 1 text (`#! btw 1`, or no version line) is upgraded, which is a
+/// new CID for the same program: `from_cid` is then the CID of the text as given. A BeatScript 2 text formats to its own CID.
+/// [`format_text`] formats without upgrading.
 pub fn fmt_json(text: &str) -> String {
     let env = web_env().env();
     let ix = Utf16Index::new(text);
@@ -409,14 +418,22 @@ pub fn fmt_json(text: &str) -> String {
     let diagnostics = diagnostics_json(&chk.diagnostics, text, &ix);
     let v = match chk.compiled {
         Some(c) => {
+            let formatted = upgrade_text(text);
+            // the program the text upgrades to: the same statements with the version line first
+            let canonical = if formatted.is_some() { djlive::version::upgrade_canonical(&c.text) } else { c.text.clone() };
+            let cid = djlive::compile::program_cid(&canonical);
             let mut fields = vec![
                 ("ok", JsonValue::Bool(true)),
-                ("canonical", JsonValue::str(c.text.clone())),
-                ("cid", JsonValue::str(c.cid.clone())),
+                ("canonical", JsonValue::str(canonical.clone())),
+                ("cid", JsonValue::str(cid.clone())),
+                ("version", int(djlive::version::of_canonical(&canonical).number() as usize)),
                 ("comments", strs(c.notes.iter().cloned())),
                 ("diagnostics", diagnostics),
             ];
-            if let Some(t) = format_text(text) {
+            if cid != c.cid {
+                fields.push(("from_cid", JsonValue::str(c.cid.clone())));
+            }
+            if let Some(t) = formatted {
                 fields.push(("text", JsonValue::str(t)));
             }
             JsonValue::Object(JsonObject::from_pairs(fields))
@@ -426,8 +443,15 @@ pub fn fmt_json(text: &str) -> String {
     v.js_stringified()
 }
 
-/// The text formatted (djlive::format: canonical, with the `#!` headers, comments and blank lines kept), or None when it does
-/// not read. Parses and prints only: no CID is made, nothing is compiled, so it is cheap and says nothing about the program.
+/// The text formatted and in BeatScript 2 (djlive::format::format_upgrading), or None when it does not read: what `fmt` gives.
+pub fn upgrade_text(text: &str) -> Option<String> {
+    djlive::format::format_upgrading(text, &web_env().env()).ok()
+}
+
+/// The text formatted in the version it is in (djlive::format: canonical, with the `#!` headers, comments and blank lines kept,
+/// a BeatScript 1 text left BeatScript 1, so its CID never moves), or None when it does not read. Parses and prints only: no CID
+/// is made, nothing is compiled, so it is cheap and says nothing about the program. The server's autoformat uses it: nothing
+/// upgrades a program silently.
 pub fn format_text(text: &str) -> Option<String> {
     djlive::format::format(text, &web_env().env()).ok()
 }

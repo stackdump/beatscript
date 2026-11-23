@@ -26,7 +26,7 @@ pub mod utf16;
 pub use cheatsheet::cheatsheet;
 pub use generate::{generate, generate_json, GenRequest, Generated};
 pub use highlight::{highlight_json, highlight_json_utf16};
-pub use report::{check_json, check_json_with, check_report, check_report_with, diagnostic_json, docs_json, expand_json, fmt_json, format_text, generation_json, instruments_json, nets_json};
+pub use report::{check_json, check_json_with, check_report, check_report_with, diagnostic_json, docs_json, expand_json, fmt_json, format_text, generation_json, instruments_json, nets_json, upgrade_text};
 pub use same::{same_as_json, same_as_json_pair, same_as_report};
 pub use share::{open_json, share_json, DEFAULT_ORIGIN};
 pub use snapshot::{web_env, WebEnv};
