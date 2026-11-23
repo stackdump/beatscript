@@ -502,11 +502,12 @@ pub fn shape_meta(v: &Value) -> Value {
     let mut m = Map::new();
     m.insert("license".into(), json!(s_of(v, "license")));
     m.insert("visibility".into(), json!(s_of(v, "visibility")));
-    for k in ["name", "composed_by", "forked_from"] {
+    // `derivation: "renamed"` (and when): the BeatScript 2 twin of the program `forked_from` names
+    for k in ["name", "composed_by", "forked_from", "derivation"] {
         put_s(&mut m, k, s_of(v, k), true);
     }
     put_strs(&mut m, "credits", strs_of(v, "credits"));
-    for k in ["prompt_sha256", "author", "created", "source"] {
+    for k in ["prompt_sha256", "author", "created", "source", "renamed_at"] {
         put_s(&mut m, k, s_of(v, k), true);
     }
     Value::Object(m)
@@ -861,11 +862,17 @@ async fn get_program(State(st): St, req: Request) -> Response<Body> {
         return ApiError::new(404, "not_found", "no such program").response();
     }
     let (st2, cid2) = (st.clone(), cid.clone());
-    let Some((text, meta)) = tokio::task::spawn_blocking(move || st2.program(&cid2)).await.ok().flatten() else {
+    // the rename: an old program still answers with its own text (it is immutable), and names its BeatScript 2 twin
+    let found = tokio::task::spawn_blocking(move || st2.program(&cid2).map(|p| (p, st2.app.store.renamed_to(&cid2), st2.app.store.renamed_from(&cid2)))).await.ok().flatten();
+    let Some(((text, meta), renamed_to, renamed_from)) = found else {
         return ApiError::new(404, "not_found", format!("no program {cid} here; PUT it first")).response();
     };
     let etag = format!("\"{cid}\"");
-    let b = Response::builder().header(header::CACHE_CONTROL, "public, max-age=31536000, immutable").header(header::ETAG, &etag);
+    let mut b = Response::builder().header(header::CACHE_CONTROL, "public, max-age=31536000, immutable").header(header::ETAG, &etag);
+    let link = renamed_link(&st.public_url, renamed_to.as_deref(), renamed_from.as_deref());
+    if let Some(l) = &link {
+        b = b.header(header::LINK, l);
+    }
     if req.headers().get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()) == Some(etag.as_str()) {
         return b.status(304).body(crate::content::nothing()).unwrap();
     }
@@ -877,11 +884,32 @@ async fn get_program(State(st): St, req: Request) -> Response<Body> {
             .body(go_body(beatscript_file(&cid, &text, &meta)))
             .unwrap();
     }
-    let mut r = json_resp(200, &json!({"cid": cid, "text": text, "meta": meta}));
+    let mut doc = json!({"cid": cid, "text": text, "meta": meta});
+    if let Some(y) = &renamed_to {
+        doc["renamed_to"] = json!(y);
+    }
+    if let Some(x) = &renamed_from {
+        doc["renamed_from"] = json!(x);
+    }
+    let mut r = json_resp(200, &doc);
     let h = r.headers_mut();
     h.insert(header::CACHE_CONTROL, "public, max-age=31536000, immutable".parse().unwrap());
     h.insert(header::ETAG, etag.parse().unwrap());
+    if let Some(l) = link.and_then(|l| l.parse().ok()) {
+        h.insert(header::LINK, l);
+    }
     r
+}
+
+/// The `Link` of a program with a twin: `rel="successor-version"` to the BeatScript 2 program an old one is renamed to,
+/// `rel="predecessor-version"` to the legacy program a BeatScript 2 one was renamed from (RFC 5829).
+fn renamed_link(origin: &str, to: Option<&str>, from: Option<&str>) -> Option<String> {
+    let origin = origin.trim_end_matches('/');
+    match (to, from) {
+        (Some(y), _) => Some(format!("<{origin}/api/programs/{y}>; rel=\"successor-version\"")),
+        (None, Some(x)) => Some(format!("<{origin}/api/programs/{x}>; rel=\"predecessor-version\"")),
+        _ => None,
+    }
 }
 
 /// The `{cid}` segment of /api/programs/{cid}, percent-decoded as Go's PathValue is.

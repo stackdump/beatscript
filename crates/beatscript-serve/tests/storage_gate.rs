@@ -54,7 +54,8 @@ fn cid_of(text: &str) -> String {
 /// Every file under src/ that writes to disk (outside its tests), how many write calls it has, and what it writes.
 /// Adding a write anywhere fails this test until it is listed here, with what it stores.
 const WRITERS: &[(&str, usize, &str)] = &[
-    ("gate.rs", 2, "programs/<cid>.json: the only program write (temp file + link(2)), after gate::admit"),
+    ("gate.rs", 2, "programs/<cid>.json: the only program write (temp file + link(2)), after gate::admit; a BeatScript 1 program's BeatScript 2 twin goes through the same write"),
+    ("migrate.rs", 5, "migrate-rename: the backup archive (outside the data dir, create_new, 0600), and the render cache's links and .meta copies for a twin (render/ only); the twins themselves go through gate::write_twin"),
     ("authsvc.rs", 5, "session.secret, tokens.json (sign-in): no programs"),
     ("cards.rs", 3, "the share-card PNG cache, keyed by an admitted stored program's CID: images, no program text"),
     ("compose/limits.rs", 5, "compose spend table and compose-<day>.jsonl (prompt hash and head, CID): no program text"),
@@ -111,8 +112,15 @@ fn every_write_site_is_known() {
         }
         let text = lines.join("\n");
         // a program is written by gate::write_program and nothing else
-        if rel != "gate.rs" {
+        if rel != "gate.rs" && rel != "migrate.rs" {
             assert!(!text.contains("hard_link("), "{rel}: link(2) is how a program is stored; only gate.rs may do it");
+        }
+        // migrate.rs links render files, never programs: its one link is in its render step
+        if rel == "migrate.rs" {
+            let at = lines.iter().position(|l| l.contains("hard_link(")).expect("migrate.rs links render files");
+            assert_eq!(lines.iter().filter(|l| l.contains("hard_link(")).count(), 1);
+            let within = lines[..at].iter().rev().find(|l| l.trim_start().starts_with("fn ") || l.trim_start().starts_with("pub fn "));
+            assert!(within.is_some_and(|l| l.contains("fn link_renders(")), "migrate.rs: its link is the render step's (link_renders), not a program write");
         }
         if text.contains("write_program(") && rel != "gate.rs" {
             assert!(text.contains("gate::admit(") || text.contains("admit_as("), "{rel} calls gate::write_program without gate::admit");
@@ -451,7 +459,7 @@ fn write_paths_refuse_what_is_not_cc() {
     assert_eq!(bad.len(), 1, "{bad:?}");
     assert_eq!(bad[0].0, "zARR.json");
     let n = std::fs::read_dir(&programs).unwrap().count();
-    assert_eq!(n, 4, "PLAIN, PLAIN2, PLAIN4 and the planted file");
+    assert_eq!(n, 7, "PLAIN, PLAIN2, PLAIN4, their BeatScript 2 twins and the planted file");
 }
 
 // ---------- the private relay ----------

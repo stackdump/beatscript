@@ -195,7 +195,8 @@ fn optional_line(m: &Map<String, Value>, k: &str, max: usize) -> Result<Option<S
 /// `added_at` is now.
 fn item_of(v: &Value, now: &str, extra: &[&str]) -> Result<Item, ApiError> {
     let Value::Object(m) = v else { return Err(ApiError::new(400, "bad_request", "an item is a JSON object {cid, title?, note?}")) };
-    let mut allowed = vec!["cid", "title", "note", "id", "added_at"];
+    // `renamed_from` is the server's (migrate-rename): a client that sends an item back as it got it keeps it
+    let mut allowed = vec!["cid", "title", "note", "id", "added_at", "renamed_from"];
     allowed.extend_from_slice(extra);
     for k in m.keys() {
         if !allowed.contains(&k.as_str()) {
@@ -212,7 +213,7 @@ fn item_of(v: &Value, now: &str, extra: &[&str]) -> Result<Item, ApiError> {
         None => format!("it_{}", rand_b64(9)),
     };
     let added_at = opt_str(m, "added_at")?.filter(|t| valid_time(t)).map(str::to_string).unwrap_or_else(|| now.to_string());
-    Ok(Item { id, cid: cid.to_string(), title: optional_line(m, "title", MAX_TITLE)?, added_at, note: optional_line(m, "note", MAX_NOTE)? })
+    Ok(Item { id, cid: cid.to_string(), title: optional_line(m, "title", MAX_TITLE)?, added_at, note: optional_line(m, "note", MAX_NOTE)?, renamed_from: opt_str(m, "renamed_from")?.filter(|c| valid_cid(c)).map(str::to_string) })
 }
 
 fn items_of(m: &Map<String, Value>, max: usize, now: &str) -> Result<Option<Vec<Item>>, ApiError> {

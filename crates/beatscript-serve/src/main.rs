@@ -33,6 +33,10 @@
 //!   -docs-src <dir>             the Go docs package (internal/btwsite/docs): api.md, assets/docs.css, assets/docs.js
 //!   -fallback <url>             the Go server, for every route not served here (e.g. http://127.0.0.1:18097)
 //!   -card-meta true             put the generic share card into / and /p (Go does once its card service is wired)
+//!
+//! Subcommands:
+//!   migrate-rename --data <dir> --backup <file.tar.gz> [--examples <dir>] [--dry-run] [--json]
+//!       the rename's data migration: every stored BeatScript 1 program gets its BeatScript 2 twin (migrate.rs)
 
 #[path = "../../beatscript-cli/src/render.rs"]
 #[allow(dead_code)]
@@ -54,6 +58,7 @@ mod opus;
 mod sched;
 mod service;
 mod store;
+mod migrate; // `beatscript-serve migrate-rename`: the BeatScript 1 -> 2 data migration
 // the phases of docs/RUST-SERVER.md §7, one module each; each has `routes(&AppState) -> Router` merged in main
 mod beta; // the Android beta sign-up (off unless -android-beta-url)
 mod public; // P2 + P3: info, site doc, assetlinks, instruments, context, programs, check, fmt, share, open, qr
@@ -961,6 +966,10 @@ async fn main() {
     if std::env::var_os(ontology::query::WORKER_ENV).is_some() {
         return ontology::worker_main(); // an /ontology/ query worker, started by this server
     }
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().map(String::as_str) == Some("migrate-rename") {
+        std::process::exit(migrate::main(&args[1..]));
+    }
     let cfg = match parse_config() {
         Ok(c) => c,
         Err(e) => {
@@ -1059,7 +1068,8 @@ async fn main() {
         public_url: cfg.public_url.clone(),
         hosts: beatscript_serve::playlists::Config::hosts_from(&cfg.public_url, &cfg.alt_origins, &cfg.legacy_hosts),
         limits: cfg.playlist_limits.clone(),
-        gate: beatscript_serve::playlists::ItemGate::new(cfg.programs.clone(), app.examples.list.iter().map(|e| e.cid.clone())),
+        // the examples by every CID they answer to (a BeatScript 2 example's legacy CID too: old playlists name it)
+        gate: beatscript_serve::playlists::ItemGate::new(cfg.programs.clone(), app.examples.list.iter().map(|e| e.cid.clone()).chain(app.store.example_cids())),
     };
     let (playlists, pl_warn) = beatscript_serve::playlists::Playlists::open(pl_cfg).expect("playlists dir");
     for w in pl_warn {

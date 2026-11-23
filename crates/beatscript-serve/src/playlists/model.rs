@@ -20,6 +20,10 @@ pub struct Item {
     pub added_at: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
+    /// The CID the item named before the rename (BeatScript 1), when `migrate-rename` pointed it at the program's
+    /// BeatScript 2 twin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renamed_from: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]

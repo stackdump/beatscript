@@ -7,6 +7,10 @@
 //!
 //! A CID that is unknown and one that is private get the same 404, so the answer does not tell a private program
 //! exists.
+//!
+//! The rename: the tree of a BeatScript 1 program whose BeatScript 2 twin may be shown answers 308 at the twin's tree
+//! ([`renamed_redirect`]), and a compare of two such programs at their twins' (not a compare of a program with its own twin).
+//! `/api/lineage/<cid>` answers for the CID it names (its root says `renamedTo`).
 
 use std::sync::Arc;
 
@@ -128,11 +132,48 @@ async fn serve_tree(st: Arc<Routes>, method: Method, cid: String, want: Want, va
     }
 }
 
-async fn tree(State(st): St, Path(cid): Path<String>, method: Method, h: HeaderMap) -> Response<Body> {
+/// A `308 Permanent Redirect` from the address of a BeatScript 1 program to the same address with its BeatScript 2 twin's CID
+/// (`path` with `from` replaced by `to`, the query kept): the store is append-only, so a twin once stored stays.
+pub fn renamed_redirect(method: &Method, path: &str, query: Option<&str>, from: &str, to: &str) -> Response<Body> {
+    permanent_redirect(method, &path.replacen(from, to, 1), query)
+}
+
+/// `308 Permanent Redirect` to `path` (the query kept), with Go's `http.Redirect` body.
+pub fn permanent_redirect(method: &Method, path: &str, query: Option<&str>) -> Response<Body> {
+    let mut loc = path.to_string();
+    if let Some(q) = query.filter(|q| !q.is_empty()) {
+        loc = format!("{loc}?{q}");
+    }
+    let body = if method == Method::GET { format!("<a href=\"{}\">Permanent Redirect</a>.\n\n", super::page::esc(&loc)) } else { String::new() };
+    let mut r = Response::new(Body::from(body));
+    *r.status_mut() = StatusCode::PERMANENT_REDIRECT;
+    let h = r.headers_mut();
+    h.insert(header::LOCATION, HeaderValue::from_str(&loc).unwrap_or(HeaderValue::from_static("/")));
+    h.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8"));
+    h.insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=86400"));
+    r
+}
+
+/// The twin a BeatScript 1 program's address redirects to, asked off the async threads.
+async fn twin_of(st: &Arc<Routes>, cid: &str) -> Option<String> {
+    if !super::is_cid(cid) {
+        return None;
+    }
+    let c = cid.to_string();
+    blocking(st, move |l| l.renamed_to(&c)).await.flatten()
+}
+
+async fn tree(State(st): St, Path(cid): Path<String>, method: Method, h: HeaderMap, uri: axum::http::Uri) -> Response<Body> {
+    if let Some(to) = twin_of(&st, &cid).await {
+        return renamed_redirect(&method, uri.path(), uri.query(), &cid, &to);
+    }
     serve_tree(st, method, cid, negotiate(&h), true).await
 }
 
-async fn tree_ld(State(st): St, Path(cid): Path<String>, method: Method) -> Response<Body> {
+async fn tree_ld(State(st): St, Path(cid): Path<String>, method: Method, uri: axum::http::Uri) -> Response<Body> {
+    if let Some(to) = twin_of(&st, &cid).await {
+        return renamed_redirect(&method, uri.path(), uri.query(), &cid, &to);
+    }
     serve_tree(st, method, cid, Want::Ld, false).await
 }
 
@@ -140,13 +181,21 @@ async fn api_tree(State(st): St, Path(cid): Path<String>, method: Method) -> Res
     serve_tree(st, method, cid, Want::Json, false).await
 }
 
-async fn compare(State(st): St, Path((a, b)): Path<(String, String)>, method: Method, h: HeaderMap) -> Response<Body> {
+async fn compare(State(st): St, Path((a, b)): Path<(String, String)>, method: Method, h: HeaderMap, uri: axum::http::Uri) -> Response<Body> {
     let (b, want, vary) = match b.strip_suffix(".jsonld") {
         Some(b) => (b.to_string(), Want::Ld, false),
         None => (b, negotiate(&h), true),
     };
     if !super::is_cid(&a) || !super::is_cid(&b) {
         return not_found(&st, &method, want);
+    }
+    // two old programs compare as their twins; a program and its own twin (the renamed edge's compare) stay as they are
+    let (ta, tb) = (twin_of(&st, &a).await, twin_of(&st, &b).await);
+    if ta.as_deref() != Some(b.as_str()) && tb.as_deref() != Some(a.as_str()) && (ta.is_some() || tb.is_some()) {
+        let (na, nb) = (ta.unwrap_or_else(|| a.clone()), tb.unwrap_or_else(|| b.clone()));
+        let suffix = if want == Want::Ld && !vary { ".jsonld" } else { "" };
+        let path = format!("/p/{na}/compare/{nb}{suffix}");
+        return permanent_redirect(&method, &path, uri.query());
     }
     let Some(r) = blocking(&st, move |l| l.compare(&a, &b)).await else { return busy(&method) };
     let Some((na, nb, c)) = r else { return not_found(&st, &method, want) };

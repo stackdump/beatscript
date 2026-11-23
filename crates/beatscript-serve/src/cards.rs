@@ -512,6 +512,16 @@ impl Cards {
         }
     }
 
+    /// The 308 to the BeatScript 2 twin's address, for an address (`/p/<cid>[.jsonld|.beatscript]`, `/c/<cid>`,
+    /// `/card/<cid>[.square].png`) that names a BeatScript 1 program by its CID alone whose twin is here.
+    fn renamed(&self, method: &axum::http::Method, path: &str, query: Option<&str>, cid: &str, packed: &str) -> Option<Response<Body>> {
+        if !packed.is_empty() || !valid_cid(cid) {
+            return None;
+        }
+        let to = self.app.store.renamed_to(cid)?;
+        Some(beatscript_serve::lineage::routes::renamed_redirect(method, path, query, cid, &to))
+    }
+
     fn allow_work(&self, addr: Option<&str>) -> Result<(), CardErr> {
         let Some(addr) = addr else { return Ok(()) };
         let (ok, retry) = self.work.lock().unwrap().allow(addr);
@@ -1235,6 +1245,9 @@ async fn serve_card(State(c): State<Arc<Cards>>, req: Request) -> Response<Body>
         return generic_png(&c, &creq, v, "default", "public, max-age=86400", false);
     }
     let (cid, packed) = name.split_once('.').unwrap_or((name, ""));
+    if let Some(r) = c.renamed(req.method(), &path, req.uri().query(), cid, packed) {
+        return r;
+    }
     let addr = addr_of(&req);
     let p = match c.resolve(Some(&addr), cid, packed).await {
         Ok(p) => p,
@@ -1302,6 +1315,11 @@ async fn serve_page(State(c): State<Arc<Cards>>, req: Request) -> Response<Body>
     let (cid, packed) = name.split_once('.').unwrap_or((name, ""));
     if short && (!packed.is_empty() || !valid_cid(cid)) {
         return not_found(HeaderMap::new());
+    }
+    // the rename: a BeatScript 1 program whose BeatScript 2 twin is here is answered at the twin's address (a link that
+    // carries its text, `<cid>.<packed>`, opens as it is)
+    if let Some(r) = c.renamed(req.method(), &path, req.uri().query(), cid, packed) {
+        return r;
     }
     let origin = c.origin.clone();
     let addr = addr_of(&req);
@@ -1424,6 +1442,15 @@ async fn serve_page(State(c): State<Arc<Cards>>, req: Request) -> Response<Body>
         let cid = p.cid.clone();
         if let Ok(n) = tokio::task::spawn_blocking(move || l.fork_count(&cid)).await {
             html = beatscript_serve::lineage::page::with_fork_line(&html, &p.cid, n);
+        }
+    }
+    // and its twin: a BeatScript 1 program (opened by a link that carries its text) links the same program in BeatScript 2,
+    // a BeatScript 2 one names the legacy CID it was renamed from
+    if doc.is_some() {
+        if let Some(y) = c.app.store.renamed_to(&p.cid) {
+            html = beatscript_serve::lineage::page::with_renamed_line(&html, &p.cid, &y, true);
+        } else if let Some(x) = c.app.store.renamed_from(&p.cid) {
+            html = beatscript_serve::lineage::page::with_renamed_line(&html, &p.cid, &x, false);
         }
     }
     written(req.method(), h, html.into_bytes())

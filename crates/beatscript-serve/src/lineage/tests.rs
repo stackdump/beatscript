@@ -240,3 +240,99 @@ fn a_call_and_its_cid_count_who_draws_on_them() {
     assert_eq!(n.curation, Curation::default());
     assert!(l.node(&b).is_some() && l.node(&v).is_some());
 }
+
+// ---------- the rename ----------
+
+/// The family, with the root's BeatScript 2 twin stored as the store writes it (crate::gate::write_twin) and a fork of the
+/// twin.
+fn renamed_family() -> (Fam, String, String) {
+    let f = family();
+    let (_, root_text) = canon(ROOT);
+    let (twin, _) = crate::gate::write_twin(f._d.path(), &f.root, &root_text, &json!({"license": "CC0-1.0", "visibility": "public", "name": "night bus"}), "2026-11-22T00:00:00Z", |v| v.to_string()).unwrap();
+    let twin_fork = put(f._d.path(), &format!("#! beatscript 2\n{}", FAST.replace("126", "130")), json!({"visibility": "public", "forked_from": twin}));
+    f.l.refresh(true);
+    (f, twin, twin_fork)
+}
+
+#[test]
+fn a_renamed_edge_is_labelled_and_is_not_a_fork() {
+    let (f, twin, twin_fork) = renamed_family();
+    // the old program: its forks are what they were, the twin is named, not counted
+    assert_eq!(f.l.fork_count(&f.root), 2, "fast and up; the twin is not a fork");
+    let t = f.l.tree(&f.root).unwrap();
+    assert!(t.forks.iter().all(|n| n.cid != twin), "the twin is not in the forks");
+    assert_eq!(t.root.renamed_to, twin);
+    assert_eq!(f.l.renamed_to(&f.root).as_deref(), Some(twin.as_str()));
+    let ld = t.json_ld("https://beatscript.app");
+    assert_eq!(ld["programs"][0]["renamedTo"], twin);
+    // the twin: its parent is the old program, by a renamed edge with the label and no diff
+    let t = f.l.tree(&twin).unwrap();
+    assert_eq!(t.ancestors.first().map(|n| n.cid.as_str()), Some(f.root.as_str()));
+    assert!(t.root.renamed);
+    assert_eq!(t.root.renamed_from, f.root);
+    assert_eq!(t.root.fork_count, 1, "its own fork");
+    let e = t.edge_to(&twin).unwrap();
+    assert!(e.renamed);
+    assert_eq!(e.change.as_ref().unwrap().summary, [RENAMED_LABEL]);
+    let ld = t.json_ld("https://beatscript.app");
+    let d = ld["derivations"].as_array().unwrap().iter().find(|d| d["to"] == twin).unwrap();
+    assert_eq!(d["derivation"], "renamed");
+    assert_eq!(d["isBasedOn"], json!({"@id": f.root, "derivation": "renamed"}));
+    assert_eq!(d["change"], json!([RENAMED_LABEL]));
+    assert_eq!(d["sameSong"], true);
+    assert_eq!(ld["programs"][0]["renamedFrom"], f.root);
+    // siblings are the old program's real forks; a fork's siblings never list the twin
+    let sib: Vec<&str> = t.siblings.iter().map(|n| n.cid.as_str()).collect();
+    assert_eq!(sib.len(), 2, "{sib:?}");
+    let t = f.l.tree(&f.fast).unwrap();
+    assert!(t.siblings.iter().all(|n| n.cid != twin));
+    assert_eq!(t.siblings.len(), 1);
+    // the twin's own fork is an ordinary fork
+    let t = f.l.tree(&twin_fork).unwrap();
+    assert!(!t.edge_to(&twin_fork).unwrap().renamed);
+    assert_eq!(f.l.renamed_to(&twin), None);
+}
+
+#[test]
+fn a_fork_that_only_says_renamed_is_a_fork() {
+    // `derivation: renamed` on a program that is not the parent's twin is not a rename
+    let f = family();
+    let liar = put(f._d.path(), "tempo 140\nkey am\ndeck A: kick x ~ x ~ | bass a1 ~ c2 ~\n", json!({"visibility": "public", "forked_from": f.root, "derivation": "renamed"}));
+    f.l.refresh(true);
+    assert_eq!(f.l.fork_count(&f.root), 3);
+    assert!(!f.l.tree(&liar).unwrap().root.renamed);
+}
+
+#[test]
+fn an_example_in_beatscript_2_is_known_by_its_legacy_cid() {
+    let d = tempfile::tempdir().unwrap();
+    let text = format!("#! beatscript 2\n# an example\n{ROOT}");
+    let (cid, canonical) = canon(&text);
+    let old = djlive::compile::renamed_cid(&canonical);
+    // a program forked from the example before the rename names its legacy CID
+    let fork = put(d.path(), FAST, json!({"visibility": "public", "forked_from": old}));
+    let l = Lineage::new(d.path(), vec![Example { cid: cid.clone(), name: "night-bus".into(), license: "CC0-1.0".into(), text }]);
+    let t = l.tree(&fork).unwrap();
+    assert!(!t.ancestors_cut);
+    assert_eq!(t.ancestors[0].cid, old);
+    assert!(t.ancestors[0].example);
+    assert_eq!(t.ancestors[0].renamed_to, cid);
+    assert_eq!(l.renamed_to(&old).as_deref(), Some(cid.as_str()));
+    assert_eq!(l.node(&cid).unwrap().renamed_from, old);
+}
+
+#[test]
+fn the_pages_say_renamed() {
+    let (f, twin, _) = renamed_family();
+    let origin = "https://beatscript.app";
+    let t = f.l.tree(&twin).unwrap();
+    let html = page::tree_page(origin, &t, &t.json_ld(origin));
+    assert!(html.contains(&page::esc(RENAMED_LABEL)), "{html}");
+    assert!(html.contains("Renamed from BeatScript 1"));
+    let t = f.l.tree(&f.root).unwrap();
+    let html = page::tree_page(origin, &t, &t.json_ld(origin));
+    assert!(html.contains(&format!("{origin}/p/{twin}")), "the old program's tree links its twin");
+    let base = "<main><h1>x</h1></main>";
+    assert!(page::with_renamed_line(base, &f.root, &twin, true).contains(&format!("href=\"/p/{twin}\"")));
+    assert!(page::with_renamed_line(base, &twin, &f.root, false).contains("Renamed from BeatScript 1"));
+}

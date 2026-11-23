@@ -94,6 +94,9 @@ fn node_html(origin: &str, n: &Node, me: bool) -> String {
 /// What changed on an edge, as the lines under it.
 fn change_html(origin: &str, e: &Edge) -> String {
     let cmp = format!(" <a href=\"{}\">compare</a>", esc(&compare_url(origin, &e.from, &e.to)));
+    if e.renamed {
+        return format!("<div class=\"edge\"><span class=\"same\">{}</span> (a new CID, not a fork){cmp}</div>\n", esc(super::RENAMED_LABEL));
+    }
     match &e.change {
         None => format!("<div class=\"edge\"><span class=\"none\">forked (what changed is not worked out yet)</span>{cmp}</div>\n"),
         Some(c) if c.same => format!("<div class=\"edge\"><span class=\"same\">the same song</span> (rewritten, not changed){cmp}</div>\n"),
@@ -154,6 +157,7 @@ pub fn tree_page(origin: &str, t: &Tree, ld: &Value) -> String {
     };
     let desc = if t.forks.len() > r.fork_count { format!("{fc}, {} in all generations", t.forks.len()) } else { fc };
     s.push_str(&format!("<p class=\"sub\">Family tree · {} · {} · <a href=\"{}\">the program</a></p>\n", esc(&desc), plural(t.ancestors.len(), "ancestor"), esc(&format!("{origin}/p/{}", r.cid))));
+    s.push_str(&renamed_note(origin, r));
     s.push_str("<h2>Lineage</h2>\n");
     if t.ancestors_cut {
         s.push_str("<p class=\"none\">Forked from a program that is not public here.</p>\n");
@@ -234,6 +238,36 @@ pub fn missing_page(origin: &str) -> String {
     s.push_str("<h1>No such program here</h1>\n<p class=\"sub\">No public program with that CID is stored on this site.</p>\n<p><a href=\"/\">Open BeatScript</a></p>\n");
     s.push_str(FOOT);
     s
+}
+
+/// What the tree page says of a program that has a twin: the BeatScript 2 one for an old program, the old CID for a new one.
+fn renamed_note(origin: &str, n: &Node) -> String {
+    if !n.renamed_to.is_empty() {
+        return format!(
+            "<p class=\"sub renamed\">This is the BeatScript 1 spelling. The same program in BeatScript 2 is <a href=\"{}\"><code>{}</code></a> (<a href=\"{}\">its tree</a>): the same music, a new CID.</p>\n",
+            esc(&format!("{origin}/p/{}", n.renamed_to)),
+            esc(&super::short_cid(&n.renamed_to)),
+            esc(&tree_url(origin, &n.renamed_to))
+        );
+    }
+    if !n.renamed_from.is_empty() {
+        return format!("<p class=\"sub renamed\">Renamed from BeatScript 1 <code>{}</code>: the same music, a new CID. Links to the old CID still open.</p>\n", esc(&super::short_cid(&n.renamed_from)));
+    }
+    String::new()
+}
+
+/// A program page (`/p/<cid>`) with a line saying it has a twin, before `</main>`: for a BeatScript 1 program (`newer` true),
+/// the link to the same program in BeatScript 2; for a BeatScript 2 one, the legacy CID it was renamed from.
+pub fn with_renamed_line(html: &str, cid: &str, twin: &str, newer: bool) -> String {
+    let line = if newer {
+        format!("<p class=\"lineage renamed\">BeatScript 2: this program is <a href=\"/p/{}\"><code>{}</code></a> now, the same music under a new CID.</p>\n", esc(twin), esc(&super::short_cid(twin)))
+    } else {
+        format!("<p class=\"lineage renamed\">Renamed from BeatScript 1 <code>{}</code> (<a href=\"/p/{}/tree\">family tree</a>): the same music, a new CID.</p>\n", esc(&super::short_cid(twin)), esc(cid))
+    };
+    match html.rfind("</main>") {
+        Some(at) => format!("{}{line}{}", &html[..at], &html[at..]),
+        None => html.to_string(),
+    }
 }
 
 /// A program page (`/p/<cid>`) with a line naming its forks and linking its family tree, before `</main>`.

@@ -2,6 +2,10 @@
 //! `{"cid","text","meta"}`), so the Go and Rust servers can share one data directory while both run.
 //! Examples answer first, as in Go (`Backend.Get`).
 //!
+//! The rename (BeatScript 1 -> 2): examples are read from `*.beatscript` and the legacy `*.btw`; an example written in
+//! BeatScript 2 is also answered under its legacy CID, with its legacy text, so old example links and stored forks that name
+//! one keep resolving. [`Store::renamed_to`] and [`Store::renamed_from`] pair a program with its twin when both are here.
+//!
 //! Read-only (`-programs-readonly`, a shadow next to the Go server): nothing is written; a program that arrives in a
 //! `<cid>.<packed>` URL is checked exactly as for storing and then held in memory (at most `MAX_LINKS`), so the
 //! render works and the Go server's store stays the Go server's.
@@ -82,7 +86,8 @@ impl Store {
                 Ok(rd) => {
                     for e in rd.flatten() {
                         let p = e.path();
-                        if p.extension().and_then(|x| x.to_str()) != Some("beatscript") {
+                        // `.btw` is the legacy spelling, read as an alias
+                        if !matches!(p.extension().and_then(|x| x.to_str()), Some("beatscript" | "btw")) {
                             continue;
                         }
                         let Ok(text) = std::fs::read_to_string(&p) else { continue };
@@ -91,6 +96,12 @@ impl Store {
                         match (ok, rep["cid"].as_str(), rep["canonical"].as_str()) {
                             (true, Some(cid), Some(canon)) => {
                                 ex.insert(cid.to_string(), Program { cid: cid.to_string(), text: canon.to_string() });
+                                // a BeatScript 2 example is also its legacy CID, with the legacy text (the CID of that text)
+                                if djlive::version::of_canonical(canon) == djlive::version::Version::V2 {
+                                    let old = djlive::version::legacy_canonical(canon).to_string();
+                                    let old_cid = djlive::compile::program_cid(&old);
+                                    ex.entry(old_cid.clone()).or_insert(Program { cid: old_cid, text: old });
+                                }
                             }
                             _ => warnings.push(format!("example {} left out: it does not check, or is restricted", p.display())),
                         }
@@ -131,9 +142,35 @@ impl Store {
         Some(v.get("meta").cloned().unwrap_or(Value::Null))
     }
 
-    /// Whether `cid` is one of the examples.
+    /// Whether `cid` is one of the examples (by its CID, or by its legacy CID).
     pub fn is_example(&self, cid: &str) -> bool {
         self.examples.contains_key(cid)
+    }
+
+    /// Every CID an example answers to: each one's own, and the legacy CID of each BeatScript 2 example.
+    pub fn example_cids(&self) -> impl Iterator<Item = String> + '_ {
+        self.examples.keys().cloned()
+    }
+
+    /// For a BeatScript 1 program here (stored or an example), the CID of its BeatScript 2 twin, when the twin is here too
+    /// (a stored file that hashes to it, or an example): where `/p/<cid>` redirects. None for a BeatScript 2 program, one
+    /// that is not here, or one whose twin is not.
+    pub fn renamed_to(&self, cid: &str) -> Option<String> {
+        self.twin(cid, djlive::version::Version::V1)
+    }
+
+    /// The other way: for a BeatScript 2 program here, its legacy (BeatScript 1) CID when that program is here too.
+    pub fn renamed_from(&self, cid: &str) -> Option<String> {
+        self.twin(cid, djlive::version::Version::V2)
+    }
+
+    fn twin(&self, cid: &str, from: djlive::version::Version) -> Option<String> {
+        let p = self.get(cid)?;
+        if djlive::version::of_canonical(&p.text) != from {
+            return None;
+        }
+        let other = djlive::compile::renamed_cid(&p.text);
+        self.get(&other).map(|_| other)
     }
 
     pub fn dir(&self) -> &Path {
@@ -154,6 +191,7 @@ impl Store {
                 l.clear();
             }
             l.insert(cid.to_string(), Program { cid: cid.to_string(), text: canonical.to_string() });
+            hold_twin(&mut l, cid, canonical, &meta);
             return Ok(Some(0));
         }
         beatscript_serve::gate::write_program(&self.dir, &a, meta, encode)
@@ -179,6 +217,7 @@ impl Store {
                 l.clear();
             }
             l.insert(cid.to_string(), Program { cid: cid.to_string(), text: canonical.to_string() });
+            hold_twin(&mut l, cid, canonical, &Value::Null);
             return Ok(());
         }
         let path = self.dir.join(format!("{cid}.json"));
@@ -196,6 +235,16 @@ impl Store {
         meta.insert("source".into(), json!("put"));
         // link(2): a race between the two servers stores once (Go writes with link too)
         beatscript_serve::gate::write_program(&self.dir, &a, Value::Object(meta), go_json).map(|_| ())
+    }
+}
+
+/// Read-only: a BeatScript 1 program held in memory is held with its BeatScript 2 twin, as the store writes both.
+fn hold_twin(l: &mut HashMap<String, Program>, cid: &str, canonical: &str, meta: &Value) {
+    if djlive::version::of_canonical(canonical) != djlive::version::Version::V1 {
+        return;
+    }
+    if let Ok(y) = beatscript_serve::gate::admit_twin(cid, canonical, meta) {
+        l.insert(y.cid().to_string(), Program { cid: y.cid().to_string(), text: y.canonical().to_string() });
     }
 }
 
@@ -224,4 +273,75 @@ pub fn rfc3339_now() -> String {
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = yoe + era * 400 + i64::from(m <= 2);
     format!("{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}Z", rem / 3600, rem % 3600 / 60, rem % 60)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const V1: &str = "tempo 120\ndeck A: kick x ~ x ~\n";
+
+    fn canonical(text: &str) -> (String, String) {
+        let r = check(text);
+        (r["cid"].as_str().unwrap().to_string(), r["canonical"].as_str().unwrap().to_string())
+    }
+
+    #[test]
+    fn examples_answer_under_both_cids_and_btw_files_are_read() {
+        let d = tempfile::tempdir().unwrap();
+        let ex = d.path().join("examples");
+        std::fs::create_dir_all(&ex).unwrap();
+        std::fs::write(ex.join("two.beatscript"), "#! beatscript 2\n# a comment\ntempo 128\ndeck A: kick x x x x\n").unwrap();
+        std::fs::write(ex.join("one.btw"), "tempo 90\ndeck A: kick x ~ ~ ~\n").unwrap();
+        let (st, w) = Store::open(&d.path().join("programs"), Some(&ex), false).unwrap();
+        assert!(w.is_empty(), "{w:?}");
+        let (new, canon) = canonical("#! beatscript 2\ntempo 128\ndeck A: kick x x x x\n");
+        let old = djlive::compile::renamed_cid(&canon);
+        assert_eq!(st.get(&new).unwrap().text, canon);
+        // the legacy CID answers with the legacy text, which hashes to it
+        let legacy = st.get(&old).expect("the legacy CID of a BeatScript 2 example");
+        assert_eq!(legacy.text, djlive::version::legacy_canonical(&canon));
+        assert_eq!(canonical(&legacy.text).0, old, "the legacy text checks as the legacy CID");
+        assert!(st.is_example(&old) && st.is_example(&new));
+        assert_eq!(st.renamed_to(&old).as_deref(), Some(new.as_str()));
+        assert_eq!(st.renamed_from(&new).as_deref(), Some(old.as_str()));
+        assert_eq!(st.renamed_to(&new), None);
+        // a `.btw` example is read; a BeatScript 1 example has no twin here
+        let (one, _) = canonical("tempo 90\ndeck A: kick x ~ ~ ~\n");
+        assert!(st.get(&one).is_some());
+        assert_eq!(st.renamed_to(&one), None);
+        assert_eq!(st.example_cids().count(), 3);
+    }
+
+    #[test]
+    fn a_stored_program_is_paired_with_its_twin_and_a_tampered_twin_is_not_one() {
+        let d = tempfile::tempdir().unwrap();
+        let (st, _) = Store::open(&d.path().join("programs"), None, false).unwrap();
+        let (x, xt) = canonical(V1);
+        assert_eq!(st.renamed_to(&x), None, "not stored");
+        st.put_canonical(&x, &xt).unwrap();
+        let y = djlive::compile::renamed_cid(&xt);
+        assert_eq!(st.renamed_to(&x).as_deref(), Some(y.as_str()), "stored with its twin");
+        assert_eq!(st.renamed_from(&y).as_deref(), Some(x.as_str()));
+        assert_eq!(st.file_meta(&y).unwrap()["derivation"], "renamed");
+        // a twin file whose text is not its CID's is not a program: no redirect to it
+        let path = st.dir().join(format!("{y}.json"));
+        let mut f: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        f["text"] = json!(format!("{}deck B: snare ~ x ~ x\n", f["text"].as_str().unwrap()));
+        std::fs::write(&path, f.to_string()).unwrap();
+        assert!(st.get(&y).is_none());
+        assert_eq!(st.renamed_to(&x), None);
+        assert!(st.get(&x).is_some(), "the old program still answers");
+    }
+
+    #[test]
+    fn read_only_holds_the_twin_in_memory() {
+        let d = tempfile::tempdir().unwrap();
+        let (st, _) = Store::open(&d.path().join("programs"), None, true).unwrap();
+        let (x, xt) = canonical(V1);
+        st.put_canonical(&x, &xt).unwrap();
+        let y = djlive::compile::renamed_cid(&xt);
+        assert_eq!(st.renamed_to(&x).as_deref(), Some(y.as_str()));
+        assert!(!d.path().join("programs").exists(), "nothing written");
+    }
 }

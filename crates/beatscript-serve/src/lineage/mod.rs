@@ -16,6 +16,13 @@
 //!
 //! The store is append-only (first write wins), so the index grows by reading only the files it has not seen, at most
 //! every [`RESCAN`], and a pair's diff, once computed, is kept.
+//!
+//! **The rename.** A stored program whose meta says `derivation: "renamed"` and names as `forked_from` its own legacy CID
+//! (`djlive::compile::renamed_cid` of its text) is the BeatScript 2 twin of that BeatScript 1 program: the same music under a
+//! new CID. That edge is of kind renamed ([`Edge::renamed`]): it is labelled [`RENAMED_LABEL`] (no diff is worked out), it
+//! is not a fork (not in [`Lineage::fork_count`], the forks or the siblings), and a node names its twin either way
+//! ([`Node::renamed_to`], [`Node::renamed_from`]). An example written in BeatScript 2 is also known by its legacy CID, so a
+//! program forked from an example before the rename still has its parent.
 
 pub mod page;
 pub mod routes;
@@ -46,6 +53,9 @@ const MAX_CACHED: usize = 50_000;
 /// The schema the documents are written in (djlive `progld`'s, the `<beatscript-view>` block's), then schema.org.
 pub const SCHEMA: &str = "https://beatscript.app/schema";
 
+/// What a renamed edge says: the same program, spelled in BeatScript 2.
+pub const RENAMED_LABEL: &str = "renamed: BeatScript 1 -> 2, same music";
+
 /// One example program: always public.
 #[derive(Clone, Debug)]
 pub struct Example {
@@ -64,6 +74,8 @@ struct Entry {
     forked_from: String,
     credits: Vec<String>,
     created: String,
+    /// Its parent is its own legacy CID and its meta says `derivation: "renamed"`: the edge to the parent is a rename.
+    renamed: bool,
     /// What it is based on (djlive::refs::based_on): (the call or reference, the CID it resolves to, `called` / `borrowed` /
     /// `vendored`). Vendored parts come from `meta.based_on` (`["<call> -> <cid>"]`, the `# from:` lines its text had when it
     /// was saved: the canonical text has no comments).
@@ -99,6 +111,12 @@ pub struct Node {
     pub parent_hidden: bool,
     /// How many public programs call, borrow or vendored this one (by its CID).
     pub curation: Curation,
+    /// The edge to `forked_from` is a rename (this is the BeatScript 2 twin of its parent).
+    pub renamed: bool,
+    /// A BeatScript 1 program whose BeatScript 2 twin may be shown: the twin's CID.
+    pub renamed_to: String,
+    /// A BeatScript 2 program whose legacy (BeatScript 1) CID may be shown: that CID.
+    pub renamed_from: String,
 }
 
 impl Node {
@@ -127,11 +145,13 @@ pub struct Change {
     pub report: Value,
 }
 
-/// One edge of a tree: `to` was forked from `from`.
+/// One edge of a tree: `to` was forked from `from` (or, [`Edge::renamed`], is `from` renamed).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edge {
     pub from: String,
     pub to: String,
+    /// `to` is the BeatScript 2 twin of `from`: the change is [`RENAMED_LABEL`], not a diff.
+    pub renamed: bool,
     /// None: not computed yet (more than [`MAX_NEW_DIFFS`] new edges in one look), or the pair did not compile.
     pub change: Option<Change>,
 }
@@ -158,7 +178,7 @@ struct Index {
     at: Option<Instant>,
     /// Every store file seen: Some for one that may be shown (cheap checks), None for one that may not.
     files: HashMap<String, Option<Entry>>,
-    /// parent CID -> the public files that name it (sorted, so trees are stable).
+    /// parent CID -> the public files that name it (sorted, so trees are stable). Renamed twins are not here.
     children: HashMap<String, BTreeSet<String>>,
     /// A CID or a call (`gen@2 techno seed=42 section=drop part=bass`) -> the public files that reference it, and that vendored it.
     referenced: HashMap<String, (BTreeSet<String>, BTreeSet<String>)>,
@@ -233,17 +253,33 @@ fn read_file(path: &Path, cid: &str) -> Option<Entry> {
     }
     let credits = m.get("credits").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
     let forked = s("forked_from");
+    // a twin: the meta says so, and the parent it names is its own legacy CID
+    let renamed = s("derivation") == crate::gate::RENAMED && is_cid(&forked) && djlive::compile::renamed_cid(text) == forked;
     // what it is based on: the calls and borrows of its text, and what its saved `# from:` lines say it vendored
     let notes: Vec<String> = m.get("based_on").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(|l| format!("from: {l}")).collect()).unwrap_or_default();
     let bases = djlive::refs::based_on(text, &notes).into_iter().map(|b| (b.call, b.cid, b.how)).collect();
-    Some(Entry { name: s("name"), license: s("license"), author: s("author"), forked_from: if is_cid(&forked) { forked } else { String::new() }, credits, created: s("created"), bases })
+    Some(Entry { name: s("name"), license: s("license"), author: s("author"), forked_from: if is_cid(&forked) { forked } else { String::new() }, credits, created: s("created"), renamed, bases })
 }
 
 impl Lineage {
     pub fn new(dir: &Path, examples: Vec<Example>) -> Lineage {
         // a call's CID is the program the generator prints for it
         beatscript_api::generate::install();
-        let examples: HashMap<String, Example> = examples.into_iter().filter(|e| is_cid(&e.cid)).map(|e| (e.cid.clone(), e)).collect();
+        let mut examples: HashMap<String, Example> = examples.into_iter().filter(|e| is_cid(&e.cid)).map(|e| (e.cid.clone(), e)).collect();
+        // an example in BeatScript 2 is also its legacy CID (what forks made before the rename name), with the legacy text
+        let legacy: Vec<Example> = examples
+            .values()
+            .filter(|e| djlive::version::of_source(&e.text) == djlive::version::Version::V2)
+            .filter_map(|e| {
+                let rep: Value = serde_json::from_str(&beatscript_api::check_json(&e.text)).ok()?;
+                let canon = rep["canonical"].as_str().filter(|_| rep["cid"].as_str() == Some(e.cid.as_str()))?;
+                let text = djlive::version::legacy_canonical(canon).to_string();
+                Some(Example { cid: djlive::compile::program_cid(&text), name: e.name.clone(), license: e.license.clone(), text })
+            })
+            .collect();
+        for e in legacy {
+            examples.entry(e.cid.clone()).or_insert(e);
+        }
         // the examples draw on calls and programs too: they count like any public program
         let mut ix = Index::default();
         for (cid, e) in &examples {
@@ -278,7 +314,8 @@ impl Lineage {
             }
             let ent = read_file(&e.path(), cid);
             if let Some(en) = &ent {
-                if !en.forked_from.is_empty() && en.forked_from != cid {
+                // a twin is not a fork of the program it renames
+                if !en.forked_from.is_empty() && en.forked_from != cid && !en.renamed {
                     ix.children.entry(en.forked_from.clone()).or_default().insert(cid.to_string());
                 }
                 for (call, resolves, how) in &en.bases {
@@ -344,6 +381,13 @@ impl Lineage {
         let fork_count = self.forks_of(cid).len();
         let curation = self.curation(cid);
         let parent_hidden = !ent.forked_from.is_empty() && !self.shown(&ent.forked_from);
+        // its twin, either way, when that may be shown
+        let twin = djlive::compile::renamed_cid(&f.text);
+        let twin = if self.visible(&twin) { twin } else { String::new() };
+        let (renamed_to, renamed_from) = match djlive::version::of_canonical(&f.text) {
+            djlive::version::Version::V1 => (twin, String::new()),
+            djlive::version::Version::V2 => (String::new(), twin),
+        };
         Some(Node {
             cid: cid.to_string(),
             name: ent.name,
@@ -358,6 +402,9 @@ impl Lineage {
             key: f.key,
             fork_count,
             curation,
+            renamed: ent.renamed && !parent_hidden,
+            renamed_to,
+            renamed_from,
         })
     }
 
@@ -380,6 +427,36 @@ impl Lineage {
         }
         let ok = matches!(self.index.lock().unwrap().files.get(cid), Some(Some(_)));
         ok && self.facts(cid, || self.stored_text(cid)).is_some()
+    }
+
+    /// [`Lineage::shown`], also for a file stored since the last scan (read now, as [`Lineage::node`] does).
+    fn visible(&self, cid: &str) -> bool {
+        if !is_cid(cid) {
+            return false;
+        }
+        if self.examples.contains_key(cid) {
+            return self.shown(cid);
+        }
+        let known = self.index.lock().unwrap().files.get(cid).map(Option::is_some);
+        match known {
+            Some(true) => self.shown(cid),
+            Some(false) => false,
+            None => {
+                if read_file(&self.dir.join(format!("{cid}.json")), cid).is_none() {
+                    return false;
+                }
+                self.refresh(true);
+                self.shown(cid)
+            }
+        }
+    }
+
+    /// For a BeatScript 1 program that may be shown, the CID of its BeatScript 2 twin when that may be shown too: where its
+    /// tree redirects.
+    pub fn renamed_to(&self, cid: &str) -> Option<String> {
+        self.refresh(false);
+        let n = self.node(cid)?;
+        (!n.renamed_to.is_empty()).then_some(n.renamed_to)
     }
 
     /// How often public programs draw on `key`, a CID or a call (`gen@2 techno seed=42 section=drop part=bass`, as its canonical
@@ -507,10 +584,15 @@ impl Lineage {
         for f in &forks {
             pairs.push((f.forked_from.clone(), f.cid.clone()));
         }
+        // which edges are renames: the node they lead to says so
+        let renamed: HashSet<String> = std::iter::once(&root).chain(&ancestors).chain(&siblings).chain(&forks).filter(|n| n.renamed).map(|n| n.cid.clone()).collect();
         let mut budget = MAX_NEW_DIFFS;
         let edges = pairs
             .into_iter()
             .map(|(from, to)| {
+                if renamed.contains(&to) {
+                    return Edge { from, to, renamed: true, change: Some(Change::renamed()) };
+                }
                 let change = match self.change(&from, &to, false) {
                     Some(c) => c,
                     None if budget > 0 => {
@@ -519,7 +601,7 @@ impl Lineage {
                     }
                     None => None,
                 };
-                Edge { from, to, change }
+                Edge { from, to, renamed: false, change }
             })
             .collect();
         Some(Tree { root, ancestors, siblings, forks, edges, ancestors_cut, truncated })
@@ -595,6 +677,15 @@ impl Node {
         if self.example {
             m.insert("example".into(), json!(true));
         }
+        if self.renamed {
+            m.insert("isBasedOn".into(), json!({"@id": self.forked_from, "derivation": crate::gate::RENAMED}));
+        }
+        if !self.renamed_to.is_empty() {
+            m.insert("renamedTo".into(), json!(self.renamed_to));
+        }
+        if !self.renamed_from.is_empty() {
+            m.insert("renamedFrom".into(), json!(self.renamed_from));
+        }
         m.insert("forkCount".into(), json!(self.fork_count));
         // the curation signal: how many public programs call or borrow it, and vendored it
         if self.curation.referenced_by > 0 {
@@ -608,6 +699,17 @@ impl Node {
 }
 
 impl Change {
+    /// The change on a renamed edge: the same song, the same statements, a new spelling and CID.
+    pub fn renamed() -> Change {
+        Change {
+            same: true,
+            text_same: false,
+            summary: vec![RENAMED_LABEL.to_string()],
+            why: "the same program spelled in BeatScript 2 (the version line first): a new CID, the same music".into(),
+            report: json!({"ok": true, "same": true, "derivation": crate::gate::RENAMED}),
+        }
+    }
+
     fn json(&self) -> Value {
         json!({"sameSong": self.same, "change": self.summary, "why": self.why})
     }
@@ -620,6 +722,10 @@ impl Edge {
         m.insert("from".into(), json!(self.from));
         m.insert("to".into(), json!(self.to));
         m.insert("compare".into(), json!(compare_url(origin, &self.from, &self.to)));
+        if self.renamed {
+            m.insert("derivation".into(), json!(crate::gate::RENAMED));
+            m.insert("isBasedOn".into(), json!({"@id": self.from, "derivation": crate::gate::RENAMED}));
+        }
         match &self.change {
             Some(c) => {
                 m.insert("sameSong".into(), json!(c.same));
