@@ -1622,7 +1622,7 @@
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The mutation production of BeatScript&apos;s grammar (~ from here on, @ the next section only; ~3: every 3rd pass).</skos:definition>
 		<skos:prefLabel xml:lang="en">mutation</skos:prefLabel>
-		<ns:ebnf>( &quot;~&quot; | &quot;@&quot; ) [ INT ] mut_target mut_op { &quot;|&quot; mut_op } { &quot;,&quot; mut_target mut_op { &quot;|&quot; mut_op } }</ns:ebnf>
+		<ns:ebnf>( &quot;~&quot; | &quot;@&quot; ) [ INT ] ( switch | mut_target mut_op { &quot;|&quot; mut_op } { &quot;,&quot; mut_target mut_op { &quot;|&quot; mut_op } } )</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Arrange mutations</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-at"/>
@@ -1631,6 +1631,7 @@
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-tilde"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-mut-op"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-mut-target"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-switch"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-int"/>
 		<ns:writtenAs>mutation</ns:writtenAs>
 	</skos:Concept>
@@ -2315,6 +2316,19 @@
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-product"/>
 		<ns:writtenAs>sum</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-switch">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The switch production of BeatScript&apos;s grammar (the control deck&apos;s lines fire or not: all of them, or one call&apos;s (~ control freeze off); a line of its own).</skos:definition>
+		<skos:prefLabel xml:lang="en">switch</skos:prefLabel>
+		<ns:ebnf>&quot;control&quot; [ NAME ] ( &quot;on&quot; | &quot;off&quot; )</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Arrange mutations</ns:grammarSection>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-control"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-off"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-on"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:writtenAs>switch</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-target">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
 		<skos:definition xml:lang="en">The target production of BeatScript&apos;s grammar.</skos:definition>
@@ -2787,7 +2801,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-control">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword control of BeatScript, written in: headed.</skos:definition>
+		<skos:definition xml:lang="en">The keyword control of BeatScript, written in: headed, switch.</skos:definition>
 		<skos:prefLabel xml:lang="en">control</skos:prefLabel>
 		<ns:keywordText>control</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3368,14 +3382,14 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-off">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword off of BeatScript, written in: action, param.</skos:definition>
+		<skos:definition xml:lang="en">The keyword off of BeatScript, written in: action, param, switch.</skos:definition>
 		<skos:prefLabel xml:lang="en">off</skos:prefLabel>
 		<ns:keywordText>off</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-on">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword on of BeatScript, written in: assert, engine, launch, param, sing, when.</skos:definition>
+		<skos:definition xml:lang="en">The keyword on of BeatScript, written in: assert, engine, launch, param, sing, switch, when.</skos:definition>
 		<skos:prefLabel xml:lang="en">on</skos:prefLabel>
 		<ns:keywordText>on</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -6579,7 +6593,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-name">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, engine, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, template, until_when, when, wire.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, engine, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, switch, template, until_when, when, wire.</skos:definition>
 		<skos:prefLabel xml:lang="en">NAME</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>NAME</ns:writtenAs>
@@ -6721,9 +6735,9 @@
 		<ns:toolTitle xml:lang="en">A program as a page to publish</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-check">
-		<skos:definition xml:lang="en">Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BEATSCRIPT.md &quot;The control deck&quot;): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head.
+		<skos:definition xml:lang="en">Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BEATSCRIPT.md &quot;The control deck&quot;): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head. An `arrange { }` switches it pass by pass with a line of its own: `~ control off` (a section&apos;s control-deck lines do not fire from here on), `~ control on`, `@ control off` (the next section only), `~ control freeze off` (the lines of one call), `~3 control off` (every 3rd pass); plays[].control_off in the answer&apos;s arrange names the calls each play holds back.
 
-Answers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, version, renamed_cid, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references. docs is the text&apos;s doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section&apos;s, when it has one. line and col are 1-based; help says what would fix it (&quot;did you mean ...&quot;); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID). version is the language version: 2 for a text whose header has `#! beatscript 2` (write that), 1 for a text with `#! btw 1` or no version line (BeatScript 1, the old spelling, which checks as before and keeps its old CID); renamed_cid is the CID of the same program in the other version (fmt upgrades a BeatScript 1 text to it). A station program (radio: a `station { }` block, see the station tool) checks the tracks of its first pass of forms and its first segue, and the answer gains station {text, cid, genre, generator, seed, step, forms, tempo, key, length, start_cid, version, tracks, segue}.
+Answers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, version, renamed_cid, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references, and arrange {passes, unbounded, plays[{section, name, pass, coda, start_bar, bars, reads, control_off}], patterns, fires} for an `arrange { }` with mutations. docs is the text&apos;s doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section&apos;s, when it has one. line and col are 1-based; help says what would fix it (&quot;did you mean ...&quot;); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID). version is the language version: 2 for a text whose header has `#! beatscript 2` (write that), 1 for a text with `#! btw 1` or no version line (BeatScript 1, the old spelling, which checks as before and keeps its old CID); renamed_cid is the CID of the same program in the other version (fmt upgrades a BeatScript 1 text to it). A station program (radio: a `station { }` block, see the station tool) checks the tracks of its first pass of forms and its first segue, and the answer gains station {text, cid, genre, generator, seed, step, forms, tempo, key, length, start_cid, version, tracks, segue}.
 
 With same_as (another program&apos;s CID or text) the answer gains same_as {same, text_same, basis, why, diffs[{section, deck, start_bar, a_cid, b_cid}], only_in_a, only_in_b, renamed, song, diff}: whether the two are the same song by their compiled nets and song-level settings, not their text. When they are not, diff says what changed in music: diff.summary is one line per change (&quot;tempo 124 -&gt; 126&quot;, &quot;moved outro: bar 13 -&gt; bar 5&quot;, &quot;drop2 bass = drop bass transposed +1&quot;, &quot;drop bass: 1 note changed (1:7 c3 -&gt; d3)&quot;), with song, arrangement (inserted, removed, moved, repeated, renamed, changed) and parts (a transform: transpose, octave, rotate, reverse, thin, fill, fast, slow; else the notes added, removed or changed at bar:step) as JSON. Use it to prove a refactor changed nothing, or to find what an edit did.
 
@@ -6924,7 +6938,7 @@ Needs a bearer token: it reads the tabs of the token&apos;s account, by default 
 		<ns:toolTitle xml:lang="en">The example programs</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-listen">
-		<skos:definition xml:lang="en">Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck&apos;s line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section&apos;s loudness, `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a reference (a gen@2 call, a seed(...), a template, a stored program&apos;s section) says so in `from` {call, kind, resolved, place, generator, sections} (`also_from` when several made it); a gen call fitted to the program&apos;s key or tempo says so in `notes`, in check&apos;s words; and the answer gains `expanded_cid` and `resolution`, as check&apos;s. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes, the mixer and insert moves it has ops for and the `macro` lines (the DJ macro catalogue: see the macros tool); `notes` names the control lines it leaves out. A program with a macro line gains `macros`: each call in the window, `at_bar` (the bar the engine starts it on, as the time words count), and `played`, with `refused` (the engine&apos;s reason, also a warning) when it was not.
+		<skos:definition xml:lang="en">Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck&apos;s line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section&apos;s loudness (and `control_off` on a section an `arrange { }` switch such as `~ control off` plays with lines of its control deck held back: the calls that do not fire there), `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a reference (a gen@2 call, a seed(...), a template, a stored program&apos;s section) says so in `from` {call, kind, resolved, place, generator, sections} (`also_from` when several made it); a gen call fitted to the program&apos;s key or tempo says so in `notes`, in check&apos;s words; and the answer gains `expanded_cid` and `resolution`, as check&apos;s. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes, the mixer and insert moves it has ops for and the `macro` lines (the DJ macro catalogue: see the macros tool); `notes` names the control lines it leaves out. A program with a macro line gains `macros`: each call in the window, `at_bar` (the bar the engine starts it on, as the time words count), and `played`, with `refused` (the engine&apos;s reason, also a warning) when it was not.
 
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">listen</skos:prefLabel>
