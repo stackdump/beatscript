@@ -1140,6 +1140,9 @@ const A_RECORD: &[Action] = &[
     Action::new("tracklist", "a set's tracklist as a cue sheet (default: the one recording now, else the newest)", Effect::Read)
         .with(&[Param::new("id", "string", "its cid or name")])
         .probe(r#"{"id":"__no_such_set__"}"#),
+    Action::new("program", "a recorded set written out as a BeatScript set program (play and mix lines), and the take that names it by CID", Effect::Read)
+        .with(&[Param::new("id", "string", "its cid, a part of it, or its name (default: the newest)")])
+        .probe(r#"{"id":"__no_such_set__"}"#),
     Action::new("verify", "check a saved set: the CID, the audio file against its CID, the signature against its did", Effect::Read)
         .with(&[Param::new("id", "string", "its cid or name").req()])
         .probe(r#"{"id":"__no_such_set__"}"#),
@@ -2472,7 +2475,8 @@ pub(super) const NOUNS: &[Noun] = &[
               parent CIDs; canonical JSON with a CID, signed by the booth's key (EIP-191 over the CID, signer a \
               did:pkh), saved under <support>/recordings/<cid>/. replay plays it again exactly through the action \
               log's player; fork makes an editable copy that points back; verify checks the CID, the audio and \
-              the signature.",
+              the signature. program writes it out as a BeatScript set program (djhost::set_program) and \
+              answers its text, its program CID and the CID of the take that names it.",
         schema: "",
         params: &[],
         aliases: &["recording", "setrec"],

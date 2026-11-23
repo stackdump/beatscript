@@ -55,6 +55,9 @@ usage: beatscript <command> [options]
   listen       [--section NAME] [--bars N] [--max-bars N] [--budget SECONDS] [--sr N] [--file F | -]
                                          render offline and summarise it as JSON: loudness per deck, part and section,
                                          silent parts and why, detected tempo and key, clipping (listen.rs)
+  set-program  <recording dir | set.json> [--out DIR]   a recorded set as a BeatScript `set`: writes <name>.beatscript, <take cid>.take.json
+                                         (and tracks/ for a generator track it plays) and prints both CIDs as JSON; programs from
+                                         --with, then the saved ones (djhost::set_program)
   selftest                               run the built-in corpus in-process; prints ok
   --version
 
@@ -234,6 +237,7 @@ fn run(args: &[String]) -> Result<(), String> {
         "instruments" => out(&beatscript_api::instruments_json()),
         "cheatsheet" => out(&beatscript_api::cheatsheet()),
         "selftest" => selftest::run(),
+        "set-program" => out(&djhost::set_program::cli(rest, Some(&beatscript_api::known::Known))?),
         "--version" | "-V" | "version" => out(&format!("beatscript {}", env!("CARGO_PKG_VERSION"))),
         "" | "help" | "--help" | "-h" => {
             println!("{USAGE}");

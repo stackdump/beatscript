@@ -32,6 +32,8 @@ pub mod mashups;
 pub mod mixxx;
 pub mod ontology;
 pub mod setlist;
+// a recorded set written out as a BeatScript `set` and its take (no wallet: it reads set.json)
+pub mod set_program;
 pub mod setqueue;
 // set recordings sign with the booth identity (djrust-wallet): the `wallet` feature
 #[cfg(feature = "wallet")]

@@ -2524,6 +2524,17 @@ track does (`every N bars` stops at the track's end). The playhead sits on the `
 `mix` line during a mix, so the follow-scroll goes track to track and mix to mix. What is **not** lit are tokens inside a
 track: their text is the track's, not the set's. (The window shows the set's text; the track opens with `btw load`.)
 
+**A recorded set as a set.** `beatscript set-program <recording>` (and the booth's `record program`) writes a recorded set back
+out as a set, in the syntax above. Each tracklist line that is a saved program becomes a `play`, cut with `until bar N` where
+the next track came in. The moves into it become one `mix`: its bars run from the incoming track's mark to the last move, a
+move with no set spelling (a bass swap, a loop roll, a phrase sync, a vocoder handoff) is written as a `crossfade` under a
+`# performed:` line, and `tempo A -> B` is added when the master tempo moved. A generator track (`techno:7` with nothing
+changed) is played as `arrange from seed(techno, 7)`, which plays the generator's notes. Anything else (a mashup, a loop
+set, a sample) is a `# not a program:` line, and its bars are said: the track before plays on through them, or, before the
+first program, they are a `# gap:`. A sample makes the set `use restricted` and private. Beside the program it writes the
+**take**, `<cid>.take.json`: the tracklist, the replay and the controls it was played with, naming the program by CID as a
+performance does. A program is in a tracklist only when the booth marks it (`record mark`, kind `track`, its program CID).
+
 **Share links.** The canonical text pins saved tracks by CID, and a generator call or a `next` is its own text, so a link of a
 set is the set. A link carries its saved tracks' canonical texts (`*` section, each one checked against its CID on opening),
 however long the link is, so it opens where no track is saved ("Share links").
