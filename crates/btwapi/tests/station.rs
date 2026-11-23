@@ -72,7 +72,19 @@ fn a_station_program_checks_and_compiles_to_its_track_0() {
     let plain = check("station {\n  from gen@2 house seed=7\n}\n");
     assert!(complaints(&plain).is_empty(), "{:#?}", complaints(&plain));
     let st = plain.compiled.unwrap().station.unwrap().station;
-    assert!(st.tempo.is_some() && st.key.is_some(), "{st:?}");
+    assert!(st.tempo.is_none() && st.key.is_none(), "the station says neither: {st:?}");
+    assert!(st.tempo_heard().is_some() && st.key_heard().is_some(), "its tracks play at the from call's own: {st:?}");
+    // the station's CID is of its text as written, in the check and in the answer
+    let plain_src = "station {\n  from gen@2 house seed=7\n}\n";
+    assert_eq!(st.cid(), djlive::station::read(plain_src).unwrap().cid());
+    let a = ask(&req(plain_src, ", \"n\": 2"));
+    assert_eq!(s(&a, &["station", "cid"]), st.cid());
+    assert!(s(&a, &["tracks", "0", "text"]).starts_with(&format!("#! station: {} track 2\n", st.cid())));
+    // a notch of the tempo it does not say turns the from call's own, and writes it
+    let up = ask(&req(plain_src, ", \"retune\": {\"tempo\": \"+1\"}"));
+    let t = up.get("station").unwrap().get("tempo").and_then(JsonValue::as_f64).unwrap();
+    assert_eq!(t, st.tempo_heard().unwrap() + 2.0);
+    assert!(s(&up, &["station", "text"]).starts_with(&format!("tempo {}", t as i64)));
 }
 
 #[test]
@@ -215,6 +227,7 @@ fn a_bad_request_says_what_is_wrong() {
     for (r, says) in [
         ("{}".to_string(), "`station`"),
         (req(RADIO, ", \"count\": 99"), "`count`"),
+        (req(RADIO, ", \"count\": 8, \"check\": true"), "with `check`"),
         (req(RADIO, ", \"nn\": 1"), "`nn` is no field"),
         (req(RADIO, ", \"retune\": {\"genre\": \"+1\"}"), "no notch"),
         (req(RADIO, ", \"locks\": [\"volume\"]"), "`volume` is no knob"),

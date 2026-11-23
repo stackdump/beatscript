@@ -101,6 +101,9 @@ fn the_walk_counts_on_or_draws_from_the_cid_before() {
     assert_eq!(far.seed, 42u32.wrapping_add((3u64.wrapping_mul(9_000_000_000_000) & 0xffff_ffff) as u32));
     assert!(by.seeds(station::MAX_WALK + 1).is_err());
     assert!(radio().track(station::MAX_WALK + 1).is_err(), "a hashed walk is worked out to MAX_WALK");
+    // the last position has its track and the segue after it
+    assert_eq!(radio().track(station::MAX_WALK).unwrap().n, station::MAX_WALK);
+    assert_eq!(radio().segue(station::MAX_WALK).unwrap().to, station::MAX_WALK + 1);
     // seed=~ draws the next seed from the CID of `arrange from <the call>`
     let s = radio();
     let seeds = s.seeds(3).unwrap();

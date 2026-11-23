@@ -76,6 +76,10 @@ pub struct Station {
     /// The program's `tempo` and `key`: every track and segue is generated at them. None: the from call's own.
     pub tempo: Option<f64>,
     pub key: Option<String>,
+    /// The from call's own tempo and key, for a station that does not say them ([`Station::with_defaults`]): the tracks
+    /// play at them, and the station's text (and CID) stays as written.
+    pub own_tempo: Option<f64>,
+    pub own_key: Option<String>,
 }
 
 /// A walk as a run of tracks reads it.
@@ -240,8 +244,9 @@ impl Station {
                 Ok((0..=upto).map(|i| self.counted(n, i)).collect())
             }
             SeedStep::Hash => {
-                if upto > MAX_WALK {
-                    return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {upto} is past it"));
+                // (the segue after position MAX_WALK reads the seed after it)
+                if upto > MAX_WALK + 1 {
+                    return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {} is past it", upto - 1));
                 }
                 let mut out = Vec::with_capacity(upto as usize + 1);
                 out.push(seed_value(&self.seed));
@@ -307,13 +312,23 @@ impl Station {
         (format!("template({form}, @{phrase}, {roles})"), form, Some(format!("@{phrase}")), s, t)
     }
 
+    /// The tempo the tracks play at: the station's, else its from call's own.
+    pub fn tempo_heard(&self) -> Option<f64> {
+        self.tempo.or(self.own_tempo)
+    }
+
+    /// The key the tracks play in: the station's, else its from call's own.
+    pub fn key_heard(&self) -> Option<String> {
+        self.key.clone().or_else(|| self.own_key.clone())
+    }
+
     /// The program of a reference: the station's tempo and key, then `arrange from` it; canonical.
     fn body(&self, reference: &str) -> String {
         let mut s = String::new();
-        if let Some(t) = self.tempo {
+        if let Some(t) = self.tempo_heard() {
             s.push_str(&format!("tempo {}\n", num(t)));
         }
-        if let Some(k) = &self.key {
+        if let Some(k) = self.key_heard() {
             s.push_str(&format!("key {k}\n"));
         }
         s.push_str(&format!("arrange from {reference}\n"));
@@ -323,6 +338,9 @@ impl Station {
     /// The tracks at n .. n+count.
     pub fn tracks(&self, n: u64, count: u64) -> Result<Vec<Track>, String> {
         let last = n.checked_add(count.saturating_sub(1)).ok_or("past the end of the walk")?;
+        if self.step == SeedStep::Hash && last > MAX_WALK {
+            return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {last} is past it"));
+        }
         let seeds = self.walk(last)?;
         let station = self.cid();
         let mut parent = (n > 0).then(|| {
@@ -352,6 +370,9 @@ impl Station {
 
     /// The segue from track n to n+1: the cross of their seeds.
     pub fn segue(&self, n: u64) -> Result<Segue, String> {
+        if self.step == SeedStep::Hash && n > MAX_WALK {
+            return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {n} is past it"));
+        }
         let last = n.checked_add(1).ok_or("past the end of the walk")?;
         let seeds = self.walk(last)?;
         let (a, b) = (self.seed_in(&seeds, n), self.seed_in(&seeds, last));
@@ -428,7 +449,7 @@ impl Station {
             },
             "tempo" => {
                 let t = match notch {
-                    Some(d) => self.tempo.ok_or("the station's tempo is its from call's own: say one, then turn it")? + 2.0 * d as f64,
+                    Some(d) => self.tempo_heard().ok_or("the station's tempo is its from call's own, which is not known here: say one, then turn it")? + 2.0 * d as f64,
                     None => value.trim().parse::<f64>().map_err(|_| format!("`{value}` is no tempo"))?,
                 };
                 if !(40.0..=300.0).contains(&t) {
@@ -438,7 +459,7 @@ impl Station {
             }
             "key" => {
                 s.key = Some(match notch {
-                    Some(d) => fifth(self.key.as_deref().ok_or("the station's key is its from call's own: say one, then turn it")?, d)?,
+                    Some(d) => fifth(&self.key_heard().ok_or("the station's key is its from call's own, which is not known here: say one, then turn it")?, d)?,
                     None => {
                         let k = value.trim().to_lowercase();
                         if crate::music::Key::parse(&k).is_none() {
@@ -467,6 +488,11 @@ impl Station {
                 }
             }
             _ => return Err(format!("`{knob}` is no knob of a station: {}", KNOBS.join(" "))),
+        }
+        // (another call has its own tempo and key: [`Station::with_defaults`] works them out again)
+        if matches!(knob, "genre" | "seed" | "length") {
+            s.own_tempo = None;
+            s.own_key = None;
         }
         Ok(s)
     }
@@ -500,8 +526,8 @@ impl Station {
         let r = crate::gen::resolve_word(&self.from_call(), &Host::default())?;
         let h = crate::gen::host_of(&lex(&r.text).tokens);
         let mut s = self.clone();
-        s.tempo = s.tempo.or(h.tempo);
-        s.key = s.key.or(h.key);
+        s.own_tempo = h.tempo;
+        s.own_key = h.key;
         Ok(s)
     }
 
@@ -517,8 +543,11 @@ impl Station {
             SeedStep::Hash => "~".to_string(),
         }));
         o.set("forms", JsonValue::Array(self.forms.iter().map(|f| JsonValue::str(f.clone())).collect()));
-        o.set("tempo", self.tempo.map_or(JsonValue::Null, JsonValue::Number));
-        o.set("key", self.key.clone().map_or(JsonValue::Null, JsonValue::str));
+        // (the tempo and key the tracks play at; `tempo_said` and `key_said` whether the station says them)
+        o.set("tempo", self.tempo_heard().map_or(JsonValue::Null, JsonValue::Number));
+        o.set("key", self.key_heard().map_or(JsonValue::Null, JsonValue::str));
+        o.set("tempo_said", JsonValue::Bool(self.tempo.is_some()));
+        o.set("key_said", JsonValue::Bool(self.key.is_some()));
         o.set("length", JsonValue::str(self.length.clone().unwrap_or_else(|| "standard".into())));
         o.set("start_cid", JsonValue::str(self.start_cid()));
         o.set("version", JsonValue::str(format!("stations/{VERSION}")));
@@ -684,7 +713,7 @@ fn from_parsed(parsed: &Parsed, src: &str, diags: &mut Vec<Diagnostic>) -> Optio
     }
     let host = crate::gen::host_of(&lex(src).tokens);
     let (forms, forms_span) = forms.unwrap_or((vec!["seeded".to_string()], from_span));
-    let s = Station { version: call.version, genre: call.genre.clone(), seed: call.seed.clone(), length: call.length.clone().filter(|l| l != "standard"), step: step.unwrap_or(SeedStep::By(1)), forms, tempo: host.tempo, key: host.key };
+    let s = Station { version: call.version, genre: call.genre.clone(), seed: call.seed.clone(), length: call.length.clone().filter(|l| l != "standard"), step: step.unwrap_or(SeedStep::By(1)), forms, tempo: host.tempo, key: host.key, own_tempo: None, own_key: None };
     Some((s, [span, from_span, forms_span]))
 }
 
@@ -767,8 +796,8 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, diags: &mut Vec<Diagnostic>)
         filled.seed,
         crate::print::step_word(filled.step).replace("seed=", "next seed="),
         filled.forms.join(" "),
-        filled.tempo.map_or("?".into(), num),
-        filled.key.clone().unwrap_or_else(|| "?".into()),
+        filled.tempo_heard().map_or("?".into(), num),
+        filled.key_heard().unwrap_or_else(|| "?".into()),
         list.join(", "),
         report.segue.as_ref().map_or("-".into(), |s| short(&s.cid)),
     )));

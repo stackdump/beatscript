@@ -206,7 +206,7 @@ curl -s https://beatscript.app/api/station -H 'Content-Type: application/json' \
 |---|---|
 | `station` | the station's program text |
 | `n` | the position (default 0) |
-| `count` | how many tracks from `n`, 1 to 16 (default 1) |
+| `count` | how many tracks from `n`, 1 to 16 (default 1); with `check`, 1 to 4 (each track and segue is checked, a few seconds each) |
 | `segue` | the segue after each track |
 | `check` | each track and segue checked: `ok`, `expanded_cid`, `bars`, `seconds`, `errors` |
 | `retune` | one or more knobs set before anything else: a value (`{"tempo": 130}`), or `"+1"` / `"-1"` for one notch up or down (`{"seed": "+1"}`) |

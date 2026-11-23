@@ -10,8 +10,10 @@
 use djengine::json::{JsonObject, JsonValue};
 use djlive::station::{Station, KNOBS};
 
-/// At most this many tracks an answer (each is checked when asked).
+/// At most this many tracks an answer.
 pub const MAX_COUNT: u64 = 16;
+/// At most this many tracks an answer when each is checked (with its segue: twice as many programs).
+pub const MAX_CHECKED: u64 = 4;
 
 /// What a request asks.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -59,6 +61,9 @@ impl StationAsk {
         let count = whole("count", 1)?;
         if count == 0 || count > MAX_COUNT {
             return Err(format!("`count` is 1 to {MAX_COUNT}"));
+        }
+        if flag("check", false)? && count > MAX_CHECKED {
+            return Err(format!("with `check`, `count` is 1 to {MAX_CHECKED}: each track and segue is checked, a few seconds each"));
         }
         let mut retune = Vec::new();
         match o.get("retune") {
@@ -135,7 +140,8 @@ pub fn station_of(text: &str) -> Result<(Station, Station), (String, Vec<JsonVal
 
 /// The answer to a request.
 pub fn station_answer(ask: &StationAsk) -> JsonValue {
-    let (mut station, _) = match station_of(&ask.station) {
+    // (the station filled in with its from call's own tempo and key, its text as written)
+    let (_, mut station) = match station_of(&ask.station) {
         Ok(s) => s,
         Err((e, ds)) => return err(e, ds),
     };
@@ -144,43 +150,19 @@ pub fn station_answer(ask: &StationAsk) -> JsonValue {
         if ask.locks.iter().any(|l| l == k) {
             return err(format!("`{k}` is locked: unlock it to turn it"), Vec::new());
         }
-        // (a notch of a tempo or key the station does not say turns the from call's own)
-        let base = if matches!(k.as_str(), "tempo" | "key") && v.trim_start_matches(['+', '-']).chars().all(|c| c.is_ascii_digit()) && v.starts_with(['+', '-']) {
-            match station.with_defaults() {
-                Ok(f) => {
-                    let mut b = station.clone();
-                    if k == "tempo" {
-                        b.tempo = f.tempo;
-                    } else {
-                        b.key = f.key;
-                    }
-                    b
-                }
-                Err(d) => return err(d.message, Vec::new()),
-            }
-        } else {
-            station.clone()
-        };
-        match base.retune(k, v) {
+        match station.retune(k, v).and_then(|s| s.with_defaults().map_err(|d| d.message)) {
             Ok(s) => station = s,
             Err(e) => return err(e, Vec::new()),
         }
         retuned.push(JsonValue::str(k.clone()));
     }
-    let filled = match station.with_defaults() {
-        Ok(f) => f,
-        Err(d) => return err(d.message, Vec::new()),
-    };
+    let filled = station.clone();
     let tracks = match filled.tracks(ask.n, ask.count) {
         Ok(t) => t,
         Err(e) => return err(e, Vec::new()),
     };
-    // the station as the listener tuned it: its own text, the defaults it does not say left unsaid
-    let mut st = station.to_json();
-    if let (JsonValue::Object(o), JsonValue::Object(f)) = (&mut st, filled.to_json()) {
-        o.set("tempo", f.get("tempo").cloned().unwrap_or(JsonValue::Null));
-        o.set("key", f.get("key").cloned().unwrap_or(JsonValue::Null));
-    }
+    // the station as the listener tuned it: its own text and CID, and the tempo and key its tracks play at
+    let st = filled.to_json();
     let mut ts = Vec::new();
     for t in &tracks {
         let mut j = t.to_json();
@@ -213,6 +195,7 @@ pub fn station_answer(ask: &StationAsk) -> JsonValue {
     let mut ns = Vec::new();
     if ask.neighbours {
         for (knob, notch, s) in filled.neighbours(&ask.locks) {
+            let Ok(s) = s.with_defaults() else { continue };
             let mut o = JsonObject::new();
             o.set("knob", JsonValue::str(knob.clone()));
             o.set("notch", JsonValue::str(notch));

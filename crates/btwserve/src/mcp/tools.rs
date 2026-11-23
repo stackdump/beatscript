@@ -641,7 +641,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 vec![
                     ("station", sprop(&format!("The station program: its tempo and key lines and its station {{ from, next, forms }} block (at most {mp} bytes)."), &[("maxLength", mpv.clone())])),
                     ("n", json!({"type": "integer", "minimum": 0, "description": "The position: the station's track n (default 0). Track n of a station is always the same track."})),
-                    ("count", json!({"type": "integer", "minimum": 1, "maximum": btwapi::station::MAX_COUNT, "description": format!("How many tracks from n (default 1, at most {}).", btwapi::station::MAX_COUNT)})),
+                    ("count", json!({"type": "integer", "minimum": 1, "maximum": btwapi::station::MAX_COUNT, "description": format!("How many tracks from n (default 1, at most {}; with check, at most {}).", btwapi::station::MAX_COUNT, btwapi::station::MAX_CHECKED)})),
                     ("segue", json!({"type": "boolean", "description": "Also the segue after each track, track n into n+1: the cross form of their two seeds, with its own CID (default true)."})),
                     ("check", json!({"type": "boolean", "description": "Check each track and segue: {ok, expanded_cid, bars, seconds, errors} (default false). Each program checked counts as one call of the checker."})),
                     ("retune", json!({
