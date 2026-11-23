@@ -375,7 +375,7 @@ const A_SETLIST: &[Action] = &[
     Action::new("visibility", "the working set's visibility (or a saved one's, by id): no value reads it; public | private sets it (private: never shared or uploaded)", Effect::Write)
         .with(&[Param::new("value", "string", "public (the default) | private"), Param::new("id", "string", "read a saved set's instead")])
         .probe(r#"{"value":"__no_such_visibility__"}"#),
-    Action::new("fork", "a remix of a saved set (or of the working one), saved and made the working set: it keeps the license, points at its parent (forkedFrom) and credits a CC BY parent's author; forking an all-rights-reserved set warns", Effect::Write)
+    Action::new("fork", "a remix of a saved set (or of the working one), saved and made the working set: it keeps the license, points at its parent (forkedFrom) and credits the parent with its author whatever its license (marked forked from; once, as the attribution, when it is CC BY); forking an all-rights-reserved set warns", Effect::Write)
         .with(&[
             Param::new("id", "string", "the saved set; none: the working set"),
             Param::new("name", "string", "default: its name + (remix)"),
@@ -410,7 +410,7 @@ const A_TRACK: &[Action] = &[
     Action::new("visibility", "a saved track's visibility: no value reads it; public | private sets it (a new CID; private is never shared or uploaded)", Effect::Write)
         .with(&[Param::new("id", "string", "its cid, a part of it, or its name").req(), Param::new("value", "string", "public | private")])
         .probe(r#"{"id":"__no_such_track__"}"#),
-    Action::new("fork", "save a remix of a saved track: it keeps the license, points at its parent (forkedFrom) and carries every credit, adding the parent's author when it is CC BY; forking an all-rights-reserved track warns", Effect::Write)
+    Action::new("fork", "save a remix of a saved track: it keeps the license, points at its parent (forkedFrom) and carries every credit, adding the parent with its author whatever its license (marked forked from; once, as the attribution, when it is CC BY); forking an all-rights-reserved track warns", Effect::Write)
         .with(&[
             Param::new("id", "string", "the parent: its cid, a part of it, or its name").req(),
             Param::new("name", "string", "default: its name + (remix)"),
@@ -476,7 +476,7 @@ const A_LIVE: &[Action] = &[
             Param::new("eval", "boolean", "stage it too (default false)"),
         ])
         .probe(r#"{"url":"__not_a_link__"}"#),
-    Action::new("fork", "a fork of a saved program: the same program, forkedFrom its CID, its license and credits carried (a CC BY parent is credited), saved", Effect::Write)
+    Action::new("fork", "a fork of a saved program: the same program, forkedFrom its CID, its license and credits carried, the parent credited with its author whatever its license (a #! credit: line marked forked from), saved", Effect::Write)
         .with(&[
             Param::new("id", "string", "the parent: cid, part of one, or name").req(),
             Param::new("name", "string", "default \"<name> (fork)\""),
@@ -1843,8 +1843,8 @@ pub(super) const NOUNS: &[Noun] = &[
               canonical, content-addressed JSON object that carries its own rights: license CC0-1.0 (the default: \
               public domain), CC-BY-4.0 (reuse with credit) or all-rights-reserved; visibility public (the \
               default) or private (never shared by CID, never uploaded); author (a signer identity); forkedFrom \
-              (the parent's CID, for a remix) and credits (every CC BY ancestor's CID and author, kept down the \
-              whole chain of forks). The rights are inside the object, so changing the license changes the CID. \
+              (the parent's CID, for a remix) and credits (every parent's CID and author, marked forked from, kept \
+              down the whole chain of forks). The rights are inside the object, so changing the license changes the CID. \
               list, get {id | deck}, save {deck, name, license, visibility, author}, license {id, value}, \
               visibility {id, value}, fork {id, name, author} (warns on an all-rights-reserved parent), share \
               {id} (refused when private), load {id, deck}, delete {id}. The music's own share CID (music_cid) \

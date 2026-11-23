@@ -11,9 +11,12 @@
 //! - `author`: who made it, as a signer identity (the wallet's `did:key:z…` or an `0x…` address;
 //!   any non-empty text is kept). When the object is signed, the signature's issuer is the author.
 //! - `forkedFrom`: the parent object's CID, when this one is a remix of it.
-//! - `credits`: who must be credited. A fork of a CC BY object adds the parent (its CID, author,
-//!   license and name); credits are inherited by every later fork and are never dropped, so a
-//!   chain of remixes keeps crediting everyone upstream who asked for it.
+//! - `credits`: the lineage and who must be credited. Every fork adds its parent (its CID, author,
+//!   license and name, the name marked [`FORKED_FROM`]) whatever the license, so the original
+//!   author stays in the lineage when the fork's own `author` is the forker; a CC BY parent's credit
+//!   is also its attribution. An object that uses a CC BY one (an import) adds that one too.
+//!   Credits are inherited by every later fork and are never dropped, so a chain of remixes keeps
+//!   naming everyone upstream.
 //!
 //! Generated deterministic snapshots (genre + seed + structure) are not covered here: they are
 //! CC0 by definition (the wallet's `beats-snapshot.v1`), and discovery claims stay attribution
@@ -143,20 +146,58 @@ impl Visibility {
     }
 }
 
-/// One upstream work a fork must credit (a CC BY ancestor).
+/// The note a fork writes in the `name` of its credit for the parent, so a reader can tell a
+/// fork's parents from the CC BY works it uses: `forked from`, or `forked from: <the parent's
+/// name>` when it had one.
+pub const FORKED_FROM: &str = "forked from";
+
+/// One upstream work an object credits: a parent it was forked from (any license), or a CC BY work
+/// it uses.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Credit {
     /// The credited object's CID.
     pub cid: String,
     /// Its author (signer identity), when it named one.
     pub author: Option<String>,
-    /// Its license when it was forked (CC BY, for a credit a fork had to add).
+    /// Its license when it was forked or used.
     pub license: License,
-    /// Its name, when it had one.
+    /// Its name, when it had one; a fork parent's starts with [`FORKED_FROM`].
     pub name: Option<String>,
 }
 
 impl Credit {
+    /// A fork's credit for its parent: the parent's CID, author and license, and its name after
+    /// the [`FORKED_FROM`] note (on one line: a control character is a space).
+    pub fn fork_parent(cid: &str, author: Option<&str>, license: License, name: Option<&str>) -> Credit {
+        let name: Option<String> = name.map(|n| n.chars().map(|c| if c.is_control() { ' ' } else { c }).collect());
+        let name = match clean(name.as_deref()) {
+            Some(n) => format!("{FORKED_FROM}: {n}"),
+            None => FORKED_FROM.to_string(),
+        };
+        Credit { cid: cid.to_string(), author: clean(author), license, name: Some(name) }
+    }
+
+    /// Whether this credits a parent a fork was made from (its name carries the note).
+    pub fn is_fork_parent(&self) -> bool {
+        self.name.as_deref().and_then(|n| n.strip_prefix(FORKED_FROM)).is_some_and(|rest| rest.is_empty() || rest.starts_with(':'))
+    }
+
+    /// The credited work's own name, without the [`FORKED_FROM`] note.
+    pub fn work_name(&self) -> Option<&str> {
+        let n = self.name.as_deref()?;
+        if !self.is_fork_parent() {
+            return Some(n);
+        }
+        n[FORKED_FROM.len()..].strip_prefix(':').map(str::trim).filter(|s| !s.is_empty())
+    }
+
+    /// The same work by the same author: what a chain of credits never holds twice. (A fork of a
+    /// program names its parent by the program's CID, which an unedited fork shares with its own
+    /// parent, so the author is what tells those two steps apart.)
+    fn same_as(&self, other: &Credit) -> bool {
+        self.cid == other.cid && self.author == other.author
+    }
+
     pub fn to_json(&self) -> JsonValue {
         let mut o = JsonObject::new();
         o.set("cid", self.cid.clone().into());
@@ -179,14 +220,23 @@ impl Credit {
         Ok(Credit { cid, author: text_of(v, "author"), license, name: text_of(v, "name") })
     }
 
-    /// "by did:key:z6Mk… · “Night Bus” (zQmAb…9xYz), CC BY 4.0".
+    /// "by did:key:z6Mk… · “Night Bus” (zQmAb…9xYz), CC BY 4.0"; a fork parent's reads "by … ·
+    /// forked from “Night Bus” (…), CC0 1.0".
     pub fn text(&self) -> String {
         let who = self.author.as_deref().unwrap_or("an unnamed author");
-        let what = match &self.name {
+        let what = match self.work_name() {
             Some(n) => format!("“{n}” ({})", short_cid(&self.cid)),
             None => short_cid(&self.cid),
         };
+        let what = if self.is_fork_parent() { format!("{FORKED_FROM} {what}") } else { what };
         format!("by {who} · {what}, {}", self.license.label())
+    }
+}
+
+/// Add `c` to `credits` unless the same work by the same author is already there.
+fn add_credit(credits: &mut Vec<Credit>, c: Credit) {
+    if !credits.iter().any(|x| x.same_as(&c)) {
+        credits.push(c);
     }
 }
 
@@ -297,36 +347,31 @@ impl Rights {
     }
 
     /// The rights of a fork of an object with these rights and CID (`parent_name`: its name, for
-    /// the credit), made by `author`. The fork keeps the parent's license and visibility (the
-    /// person may change either after), points at the parent (`forkedFrom`), inherits every
-    /// credit, and adds the parent as a credit when it is CC BY. Forking an all-rights-reserved
-    /// object is allowed (it may be the person's own) but warns.
+    /// the credit), made by `author` (the forker: the caller's, which the stores default to
+    /// `$DJ_AUTHOR`). The fork keeps the parent's license and visibility (the person may change
+    /// either after), points at the parent (`forkedFrom`), inherits every credit, and adds the
+    /// parent as a credit ([`Credit::fork_parent`]) whatever its license, so the parent's author
+    /// stays in the lineage: for a CC BY parent that one credit is also the attribution its
+    /// license asks. A parent that names no author adds no credit, unless it is CC BY (then it is
+    /// credited by its CID alone, and that warns). Forking an all-rights-reserved object is allowed
+    /// (it may be the person's own) but warns.
     pub fn fork(&self, parent_cid: &str, parent_name: Option<&str>, author: Option<&str>) -> Fork {
         let mut warnings = Vec::new();
-        let mut credits = self.credits.clone();
         match self.license {
             License::AllRightsReserved => warnings.push(format!(
                 "{} is all rights reserved{}: its author has not granted reuse, so this fork may not be shared or published without their permission",
                 short_cid(parent_cid),
                 self.author.as_deref().map(|a| format!(" by {a}")).unwrap_or_default()
             )),
-            License::CcBy4 => {
-                if self.author.is_none() {
-                    warnings.push(format!(
-                        "{} is CC BY 4.0 but names no author: it is credited by its CID alone",
-                        short_cid(parent_cid)
-                    ));
-                }
-                if !credits.iter().any(|c| c.cid == parent_cid) {
-                    credits.push(Credit {
-                        cid: parent_cid.to_string(),
-                        author: self.author.clone(),
-                        license: License::CcBy4,
-                        name: clean(parent_name),
-                    });
-                }
-            }
-            License::Cc0 => {}
+            License::CcBy4 if self.author.is_none() => warnings.push(format!(
+                "{} is CC BY 4.0 but names no author: it is credited by its CID alone",
+                short_cid(parent_cid)
+            )),
+            License::CcBy4 | License::Cc0 => {}
+        }
+        let mut credits = self.credits.clone();
+        if self.author.is_some() || self.license.requires_attribution() {
+            add_credit(&mut credits, Credit::fork_parent(parent_cid, self.author.as_deref(), self.license, parent_name));
         }
         Fork {
             rights: Rights {
@@ -337,6 +382,24 @@ impl Rights {
                 credits,
             },
             warnings,
+        }
+    }
+
+    /// What an object that uses this one without forking it (an import, a borrowed section, a set
+    /// that plays it) must credit for it: every credit this one carries, and this one itself
+    /// (named `name`) when it is CC BY. Add them with [`Rights::add_credits`].
+    pub fn credits_for_use(&self, cid: &str, name: Option<&str>) -> Vec<Credit> {
+        let mut credits = self.credits.clone();
+        if self.license.requires_attribution() {
+            add_credit(&mut credits, Credit { cid: cid.to_string(), author: self.author.clone(), license: License::CcBy4, name: clean(name) });
+        }
+        credits
+    }
+
+    /// Add credits, skipping any already here (the same work by the same author).
+    pub fn add_credits(&mut self, credits: impl IntoIterator<Item = Credit>) {
+        for c in credits {
+            add_credit(&mut self.credits, c);
         }
     }
 

@@ -2920,10 +2920,11 @@ canonical text is a fixed point), `examples_beatscript.rs` for `examples/beatscr
 
 A saved program is a **licensed object**, like a `track` (docs/LICENSING.md): the canonical text and its rights
 (CC0-1.0 public by default, CC-BY-4.0, all-rights-reserved; public or private; an author, `$DJ_AUTHOR` by
-default), `forkedFrom` (the parent program's CID) and the credits a CC BY parent or import brings. `btw fork`
-records the parent and carries the license and credits on; a program that **imports** a CC BY snippet is
-credited to it, down the fork chain. Two CIDs: the **program CID** (of the text) is what links, imports and
-`forkedFrom` name; the **object CID** (text and rights) names the file, so a new license is a new object of
+default), `forkedFrom` (the parent program's CID) and its credits. `btw fork` records the parent, names the
+forker as the author, and carries the license and credits on; it adds the parent with its author as a credit
+whatever its license (a `#! credit:` line marked `forked from`), so every author up the fork chain stays in the
+lineage. A program that **imports** a CC BY snippet is credited to it, down the fork chain. Two CIDs: the
+**program CID** (of the text) is what links, imports and `forkedFrom` name; the **object CID** (text and rights) names the file, so a new license is a new object of
 the same program.
 
 A `.beatscript` file in `<support>/live` (`$DJ_LIVE_DIR`) is the program with `#!` header lines (comments to the

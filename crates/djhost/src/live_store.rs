@@ -2,7 +2,7 @@
 //!
 //! A saved program is a track object (docs/LICENSING.md): the program's canonical text and its
 //! rights, CC0-1.0 and public unless said, with an author, `forkedFrom` (the parent program's CID)
-//! and the credits CC BY ancestors and CC BY imports bring down the fork chain. Two CIDs:
+//! and the credits the fork chain (every parent, with its author) and CC BY imports bring. Two CIDs:
 //!
 //! - the **program CID** (`djlive::program_cid`: of the canonical text alone) is what links, imports
 //!   and `forkedFrom` name, so formatting and licensing never fork a program;
@@ -18,7 +18,7 @@
 //! #! visibility: public
 //! #! author: did:key:z6Mk...
 //! #! forked-from: z4EBG9...
-//! #! credit: z4EBG9... | did:key:z6Mk... | CC-BY-4.0 | night bus
+//! #! credit: z4EBG9... | did:key:z6Mk... | CC-BY-4.0 | forked from: night bus
 //! #! genre: https://beatscript.app/ontology/genre/techno
 //! #! tags: https://beatscript.app/ontology/instrument/acid, https://beatscript.app/ontology/section/drop
 //! tempo 140
@@ -174,7 +174,8 @@ impl Object {
                 "genre" => genre = Some(v.to_string()).filter(|a| !a.is_empty()),
                 "tags" => tags.extend(linked::split_tags(v)),
                 "credit" => {
-                    let f: Vec<&str> = v.split('|').map(str::trim).collect();
+                    // the name is the rest of the line, so a `|` in it reads back as written
+                    let f: Vec<&str> = v.splitn(4, '|').map(str::trim).collect();
                     if let Some(cid) = f.first().filter(|c| !c.is_empty()) {
                         credits.push(Credit {
                             cid: cid.to_string(),
@@ -428,7 +429,8 @@ impl LiveStore {
         linked::canonical_links(crate::ontology::vocabulary(), genre, tags).map_err(|ps| format!("btw: {}", ps.iter().map(linked::Problem::text).collect::<Vec<_>>().join("; ")))
     }
 
-    /// Every snippet the program imports is credited the way a fork credits its parent.
+    /// Every snippet the program imports, and what the check drew on, brings its credits, and itself when it is CC BY
+    /// (`Rights::credits_for_use`; an import is not a fork, so a CC0 one adds no credit of its own).
     fn add_import_credits(&self, text: &str, drew_on: &[(String, String)], rights: &mut Rights, warnings: &mut Vec<String>) {
         let be = BeatscriptEnv::new(Some(self));
         let parsed = djlive::parse::parse_with(text, &be.env());
@@ -442,12 +444,7 @@ impl LiveStore {
         }
         for cid in &cids {
             let Some(e) = self.list().into_iter().find(|e| e.cid == *cid) else { continue };
-            let f = e.rights.fork(&e.cid, Some(&e.name), rights.author.as_deref());
-            for c in f.rights.credits {
-                if !rights.credits.iter().any(|x| x.cid == c.cid) {
-                    rights.credits.push(c);
-                }
-            }
+            rights.add_credits(e.rights.credits_for_use(&e.cid, Some(&e.name)));
             if e.rights.license == License::AllRightsReserved {
                 warnings.push(format!("it draws on {} ({}), which is all rights reserved: ask its author before sharing this", e.name, short_cid(&e.cid)));
             }
@@ -612,8 +609,9 @@ impl LiveStore {
         Ok(linked::jsonld(&comp, &linked::Facts { name, rights: has_rights.then_some(&o.rights), links: Some(&links) }, Some(crate::ontology::vocabulary())))
     }
 
-    /// A fork by `author`: the same program, `forkedFrom` its CID, the license and visibility
-    /// and credits carried (a CC BY parent is credited). Saved; answers it and the warnings.
+    /// A fork by `author` (else `$DJ_AUTHOR`): the same program, `forkedFrom` its CID, the license
+    /// and visibility and credits carried, and the parent credited with its author (marked
+    /// `forked from`) whatever its license. Saved; answers it and the warnings.
     pub fn fork(&self, query: &str, name: Option<&str>, author: Option<&str>) -> Result<(Entry, Vec<String>), String> {
         let parent = self.resolve(query)?;
         let o = self.read_object(&parent.object).ok_or_else(|| format!("btw {}: unreadable", parent.object))?;
@@ -895,6 +893,57 @@ mod tests {
         let (_, w) = s.fork("night bus", Some("third"), None).unwrap();
         assert!(w.iter().any(|x| x.contains("all rights reserved")), "{w:?}");
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    /// A program that names its author keeps it; a fork names the forker and keeps every author before it in its lineage
+    /// (`#! credit:` lines, marked `forked from`), CC0 too. The program CID never moves; the header lines read back as written.
+    #[test]
+    fn a_fork_keeps_the_original_author_in_its_lineage_and_the_header_lines_round_trip() {
+        let (s, dir) = store_named("lineage");
+        let alice = Rights { author: Some("did:key:zAlice".into()), ..Rights::default() };
+        let a = s.save_with("night bus", "deck A: kick x ~ x ~\n", Some(alice)).unwrap().0;
+        assert_eq!((a.rights.license, a.rights.author.as_deref()), (License::Cc0, Some("did:key:zAlice")));
+        // Bob forks Alice's CC0 program: he is its author, Alice is in its lineage
+        let (b, w) = s.fork(&a.object, Some("night bus | dub"), Some("did:key:zBob")).unwrap();
+        assert!(w.is_empty(), "{w:?}");
+        assert_eq!(b.cid, a.cid, "a fork is the same program: its CID does not move");
+        assert_ne!(b.object, a.object);
+        assert_eq!(b.rights.author.as_deref(), Some("did:key:zBob"));
+        assert_eq!(b.rights.forked_from.as_deref(), Some(a.cid.as_str()));
+        assert_eq!(b.rights.credits.len(), 1);
+        let c0 = &b.rights.credits[0];
+        assert_eq!((c0.cid.as_str(), c0.author.as_deref(), c0.license), (a.cid.as_str(), Some("did:key:zAlice"), License::Cc0));
+        assert!(c0.is_fork_parent() && c0.work_name() == Some("night bus"), "{c0:?}");
+        // Carol forks Bob's fork (the same program CID): both ancestors stay, each once
+        let (c, _) = s.fork(&b.object, Some("night bus (carol)"), Some("did:key:zCarol")).unwrap();
+        assert_eq!(c.cid, a.cid);
+        assert_eq!(c.rights.author.as_deref(), Some("did:key:zCarol"));
+        let who: Vec<_> = c.rights.credits.iter().map(|x| x.author.as_deref().unwrap()).collect();
+        assert_eq!(who, ["did:key:zAlice", "did:key:zBob"]);
+        assert!(c.rights.credits.iter().all(|x| x.cid == a.cid && x.is_fork_parent()));
+        assert_eq!(c.rights.credits[1].work_name(), Some("night bus | dub"));
+        // the file says so in its header lines
+        let (_, file) = s.export(&c.object).unwrap();
+        assert!(file.contains(&format!("#! credit: {} | did:key:zAlice | CC0-1.0 | forked from: night bus\n", a.cid)), "{file}");
+        assert!(file.contains(&format!("#! credit: {} | did:key:zBob | CC0-1.0 | forked from: night bus | dub\n", a.cid)), "{file}");
+        assert!(file.contains("#! author: did:key:zCarol\n"), "{file}");
+        // they read back as written, the object is the same object (the same CID) and the program runs as it is
+        let (back, _) = Object::from_file(&file).unwrap();
+        assert_eq!(back.rights, c.rights);
+        assert_eq!(back.cid(), c.object);
+        assert_eq!(s.load(&c.object).unwrap().rights, c.rights);
+        assert_eq!(djlive::check(&file).compiled.unwrap().cid, a.cid);
+        // and a store that imports the file keeps the same object
+        let (s2, dir2) = store_named("lineage-import");
+        let (e, _) = s2.import_text(&file, "x").unwrap();
+        assert_eq!((e.object.as_str(), e.cid.as_str()), (c.object.as_str(), a.cid.as_str()));
+        assert_eq!(e.rights, c.rights);
+        // a program that only imports a CC0 one is not its fork: no credit for that
+        let (lib, _) = s.save_with("riffs", "let riff = c2 e2 g2 b2\n", Some(Rights { author: Some("did:key:zLib".into()), ..Rights::default() })).unwrap();
+        let (song, _) = s.save_with("song", &format!("import {}\ndeck A: bass riff\n", lib.cid), Some(Rights { author: Some("did:key:zSong".into()), ..Rights::default() })).unwrap();
+        assert!(song.rights.credits.is_empty(), "{:?}", song.rights.credits);
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(dir2);
     }
 
     #[test]

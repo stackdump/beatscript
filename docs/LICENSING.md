@@ -20,7 +20,7 @@ Every user-made track and set has these fields at the top level of its canonical
 | `visibility` | `public` · `private` | `public` | whether it may leave this machine |
 | `author` | a signer identity (`did:key:z…`, `0x…`) | none (`$DJ_AUTHOR` if set) | who made it |
 | `forkedFrom` | the parent's CID | none | set on a fork / remix |
-| `credits` | `[{cid, author, license, name}]` | none | everyone upstream who must be credited |
+| `credits` | `[{cid, author, license, name}]` | none | the lineage: every parent it was forked from, and every CC BY work it uses |
 
 The two fields are independent: a private CC0 track is fine, and so is a public track with all
 rights reserved.
@@ -65,7 +65,7 @@ writes nothing. Every new set (`SetList::new`, the generator) carries the block 
  "spec":{"cohesion":"v2","genre":"dnb","seed":82819},
  "license":"CC-BY-4.0","visibility":"public","author":"did:key:zBob",
  "forkedFrom":"z4EBG9jFxJJ…dW4cXT",
- "credits":[{"author":"did:key:zAlice","cid":"z4EBG9jFxJJ…dW4cXT","license":"CC-BY-4.0","name":"Night Bus"}]}
+ "credits":[{"author":"did:key:zAlice","cid":"z4EBG9jFxJJ…dW4cXT","license":"CC-BY-4.0","name":"forked from: Night Bus"}]}
 ```
 
 Kept as `<cid>.json` in `<support>/tracks` (`$DJ_TRACKS_DIR`; on macOS
@@ -76,7 +76,7 @@ listed, as with the set lists.
 
 Typed lyrics sung by the formant voice (docs/VOICE.md, "Typed lyrics") are the same kind of object: the
 rights block rides inside the canonical JSON, **CC0 and public by default**, changing the license is a new
-CID, a fork credits a CC BY parent, a private line is never shared. Kept as `<cid>.json` in
+CID, a fork credits its parent, a private line is never shared. Kept as `<cid>.json` in
 `<support>/vocals` (`$DJ_VOCALS_DIR`). The sung audio can be CC0 because nothing in it is recorded or
 cloned: the phonemes come from the BeatScript phoneme set, lexicon and phrasebook (CC0, written for this project,
 docs/beatscript/phonemes.md) and rules written here, and the voice is synthesised. (The desktop booth alone also consults the
@@ -94,10 +94,25 @@ written here, and the file is CC0. No modern edition, translation or transcripti
 - the parent's `license` and `visibility` (the person may change either afterwards);
 - `forkedFrom` = the parent's CID;
 - `author` = whoever forked it (`author` param, else `$DJ_AUTHOR`);
-- `credits` = the parent's credits, **plus the parent itself when it is CC BY 4.0** (its CID, its
-  author, its name). Credits are inherited by every later fork and no verb removes them. A chain
-  Alice (CC BY) → Bob (relicensed CC0) → Carol still credits Alice, and Alice → Bob (CC BY) →
-  Carol credits both. A parent is never credited twice.
+- `credits` = the parent's credits, **plus the parent itself, whatever its license** (its CID, its
+  author, its license, and its name after the note `forked from`). So the original author stays
+  in the lineage while `author` names the forker. For a CC BY 4.0 parent that one credit is also
+  the attribution the license asks for. A parent that names no author adds no credit, unless it is
+  CC BY: then it is credited by its CID alone. Credits are inherited by every later fork and no
+  verb removes them. A chain Alice → Bob → Carol credits Alice and Bob, whether they chose CC0 or
+  CC BY. The same work by the same author is never credited twice. (A program's fork names its
+  parent by the program's CID, which an unedited fork shares with its own parent, so the author is
+  what tells those two steps apart.)
+
+A credit for a fork parent is marked in its `name`: `forked from`, or `forked from: Night Bus` when
+the parent had a name. A saved program writes it as a header line:
+
+```
+#! credit: z4EBG9... | did:key:zAlice | CC0-1.0 | forked from: night bus
+```
+
+An object that uses another without forking it (a program that imports a snippet or borrows a
+section) adds that object's credits, and the object itself only when it is CC BY.
 
 Warnings (returned by the verb, printed by the CLI, shown in the window):
 
@@ -121,9 +136,9 @@ is what makes a user-made object with a choice of license.
 - **The Tracks window** (top bar, `windows open window=tracks`): a save row with a name, a license
   picker and a visibility picker (CC0 1.0 + public until changed), **Save A** / **Save B**; each
   saved track with its license badge (coloured, the license's meaning and URL on hover), its
-  `forkedFrom`, its credit line ("Contains work by did:key:zAlice · “Night Bus” (z…dW4cXT), CC BY
-  4.0"), pickers to change the license and visibility, →A / →B, Fork, Share (copies the CID;
-  refused when private) and ✕.
+  `forkedFrom`, its credit line ("Contains work by did:key:zAlice · forked from “Night Bus”
+  (z…dW4cXT), CC BY 4.0"), pickers to change the license and visibility, →A / →B, Fork, Share
+  (copies the CID; refused when private) and ✕.
 - **The deck header**: when a deck plays a saved track (its share CID is a saved track's
   `music_cid`), the track's name, its license badge and its credit line under the title.
 - **The Set window**: each saved set's badge, a Fork button, and license / visibility pickers and
@@ -163,8 +178,13 @@ djctl track check some-track.json      # reads a track object, prints its CID an
 ## Tests
 
 - `djengine/tests/rights.rs`: the default is CC0 / public; the ids round-trip; "unlicensed" is
-  never accepted; private refuses; the license survives a fork; all-rights-reserved warns; a CC BY
-  fork credits the parent's author; credits are inherited down a chain and not duplicated.
+  never accepted; private refuses; the license survives a fork; all-rights-reserved warns; every
+  fork credits its parent's author (CC0 too), marked `forked from`, and a CC BY parent once; a fork
+  of a fork credits both; a parent with no author adds none; credits are inherited down a chain
+  and not duplicated; an import credits only what its license asks.
+- `djhost/src/live_store.rs`: a program's fork keeps the original author in its lineage, its
+  program CID does not move, and the `#! credit:` header lines round-trip through export, load
+  and import.
 - `djhost/src/tracks/tests.rs`: a new track is CC0 / public in its JSON; the CID changes with the
   license and with the visibility and the music CID does not; private refuses sharing; the
   license survives a fork; the CC BY credit is in the forked object and in its share; the store
