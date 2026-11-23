@@ -722,6 +722,14 @@ const A_EFFECTS: &[Action] = &[
     Action::new("release", "a held pad let go", Effect::Write)
         .with(&[P_TARGET, Param::new("id", "string", "a pad id").req()])
         .probe(r#"{"id":"__no_such_pad__"}"#),
+    Action::new("fire", "a pad by id on the target's next bar, for whole bars or latched, whatever the window's length (a program's `macro` line): a transition runs its own length, a riser's bars are its sweep", Effect::Write)
+        .with(&[
+            P_TARGET,
+            Param::new("id", "string", "a pad id from catalogue").req(),
+            Param::new("bars", "integer", "1-64 whole bars (a transition takes none; a riser: the bars it rises over)"),
+            Param::new("latch", "boolean", "on until released (not a transition or a sweep)"),
+        ])
+        .probe(r#"{"id":"__no_such_pad__"}"#),
     Action::new("length", "the target's engagement: 1-4 bars or latch", Effect::Write)
         .with(&[P_TARGET, Param::new("length", "integer|string", "1-4 or latch").req()]),
     Action::new("sweep", "the sweep categories' own bars (1-4)", Effect::Write)
@@ -2292,7 +2300,9 @@ pub(super) const NOUNS: &[Noun] = &[
               macros as pads, fired on the target's next bar (the Wheel's and the Master's: the \
               lead deck's) for 1-4 bars or latched. status (target?): the aim, length and what is \
               on. catalogue: the pads. tap (id): a click: off on the next bar if on, else on. hold / \
-              release (id): a transition pad held. length (1-4 | latch), sweep (bars), knob (the \
+              release (id): a transition pad held. fire (id, bars 1-64 | latch): a pad by id for its \
+              own length, whatever the window's (a transition runs its own; a riser's bars are its \
+              sweep): what a program's `macro` line is. length (1-4 | latch), sweep (bars), knob (the \
               filter, 0.5 open), panic, target (aim the window). Pads that work a deck's track \
               are refused on the Wheel and the Master, with the reason.",
         schema: "",

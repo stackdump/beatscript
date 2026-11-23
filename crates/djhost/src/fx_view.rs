@@ -6,8 +6,10 @@
 //! where this started), so a pad does the same thing on both.
 
 use djengine::fx::catalogue::{self, Category, Family};
+use djengine::fx::tricks::{TrickArgs, TrickKind};
 
 use crate::deck::slot_fx::slot_entry;
+use crate::deck::tricks::TrickQuant;
 use crate::deck::{Engagement, Engine, TrickSlot};
 use crate::insert_view::WHEEL_STRIP;
 
@@ -107,6 +109,59 @@ pub fn engage(e: &mut Engine, t: &str, id: &str, mode: Engagement) -> Result<(),
     }
 }
 
+/// The most whole bars `fire` engages an entry for: the engine's own bound on [`Engagement::Bars`] (the window offers 1 to 4).
+pub const FIRE_MAX_BARS: u32 = 64;
+
+/// `effects fire` (the registry verb a program's `macro` line lowers to, docs/beatscript/ext-control.md): engage catalogue entry `id`
+/// on `t`'s next bar, whatever the window's length is. `bars` (1 to [`FIRE_MAX_BARS`]) runs it that many whole bars and ends
+/// it; `latch` holds it until it is let go. A transition takes neither: it runs its own length (`Engagement::Momentary`),
+/// except the riser, whose length is its sweep: `bars` is how many bars the noise rises over (4 when it has none). A
+/// transition that is held (tape stop, spin back, reverb freeze) is on until `release`. Refused, with the reason: an id the
+/// catalogue does not have (with the nearest), a length on a one-shot or none on the rest, `bars` out of range, a latch where
+/// the category has none, and what the engine refuses (a net, pan or shape entry on a deck that plays no net).
+pub fn fire(e: &mut Engine, t: &str, id: &str, bars: Option<u32>, latch: bool) -> Result<(), String> {
+    let Some(entry) = catalogue::find(id) else {
+        let ids = catalogue::ENTRIES.iter().map(|x| x.id);
+        return Err(match djlive::parse::nearest(id, ids) {
+            Some(n) => format!("no effect {id:?}: did you mean {n:?}? (catalogue lists every id)"),
+            None => format!("no effect {id:?}: catalogue lists every id"),
+        });
+    };
+    if bars.is_some() && latch {
+        return Err(format!("{id}: bars or latch, not both"));
+    }
+    if let Some(n) = bars {
+        if !(1..=FIRE_MAX_BARS).contains(&n) {
+            return Err(format!("{id}: bars is a whole number from 1 to {FIRE_MAX_BARS}, not {n}"));
+        }
+    }
+    let mode = match (entry.transition(), bars, latch) {
+        (true, None, false) => Engagement::Momentary,
+        (true, _, true) => return Err(format!("{id} is a one-shot ({}): it cannot latch", entry.category.label())),
+        (true, Some(n), _) => {
+            if let Family::Trick(TrickKind::Riser) = entry.family {
+                // the riser's own length is its sweep's: the trick, with its bars, on the deck's next bar (as `engage` places it)
+                return match target(e, t)? {
+                    FxTarget::Deck(d) => {
+                        let args = TrickArgs { bars: f64::from(n), ..TrickKind::Riser.default_args() };
+                        e.trick(d, TrickKind::Riser, true, Some(args), TrickQuant::Beats(4.0))
+                    }
+                    FxTarget::Slot(_) => Err(format!("{id}: a riser's bars are a deck's sweep; on the Wheel or the Master it runs its own (no bars)")),
+                };
+            }
+            return Err(match entry.family {
+                Family::Trick(_) => format!("{id} is a one-shot that runs while it is held: fire it with no bars, then release it"),
+                _ => format!("{id} is a one-shot: it runs its own length, so it takes no bars"),
+            });
+        }
+        (false, Some(n), _) => Engagement::Bars(n as u8),
+        (false, None, true) if !entry.latchable() => return Err(format!("{id} cannot latch ({}): give it bars", entry.category.label())),
+        (false, None, true) => Engagement::Latch,
+        (false, None, false) => return Err(format!("{id} needs a length: bars (1 to {FIRE_MAX_BARS}) or latch")),
+    };
+    engage(e, t, id, mode)
+}
+
 /// A held pad let go: off at once (a transition runs its own length).
 pub fn release(e: &mut Engine, t: &str, id: &str) -> Result<(), String> {
     match target(e, t)? {
@@ -177,5 +232,30 @@ mod tests {
             assert!(state(&e, t).is_empty(), "{t}: PANIC clears");
         }
         assert!(target(&e, "C").is_err());
+    }
+
+    /// `effects fire`: a length by id, whatever the window's, with its own refusals (a program's `macro` line is this call).
+    #[test]
+    fn fire_engages_by_id_for_whole_bars_and_refuses_with_the_reason() {
+        let (mut e, _r) = crate::deck::engine(crate::deck::EngineConfig::new(48_000.0));
+        let err = |e: &mut Engine, id: &str, bars: Option<u32>, latch: bool| fire(e, "A", id, bars, latch).unwrap_err();
+        assert!(err(&mut e, "rizer", None, false).contains("did you mean \"riser\""));
+        assert!(err(&mut e, "filter", Some(0), false).contains("1 to 64"));
+        assert!(err(&mut e, "filter", Some(65), false).contains("1 to 64"));
+        assert!(err(&mut e, "filter", Some(2), true).contains("not both"));
+        assert!(err(&mut e, "filter", None, false).contains("needs a length"));
+        assert!(err(&mut e, "feel-build", None, true).contains("cannot latch"));
+        assert!(err(&mut e, "tape_stop", Some(2), false).contains("release"));
+        assert!(err(&mut e, "cut", Some(2), false).contains("its own length"));
+        assert!(err(&mut e, "riser", None, true).contains("cannot latch"));
+        // a net entry on a deck that plays no net: the engine's refusal
+        assert!(err(&mut e, "breakdown", Some(2), false).contains("net deck"), "{}", err(&mut e, "breakdown", Some(2), false));
+        // past the window's 4 bars, and the riser's sweep
+        fire(&mut e, "A", "filter", Some(8), false).unwrap();
+        assert!(state(&e, "A").iter().any(|a| a.id == "filter"));
+        fire(&mut e, "A", "riser", Some(8), false).unwrap();
+        fire(&mut e, "B", "riser", None, false).unwrap();
+        fire(&mut e, "B", "delay", None, true).unwrap();
+        assert!(fire(&mut e, "Master", "riser", Some(8), false).is_err());
     }
 }
