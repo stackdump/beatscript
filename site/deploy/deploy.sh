@@ -7,7 +7,7 @@
 #   site/deploy/deploy.sh host        checkout $BRANCH (default main) into ~/Workspace/btw-bitwrap-io on the host
 #   site/deploy/deploy.sh artifacts   copy what is built from the PRIVATE repo (wasm + sidecars, docs); never in git
 #   site/deploy/deploy.sh docs        copy only site/web/docs (BEATSCRIPT.md redacted by scripts/beatscript-gen-docs.sh, cheatsheet.md)
-#   site/deploy/deploy.sh restart     restart btw-rust only, /healthz on :18099
+#   site/deploy/deploy.sh restart     restart beatscript only (stop, start), /healthz on :18099
 #   site/deploy/deploy.sh upstream    install conf.d/btw-front.conf (upstream btw_front -> :18099) if it is missing
 #   site/deploy/deploy.sh retire-go         one time: stop the Go server, drop its btw-bitwrap entry from ~/services
 #                                               (backup first; refuses unless btw_front -> :18099 and beatscript-serve is healthy)
@@ -23,8 +23,9 @@
 #   site/deploy/deploy.sh nginx-redirect-btw      btw.bitwrap.io becomes a 301 to beatscript.app, except /api/, /mcp, /context/
 #                                                    (nginx/btw.bitwrap.io.redirect.conf), nginx -t, reload; restores on failure
 #
-# The beatscript-serve binary, the wasm and the docs are built and installed by deploy/deploy.sh, which also owns btw-rust's
-# ~/services CMD and runs the live checks.
+# The beatscript-serve binary, the wasm and the docs are built and installed by deploy/deploy.sh, which also owns the
+# beatscript service's ~/services entry and CMD (it was btw-rust until the rename: deploy/deploy.sh renames it, in one
+# guarded deploy) and runs the live checks.
 # `build` is kept as a no-op so an older runbook that calls it still runs; `services` and `public-url` (which wrote
 # the Go server's ~/services entry) refuse.
 #
@@ -34,7 +35,7 @@
 #
 # Env: HOST (default pflow.dev), BRANCH (default main). RUST (the private engine checkout) is no longer needed here:
 # the wasm is built into site/web/wasm of this checkout. The Gemini key is NEVER read here: it is on the host in
-# ~/.env-services/btw-bitwrap (mode 0600; ~/.env-services/btw-rust links to it) and only ever sourced by ~/services.
+# ~/.env-services/btw-bitwrap (mode 0600; ~/.env-services/beatscript links to it) and only ever sourced by ~/services.
 set -euo pipefail
 
 HOST=${HOST:-pflow.dev}
@@ -42,7 +43,7 @@ BRANCH=${BRANCH:-main}
 HERE=$(cd "$(dirname "$0")" && pwd)
 GO=$(cd "$HERE/../.." && pwd)
 REMOTE_DIR='$HOME/Workspace/btw-bitwrap-io'
-SERVICE=btw-rust
+SERVICE=beatscript   # btw-rust before the rename (deploy/deploy.sh's cutover)
 PORT=18099
 DOMAIN=btw.bitwrap.io
 
@@ -58,10 +59,12 @@ build)
 artifacts)
   echo "artifacts: retired: deploy/deploy.sh (repo root) builds, ships and checks beatscript.app from one pin" >&2; exit 1 ;;
 services|public-url)
-  echo "$step: retired with the Go server (it wrote the btw-bitwrap entry in ~/services). btw-rust's entry is" >&2
+  echo "$step: retired with the Go server (it wrote the btw-bitwrap entry in ~/services). beatscript's entry is" >&2
   echo "written by deploy/deploy.sh (repo root)." >&2
   exit 1 ;;
 retire-go)
+  # (Done before the rename, and kept as it ran: btw-rust below is the service's name then; with no btw-bitwrap entry
+  # left it says "already retired" and touches nothing.)
   # One time: stop the retired Go server and take its btw-bitwrap entry out of ~/services (backup first). Refuses
   # unless nginx's btw_front names beatscript-serve (:18099) and beatscript-serve answers /healthz. Touches nothing of btw-rust:
   # not its entry, not ~/.env-services/btw-bitwrap (btw-rust's env links to it), not data/. Idempotent.

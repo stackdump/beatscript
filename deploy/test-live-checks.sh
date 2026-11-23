@@ -10,6 +10,7 @@
 #   3. a short gap with no answer is retried, and the answer that follows is judged as before
 #   4. deploy.sh check names the step and passes live-checks' exit code on
 #   5. deploy.sh all, when check fails: the failing step and its exit code, the rollback, exit with that code
+#   6. /healthz must say name beatscript (the rename), and the version must be beatscript-serve-<sha7>
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd -P)
 s=$(mktemp -d)
@@ -28,8 +29,9 @@ git -C "$src" init -q; git -C "$src" add -A; git -C "$src" commit -q -m pin
 PIN=$(git -C "$src" rev-parse HEAD); V=beatscript-serve-$(git -C "$src" rev-parse --short=7 HEAD)
 home=$s/home; mkdir -p "$home"; git clone -q "$src" "$home/app"; git -C "$home/app" checkout -q --detach "$PIN"
 
-# the fake origin: /healthz answers V; every other path is 404, except that MODE makes it close the connection with no
-# answer at all (curl exit 52): `drop N` for the first N other requests, `drop-grammar` for /grammar always
+# the fake origin: /healthz answers V (as name beatscript; MODE `oldname`: as btw, the name before the rename); every
+# other path is 404, except that MODE makes it close the connection with no answer at all (curl exit 52): `drop N` for
+# the first N other requests, `drop-grammar` for /grammar always
 cat > "$s/origin.py" <<'PY'
 import http.server, os, sys
 mode, version = sys.argv[1], sys.argv[2]
@@ -39,7 +41,7 @@ class H(http.server.BaseHTTPRequestHandler):
         pass
     def answer(self):
         if self.path == "/healthz":
-            body = ('{"name":"beatscript","ok":true,"version":"%s"}' % version).encode()
+            body = ('{"name":"%s","ok":true,"version":"%s"}' % ("btw" if mode == "oldname" else "beatscript", version)).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
         seen["n"] += 1
@@ -93,10 +95,10 @@ if [ "$rc" = 52 ] && grep -q '^host checkout ' "$s/out" && grep -q 'LIVE CHECK F
   grep -q '^deploy: deploy/live-checks.sh exited 52' "$s/out" && grep -q '^deploy: FAILED in step check: ' "$s/out"; then
   ok "deploy.sh check: names the step and exits with live-checks' code"; else bad "deploy.sh check (rc $rc)"; fi
 
-# 5. deploy.sh all with the steps before restart, restart and rollback stubbed (they need a build and ~/services):
+# 5. deploy.sh all with detect, the steps before restart, restart and rollback stubbed (they need a build and ~/services):
 # the real `all` branch and the real check step
 stub=$src/deploy/deploy-stubbed.sh
-awk '/^case "\$\{1:-\}" in$/ { print "preflight() { say preflight; }; build() { say build; }; host() { say host; }; ship() { say ship; }; services() { say services; }"; print "restart() { say restart; echo restarted; }; rollback() { say rollback; echo rolled-back-stub; }" } { print }' \
+awk '/^case "\$\{1:-\}" in$/ { print "preflight() { say preflight; }; detect() { echo steady; }; build() { say build; }; host() { say host; }; ship() { say ship; }; services() { say services; }"; print "restart() { say restart; echo restarted; }; rollback() { say rollback; echo rolled-back-stub; }" } { print }' \
   "$src/deploy/deploy.sh" > "$stub"; chmod +x "$stub"
 origin "404"; dp "$stub" all
 if [ "$rc" = 1 ] && grep -q '^deploy: step check failed (exit 1) for ' "$s/out" && grep -q '^rolled-back-stub$' "$s/out" &&
@@ -106,5 +108,12 @@ NO_ROLLBACK=1 dp "$stub" all
 if [ "$rc" = 1 ] && ! grep -q 'rolled-back-stub' "$s/out" && grep -q 'NO_ROLLBACK=1: .* step check failed (exit 1)' "$s/out"; then
   ok "deploy.sh all, NO_ROLLBACK=1: says so, no rollback"; else bad "deploy.sh all NO_ROLLBACK (rc $rc)"; fi
 rm -f "$stub"
+
+# 6. the healthz name and the version's form
+origin "oldname"; lc
+if [ "$rc" = 1 ] && grep -qE '^LIVE CHECK FAILED: deploy/live-checks.sh line [0-9]+ \(exit 1\): python3 .*assert d.get\("name"\) == "beatscript"' "$s/out" &&
+  grep -q 'AssertionError' "$s/out" && ! grep -q '^/grammar ' "$s/out"; then ok "/healthz answering as btw (the old name) fails the first check"; else bad "healthz name (rc $rc)"; fi
+rc=0; (cd "$src" && deploy/live-checks.sh "$U" "btwserve-${V#beatscript-serve-}") >"$s/out" 2>&1 || rc=$?
+if [ "$rc" = 2 ] && grep -q '^live-checks: the version is beatscript-serve-<sha7>, not btwserve-' "$s/out"; then ok "a version not named beatscript-serve-<sha7> is refused (exit 2)"; else bad "version form (rc $rc)"; fi
 
 [ "$fails" = 0 ] && echo "deploy/test-live-checks.sh: all passed" || { echo "deploy/test-live-checks.sh: $fails failed"; exit 1; }

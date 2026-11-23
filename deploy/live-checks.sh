@@ -15,6 +15,12 @@
 # 28, inside `EH=$(curl ...)`: set -e alone exits there without a word, so no check said FAIL.) -E carries the trap
 # into the functions below, where a bare set -e exits silently too.
 #
+# The rename (btw -> beatscript, 2026-11-22) keeps its compatibility promises, and these check them: the old names
+# still answer, /docs/BTW.md and /examples/<n>.btw with the same bytes as /docs/BEATSCRIPT.md and <n>.beatscript, and
+# /.well-known/btw-site and btw-capabilities.json as before, /context/v1.jsonld byte for byte as published; the new
+# names answer too (/.well-known/beatscript-site, beatscript-capabilities.json, /context/beatscript-v1.jsonld; nginx's
+# catch-all already sends them to beatscript-serve); /healthz says name beatscript and the exact version.
+#
 # curl retries a transport failure, and only that: no answer at all (exit 6 resolve, 7 connect, 28 timeout, 35 TLS,
 # 52 empty reply, 55 send, 56 receive) is tried again up to LIVE_CHECK_RETRIES times (default 3), LIVE_CHECK_RETRY_S
 # apart (default 5), which rides out a short network gap on the ops machine's side. Any answer the server gives, of
@@ -44,10 +50,12 @@ curl() {
 }
 U=${1:-https://beatscript.app}
 V=${2:?usage: deploy/live-checks.sh <public url> <beatscript-serve version, e.g. beatscript-serve-abc1234>}
-for i in $(seq 1 30); do command curl -s -m 5 $U/healthz | grep -q $V && break; sleep 2; done
+case $V in beatscript-serve-*) ;; *) echo "live-checks: the version is beatscript-serve-<sha7>, not $V" >&2; exit 2 ;; esac
+for i in $(seq 1 30); do command curl -s -m 5 $U/healthz | grep -qF "\"version\":\"$V\"" && break; sleep 2; done
 # (shown on stderr without `tee /dev/stderr`, which reopens a redirected stderr file and truncates the log)
-HZ=$(curl -s -m 10 $U/healthz); printf '%s\n' "$HZ" >&2; printf '%s' "$HZ" | grep -q $V
-for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /embed.js /js/embed-player.js /radio /js/station.js /js/station-model.js; do
+HZ=$(curl -s -m 10 $U/healthz); printf '%s\n' "$HZ" >&2
+printf '%s' "$HZ" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("version") == sys.argv[1], d; assert d.get("name") == "beatscript", d' "$V"; echo "/healthz: name beatscript, version $V"
+for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /.well-known/beatscript-capabilities.json /.well-known/btw-site /.well-known/beatscript-site /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /embed.js /js/embed-player.js /radio /js/station.js /js/station-model.js; do
   c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U$p); echo "$p $c"; test "$c" = 200
 done
 for p in /grammar.css /lineage.css /mcp.css /card/card.css /css/beatscript.css /docs/assets/docs.css /css/embed.css /css/station.css; do
@@ -106,6 +114,22 @@ if [ -n "$PB" ]; then c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U/phrase
 curl -s -m 20 $U/llms.txt | grep -q "$U/phrasebook"; echo 'llms.txt lists /phrasebook'
 curl -s -m 20 $U/api/examples | python3 -c 'import json,sys; d=json.load(sys.stdin); d=d.get("examples",d) if isinstance(d,dict) else d; assert d[0]["name"]=="arrange-in-eight-lines", d[0]["name"]; assert d[0].get("cid","z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz")=="z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz"'; echo 'api/examples: arrange-in-eight-lines first, CID as pinned'
 curl -s -m 20 $U/examples/arrange-in-eight-lines.beatscript | grep -q 'One section, played eight times'; echo 'arrange-in-eight-lines.beatscript keeps its teaching comments'
+# the old names answer with the same bytes (the rename's compatibility promise: every old link keeps working)
+same() { # same OLD NEW: both 200, NEW not empty, the same body
+  local t ok=0
+  t=$(mktemp -d)
+  curl -s -f -m 20 -o "$t/old" $U$1 && curl -s -f -m 20 -o "$t/new" $U$2 && test -s "$t/new" && cmp -s "$t/old" "$t/new" && ok=1
+  rm -rf "$t"
+  test "$ok" = 1 || { echo "$1 does not answer 200 with the bytes of $2"; return 1; }
+  echo "$1 (the old name) answers with the bytes of $2"
+}
+same /examples/arrange-in-eight-lines.btw /examples/arrange-in-eight-lines.beatscript
+same /docs/BTW.md /docs/BEATSCRIPT.md
+# the JSON-LD contexts: the old IRI is immutable (documents name it), byte for byte the checkout's docs/btw-context-v1.jsonld;
+# the new one is JSON-LD with a @context
+test "$(curl -s -f -m 20 $U/context/v1.jsonld | sha256sum)" = "$(sha256sum < docs/btw-context-v1.jsonld)"; echo '/context/v1.jsonld: byte for byte docs/btw-context-v1.jsonld'
+curl -s -o /dev/null -m 20 -w '%{content_type}' $U/context/beatscript-v1.jsonld | grep -q '^application/ld+json'
+curl -s -f -m 20 $U/context/beatscript-v1.jsonld | python3 -c 'import json,sys; assert "@context" in json.load(sys.stdin)'; echo '/context/beatscript-v1.jsonld: application/ld+json with a @context'
 chk() { curl -s -m 30 -H 'Content-Type: application/json' -d "$(python3 -c 'import json,sys; print(json.dumps({"text": sys.argv[1]}))' "$1")" $U/api/check | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["ok"] is True, d["diagnostics"]'; }
 chk 'arrange from template(deep-house, @tempest_such_stuff)'; echo 'live check: template(deep-house, @tempest_such_stuff) ok'
 chk 'tempo 100

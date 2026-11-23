@@ -1,5 +1,5 @@
 #!/bin/sh
-# build-linux.sh: a release `beatscript` for x86_64 Ubuntu 24.04 (glibc 2.39: the deploy host pflow.dev), built on
+# build-linux.sh: a release `beatscript` (the CLI, crate beatscript-cli) or `beatscript-serve` for x86_64 Ubuntu 24.04 (glibc 2.39: the deploy host pflow.dev), built on
 # a build host (scripts/build-host.sh: BUILD_HOST, else this machine, else BUILD_HOSTS), with no system libraries
 # beyond libc.
 #
@@ -29,7 +29,7 @@
 #   2. builds the image beatscript-build:ubuntu24.04 once (ubuntu:24.04 + gcc + rustup stable): the toolchain is
 #      in the image, the crate registry and target/ are kept under the scratch dir, so a second build is
 #      incremental.
-#   3. `cargo build --release -p beatscript-cli --locked` in that container, as the host user (no root-owned files),
+#   3. `cargo build --release -p beatscript-cli --locked` (or -p beatscript-serve) in that container, as the host user (no root-owned files),
 #      symbols stripped. The container's glibc is the deploy host's (2.39), so the binary needs nothing newer.
 #   4. copies the binary back, and (unless --no-smoke) runs it in a fresh ubuntu:24.04 container with
 #      nothing installed: `ldd`, then a render of a corpus program, timed.
@@ -54,12 +54,25 @@
 # target dir, default <repo>/target-linux), BEATSCRIPT_SMOKE_HOST (above), BEATSCRIPT_UNLOCKED=1 (drop --locked: for a
 # Cargo.lock that is mid-edit), BEATSCRIPT_PKG=beatscript-serve (build the server instead: dist/beatscript-serve-linux-x86_64; its smoke
 # is a server start and stop, in the bare container on a Linux build host, with /healthz on the smoke host for a
-# cross-compiled one).
+# cross-compiled one; BEATSCRIPT_PKG=beatscript, the default, is the CLI: dist/beatscript-linux-x86_64).
+# The names before the rename are read when the new one is unset: BTWD_BUILD_HOST, BTWD_BUILD_DIR, BTWD_TARGET_DIR,
+# BTWD_SMOKE_HOST (the staged deploy scripts pass BTWD_SMOKE_HOST=gir.local), BTWD_UNLOCKED and BTWD_PKG (btwd is
+# beatscript, btwserve is beatscript-serve).
 set -eu
 
-PKG=${BEATSCRIPT_PKG:-btwd}
-case $PKG in beatscript|beatscript-serve) ;; *) echo "build-btwd-linux: BEATSCRIPT_PKG is beatscript or beatscript-serve" >&2; exit 2 ;; esac
-SCRATCH=${BEATSCRIPT_BUILD_DIR:-beatscript-web-build}
+# BEATSCRIPT_* first, then the BTWD_* name it had before the rename
+BEATSCRIPT_BUILD_HOST=${BEATSCRIPT_BUILD_HOST:-${BTWD_BUILD_HOST:-}}
+BEATSCRIPT_TARGET_DIR=${BEATSCRIPT_TARGET_DIR:-${BTWD_TARGET_DIR:-}}
+BEATSCRIPT_SMOKE_HOST=${BEATSCRIPT_SMOKE_HOST:-${BTWD_SMOKE_HOST:-}}
+BEATSCRIPT_UNLOCKED=${BEATSCRIPT_UNLOCKED:-${BTWD_UNLOCKED:-0}}
+# PKG: the binary (and the dist/ name), CRATE: the cargo package that builds it
+PKG=${BEATSCRIPT_PKG:-${BTWD_PKG:-beatscript}}
+case $PKG in
+  beatscript|beatscript-cli|btwd) PKG=beatscript CRATE=beatscript-cli ;;
+  beatscript-serve|btwserve) PKG=beatscript-serve CRATE=beatscript-serve ;;
+  *) echo "build-linux: BEATSCRIPT_PKG is beatscript (the CLI, crate beatscript-cli) or beatscript-serve" >&2; exit 2 ;;
+esac
+SCRATCH=${BEATSCRIPT_BUILD_DIR:-${BTWD_BUILD_DIR:-beatscript-web-build}}
 IMAGE=beatscript-build:ubuntu24.04
 # the deploy host's glibc, and the zig target that links against exactly it
 GLIBC_MAX=2.39
@@ -71,7 +84,7 @@ for a in "$@"; do
     --clean) CLEAN=1 ;;
     --no-smoke) SMOKE=0 ;;
     -h|--help) awk 'NR > 1 && /^set -eu$/ { exit } NR > 1' "$0"; exit 0 ;;
-    *) echo "build-btwd-linux: unknown argument $a" >&2; exit 2 ;;
+    *) echo "build-linux: unknown argument $a" >&2; exit 2 ;;
   esac
 done
 
@@ -87,21 +100,21 @@ HOST=$BH_NAME
 case $BH_OS in
   Darwin) METHOD=zig ;;
   Linux) METHOD=docker ;;
-  *) echo "build-btwd-linux: no way to build on $HOST ($BH_OS)" >&2; exit 2 ;;
+  *) echo "build-linux: no way to build on $HOST ($BH_OS)" >&2; exit 2 ;;
 esac
 RS="$BH_RSYNC -a --delete --delete-excluded --exclude=target/ --exclude=/target-*/ --exclude=.git/ --exclude=/dist/ --exclude=*.wav --exclude=*.sf2"
 LOCKED=--locked
-[ "${BEATSCRIPT_UNLOCKED:-0}" = 1 ] && LOCKED=
+[ "$BEATSCRIPT_UNLOCKED" = 1 ] && LOCKED=
 
 # the newest GLIBC_x.y the binary asks for, and a refusal when that is newer than the deploy host's
 glibc_check() {
   need=$(objdump -T "$1" | grep -o 'GLIBC_[0-9][0-9.]*' | sed 's/^GLIBC_//' | sort -u |
     awk -F. '{ v = $1 * 1000000 + $2 * 1000 + $3; if (v > m) { m = v; s = $0 } } END { print s }')
-  [ -n "$need" ] || { echo "build-btwd-linux: objdump -T shows no GLIBC symbol version in $1" >&2; return 1; }
+  [ -n "$need" ] || { echo "build-linux: objdump -T shows no GLIBC symbol version in $1" >&2; return 1; }
   echo "-- newest glibc symbol version: GLIBC_$need (the deploy host has $GLIBC_MAX)"
   if ! awk -v a="$need" -v b="$GLIBC_MAX" 'BEGIN { split(a, x, "."); split(b, y, ".");
       exit !(x[1] * 1000000 + x[2] * 1000 + x[3] <= y[1] * 1000000 + y[2] * 1000 + y[3]) }'; then
-    echo "build-btwd-linux: the binary needs GLIBC_$need, newer than the deploy host's glibc $GLIBC_MAX" >&2
+    echo "build-linux: the binary needs GLIBC_$need, newer than the deploy host's glibc $GLIBC_MAX" >&2
     return 1
   fi
 }
@@ -124,7 +137,7 @@ zig_smoke() {
     echo "-- smoke host ${BEATSCRIPT_SMOKE_HOST:-local} did not answer: smoke here"
     SH=local
   fi
-  [ -n "$SH" ] || { echo "build-btwd-linux: no smoke host (${BEATSCRIPT_SMOKE_HOST:-local} did not answer, and this is not x86_64 Linux): BEATSCRIPT_SMOKE_HOST=<host>, or --no-smoke" >&2; return 1; }
+  [ -n "$SH" ] || { echo "build-linux: no smoke host (${BEATSCRIPT_SMOKE_HOST:-local} did not answer, and this is not x86_64 Linux): BEATSCRIPT_SMOKE_HOST=<host>, or --no-smoke" >&2; return 1; }
   echo "== smoke on $SH"
   if [ "$SH" = local ]; then
     sdir=$(mktemp -d)
@@ -167,7 +180,7 @@ else
 fi
 SMOKE
   if [ "$SH" = local ]; then rm -rf "$sdir"; else ssh -o BatchMode=yes "$SH" "rm -rf '$sdir'"; fi
-  [ "$rc" = 0 ] || { echo "build-btwd-linux: the smoke failed on $SH" >&2; return 1; }
+  [ "$rc" = 0 ] || { echo "build-linux: the smoke failed on $SH" >&2; return 1; }
 }
 
 if [ "$METHOD" = zig ] && [ "$BH" = local ]; then
@@ -175,15 +188,15 @@ if [ "$METHOD" = zig ] && [ "$BH" = local ]; then
   tdir=${BEATSCRIPT_TARGET_DIR:-$root/target-linux}
   mkdir -p "$tdir"
   log="$tdir/build-$PKG.log"
-  echo "== build host $HOST (this machine): cargo zigbuild --release -p $PKG --target $ZIG_TARGET, target dir $tdir"
+  echo "== build host $HOST (this machine): cargo zigbuild --release -p $CRATE --target $ZIG_TARGET, target dir $tdir"
   t0=$(date +%s)
   rm -f "$tdir/x86_64-unknown-linux-gnu/release/$PKG"
   if ! ( cd "$root" && CARGO_TARGET_DIR="$tdir" CARGO_PROFILE_RELEASE_STRIP=symbols CARGO_INCREMENTAL=0 CARGO_TERM_COLOR=never \
-      cargo zigbuild --release -p "$PKG" $LOCKED --target "$ZIG_TARGET" ) >"$log" 2>&1; then
+      cargo zigbuild --release -p "$CRATE" $LOCKED --target "$ZIG_TARGET" ) >"$log" 2>&1; then
     tail -n 40 "$log" >&2
     crate=$(grep -o 'failed to run custom build command for `[^`]*`' "$log" | head -n 1 | sed 's/^.*for `//; s/`$//')
-    [ -z "$crate" ] || echo "build-btwd-linux: $crate does not cross-compile with zig: build $PKG on a Linux host (BUILD_HOST=<linux host>)" >&2
-    echo "build-btwd-linux: cargo zigbuild failed (log: $log)" >&2
+    [ -z "$crate" ] || echo "build-linux: $crate does not cross-compile with zig: build $PKG on a Linux host (BUILD_HOST=<linux host>)" >&2
+    echo "build-linux: cargo zigbuild failed (log: $log)" >&2
     exit 1
   fi
   tail -n 1 "$log"
@@ -208,7 +221,7 @@ $RS "$root/" "$(bh_path "$SCRATCH/beatscript-web/")"
 if [ "$METHOD" = zig ]; then
   # the Mac over ssh: this script, there, in place in the scratch copy
   echo "== build on $HOST (cargo zigbuild, BUILD_HOST=local there)"
-  bh_sh "$BH_ENV cd '$SCRATCH/beatscript-web' && BUILD_HOST=local BEATSCRIPT_PKG='$PKG' BEATSCRIPT_UNLOCKED='${BEATSCRIPT_UNLOCKED:-0}' BEATSCRIPT_TARGET_DIR=\"\$HOME/$SCRATCH/target-linux\" sh scripts/build-linux.sh --no-smoke"
+  bh_sh "$BH_ENV cd '$SCRATCH/beatscript-web' && BUILD_HOST=local BEATSCRIPT_PKG='$PKG' BEATSCRIPT_UNLOCKED='$BEATSCRIPT_UNLOCKED' BEATSCRIPT_TARGET_DIR=\"\$HOME/$SCRATCH/target-linux\" sh scripts/build-linux.sh --no-smoke"
   echo "== fetch"
   scp -q "$(bh_path "$SCRATCH/beatscript-web/dist/$PKG-linux-x86_64")" "$dist/$PKG-linux-x86_64"
   glibc_check "$dist/$PKG-linux-x86_64"
@@ -219,8 +232,8 @@ if [ "$METHOD" = zig ]; then
   exit 0
 fi
 
-echo "== build (image if needed, then cargo build --release -p $PKG)"
-bh_sh "HOST='$HOST' PKG='$PKG' SCRATCH='$SCRATCH' IMAGE='$IMAGE' UNLOCKED='${BEATSCRIPT_UNLOCKED:-0}' sh -s" <<'REMOTE'
+echo "== build (image if needed, then cargo build --release -p $CRATE)"
+bh_sh "HOST='$HOST' PKG='$PKG' CRATE='$CRATE' SCRATCH='$SCRATCH' IMAGE='$IMAGE' UNLOCKED='$BEATSCRIPT_UNLOCKED' sh -s" <<'REMOTE'
 set -eu
 cd "$HOME/$SCRATCH"
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
@@ -245,7 +258,7 @@ docker run --rm -u "$(id -u):$(id -g)" \
   -e RUSTUP_TOOLCHAIN=stable-x86_64-unknown-linux-gnu \
   -e CARGO_PROFILE_RELEASE_STRIP=symbols -e CARGO_INCREMENTAL=0 -e CARGO_TERM_COLOR=never \
   -v "$PWD:/work" -w /work/beatscript-web "$IMAGE" \
-  cargo build --release -p "$PKG" $LOCKED >build.log 2>&1 || { tail -n 40 build.log >&2; echo "build-btwd-linux: cargo failed (log: $HOST:~/$SCRATCH/build.log)" >&2; exit 1; }
+  cargo build --release -p "$CRATE" $LOCKED >build.log 2>&1 || { tail -n 40 build.log >&2; echo "build-linux: cargo failed (log: $HOST:~/$SCRATCH/build.log)" >&2; exit 1; }
 tail -n 3 build.log
 test -x "target/release/$PKG"
 REMOTE
@@ -264,7 +277,7 @@ docker run --rm -v "$PWD/target/release:/b:ro" ubuntu:24.04 sh -c "echo '-- ldd'
 need=$(docker run --rm -v "$PWD/target/release:/b:ro" "$IMAGE" sh -c "objdump -T /b/$PKG | grep -o 'GLIBC_[0-9.]*' | sort -u -V | tail -n 1")
 echo "-- newest glibc symbol version: $need (the deploy host has 2.39)"
 newest=$(printf '%s\nGLIBC_2.39\n' "$need" | sort -V | tail -n 1)
-if [ "$newest" != GLIBC_2.39 ]; then echo "build-btwd-linux: the binary needs $need, newer than the deploy host's glibc 2.39" >&2; exit 1; fi
+if [ "$newest" != GLIBC_2.39 ]; then echo "build-linux: the binary needs $need, newer than the deploy host's glibc 2.39" >&2; exit 1; fi
 if [ "$SMOKE" = 1 ] && [ "$PKG" = beatscript-serve ]; then
   echo "-- beatscript-serve in ubuntu:24.04: start, render smoke.beatscript over HTTP (WAV and Opus), stop"
   docker run --rm -i -v "$PWD/target/release:/b:ro" -v "$PWD/beatscript-web/crates/beatscript-serve/bench:/bench:ro" ubuntu:24.04 sh -c '

@@ -72,10 +72,12 @@ jobs:
       - run: python3 -I site/embed/jupyter/test_beatscript_embed.py
 
   deploy:
-    name: deploy host checkout (shell)
+    name: deploy scripts (shell)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash -n deploy/deploy.sh && bash -n deploy/live-checks.sh && bash -n deploy/test-live-checks.sh
+      - run: for f in deploy/*.sh site/deploy/deploy.sh; do bash -n "$f" || exit 1; done && sh -n scripts/build-linux.sh
       - run: bash deploy/test-host.sh
       - run: bash deploy/test-live-checks.sh
+      # the ~/services steps against a synthetic host: the btw-rust -> beatscript cutover, its rollbacks, the steady state
+      - run: bash deploy/test-services.sh
