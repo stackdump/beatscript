@@ -3,6 +3,7 @@
 //! non-zero only for usage, I/O or a panic. `render` is render.rs's.
 
 mod export;
+mod files;
 mod listen;
 #[cfg(test)]
 mod radio_listen;
@@ -12,19 +13,24 @@ mod selftest;
 
 use std::io::{Read, Write};
 
-const USAGE: &str = "beatscript: btw from a shell (docs/BEATSCRIPT.md)
+const USAGE: &str = "beatscript: BeatScript from a shell (docs/BEATSCRIPT.md)
 
 usage: beatscript <command> [options]
 
   check        [--file F | -] [--same-as F|LINK] [--expand]  the CheckReport as JSON (errors with line, column, help; the CID;
-                                         the nets; expanded_cid, and refs and resolution for a program with references);
+                                         the language version (1, the old spelling, or 2) and renamed_cid, the CID the program
+                                         has in the other version; the nets; expanded_cid, and refs and resolution for a
+                                         program with references);
                                          with --same-as, a `same_as` field: is the other program (a file, or a share link that
                                          carries its text) the same song, by its nets; with --expand, each entry of refs carries
                                          its expansion (the BeatScript the reference is written out as)
   diff         A B                       are A and B (each a file or a share link) the same song, and if not, what changed in
                                          music: same_as's report with its `diff` (song settings, arrangement, transforms, notes)
   same-as      [--file F | -]            {\"a\": text, \"b\": text} as JSON in; are they the same song (by their nets), as JSON
-  fmt          [--file F | -] [--expand] [--lineage]   the canonical text, its CID and the comments, as JSON; with --expand,
+  fmt          [--file F | -] [--keep-version] [--expand] [--lineage]   the program formatted and in BeatScript 2 (text), its
+                                         canonical text, CID, version and comments, as JSON: a BeatScript 1 text (`#! btw 1`, or
+                                         no version line) is upgraded, a new CID for the same program (from_cid: the one it had);
+                                         --keep-version formats it in the version it is in (its CID never moves); with --expand,
                                          every seed(...) and every <cid>.section borrowed from a program given with --with written out as the BeatScript it
                                          stands for (`expand`), to edit from there
   expand       [--file F | -] [--lineage]  the same as fmt --expand: {ok, text, cid, from_cid, refs}; --lineage opens the text
@@ -70,11 +76,12 @@ struct Opts {
     same_as: Option<String>,
     expand: bool,
     lineage: bool,
+    keep_version: bool,
     positional: Vec<String>,
 }
 
 fn parse_opts(args: &[String]) -> Result<Opts, String> {
-    let mut o = Opts { file: None, stdin: false, sig: None, notes: false, origin: String::new(), scope: None, n: None, brief: false, same_as: None, expand: false, lineage: false, positional: Vec::new() };
+    let mut o = Opts { file: None, stdin: false, sig: None, notes: false, origin: String::new(), scope: None, n: None, brief: false, same_as: None, expand: false, lineage: false, keep_version: false, positional: Vec::new() };
     let mut i = 0;
     let value = |i: &mut usize, flag: &str| -> Result<String, String> {
         *i += 1;
@@ -86,6 +93,7 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
             "--sig" => o.sig = Some(value(&mut i, "--sig")?),
             "--expand" => o.expand = true,
             "--lineage" => o.lineage = true,
+            "--keep-version" => o.keep_version = true,
             "--origin" => o.origin = value(&mut i, "--origin")?,
             "--scope" => o.scope = Some(value(&mut i, "--scope")?),
             "-n" | "--n" => o.n = Some(value(&mut i, "-n")?.parse().map_err(|_| "-n takes a whole number".to_string())?),
@@ -127,6 +135,33 @@ fn other_program(s: &str) -> Result<String, String> {
     }
 }
 
+/// `fmt --keep-version`: fmt's answer for the text in the version it is in. A BeatScript 2 text formats as `fmt` formats it;
+/// a BeatScript 1 one stays BeatScript 1 (`beatscript_api::format_text`, the formatter the server's autoformat uses), with the
+/// canonical text, CID and version of the program as it is, so its CID never moves. Everything else is `fmt`'s.
+fn fmt_keeping_version(t: &str) -> String {
+    use djengine::json::{JsonObject, JsonValue};
+    let fmt = beatscript_api::fmt_json(t);
+    let Ok(answer) = JsonValue::parse(&fmt) else { return fmt };
+    // nothing was upgraded (a BeatScript 2 text, or one that does not read): fmt's answer is the answer
+    if answer.get("from_cid").is_none() || answer.get("ok").and_then(JsonValue::as_bool) != Some(true) {
+        return fmt;
+    }
+    let check = beatscript_api::check_report(t);
+    let field = |v: &JsonValue, k: &str| v.get(k).cloned().unwrap_or(JsonValue::Null);
+    let mut fields = vec![
+        ("ok", JsonValue::Bool(true)),
+        ("canonical", field(&check, "canonical")),
+        ("cid", field(&check, "cid")),
+        ("version", field(&check, "version")),
+        ("comments", field(&answer, "comments")),
+        ("diagnostics", field(&answer, "diagnostics")),
+    ];
+    if let Some(text) = beatscript_api::format_text(t) {
+        fields.push(("text", JsonValue::str(text)));
+    }
+    JsonValue::Object(JsonObject::from_pairs(fields)).js_stringified()
+}
+
 fn out(s: &str) -> Result<(), String> {
     let mut o = std::io::stdout().lock();
     o.write_all(s.as_bytes()).and_then(|_| if s.ends_with('\n') { Ok(()) } else { o.write_all(b"\n") }).and_then(|_| o.flush()).map_err(|e| format!("stdout: {e}"))
@@ -162,6 +197,7 @@ fn run(args: &[String]) -> Result<(), String> {
                             }
                         },
                         "same-as" => beatscript_api::same_as_json_pair(&t),
+                        "fmt" if !o.expand && o.keep_version => fmt_keeping_version(&t),
                         "fmt" if !o.expand => beatscript_api::fmt_json(&t),
                         "fmt" | "expand" => beatscript_api::expand_json(&t, o.lineage),
                         "highlight" => beatscript_api::highlight_json(&t),
@@ -212,7 +248,8 @@ fn run(args: &[String]) -> Result<(), String> {
 }
 
 /// Every `--with FILE` taken out of `args`, and what each names told to the checker: the programs a text may import by CID.
-/// A file is read as the program it is (its canonical text and CID are made here), a directory is every `.beatscript` in it, and
+/// A file is read as the program it is (its canonical text and CID are made here), a directory is every `.beatscript` (and
+/// `.btw`, the extension before the rename) in it, and
 /// anything else is a share link, whose own bundle is kept too. A file that imports another given after it is read once that one
 /// is known, so the order they are given in does not matter.
 fn take_with(args: Vec<String>) -> Result<Vec<String>, String> {
@@ -229,7 +266,7 @@ fn take_with(args: Vec<String>) -> Result<Vec<String>, String> {
     for g in &given {
         let p = std::path::Path::new(g);
         if p.is_dir() {
-            let mut names: Vec<_> = std::fs::read_dir(p).map_err(|e| format!("{g}: {e}"))?.flatten().map(|e| e.path()).filter(|f| f.extension().is_some_and(|x| x == "beatscript")).collect();
+            let mut names: Vec<_> = std::fs::read_dir(p).map_err(|e| format!("{g}: {e}"))?.flatten().map(|e| e.path()).filter(|f| files::is_program(f)).collect();
             names.sort();
             for f in names {
                 files.push((f.display().to_string(), std::fs::read_to_string(&f).map_err(|e| format!("{}: {e}", f.display()))?));
@@ -248,6 +285,7 @@ fn take_with(args: Vec<String>) -> Result<Vec<String>, String> {
             }
             let cid = v.get("cid").and_then(|c| c.as_str()).unwrap_or("");
             beatscript_api::known::know(cid, canonical).map_err(|e| format!("--with {g}: {e}"))?;
+            know_twin(canonical).map_err(|e| format!("--with {g}: {e}"))?;
         }
     }
     // a file that imports one not read yet waits: read them again until none is left that can be
@@ -259,6 +297,7 @@ fn take_with(args: Vec<String>) -> Result<Vec<String>, String> {
             if parsed.ok() {
                 let canonical = djlive::print::canonical(&parsed.program);
                 beatscript_api::known::know(&djlive::compile::program_cid(&canonical), &canonical).map_err(|e| format!("--with {name}: {e}"))?;
+                know_twin(&canonical).map_err(|e| format!("--with {name}: {e}"))?;
             } else {
                 later.push((name, text));
             }
@@ -272,6 +311,18 @@ fn take_with(args: Vec<String>) -> Result<Vec<String>, String> {
         files = later;
     }
     Ok(rest)
+}
+
+/// The program also under its CID in the other language version (djlive::version): a BeatScript 1 program under the CID of
+/// its BeatScript 2 twin (what `beatscript fmt` says it is now), a BeatScript 2 one under its BeatScript 1 CID, so an import of
+/// either finds it, as the site's store answers both.
+fn know_twin(canonical: &str) -> Result<(), String> {
+    use djlive::version::{legacy_canonical, of_canonical, upgrade_canonical, Version};
+    let twin = match of_canonical(canonical) {
+        Version::V1 => upgrade_canonical(canonical),
+        Version::V2 => legacy_canonical(canonical).to_string(),
+    };
+    beatscript_api::known::know(&djlive::compile::program_cid(&twin), &twin)
 }
 
 fn main() {

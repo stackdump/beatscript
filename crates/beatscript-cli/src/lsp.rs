@@ -196,7 +196,7 @@ mod tests {
         let input = [
             frame(r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#),
             frame(r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#),
-            frame(r#"{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///t.beatscript","languageId":"btw","version":1,"text":"tempo 12x\n"}}}"#),
+            frame(r#"{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///t.beatscript","languageId":"beatscript","version":1,"text":"tempo 12x\n"}}}"#),
             frame(r#"{"jsonrpc":"2.0","id":2,"method":"shutdown"}"#),
             frame(r#"{"jsonrpc":"2.0","method":"exit"}"#),
         ]
@@ -223,7 +223,7 @@ mod tests {
         // `inst=nope` is no voice: only the compile says so; the parser finds nothing
         let input = [
             frame(r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}"#),
-            frame(r#"{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///t.beatscript","languageId":"btw","version":1,"text":"deck A: bass a1 inst=nopenope\n"}}}"#),
+            frame(r#"{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///t.beatscript","languageId":"beatscript","version":1,"text":"deck A: bass a1 inst=nopenope\n"}}}"#),
         ]
         .concat();
         let mut out = Vec::new();

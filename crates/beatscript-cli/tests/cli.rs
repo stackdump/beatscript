@@ -243,3 +243,75 @@ fn with_gives_check_the_programs_an_import_names_and_never_fetches() {
     assert_eq!(run(&["check", "--with", bad.to_str().unwrap(), "--file", song.to_str().unwrap()], None).status.code(), Some(2));
     assert_eq!(run(&["check", "--with"], None).status.code(), Some(2));
 }
+
+#[test]
+fn fmt_upgrades_to_beatscript_2_and_keep_version_does_not() {
+    let v1 = "#! name: x\ntempo   120\ndeck A: kick x ~ x ~   # four\n";
+    let check = JsonValue::parse(&beatscript_api::check_json(v1)).unwrap();
+    let old = check.get("cid").and_then(JsonValue::as_str).unwrap().to_string();
+    assert_eq!(check.get("version").and_then(JsonValue::as_i64), Some(1));
+    // fmt: beatscript-api's answer, upgraded: the same program under its BeatScript 2 CID, the old one in from_cid
+    let r = run(&["fmt"], Some(v1.as_bytes()));
+    assert_eq!(out(&r), format!("{}\n", beatscript_api::fmt_json(v1)));
+    let up = JsonValue::parse(&out(&r)).unwrap();
+    assert_eq!(up.get("version").and_then(JsonValue::as_i64), Some(2));
+    assert_eq!(up.get("from_cid").and_then(JsonValue::as_str), Some(old.as_str()));
+    assert_eq!(up.get("cid"), check.get("renamed_cid"));
+    let text = up.get("text").and_then(JsonValue::as_str).unwrap().to_string();
+    assert!(text.starts_with("#! beatscript 2\n#! name: x\ntempo 120\n") && text.contains("# four"), "{text}");
+    // --keep-version: formatted in the version it is in, the CID it had
+    let k = JsonValue::parse(&out(&run(&["fmt", "--keep-version"], Some(v1.as_bytes())))).unwrap();
+    assert_eq!(k.get("ok").and_then(JsonValue::as_bool), Some(true));
+    assert_eq!(k.get("version").and_then(JsonValue::as_i64), Some(1));
+    assert_eq!(k.get("cid").and_then(JsonValue::as_str), Some(old.as_str()));
+    assert_eq!(k.get("canonical"), check.get("canonical"));
+    assert!(k.get("from_cid").is_none());
+    let kept = k.get("text").and_then(JsonValue::as_str).unwrap();
+    assert_eq!(Some(kept.to_string()), beatscript_api::format_text(v1));
+    assert!(kept.starts_with("#! name: x\ntempo 120\n"), "{kept}");
+    assert_eq!(JsonValue::parse(&beatscript_api::check_json(kept)).unwrap().get("cid").and_then(JsonValue::as_str), Some(old.as_str()));
+    assert_eq!(k.get("comments"), up.get("comments"));
+    // a BeatScript 2 text, or one with errors: --keep-version is fmt
+    for t in [text.as_str(), "deck A: kick |\n"] {
+        let a = out(&run(&["fmt"], Some(t.as_bytes())));
+        assert_eq!(out(&run(&["fmt", "--keep-version"], Some(t.as_bytes()))), a, "{t}");
+        assert!(!a.contains("from_cid"), "{a}");
+    }
+}
+
+#[test]
+fn check_says_the_language_version_and_the_other_versions_cid() {
+    for (text, v) in [("tempo 120\ndeck A: kick x ~ x ~\n", 1), ("#! btw 1\ntempo 120\ndeck A: kick x ~ x ~\n", 1), ("#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n", 2)] {
+        let r = run(&["check"], Some(text.as_bytes()));
+        assert_eq!(out(&r), format!("{}\n", beatscript_api::check_json(text)));
+        let j = JsonValue::parse(&out(&r)).unwrap();
+        assert_eq!(j.get("version").and_then(JsonValue::as_i64), Some(v), "{text}");
+        let (cid, renamed) = (j.get("cid").and_then(JsonValue::as_str).unwrap(), j.get("renamed_cid").and_then(JsonValue::as_str).unwrap());
+        assert!(renamed.starts_with('z') && renamed != cid, "{text}");
+    }
+    // the two spellings of one program: each one's renamed_cid is the other's CID
+    let a = JsonValue::parse(&beatscript_api::check_json("tempo 120\ndeck A: kick x ~ x ~\n")).unwrap();
+    let b = JsonValue::parse(&beatscript_api::check_json("#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n")).unwrap();
+    assert_eq!((a.get("renamed_cid"), b.get("renamed_cid")), (b.get("cid"), a.get("cid")));
+}
+
+#[test]
+fn with_reads_btw_files_beside_beatscript_ones_and_imports_by_either_versions_cid() {
+    let dir = std::env::temp_dir().join(format!("beatscript-cli-ext-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let riffs = "let riff = c2 e2 g2 b2\n";
+    let hits = "def hit(d) {\n  deck $d: kick x ~ x ~\n}\n";
+    std::fs::write(dir.join("riffs.beatscript"), riffs).unwrap();
+    // the extension before the rename (rename-to-beatscript: keep)
+    std::fs::write(dir.join("hits.btw"), hits).unwrap();
+    std::fs::write(dir.join("notes.txt"), "not a program\n").unwrap();
+    let cid = |t: &str| JsonValue::parse(&beatscript_api::check_json(t)).unwrap().get("cid").and_then(JsonValue::as_str).unwrap().to_string();
+    let renamed = |t: &str| JsonValue::parse(&beatscript_api::check_json(t)).unwrap().get("renamed_cid").and_then(JsonValue::as_str).unwrap().to_string();
+    // one import by the BeatScript 1 CID, one by the BeatScript 2 CID `beatscript fmt` would have said
+    let song = format!("#! beatscript 2\ntempo 120\nimport {}\nimport {}\ndeck A: bass riff\nhit(B)\n", cid(riffs), renamed(hits));
+    let r = run(&["check", "--with", dir.to_str().unwrap()], Some(song.as_bytes()));
+    assert_eq!(r.status.code(), Some(0), "{}", String::from_utf8_lossy(&r.stderr));
+    let j = JsonValue::parse(&out(&r)).unwrap();
+    assert_eq!(j.get("ok").and_then(JsonValue::as_bool), Some(true), "{}", j.js_stringified());
+    assert_eq!(j.get("uses").and_then(JsonValue::as_array).map(Vec::len), Some(2));
+}
