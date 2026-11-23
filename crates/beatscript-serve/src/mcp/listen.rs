@@ -71,8 +71,10 @@ in check's words; and the answer gains `expanded_cid` and `resolution`, as check
 cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). \
 Nothing is stored and no sign-in is needed. At most {per_hour} new listens an hour per caller; the same program, section \
 and bars again is answered from the cache. Programs are at most {max_prog} bytes; the render covers at most {MAX_BARS} \
-bars from the start. Like render, the offline engine plays the notes and the mixer and insert moves it has ops for; \
-`notes` names the control lines it leaves out."
+bars from the start. Like render, the offline engine plays the notes, the mixer and insert moves it has ops for and the \
+`macro` lines (the DJ macro catalogue: see the macros tool); `notes` names the control lines it leaves out. A program with \
+a macro line gains `macros`: each call in the window, `at_bar` (the bar the engine starts it on, as the time words count), \
+and `played`, with `refused` (the engine's reason, also a warning) when it was not."
     );
     tool(
         "listen",

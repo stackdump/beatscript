@@ -158,6 +158,23 @@
       ]
     },
     {
+      "id": "macros",
+      "docs": ["ext-control.md"],
+      "say": [["macros", "macro riser on A over 8 bars"], ["macros", "macro@1"], ["macros", "needs_net"], ["macros", "default_bars"]],
+      "calls": [
+        {"tool": "macros", "args": {}, "expect": [["/head", "=", "macro"], ["/version", "=", 1], ["/entries/0/id", "=", "riser"], ["/entries/0/length", "=", "sweep"], ["/entries/38/id", "=", "feel-reset"], ["/versions/0", "=", "macro@1"]]}
+      ]
+    },
+    {
+      "id": "macro-line",
+      "docs": ["ext-control.md"],
+      "say": [["listen", "`macro` lines"], ["listen", "gains `macros`"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "tempo 124\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~\nat bar 1: control: macro@1 riser over 2 bars on A\nend at bar 4\n"}, "expect": [["/ok", "=", true], ["/canonical", "~", "at bar 1: control: macro riser on A over 2 bars"]]},
+        {"tool": "listen", "args": {"text": "tempo 124\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~\nat bar 1: control: macro riser on A over 2 bars\nend at bar 4\n"}, "expect": [["/macros/0/id", "=", "riser"], ["/macros/0/at_bar", "=", 1], ["/macros/0/played", "=", true]]}
+      ]
+    },
+    {
       "id": "form-roles",
       "datum": 6674,
       "docs": ["ext-roles.md"],

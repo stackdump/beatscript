@@ -32,7 +32,7 @@ mod listen;
 #[path = "artifact.rs"]
 mod artifact;
 
-pub const TOOL_NAMES: [&str; 22] = ["artifact", "check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private", "station"];
+pub const TOOL_NAMES: [&str; 23] = ["artifact", "check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "macros", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private", "station"];
 
 /// The tools that need a signed-in caller.
 /// The account a `/mcp` bearer token acts as: an OAuth access token bound to `/mcp` (oauth.rs), or a pasted `btw_`
@@ -302,6 +302,24 @@ impl Args {
             Some(_) => Err(bad(format!("argument {} must be true or false", q(k)))),
         }
     }
+}
+
+// ---------- macros ----------
+
+/// The `macros` tool: a version's table of the DJ macro catalogue (djlive::macros, docs/beatscript/ext-control.md), as a `macro` line reads it.
+fn macros_tool(a: Args) -> Result<Value, Fail> {
+    a.only(&["version"])?;
+    let v = match a.present("version") {
+        None => djlive::macros::BARE,
+        Some(x) => x.as_u64().filter(|n| *n >= 1).and_then(|n| u32::try_from(n).ok()).ok_or_else(|| bad("argument \"version\" is a whole number from 1"))?,
+    };
+    let Some(t) = djlive::macros::table_json(v) else {
+        return Err(bad(format!("this BeatScript has {}, not macro@{v}", djlive::macros::version_names().join(", "))));
+    };
+    let mut j: Value = serde_json::from_str(&t.js_stringified()).map_err(|e| bad(format!("macros: {e}")))?;
+    j["versions"] = json!(djlive::macros::version_names());
+    j["example"] = json!("control: macro riser on A over 8 bars");
+    Ok(j)
 }
 
 // ---------- schemas ----------
@@ -603,6 +621,14 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 &["genre"],
             ),
             tool("instruments", "Voices, kits and palettes", text::INSTRUMENTS_DESC.into(), [true, false, true, false], vec![], &[]),
+            tool(
+                "macros",
+                "The DJ macro catalogue a macro line names",
+                text::MACROS_DESC.into(),
+                [true, false, true, false],
+                vec![("version", json!({"type": "integer", "minimum": 1, "description": "Optional: which table, macro@N (default 1: what a bare `macro` is)."}))],
+                &[],
+            ),
             tool("stop", "Stop a browser tab", fill(text::STOP_DESC, &[p]), [false, false, true, false], vec![("session", session.clone()), ("device", device.clone())], &[]),
             tool("devices", "Your paired phones", fill(text::DEVICES_DESC, &[p]), [true, false, true, false], vec![], &[]),
             tool(
@@ -874,6 +900,7 @@ impl Tools {
             "record" => self.record_tool(c, a).map(Text::Json),
             "list_examples" => self.list_examples(a).map(Text::Json),
             "instruments" => self.instruments(a).map(Text::Raw),
+            "macros" => macros_tool(a).map(Text::Json),
             "stop" => self.stop(c, a).map(Text::Json),
             "devices" => self.devices(c, a).map(Text::Json),
             "queue" => self.queue_tool(c, a).map(Text::Json),
