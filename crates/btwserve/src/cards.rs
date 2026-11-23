@@ -3,6 +3,7 @@
 //!   GET  /c/<cid>[.<packed>][.jsonld]   the link-preview page (og:/twitter: tags) of a program, or its JSON-LD
 //!   GET  /p/<cid>[.jsonld]              the short link's page: the same, and a person is sent to /#<cid>
 //!   GET  /card/<cid>[.<packed>][.square].png, /card/default[.square].png, /card/go.js, /card/card.css
+//!   GET  /card/<cid>.svg, /card/default.svg   the card as an SVG, for a README (cards/svg.rs)
 //!   PUT  /api/shares/<cid>              a signed-in (cookie, bearer, BtwDevice) store of a public program
 //!
 //! Pages, JSON-LD, headers and errors are Go's to the byte (the page's packed text is Go's own flate output:
@@ -14,6 +15,7 @@ mod draw;
 pub(crate) mod goflate; // also the hub's pairing QR PNG (hub::qr)
 mod lex;
 mod region;
+mod svg;
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -1197,6 +1199,10 @@ async fn serve_card(State(c): State<Arc<Cards>>, req: Request) -> Response<Body>
         h.insert(header::CONTENT_TYPE, HeaderValue::from_static("application/javascript; charset=utf-8"));
         h.insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=86400"));
         return written(req.method(), h, GO_JS.as_bytes().to_vec());
+    }
+    if let Some(name) = name.strip_suffix(".svg") {
+        let (creq, addr) = (content::Req { method: req.method(), headers: req.headers() }, addr_of(&req));
+        return svg::serve(&c, &creq, &addr, name).await;
     }
     let Some(name) = name.strip_suffix(".png") else { return not_found(HeaderMap::new()) };
     let (v, name) = match name.strip_suffix(".square") {
