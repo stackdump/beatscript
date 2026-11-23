@@ -361,14 +361,14 @@
 	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-high> , <https://beatscript.app/ontology/concept/keyword-low> , <https://beatscript.app/ontology/concept/keyword-mid> ;
 	ns:writtenAs "band" .
 <https://beatscript.app/ontology/concept/grammar-binding> a skos:Concept , ns:GrammarProduction ;
-	skos:definition "The binding production of BeatScript's grammar (a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass)."@en ;
+	skos:definition "The binding production of BeatScript's grammar (a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass; one part of a seed role: a.bass=[d2 ~ a1 ~]; a form's number: delay=6 interval=-12)."@en ;
 	skos:prefLabel "binding"@en ;
-	ns:ebnf "NAME \"=\" source" ;
+	ns:ebnf "NAME [ \".\" role ] \"=\" ( source | [ \"-\" ] INT )" ;
 	ns:grammarSection "Phrase templates"@en ;
 	ns:status "stable" ;
-	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-symbol-equals> ;
-	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-source> ;
-	ns:usesToken <https://beatscript.app/ontology/concept/token-name> ;
+	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-symbol-dot> , <https://beatscript.app/ontology/concept/keyword-symbol-equals> , <https://beatscript.app/ontology/concept/keyword-symbol-minus> ;
+	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-role> , <https://beatscript.app/ontology/concept/grammar-source> ;
+	ns:usesToken <https://beatscript.app/ontology/concept/token-int> , <https://beatscript.app/ontology/concept/token-name> ;
 	ns:writtenAs "binding" .
 <https://beatscript.app/ontology/concept/grammar-block-end> a skos:Concept , ns:GrammarProduction ;
 	skos:definition "The block_end production of BeatScript's grammar (default end; loop N: 1 to 256 passes, then a coda)."@en ;
@@ -741,13 +741,13 @@
 	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-or> ;
 	ns:writtenAs "expr" .
 <https://beatscript.app/ontology/concept/grammar-form> a skos:Concept , ns:GrammarProduction ;
-	skos:definition "The form production of BeatScript's grammar (a form inside another takes no phrase: forms nest 3 deep)."@en ;
+	skos:definition "The form production of BeatScript's grammar (a form inside another takes no phrase: forms nest 3 deep; .both is one of its sections, .both.arp that section's part)."@en ;
 	skos:prefLabel "form"@en ;
-	ns:ebnf "\"template\" \"(\" NAME { \",\" binding } \")\"" ;
+	ns:ebnf "\"template\" \"(\" NAME { \",\" binding } \")\" [ \".\" NAME [ \".\" role ] ]" ;
 	ns:grammarSection "Phrase templates"@en ;
 	ns:status "stable" ;
-	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-symbol-close-paren> , <https://beatscript.app/ontology/concept/keyword-symbol-comma> , <https://beatscript.app/ontology/concept/keyword-symbol-open-paren> , <https://beatscript.app/ontology/concept/keyword-template> ;
-	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-binding> ;
+	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-symbol-close-paren> , <https://beatscript.app/ontology/concept/keyword-symbol-comma> , <https://beatscript.app/ontology/concept/keyword-symbol-dot> , <https://beatscript.app/ontology/concept/keyword-symbol-open-paren> , <https://beatscript.app/ontology/concept/keyword-template> ;
+	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-binding> , <https://beatscript.app/ontology/concept/grammar-role> ;
 	ns:usesToken <https://beatscript.app/ontology/concept/token-name> ;
 	ns:writtenAs "form" .
 <https://beatscript.app/ontology/concept/grammar-gen-param> a skos:Concept , ns:GrammarProduction ;
@@ -1359,12 +1359,12 @@
 	ns:usesToken <https://beatscript.app/ontology/concept/token-int> , <https://beatscript.app/ontology/concept/token-key> , <https://beatscript.app/ontology/concept/token-name> , <https://beatscript.app/ontology/concept/token-phrase> ;
 	ns:writtenAs "sing" .
 <https://beatscript.app/ontology/concept/grammar-source> a skos:Concept , ns:GrammarProduction ;
-	skos:definition "The source production of BeatScript's grammar (an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program's part or sections)."@en ;
+	skos:definition "The source production of BeatScript's grammar (an engine call; a public-domain theme by id (ode_to_joy); notes; another template, or one section of it; a stored program's part or sections; a stored set's track)."@en ;
 	skos:prefLabel "source"@en ;
-	ns:ebnf "gen | NAME | notes | form | stored" ;
+	ns:ebnf "gen | NAME | notes | form | stored | track" ;
 	ns:grammarSection "Phrase templates"@en ;
 	ns:status "stable" ;
-	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-form> , <https://beatscript.app/ontology/concept/grammar-gen> , <https://beatscript.app/ontology/concept/grammar-notes> , <https://beatscript.app/ontology/concept/grammar-stored> ;
+	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-form> , <https://beatscript.app/ontology/concept/grammar-gen> , <https://beatscript.app/ontology/concept/grammar-notes> , <https://beatscript.app/ontology/concept/grammar-stored> , <https://beatscript.app/ontology/concept/grammar-track> ;
 	ns:usesToken <https://beatscript.app/ontology/concept/token-name> ;
 	ns:writtenAs "source" .
 <https://beatscript.app/ontology/concept/grammar-span> a skos:Concept , ns:GrammarProduction ;
@@ -1533,6 +1533,17 @@
 	ns:status "stable" ;
 	ns:usesToken <https://beatscript.app/ontology/concept/token-token> ;
 	ns:writtenAs "tokens" .
+<https://beatscript.app/ontology/concept/grammar-track> a skos:Concept , ns:GrammarProduction ;
+	skos:definition "The track production of BeatScript's grammar (a stored set's track by number: <cid>.track2, its section <cid>.track2.drop, its part <cid>.track2.drop.bass)."@en ;
+	skos:prefLabel "track"@en ;
+	ns:ebnf "CID \".\" NAME [ \".\" NAME ] [ \".\" role ]" ;
+	ns:grammarSection "Phrase templates"@en ;
+	ns:hostOnly true ;
+	ns:status "stable" ;
+	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-symbol-dot> ;
+	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-role> ;
+	ns:usesToken <https://beatscript.app/ontology/concept/token-cid> , <https://beatscript.app/ontology/concept/token-name> ;
+	ns:writtenAs "track" .
 <https://beatscript.app/ontology/concept/grammar-type> a skos:Concept , ns:GrammarProduction ;
 	skos:definition "The type production of BeatScript's grammar."@en ;
 	skos:prefLabel "type"@en ;
@@ -2530,7 +2541,7 @@
 	ns:keywordText "," ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/concept/keyword-symbol-dot> a skos:Concept , ns:Keyword ;
-	skos:definition "The keyword . of BeatScript, written in: duck, seed, stored, subject, wire."@en ;
+	skos:definition "The keyword . of BeatScript, written in: binding, duck, form, seed, stored, subject, track, wire."@en ;
 	skos:prefLabel "."@en ;
 	ns:keywordText "." ;
 	ns:status "stable" .
@@ -2565,7 +2576,7 @@
 	ns:keywordText "<" ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/concept/keyword-symbol-minus> a skos:Concept , ns:Keyword ;
-	skos:definition "The keyword - of BeatScript, written in: csum, cunary, levelexpr, lop, mut_op, sum, unary."@en ;
+	skos:definition "The keyword - of BeatScript, written in: binding, csum, cunary, levelexpr, lop, mut_op, sum, unary."@en ;
 	skos:prefLabel "-"@en ;
 	ns:keywordText "-" ;
 	ns:status "stable" .
@@ -3837,7 +3848,7 @@
 	ns:status "stable" ;
 	ns:writtenAs "CHORD" .
 <https://beatscript.app/ontology/concept/token-cid> a skos:Concept , ns:TokenClass ;
-	skos:definition "The lexer's CID token, used in: stored."@en ;
+	skos:definition "The lexer's CID token, used in: stored, track."@en ;
 	skos:prefLabel "CID"@en ;
 	ns:status "stable" ;
 	ns:writtenAs "CID" .
@@ -3862,7 +3873,7 @@
 	ns:status "stable" ;
 	ns:writtenAs "GLOB" .
 <https://beatscript.app/ontology/concept/token-int> a skos:Concept , ns:TokenClass ;
-	skos:definition "The lexer's INT token, used in: SPEC, arg, arr_end, assert, atom, block_end, bound, choose, dleaf, dterm, end, engine, evolve, gen, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, step, term, until_when."@en ;
+	skos:definition "The lexer's INT token, used in: SPEC, arg, arr_end, assert, atom, binding, block_end, bound, choose, dleaf, dterm, end, engine, evolve, gen, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, step, term, until_when."@en ;
 	skos:prefLabel "INT"@en ;
 	ns:status "stable" ;
 	ns:writtenAs "INT" .
@@ -3877,7 +3888,7 @@
 	ns:status "stable" ;
 	ns:writtenAs "MACRO" .
 <https://beatscript.app/ontology/concept/token-name> a skos:Concept , ns:TokenClass ;
-	skos:definition "The lexer's NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, engine, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, switch, template, until_when, when, wire."@en ;
+	skos:definition "The lexer's NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, engine, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, switch, template, track, until_when, when, wire."@en ;
 	skos:prefLabel "NAME"@en ;
 	ns:status "stable" ;
 	ns:writtenAs "NAME" .
@@ -4064,7 +4075,7 @@
 <https://beatscript.app/ontology/concept/tool-beatscript-genre-template> a ns:McpTool ;
 	skos:definition "A starting BeatScript program for a genre, built from the BeatScript ontology's data for it (https://beatscript.app/ontology/, CC0, forked from the bitwrap ontology): its tempo, key (root and scale), swing, drum kit and Euclidean kick, snare and hihat rhythms, its bass, arp and melody voices, its first chord progression (the chords, bass, arp and melody are Roman numerals, so a `key` line moves them all), and its family's standard song structure, each section with the roles the family's section profile makes active and its usual length. Returns {text, cid, canonical, seconds, genre{genre, label, family, tempo, tempo_range, scale, kit, voices, progressions, sections}} (and phrase, warnings with a phrase). The text passes check (it is checked before it is returned) and carries a `#! genre:` line, so check reports its style against the genre. Edit it, check it, then play or share it. For vocals, pass phrase (a phrasebook id from list_examples with phrasebook true, or any words): it is sung on the melody part of each section that has one, and the answer gains phrase with its source, year, meter, stress, syllables and phoneme escapes and whether its meter fits the genre (https://beatscript.app/docs/found-phrases.md). For a classical form, pass form (quodlibet, passacaglia, canon, rondo, fugue or theme-and-variations): the program is that form's template at the genre's tempo, built from public-domain themes, with the phrase (or the form's own) sung in it, and the answer gains form (its sections, mutation plan, themes and reference track) and expanded (the program written out to edit). To borrow one theme instead, pass theme (an id from list_examples with themes true): its lets go in, moved to the genre's key, played by the part of its role. See https://beatscript.app/docs/forms.md. For a whole track made from a phrase, write `arrange from template(deep-house, \"your words\")` (see expand). Read-only, no sign-in. The answer also has expanded_cid (the CID of the program written out: the same as cid for a program with no references) and, for a program with references (a form's template(...)), refs and resolution, as check gives them. A form takes its sources as roles (docs/beatscript/ext-roles.md): with form and roles, each role is bound to a source (a seed of the seeded generator, a public-domain theme, notes, a stored program's part or section, another form), and the forms include cross (a quodlibet of two sources, roles a and b): two seeds that lead in turn, overlap, and morph toward each other and back.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
 	skos:prefLabel "genre_template"@en ;
-	ns:inputSchema "{\"additionalProperties\":false,\"properties\":{\"form\":{\"description\":\"Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.\",\"maxLength\":64,\"type\":\"string\"},\"genre\":{\"description\":\"A genre of the BeatScript ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://beatscript.app/ontology/genre/ IRI.\",\"maxLength\":200,\"type\":\"string\"},\"phrase\":{\"description\":\"Optional, for vocals (found phrases, see docs/beatscript/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.\",\"maxLength\":400,\"type\":\"string\"},\"roles\":{\"additionalProperties\":{\"maxLength\":400,\"type\":\"string\"},\"description\":\"Optional, with form (docs/beatscript/ext-roles.md): the form's roles, each bound to a source, {\\\"ROLE\\\": \\\"SOURCE\\\"}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program's part or section by CID, or another form (template(passacaglia, ground=gen@1 dubstep seed=54876)). cross takes a and b; passacaglia ground and upper; canon subject and ground; rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form's key and tempo and stays an engine call, pinned (see resolution).\",\"type\":\"object\"},\"theme\":{\"description\":\"Optional (docs/beatscript/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre's key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.\",\"maxLength\":64,\"type\":\"string\"}},\"required\":[\"genre\"],\"type\":\"object\"}" ;
+	ns:inputSchema "{\"additionalProperties\":false,\"properties\":{\"form\":{\"description\":\"Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track, its roles with their parts, and its numbers) and expanded (the program written out as plain BeatScript). Not with theme.\",\"maxLength\":64,\"type\":\"string\"},\"genre\":{\"description\":\"A genre of the BeatScript ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://beatscript.app/ontology/genre/ IRI.\",\"maxLength\":200,\"type\":\"string\"},\"phrase\":{\"description\":\"Optional, for vocals (found phrases, see docs/beatscript/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.\",\"maxLength\":400,\"type\":\"string\"},\"roles\":{\"additionalProperties\":{\"maxLength\":400,\"type\":\"string\"},\"description\":\"Optional, with form (docs/beatscript/ext-roles.md): the form's roles, each bound to a source, {\\\"ROLE\\\": \\\"SOURCE\\\"}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program's part or section by CID, a stored set by CID (its tracks in order) or one of its tracks (<cid>.track2), another form (template(passacaglia, ground=gen@1 dubstep seed=54876)) or one section of it (template(cross).both, template(cross).both.arp: where a line goes, the notes its part plays). cross takes a and b, and one part of either alone as a.bass, a.melody, a.harmony; quodlibet a, b, ground and third; passacaglia ground and upper; canon subject and ground, and the numbers delay (beats behind, {\\\"delay\\\": \\\"6\\\"}) and interval (semitones, {\\\"interval\\\": \\\"7\\\"}); rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form's key and tempo and stays an engine call, pinned (see resolution).\",\"type\":\"object\"},\"theme\":{\"description\":\"Optional (docs/beatscript/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre's key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.\",\"maxLength\":64,\"type\":\"string\"}},\"required\":[\"genre\"],\"type\":\"object\"}" ;
 	ns:needsToken false ;
 	ns:providedBy <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
 	ns:readOnly true ;

@@ -586,13 +586,17 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-binding">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The binding production of BeatScript&apos;s grammar (a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass).</skos:definition>
+		<skos:definition xml:lang="en">The binding production of BeatScript&apos;s grammar (a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass; one part of a seed role: a.bass=[d2 ~ a1 ~]; a form&apos;s number: delay=6 interval=-12).</skos:definition>
 		<skos:prefLabel xml:lang="en">binding</skos:prefLabel>
-		<ns:ebnf>NAME &quot;=&quot; source</ns:ebnf>
+		<ns:ebnf>NAME [ &quot;.&quot; role ] &quot;=&quot; ( source | [ &quot;-&quot; ] INT )</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
 		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-dot"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-equals"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-minus"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-role"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-source"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-int"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
 		<ns:writtenAs>binding</ns:writtenAs>
 	</skos:Concept>
@@ -1178,16 +1182,18 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-form">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The form production of BeatScript&apos;s grammar (a form inside another takes no phrase: forms nest 3 deep).</skos:definition>
+		<skos:definition xml:lang="en">The form production of BeatScript&apos;s grammar (a form inside another takes no phrase: forms nest 3 deep; .both is one of its sections, .both.arp that section&apos;s part).</skos:definition>
 		<skos:prefLabel xml:lang="en">form</skos:prefLabel>
-		<ns:ebnf>&quot;template&quot; &quot;(&quot; NAME { &quot;,&quot; binding } &quot;)&quot;</ns:ebnf>
+		<ns:ebnf>&quot;template&quot; &quot;(&quot; NAME { &quot;,&quot; binding } &quot;)&quot; [ &quot;.&quot; NAME [ &quot;.&quot; role ] ]</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-close-paren"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-comma"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-dot"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-open-paren"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-template"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-binding"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-role"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
 		<ns:writtenAs>form</ns:writtenAs>
 	</skos:Concept>
@@ -2157,15 +2163,16 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-source">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The source production of BeatScript&apos;s grammar (an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program&apos;s part or sections).</skos:definition>
+		<skos:definition xml:lang="en">The source production of BeatScript&apos;s grammar (an engine call; a public-domain theme by id (ode_to_joy); notes; another template, or one section of it; a stored program&apos;s part or sections; a stored set&apos;s track).</skos:definition>
 		<skos:prefLabel xml:lang="en">source</skos:prefLabel>
-		<ns:ebnf>gen | NAME | notes | form | stored</ns:ebnf>
+		<ns:ebnf>gen | NAME | notes | form | stored | track</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
 		<ns:status>stable</ns:status>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-form"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-gen"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-notes"/>
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-stored"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-track"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
 		<ns:writtenAs>source</ns:writtenAs>
 	</skos:Concept>
@@ -2424,6 +2431,20 @@
 		<ns:status>stable</ns:status>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-token"/>
 		<ns:writtenAs>tokens</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-track">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
+		<skos:definition xml:lang="en">The track production of BeatScript&apos;s grammar (a stored set&apos;s track by number: &lt;cid&gt;.track2, its section &lt;cid&gt;.track2.drop, its part &lt;cid&gt;.track2.drop.bass).</skos:definition>
+		<skos:prefLabel xml:lang="en">track</skos:prefLabel>
+		<ns:ebnf>CID &quot;.&quot; NAME [ &quot;.&quot; NAME ] [ &quot;.&quot; role ]</ns:ebnf>
+		<ns:grammarSection xml:lang="en">Phrase templates</ns:grammarSection>
+		<ns:hostOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:hostOnly>
+		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-dot"/>
+		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-role"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-cid"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:writtenAs>track</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-type">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
@@ -3837,7 +3858,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-dot">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword . of BeatScript, written in: duck, seed, stored, subject, wire.</skos:definition>
+		<skos:definition xml:lang="en">The keyword . of BeatScript, written in: binding, duck, form, seed, stored, subject, track, wire.</skos:definition>
 		<skos:prefLabel xml:lang="en">.</skos:prefLabel>
 		<ns:keywordText>.</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -3886,7 +3907,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-symbol-minus">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword - of BeatScript, written in: csum, cunary, levelexpr, lop, mut_op, sum, unary.</skos:definition>
+		<skos:definition xml:lang="en">The keyword - of BeatScript, written in: binding, csum, cunary, levelexpr, lop, mut_op, sum, unary.</skos:definition>
 		<skos:prefLabel xml:lang="en">-</skos:prefLabel>
 		<ns:keywordText>-</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -6537,7 +6558,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-cid">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s CID token, used in: stored.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s CID token, used in: stored, track.</skos:definition>
 		<skos:prefLabel xml:lang="en">CID</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>CID</ns:writtenAs>
@@ -6572,7 +6593,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-int">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s INT token, used in: SPEC, arg, arr_end, assert, atom, block_end, bound, choose, dleaf, dterm, end, engine, evolve, gen, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, step, term, until_when.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s INT token, used in: SPEC, arg, arr_end, assert, atom, binding, block_end, bound, choose, dleaf, dterm, end, engine, evolve, gen, input, launch, mutation, op, part, repeat, rule, section, seed, set_mix, shape, sing, step, term, until_when.</skos:definition>
 		<skos:prefLabel xml:lang="en">INT</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>INT</ns:writtenAs>
@@ -6593,7 +6614,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-name">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
-		<skos:definition xml:lang="en">The lexer&apos;s NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, engine, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, switch, template, until_when, when, wire.</skos:definition>
+		<skos:definition xml:lang="en">The lexer&apos;s NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, engine, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, switch, template, track, until_when, when, wire.</skos:definition>
 		<skos:prefLabel xml:lang="en">NAME</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>NAME</ns:writtenAs>
@@ -6873,7 +6894,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">genre_template</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;form&quot;:{&quot;description&quot;:&quot;Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form&apos;s template at the genre&apos;s tempo, arrange from template(&lt;form&gt;, &lt;phrase&gt;), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;A genre of the BeatScript ontology: its name (techno, house, jazz, dnb, ...), genre:&lt;name&gt;, or its https://beatscript.app/ontology/genre/ IRI.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;phrase&quot;:{&quot;description&quot;:&quot;Optional, for vocals (found phrases, see docs/beatscript/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.&quot;,&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;roles&quot;:{&quot;additionalProperties&quot;:{&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;description&quot;:&quot;Optional, with form (docs/beatscript/ext-roles.md): the form&apos;s roles, each bound to a source, {\&quot;ROLE\&quot;: \&quot;SOURCE\&quot;}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program&apos;s part or section by CID, or another form (template(passacaglia, ground=gen@1 dubstep seed=54876)). cross takes a and b; passacaglia ground and upper; canon subject and ground; rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form&apos;s key and tempo and stays an engine call, pinned (see resolution).&quot;,&quot;type&quot;:&quot;object&quot;},&quot;theme&quot;:{&quot;description&quot;:&quot;Optional (docs/beatscript/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre&apos;s key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;genre&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;form&quot;:{&quot;description&quot;:&quot;Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form&apos;s template at the genre&apos;s tempo, arrange from template(&lt;form&gt;, &lt;phrase&gt;), and the answer gains form (shape, mutation plan, themes, reference track, its roles with their parts, and its numbers) and expanded (the program written out as plain BeatScript). Not with theme.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;A genre of the BeatScript ontology: its name (techno, house, jazz, dnb, ...), genre:&lt;name&gt;, or its https://beatscript.app/ontology/genre/ IRI.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;phrase&quot;:{&quot;description&quot;:&quot;Optional, for vocals (found phrases, see docs/beatscript/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.&quot;,&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;roles&quot;:{&quot;additionalProperties&quot;:{&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;description&quot;:&quot;Optional, with form (docs/beatscript/ext-roles.md): the form&apos;s roles, each bound to a source, {\&quot;ROLE\&quot;: \&quot;SOURCE\&quot;}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program&apos;s part or section by CID, a stored set by CID (its tracks in order) or one of its tracks (&lt;cid&gt;.track2), another form (template(passacaglia, ground=gen@1 dubstep seed=54876)) or one section of it (template(cross).both, template(cross).both.arp: where a line goes, the notes its part plays). cross takes a and b, and one part of either alone as a.bass, a.melody, a.harmony; quodlibet a, b, ground and third; passacaglia ground and upper; canon subject and ground, and the numbers delay (beats behind, {\&quot;delay\&quot;: \&quot;6\&quot;}) and interval (semitones, {\&quot;interval\&quot;: \&quot;7\&quot;}); rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form&apos;s key and tempo and stays an engine call, pinned (see resolution).&quot;,&quot;type&quot;:&quot;object&quot;},&quot;theme&quot;:{&quot;description&quot;:&quot;Optional (docs/beatscript/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre&apos;s key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;genre&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:readOnly>
