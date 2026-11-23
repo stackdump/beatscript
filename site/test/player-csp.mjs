@@ -37,7 +37,7 @@ if (!fs.existsSync(path.join(wasm, 'beatscript_bg.wasm'))) {
   console.log(`# skip: no ${wasm}/beatscript_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
   process.exit(0);
 }
-const dist = fs.mkdtempSync(path.join(os.tmpdir(), 'btw-player-'));
+const dist = fs.mkdtempSync(path.join(os.tmpdir(), 'beatscript-player-'));
 execFileSync(process.execPath, [path.join(here, '..', 'player', 'build.mjs'), '--wasm', wasm, '--out', dist], { stdio: 'inherit' });
 
 const ARTIFACT = "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; connect-src 'self'";

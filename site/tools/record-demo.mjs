@@ -42,7 +42,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 // ---- Chrome + a minimal CDP client ----
 const port = 9300 + Math.floor(Math.random() * 500)
-const profile = mkdtempSync(join(tmpdir(), 'btw-rec-'))
+const profile = mkdtempSync(join(tmpdir(), 'beatscript-rec-'))
 const proc = spawn(chrome, [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
   `--window-size=${W},${H}`, '--force-device-scale-factor=1', '--hide-scrollbars',

@@ -16,7 +16,7 @@ export const wasmDir = () => WASM_DIR || path.join(site, 'web', 'wasm');
 
 /** Why the harness cannot run here, or null. */
 export function missing(beatscript) {
-    if (!fs.existsSync(path.join(wasmDir(), 'beatscript_bg.wasm'))) return 'no built module in site/web/wasm (scripts/build-web-wasm.sh <btwsite>/web/wasm)';
+    if (!fs.existsSync(path.join(wasmDir(), 'beatscript_bg.wasm'))) return 'no built module in site/web/wasm (scripts/build-web-wasm.sh site/web/wasm)';
     if (!fs.existsSync(CHROME)) return `no Chrome at ${CHROME}`;
     if (beatscript !== undefined && (!beatscript || !fs.existsSync(beatscript))) return 'no beatscript (--beatscript PATH, BEATSCRIPT_BIN, or site/bin/beatscript)';
     return null;

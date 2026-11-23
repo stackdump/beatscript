@@ -60,7 +60,7 @@ if [ -n "${BEATSCRIPT_BIN:-}" ]; then
     echo "beatscript-gen-docs: BEATSCRIPT_BIN=$BEATSCRIPT_BIN is not an executable" >&2
     exit 1
   fi
-  fresh=$(mktemp "${TMPDIR:-/tmp}/btw-cheatsheet.XXXXXX")
+  fresh=$(mktemp "${TMPDIR:-/tmp}/beatscript-cheatsheet.XXXXXX")
   trap 'rm -f "$fresh"' EXIT
   "$BEATSCRIPT_BIN" cheatsheet > "$fresh"
   if [ ! -s "$fresh" ]; then

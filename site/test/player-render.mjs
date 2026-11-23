@@ -21,7 +21,7 @@ if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm'))) {
   console.log(`# skip: no ${wasmDir}/beatscript_bg.wasm (scripts/build-web-wasm.sh ${wasmDir})`);
   process.exit(0);
 }
-const dist = process.env.BEATSCRIPT_PLAYER_DIST || fs.mkdtempSync(path.join(os.tmpdir(), 'btw-player-render-'));
+const dist = process.env.BEATSCRIPT_PLAYER_DIST || fs.mkdtempSync(path.join(os.tmpdir(), 'beatscript-player-render-'));
 if (!process.env.BEATSCRIPT_PLAYER_DIST) execFileSync(process.execPath, [path.join(here, '..', 'player', 'build.mjs'), '--wasm', wasmDir, '--out', dist], { stdio: 'inherit' });
 
 const { renderProgram } = await import(pathToFileURL(path.join(dist, 'beatscript-render.js')).href);

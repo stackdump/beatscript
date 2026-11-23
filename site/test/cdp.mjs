@@ -22,7 +22,7 @@ function freePort() {
 
 export async function launch({ width = 1280, height = 800, args = [] } = {}) {
   const port = await freePort();
-  const profile = mkdtempSync(join(tmpdir(), 'btw-chrome-'));
+  const profile = mkdtempSync(join(tmpdir(), 'beatscript-chrome-'));
   const proc = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, `--window-size=${width},${height}`, '--force-device-scale-factor=1', '--hide-scrollbars', '--autoplay-policy=no-user-gesture-required', '--no-first-run', '--no-default-browser-check', '--disable-gpu-vsync', '--font-render-hinting=none', ...(process.env.BEATSCRIPT_CHROME_ARGS || '').split(' ').filter(Boolean), ...args, 'about:blank'], { stdio: 'ignore' });
   const kill = () => { try { proc.kill('SIGKILL'); } catch { /* gone */ } try { rmSync(profile, { recursive: true, force: true }); } catch { /* busy */ } };
   process.on('exit', kill);
