@@ -101,12 +101,22 @@ fn a_slide_on_the_acid_voice_glides_by_itself_as_a_303s_does() {
         assert_eq!(b.iter().map(|(_, m)| int(m, "glide")).collect::<Vec<_>>(), [None, Some(150)]);
         // no slide, no glide
         assert!(bindings(&format!("deck B: bass f1 f2 inst={inst}\n"), Deck::B, "bass").iter().all(|(_, m)| m.get("glide").is_none()));
+        // the note a slide leaves says so (its gate is held for the glide), and so does one on the last step, round the
+        // ring into the first
+        let b = bindings(&format!("deck B: bass f1 ~ ~ ~ f1^ ~ ~ ~ f2 ~ ~ ~ ~ ~ ~ ~ inst={inst}\n"), Deck::B, "bass");
+        let slide = |m: &JsonValue| m.get("slide").and_then(JsonValue::as_bool) == Some(true);
+        assert_eq!(b.iter().map(|(s, m)| (*s, slide(m))).collect::<Vec<_>>(), [(0, false), (4, true), (8, false)]);
+        let b = bindings(&format!("deck B: bass a1 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ e1^ inst={inst}\n"), Deck::B, "bass");
+        assert_eq!(b.iter().map(|(s, m)| (*s, slide(m), int(m, "glide"))).collect::<Vec<_>>(), [(0, false, Some(60)), (15, true, None)]);
     }
     // every other voice's `^` holds, as it always has (a name that contains `acid` is not the voice)
     for inst in ["sub-bass", "acid-bass", "bass"] {
         assert!(!djlive::compile::slides_by_itself(inst), "{inst}");
         let b = bindings(&format!("deck B: bass f1^ f2 inst={inst}\n"), Deck::B, "bass");
-        assert!(b.iter().all(|(_, m)| m.get("glide").is_none()), "{inst}");
+        assert!(b.iter().all(|(_, m)| m.get("glide").is_none() && m.get("slide").is_none()), "{inst}");
+        // with glide= it bends, and still says no slide: its net is what it always was
+        let b = bindings(&format!("deck B: bass f1^ f2 glide=50 inst={inst}\n"), Deck::B, "bass");
+        assert!(b.iter().all(|(_, m)| m.get("slide").is_none()), "{inst}");
     }
 }
 

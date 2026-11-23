@@ -84,7 +84,7 @@ pub const SELF_SLIDE_MS: u16 = 60;
 
 /// Does the voice `inst` slide by itself on a `^`, as a 303 does? The acid voices (`acid`, `acid-square`): the entries of
 /// the engine's instrument table that play its `"acid"` engine. Every other voice's `^` holds its note, and bends only with
-/// `glide=`.
+/// `glide=`. On such a voice the note a `^` is on also says `"slide": true`, so it holds its gate until the glide comes.
 pub fn slides_by_itself(inst: &str) -> bool {
     djengine::wave::instruments::InstrumentTable::shared().entries.get(inst).and_then(|e| e.get("engine")).and_then(JsonValue::as_str) == Some("acid")
 }
@@ -180,8 +180,8 @@ impl PartIr {
         let bars: Vec<&[Hit]> = (0..period).map(|bar| self.cycles.get((bar + phase) % n).map_or(&[][..], |c| c.as_slice())).collect();
         // `glide=`: a note glides when the step before it (the net comes round, so the last step is before the
         // first) has a slide on it. On a voice that slides by itself (the acid voice) a slide glides without it, in a 303's time.
-        let own = || self.instrument.as_deref().filter(|i| slides_by_itself(i)).map(|_| SELF_SLIDE_MS);
-        let glide = self.expr.glide_ms.or_else(own).filter(|_| bars.iter().any(|b| b.iter().any(|h| h.slide)));
+        let self_sliding = self.instrument.as_deref().is_some_and(slides_by_itself);
+        let glide = self.expr.glide_ms.or(self_sliding.then_some(SELF_SLIDE_MS)).filter(|_| bars.iter().any(|b| b.iter().any(|h| h.slide)));
         let mut slid = glide.is_some() && bars.iter().rev().find(|b| !b.is_empty()).is_some_and(|b| {
             let last = b.iter().map(|h| h.step).max().unwrap_or(0);
             b.iter().any(|h| h.step == last && h.slide)
@@ -211,6 +211,11 @@ impl PartIr {
                 }
                 if let Some(r) = h.marks.ratchet {
                     x.set("ratchet", JsonValue::int(i64::from(r)));
+                }
+                // on a voice that slides by itself the note a slide leaves says so: its gate stays open for the glide,
+                // as a 303's does on a slide step (the last step's length is cut at the ring's end, the gate must not be)
+                if self_sliding && glide.is_some() && h.slide {
+                    x.set("slide", JsonValue::Bool(true));
                 }
                 if h.marks.flam {
                     x.set("flam", JsonValue::Bool(true));
