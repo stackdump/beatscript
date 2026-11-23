@@ -3284,7 +3284,9 @@ logs are the "Decisions" of each `docs/beatscript/ext-*.md`.)
 - A set in a role is its tracks, not its mix: the form's own sections stand between the tracks, so the mixes and cuts stay behind,
   said in a note. A playlist (an account's list, changed in place) is no source; a set, pinned by CID, is.
 - A section where a line goes is the role's own part of it, as it first plays (the stored program's first stretch, the same
-  `stored.rs` reads), written out as notes; a seed role takes each of its parts from it.
+  `stored.rs` reads), written out as notes; a seed role takes each of its parts from it. A form's section is computed in the form
+  written out on its own, in its own key and tempo, so the program's tempo leaves its notes alone and its key moves them.
+- After a program that is no set, `.track2` is its section `track2`, as it always was; only a set reads it as a track.
 - `a.bass=` wins over what `a=` gives the bass; only two bindings of the very same part are an error. The canon's `delay` counts
   beats and wraps the leftover beats in the bar, so the copy stays made of the subject's bars; `interval` counts semitones, as
   `transpose` does. The quodlibet's tunes are written `tune_a` and `tune_b` (a let named `a` reads as a note).

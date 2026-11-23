@@ -269,14 +269,17 @@ is written out as `section ep_t1_verse from <track 1>.verse`, `section ep_t1_hoo
 from <track 2>.intro` ..., each under its doc comment, the arrangement's `episode` places taking `ep_t1_verse ep_t1_hook
 ep_t1_verse` and then `ep_t2_intro ep_t2_lift`. With more tracks than places they are shared out in order; with fewer they come
 round. **`.trackN`** names one track, and is that track's program from then on: `<cid>.track2` (its sections), `<cid>.track2.lift`
-(a section), `<cid>.track2.lift.melody` (a part, a line). A track that is itself a set is its tracks in turn.
+(a section), `<cid>.track2.lift.melody` (a part, a line). A track that is itself a set is its tracks in turn, named by their
+place (`ep_t2_1_drop`: the drop of track 1 of track 2). After a program that is no set, `.track2` is its section called `track2`,
+as it always was.
 
 - **Lowers to** the tracks' sections borrowed by their own CIDs (stored.rs writes them out); the set's text goes with the program
   for a link to carry (`plays`), since the written-out text names only its tracks.
 - **Refuses**, at the reference: a set where a line goes (`refrain=<set>`: "one part of one of its tracks",
   `refrain=<set>.track1.SECTION.melody`); a set's section (`<set>.verse`: "it has tracks, not sections", `<set>.track1.verse`);
-  a track it does not have ("the set has 2 tracks: `.track3` is none of them", `track1 to track2`); `.trackN` after a program
-  that is no set; a track with no sections; more than 128 bars a pass (the cap every role of sections has: bind one track).
+  a track it does not have ("the set has 2 tracks: `.track3` is none of them", `track1 to track2`; `.track0` or `.trackx`: tracks
+  count from 1); `.trackN` after a program that is no set and has no section of that name; a track with no sections; more than
+  128 bars a pass (the cap every role of sections has; for a set the help names its first track, `<cid>.track1`).
 
 ### A section where a line goes
 
@@ -293,9 +296,9 @@ is a canon whose subject is the cross's overlap: the arp of its `both` section, 
 moved it by then (morphed a quarter of the way toward the Badinerie; the plan's one-shot `xfer` falls on the second `both`),
 chased by copies of itself.
 
-- **Lowers to** notes: the inner form is written out on its own and compiled, and the part is written as the notes it plays the
-  first time the section plays, a let a bar (`let subject_1 = ...`), moved from the inner form's key into the role's (the rule a
-  theme is moved by: to the tonic, or to the relative key when the modes differ). The outer plan's mutations then read it by
+- **Lowers to** notes: the inner form is written out on its own and compiled, in its own key and at its own tempo, and the part is
+  written as the notes it plays the first time the section plays, a let a bar (`let subject_1 = ...`), then moved from the inner
+  form's key into the role's (the rule a theme is moved by: to the tonic, or to the relative key when the modes differ). The outer plan's mutations then read it by
   name, and the canon's copies are made of its bars. In a seed role (`a=template(canon).round`, `a=<cid>.verse`) a section gives
   each of the role's parts. Where a role takes sections, `template(cross).both` is that section, its parts written out as a stored
   program's section is, standing in for the role's section (`episode`) in its own key; `template(cross).both.arp` there is a line.
@@ -356,8 +359,10 @@ arrange from template(quodlibet, @psalm42_deep_calleth, a=badinerie, b=new_world
 - **A playlist is not a source.** A playlist is an account's list, changed in place and named by an id; a role's source is pinned
   by what it is. A set is the content-addressed program of programs, so a set by CID is what a role takes.
 - **`.trackN`, not `.N`.** `<cid>.2` would need the lexer to read a `.` before a digit, which it reads as no token today (a lone
-  `.`); `track2` is a word. After a CID that is no set, `.track2` is refused ("not a set") rather than read as a section called
-  `track2`: such a section is still borrowed with `section NAME from <cid>.track2`.
+  `.`); `track2` is a word. After a CID that is no set, `.track2` is the program's section called `track2` (a section may be
+  named so), read and written out exactly as before sets were sources; only a program with no such section is told it is no set.
+- **A set's nested tracks are named by their place** (`ep_t2_1_drop`: track 1 of track 2), the way `.trackN` counts them; a track the set
+  plays twice is written once, under its first place.
 - **A set is held to the same 128 bars a pass** as any role of sections, so a written-out form stays bounded; a set of longer
   tracks binds one track at a time.
 - **A section where a line goes is its part as it first plays**, the same first stretch a stored program's section is
@@ -365,10 +370,19 @@ arrange from template(quodlibet, @psalm42_deep_calleth, a=badinerie, b=new_world
   notes, structure a person could type: the inner form's later mutations do not follow it, the outer plan's do.
 - **A form's section is moved by the theme rule**, and a form's section where sections go keeps its own key with a `key` line,
   as an inner form's sections do.
-- **The form a section is taken from is written out on its own**, at the program's tempo (a seed bound in it is fitted to that
-  tempo, as everywhere) and in its own key, and compiled; its plan's dice are that program's (mutations seed from a program's
-  CID). So the same reference at the same tempo is the same notes every time, and the notes are the inner form's own, not the
-  ones it would play written into this program (whose CID is another).
+- **The form a section is taken from is written out on its own, as a function of the reference alone**: in its own key (no
+  section of it says another) and at its own tempo, and compiled; its plan's dice are that program's (mutations seed from a
+  program's CID). So the program's tempo, swing or comments leave the notes as they are, and its key moves them by the key rule
+  and nothing else (`key e` is the D notes up a whole tone). The one exception: when a role of the form is bound to a seed, the
+  form is written at the program's tempo, because a seed is generated at the program's tempo everywhere. What the inner form's
+  own bindings say in `check` is left out: it names lets the program does not have.
+- **A bar of one step the plan morphs or crosses toward is written in brackets** (`let a_bass_1 = [d2]`, as a seed's bars are):
+  a bare `d2` is no pattern `morph` or `xfer` takes, so `a.bass=[d2]` failed at the plan. Only there: anywhere else the bare step
+  checked, and its text stays as it was, because the written-out text's CID seeds the plan's dice (a bracket elsewhere would
+  redraw the drums).
+- **A stored subject is one let** (`let subject_1 = <cid>.verse.melody`, which the stored stage writes out), however many bars it
+  has, so the canon's copy of it moves within the bar: `delay=` is 1 to 3 beats there, and the refusal says so. A subject of
+  notes, a theme or a seed is a let a bar, and takes a delay of bars.
 - **The part a section gives is the role's own** (the same part a whole seed gives it), so `subject=<cid>.both` and
   `subject=gen@1 ... section=both` mean the same thing; another part is named, as a stored program's is.
 - **A part bound alone wins over the whole.** `a=seed, a.bass=notes` is the reason to have parts: the seed for its tune and
@@ -386,8 +400,9 @@ arrange from template(quodlibet, @psalm42_deep_calleth, a=badinerie, b=new_world
 
 ### Not done
 
-- `stored.rs cids_of` (what a store credits like an `import`) does not see a CID inside a role's reference with three names after it
-  (`<cid>.track2.drop.bass`), nor a bare CID in a role; the written-out text's references are credited.
+- Lineage (`refs.rs based_on`, which reads the text alone) names a set bound in a role but not its tracks: only a check that has the
+  set knows them. The store credits them (it credits what the check drew on: `plays`), and `stored.rs cids_of` reads every CID
+  a role names (a bare one, a set's `.track2.drop.bass`, one in a form in a role).
 - A whole stored program in a role whose arrangement mutates a section borrows `drop@2` by that name (a name `section ... from`
   cannot read); a set's tracks borrow the section (`drop`) instead. The same fix in `borrowed` is a one-liner left for its own
   change.
