@@ -60,7 +60,7 @@
         "readOnlyHint": true,
         "title": "Check a BeatScript program"
       },
-      "description": "Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BTW.md \"The control deck\"): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head.\n\nAnswers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references. docs is the text's doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section's, when it has one. line and col are 1-based; help says what would fix it (\"did you mean ...\"); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID).\n\nWith same_as (another program's CID or text) the answer gains same_as {same, text_same, basis, why, diffs[{section, deck, start_bar, a_cid, b_cid}], only_in_a, only_in_b, renamed, song, diff}: whether the two are the same song by their compiled nets and song-level settings, not their text. When they are not, diff says what changed in music: diff.summary is one line per change (\"tempo 124 -> 126\", \"moved outro: bar 13 -> bar 5\", \"drop2 bass = drop bass transposed +1\", \"drop bass: 1 note changed (1:7 c3 -> d3)\"), with song, arrangement (inserted, removed, moved, repeated, renamed, changed) and parts (a transform: transpose, octave, rotate, reverse, thin, fill, fast, slow; else the notes added, removed or changed at bar:step) as JSON. Use it to prove a refactor changed nothing, or to find what an edit did.\n\nThis is the loop for writing a program (there is no compose tool): read https://beatscript.app/docs/cheatsheet.md and one or two list_examples programs, call instruments, write the program, call check and fix every line:col error until ok, then eval / load to play it and share to store it. Voices come from the instruments tool: use only names from it. For a sung line, a public-domain phrasebook line (list_examples with phrasebook true) comes with its meter, stress and phoneme escapes, so that sing @id on melody checks with no unknown-word warning (https://beatscript.app/docs/found-phrases.md). A voice name with a leading digit (808-bass) cannot be written: inst=808-bass reads as 808 - bass and a quoted \"808-bass\" is refused, so pick a voice that starts with a letter (inst=sub-bass for a deep bass). Read-only, no sign-in. Limits: the text is at most 16384 bytes; about 60 calls a minute.\n\nReferences: a program can call the seeded generator (gen@2 techno seed=42 section=drop part=bass is the program generate prints, fitted to the program's key and tempo unless it says bpm= or key=) or borrow from seed(...), template(...) or a stored program by CID. Its cid is of the text as written (the recipe), and the answer says what the recipe makes: refs lists each reference of the program (a gen@N call, a seed(...), a template(...), a <cid>.section borrowed from a stored program): its kind, half (engine or structure), call, place (part, let, section or arrange), name, line and col, resolved (the CID it is pinned to), generator, fitted (what a gen call took from the program: key, bpm) and track; expanded_cid is the CID of the program with every reference written out as plain BeatScript: cid addresses the recipe, expanded_cid the result; the same recipe always gives the same expanded_cid, and a program with no references has expanded_cid equal to cid; resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it (seeded@2), and for a gen call the key and bpm it was generated in. With expand true, each entry of refs also carries its expansion (the BeatScript it is written out as where it stands). A diagnostic of severity info at each gen call says the CID it resolved to and the key and tempo it was fitted to; the expand tool writes the whole program out.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.",
+      "description": "Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BTW.md \"The control deck\"): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head.\n\nAnswers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references. docs is the text's doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section's, when it has one. line and col are 1-based; help says what would fix it (\"did you mean ...\"); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID). A station program (radio: a `station { }` block, see the station tool) checks the tracks of its first pass of forms and its first segue, and the answer gains station {text, cid, genre, generator, seed, step, forms, tempo, key, length, start_cid, version, tracks, segue}.\n\nWith same_as (another program's CID or text) the answer gains same_as {same, text_same, basis, why, diffs[{section, deck, start_bar, a_cid, b_cid}], only_in_a, only_in_b, renamed, song, diff}: whether the two are the same song by their compiled nets and song-level settings, not their text. When they are not, diff says what changed in music: diff.summary is one line per change (\"tempo 124 -> 126\", \"moved outro: bar 13 -> bar 5\", \"drop2 bass = drop bass transposed +1\", \"drop bass: 1 note changed (1:7 c3 -> d3)\"), with song, arrangement (inserted, removed, moved, repeated, renamed, changed) and parts (a transform: transpose, octave, rotate, reverse, thin, fill, fast, slow; else the notes added, removed or changed at bar:step) as JSON. Use it to prove a refactor changed nothing, or to find what an edit did.\n\nThis is the loop for writing a program (there is no compose tool): read https://beatscript.app/docs/cheatsheet.md and one or two list_examples programs, call instruments, write the program, call check and fix every line:col error until ok, then eval / load to play it and share to store it. Voices come from the instruments tool: use only names from it. For a sung line, a public-domain phrasebook line (list_examples with phrasebook true) comes with its meter, stress and phoneme escapes, so that sing @id on melody checks with no unknown-word warning (https://beatscript.app/docs/found-phrases.md). A voice name with a leading digit (808-bass) cannot be written: inst=808-bass reads as 808 - bass and a quoted \"808-bass\" is refused, so pick a voice that starts with a letter (inst=sub-bass for a deep bass). Read-only, no sign-in. Limits: the text is at most 16384 bytes; about 60 calls a minute.\n\nReferences: a program can call the seeded generator (gen@2 techno seed=42 section=drop part=bass is the program generate prints, fitted to the program's key and tempo unless it says bpm= or key=) or borrow from seed(...), template(...) or a stored program by CID. Its cid is of the text as written (the recipe), and the answer says what the recipe makes: refs lists each reference of the program (a gen@N call, a seed(...), a template(...), a <cid>.section borrowed from a stored program): its kind, half (engine or structure), call, place (part, let, section or arrange), name, line and col, resolved (the CID it is pinned to), generator, fitted (what a gen call took from the program: key, bpm) and track; expanded_cid is the CID of the program with every reference written out as plain BeatScript: cid addresses the recipe, expanded_cid the result; the same recipe always gives the same expanded_cid, and a program with no references has expanded_cid equal to cid; resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it (seeded@2), and for a gen call the key and bpm it was generated in. With expand true, each entry of refs also carries its expansion (the BeatScript it is written out as where it stands). A diagnostic of severity info at each gen call says the CID it resolved to and the key and tempo it was fitted to; the expand tool writes the whole program out.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -915,6 +915,118 @@
         "type": "object"
       },
       "name": "share"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "A radio station: the track at a position"
+      },
+      "description": "Radio: a station is a BeatScript program that names a run of tracks with no end, and this tool answers what is at a position of one. Stations are endless and deterministic: position N of a station is always the same track (the same text, so the same CID), worked out from the station's text alone, with no clock and no store; nothing is stored here. A station program holds its `tempo`, its `key` and one block:\n\ntempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia rondo fugue\n}\n\nfrom is the first track's call of the seeded generator (gen@V GENRE seed=N, optionally length=short|standard|long; the station's tempo and key are its own lines, never the call's bpm= or key=). next is the walk from one track's seed to the next: seed=+N counts on (each track's seed is the one before's plus N), seed=~ draws each seed from the CID of the track before (worked out step by step, so a position past the walk's cap is refused; a seed=+N station has a track at any position); default seed=+1. forms is the forms rotation within the genre: track N plays forms[N mod R] of the R forms (seeded, the generator's own arrangement, or passacaglia, canon, rondo, fugue, theme-and-variations, cross), each form's first role bound to the chapter's theme seed (the first track of each pass of the rotation, so it recurs) and its second role to track N's own seed; default forms seeded. The segue from track N to N+1 is the cross form of their two seeds: a program of its own, with its own CID.\n\nAnswers {ok, version, station {text, cid, genre, generator, seed, step, forms, tempo, key, length, start_cid}, n, tracks[{n, seed, theme, form, phrase, text, cid, parent, station, check}], segues[{from, to, form, phrase, text, cid, check}], neighbours, retuned, locks, diagnostics}; ok:false with error and diagnostics is an answer, not a tool error. Each track's text is a program to check, listen to, eval, render or share; its parent is track N-1's CID. A listener does not steer a station: they turn its knobs (genre, seed, step, forms, tempo, key, length), and turning one moves them to a neighbouring station that already exists. retune sets knobs before anything else, each to a value or to \"+1\" / \"-1\" for one notch (seed by 1, tempo by 2, key a fifth round the circle in its own mode, step between +1 and ~, forms rotated by one, length one step; a genre only by name), and retune keeps N: the answer is track N of the retuned station. locks are knobs held fixed: retuning a locked knob is refused, and neighbours (true) lists the stations one notch away along each unlocked knob, each with its text, its CID and its track at n. check (true) checks each track and segue: {ok, expanded_cid, bars, seconds, errors}; each program checked counts as one call of the checker. check of a station program answers station too. Read-only, no sign-in. Stations, the walk and the knobs: https://beatscript.app/docs/radio.md.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "check": {
+            "description": "Check each track and segue: {ok, expanded_cid, bars, seconds, errors} (default false). Each program checked counts as one call of the checker.",
+            "type": "boolean"
+          },
+          "count": {
+            "description": "How many tracks from n (default 1, at most 16; with check, at most 4).",
+            "maximum": 16,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "locks": {
+            "description": "Knobs held fixed: retuning one is refused, and neighbours never turns one.",
+            "items": {
+              "enum": [
+                "genre",
+                "seed",
+                "step",
+                "forms",
+                "tempo",
+                "key",
+                "length"
+              ],
+              "type": "string"
+            },
+            "maxItems": 7,
+            "type": "array"
+          },
+          "n": {
+            "description": "The position: the station's track n (default 0). Track n of a station is always the same track.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "neighbours": {
+            "description": "Also the neighbouring stations, one notch away along each unlocked knob, each with its text, its CID and its track at n (default false).",
+            "type": "boolean"
+          },
+          "retune": {
+            "additionalProperties": false,
+            "description": "Knobs to set before anything else, each to a value or to \"+1\" / \"-1\" for one notch: {\"tempo\": \"+1\"}, {\"seed\": 7, \"forms\": \"seeded cross\"}. The position n is kept: the answer is track n of the retuned station.",
+            "properties": {
+              "forms": {
+                "description": "The forms in turn (\"seeded passacaglia\" or a list), or a notch: rotated by one.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "string",
+                  "array"
+                ]
+              },
+              "genre": {
+                "description": "A genre of the seeded generator, by name (a genre has no notch).",
+                "type": "string"
+              },
+              "key": {
+                "description": "A key (am, c, f#m ...), or a notch: a fifth round the circle in its own mode.",
+                "type": "string"
+              },
+              "length": {
+                "description": "short, standard or long, or a notch.",
+                "type": "string"
+              },
+              "seed": {
+                "description": "The first track's seed: a whole number or a word, or \"+1\" / \"-1\".",
+                "type": [
+                  "string",
+                  "integer"
+                ]
+              },
+              "step": {
+                "description": "The walk: \"+1\", \"+2\" ... or \"~\"; a notch turns between +1 and ~.",
+                "type": "string"
+              },
+              "tempo": {
+                "description": "40 to 300, or a notch of 2.",
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "segue": {
+            "description": "Also the segue after each track, track n into n+1: the cross form of their two seeds, with its own CID (default true).",
+            "type": "boolean"
+          },
+          "station": {
+            "description": "The station program: its tempo and key lines and its station { from, next, forms } block (at most 16384 bytes).",
+            "maxLength": 16384,
+            "type": "string"
+          }
+        },
+        "required": [
+          "station"
+        ],
+        "type": "object"
+      },
+      "name": "station"
     },
     {
       "annotations": {
