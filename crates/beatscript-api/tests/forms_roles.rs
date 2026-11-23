@@ -68,6 +68,7 @@ const B: &str = "gen@1 house seed=7";
 #[test]
 fn every_form_checks_clean_with_a_seed_in_each_role() {
     let cases = [
+        format!("arrange from template(quodlibet, @psalm42_deep_calleth, a={A}, b={B}, ground={A} part=bass, third={B} part=bass)\n"),
         format!("arrange from template(passacaglia, @eccl3_season, ground={A} section=drop part=bass, upper={B})\n"),
         format!("arrange from template(canon, @mgm_pease_porridge_hot, subject={A}, ground={B} part=bass)\n"),
         format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={A}, episodes={B} part=melody)\n"),
@@ -90,11 +91,11 @@ fn every_form_checks_clean_with_a_seed_in_each_role() {
         assert_eq!(nets(&alone), nets(&c), "{name}: the written-out program plays as the reference");
         // the mutation plan reads the bound lines: a `~` or `@` of the arrangement is aimed at one
         let plan: Vec<&str> = text.lines().skip_while(|l| !l.starts_with("arrange {")).map(str::trim).filter(|l| l.starts_with('~') || l.starts_with('@')).collect();
-        let bound = ["upper_*", "subject_*", "tune_*", "figure_*", "dux_*", "countersubject_*", "air_*", "a_melody_*", "b_bass_*"];
+        let bound = ["upper_*", "subject_*", "tune_*", "figure_*", "dux_*", "countersubject_*", "air_*", "a_melody_*", "b_bass_*", "tune_a_*", "tune_b_*"];
         assert!(plan.iter().any(|l| bound.iter().any(|b| l.contains(b))), "{name}: {plan:?}");
         // and a pattern a seed wrote has generations in check's table
         let g = djlive::mutate::generations(src, &env()).expect("an arrange table");
-        let fired: Vec<&String> = g.patterns.keys().filter(|k| ["upper_", "subject_", "tune_", "figure_", "dux_", "countersubject_", "a_melody_", "b_bass_", "drm_"].iter().any(|p| k.starts_with(p))).collect();
+        let fired: Vec<&String> = g.patterns.keys().filter(|k| ["upper_", "subject_", "tune_", "figure_", "dux_", "countersubject_", "a_melody_", "b_bass_", "drm_", "third_"].iter().any(|p| k.starts_with(p))).collect();
         assert!(!fired.is_empty(), "{name}: {:?}", g.patterns.keys().collect::<Vec<_>>());
     }
     let with: BTreeSet<String> = djlive::roles::forms_with_roles().into_iter().map(String::from).collect();
@@ -269,7 +270,7 @@ fn check_names_what_is_wrong_at_the_binding() {
         (format!("arrange from template(passacaglia, @eccl3_season, grund={A})\n"), "grund", "`ground`"),
         (format!("arrange from template(passacaglia, @eccl3_season, ground={A}, ground=ode_to_joy)\n"), "ground", "bound twice"),
         ("arrange from template(passacaglia, @eccl3_season, upper=ode_to_jy)\n".into(), "ode_to_jy", "`ode_to_joy`"),
-        (format!("arrange from template(quodlibet, @eccl3_season, a={A})\n"), "a", "takes no roles yet"),
+        (format!("arrange from template(deep-house, @eccl3_season, a={A})\n"), "a", "takes no roles yet"),
         ("arrange from template(canon, @mgm_pease_porridge_hot, subject=gymnopedie_melody)\n".into(), "gymnopedie_melody", "bars of 16"),
         (format!("arrange from template(rondo, @shanty_drunken_sailor, refrain=template(passacaglia, ground={A}))\n"), "template(passacaglia", "takes a line"),
     ];
@@ -279,4 +280,115 @@ fn check_names_what_is_wrong_at_the_binding() {
     }
     let e = errors("arrange from template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, @eccl3_season))\n");
     assert!(e.iter().any(|(_, m)| m.contains("takes no phrase")), "{e:?}");
+}
+
+/// Two stored tracks and a set that plays them, with a mix between: what the set tests below bind. (The tracks have no control
+/// lines, so a borrowed section leaves nothing behind.)
+fn a_set() -> (StaticSnippets, String, String, String) {
+    let one = "tempo 120\nkey c\nsection verse 4 bars {\n  deck A: kick x ~ x ~ | bass c2 ~ g1 ~\n  deck B: melody e4 g4 c5 g4\n}\nsection hook 4 bars {\n  deck A: kick x x x x | bass f1 ~ c2 ~\n  deck B: melody a4 c5 f5 c5\n}\narrange verse hook verse\n";
+    let two = "tempo 124\nkey am\nsection intro 4 bars {\n  deck A: kick x ~ ~ ~ | bass a1 ~ e2 ~\n}\nsection lift 8 bars {\n  deck A: kick x ~ x ~ | bass a1 ~ c2 ~\n  deck B: melody a4 e5 c5 e5 | harmony [a3, c4, e4] ~ ~ ~\n}\narrange intro lift\n";
+    let (c1, c2) = (compiled(one), compiled(two));
+    let mut s = StaticSnippets::default();
+    s.items.push(("one".into(), c1.cid.clone(), c1.text.clone()));
+    s.items.push(("two".into(), c2.cid.clone(), c2.text.clone()));
+    let set = format!("set {{\n  play {}\n  mix 4 bars with crossfade\n  play {}\n}}\nend\n", c1.cid, c2.cid);
+    let with = Env { snippets: Some(&s), ..env() };
+    let cs = djlive::compile::check_with(&set, &with).compiled.unwrap_or_else(|| panic!("the set compiles"));
+    drop(with);
+    s.items.push(("the set".into(), cs.cid.clone(), cs.text.clone()));
+    (s, cs.cid, c1.cid, c2.cid)
+}
+
+/// A stored set fills a role of sections: its tracks in order, each its sections in its order, one track an episode; its mixes
+/// stay behind (a note says so), and the set itself goes with the program for a link to carry. Its track (`.track2`) is that
+/// track's program: its sections, a section, a part.
+#[test]
+fn a_stored_set_fills_a_role_of_sections() {
+    let (s, set, t1, t2) = a_set();
+    let with = Env { snippets: Some(&s), ..env() };
+    let ok = |src: &str| {
+        let c = djlive::compile::check_with(src, &with);
+        let bad = complaints(&c);
+        assert!(bad.is_empty() && c.compiled.is_some(), "{src}\n{bad:#?}");
+        (c.compiled.unwrap(), c.diagnostics)
+    };
+    let src = format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={set})\n");
+    let (whole, diags) = ok(&src);
+    assert_eq!(played_sections(&whole, "ep_", 5), ["ep_t1_verse", "ep_t1_hook", "ep_t1_verse", "ep_t2_intro", "ep_t2_lift"], "track 1 in the first episode, track 2 in the second");
+    assert!(diags.iter().any(|d| d.severity == Severity::Info && d.message.contains("the set") && d.message.contains("2 tracks") && d.message.contains("its mixes and cuts stay behind")), "{diags:#?}");
+    assert!(whole.plays.iter().any(|(c, _)| *c == set), "the set goes with the program: {:?}", whole.plays.iter().map(|p| &p.0).collect::<Vec<_>>());
+    assert!(whole.plays.iter().any(|(c, _)| *c == t1) && whole.plays.iter().any(|(c, _)| *c == t2));
+    let text = match djlive::template::expand(&src, &with) {
+        Some(Ok(e)) => e.text,
+        other => panic!("{other:?}"),
+    };
+    assert!(text.contains(&format!("# ep_t2_lift: the lift of track 2 of the set {}\nsection ep_t2_lift from {t2}.lift", djengine::rights::short_cid(&set))), "{text}");
+    assert_eq!(ok(&whole.text).0.cid, whole.cid, "the canonical text is a fixed point");
+    // a track: its sections; its section; its part; a section where a line goes is the role's part of it
+    let (t, _) = ok(&format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={set}.track2)\n"));
+    assert_eq!(played_sections(&t, "ep_", 2), ["ep_intro", "ep_lift"]);
+    let (t, _) = ok(&format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={set}.track2.lift)\n"));
+    assert!(t.segments.iter().any(|g| g.name.starts_with("episode") && g.bars == 8));
+    ok(&format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={set}.track1.hook.melody)\n"));
+    let line = format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={set}.track1.hook)\n");
+    ok(&line);
+    let (_, d) = ok(&line);
+    assert!(d.iter().any(|x| x.message.contains("refrain: the melody of the hook of track 1 of the set")), "{d:#?}");
+    // spelt one way
+    let (c, _) = ok(&format!("arrange from template( rondo,@shanty_drunken_sailor,episodes = {set}.track2 )\n"));
+    assert_eq!(c.text, format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={set}.track2)\n"));
+}
+
+/// What is wrong with a set in a role is said at it.
+#[test]
+fn a_stored_set_says_what_is_wrong() {
+    let (s, set, t1, _) = a_set();
+    let with = Env { snippets: Some(&s), ..env() };
+    let errs = |src: &str| -> Vec<(String, String)> {
+        djlive::compile::check_with(src, &with).diagnostics.into_iter().filter(|d| d.is_error()).map(|d| (d.span.text(src).to_string(), format!("{} {}", d.message, d.help.unwrap_or_default()))).collect()
+    };
+    let cases: Vec<(String, &str)> = vec![
+        (format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={set}.track3)\n"), "has 2 tracks"),
+        (format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={t1}.track1)\n"), "is not a set"),
+        (format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={set})\n"), "this is a set"),
+        (format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={set}.verse)\n"), "it has tracks, not sections"),
+        (format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={set}.track2.intro)\n"), "plays no melody"),
+    ];
+    for (src, msg) in &cases {
+        let e = errs(src);
+        assert!(e.iter().any(|(at, m)| at.starts_with('z') && m.contains(msg)), "{src}: {e:?}");
+    }
+}
+
+/// A stored program's section where a line goes is the role's part of it, and in a seed role each of its parts; one part of a
+/// seed role is bound alone beside a seed (`a=gen@1 ..., a.bass=[...]`), the seed giving the rest.
+#[test]
+fn a_section_is_a_line_and_a_part_is_bound_alone() {
+    let source = "tempo 120\nkey d\nsection verse 4 bars {\n  deck A: kick x ~ x ~ | bass d2 ~ a1 ~\n  deck B: melody f#4 a4 d5 a4 | harmony [d3, f#3, a3] ~ ~ ~\n}\narrange verse\n";
+    let comp = compiled(source);
+    let mut s = StaticSnippets::default();
+    s.items.push(("song".into(), comp.cid.clone(), comp.text.clone()));
+    let with = Env { snippets: Some(&s), ..env() };
+    let ok = |src: &str| {
+        let c = djlive::compile::check_with(src, &with);
+        let bad = complaints(&c);
+        assert!(bad.is_empty() && c.compiled.is_some(), "{src}\n{bad:#?}");
+        match djlive::template::expand(src, &with) {
+            Some(Ok(e)) => e.text,
+            other => panic!("{other:?}"),
+        }
+    };
+    let cid = &comp.cid;
+    let t = ok(&format!("arrange from template(canon, @mgm_pease_porridge_hot, subject={cid}.verse)\n"));
+    assert!(t.contains(&format!("let subject_1 = {cid}.verse.melody")), "{t}");
+    let t = ok(&format!("arrange from template(cross, @psalm42_deep_calleth, a={cid}.verse)\n"));
+    for part in ["melody", "bass", "harmony"] {
+        assert!(t.contains(&format!("let a_{part}_1 = {cid}.verse.{part}")), "{part}: {t}");
+    }
+    let t = ok(&format!("arrange from template(cross, @psalm42_deep_calleth, a={A}, a.bass=<[d2 ~ ~ ~ a1 ~ ~ ~] [g1 ~ ~ ~ a1 ~ ~ ~]>, b={B})\n"));
+    assert!(t.contains(&format!("let a_melody = {A} section=")) && t.contains(&format!("let a_harmony = {A} section=")) && !t.contains(&format!("let a_bass = {A}")), "{t}");
+    assert!(t.contains("# a.bass, bound: <[d2"), "{t}");
+    // the seed is generated in the program's key, and checks with the bound bass under it
+    let e: Vec<String> = djlive::compile::check_with(&format!("arrange from template(cross, @psalm42_deep_calleth, a={A} part=bass, a.bass=[d2 ~])\n"), &with).diagnostics.iter().filter(|d| d.is_error()).map(|d| d.message.clone()).collect();
+    assert!(e.iter().any(|m| m.contains("bass is bound twice")), "{e:?}");
 }
