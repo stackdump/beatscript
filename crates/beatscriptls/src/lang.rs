@@ -93,7 +93,7 @@ pub const STATEMENTS: &[(&str, &str, &str)] = &[
     ("assert", "a statement the program makes about itself: `assert length == 3m30s ± 5s`", "assert ${1:length} == ${2:3m30s}"),
     ("set", "programs of programs: `set { play X  mix 8 bars with crossfade  play Y }`", "set {\n  play ${1:a}\n  mix ${2:8} bars with ${3:crossfade}\n  play ${4:b}\n}"),
     ("station", "radio: an endless, deterministic run of tracks, position N always the same track: `station { from gen@2 techno seed=42  next seed=~  forms seeded passacaglia }`", "station {\n  from gen@2 ${1:techno} seed=${2:42}\n  next seed=${3:~}\n  forms ${4:seeded passacaglia rondo fugue}\n}"),
-    ("use", "`use restricted`: the program is private and may use restricted assets", "use restricted"),
+    ("use", "`use SOURCE as NAME`: a name for a source, used as a section, a let or a phrase of the program's own (a stored program's `<cid>.drop`, a `gen@2` call, `template(passacaglia).ground`, `genre@1 techno.drop`, `theme ode_to_joy`, `phrase @id`, a form for a role); `use restricted`: the program is private and may use restricted assets", "use ${1:theme ode_to_joy} as ${2:tune}"),
     ("do", "a call on the control registry: `do noun verb key=value`", "do ${1:noun}"),
     ("control", "the control deck, beside `deck A:`, `deck B:` and `master:`: engine calls only (`move`, `swap pairs`, `queue`, `crossfader`, a timed `tempo`, `do` and its sugar), sequenced like any line: `at bar 12: control: swap pairs with filter_exit`", "control: ${1:move echo_out on B}"),
     ("every", "a timed line: `every 4 bars: swap pairs`", "every ${1:4} bars: $0"),

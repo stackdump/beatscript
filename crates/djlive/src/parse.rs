@@ -246,7 +246,8 @@ fn parse_depth(src: &str, env: &Env, depth: usize) -> Parsed {
     diags.extend(use_diags);
     // the same for a stored program's: its CID and `.section.role`, one word (stored.rs)
     let toks = crate::stored::collapse(toks);
-    let pre = prepass(crate::algebra::collapse_lets(toks), src, env, depth, &mut diags, &mut imports, &mut scalar_lets, &mut ratios);
+    // (the prepass leaves a phrase's name after `sing` as it is: uses::with_phrases says which names those are)
+    let pre = crate::uses::with_phrases(&phrases, || prepass(crate::algebra::collapse_lets(toks), src, env, depth, &mut diags, &mut imports, &mut scalar_lets, &mut ratios));
     let mut p = Parser { toks: pre.toks, at: 0, src, diags, depth: 0, ratios };
     let mut stmts = crate::uses::with_phrases(&phrases, || p.statements(false));
     // pin each import to its CID: the canonical text says which snippet, not what it was called
@@ -388,8 +389,9 @@ pub(crate) fn is_syntax_here(w: &str, toks: &[Token], i: usize, out: &[Token], i
     if prev == Some(&Tok::Dot) || next == Some(&Tok::Dot) {
         return true;
     }
-    // the name a `use` line gives its source, and a phrase's name after `sing` (uses.rs): names, whatever a `let` says
-    if (prev_word("as") && line_starts_with(out, "use")) || (prev_word("sing") && matches!(next, Some(Tok::Word(o)) if o == "on")) {
+    // the name a `use` line gives its source, and the name of a phrase a `use phrase` line gave, after `sing` (uses.rs): names,
+    // whatever a `let` says (a `let` of a word or an @id sung by name is the `let`'s value, as before)
+    if (prev_word("as") && line_starts_with(out, "use")) || (prev_word("sing") && matches!(next, Some(Tok::Word(o)) if o == "on") && crate::uses::phrase_named(w).is_some()) {
         return true;
     }
     match w {

@@ -220,3 +220,91 @@ fn a_genre_templates_section() {
         }
     }
 }
+
+/// A `let` of words or of an @id sung by its name is the let's value, as it was before `use`: only a name a `use phrase` line
+/// gave is a phrase's name.
+#[test]
+fn a_let_sung_by_name_is_the_lets_value() {
+    let a = clean("let la = \"hello world\"\ndeck B: melody c4 e4 g4 e4\ndeck B: sing la on melody\n");
+    assert!(a.text.contains("sing \"hello world\" on melody"), "{}", a.text);
+    let b = clean("let ph = @hands_up\ndeck B: melody c4 e4 g4 e4\ndeck B: sing ph on melody\n");
+    assert!(b.text.contains("sing @hands_up on melody"), "{}", b.text);
+}
+
+/// `theme`, `phrase` and `genre` are a source's words on a `use` line only: elsewhere they are names like any, and a name used
+/// after one is a use of it (the theme and variations' own first section is `theme`).
+#[test]
+fn theme_and_genre_are_names_off_a_use_line() {
+    let tv = clean("use template(theme-and-variations).theme as theme\nuse template(theme-and-variations).variation as variation\narrange theme variation theme\n");
+    assert_eq!(tv.segments.iter().filter(|s| !s.chain).map(|s| s.name.as_str()).collect::<Vec<_>>(), ["theme", "variation", "theme"]);
+    clean("section theme 4 bars {\n  deck A: kick x ~ x ~\n}\nsection genre 4 bars {\n  deck A: kick x x x x\n}\nuse genre@1 techno.drop as dr\narrange theme genre dr\n");
+    clean("let genre = <c4 e4>\nuse theme ode_to_joy as tune\ndeck B: melody genre tune\n");
+}
+
+/// Eject of every reference of a chain of `use` lines (a theme read by a form read by a rondo; a phrase read by a canned
+/// section) writes a program that checks and plays as the one it came from: a name read only by a later `use` line is written
+/// into that line's source.
+#[test]
+fn every_site_of_a_chain_of_uses_ejects() {
+    let chains = [
+        "use theme ode_to_joy as tune\nuse template(passacaglia, ground=tune) as epf\narrange from template(rondo, @shanty_drunken_sailor, episodes=epf)\n",
+        "use phrase @tempest_such_stuff as line\nuse template(deep-house, line).night as night\narrange night\n",
+        THEME,
+    ];
+    for src in chains {
+        let before = nets(&clean(src));
+        let ss = env_with(|e| refs::sites(src, e)).unwrap();
+        assert!(ss.iter().any(|s| s.kind == "use"), "{src}");
+        for s in &ss {
+            let ej = env_with(|e| refs::eject(src, e, s.span.start)).unwrap().unwrap();
+            assert_eq!(nets(&clean(&ej)), before, "{src}\n--- ejected {} ---\n{ej}", s.call);
+        }
+    }
+    let ej = env_with(|e| refs::eject(chains[0], e, 0)).unwrap().unwrap();
+    assert!(ej.starts_with("use template(passacaglia, ground=ode_to_joy) as epf\n"), "{ej}");
+}
+
+/// Every section a template lists as one `use` can name checks when it is named (with the template's own example phrase when
+/// the reference says none, pinned here), and a section that reads the form's own lets in a call is refused at the line, with
+/// the sections that can be borrowed.
+#[test]
+fn every_listed_canned_section_checks_and_the_others_are_refused() {
+    let want = [
+        ("deep-house", "@tempest_such_stuff", &["night", "spot"][..]),
+        ("quodlibet", "@psalm42_deep_calleth", &["canon", "ode", "voices"][..]),
+        ("passacaglia", "@eccl3_season", &["ground", "variation", "sung"][..]),
+        ("canon", "@mgm_pease_porridge_hot", &["lead"][..]),
+        ("rondo", "@shanty_drunken_sailor", &["refrain", "episode", "sung"][..]),
+        ("fugue", "@tyger_burning_bright", &["subject"][..]),
+        ("theme-and-variations", "@dickinson_chariot_death", &["theme", "variation", "sung"][..]),
+        ("cross", "@psalm42_deep_calleth", &["a_leads", "b_leads", "both", "sung"][..]),
+    ];
+    for (name, phrase, sections) in want {
+        let (got, p) = uses::template_sections(name).unwrap();
+        assert_eq!((p.as_str(), got.iter().map(String::as_str).collect::<Vec<_>>()), (phrase, sections.to_vec()), "{name}");
+        let t = djlive::template::find(name).unwrap();
+        let head = if t.form.is_some() { format!("template({name})") } else { format!("template({name}, {phrase})") };
+        for s in sections {
+            clean(&format!("use {head}.{s} as sec\narrange sec\n"));
+        }
+        for s in t.text().lines().filter_map(|l| l.strip_prefix("section ").and_then(|r| r.split_whitespace().next())) {
+            if sections.contains(&s) {
+                continue;
+            }
+            let e = errors(&format!("use {head}.{s} as sec\narrange sec\n"));
+            assert!(e[0].1.contains("cannot be borrowed alone") && e[0].1.contains(&format!("sections that can: {}", sections.join(", "))), "{name}.{s}: {e:?}");
+        }
+    }
+}
+
+/// A `use` name that is one of another `use` line's bars (`tune_1` of the line `tune`), or whose bars another name is, is bound
+/// already, said at the second line.
+#[test]
+fn a_name_and_another_lines_bars_clash() {
+    let e = errors("use theme ode_to_joy as tune\nuse genre@1 techno.drop as tune_1\nsection v 4 bars {\n  deck B: melody tune\n}\narrange v tune_1\n");
+    assert_eq!(e[0].0, "tune_1");
+    assert!(e[0].1.starts_with("`tune_1` is bound already: `tune_1` is a bar of the line `tune`"), "{e:?}");
+    let e = errors("use genre@1 techno.drop as tune_1\nuse theme ode_to_joy as tune\nsection v 4 bars {\n  deck B: melody tune\n}\narrange v tune_1\n");
+    assert_eq!(e[0].0, "tune");
+    assert!(e[0].1.starts_with("`tune` is bound already: `tune_1` is a bar of the line `tune`"), "{e:?}");
+}

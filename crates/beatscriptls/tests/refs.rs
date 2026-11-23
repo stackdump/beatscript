@@ -428,3 +428,28 @@ fn the_web_page_shows_copies_and_ejects_through_the_string_surface() {
     beatscriptls::wasm::open(&mut s, "main", &got);
     assert_eq!(call(&mut s, "beatscript/expand", r#"{"textDocument":{"uri":"main"}}"#.to_string()).js_stringified(), r#"{"references":[]}"#);
 }
+
+/// A `use` line is a reference (docs/beatscript/ext-roles.md "Name a source"): a lens over it, a hover that says it names a source,
+/// and an eject offered and proved, which writes the line out (a theme's lets under its `# from:` line) or, for a form only a
+/// role reads, writes the role's source in its place and drops the line.
+#[test]
+fn a_use_line_has_a_lens_a_hover_and_an_eject() {
+    beatscript_api::generate::install();
+    let theme = "key am\nuse theme ode_to_joy as tune\nsection verse 4 bars {\n  deck B: melody tune\n}\narrange verse\n";
+    let form = "use template(passacaglia, ground=ode_to_joy) as ep\narrange from template(rondo, @shanty_drunken_sailor, episodes=ep)\n";
+    for text in [theme, form] {
+        let ss = sites(text);
+        let u = ss.iter().find(|s| s.kind == "use").unwrap_or_else(|| panic!("no use site: {ss:?}"));
+        let mut s = server(text);
+        let lenses = req(&mut s, "textDocument/codeLens", &doc());
+        assert_eq!(lenses.as_array().map(Vec::len), Some(2 * ss.len()), "{}", lenses.js_stringified());
+        let md = hover_text(&mut s, text, u.span.start);
+        assert!(md.contains("a name for a source"), "{md}");
+        let (_, resolved) = eject_action(&mut s, text, u.span.start);
+        let got = apply(text, resolved.get("edit").unwrap());
+        assert_eq!(got, refs::eject(text, &env(), u.span.start).unwrap().unwrap());
+        let a = Analysis::checked(text);
+        beatscriptls::refactor::verify(&a, &beatscriptls::refs::eject_made(&a, u.span.start).unwrap()).unwrap();
+        assert!(!got.contains("use "), "{got}");
+    }
+}

@@ -467,7 +467,8 @@ name with `*` in it; `CID` a saved program's id; `SEED` `seed` or `seed@2`; `GHO
 `RATCHET` a ratchet's `:N` (`x.` `x:3`). `±` may be written `+-` after
 a unit (`3m30s +- 5s`). In a lyric, `PHONES` is an escape's text:
 `aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j`, `-` cuts a word, `_` rests,
-`:` holds a vowel, `!` accents it; `/` and a space: a phrase break.
+`:` holds a vowel, `!` accents it; `/` and a space: a phrase break. A phrase's `NAME` is one `use phrase @id as NAME` gave;
+`use theme ode_to_joy as tune` names a theme ("Name a source").
 
 Some marks must **touch** the token before them, because a space would change what they mean: `hihat/12`, `x?0.3`,
 `A.kick`, `6db` `120ms` `3m30s`, `e2!` `c2^` `x.` `x&` `x:3`, the octave marks of `deg( )` (`5'` `1,`), and the
@@ -1443,7 +1444,7 @@ use template(passacaglia, ground=walk) as episode_form   a form, for a role: tem
 |---|---|---|
 | `<cid>.drop`, `gen@2 ... section=drop` | a section | `section NAME from <cid>.drop`, which the stored stage writes out ("Borrow from a stored program") |
 | `<cid>.drop.bass`, `<cid>.bass`, `gen@2 ... part=bass` | a line | `let NAME = <cid>.drop.bass` (its pattern), `let NAME = gen@2 ...` (a let a bar) |
-| `template(passacaglia).ground`, `template(deep-house, @id).night` | a section | the template written out (with the form's own example phrase when it names none), then that section borrowed by its CID |
+| `template(passacaglia).ground`, `template(deep-house, @id).night` | a section | the template written out (with the form's own example phrase when it names none), then that section borrowed by its CID; a section whose parts read the form's own lets in a call (the canon's `chase`) is refused, and `list_examples` with `imports` lists the ones that can be borrowed |
 | `genre@1 techno.drop` | a section | the genre's starting program as `genre_template` writes it, frozen in genre templates v1, then that section borrowed by its CID |
 | `theme ode_to_joy` | a line | its bars as lets named for the name, `NAME_1` ... `NAME = <NAME_1 ...>`, moved into the program's `key` (to its relative key when the theme's mode is the other one), as a role moves one |
 | `phrase @tyger_burning_bright` | a phrase | nothing: `sing NAME on ROLE` and `template(T, NAME)` sing `@id` |

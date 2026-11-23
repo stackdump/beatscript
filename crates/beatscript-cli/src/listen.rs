@@ -758,6 +758,22 @@ fn targets(src: &str, toks: &[djlive::lex::Token], s: &djlive::refs::Site) -> Ve
             let (deck, _) = deck_and_role_at(src, s.replaced.start);
             vec![Target { deck, role: s.name.clone(), section: section_at(toks, s.replaced.start) }]
         }
+        // a `use` line's name for a phrase (or a role's source): the parts its `sing NAME on ROLE` lines sing on, and no other
+        "use" => {
+            let mut out = Vec::new();
+            let Some(n) = &s.name else { return out };
+            for (i, t) in toks.iter().enumerate() {
+                let sung = matches!(&t.tok, djlive::lex::Tok::Word(w) if w == n) && matches!(toks.get(i + 1).map(|x| &x.tok), Some(djlive::lex::Tok::Word(o)) if o == "on");
+                if let (true, Some(djlive::lex::Tok::Word(role))) = (sung, toks.get(i + 2).map(|x| &x.tok)) {
+                    let (deck, _) = deck_and_role_at(src, t.span.start);
+                    let tg = Target { deck, role: Some(role.clone()), section: section_at(toks, t.span.start) };
+                    if !out.contains(&tg) {
+                        out.push(tg);
+                    }
+                }
+            }
+            out
+        }
         _ => {
             let mut out = Vec::new();
             if let Some(n) = &s.name {

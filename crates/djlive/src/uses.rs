@@ -571,11 +571,13 @@ fn uses_of(toks: &[Token], name: &str, bars: bool, own: Span, heads: &[usize], t
             }
             let head = &toks[heads[k]].tok;
             let pw = |x: &str| matches!(prev, Some(Tok::Word(p)) if p == x);
+            let head_is = |x: &str| matches!(head, Tok::Word(h) if h == x);
+            // (the words that take a section do where they start a line's construct: `after drop:`, `end after drop`,
+            // `launch drop on pad(2)`, `start open`, `assert ... in drop`; elsewhere they are names like any, a let or a section)
+            let first = heads[k] + 1 == k;
             if pw("sing") && matches!(next, Some(Tok::Word(o)) if o == "on") {
                 Place::Phrase
-            } else if pw("theme") || pw("phrase") || pw("genre") {
-                continue;
-            } else if pw("after") || pw("before") || pw("launch") || pw("start") || pw("in") {
+            } else if ((pw("after") || pw("before")) && (first || head_is("end"))) || ((pw("launch") || pw("start")) && first) || (pw("in") && head_is("assert")) {
                 Place::Arrange
             } else if blocks[k] {
                 if matches!(head, Tok::Tilde | Tok::At) {
@@ -787,7 +789,17 @@ fn resolve(d: &Decl, env: &Env, host: &crate::gen::Host, phrases: &[(String, Str
             let what = format!("`{name}` is a section: the {section} of {tref} ({}, templates {})", bars_word(bars as usize), crate::template::VERSION);
             let cid = b.cid.clone();
             if !programs.iter().any(|(c, _)| *c == b.cid) {
-                programs.push((b.cid, b.canon));
+                programs.push((b.cid.clone(), b.canon.clone()));
+            }
+            // a section whose parts read the form's own lets in a call (the canon's `octave(follow, -1)`) does not read once borrowed
+            let progs: &[(String, String)] = programs;
+            if let Some(why) = borrow_problem(&b.cid, section, env, progs) {
+                // (in the order the form writes them, once each)
+                let can: Vec<String> = b.written.iter().filter(|n| b.played.iter().any(|(p, _)| p == *n)).filter(|n| borrow_problem(&b.cid, n, env, progs).is_none()).cloned().collect();
+                return Err(Diagnostic::error(at, format!("the {section} of the {tpl} template cannot be borrowed alone: a part of it reads the form's own lets, which a borrowed section does not bring ({why})")).help(format!(
+                    "{}; or write the whole form out: arrange from {tref}",
+                    if can.is_empty() { format!("none of the {tpl}'s sections can") } else { format!("the {tpl}'s sections that can: {}", can.join(", ")) }
+                )));
             }
             Resolved { resolved: Some(cid), ..mk(def, role, what) }
         }
@@ -912,8 +924,16 @@ fn expand_full(src: &str, env: &Env, full: bool) -> Option<Result<Out, Vec<Diagn
     // the names: each once, and none a program's own
     for (k, (_, d)) in decls.iter().enumerate() {
         let bars = d.source.makes() == Makes::Line;
+        // (a line's bars are named for it, `tune_1` ...: a name that is one of another line's bars, or whose bars are another name)
+        let bars_of = |line: &Decl, other: &str| line.source.makes() == Makes::Line && other != line.name && names_it(other, &line.name, true, false);
         if let Some((_, other)) = decls[..k].iter().find(|(_, o)| o.name == d.name) {
             errors.push(Diagnostic::error(d.name_span, format!("`{}` is named already, by the `use` on line {}", d.name, line_of(other.name_span.start))).help(format!("give this one another name: use {} as {}_2", d.source.text(), d.name)));
+        } else if let Some((_, other)) = decls[..k].iter().find(|(_, o)| bars_of(o, &d.name) || bars_of(d, &o.name)) {
+            let (line, bar) = if bars_of(other, &d.name) { (&other.name, &d.name) } else { (&d.name, &other.name) };
+            errors.push(
+                Diagnostic::error(d.name_span, format!("`{}` is bound already: `{bar}` is a bar of the line `{line}` (the `use` on line {} names one of the two)", d.name, line_of(other.name_span.start)))
+                    .help(format!("name one of them otherwise: a line's bars are `{line}_1`, `{line}_2` ...")),
+            );
         } else if let Some((n, sp, what)) = own_defs.iter().find(|(n, _, _)| names_it(n, &d.name, bars, false)) {
             errors.push(Diagnostic::error(d.name_span, format!("`{}` is bound already: {what} `{n}` on line {}", d.name, line_of(sp.start))).help(format!("name the source otherwise: use {} as {}_2", d.source.text(), d.name)));
         }
@@ -1018,16 +1038,19 @@ fn expand_full(src: &str, env: &Env, full: bool) -> Option<Result<Out, Vec<Diagn
         let outside = occs[k].iter().any(|o| !matches!(o.place, Place::Role | Place::Phrase));
         let def = if outside { r.def.clone() } else { String::new() };
         pieces.push((*line, def.clone(), true));
+        // where a role or a phrase reads the name: written as its source. In another `use` line's source too, for eject (that line
+        // is the expansion's own piece, resolved above with the name written in, so the expansion leaves those places alone)
         let mut also = Vec::new();
-        for o in occs[k].iter().filter(|o| !o.in_use) {
-            match o.place {
-                Place::Role => also.push((o.at, r.role.clone())),
-                Place::Phrase => also.push((o.at, r.phrase.clone())),
-                _ => {}
+        for o in &occs[k] {
+            let w = match o.place {
+                Place::Role => r.role.clone(),
+                Place::Phrase => r.phrase.clone(),
+                _ => continue,
+            };
+            if !o.in_use {
+                pieces.push((o.at, w.clone(), false));
             }
-        }
-        for (s, w) in &also {
-            pieces.push((*s, w.clone(), false));
+            also.push((o.at, w));
         }
         warnings.push(Diagnostic::info(*line, r.what.clone()));
         // eject's text: through every stage after this one
@@ -1177,8 +1200,48 @@ fn sections_in(text: &str) -> Vec<String> {
 /// The sections a template writes (what `use template(NAME).SECTION` takes), and the phrase it is written with when it names
 /// none (its own example's); None for no such template.
 pub fn template_sections(name: &str) -> Option<(Vec<String>, String)> {
-    let t = crate::template::find(name)?;
-    Some((sections_in(t.text()), example_phrase(t)))
+    canned().iter().find(|(n, _, _)| n == name).map(|(_, s, p)| (s.clone(), p.clone()))
+}
+
+/// Every template's sections that can be borrowed alone (each `use template(NAME).SECTION` checks), and the phrase it is
+/// written with when it names none: worked out once (templates v1 are fixed, and this is a pure function of them).
+fn canned() -> &'static [(String, Vec<String>, String)] {
+    static TABLE: std::sync::OnceLock<Vec<(String, Vec<String>, String)>> = std::sync::OnceLock::new();
+    TABLE.get_or_init(|| {
+        let env = Env::none();
+        crate::template::TEMPLATES
+            .iter()
+            .map(|t| {
+                let phrase = example_phrase(t);
+                let prog = format!("arrange from template({}, {phrase})\n", t.name);
+                let can = match crate::stored::expand_text(&prog, &env).and_then(Result::ok).map(|(text, _, _)| borrowed(&text)) {
+                    Some(Ok(b)) => {
+                        let programs = vec![(b.cid.clone(), b.canon.clone())];
+                        sections_in(t.text()).into_iter().filter(|s| b.played.iter().any(|(n, _)| n == s) && borrow_problem(&b.cid, s, &env, &programs).is_none()).collect()
+                    }
+                    _ => Vec::new(),
+                };
+                (t.name.to_string(), can, phrase)
+            })
+            .collect()
+    })
+}
+
+/// Does section `section` of the program `cid` (one of `programs`) read once borrowed, as `section NAME from <cid>.SECTION`
+/// is written out by the stored stage: None when it does, else what is wrong with it.
+fn borrow_problem(cid: &str, section: &str, env: &Env, programs: &[(String, String)]) -> Option<String> {
+    let probe = format!("section borrowed_probe from {cid}.{section}\narrange borrowed_probe\n");
+    match crate::gen::with_generated(programs, || crate::stored::expand(&probe, env)) {
+        Some(Ok((e, _))) => {
+            let c = crate::compile::check_with(&e.text, &Env::none());
+            match c.compiled {
+                Some(_) => None,
+                None => Some(c.diagnostics.into_iter().find(|d| d.is_error()).map_or_else(|| "it does not compile".to_string(), |d| d.message)),
+            }
+        }
+        Some(Err(ds)) => Some(ds.into_iter().next().map_or_else(|| "it is not borrowed".to_string(), |d| d.message)),
+        None => Some("nothing is borrowed (this is a bug)".to_string()),
+    }
 }
 
 /// The sections genre template `genre` of version `version` writes (what `use genre@N GENRE.SECTION` takes).

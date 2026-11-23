@@ -226,6 +226,8 @@ a section's is `<cid>.S`), and a `use` whose name only roles and phrases read wr
 | the wrong kind for the place | a section where a part plays a line (name one part of it), a line where `arrange` places a section (play it in a section), a phrase in a role, a source for a role anywhere but after a role's `=`, a name `sing` takes that no `use phrase` line gave |
 | a `use` in a block | a `use` goes at the top of the program |
 | a template with a phrase and no section | it makes a whole track: name one of its sections |
+| a canned section whose parts read the form's own lets in a call (the canon's `chase`, `round` and `sung`, the fugue's `answer`, `counter` and `sung`, the quodlibet's `fate`) | it cannot be borrowed alone, with the form's sections that can, or write the whole form out (`arrange from template(...)`) |
+| a name that is one of another line's bars (`tune_1` beside `use theme ... as tune`), or whose bars another name is | bound already, at the second line |
 
 A name never used is a warning (its definition is not written).
 
@@ -236,7 +238,8 @@ A name never used is a warning (its definition is not written).
 `gen` source its generator and what it was fitted to), and `imports` each name with its source (beatscript-api `IMPORTS_DOC`). The MCP
 `check`, `expand` and `listen` answer `imports`; `listen` marks a part a `use` made with `from`, and its `name`. Eject writes a line
 out under `# from: <source> -> <pin>` (a section through every stage, as its music; a theme as its lets), and a name in a role or a
-phrase's place as its source (a line nobody else reads goes). `refs::based_on` adds each theme, phrase and genre template (with its
+phrase's place as its source (a line nobody else reads goes), in a later `use` line's source too, so a chain of `use` lines ejects
+a line at a time and each step plays the same. `refs::based_on` adds each theme, phrase and genre template (with its
 library's or its program's CID) to what a program is based on (its JSON-LD `isBasedOn`, lineage); a stored CID on a `use` line is
 credited as any borrow is (`stored::cids_of`), a `gen` call as any call.
 
@@ -274,9 +277,10 @@ credited as any borrow is (`stored::cids_of`), a `gen` call as any call.
   own (what it writes depends on the role it fills).
 - **No new MCP tool.** What can be named is listed by `list_examples` (`imports`: the kinds, the templates and their sections,
   the genre templates and theirs) and `genre_template` (its answer's `use`: each of the genre's sections as a `use` line).
-- **The cheat sheet leaves `use` out** (as it leaves out `use restricted`): it was at its 30 KB cap before `use` (29.8 KB), and a
-  `use` only names what a program can write in place, so a program written from the sheet loses nothing. BEATSCRIPT.md, this page and
-  the MCP `check` description teach it. Raising the cap, or trimming the sheet's plan for it, is Matt's call.
+- **The cheat sheet says `use` in one sentence**, after the grammar (the `NAME` paragraph: a phrase's name, `use theme
+  ode_to_joy as tune`), and its grammar leaves `use` and `use_source` out, as it left out `use restricted`: the sheet was at its
+  30 KB cap before `use` (29.85 KB), and a `use` only names what a program can write in place. BEATSCRIPT.md, this page and the MCP
+  `check` description teach the rest. Raising the cap, or trimming the sheet's plan, is Matt's call.
 - **One more kind is one more arm** of `uses::Source` (and a word for it in `read_source`): a bar slice of a stored program, a
   render, a set's track would each be one.
 
@@ -284,6 +288,9 @@ credited as any borrow is (`stored::cids_of`), a `gen` call as any call.
 
 - **A bar slice of a CID** (`use <cid>[17..24] as NAME`, as `seed(...)[17..24]`): asked for in this run and set aside for Matt's
   yes or no; it would build a `seed::Track` from the compiled program and reuse seed.rs's writer.
+- A canned section whose parts read the form's own lets in a call is refused (7 of the 26 sections the templates write); it
+  could be borrowed with the lets it reads. A stored program's section of that kind (`section x from <cid>.chase`) has the
+  same limit in the stored stage.
 - A `use` in an imported snippet is not written out (an `import` brings lets and defs); a `use` names nothing across programs.
 - A stored part as a line is its pattern only (as `let riff = <cid>.drop.bass` is); its params stay behind: write them on the
   part line, or borrow the part on the line (`deck A: bass <cid>.drop.bass`).
