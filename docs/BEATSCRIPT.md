@@ -1102,8 +1102,9 @@ program that uses none of them is the program it was: same canonical text, same 
 **The acid voice** (`inst=acid`, a saw; `inst=acid-square`, a square) is a 303-style voice made in the engine (no
 samples): an oscillator into a resonant four-pole lowpass that an envelope sweeps on each note. It plays the marks as a
 303 does. An accent `!` is louder, opens the filter further and sweeps it shorter, and accents in a row build on each
-other (the engine reads the accent from the velocity, so a `vel=` near 127 is accented too). A slide `^` carries the
-voice into the next note without striking it again: in 60 ms, or in `glide=` ms. A note that does not slide lets the one
+other (the engine reads the accent from the velocity: above 110 in proportion, all of it at 127, so a `vel=` up there is
+accented too). A slide `^` carries the voice into the next note without striking it again, the last step's into the
+first: in 60 ms, or in `glide=` ms (the note it leaves says `slide` on its binding, so its gate stays open). A note that does not slide lets the one
 before go (one note at a time, as a 303; a chord's notes each sound). Long note, with its decisions:
 `docs/beatscript/ext-acid.md`. Example: `examples/beatscript/acid-303.beatscript`.
 

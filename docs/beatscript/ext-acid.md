@@ -25,33 +25,41 @@ deck B: melody ~ ~ ~ ~ a3! ~ ~ e3^ g3 ~ ~ ~ c4!^ b3 ~ ~ decay=600 glide=110 inst
 | `decay=180` | the 303's decay knob: how long the filter's sweep takes to fall, ms (10 to 10000) |
 | `pitch-drop=7` | each note starts 7 semitones high and falls onto its pitch in 50 ms, as on every voice |
 | `len=` | how long the note's gate is open: the voice is let go 30 ms before the note ends (at most half the note) |
-| `vel=` | the level, and the accent: a velocity above 100 is accented in proportion, all of it at 127 |
+| `vel=` | the level, and the accent: a velocity above 110 is accented in proportion, all of it at 127 (a humanized 100 is not) |
 
 ## What it lowers to
 
 The net is the same as for any tonal part, with one difference: on the acid voice a slide is a 303's. Each note's binding
 carries what every tonal binding does (`velocity`, `durationSteps`, and `decay` / `glide` / `pitchDrop` when set), and a
-note that a `^` slides into carries `"glide": 60` when the part has no `glide=` (`djlive::compile::SELF_SLIDE_MS`). On
-every other voice that note carries no glide, and the `^` holds its note as it always has. Which voices slide by
+note that a `^` slides into carries `"glide": 60` when the part has no `glide=` (`djlive::compile::SELF_SLIDE_MS`), and
+the note the `^` is on carries `"slide": true`, so the voice holds its gate until the glide comes, as a 303 keeps its gate
+high on a slide step. (The ring cuts a note's length at its end, so a `^` on the last step would otherwise let go 30 ms
+before the bar line and swell back into the downbeat.) On every other voice neither key is written, and the `^` holds
+its note as it always has. Which voices slide by
 themselves is the engine's to say: the entries of its instrument table that play its `"acid"` engine
 (`djlive::compile::slides_by_itself`), today `acid` and `acid-square`.
 
 The engine plays a net's notes on the acid lane so:
 
-- **An accent is the velocity.** The nets carry an accent as velocity +27, so the voice reads it there: none at 100 and
-  below, in proportion above, all of it at 127. A fully accented note is about 5 dB louder than the same note at 100,
-  its filter opens about an octave further at the strike, its sweep falls in 90 ms at most (the 303 takes its shortest
+- **An accent is the velocity.** The nets carry an accent as velocity +27, so the voice reads it there: none at 110 and
+  below (over the ten a humanize moves a 100), in proportion above, all of it at 127. At the default accent knob (0.8) a
+  fully accented note is about 4 dB louder than the same note at 100, its filter opens about an octave further at the
+  strike, its sweep is shorter (132 ms at the default decay of 300, 108 ms at `decay=180`: the 303 takes its shortest
   decay on an accent), and a smoothed copy of the accented sweep (one for the lane, as a 303 has one circuit) opens the
-  filter up to 1.6 octaves more, so accents in a row climb.
+  filter up to 1.3 octaves more, so accents in a row climb.
 - **A slide is a note's `glide`.** The voice still sounding the note before goes on: its envelopes are not struck again,
   its gate is held to the new note's length, and its pitch glides there as a 303's lag does, fast then settling (95% of
-  the interval in the glide's time).
+  the interval in the glide's time). A note that says `slide` holds its gate for half its length again, past any swing of
+  the note the glide comes on.
 - **One note at a time.** A note that does not slide lets the one before go (8 ms), as a 303 plays one note at a time.
-  Notes struck within 25 ms of each other are a chord: each sounds on a voice of its own (a lane has four, a harmony
-  part six).
+  Notes struck within 12 ms of each other are a chord: each sounds on a voice of its own (a lane has four, a harmony
+  part six). A flam's grace, 22 ms ahead of its note, is let go when the note comes.
 - **The sound**: a saw (or a square), band-limited (PolyBLEP), into a four-pole lowpass (trapezoidal one-pole stages
-  with the feedback solved each sample and the stage input saturated), then a 25 Hz coupling highpass and the
-  amplifier. The knobs' defaults are a classic squelch: cutoff 300 Hz, resonance 0.72, envelope 2.7 octaves, decay
+  with the feedback solved each sample and the stage input saturated), a symmetric soft clip (a 303's output stage
+  clips softly), then a 25 Hz coupling highpass and the amplifier. The saw's reset rings a resonant ladder into
+  one-sided spikes; clipped there, an acid line is no harder on a deck's safety limiter than the wavetable bass on the
+  same line (a test: plain sixteenths and a busy accented line through `PeakLimiter` under `WaveOptions::extended`,
+  limited on no more samples, no deeper, and with under 1% DC). The knobs' defaults are a classic squelch: cutoff 300 Hz, resonance 0.72, envelope 2.7 octaves, decay
   300 ms, accent 0.8. No key tracking: a 303 has none. Its level sits within 3 dB of the lead voice (djrust's
   instrument test), as every voice of the table does. The engine's own shaping of a synth voice (`.subtractive`'s
   filter, `.unison`'s detuned pair) leaves it alone; a genre that puts a sine an octave under its bass (dnb, dubstep,
@@ -78,7 +86,9 @@ it does and names `acid` among the voices with a sound of their own.
   square switch, a second entry in the instrument table, because a name is how a part picks a sound today.
 - **The accent rides in the velocity, not a new key on the binding.** The nets already carry `!` as velocity +27, and the
   acid genre's own lines carry it as +25; a new `accent` key would move the CID of every net with an accented tonal note.
-  The cost: a part with a `vel=` above 100 is a little accented without a `!`, as on a MIDI 303.
+  The accent starts above 110, so a humanized 100 (`humanize( )`, the runner's groove) stays unaccented; the cost is
+  that a `vel=` above 110 is a little accented without a `!`, as on a MIDI 303, and an accent on a part at `vel=80`
+  (107) is only louder.
 - **A slide is lowered to a glide on the acid voice, not inferred from held notes.** A held note is the TB-303 MIDI
   convention for a slide, but a tonal part's notes are two steps long unless it says otherwise, so every line of
   sixteenths would slide. The language knows the slides (`^`) and writes them; the engine only obeys `glide`, as it does
@@ -87,6 +97,17 @@ it does and names `acid` among the voices with a sound of their own.
 - **`decay=` is the 303's decay knob here, not the note's tail.** On a 303 the decay knob is the filter's; the level is
   gated by the note. On every other voice `decay=` is still the tail.
 - **One note at a time, but chords sound.** A 303 is monophonic; a part may still write `[a1,e2]`, and both notes play.
+- **The note a slide leaves says `slide`.** The ring cuts a note's length at its end, so the engine cannot tell from the
+  last step's length that a glide follows; the flag says it, is written only on the acid voice's parts (no pinned net
+  moves: the only program with it is `examples/beatscript/acid-303.beatscript`, pinned with it), and every other voice ignores it.
+- **The loudness probe stays at 8 kHz for the acid voice.** There the filter is held under the 4 kHz Nyquist and the
+  voice measures about 1 dB quiet, so a track with it comes out a little loud. A sung voice is probed at 24 kHz (it
+  measured 13 to 19 dB wrong at 8 kHz), but the probe's target is calibrated at 8 kHz: probed at 24 kHz, whole edm
+  and trance tracks landed 0.7 dB over it, and the genres' spread went past its 2 LU (djhost's deck_acceptance). The
+  1 dB is the smaller error.
+- **A soft output stage, not a lower level.** Trimming the level would not have helped: the loudness gain brings the
+  line back up, and the spikes with it. Clipping them at a symmetric knee before the highpass takes the limiter off the
+  line and adds the grit a driven 303 has.
 - **The generator's versions keep the voices they had.** `gen@1` and `gen@2` pick a part's voice from the genre's
   instruments that are voices, and `acid` was only a family word when they were pinned, so neither picks it now
   (`beatscript-api::generate::VOICES_AFTER_V2`): every gen call resolves to the program it always did (`tests/gen.rs`). A later
