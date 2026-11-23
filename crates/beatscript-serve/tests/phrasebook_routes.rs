@@ -31,20 +31,47 @@ fn start() -> Server {
     let d = dir.path();
     std::fs::write(d.join("session.secret"), hex::encode([42u8; 32]) + "\n").unwrap();
     std::fs::write(d.join("site.json"), json!({"site_id": "siteSITEsiteSITEsite01", "created": "2026-11-19T00:00:00Z"}).to_string()).unwrap();
-    let port = TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
-    let addr = format!("127.0.0.1:{port}");
-    let child = Command::new(env!("CARGO_BIN_EXE_beatscript-serve"))
-        .args(["-addr", &addr, "-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", "https://beatscript.app", "-web", "", "-docs", ""])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .unwrap();
-    let t0 = Instant::now();
-    while TcpStream::connect(&addr).is_err() {
-        assert!(t0.elapsed() < Duration::from_secs(60), "beatscript-serve did not start");
-        std::thread::sleep(Duration::from_millis(50));
+    // a port picked here can be taken by another test's server before this one binds it (the tests run in parallel): then
+    // this server exits, a bare connect reaches the other one, and that one goes when its test ends. So each server says
+    // its own version, and one that is not ours, or that exits, is retried on another port (as embed_routes.rs does)
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let version = format!("phrasebook-test-{}-{}", std::process::id(), N.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
+    for _ in 0..5 {
+        let port = TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
+        let addr = format!("127.0.0.1:{port}");
+        let mut child = Command::new(env!("CARGO_BIN_EXE_beatscript-serve"))
+            .args(["-addr", &addr, "-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", "https://beatscript.app", "-web", "", "-docs", "", "-version", &version])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        let t0 = Instant::now();
+        let ours = loop {
+            if child.try_wait().ok().flatten().is_some() {
+                break false;
+            }
+            if let Some(body) = healthz(&addr) {
+                break body.contains(&format!("\"version\":\"{version}\""));
+            }
+            assert!(t0.elapsed() < Duration::from_secs(60), "beatscript-serve did not start");
+            std::thread::sleep(Duration::from_millis(50));
+        };
+        if ours {
+            return Server { child, addr, _dir: dir };
+        }
+        let _ = child.kill();
+        let _ = child.wait();
     }
-    Server { child, addr, _dir: dir }
+    panic!("beatscript-serve did not start on a free port");
+}
+
+fn healthz(addr: &str) -> Option<String> {
+    let mut s = TcpStream::connect(addr).ok()?;
+    s.set_read_timeout(Some(Duration::from_secs(5))).ok()?;
+    s.write_all(format!("GET /healthz HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n\r\n").as_bytes()).ok()?;
+    let mut raw = String::new();
+    let _ = s.read_to_string(&mut raw);
+    Some(raw).filter(|r| r.starts_with("HTTP/1.1 200"))
 }
 
 struct Resp {
