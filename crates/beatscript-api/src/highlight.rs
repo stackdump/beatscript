@@ -19,7 +19,7 @@ const KEYWORDS: [&str; 25] = [
 ];
 
 /// An `evolve` rule's transforms.
-const TRANSFORMS: [&str; 6] = ["rotate", "transpose", "octave", "invert", "reverse", "thin"];
+const TRANSFORMS: [&str; 9] = ["rotate", "transpose", "octave", "invert", "reverse", "thin", "fill", "slow", "fast"];
 
 pub fn class_name(c: Class) -> &'static str {
     match c {

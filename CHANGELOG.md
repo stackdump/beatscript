@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Arrange mutations and evolve work where they are written (2026-11-23)
+
+- A mutation that takes a pattern down to one step (`decay` or `thin` of a one-`[...]` let, `half` of `x ~`) no longer
+  breaks the section that reads it: its generation is written `[~]`, a pattern, not a one-value let (which is put in place
+  of its name before the lowering's lets exist, so the name stayed a word: "`acid@1` is not a step"). This was the error
+  behind lets that read other lets, sections with a `sing` line, and `half` / `decay`.
+- A let written as one `[...]` is its steps: every operator works inside the brackets. A `<...>` cycle of bars is worked a
+  bar at a time (`rot 3`, `accent 0.3`, `ratchet` reach the bars instead of doing nothing or doubling the whole cycle).
+- `ratchet` on a sixteenth strikes inside the step (`x:2`) instead of `x*2`, which snapped and lost hits; a coarser step
+  still doubles on the grid (`x*2`).
+- Roman numerals move by scale degrees (`<i i iv v>` up 2 is `<III III VI VII>` in A minor), and a let of `markov(...)` /
+  `arp(...)` is pitched (`oct n` plays it `n` octaves on; the other pitch operators say they leave it): neither is called a
+  drum pattern any more.
+- `evolve` takes `fill p seed=s`, `slow n` and `fast n`; a mutation operator it does not take is an error that says it is an
+  `arrange { }` operator.
+
 ### The radio page is a player (2026-11-23)
 
 - `/radio` plays as a player: a transport (previous, play/pause, next, stop), an LED readout (title, elapsed/total, section

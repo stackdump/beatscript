@@ -404,7 +404,7 @@ track       = CID "." NAME [ "." NAME ] [ "." role ] ;        (* a stored set's 
 (* == Evolving == *)
 evolve      = "evolve" "every" INT "bars" "{" { NEWLINE } { rule NEWLINE { NEWLINE } } [ bound NEWLINE { NEWLINE } ] "}" ;   (* a rule a line; the bound last *)
 rule        = ( role | "deck" deck ) ":" op { "|" op } [ "when" "gen" [ "%" INT ] cmp INT ] ;
-op          = ( "rotate" | "transpose" | "octave" | "invert" | "reverse" | "thin" ) { NUMBER | "<" NUMBER { NUMBER } ">" } [ "seed=" INT ] ;
+op          = ( "rotate" | "transpose" | "octave" | "invert" | "reverse" | "thin" | "fill" | "slow" | "fast" ) { NUMBER | "<" NUMBER { NUMBER } ">" } [ "seed=" INT ] ;   (* seed= on thin and fill *)
 bound       = "stop" "when" "gen" ( "==" | ">=" | ">" ) INT | "for" INT "gens" ;
 
 (* == Typed ports == *)
@@ -1023,6 +1023,12 @@ the text, so a `thin` takes away what the last generation still had.
 | `transpose n` / `octave n` | pitches up `n` semitones / octaves (tonal parts; a drum's note is the drum) |
 | `invert` | pitches turned over about the part's first note (tonal parts) |
 | `thin p [seed=s]` | drops the share `p` of the hits, picked by a hash of (seed, generation, bar, step, note): the same seed, the same hits |
+| `fill p [seed=s]` | each step of a bar with no hit on it takes, with chance `p` (a hash of seed, generation, bar and step), a copy of the hits of the step before it that has some; a bar with no hits stays empty |
+| `slow n` | the first `1/n` of each bar played over the whole of it: a hit at step `s` moves to `s*n` (its length with it), what would fall past the bar's end is gone (`n` 1 to 16) |
+| `fast n` | each bar played `n` times in the time of one: a hit at `s` lands at `s/n` and again every `16/n` steps (`n` 1, 2, 4, 8 or 16) |
+
+The transforms act on realized hits, so they are not the arrange mutations' operators (which rewrite a pattern's text): a
+mutation operator an evolve does not take (`drift`, `ratchet`, `morph` ...) is an error that says it belongs to `arrange { }`.
 
 An argument `<0 5 7 0>` takes one value per generation, round (generation 1 the first). A guard is `gen == 3`,
 `gen % 4 == 3`, `gen >= 8` (also `!=`, `<`, `<=`, `>`): the rule runs in the generations it is true for.
@@ -1051,7 +1057,9 @@ thinned hi-hat runs out of hits, and what is left comes round every four generat
 
 `thin` picks hits by a hash of the generation number, so a part it acts on is not a function of its state and the rule's
 clock: its only provable fixed point is the empty part (which every transform leaves empty), and a thinned part's orbit is
-found when it has no hits left (or not found, said so, if that is not within 20,000 generations).
+found when it has no hits left (or not found, said so, if that is not within 20,000 generations). `fill` is random the same
+way; with no `thin` against it, its fixed point is the part with a hit on every step of every bar that has one, found when a
+generation leaves it as it was under rules with no clock of their own (no `when`, no `<a b c>`).
 
 **Any generation, from the rule.** `btw generation {gen: N}` (and `djctl btw gen FILE N`) answers the CID of generation N
 computed from generation 0 and the rule alone: no chain stored, and a part that has come round its cycle is brought back to where
@@ -1147,18 +1155,25 @@ arrange {
 } loop 4 then outro end
 ```
 
-| op | does (to the pattern's top-level steps) |
+| op | does (to the pattern's steps: see **The steps** below the table) |
 |---|---|
 | `rot n` / `rev` / `swap` / `mirror` / `shuffle` | rotate `n` steps later / backwards / swap neighbours / the first half, then backwards / a seeded permutation |
 | `thin p` / `fill p` / `euclid k` | each sounding step rests with chance `p` / each rest takes the step before it with chance `p` / the hits re-spread as `k` Euclidean hits |
 | `half` / `double` / `stutter n` | the first half at half speed / the pattern twice in the bar / the first `1/n` of it `n` times |
-| `ratchet p` / `swing amt` | a sounding step doubled (`*2`) with chance `p` / every second step later by `amt` of a step (on the sixteenth grid) |
-| `up n` / `down n` / `oct n` / `invert` / `drift p` | scale degrees of the `key` up / down / octaves / turned over about the first note / a step up or down with chance `p` |
+| `ratchet p` / `swing amt` | a sounding step struck twice with chance `p`: doubled on the grid (`*2`) when its step is longer than a sixteenth, else ratcheted inside it (`x:2`, again `x:4`, at most `x:8`), so no hit snaps / every second step later by `amt` of a step (on the sixteenth grid) |
+| `up n` / `down n` / `oct n` / `invert` / `drift p` | scale degrees of the `key` up / down / octaves / turned over about the first note / a step up or down with chance `p`. A Roman numeral moves by degrees too (in A minor `i` up 2 is `III`, the key's own triad there; `V7` up 1 is `VI7`) |
 | `vel n` / `accent p` | accents on the `n` strongest steps (`vel -n` takes `n` off) / an accent with chance `p` |
 | `morph b p` / `xfer b` / `mask b` | each step becomes `b`'s with chance `p` / `b`'s rhythm with these notes / rests where `b` rests |
 | `grow` / `decay` | one rest filled / one sounding step taken out (seeded; they pile up pass on pass) |
 | `voice n` / `spread` | each chord `[a3,c4,e4]` or `chord(am7)` inverted `n` times / its every second note an octave up |
 | `jux op` | the pattern stays the left copy, `op` of it plays hard right (`jux rev`) |
+
+**The steps.** A pattern written as one `[...]` (`let acid = [1 1 ~ 1 3 ~ 1 5 ~ ...]`, a bar of sixteenths) is its steps, not
+one step: `rot`, `thin`, `half`, `decay`, `ratchet` and the rest work inside the brackets, and the brackets stay. A `<...>`
+cycle of bars (`let riff = <[...] [...]>`, `let chords = <i i iv v>`) is worked a bar at a time, each bar as its own steps,
+the dice running on from bar to bar: `rot 3` rotates every bar, `accent 0.3` accents steps in them, never the cycle as a whole.
+A cross operator (`morph b p`, `xfer b`, `mask b`) reads `b` the same way, bar for bar when both are cycles. A pattern a
+mutation takes down to one step (`~ p half` on `x ~`) is still a pattern.
 
 Try [arrange-in-eight-lines](https://beatscript.app/examples/arrange-in-eight-lines.beatscript).
 
@@ -1171,6 +1186,10 @@ file say it in words.
   in the octave of the part that reads the let (`harmony` 3, bass 2, the rest 4, or its `oct=`), and a chord with an octave
   of its own (`chord(gm7, 4)`) keeps it. If parts in different octaves read the let, the first one's octave is used and
   `check` says so. An operator that moves no pitch (`rot`, `thin`) leaves `chord(am7)` as written.
+- **Numerals and generators are pitched.** A `let` of Roman numerals (`<i i iv v>`) moves by scale degrees (above). A `let` of
+  `markov(...)` or `arp(...)` is pitched as well: `oct n` plays it `n` octaves on (`octave(markov(0.3, 1303), 1)`), but its
+  notes are picked as it plays, so `up`, `down`, `invert`, `drift`, `voice` and `spread` have none to move: `check` says so
+  and leaves it as it is (write its notes out to move them by degrees).
 - **`~`** rebinds the pattern for every later section, on every deck that reads it. **`@`** is on top of the current
   generation for the next section only. Ops in a chain (`rot 1 | thin 0.1`) apply in order; targets are comma-separated.
 - **`~3` / `@4`**: a whole number right after the mark (1 to 256, spaced or glued, `~1` is no count) fires the line only on every
