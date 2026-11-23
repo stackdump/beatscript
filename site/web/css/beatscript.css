@@ -101,6 +101,8 @@ a.tb { text-decoration: none; color: inherit; }
 .upnext li + li::before { content: '›'; margin-right: 12px; opacity: .6; }
 .upnext-lbl { font-weight: 600; white-space: nowrap; }
 .upnext-paused { margin-left: auto; white-space: nowrap; color: #f0c674; }
+.upnext-player { margin-left: auto; white-space: nowrap; color: var(--link); }
+.upnext-paused + .upnext-player { margin-left: 10px; }
 .banner.ok { background: #14301f; border-color: #285a38; }
 .banner b { font-weight: 600; }
 .banner code { font-family: var(--mono); font-size: 12px; color: var(--amber); }

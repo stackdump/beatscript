@@ -71,7 +71,7 @@ Pass a phone's id as device to eval, load, get or stop to drive that phone alone
 
 pub const QUEUE_DESC: &str = r####"An "up next" queue on one browser tab at %[1]s (the same tabs and rules as load: session, or device, else your most recently seen signed-in tab). When the playing program ends the page plays the next item, on the bar line where it can; a looping program (one that never ends) plays for the item's bars or minutes, else one full pass of its arrangement, and then advances. Needs a bearer token.
 
-action is one of: list (the queue, now_playing, position, paused_reason, listener), add (items: up to %[2]d per call, %[3]d in the queue), remove (item: an item id from list, or a CID), clear, skip (play the next item now).
+action is one of: list (the queue, now_playing, position, paused_reason, listener), add (items: up to %[2]d per call, %[3]d in the queue), remove (item: an item id from list, or a CID), move (item and to: reorder; to is the index in up_next, 0 plays next), clear, skip (play the next item now, or with item that item). The radio page (%[1]s/radio) shows its queue as a playlist with each row's render status, and the person there can add, remove, reorder and play rows too.
 
 Items must already be programs: {cid} of a stored program (render and a signed-in share store theirs) or an example's CID, {example} by name from list_examples, or {url} a share link (verified exactly as load verifies it; a CID-only link must name a stored program). Optional per item: bars (1-1024) or minutes (0.1-120) to play, title. THE QUEUE NEVER COMPOSES OR CALLS A MODEL, and there is no way to make it: to queue new music, write the programs yourself (check them), store each with render or share, then add the CIDs.
 

@@ -98,6 +98,20 @@ export class Driver {
     return res;
   }
 
+  /**
+   * Play a run that was evaluated already (`run.eval(text)` answered `res`, ok): a fresh start on `src`, the program it
+   * holds from its bar 0. The radio compiles what is next while the current item plays, so the change is a swap.
+   */
+  adopt(run, text, res, src) {
+    if (this.run) this.stopSound();
+    this.run = run;
+    this.src = src;
+    this.evalText = text;
+    this.evalCid = (res && res.cid) || run.cid();
+    this._st = null;
+    return res;
+  }
+
   /** One pass: service the runtime with the source's clock, hand its commands on, read what to show. */
   tick() {
     if (!this.run || !this.src) return null;

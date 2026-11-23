@@ -11,7 +11,7 @@
 //!   GET /api/devices · DELETE /api/devices/{id} · POST /api/devices/{id}/push
 //!   GET|DELETE /api/device · GET /api/device/events (SSE) · POST /api/device/report|reply|compose
 //!   POST /api/session · GET /api/session/{id}/events (SSE) · POST /api/session/{id}/report|reply
-//!   GET /api/session/{id}/queue · POST /api/session/{id}/queue/next
+//!   GET /api/session/{id}/queue · POST /api/session/{id}/queue (the page's add, remove, move, clear) · POST /api/session/{id}/queue/next
 //!
 //! Flags: -queue-idle-minutes 30, -queue-max-auto 8, -queue-max-items 50, -queue-max-per-add 20, -moved-to,
 //! -site-id, -max-prompt-chars 800 (device compose's body cap), and beatscript-serve's own -sse-ping-ms 20000.
@@ -100,6 +100,8 @@ pub struct Hub {
     session_ip: IpLimiter,
     pair_ip: IpLimiter,
     claim_ip: IpLimiter,
+    /// the page's own queue writes (add, remove, move, clear) per address
+    queue_ip: IpLimiter,
 }
 
 /// `errorf` for `limited`: 429 for a refused limiter.
@@ -122,6 +124,7 @@ impl Hub {
             session_ip: IpLimiter::new(120, Duration::from_secs(3600)),
             pair_ip: IpLimiter::new(20, Duration::from_secs(60)),
             claim_ip: IpLimiter::new(20, Duration::from_secs(60)),
+            queue_ip: IpLimiter::new(60, Duration::from_secs(60)),
         }
     }
 
@@ -1057,20 +1060,26 @@ async fn queue_next(State(s): State<HS>, Path(id): Path<String>, req: Request) -
         Ok(n) => n,
         Err(e) => return err(e),
     };
-    let (mut reason, mut presence) = (String::new(), None);
+    let (mut reason, mut presence, mut pick) = (String::new(), None, String::new());
     let mut bd = Bind::new(&b);
-    bd.object(&n, "", "struct { Reason string \"json:\\\"reason\\\"\"; Presence *api.Presence \"json:\\\"presence\\\"\" }", &["reason", "presence"], |bd, i, v| match i {
+    bd.object(&n, "", "struct { Reason string \"json:\\\"reason\\\"\"; Presence *api.Presence \"json:\\\"presence\\\"\"; Item string \"json:\\\"item\\\"\" }", &["reason", "presence", "item"], |bd, i, v| match i {
         0 => bd.string(v, &mut reason),
-        _ => Presence::bind(bd, v, &mut presence),
+        1 => Presence::bind(bd, v, &mut presence),
+        _ => bd.string(v, &mut pick),
     });
     if let Err(e) = bind_err(bd) {
         return err(e);
     }
-    if !matches!(reason.as_str(), "ended" | "length" | "skip" | "resume") {
-        return err(ApiError::new(400, "bad_request", "reason must be ended, length, skip or resume"));
+    if !matches!(reason.as_str(), "ended" | "length" | "skip" | "resume" | "pick") {
+        return err(ApiError::new(400, "bad_request", "reason must be ended, length, skip, resume or pick"));
+    }
+    // pick: a row the person chose (its id, or a CID); skip may name one too (an MCP skip to an item)
+    if reason == "pick" && pick.trim().is_empty() {
+        return err(ApiError::new(400, "bad_request", "pick needs item: the id of the row to play"));
     }
     let u = s.user_or_anon(&parts.headers);
-    let Some((it, v)) = s.hub.core.next(&id, u.as_ref(), presence.as_ref()) else { return err(err_no_session()) };
+    let pick = Some(pick.as_str()).filter(|p| !p.trim().is_empty());
+    let Some((it, v)) = s.hub.core.next_pick(&id, u.as_ref(), presence.as_ref(), pick) else { return err(err_no_session()) };
     let item = match it {
         None => "null".to_string(),
         Some(it) => {
@@ -1087,6 +1096,101 @@ async fn queue_next(State(s): State<HS>, Path(id): Path<String>, req: Request) -
         }
     };
     json_answer(200, format!("{{\"item\":{item},\"queue\":{}}}", v.to_json()))
+}
+
+/// `POST /api/session/<id>/queue` `{action: add|remove|move|clear, items?: [{cid} | {example}], item?, to?}`: the page's
+/// own playlist edits (the radio page). The id is the capability, as for the page's other routes. An added item is a
+/// program that already exists here (a stored program's CID or an example's, gated as MCP's add gates it); nothing is
+/// composed, rendered or stored. Answers `{queue}`.
+async fn queue_write(State(s): State<HS>, Path(id): Path<String>, req: Request) -> Response<Body> {
+    let (ok, retry) = s.hub.queue_ip.allow(&peer_ip(&req), s.hub.now());
+    if !ok {
+        return err(limited(retry, "queue"));
+    }
+    let (parts, body) = req.into_parts();
+    let max = 16 << 10;
+    let b = read_body(body, max).await;
+    if b.len() > max {
+        return err(ApiError::new(413, "too_large", format!("request body is over {max} bytes")));
+    }
+    let v: serde_json::Value = match serde_json::from_slice(&b) {
+        Ok(v) => v,
+        Err(e) => return err(ApiError::new(400, "bad_request", format!("the body must be JSON: {e}"))),
+    };
+    let op = match page_queue_op(&s.app, &v, s.hub.core.queue_cfg.max_per_add) {
+        Ok(op) => op,
+        Err(e) => return err(e),
+    };
+    let u = s.user_or_anon(&parts.headers);
+    match s.hub.core.page_queue_write(&id, u.as_ref(), op) {
+        None => err(err_no_session()),
+        Some(Err(e)) => err(e),
+        Some(Ok(v)) => json_answer(200, format!("{{\"queue\":{}}}", v.to_json())),
+    }
+}
+
+/// The page's queue write as a [`QueueOp`], its items resolved against the store and the examples.
+fn page_queue_op(app: &crate::App, v: &serde_json::Value, max_per_add: usize) -> Result<types::QueueOp, ApiError> {
+    let bad = |m: &str| ApiError::new(400, "bad_request", m.to_string());
+    let Some(o) = v.as_object() else { return Err(bad("the body must be a JSON object")) };
+    if let Some(k) = o.keys().find(|k| !["action", "items", "item", "to"].contains(&k.as_str())) {
+        return Err(bad(&format!("{} is no field of a queue write: action, items, item, to", gojson::go_quote(k))));
+    }
+    let action = o.get("action").and_then(|a| a.as_str()).unwrap_or("").to_string();
+    if !matches!(action.as_str(), "add" | "remove" | "move" | "clear") {
+        return Err(bad("action must be add, remove, move or clear"));
+    }
+    let item = o.get("item").and_then(|i| i.as_str()).unwrap_or("").trim().to_string();
+    if item.len() > 100 {
+        return Err(bad("item is an id from the queue (q1 ...) or a CID"));
+    }
+    if matches!(action.as_str(), "remove" | "move") && item.is_empty() {
+        return Err(bad(&format!("{action} needs item: an id from the queue (q1 ...) or a CID")));
+    }
+    let mut op = types::QueueOp { action: action.clone(), remove: item, ..Default::default() };
+    if action == "move" {
+        let Some(to) = o.get("to").and_then(|t| t.as_u64()).filter(|t| *t <= 1023) else { return Err(bad("move needs to: the index the item goes to, 0 to 1023")) };
+        op.to = to as usize;
+    }
+    if action == "add" {
+        let Some(raw) = o.get("items").and_then(|i| i.as_array()).filter(|r| !r.is_empty()) else { return Err(bad("add needs items: a list of {cid} or {example}")) };
+        if raw.len() > max_per_add {
+            return Err(ApiError::new(413, "too_large", format!("one add takes at most {max_per_add} items; this one has {}", raw.len())));
+        }
+        for (i, r) in raw.iter().enumerate() {
+            op.items.push(page_queue_item(app, r).map_err(|mut e| {
+                e.message = format!("items[{i}]: {}", e.message);
+                e
+            })?);
+        }
+    }
+    Ok(op)
+}
+
+/// One `{cid}` (a stored program or an example's) or `{example}` (by name) for the page's add.
+fn page_queue_item(app: &crate::App, r: &serde_json::Value) -> Result<types::QueueItem, ApiError> {
+    let bad = |m: &str| ApiError::new(400, "bad_request", m.to_string());
+    let Some(o) = r.as_object() else { return Err(bad("an item is {cid} or {example}")) };
+    let s = |k: &str| o.get(k).and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
+    let (cid, example) = (s("cid"), s("example"));
+    if o.keys().any(|k| k != "cid" && k != "example") || cid.is_empty() == example.is_empty() {
+        return Err(bad("an item is {cid} or {example}, one of them"));
+    }
+    if !example.is_empty() {
+        let Some(e) = app.examples.list.iter().find(|e| e.name == example) else { return Err(ApiError::new(404, "not_found", format!("no example is named {}", gojson::go_quote(&example)))) };
+        return Ok(types::QueueItem { cid: e.cid.clone(), title: e.title.clone(), source: "example".into(), example: e.name.clone(), ..Default::default() });
+    }
+    if !crate::store::is_cid(&cid) {
+        return Err(bad("cid is not a CID (it starts with z)"));
+    }
+    if let Some(e) = app.examples.list.iter().find(|e| e.cid == cid) {
+        return Ok(types::QueueItem { cid, title: e.title.clone(), source: "example".into(), example: e.name.clone(), ..Default::default() });
+    }
+    let Some((text, meta)) = crate::compose::stored(app, &cid) else {
+        return Err(ApiError::new(404, "not_found", format!("no stored program has CID {cid}: the queue plays only programs that exist here (share one first)")));
+    };
+    beatscript_serve::gate::admit(&text, meta["license"].as_str().unwrap_or(""), meta["visibility"].as_str().unwrap_or("")).map_err(|r| ApiError::new(r.status, r.code, r.message))?;
+    Ok(types::QueueItem { cid, title: meta["name"].as_str().unwrap_or("").to_string(), source: "store".into(), ..Default::default() })
 }
 
 async fn queue_get(State(s): State<HS>, Path(id): Path<String>, h: HeaderMap) -> Response<Body> {
@@ -1220,6 +1324,7 @@ async fn route(State(s): State<HS>, Path(params): Path<HashMap<String, String>>,
         (["api", "session", _, "report"], _, true, _) => session_report(st, Path(id), req).await,
         (["api", "session", _, "reply"], _, true, _) => session_reply(st, Path(id), req).await,
         (["api", "session", _, "queue"], true, _, _) => queue_get(st, Path(id), h).await,
+        (["api", "session", _, "queue"], _, true, _) => queue_write(st, Path(id), req).await,
         (["api", "session", _, "queue", "next"], _, true, _) => queue_next(st, Path(id), req).await,
         _ => other_method(st, req).await,
     }

@@ -64,6 +64,42 @@ const users = new Map(); // cookie -> user
 const tokens = new Map(); // token -> user
 const renderLog = [];
 const programGets = []; // the CIDs fetched with GET /api/programs/<cid>, in order (the page fetches what a program imports once)
+const renderStates = new Map(); // cid -> {state, pct, seconds} set by /__render_state/<cid>
+
+// ---- the up-next queue of a session ---------------------------------------------------------------------------------
+const queueOf = (s) => (s.queue ||= { items: [], seq: 0, now: null, position: 0 });
+const queueView = (id, q) => ({ session: id, up_next: q.items.map(({ text, ...x }) => x), now_playing: q.now, position: q.position, paused_reason: '', listener: 'present', auto_advanced: 0, max_auto_advance: 8, idle_minutes: 30, max_items: 50 });
+function pushQueue(id, s) {
+  const data = JSON.stringify({ type: 'queue', extra: { queue: queueView(id, queueOf(s)) } });
+  for (const r of s.res) r.write(`event: queue\ndata: ${data}\n\n`);
+}
+/** {cid} (a stored program or an example's) or {example}: the item, or {error, status, code}. */
+function queueItem(x) {
+  if (x && x.example) {
+    const e = examples.find((y) => y.name === x.example);
+    return e ? { cid: e.cid, title: e.title || e.name, source: 'example', example: e.name } : { error: `no example is named ${x.example}`, status: 404, code: 'not_found' };
+  }
+  const cid = x && x.cid;
+  const e = examples.find((y) => y.cid === cid);
+  if (e) return { cid, title: e.title || e.name, source: 'example', example: e.name };
+  const pr = programs.get(cid);
+  if (!pr) return { error: `no stored program has CID ${cid}`, status: 404, code: 'not_found' };
+  const name = /^#!\s*name:\s*(.+)$/m.exec(pr.text);
+  return { cid, title: name ? name[1].trim() : '', source: 'store' };
+}
+/** The render status answer (beatscript-serve's shape): a state set by a test, else ready for a stored program, else 404-ish none. */
+function renderStatus(cid, url) {
+  const set = renderStates.get(cid);
+  const pr = programs.get(cid) || examples.find((e) => e.cid === cid);
+  const c = pr ? M.check(pr.text) : null;
+  const seconds = (set && set.seconds) || (c && c.seconds) || 120;
+  const st = set ? set.state : 'none';
+  if (set && set.state === 'failed') return { cid, restricted: true, formats: {} };
+  const f = { state: st, url: `/api/render/${cid}?format=opus&v=r2`, available: true };
+  if (st === 'ready') { f.seconds = seconds; f.bytes = Math.round(seconds * 12000); }
+  if (st === 'rendering') { f.seconds = seconds; f.seconds_rendered = Math.round(seconds * (set.pct || 0) / 100); f.bytes = 4096; }
+  return { cid, bars: (c && c.song_bars) || 0, seconds, restricted: false, formats: { opus: f, wav: { state: 'none', available: true } } };
+}
 
 function loadExamples() {
   let list = [];
@@ -137,7 +173,15 @@ function wavHeader(sr) {
 }
 
 async function handleRender(req, res, cid, url) {
-  const p = programs.get(cid);
+  // <cid>.<packed>: a program that is not stored carries its text (a radio station's track); stored as the server does
+  const dot = cid.indexOf('.');
+  if (dot > 0) {
+    const o = M.open(`https://beatscript.app/#${cid}`);
+    cid = cid.slice(0, dot);
+    if (!o || !o.ok || o.cid !== cid) return err(res, 422, 'cid_mismatch', 'the packed text is not the program its CID names');
+    if (!programs.has(cid)) programs.set(cid, { text: o.canonical, meta: { license: 'CC0-1.0', source: 'put' } });
+  }
+  const p = programs.get(cid) || examples.find((e) => e.cid === cid);
   if (!p) return err(res, 404, 'not_found', `no program ${cid}: PUT it to /api/programs/${cid} first`);
   const c = M.check(p.text);
   if (url.searchParams.get('busy')) return err(res, 429, 'busy', 'all render slots are taken', { retry_after: 7 }, { 'Retry-After': '7' });
@@ -221,7 +265,7 @@ async function route(req, res) {
     return send(res, 200, { cid, text: pr.text, meta: pr.meta });
   }
   if ((mm = /^\/api\/render\/([^/]+?)(\/status)?$/.exec(p))) {
-    if (mm[2]) return send(res, 200, { cid: mm[1], state: programs.has(mm[1]) ? 'ready' : 'unknown' });
+    if (mm[2]) return send(res, 200, renderStatus(decodeURIComponent(mm[1]), url));
     return handleRender(req, res, decodeURIComponent(mm[1]), url);
   }
   // auth
@@ -253,11 +297,54 @@ async function route(req, res) {
     sessions.set(id, { owner: u ? u.id : '', res: new Set(), state: null, last: Date.now(), replies: [] });
     return send(res, 200, { id, user: u });
   }
-  // the up-next queue (DESIGN.md; only MCP writes it): the mock's is always empty, as a fresh session's is
+  // the up-next queue (DESIGN.md "Up next"): a session's own, written by the radio page's playlist (POST …/queue add|remove|move|clear)
+  // and the test route /__queue/<id> (MCP's add, for a test); …/queue/next takes the first item, or `item`
   if ((mm = /^\/api\/session\/([^/]+)\/queue(\/next)?$/.exec(p))) {
-    if (!sessions.has(mm[1])) return err(res, 404, 'no_session', 'no such session');
-    return send(res, 200, { queue: { session: mm[1], up_next: [], position: 0, listener: 'present', auto_advanced: 0, max_auto_advance: 8 }, ...(mm[2] ? { item: null } : {}) });
+    const s = sessions.get(mm[1]);
+    if (!s) return err(res, 404, 'no_session', 'no such session');
+    const q = queueOf(s);
+    if (m === 'GET') return send(res, 200, { queue: queueView(mm[1], q) });
+    const b = await readJson(req);
+    if (mm[2]) {
+      const key = typeof b.item === 'string' ? b.item : '';
+      const i = key ? q.items.findIndex((x) => x.id === key || x.cid === key) : 0;
+      const it = i >= 0 && q.items.length ? q.items.splice(i, 1)[0] : null;
+      if (it) { q.now = { ...it }; q.position++; }
+      pushQueue(mm[1], s);
+      return send(res, 200, { item: it, queue: queueView(mm[1], q) });
+    }
+    const a = b.action;
+    if (a === 'add') {
+      const items = Array.isArray(b.items) ? b.items : [];
+      if (!items.length) return err(res, 400, 'bad_request', 'add needs items');
+      const add = [];
+      for (const x of items) {
+        const it = queueItem(x);
+        if (it.error) return err(res, it.status || 400, it.code || 'bad_request', it.error);
+        add.push(it);
+      }
+      for (const it of add) q.items.push({ ...it, id: `q${++q.seq}` });
+    } else if (a === 'remove' || a === 'move') {
+      const i = q.items.findIndex((x) => x.id === b.item || x.cid === b.item);
+      if (i < 0) return err(res, 404, 'not_found', `no queued item has id or cid ${b.item}`);
+      const [it] = q.items.splice(i, 1);
+      if (a === 'move') q.items.splice(Math.max(0, Math.min(Number(b.to) || 0, q.items.length)), 0, it);
+    } else if (a === 'clear') q.items.length = 0;
+    else return err(res, 400, 'bad_request', 'action must be add, remove, move or clear');
+    pushQueue(mm[1], s);
+    return send(res, 200, { queue: queueView(mm[1], q) });
   }
+  // test route: MCP's queue add, straight into a session's queue
+  if (m === 'POST' && (mm = /^\/__queue\/([^/]+)$/.exec(p))) {
+    const s = sessions.get(mm[1]);
+    if (!s) return err(res, 404, 'no_session', 'no such session');
+    const q = queueOf(s);
+    for (const x of (await readJson(req)).items || []) { const it = queueItem(x); if (!it.error) q.items.push({ ...it, id: `q${++q.seq}` }); }
+    pushQueue(mm[1], s);
+    return send(res, 200, { queue: queueView(mm[1], q) });
+  }
+  // test route: a render's state as /api/render/<cid>/status answers it (none, rendering with pct, ready, failed)
+  if (m === 'POST' && (mm = /^\/__render_state\/([^/]+)$/.exec(p))) { renderStates.set(mm[1], await readJson(req)); return send(res, 200, { ok: true }); }
   if ((mm = /^\/api\/session\/([^/]+)\/(events|report|reply)$/.exec(p))) {
     const s = sessions.get(mm[1]);
     if (!s) return err(res, 404, 'no_session', 'no such session');

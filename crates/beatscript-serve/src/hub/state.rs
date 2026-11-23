@@ -166,16 +166,109 @@ pub fn queue_view(q: Option<&mut QueueState>, id: &str, cfg: &QueueConfig, now: 
 
 /// `queueEvent`: `{"queue": view, ...extra}` (a map: keys sorted).
 pub fn queue_event(v: &QueueView, action: Option<&str>) -> SessionEvent {
+    queue_event_item(v, action, None)
+}
+
+/// A queue event that names an item: `{"action": "skip", "item": "q3", "queue": view}` (skip to that item).
+pub fn queue_event_item(v: &QueueView, action: Option<&str>, item: Option<&str>) -> SessionEvent {
     let mut o = String::from("{");
     if let Some(a) = action {
         o.push_str("\"action\":");
         jstr(&mut o, a);
         o.push(',');
     }
+    if let Some(i) = item {
+        o.push_str("\"item\":");
+        jstr(&mut o, i);
+        o.push(',');
+    }
     o.push_str("\"queue\":");
     o.push_str(&v.to_json());
     o.push('}');
     SessionEvent { typ: "queue".into(), extra: Some(o), ..Default::default() }
+}
+
+/// One queue operation on session `sid` (found and allowed by the caller): (view, sent). `op.remove` is the item key
+/// (an id from the view, q1 ..., or a CID: the first queued item with it) for remove, move and skip.
+fn queue_op(h: &mut Inner, sid: &str, op: QueueOp, cfg: &QueueConfig, max_state: usize, now: i64) -> Result<(QueueView, bool), ApiError> {
+    let hbytes = h.bytes;
+    let Some(s) = h.sessions.get_mut(sid) else { return Err(err_no_session()) };
+    let q = s.queue.get_or_insert_with(QueueState::fresh);
+    q.settle();
+    let delta: isize;
+    let qb = |q: &QueueState| (q.text_bytes + 128 * q.items.len()) as isize;
+    let find = |q: &QueueState, key: &str| -> Result<usize, ApiError> {
+        let key = key.trim();
+        q.items.iter().position(|it| it.id == key || it.cid == key).ok_or_else(|| ApiError::new(404, "not_found", format!("no queued item has id or cid {}; call queue with action list", super::gojson::go_quote(key))))
+    };
+    match op.action.as_str() {
+        "list" => {
+            let v = queue_view(Some(q), sid, cfg, now);
+            return Ok((v, false));
+        }
+        "add" => {
+            if op.items.is_empty() {
+                return Err(ApiError::new(400, "bad_request", "add needs at least one item"));
+            }
+            if op.items.len() > cfg.max_per_add {
+                return Err(ApiError::new(413, "too_large", format!("one add takes at most {} items; this one has {}", cfg.max_per_add, op.items.len())));
+            }
+            if q.items.len() + op.items.len() > cfg.max_items {
+                return Err(ApiError::new(413, "too_large", format!("the queue holds at most {} items; it has {} and this add brings {}. Remove or clear some first.", cfg.max_items, q.items.len(), op.items.len())));
+            }
+            let add: usize = op.items.iter().map(|i| i.text.len()).sum();
+            if q.text_bytes + add > MAX_QUEUE_TEXT_BYTES {
+                return Err(ApiError::new(413, "too_large", format!("the queue's link items may hold at most {} KiB of program text; store the programs (share or render) and queue their CIDs instead", MAX_QUEUE_TEXT_BYTES >> 10)));
+            }
+            if hbytes + add + 128 * op.items.len() > max_state {
+                return Err(ApiError::new(503, "busy", "the server is holding too much session state; try again later").retry(60));
+            }
+            let before = qb(q);
+            for mut it in op.items {
+                q.seq += 1;
+                it.id = format!("q{}", q.seq);
+                q.text_bytes += it.text.len();
+                q.items.push(it);
+            }
+            delta = qb(q) - before;
+        }
+        "remove" => {
+            let idx = find(q, &op.remove)?;
+            let before = qb(q);
+            q.text_bytes -= q.items[idx].text.len();
+            q.items.remove(idx);
+            delta = qb(q) - before;
+        }
+        "move" => {
+            // reorder: the item goes to index `to` of the queue as it is after taking it out (past the end: last)
+            let idx = find(q, &op.remove)?;
+            let it = q.items.remove(idx);
+            let to = op.to.min(q.items.len());
+            q.items.insert(to, it);
+            delta = 0;
+        }
+        "clear" => {
+            delta = -qb(q);
+            q.items.clear();
+            q.text_bytes = 0;
+        }
+        "skip" => {
+            // skip: the next item now, or with an item key that item (the page plays it, taking it out of the queue)
+            let key = op.remove.trim().to_string();
+            let pick = if key.is_empty() { None } else { Some(q.items[find(q, &key)?].id.clone()) };
+            let v = queue_view(Some(q), sid, cfg, now);
+            if q.items.is_empty() || !v.paused_reason.is_empty() || v.listener != LISTENER_PRESENT {
+                return Ok((v, false));
+            }
+            let sent = h.deliver(sid, &queue_event_item(&v, Some("skip"), pick.as_deref()));
+            return Ok((v, sent));
+        }
+        a => return Err(ApiError::new(400, "bad_request", format!("unknown queue action {} (add, list, remove, move, clear, skip)", super::gojson::go_quote(a)))),
+    }
+    let v = queue_view(Some(q), sid, cfg, now);
+    h.bytes = (h.bytes as isize + delta).max(0) as usize;
+    h.deliver(sid, &queue_event(&v, None));
+    Ok((v, false))
 }
 
 pub struct Sub {
@@ -513,84 +606,43 @@ impl Core {
 
     // ---------- the queue ----------
 
-    /// `Queue` (api.Queuer): (view, sent).
+    /// `Queue` (api.Queuer): (view, sent). MCP's side: the caller's named session, else its most recently seen one.
     pub fn queue(&self, u: Option<&User>, session: &str, op: QueueOp) -> Result<(QueueView, bool), ApiError> {
         let now = self.now();
-        let cfg = self.queue_cfg;
-        let max_state = self.max_state_bytes;
+        let (cfg, max_state) = (self.queue_cfg, self.max_state_bytes);
         let mut h = self.inner.lock().unwrap();
         let targets = h.targets(u, session)?;
         let Some(sid) = targets.first().cloned() else { return Err(err_no_session()) };
-        let hbytes = h.bytes;
-        let s = h.sessions.get_mut(&sid).unwrap();
-        let q = s.queue.get_or_insert_with(QueueState::fresh);
-        q.settle();
-        let delta: isize;
-        let qb = |q: &QueueState| (q.text_bytes + 128 * q.items.len()) as isize;
-        match op.action.as_str() {
-            "list" => {
-                let v = queue_view(Some(q), &sid, &cfg, now);
-                return Ok((v, false));
-            }
-            "add" => {
-                if op.items.is_empty() {
-                    return Err(ApiError::new(400, "bad_request", "add needs at least one item"));
-                }
-                if op.items.len() > cfg.max_per_add {
-                    return Err(ApiError::new(413, "too_large", format!("one add takes at most {} items; this one has {}", cfg.max_per_add, op.items.len())));
-                }
-                if q.items.len() + op.items.len() > cfg.max_items {
-                    return Err(ApiError::new(413, "too_large", format!("the queue holds at most {} items; it has {} and this add brings {}. Remove or clear some first.", cfg.max_items, q.items.len(), op.items.len())));
-                }
-                let add: usize = op.items.iter().map(|i| i.text.len()).sum();
-                if q.text_bytes + add > MAX_QUEUE_TEXT_BYTES {
-                    return Err(ApiError::new(413, "too_large", format!("the queue's link items may hold at most {} KiB of program text; store the programs (share or render) and queue their CIDs instead", MAX_QUEUE_TEXT_BYTES >> 10)));
-                }
-                if hbytes + add + 128 * op.items.len() > max_state {
-                    return Err(ApiError::new(503, "busy", "the server is holding too much session state; try again later").retry(60));
-                }
-                let before = qb(q);
-                for mut it in op.items {
-                    q.seq += 1;
-                    it.id = format!("q{}", q.seq);
-                    q.text_bytes += it.text.len();
-                    q.items.push(it);
-                }
-                delta = qb(q) - before;
-            }
-            "remove" => {
-                let key = op.remove.trim();
-                let Some(idx) = q.items.iter().position(|it| it.id == key || it.cid == key) else {
-                    return Err(ApiError::new(404, "not_found", format!("no queued item has id or cid {}; call queue with action list", super::gojson::go_quote(key))));
-                };
-                let before = qb(q);
-                q.text_bytes -= q.items[idx].text.len();
-                q.items.remove(idx);
-                delta = qb(q) - before;
-            }
-            "clear" => {
-                delta = -qb(q);
-                q.items.clear();
-                q.text_bytes = 0;
-            }
-            "skip" => {
-                let v = queue_view(Some(q), &sid, &cfg, now);
-                if q.items.is_empty() || !v.paused_reason.is_empty() || v.listener != LISTENER_PRESENT {
-                    return Ok((v, false));
-                }
-                let sent = h.deliver(&sid, &queue_event(&v, Some("skip")));
-                return Ok((v, sent));
-            }
-            a => return Err(ApiError::new(400, "bad_request", format!("unknown queue action {} (add, list, remove, clear, skip)", super::gojson::go_quote(a)))),
+        queue_op(&mut h, &sid, op, &cfg, max_state, now)
+    }
+
+    /// The page's own writes to its queue (`POST /api/session/<id>/queue`): add, remove, move, clear. The id is the
+    /// capability, as for the page's other routes (a signed-in other user than the owner gets None: 404).
+    pub fn page_queue_write(&self, id: &str, u: Option<&User>, op: QueueOp) -> Option<Result<QueueView, ApiError>> {
+        let now = self.now();
+        let (cfg, max_state) = (self.queue_cfg, self.max_state_bytes);
+        let mut h = self.inner.lock().unwrap();
+        if !h.page_access(id, u) {
+            return None;
         }
-        let v = queue_view(Some(q), &sid, &cfg, now);
-        h.bytes = (h.bytes as isize + delta).max(0) as usize;
-        h.deliver(&sid, &queue_event(&v, None));
-        Ok((v, false))
+        h.claim(id, u);
+        if let Some(s) = h.sessions.get_mut(id) {
+            s.last_seen = now;
+        }
+        if !matches!(op.action.as_str(), "add" | "remove" | "move" | "clear") {
+            return Some(Err(ApiError::new(400, "bad_request", "action must be add, remove, move or clear")));
+        }
+        Some(queue_op(&mut h, id, op, &cfg, max_state, now).map(|(v, _)| v))
     }
 
     /// `next`: the page asks for the item to play now. None: unknown session (or not this user's).
     pub fn next(&self, id: &str, u: Option<&User>, p: Option<&Presence>) -> Option<(Option<QueueItem>, QueueView)> {
+        self.next_pick(id, u, p, None)
+    }
+
+    /// `next`, or with `pick` (an item id or CID) that item rather than the first: a row the person chose to play now.
+    /// The same presence rules decide it; a pick the queue no longer has answers no item.
+    pub fn next_pick(&self, id: &str, u: Option<&User>, p: Option<&Presence>, pick: Option<&str>) -> Option<(Option<QueueItem>, QueueView)> {
         let now = self.now();
         let cfg = self.queue_cfg;
         let mut h = self.inner.lock().unwrap();
@@ -614,8 +666,15 @@ impl Core {
             h.deliver(id, &queue_event(&v, None));
             return Some((None, v));
         }
+        let idx = match pick.map(str::trim).filter(|k| !k.is_empty()) {
+            None => 0,
+            Some(k) => match q.items.iter().position(|it| it.id == k || it.cid == k) {
+                Some(i) => i,
+                None => return Some((None, queue_view(Some(q), id, &cfg, now))),
+            },
+        };
         let before = q.text_bytes + 128 * q.items.len();
-        let it = q.items.remove(0);
+        let it = q.items.remove(idx);
         q.text_bytes -= it.text.len();
         let after = q.text_bytes + 128 * q.items.len();
         let mut np = it.clone();
@@ -804,7 +863,7 @@ mod tests {
         }
         fn add(&self, n: usize) -> QueueView {
             let items = (0..n).map(|i| QueueItem { cid: format!("zCID{}{}", "x".repeat(20), (b'a' + (i % 26) as u8) as char), source: "store".into(), ..Default::default() }).collect();
-            self.h.queue(Some(&self.u), &self.id, QueueOp { action: "add".into(), items, remove: String::new() }).unwrap().0
+            self.h.queue(Some(&self.u), &self.id, QueueOp { action: "add".into(), items, ..Default::default() }).unwrap().0
         }
         fn op(&self, a: &str) -> Result<(QueueView, bool), ApiError> {
             self.h.queue(Some(&self.u), &self.id, QueueOp { action: a.into(), ..Default::default() })
@@ -856,6 +915,94 @@ mod tests {
         assert!(e.h.queue(Some(&m), &e.id, QueueOp { action: "list".into(), ..Default::default() }).is_err());
         assert!(e.h.queue(Some(&m), "", QueueOp { action: "list".into(), ..Default::default() }).is_err());
         assert!(e.h.next(&e.id, Some(&m), listening().as_ref()).is_none());
+    }
+
+    fn ids(v: &QueueView) -> Vec<String> {
+        v.up_next.iter().map(|i| i.id.clone()).collect()
+    }
+
+    #[test]
+    fn queue_move_reorders() {
+        let e = qenv(QueueConfig::default());
+        e.add(4);
+        let mv = |key: &str, to: usize| e.h.queue(Some(&e.u), &e.id, QueueOp { action: "move".into(), remove: key.into(), to, ..Default::default() });
+        assert_eq!(ids(&mv("q4", 0).unwrap().0), ["q4", "q1", "q2", "q3"]);
+        // past the end is last; by CID too
+        assert_eq!(ids(&mv("q4", 99).unwrap().0), ["q1", "q2", "q3", "q4"]);
+        let cid = e.op("list").unwrap().0.up_next[2].cid.clone();
+        assert_eq!(ids(&mv(&cid, 1).unwrap().0), ["q1", "q3", "q2", "q4"]);
+        assert_eq!(mv("q99", 0).unwrap_err().code, "not_found");
+        // a move keeps the bytes the queue counts
+        assert_eq!(e.op("list").unwrap().0.up_next.len(), 4);
+    }
+
+    #[test]
+    fn queue_next_pick_plays_the_row_chosen() {
+        let e = qenv(QueueConfig::default());
+        e.add(3);
+        let (it, v) = e.h.next_pick(&e.id, Some(&e.u), listening().as_ref(), Some("q2")).unwrap();
+        assert_eq!(it.unwrap().id, "q2");
+        assert_eq!(ids(&v), ["q1", "q3"]);
+        assert_eq!(v.now_playing.unwrap().id, "q2");
+        // a row that is gone answers no item and leaves the queue as it was
+        let (it, v) = e.h.next_pick(&e.id, Some(&e.u), listening().as_ref(), Some("q2")).unwrap();
+        assert!(it.is_none());
+        assert_eq!(ids(&v), ["q1", "q3"]);
+        // the presence rules decide a pick as they decide every advance
+        let (it, v) = e.h.next_pick(&e.id, Some(&e.u), pres(true, "suspended", 0).as_ref(), Some("q3")).unwrap();
+        assert!(it.is_none());
+        assert_eq!(v.paused_reason, PAUSE_AUDIO_SUSPENDED);
+    }
+
+    #[test]
+    fn queue_skip_to_an_item_tells_the_page_which() {
+        let e = qenv(QueueConfig::default());
+        let mut sub = e.h.subscribe(&e.id, Some(&e.u)).unwrap();
+        e.add(3);
+        e.next(listening()); // a listener reported: q1 plays
+        while sub.rx.try_recv().is_ok() {}
+        let skip = |key: &str| e.h.queue(Some(&e.u), &e.id, QueueOp { action: "skip".into(), remove: key.into(), ..Default::default() });
+        let (_, sent) = skip("q3").unwrap();
+        assert!(sent);
+        let ev = sub.rx.try_recv().unwrap();
+        let extra = ev.extra.unwrap();
+        assert!(extra.starts_with("{\"action\":\"skip\",\"item\":\"q3\",\"queue\":"), "{extra}");
+        // a plain skip names no item; an unknown item is refused
+        let (_, sent) = skip("").unwrap();
+        assert!(sent);
+        assert!(!sub.rx.try_recv().unwrap().extra.unwrap().contains("\"item\""));
+        assert_eq!(skip("q9").unwrap_err().code, "not_found");
+    }
+
+    #[test]
+    fn page_queue_writes() {
+        let e = qenv(QueueConfig::new(0, 0, 0, 2));
+        // the page of an anonymous tab writes its own queue by the id alone
+        let anon = e.h.create("").unwrap();
+        let item = |c: char| QueueItem { cid: format!("zCID{}{c}", "y".repeat(20)), source: "store".into(), ..Default::default() };
+        let w = |id: &str, u: Option<&User>, op: QueueOp| e.h.page_queue_write(id, u, op);
+        let v = w(&anon, None, QueueOp { action: "add".into(), items: vec![item('a'), item('b')], ..Default::default() }).unwrap().unwrap();
+        assert_eq!(ids(&v), ["q1", "q2"]);
+        let v = w(&anon, None, QueueOp { action: "move".into(), remove: "q2".into(), to: 0, ..Default::default() }).unwrap().unwrap();
+        assert_eq!(ids(&v), ["q2", "q1"]);
+        let v = w(&anon, None, QueueOp { action: "remove".into(), remove: "q1".into(), ..Default::default() }).unwrap().unwrap();
+        assert_eq!(ids(&v), ["q2"]);
+        // the per-add cap holds for the page as for MCP
+        assert_eq!(w(&anon, None, QueueOp { action: "add".into(), items: vec![item('c'); 3], ..Default::default() }).unwrap().unwrap_err().status, 413);
+        // the page has no list or skip here (GET …/queue and …/queue/next are those)
+        for a in ["list", "skip", "bogus"] {
+            assert_eq!(w(&anon, None, QueueOp { action: a.into(), ..Default::default() }).unwrap().unwrap_err().status, 400);
+        }
+        let v = w(&anon, None, QueueOp { action: "clear".into(), ..Default::default() }).unwrap().unwrap();
+        assert!(v.up_next.is_empty());
+        // alice's tab: alice's page may write it, mallory's may not; an unknown id is no session
+        let m = User::of("mallory", "");
+        assert!(w(&e.id, Some(&e.u), QueueOp { action: "clear".into(), ..Default::default() }).is_some());
+        assert!(w(&e.id, Some(&m), QueueOp { action: "clear".into(), ..Default::default() }).is_none());
+        assert!(w("nope-nope-nope", None, QueueOp { action: "clear".into(), ..Default::default() }).is_none());
+        // a signed-in page claims an anonymous tab by writing to it, as by reporting
+        w(&anon, Some(&e.u), QueueOp { action: "clear".into(), ..Default::default() }).unwrap().unwrap();
+        assert!(w(&anon, Some(&m), QueueOp { action: "clear".into(), ..Default::default() }).is_none());
     }
 
     #[test]

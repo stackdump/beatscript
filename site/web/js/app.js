@@ -1126,7 +1126,7 @@ export class App {
     if (this._ended) this.songEnded();
   }
 
-  /** The queue, read-only: what is up next. There is no control here that adds to it (only MCP does). */
+  /** The queue, read-only here: what is up next (MCP writes it; the radio player at /radio edits its own). */
   renderUpNext() {
     if (this.record) return;
     let el = this.el.upnext;
@@ -1145,7 +1145,10 @@ export class App {
     const names = items.slice(0, 5).map((it) => h('li', {}, trunc(it.title || shortCid(String(it.cid || '')), 60)));
     const more = items.length > 5 ? [h('li', { class: 'more' }, `+${items.length - 5} more`)] : [];
     const paused = this.upNext.pausedReason ? [h('span', { class: 'upnext-paused' }, 'paused: still listening? press play')] : [];
-    el.replaceChildren(h('span', { class: 'upnext-lbl' }, `Up next (${items.length})`), h('ol', {}, ...names, ...more), ...paused);
+    // the player: the same items (stored ones, by CID) queued on the radio page, as a playlist with its render statuses
+    const cids = items.map((it) => String(it.cid || '')).filter((c) => /^z[1-9A-HJ-NP-Za-km-z]{20,120}$/.test(c)).slice(0, 20);
+    const player = cids.length ? [h('a', { class: 'upnext-player', href: `/radio?queue=${cids.join(',')}`, title: 'Open these in the radio player: a playlist with each one\'s render status' }, 'open in the player')] : [];
+    el.replaceChildren(h('span', { class: 'upnext-lbl' }, `Up next (${items.length})`), h('ol', {}, ...names, ...more), ...paused, ...player);
   }
 
   /** The page is visible again: the sound is audible again and the paint catches up at once, not at the next frame. */

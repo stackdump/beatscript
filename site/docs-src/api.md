@@ -210,10 +210,14 @@ A session belongs to the user that created it (cookie or token) or is anonymous.
 session owned by the caller. An anonymous tab is reached only by its explicit id, which the page shows in its **MCP** panel (top bar), and the caller
 must still hold a token. This is how `eval`, `load`, `stop` and `get` work.
 
-**Up next.** A session can hold a queue of programs that MCP's `queue` tool writes (the page only shows it). When the playing program ends, or a
-looping one has played its length (an item's `bars` or `minutes`, else one pass of its arrangement), the page asks
-`POST /api/session/<id>/queue/next` `{"reason": "ended|length|skip|resume", "presence": {"visible", "focused", "audio", "idle_ms"}}` and plays the
-`item` it is given from bar 1; `GET /api/session/<id>/queue` reads the queue. The server advances it only while a listener is plausibly present:
+**Up next.** A session can hold a queue of programs that MCP's `queue` tool writes, and the radio page's playlist too
+(`POST /api/session/<id>/queue` `{"action": "add|remove|move|clear", "items": [{"cid"} | {"example"}], "item", "to"}`: an added item is a
+stored program's CID or an example's; `item` is an id from the queue or a CID; `to` is the index a `move` puts it at; about 60 a minute per
+address; the editor only shows it). When the playing program ends, or a looping one has played its length (an item's `bars` or `minutes`,
+else one pass of its arrangement), the page asks
+`POST /api/session/<id>/queue/next` `{"reason": "ended|length|skip|resume|pick", "presence": {"visible", "focused", "audio", "idle_ms"}, "item"}` and plays the
+`item` it is given from bar 1 (with `item`, that one rather than the first: a row the person chose, `reason` `pick`, or an MCP skip to an
+item); `GET /api/session/<id>/queue` reads the queue. The server advances it only while a listener is plausibly present:
 it pauses at the boundary (`paused_reason`) when the audio is suspended, when the tab has been hidden with no key, pointer, touch or media key for
 30 minutes, or after 8 tracks in a row with no interaction, and the page shows "Still listening? Press play to continue". Only a person on the page
 lifts a pause. The queue never composes or renders anything, holds at most 50 items, and goes with its session.
@@ -256,7 +260,7 @@ name"), so use a voice that starts with a letter (`inst=sub-bass` for a deep bas
 | `stop` | yes | `session` | stop the tab |
 | `devices` | yes | | your paired phones (pass one's id as `device` to `eval`, `load`, `get`, `stop`, `queue`) |
 | `push_private` | yes | `device`, `text` or `sealed`, `load`, `play` | send a private program (a cover, local samples, `use restricted`) to one of your paired phones, end-to-end encrypted and never stored: see [What we store](#what-we-store) |
-| `queue` | yes | `action` (list, add, remove, clear, skip), `items`, `item`, `session` | an up-next list on a tab of programs that already exist (`{cid}`, `{example}`, `{url}`, with `bars` or `minutes`); never composes; advances only while a listener is present, else `paused_reason` |
+| `queue` | yes | `action` (list, add, remove, move, clear, skip), `items`, `item`, `to`, `session` | an up-next list on a tab of programs that already exist (`{cid}`, `{example}`, `{url}`, with `bars` or `minutes`); never composes; advances only while a listener is present, else `paused_reason` |
 
 What `eval`, `load`, `queue`, `share` and `push_private` send on is formatted on the way in, as `fmt` prints it (header lines and comments kept, the CID the same). `eval`, `load`, `stop` and `get` need a browser tab open at https://beatscript.app (signed in as the token's account), or the session id from
 the page's MCP panel; with no tab connected they answer `no_session` and say so. Tool failures are MCP tool results with `isError: true`

@@ -65,7 +65,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test site/test/unit.mjs site/test/generate-unit.mjs
+      - run: node --test site/test/unit.mjs site/test/generate-unit.mjs site/test/player-unit.mjs
       # the embed config, the studio's in-page tool surface (on the JS mock: CI has no wasm) and the embed clients
       - run: node --test site/test/embed-config.test.mjs site/test/studio-tools.test.mjs
       - run: node editors/vscode/test/preview.test.js

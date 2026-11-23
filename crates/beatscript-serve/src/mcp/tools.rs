@@ -653,9 +653,10 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 fill(text::QUEUE_DESC, &[p, &qa.to_string(), &qi.to_string(), &qid.to_string(), &qauto.to_string(), &qw.to_string()]),
                 [false, true, false, false],
                 vec![
-                    ("action", sprop("list, add, remove, clear or skip.", &[("enum", json!(["list", "add", "remove", "clear", "skip"]))])),
+                    ("action", sprop("list, add, remove, move, clear or skip.", &[("enum", json!(["list", "add", "remove", "move", "clear", "skip"]))])),
                     ("items", queue_items),
-                    ("item", sprop("remove: an item id from list (q1, q2, ...) or a CID (the first queued item with it).", &[("maxLength", json!(100))])),
+                    ("item", sprop("remove, move and skip: an item id from list (q1, q2, ...) or a CID (the first queued item with it). skip with an item plays that item now; without one, the next.", &[("maxLength", json!(100))])),
+                    ("to", json!({"type": "integer", "minimum": 0, "maximum": 1023, "description": "move: the index in up_next the item goes to (0 plays next; past the end is last)."})),
                     ("session", session),
                     ("device", device),
                 ],
@@ -1354,7 +1355,7 @@ impl Tools {
         if connected > 0 {
             out.insert("sessions_connected".into(), json!(connected));
         }
-        if let Ok((v, _)) = self.hub.queue(&uid, &st_id, QueueOp { action: "list".into(), items: Vec::new(), remove: String::new() }) {
+        if let Ok((v, _)) = self.hub.queue(&uid, &st_id, QueueOp { action: "list".into(), ..Default::default() }) {
             if let Some(u) = v["up_next"].as_array().filter(|u| !u.is_empty()) {
                 out.insert("up_next".into(), Value::Array(u.clone()));
             }
@@ -1821,27 +1822,37 @@ impl Tools {
     }
 
     fn queue_tool(&self, c: &Caller, a: Args) -> R {
-        a.only(&["action", "items", "item", "session", "device"])?;
+        a.only(&["action", "items", "item", "to", "session", "device"])?;
         let action = a.str("action", 10)?.unwrap_or_default();
-        if !matches!(action.as_str(), "list" | "add" | "remove" | "clear" | "skip") {
-            return Err(bad("argument \"action\" must be one of list, add, remove, clear, skip"));
+        if !matches!(action.as_str(), "list" | "add" | "remove" | "move" | "clear" | "skip") {
+            return Err(bad("argument \"action\" must be one of list, add, remove, move, clear, skip"));
         }
         if a.0.contains_key("items") && action != "add" {
             return Err(bad("items is for action add"));
         }
         let item = a.str("item", 100)?;
-        if item.is_some() && action != "remove" {
-            return Err(bad("item is for action remove"));
+        if item.is_some() && !matches!(action.as_str(), "remove" | "move" | "skip") {
+            return Err(bad("item is for actions remove, move and skip"));
         }
         let item = item.unwrap_or_default();
-        if action == "remove" && item.trim().is_empty() {
-            return Err(bad("remove needs item: an item id from list, or a CID"));
+        if matches!(action.as_str(), "remove" | "move") && item.trim().is_empty() {
+            return Err(bad(format!("{action} needs item: an item id from list, or a CID")));
+        }
+        let to = a.num("to", 0.0, 1023.0)?;
+        if to.is_some() && action != "move" {
+            return Err(bad("to is for action move"));
+        }
+        if to.is_some_and(|t| t != t.trunc()) {
+            return Err(bad("argument \"to\" must be a whole number"));
+        }
+        if action == "move" && to.is_none() {
+            return Err(bad("move needs to: the index in up_next the item goes to (0 plays next)"));
         }
         let session = self.target(c, &a)?;
         if action != "list" {
             self.limit_queue(c)?;
         }
-        let mut op = QueueOp { action: action.clone(), items: Vec::new(), remove: item };
+        let mut op = QueueOp { action: action.clone(), items: Vec::new(), remove: item, to: to.unwrap_or(0.0) as usize };
         let mut lexicon = beatscript_serve::diagnostics::Recorded::default();
         if action == "add" {
             op.items = self.queue_items(c, &a)?;
@@ -1861,6 +1872,7 @@ impl Tools {
                 }
             }
         }
+        let op_item = op.remove.trim().to_string();
         let (v, sent) = match self.hub.queue(c.uid.as_deref().unwrap_or(""), &session, op) {
             Err(e) if e.err.code == "no_session" => return Err(self.no_session(&session)),
             Err(e) => return Err(e),
@@ -1873,7 +1885,7 @@ impl Tools {
                 let paused = v["paused_reason"].as_str().unwrap_or("");
                 let listener = v["listener"].as_str().unwrap_or("");
                 let note = if sent {
-                    "The tab was asked to play the next item now. Call get to see it.".to_string()
+                    if op_item.is_empty() { "The tab was asked to play the next item now. Call get to see it.".to_string() } else { format!("The tab was asked to play {op_item} now. Call get to see it.") }
                 } else if v["up_next"].as_array().is_none_or(|u| u.is_empty()) {
                     "The queue is empty: nothing to skip to.".into()
                 } else if !paused.is_empty() {
