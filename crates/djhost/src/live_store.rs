@@ -237,10 +237,22 @@ impl LiveStore {
         self.directory.join(format!("{object}.beatscript"))
     }
 
+    /// The name every object had before the rename (`<object cid>.btw`): read, listed and removed as the object it is, never
+    /// written, so the programs saved before it are all still here (a phone's store, the desktop's) and a saved-again one is
+    /// `.beatscript`. (rename-to-beatscript: keep.)
+    fn legacy_path(&self, object: &str) -> PathBuf {
+        self.directory.join(format!("{object}.btw"))
+    }
+
     /// Where the programs a link carried are kept, text only: `.linked/<program cid>.beatscript`. A dot-directory is no saved
     /// program, so none of them is listed, renamed or credited; they are only found again by their whole CID, by an `import`.
     fn linked_path(&self, cid: &str) -> PathBuf {
         self.directory.join(".linked").join(format!("{cid}.beatscript"))
+    }
+
+    /// A program a link carried, kept before the rename (`.linked/<cid>.btw`): read, never written.
+    fn linked_legacy_path(&self, cid: &str) -> PathBuf {
+        self.directory.join(".linked").join(format!("{cid}.btw"))
     }
 
     /// Keep the programs a link carried (CID to canonical text, `djlive::share::Link::tracks`), so that a program that imports
@@ -255,7 +267,7 @@ impl LiveStore {
                 continue;
             }
             let path = self.linked_path(cid);
-            if path.exists() || self.linked_count() >= MAX_LINKED {
+            if path.exists() || self.linked_legacy_path(cid).exists() || self.linked_count() >= MAX_LINKED {
                 continue;
             }
             if let Some(dir) = path.parent() {
@@ -277,7 +289,7 @@ impl LiveStore {
         if cid.is_empty() || !cid.chars().all(|c| c.is_ascii_alphanumeric()) {
             return None;
         }
-        let text = std::fs::read_to_string(self.linked_path(cid)).ok()?;
+        let text = std::fs::read_to_string(self.linked_path(cid)).or_else(|_| std::fs::read_to_string(self.linked_legacy_path(cid))).ok()?;
         (djlive::program_cid(&text) == cid).then_some(text)
     }
 
@@ -302,6 +314,7 @@ impl LiveStore {
     /// An object's file and its JSON-LD go (not a legacy `.json`: the callers know about those).
     fn remove_object(&self, object: &str) {
         let _ = std::fs::remove_file(self.path(object));
+        let _ = std::fs::remove_file(self.legacy_path(object));
         let _ = std::fs::remove_file(self.sidecar(object));
     }
 
@@ -436,7 +449,7 @@ impl LiveStore {
     }
 
     fn read_object(&self, object: &str) -> Option<Object> {
-        if let Ok(file) = std::fs::read_to_string(self.path(object)) {
+        if let Ok(file) = std::fs::read_to_string(self.path(object)).or_else(|_| std::fs::read_to_string(self.legacy_path(object))) {
             // what is kept is canonical text; the file's name is its content's CID, or it is not ours
             // (an edit shows). Not re-checked here: a program that imports would read the store
             // it is being read from.
@@ -461,7 +474,7 @@ impl LiveStore {
             .filter_map(|e| e.ok())
             .filter_map(|e| {
                 let n = e.file_name().to_string_lossy().to_string();
-                n.strip_suffix(".beatscript").or_else(|| n.strip_suffix(".json")).map(str::to_string)
+                n.strip_suffix(".beatscript").or_else(|| n.strip_suffix(".btw")).or_else(|| n.strip_suffix(".json")).map(str::to_string)
             })
             .filter(|n| !n.starts_with('.') && !n.ends_with(".perf"))
             .filter_map(|id| {
@@ -523,9 +536,11 @@ impl LiveStore {
         let e = self.resolve(query)?;
         // (a snippet saved before there were rights is a `<cid>.json` and has no `.beatscript`: it is gone when that file is, not an error
         // because the other is missing: R-18)
+        // (and an object saved before the rename is a `<object>.btw`: whichever of the names it has goes)
         let legacy = self.directory.join(format!("{}.json", e.object));
-        let had_legacy = legacy.exists();
+        let had_legacy = legacy.exists() || self.legacy_path(&e.object).exists();
         let _ = std::fs::remove_file(&legacy);
+        let _ = std::fs::remove_file(self.legacy_path(&e.object));
         let _ = std::fs::remove_file(self.sidecar(&e.object));
         std::fs::remove_file(self.path(&e.object)).or_else(|err| if had_legacy && err.kind() == std::io::ErrorKind::NotFound { Ok(()) } else { Err(err) }).map_err(|err| format!("btw: {err}"))?;
         Ok(e)
@@ -797,6 +812,32 @@ mod tests {
         let d = s.delete("acid").unwrap();
         assert_eq!(d.cid, c.cid);
         assert_eq!(s.list().len(), 1);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn programs_saved_before_the_rename_as_btw_files_are_still_listed_read_and_deleted() {
+        let (s, dir) = store();
+        let e = s.save("old one", "deck A: kick x ~ x ~\n").unwrap();
+        // as the store wrote it before the rename: `<object>.btw`
+        std::fs::rename(dir.join(format!("{}.beatscript", e.object)), dir.join(format!("{}.btw", e.object))).unwrap();
+        let listed = s.list();
+        assert_eq!(listed.len(), 1, "the .btw object is listed");
+        assert_eq!((listed[0].object.as_str(), listed[0].name.as_str()), (e.object.as_str(), "old one"));
+        assert!(s.load_object(&e.object).is_ok(), "and read");
+        // a new licence makes a new object, written .beatscript; the .btw one goes
+        let moved = s.set_rights(&e.object, Some(License::CcBy4), None).unwrap();
+        assert!(dir.join(format!("{}.beatscript", moved.object)).exists() && !dir.join(format!("{}.btw", e.object)).exists());
+        // and one deleted while it is still .btw is gone
+        let e2 = s.save("another", "deck A: kick x x ~ ~\n").unwrap();
+        std::fs::rename(dir.join(format!("{}.beatscript", e2.object)), dir.join(format!("{}.btw", e2.object))).unwrap();
+        s.delete(&e2.object).unwrap();
+        assert!(!dir.join(format!("{}.btw", e2.object)).exists());
+        // a program a link carried, kept before the rename
+        let text = "tempo 120\n";
+        std::fs::create_dir_all(dir.join(".linked")).unwrap();
+        std::fs::write(dir.join(".linked").join(format!("{}.btw", djlive::program_cid(text))), text).unwrap();
+        assert_eq!(s.linked(&djlive::program_cid(text)).as_deref(), Some(text));
         let _ = std::fs::remove_dir_all(dir);
     }
 
