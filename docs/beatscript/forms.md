@@ -5,8 +5,8 @@ pass after pass. Classical music named its shapes centuries ago, and they turn o
 list plus a plan of arrange mutations (`~` from here on, `@` for the next section only). This page names six of them, and a
 seventh made for crossing two seeds (`cross`), and gives each a template built from public-domain themes, so
 `arrange from template(quodlibet, @psalm42_deep_calleth)` is a whole track, and the written-out program (`expand`) is the form
-as plain BeatScript to edit. A form's roles can be filled with other sources: seeds, themes, notes, stored programs, other forms
-(see "Roles" below).
+as plain BeatScript to edit. A form's roles can be filled with other sources: seeds, themes, notes, stored programs and sets,
+other forms and their sections (see "Roles" and "Extensions" below).
 
 It is the found-material principle again ([found phrases](/docs/found-phrases)): borrow the structure, not the recording,
 from sources clean by construction. The themes are melodies composed and first published before 1929, written from the
@@ -59,7 +59,8 @@ arrange {
 } loop 3 then end
 ```
 
-Write it: `arrange from template(quodlibet, @psalm42_deep_calleth)`. Reference program: **Canon of Fate**.
+Write it: `arrange from template(quodlibet, @psalm42_deep_calleth)`. Reference program: **Canon of Fate**. Its roles are `a`,
+`b`, `ground` and `third` ("Extensions"): `template(quodlibet, @psalm42_deep_calleth, a=badinerie, third=mountain_king)`.
 
 ## Passacaglia
 
@@ -110,7 +111,9 @@ section round 8 bars {
 }
 ```
 
-Write it: `arrange from template(canon, @mgm_pease_porridge_hot)`.
+Write it: `arrange from template(canon, @mgm_pease_porridge_hot)`. How far behind and at what interval the chase's copy is are
+the canon's numbers, `delay=` (beats) and `interval=` (semitones): `template(canon, @mgm_pease_porridge_hot, delay=6,
+interval=7)` is a canon at the fifth, a bar and two beats behind ("Extensions").
 
 ## Rondo
 
@@ -203,7 +206,7 @@ Write it: `arrange from template(cross, @psalm42_deep_calleth, a=gen@1 dubstep s
 
 ## Roles: the form is the structure, sources fill it
 
-Every form but the quodlibet names its **roles**, and any of them can be bound to a source after the phrase, `role=source`:
+Every form names its **roles**, and any of them can be bound to a source after the phrase, `role=source`:
 
 ```text
 arrange from template(passacaglia, @eccl3_season, ground=gen@1 dubstep seed=54876 part=bass, upper=ode_to_joy)
@@ -214,21 +217,187 @@ A role nobody binds keeps the form's own theme, so a template with no roles is t
 
 | form | roles | what each role is | default | written as |
 |---|---|---|---|---|
+| quodlibet | `a`, `b`, `ground`, `third` | the first tune; the second, drawn toward the first; the bass; the third line both are pulled toward | Pachelbel's violin; Ode to Joy; Pachelbel's ground; the fate motif in B minor | `tune_a`, `tune_b`, `ground`, `third` |
 | passacaglia | `ground`, `upper` | the bass under every section, never changed; the line the variations change | Holst's Mars ostinato; the form's own line | `ostinato`, `upper` |
-| canon | `subject`, `ground` | the line chased by copies of itself, a bar and a beat behind; the bass | Pachelbel's violin; Pachelbel's ground | `subject`, `ground` |
+| canon | `subject`, `ground` (and the numbers `delay`, `interval`) | the line chased by copies of itself, a bar and a beat behind; the bass | Pachelbel's violin; Pachelbel's ground | `subject`, `ground` |
 | rondo | `refrain`, `episodes` | the tune that comes back; what plays between the returns, a line or sections | Joplin's Entertainer; Bach's Prelude in C | `tune`, `figure` or sections |
 | fugue | `subject`, `counter` | the theme entered, answered a fifth up, re-entered; the countersubject drawn toward it | Grieg's Mountain King; Bach's Badinerie | `dux`, `countersubject` |
 | theme and variations | `theme` | the one source every variation changes | Dvorak's New World Largo | `air` |
-| cross | `a`, `b` | the two sources, each its melody, bass and chords | Ode to Joy over Pachelbel's ground; the Badinerie over a B minor bass | `a_melody` `a_bass` `a_harmony`, `b_...` |
+| cross | `a`, `b` (and their parts alone, `a.bass` ...) | the two sources, each its melody, bass and chords | Ode to Joy over Pachelbel's ground; the Badinerie over a B minor bass | `a_melody` `a_bass` `a_harmony`, `b_...` |
 
 The sources: a **seed** (`gen@1 dubstep seed=54876`, with `section=` and `part=` or without: the form takes the role's part from
 the first section that plays it, the drop first, and a whole seed in a role of sections is its sections); a **theme** of the
 library by id (`ode_to_joy`, moved into the key the role plays in); **notes**, a bar each (`[d2 ~ a1 ~]`, `<[d2 ~] [g1 ~]>`); a
-**stored program**'s part (`<cid>.drop.bass`), section (`<cid>.drop`) or whole (`<cid>`, its sections in its order); and
-**another form** (`template(passacaglia, ground=...)`, no phrase), written inside this one under the role's prefix (`ep_ground`),
-its plan spread over the role's places. A role is written as a let a bar the sections and the plan read by name, so the plan's
-`~ subject_* rot 2` moves whatever fills it; a seed stays a pinned `gen@1` call in the written-out text. Forms nest three deep,
-a line is at most 16 bars and a role of sections at most 128 a pass. The whole design is the long note `docs/beatscript/ext-roles.md`.
+**stored program**'s part (`<cid>.drop.bass`), section (`<cid>.drop`) or whole (`<cid>`, its sections in its order); a **stored
+set** (`<cid>` of a `set { play ... }`: its tracks in order) or one of its tracks (`<cid>.track2`); **another form**
+(`template(passacaglia, ground=...)`, no phrase), written inside this one under the role's prefix (`ep_ground`), its plan spread
+over the role's places; and **one section of another form** (`template(cross).both`, `.both.arp`). A role is written as a let
+a bar the sections and the plan read by name, so the plan's `~ subject_* rot 2` moves whatever fills it; a seed stays a pinned
+`gen@1` call in the written-out text. Forms nest three deep, a line is at most 16 bars and a role of sections at most 128 a pass.
+The whole design is the long note `docs/beatscript/ext-roles.md`.
+
+## Extensions: sets, sections, parts, numbers
+
+Five ways to go further with a form's roles, each with a default that keeps every reference that does not say it written out
+as it was (`roles.rs` `bound_forms_are_pinned`, `templates_v1_are_pinned`, the examples' pins). Code: `crates/djlive/src/roles.rs`;
+tests: `crates/djlive/tests/form_extensions.rs` (no generator) and `crates/beatscript-api/tests/forms_roles.rs` (sets, stored programs,
+seeds). Example: **Canon of the crossing** (`canon-of-the-crossing`).
+
+### Grammar
+
+```ebnf
+binding     = NAME [ "." role ] "=" ( source | [ "-" ] INT ) ;
+source      = gen | NAME | notes | form | stored | track ;
+form        = "template" "(" NAME { "," binding } ")" [ "." NAME [ "." role ] ] ;
+track       = CID "." NAME [ "." NAME ] [ "." role ] ;
+```
+
+The canonical spelling puts each role's parts right after the role (in the order melody, bass, harmony) and a form's numbers
+after its roles: `template(canon, @x, subject=..., delay=6, interval=7)`, `template(cross, @x, a=..., a.bass=..., b=...)`.
+
+### A stored set in a role
+
+A set (`set { play ... }`, docs/BEATSCRIPT.md "Sets") is a program by CID like any other, so a role that takes sections takes one: the
+set's **tracks, in order, each its sections in the order it plays them**, one track a place. The rondo's two episodes a pass
+are the set's first track and its second:
+
+```text
+arrange from template(rondo, @shanty_drunken_sailor, episodes=<set cid>)
+```
+
+is written out as `section ep_t1_verse from <track 1>.verse`, `section ep_t1_hook from <track 1>.hook`, `section ep_t2_intro
+from <track 2>.intro` ..., each under its doc comment, the arrangement's `episode` places taking `ep_t1_verse ep_t1_hook
+ep_t1_verse` and then `ep_t2_intro ep_t2_lift`. With more tracks than places they are shared out in order; with fewer they come
+round. **`.trackN`** names one track, and is that track's program from then on: `<cid>.track2` (its sections), `<cid>.track2.lift`
+(a section), `<cid>.track2.lift.melody` (a part, a line). A track that is itself a set is its tracks in turn.
+
+- **Lowers to** the tracks' sections borrowed by their own CIDs (stored.rs writes them out); the set's text goes with the program
+  for a link to carry (`plays`), since the written-out text names only its tracks.
+- **Refuses**, at the reference: a set where a line goes (`refrain=<set>`: "one part of one of its tracks",
+  `refrain=<set>.track1.SECTION.melody`); a set's section (`<set>.verse`: "it has tracks, not sections", `<set>.track1.verse`);
+  a track it does not have ("the set has 2 tracks: `.track3` is none of them", `track1 to track2`); `.trackN` after a program
+  that is no set; a track with no sections; more than 128 bars a pass (the cap every role of sections has: bind one track).
+
+### A section where a line goes
+
+A section is a source where a line is expected: the role takes **its own part of it** (a subject's is the melody, a ground's the
+bass, the episodes' line the arp), or the part it names. This was already so for a seed (`gen@1 dubstep seed=54876
+section=drop` fills in the part); now it is so for a stored program's section (`subject=<cid>.both` is `<cid>.both.melody`) and
+for **one section of another form**, written after its `)`:
+
+```text
+arrange from template(canon, @mgm_pease_porridge_hot, subject=template(cross).both.arp, delay=6, interval=7)
+```
+
+is a canon whose subject is the cross's overlap: the arp of its `both` section, which is Ode to Joy as the cross's plan has
+moved it by then (morphed a quarter of the way toward the Badinerie; the plan's one-shot `xfer` falls on the second `both`),
+chased by copies of itself.
+
+- **Lowers to** notes: the inner form is written out on its own and compiled, and the part is written as the notes it plays the
+  first time the section plays, a let a bar (`let subject_1 = ...`), moved from the inner form's key into the role's (the rule a
+  theme is moved by: to the tonic, or to the relative key when the modes differ). The outer plan's mutations then read it by
+  name, and the canon's copies are made of its bars. In a seed role (`a=template(canon).round`, `a=<cid>.verse`) a section gives
+  each of the role's parts. Where a role takes sections, `template(cross).both` is that section, its parts written out as a stored
+  program's section is, standing in for the role's section (`episode`) in its own key; `template(cross).both.arp` there is a line.
+- **Refuses**: a section the form does not have (with the nearest, and its sections; its sung section is the outer form's phrase,
+  not one of its sections here); a part the section does not play ("the both of template(cross) plays no snare; it plays ...");
+  a part on both decks; a part with a cycle of its own; a line of more than 16 bars; a part before a section (`.arp` alone).
+
+### Parts of a role (`a.bass=`)
+
+A seed role (the cross's `a` and `b`: melody, bass, chords) has its parts bound one at a time. Alone, `a.bass=` replaces the
+default's bass and leaves its tune and chords; with the whole role bound, the part bound alone wins over what the whole gives it:
+
+```text
+arrange from template(cross, @psalm42_deep_calleth, a=gen@1 dubstep seed=54876, a.bass=<[d2 ~ ~ ~ a1 ~ ~ ~] [g1 ~ ~ ~ a1 ~ ~ ~]>)
+```
+
+is the seed's melody and chords over a hand-written bass; the plan's `~ a_bass_* morph b_bass_1 0.2` reads the bound bass.
+
+- **Lowers to** the part's let (`a_bass`) under `# a.bass, bound: ...`; the header says `a: gen@1 ..., a.bass=<...>`.
+- **Refuses**: a part the role does not have (`a.bas`: "did you mean `a.bass`?"); a part of a role that is one line
+  (`ground.bass=`: "`ground` is one line"); a part bound twice, by `a.bass=` twice or by `a=... part=bass` and `a.bass=`; a whole
+  role all of whose parts are bound alone ("`a=` gives nothing").
+
+### The canon's `delay=` and `interval=`
+
+The chase's copy (`follow`, played by the `chase`, `round` and `sung` sections as the arp) is a bar behind and an octave down. Two
+numbers move it:
+
+- **`delay=N`**, beats behind the leader, 1 to 4k - 1 for a subject of k bars: its bars come round N / 4 bars late (the last
+  first), and the beats left over move each bar along (`rotate`, wrapping in the bar, as the canon's own `close` copy is "a
+  beat behind"). `delay=6` on a two-bar subject is `<rotate(pachelbel_violin_2, 8) rotate(pachelbel_violin_1, 8)>`; on a one-bar
+  subject `delay=3` is `rotate(subject, 12)`.
+- **`interval=N`**, semitones from the leader, -24 to 24: `-12` is `octave(follow, -1)` as before, `-24` `octave(follow, -2)`, `0`
+  the copy itself, anything else `transpose(follow, N)` (`7` a fifth up: a canon at the fifth, the fugue's answer's way).
+
+The comments say the delay and the interval in words (`# chase: the copy a bar and 2 beats behind, a fifth up`), the header gives
+each number given, and `check` says each in a note. The round's third voice (`close`) stays a beat behind, in unison.
+**Refuses**: a delay of the subject's length or more ("1 to 7 beats for a subject of 2 bars: 8 beats is the subject itself, in
+unison"); an interval past two octaves; a number that is not whole (`delay=2.5`); a source for a number (`delay=ode_to_joy`) or a
+number for a role (`subject=3`); a number another form does not take (`delay` is no role of the rondo).
+
+### The quodlibet's roles
+
+The quodlibet names its roles as the other forms do: **`a`** (the first tune, Pachelbel's violin, written `tune_a`), **`b`** (the
+second, Ode to Joy, `tune_b`), **`ground`** (Pachelbel's ground) and **`third`** (the line the other two are pulled toward, the fate
+motif a semitone down in B minor). Its plan's cross-morphs read them (`~ tune_b_* morph tune_a_1 0.25`, `@ tune_a_* morph
+third_1 0.3`); binding `third` also takes away the fate motif's own lets, which only the default was made of.
+
+```text
+arrange from template(quodlibet, @psalm42_deep_calleth, a=badinerie, b=new_world_largo, third=mountain_king)
+```
+
+### Decisions
+
+- **A set is its tracks, not its mix.** A set's mixes overlap two tracks on two decks bar by bar; in a form the tracks are
+  separated by the form's own sections (the refrains), so there is nothing to overlap. The mixes and the `until` cuts stay
+  behind, and the note says so (`its mixes and cuts stay behind`), as a borrowed section's control lines do.
+- **A playlist is not a source.** A playlist is an account's list, changed in place and named by an id; a role's source is pinned
+  by what it is. A set is the content-addressed program of programs, so a set by CID is what a role takes.
+- **`.trackN`, not `.N`.** `<cid>.2` would need the lexer to read a `.` before a digit, which it reads as no token today (a lone
+  `.`); `track2` is a word. After a CID that is no set, `.track2` is refused ("not a set") rather than read as a section called
+  `track2`: such a section is still borrowed with `section NAME from <cid>.track2`.
+- **A set is held to the same 128 bars a pass** as any role of sections, so a written-out form stays bounded; a set of longer
+  tracks binds one track at a time.
+- **A section where a line goes is its part as it first plays**, the same first stretch a stored program's section is
+  (`stored.rs`), so the cross's `both` is the overlap as heard (the plan's morphs before it in), and the section as a source is
+  notes, structure a person could type: the inner form's later mutations do not follow it, the outer plan's do.
+- **A form's section is moved by the theme rule**, and a form's section where sections go keeps its own key with a `key` line,
+  as an inner form's sections do.
+- **The form a section is taken from is written out on its own**, at the program's tempo (a seed bound in it is fitted to that
+  tempo, as everywhere) and in its own key, and compiled; its plan's dice are that program's (mutations seed from a program's
+  CID). So the same reference at the same tempo is the same notes every time, and the notes are the inner form's own, not the
+  ones it would play written into this program (whose CID is another).
+- **The part a section gives is the role's own** (the same part a whole seed gives it), so `subject=<cid>.both` and
+  `subject=gen@1 ... section=both` mean the same thing; another part is named, as a stored program's is.
+- **A part bound alone wins over the whole.** `a=seed, a.bass=notes` is the reason to have parts: the seed for its tune and
+  chords, your bass. Only two bindings of the very same part are an error.
+- **`delay` counts beats** (the canon's copies are "a bar and a beat behind": both in beats), and its beats wrap in the bar
+  rather than carrying across the bar line, because the copy stays made of the subject's bars: `~ subject_* rot 2` moves the
+  leader and the copy together, which a copy cut and pasted across bar lines would not.
+- **`interval` counts semitones**, as `transpose` and the fugue's answer (`transpose(mountain_king, 7)`) do; a diatonic interval
+  would keep a canon at the fifth in key, but no part of the language moves by degrees yet.
+- **The numbers move the chase's copy only.** The round's third voice is the stretto of the form (a beat behind, in unison); a
+  number for it would be a third parameter nobody asked for.
+- **A number given as its default is said**: `delay=4` writes the same copy as no delay, but the reference is other text and so
+  another CID, as `vel=` said at its default is.
+- **The quodlibet's lines are `tune_a` and `tune_b`**, not `a` and `b`: a let named `a` would read as a note.
+
+### Not done
+
+- `cids_of` (what a store credits like an `import`) does not see a CID inside a role's reference with three names after it
+  (`<cid>.track2.drop.bass`), nor a bare CID in a role; the written-out text's references are credited.
+- A whole stored program in a role whose arrangement mutates a section borrows `drop@2` by that name (a name `section ... from`
+  cannot read); a set's tracks borrow the section (`drop`) instead. The same fix in `borrowed` is a one-liner left for its own
+  change.
+- A set's tracks that are flat programs (no sections) are refused, not borrowed whole.
+
+### Proposals
+
+- A diatonic `interval=` (`interval=5th`, by degrees of the key) once the language moves notes by degrees.
+- A delay for the round's third voice (`stretto=`), if a canon of four voices is wanted.
+- `.N` for a set's track, if the lexer is taught a `.` before a digit after a CID.
 
 ## The theme library
 
@@ -267,6 +436,7 @@ its CID.
    (shape, plan, themes, reference) and `expanded`, the written-out text to edit.
 3. Or write the reference yourself, `arrange from template(<form>, @<phrasebook id>)`, and `expand` it.
 4. To make a form your own music, bind its roles: `ground=gen@1 dubstep seed=54876 part=bass`, `subject=ode_to_joy`, notes, a
-   stored program's part, another form. `check` says what each role got, in a note at it.
+   stored program's part, a stored set, another form or one of its sections (`template(cross).both.arp`), one part of a seed
+   role (`a.bass=[d2 ~ a1 ~]`), the canon's `delay=` and `interval=`. `check` says what each role got, in a note at it.
 5. For your own form, start from the plan: themes as lets a bar, `drm_*` for the drums that change, the vocal only moved or
    crossed, and `check` and `listen` until it says nothing you did not mean.
