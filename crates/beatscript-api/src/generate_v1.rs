@@ -248,9 +248,10 @@ impl Pick<'_> {
     }
 }
 
-/// A voice the program may name: a real voice (not just a family word) that starts with a letter.
+/// A voice the program may name: a real voice (not just a family word) that starts with a letter, and one this version had
+/// (not one of [`crate::generate::VOICES_AFTER_V2`]).
 fn voice_ok(name: &str) -> bool {
-    name.starts_with(|c: char| c.is_ascii_lowercase()) && web_env().catalog.voices.iter().any(|v| v == name)
+    name.starts_with(|c: char| c.is_ascii_lowercase()) && !crate::generate::VOICES_AFTER_V2.contains(&name) && web_env().catalog.voices.iter().any(|v| v == name)
 }
 
 fn kit_ok(name: &str) -> bool {

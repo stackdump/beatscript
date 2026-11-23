@@ -242,9 +242,14 @@ impl Pick<'_> {
     }
 }
 
-/// A voice the program may name: a real voice (not just a family word) that starts with a letter.
+/// Voices the engine gained after `seeded@1` and `seeded@2` were pinned (`tests/fixtures/gen-pins.txt`): the acid voice
+/// (docs/beatscript/ext-acid.md), a family word when they were made. Neither version picks one, so each still prints the program it
+/// always did for the same inputs; a later version may.
+pub const VOICES_AFTER_V2: [&str; 2] = ["acid", "acid-square"];
+
+/// A voice the program may name: a real voice (not just a family word) that starts with a letter, and one this version had.
 fn voice_ok(name: &str) -> bool {
-    name.starts_with(|c: char| c.is_ascii_lowercase()) && web_env().catalog.voices.iter().any(|v| v == name)
+    name.starts_with(|c: char| c.is_ascii_lowercase()) && !VOICES_AFTER_V2.contains(&name) && web_env().catalog.voices.iter().any(|v| v == name)
 }
 
 fn kit_ok(name: &str) -> bool {
