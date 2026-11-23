@@ -242,7 +242,7 @@ lfactor     = NUMBER | ldeck | "(" levelexpr ")" ;
 (* == Sets, samples, imports == *)
 set         = "set" "{" { NEWLINE } { ( set_play | set_mix | set_next ) NEWLINE { NEWLINE } } "}" ;   (* programs of programs: an item a line *)
 set_play    = "play" ( NAME | STRING | gen ) [ "until" until_when ] ;   (* a saved program, its CID in the canonical text, or a generator call [host] *)
-set_next    = "next" step [ "until" until_when ] ;            (* the track before it, a generator call, with its seed stepped *)
+set_next    = "next" step [ "until" until_when ] ;            (* the track before it, a generator call, with its seed stepped [host] *)
 until_when  = TIME | "bar" INT | NAME | "after" NAME ;        (* a time, a bar of the track, a section's start or end *)
 set_mix     = "mix" INT ( "bar" | "bars" ) "with" TRANSITION [ "," "tempo" NUMBER "->" NUMBER ] ;
 TIME        = DECIMAL UNIT { DECIMAL UNIT } ;                 (* units glued: 20m  90s  1h  3m30s *)

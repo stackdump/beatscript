@@ -1,6 +1,6 @@
 # Radio: stations
 
-Long note for docs/BTW.md "Radio: stations" (project-datum 6700, roadmap 6681-6684): stations v1, phase 1. Code:
+Long note for docs/BTW.md "Radio: stations": stations v1, phase 1. Code:
 `btwapi::station` (`station_json`, the one answer of the MCP `station` tool, `POST /api/station` and the page's wasm
 `btw_station`) and the `station` and `set_next` productions of `crates/djlive/grammar.ebnf`. Tests:
 `crates/btwapi/tests/station.rs`. Example: `examples/btw/techno-radio.btw`.
@@ -97,8 +97,8 @@ track's own fresh seed s_N.
 - **A chapter's first track binds the theme twice.** At N = c*R the fresh seed is the theme (s_N = t), so the rotation's first
   form, when it is not `seeded`, binds one seed to both roles.
 - **The theme and variations is the chapter's theme varied.** Its one role takes t, so its own seed s_N picks only its phrase.
-- **The phrase**: each form is sung in one section (docs/btw/forms.md), and a station's phrase is `@<id>`, line s_N mod 47 of a
-  pinned list of 47 ids of the public-domain phrasebook. Stations v1 pins the list, so a new line in the phrasebook never moves a
+- **The phrase**: each form is sung in one section (docs/btw/forms.md), and a station's phrase is `@<id>`, line s_N mod 46 of a
+  pinned list of 46 ids of the public-domain phrasebook. Stations v1 pins the list, so a new line in the phrasebook never moves a
   track. A `seeded` track has no phrase.
 
 **The track's text** is a `tempo` line, a `key` line and the `arrange from` line, under header lines that say where it came from:
@@ -112,7 +112,7 @@ arrange from template(fugue, @<phrase>, subject=gen@2 techno seed=<s_4>, counter
 ```
 
 - `#! station: <cid> track N` is on every track and `#! from: next(<cid of track N-1>)`, with the station's step, on every
-  track from 1 (provenance, roadmap 6684). Both are comments, not in the CID.
+  track from 1 (provenance). Both are comments, not in the CID.
 - **Its CID** is the CID of its canonical text: the references and all, never their expansion. Its **expanded_cid** is the CID
   of the program written out (every form and seed as plain BeatScript), which `check` gives.
 
@@ -126,7 +126,7 @@ key am
 arrange from template(cross, @<phrase>, a=gen@2 techno seed=<s_N>, b=gen@2 techno seed=<s_N+1>)
 ```
 
-- Its phrase is line (s_N + s_{N+1}) mod 47 of the station's list. In the sparse genres both bindings say `part=melody`.
+- Its phrase is line (s_N + s_{N+1}) mod 46 of the station's list (the sum taken whole: it does not wrap at 2^32). In the sparse genres both bindings say `part=melody`.
 - **A segue is 192 bars**, the length of a cross. That is a taste call of phase 1: a short segue form is phase 2.
 - Each segue is a program with its own CID, and a player plays track N, the segue from N to N+1, then track N+1.
 
@@ -258,41 +258,41 @@ before they turned to it.
 | N | chapter, theme t | form | the track's `arrange from` line |
 |---|---|---|---|
 | 0 | 0, 42 | `seeded` | `gen@2 techno seed=42` |
-| 1 | 0, 42 | `passacaglia` | `template(passacaglia, @<p_1>, ground=gen@2 techno seed=42, upper=gen@2 techno seed=<s_1>)` |
-| 2 | 0, 42 | `rondo` | `template(rondo, @<p_2>, refrain=gen@2 techno seed=42, episodes=gen@2 techno seed=<s_2> part=arp)` |
-| 3 | 0, 42 | `fugue` | `template(fugue, @<p_3>, subject=gen@2 techno seed=42, counter=gen@2 techno seed=<s_3>)` |
-| 4 | 1, s_4 | `seeded` | `gen@2 techno seed=<s_4>` |
-| 5 | 1, s_4 | `passacaglia` | `template(passacaglia, @<p_5>, ground=gen@2 techno seed=<s_4>, upper=gen@2 techno seed=<s_5>)` |
-| 6 | 1, s_4 | `rondo` | `template(rondo, @<p_6>, refrain=gen@2 techno seed=<s_4>, episodes=gen@2 techno seed=<s_6> part=arp)` |
-| 7 | 1, s_4 | `fugue` | `template(fugue, @<p_7>, subject=gen@2 techno seed=<s_4>, counter=gen@2 techno seed=<s_7>)` |
+| 1 | 0, 42 | `passacaglia` | `template(passacaglia, @byron_sheen_of_their_spears, ground=gen@2 techno seed=42, upper=gen@2 techno seed=878718783)` |
+| 2 | 0, 42 | `rondo` | `template(rondo, @hopkins_pied_beauty_swift_slow, refrain=gen@2 techno seed=42, episodes=gen@2 techno seed=424155996 part=arp)` |
+| 3 | 0, 42 | `fugue` | `template(fugue, @percy_patrick_spens_king, subject=gen@2 techno seed=42, counter=gen@2 techno seed=3893902092)` |
+| 4 | 1, 2771245628 | `seeded` | `gen@2 techno seed=2771245628` |
+| 5 | 1, 2771245628 | `passacaglia` | `template(passacaglia, @lear_derry_down_derry, ground=gen@2 techno seed=2771245628, upper=gen@2 techno seed=4075880107)` |
+| 6 | 1, 2771245628 | `rondo` | `template(rondo, @percy_patrick_spens_king, refrain=gen@2 techno seed=2771245628, episodes=gen@2 techno seed=2151947734 part=arp)` |
+| 7 | 1, 2771245628 | `fugue` | `template(fugue, @hopkins_pied_beauty_glory, subject=gen@2 techno seed=2771245628, counter=gen@2 techno seed=4043716043)` |
 
-Here s_1 = fold32(CID of `arrange from gen@2 techno seed=42`), each s_{N+1} the same hash of s_N's call, and p_N is line
-s_N mod 47 of the pinned list. Seed 42 is the ground, the refrain and the subject of the first chapter; s_4 is all three in the
-second. The station's answer gives every number (`"count": 8, "check": true`).
+Here 878718783 = fold32(CID of `arrange from gen@2 techno seed=42`), each next seed the same hash of the call before, and each
+phrase line s_N mod 46 of the pinned list. Seed 42 is the ground, the refrain and the subject of the first chapter; 2771245628 is
+all three in the second. The station's answer gives every number (`"count": 8, "check": true`).
 
 Track 0 and track 1 in full:
 
 ```text
-#! station: <the CID of techno radio> track 0
+#! station: z4EBG9j79FsQaBchMGcKHL55KLeH6FjsjLQ7V1AE9oj2PencNUE track 0
 tempo 128
 key am
 arrange from gen@2 techno seed=42
 ```
 
 ```text
-#! station: <the CID of techno radio> track 1
-#! from: next(<the CID of track 0>) seed=~
+#! station: z4EBG9j79FsQaBchMGcKHL55KLeH6FjsjLQ7V1AE9oj2PencNUE track 1
+#! from: next(z4EBG9j8WpGPQpiVt6DgPnDa5Luuo9hDJCXk9akNi5dsyUFcRie) seed=~
 tempo 128
 key am
-arrange from template(passacaglia, @<p_1>, ground=gen@2 techno seed=42, upper=gen@2 techno seed=<s_1>)
+arrange from template(passacaglia, @byron_sheen_of_their_spears, ground=gen@2 techno seed=42, upper=gen@2 techno seed=878718783)
 ```
 
-and the segue between them, 192 bars, its phrase line (42 + s_1) mod 47:
+and the segue between them, 192 bars, its phrase line (42 + 878718783) mod 46 (CID z4EBG9j1xkcjngCue9QURULs1W3tpbaxrd3CtFWsZdffBbYkxJf):
 
 ```text
 tempo 128
 key am
-arrange from template(cross, @<phrase>, a=gen@2 techno seed=42, b=gen@2 techno seed=<s_1>)
+arrange from template(cross, @hiawatha_should_you_ask, a=gen@2 techno seed=42, b=gen@2 techno seed=878718783)
 ```
 
 Its neighbours, one notch along each knob: `tempo 126` and `tempo 130` (the same seeds and forms, two BPM away), `key em`
@@ -316,7 +316,7 @@ and `key dm` (the same seeds and forms in the keys either side round the circle)
 
 - **Genre neighbourhoods from the ontology**: a notch of `genre`, the genres next to this one in the bitwrap ontology. In phase
   1 a genre is retuned only to a value said explicitly.
-- **Vibes** and **zoom levels**: named in the design (project-datum 6700), not specified in stations v1.
+- **Vibes** and **zoom levels**: named in the design, not specified in stations v1.
 - **Sessions as sets**: what a listener heard, written down as a set of the station's tracks and segues.
 - **A short segue form**: a segue is a whole cross today, 192 bars.
 - **A stored program as a start**: `from` takes a generator call only (a saved program has no seed to step, as with `next` in
