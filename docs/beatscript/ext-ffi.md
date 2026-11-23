@@ -114,12 +114,18 @@ MCP `artifact` with store) is stored as its canonical text, and what its text as
 "based_on": ["gen@2 techno seed=42 section=drop part=bass -> z4EBG9j..."]     the stored file's meta
 ```
 
-- **What counts**: a comment that reads back as `# from: <call> -> <cid>` (`refs::vendored_line`): the call, then ` -> ` and a CID.
-  Every such line of the text, in the order written, each once (`refs::from_lines`, read from the lexer's comments). Spacing around
-  the parts does not matter; the stored form is `<call> -> <cid>`.
-- **What does not**: a `# from:` line with no pin (`# from: gen@2 techno seed=42`, or prose: `# from: an idea of Ann's`) is a
-  comment like any other, and so is an expansion's own `# from seed(...)` or `# from template(...)` line (no colon). Nothing is
-  refused: a comment is never an error, and the program is stored as it would be without the line.
+- **What counts** (`refs::pinned`, one reader for all of it): a comment that names where notes came from and the CID that pins
+  them. That is eject's `# from: <call> -> <cid>` (the call, then ` -> ` and a CID), and the line expand writes over a section it
+  borrowed from a stored program, `# from <cid>.<section>[.<role>]` (no colon: the reference names its pin, kept as
+  `<cid>.<section> -> <cid>`). A call that names a stored program (`<cid>`, `<cid>.drop`) must be pinned by that program, so a
+  line names one program at most. Every such line of the text, in the order written, each once (`refs::from_lines`, read from
+  the lexer's comments). Spacing around the parts and the number of `#` do not matter; the stored form is `<call> -> <cid>`.
+- **What does not**: a `# from:` line with no pin (`# from: gen@2 techno seed=42`, or prose: `# from: an idea of Ann's`), a
+  borrow pinned by another program (`# from: <cid>.drop -> <another cid>`), and an expansion's own `# from seed(...)` or
+  `# from template(...)` line, which does not write its pin. Those are comments like any other. So expand of a whole program
+  (MCP `expand`, `beatscript expand`) counts only for the sections it borrowed from stored programs: its seeds, templates, `gen` calls
+  and borrowed parts are written out with no pinned line, and only eject says where those came from. Nothing is refused: a
+  comment is never an error, and the program is stored as it would be without the line.
 - **Where it is decided**: the storage gate. `gate::admit` reads the text as sent, so what it admits carries the lines
   (`Admitted::based_on`), and `gate::write_program`, the only write of a program, puts them in `meta.based_on` (and drops a
   caller's own: the text is their only source). Every write path keeps them the same way because none can write without the gate.
@@ -127,18 +133,25 @@ MCP `artifact` with store) is stored as its canonical text, and what its text as
   download (`/api/programs/<cid>.beatscript`) writes the lines back under its `#!` header, so a save of the file keeps them again; the
   program's `<beatscript-view>` JSON-LD (its page, the editor's `/?cid=`, the open-data dumps) lists each in `isBasedOn` as
   `vendored`, exactly as the text's own lines would (`progld::Facts::based_on`); and lineage counts the program in `vendoredFrom`
-  of the call and of the CID each line names. The three agree because they share one reader: `refs::based_on`.
-- **The page** sends the editor's text as written when it stores a program (the short link, streaming, export), so its `# from:`
-  lines reach the server (and, through the short link's `PUT /api/shares`, its doc comments); a text over the size limit (16384
-  bytes) goes as its canonical text, which has the same CID, without them.
+  of the call and of the pin each line names. The three agree because they share one reader (`refs::pinned` through
+  `refs::based_on`). An example is read the same way: its file is its text as written, so its own lines are its `based_on`
+  wherever its meta is made (`site::Examples::meta`, the card's), and lineage counts them.
+- **The page** sends the canonical text with the text's provenance lines after it (`site/web/js/provenance-model.js`, the same
+  rule on the comments `fmt` answers) when it stores a program (the short link, streaming, export). That is the same CID, and no
+  other comment leaves the device: not the doc comments, not the `#!` lines. The share dialog and the streaming notice say so.
 
 **Decided: the pin is kept as written.** The save does not resolve the call again to check the CID: a `gen` call's pin depends on
 the program it stood in (it is fitted to that program's key and tempo), which need not be this one, and a stored program's CID may
-name one this host does not keep. The line is a claim, like the credits; the CID must be well formed, and the call is a key lineage
-counts by, nothing more.
+name one this host does not keep. The line is a claim, like the credits: anyone can say they vendored a program, and it counts in
+that program's `vendoredFrom`. The CID must be well formed, and a call that names a stored program must name the pin, so a line
+adds one to one program at most (the call of a `gen`, `seed(...)` or template line is a key lineage counts by, not a program).
 
 **Decided: the first save's meta stays.** The store is append-only (first write wins), and the comments are not in the CID: the
 same notes saved again, with other lines or none, keep the lines of the first save, as the rights do.
+
+**Decided: the page sends only the provenance lines.** The server reads doc comments and `#! name:` from a text it is sent, so the
+page sends the canonical text and the provenance lines alone, never the text as written: whether to publish doc comments is not
+this change's to decide (it would need the share dialog to ask).
 
 **Decided: no backfill.** Before this, no write path kept the lines: the page sent the canonical text, and MCP `share` sent the
 formatted text but kept only the meta fields it knew. The comments were never stored or logged (the access log has no bodies), so
