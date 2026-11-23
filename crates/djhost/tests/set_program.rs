@@ -193,7 +193,7 @@ fn check_accepts_the_program_when_it_has_the_tracks_texts() {
     let comp = compiles(&sp.text, &s);
     // the same CID as the language gives it, of the same canonical text
     assert_eq!(comp.cid, sp.program_cid);
-    assert_eq!(comp.text, format!("set {{\n  play {a} until bar 24\n  mix 8 bars with crossfade\n  play {b} until bar 28\n  mix 4 bars with filter_exit, tempo 124 -> 128\n  play {c} until bar 32\n}}\n"));
+    assert_eq!(comp.text, format!("#! beatscript 2\nset {{\n  play {a} until bar 24\n  mix 8 bars with crossfade\n  play {b} until bar 28\n  mix 4 bars with filter_exit, tempo 124 -> 128\n  play {c} until bar 32\n}}\n"));
     // the set as played: 72 bars, each track where the recording had it
     let r = comp.set.as_ref().unwrap();
     assert_eq!(r.total_bars, 72);
@@ -210,7 +210,7 @@ fn a_generator_track_the_booth_loaded_is_played_as_its_seed() {
     let load = ArrangeEvent { at: beat(33), bpm: 124.0, op: ArrangeOp::Deck(DeckAction::Load { deck: "A".into(), source: DeckSource::Net(spec.clone()) }), via: "Inpulse browser".into(), text: String::new() };
     let rec = recording_with(&[(33, EntryKind::Track, "A", net.clone(), "techno:7")], vec![load]);
     let sp = set_program(&rec, &opts(&s)).unwrap();
-    let seeded = djlive::check("arrange from seed(techno, 7)\n").compiled.unwrap();
+    let seeded = djlive::check("#! beatscript 2\narrange from seed(techno, 7)\n").compiled.unwrap();
     assert_eq!(sp.tracks, vec![(seeded.cid.clone(), seeded.text.clone())]);
     let b = body(&sp.text);
     assert!(b.contains(&format!("  # 1:01 techno:7: the generator's notes, as arrange from seed(techno, 7)\n  play {} until bar 12\n", seeded.cid)), "{b}");
@@ -310,6 +310,8 @@ fn the_cli_writes_the_program_and_the_take_by_their_cids() {
     let track = out.join("tracks").join("seed-techno-7.beatscript");
     assert_eq!(answer.get("tracks").and_then(JsonValue::strings), Some(vec![track.display().to_string()]));
     let (obj, _) = Object::from_file(&std::fs::read_to_string(&track).unwrap()).unwrap();
-    assert_eq!(djlive::program_cid(&obj.text), djlive::check("arrange from seed(techno, 7)\n").compiled.unwrap().cid);
+    let file = std::fs::read_to_string(&track).unwrap();
+    assert!(file.starts_with("#! beatscript 2\n"), "{file}");
+    assert_eq!(djlive::check(&file).compiled.unwrap().cid, djlive::check("#! beatscript 2\narrange from seed(techno, 7)\n").compiled.unwrap().cid, "{}", obj.text);
     let _ = std::fs::remove_dir_all(&dir);
 }

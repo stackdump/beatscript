@@ -593,7 +593,7 @@ pub fn cli_with(args: &[String], programs: &dyn Snippets) -> Result<String, Stri
     let mut tracks = Vec::new();
     for (cid, text) in &sp.tracks {
         // named by the call it is (`seed(techno, 7)`)
-        let name = text.trim().strip_prefix("arrange from ").unwrap_or(cid).to_string();
+        let name = djlive::version::without_version_line(text).trim().strip_prefix("arrange from ").unwrap_or(cid).to_string();
         let path = out.join("tracks").join(format!("{}.beatscript", file_stem(&name)));
         write(&path, Object { name, text: text.clone(), rights: Rights::default(), links: Default::default() }.to_file().as_bytes())?;
         tracks.push(JsonValue::str(path.display().to_string()));
