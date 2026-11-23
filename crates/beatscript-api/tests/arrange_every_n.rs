@@ -90,3 +90,36 @@ fn a_line_that_never_fires_is_a_warning_in_the_report() {
     assert_eq!(fires.len(), 1);
     assert_eq!(ints(get(&fires[0], "passes")), [1]);
 }
+
+/// A switch of the control deck (`~ control off`, docs/beatscript/ext-control.md "Per pass: the switch"): each play the switches hold
+/// lines of its control deck back in says which calls, as `control_off`, and the play is the section's copy (`groove@2`); a play
+/// that fires them all has no `control_off`, so every other program's report is as it was. A counted switch is in `fires`.
+#[test]
+fn check_says_which_calls_a_switch_holds_back_in_each_play() {
+    let r = check(include_str!("../../../examples/beatscript/control-per-pass.beatscript"));
+    assert_eq!(get(&r, "ok").as_bool(), Some(true));
+    let arrange = get(&r, "arrange");
+    let plays = arrange.get("plays").and_then(|p| p.as_array()).expect("plays");
+    let off = |p: &JsonValue| p.get("control_off").map(|v| v.canonical_js());
+    let said: Vec<(String, Option<String>)> = plays.iter().map(|p| (get(p, "name").as_str().unwrap().to_string(), off(p))).collect();
+    // pass 1 fires every line; pass 2 holds all but the duck back after its first two sections; pass 3's first lift holds its
+    // freeze back (a one-shot); pass 4 is pass 2; the coda fires its crossfader
+    let s = |n: &str, o: Option<&str>| (n.to_string(), o.map(str::to_string));
+    let pass2 = [s("groove", None), s("lift", None), s("groove@2", Some(r#"["mix"]"#)), s("lift@2", Some(r#"["crossfader","freeze"]"#))];
+    let mut want = vec![s("groove", None), s("lift", None), s("groove", None), s("lift", None)];
+    want.extend(pass2.iter().cloned());
+    want.extend([s("groove", None), s("lift@3", Some(r#"["freeze"]"#)), s("groove", None), s("lift", None)]);
+    want.extend(pass2.iter().cloned());
+    want.push(s("outro", None));
+    assert_eq!(said, want);
+    // the counted switches, by their lines among the block's mutation lines
+    let fires = get(arrange, "fires").as_array().unwrap();
+    let line = |i: usize| (get(&fires[i], "mutation").as_f64().unwrap() as i64, get(&fires[i], "every").as_f64().unwrap() as i64, get(&fires[i], "once").as_bool().unwrap(), ints(get(&fires[i], "passes")));
+    assert_eq!(fires.len(), 3);
+    assert_eq!(line(0), (0, 3, true, vec![2]));
+    assert_eq!(line(1), (1, 2, false, vec![1, 3]));
+    assert_eq!(line(2), (2, 2, false, vec![1, 3]));
+    // a program with no switch: no play says anything of its control deck
+    let r = check(include_str!("../../../examples/beatscript/arrange-every-n.beatscript"));
+    assert!(get(&r, "arrange").get("plays").and_then(|p| p.as_array()).unwrap().iter().all(|p| p.get("control_off").is_none()));
+}

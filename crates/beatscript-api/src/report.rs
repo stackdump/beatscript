@@ -177,7 +177,7 @@ fn arrange_json(text: &str, c: &Compiled, env: &djlive::env::Env) -> Option<Json
         .iter()
         .map(|p| {
             let seg = segs.next();
-            obj([
+            let mut fields = vec![
                 ("section", JsonValue::str(p.section.clone())),
                 ("name", JsonValue::str(p.name.clone())),
                 ("pass", JsonValue::int(i64::from(p.pass))),
@@ -200,7 +200,13 @@ fn arrange_json(text: &str, c: &Compiled, env: &djlive::env::Env) -> Option<Json
                             .collect(),
                     ),
                 ),
-            ])
+            ];
+            // (a switch of the control deck held lines of the section back in this play: the calls whose lines do not fire; only
+            // then, so every other program's report is as it was)
+            if !p.control_off.is_empty() {
+                fields.push(("control_off", JsonValue::Array(p.control_off.iter().cloned().map(JsonValue::str).collect())));
+            }
+            JsonValue::Object(JsonObject::from_pairs(fields))
         })
         .collect();
     let patterns = JsonValue::Object(JsonObject::from_pairs(t.patterns.iter().map(|(name, gens)| {

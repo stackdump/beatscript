@@ -15,7 +15,8 @@
 //!   lets it through and its voice made nothing).
 //! - **detected**: the tempo (djrust's beat-grid analyzer on the master) and the key (djengine's
 //!   chroma key detection) next to the declared ones, with a verdict for each.
-//! - **sections**: each section's loudness and a per-bar loudness curve; **clipping** on the master.
+//! - **sections**: each section's loudness and a per-bar loudness curve (and `control_off` on a section an `arrange { }` switch
+//!   plays with lines of its control deck held back); **clipping** on the master.
 //! - **macros** (only when the program has a `macro` line): each call in the window, the bar the engine starts it on (`at_bar`,
 //!   counted as the time words count, read off the target deck's own clock), `held_bars` for a held one-shot, and whether it
 //!   `played`, with the engine's reason when it was `refused` (also a warning).
@@ -611,8 +612,29 @@ pub fn listen(text: &str, lo: &ListenOptions) -> Result<JsonValue, RenderError> 
     let t0 = Instant::now();
     let c = render::check_text(text)?;
     let mut v = listen_compiled(&c, lo, t0)?;
+    switched(text, &mut v);
     referenced(text, &c.cid, &mut v);
     Ok(v)
+}
+
+/// The sections an `arrange { }` switch plays with lines of their control deck held back (`~ control off`, `@ control freeze
+/// off`: docs/beatscript/ext-control.md) say which, as `control_off`: the calls (`move`, `freeze` ...) whose lines do not fire there, as
+/// check's `arrange.plays[].control_off` says it. A section whose control deck fires whole has none, so the answer for every
+/// other program is as it was.
+fn switched(text: &str, v: &mut JsonValue) {
+    let env = djhost::beatscript_env::BeatscriptEnv::new(Some(&beatscript_api::known::Known));
+    let Some(t) = djlive::mutate::generations(text, &env.env()) else { return };
+    let off: BTreeMap<&str, &Vec<String>> = t.plays.iter().filter(|p| !p.control_off.is_empty()).map(|p| (p.name.as_str(), &p.control_off)).collect();
+    if off.is_empty() {
+        return;
+    }
+    let JsonValue::Object(out) = v else { return };
+    let Some(JsonValue::Array(secs)) = out.get_mut("sections") else { return };
+    for s in secs.iter_mut() {
+        let JsonValue::Object(o) = s else { continue };
+        let Some(calls) = o.get("name").and_then(|n| n.as_str()).and_then(|n| off.get(n)).copied() else { continue };
+        o.set("control_off", JsonValue::Array(calls.iter().cloned().map(JsonValue::str).collect()));
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1256,6 +1278,27 @@ mod tests {
         let (dry, driven) = (clipped(&song("")), clipped(&song("  master: drive 1\n  deck A: drive 1\n")));
         assert!(dry > 100.0, "the loud mix is expected to clip as it is: {dry}");
         assert!(driven < dry / 4.0, "drive 1 should take the clipping away (the first hit, before its switch fades in, is clean of it): {dry} -> {driven}");
+    }
+
+    /// A switch of the control deck (`~ control off`, docs/beatscript/ext-control.md) changes the render: the section's `mix` that takes
+    /// deck B down fires in the first play and is held back in the second, so B is silent in one and heard in the other, and
+    /// listen names the held-back call on the section that plays without it.
+    #[test]
+    fn a_switch_of_the_control_deck_is_heard_and_said() {
+        let text = "tempo 120\nkey am\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  deck B: bass a1 ~ a1 ~ inst=sub-bass\n  control: mix { B level 0 }\n}\narrange {\n  drop\n  ~ control off\n  drop\n}\n";
+        let lo = ListenOptions { max_bars: 8, budget_seconds: 0.0, ..ListenOptions::default() };
+        let r = listen(text, &lo).unwrap_or_else(|e| panic!("{e:?}"));
+        let secs = r.get("sections").and_then(|s| s.as_array()).cloned().unwrap_or_default();
+        let name = |v: &JsonValue, k: &str| v.get(k).and_then(|n| n.as_str()).unwrap_or("").to_string();
+        assert_eq!(secs.iter().map(|s| name(s, "name")).collect::<Vec<_>>(), ["drop", "drop@2"], "{}", r.canonical_js());
+        assert!(secs[0].get("control_off").is_none(), "{}", r.canonical_js());
+        assert_eq!(secs[1].get("control_off").map(|v| v.canonical_js()).as_deref(), Some(r#"["mix"]"#));
+        let silent = r.get("silent").and_then(|s| s.as_array()).cloned().unwrap_or_default();
+        let b_in = |sec: &str| silent.iter().any(|s| name(s, "deck") == "B" && name(s, "section") == sec);
+        assert!(b_in("drop") && !b_in("drop@2"), "deck B is silent under the mix and heard without it: {}", r.canonical_js());
+        // the same text, the same answer
+        let again = listen(text, &lo).unwrap();
+        assert_eq!(again.get("sections").map(|v| v.canonical_js()), r.get("sections").map(|v| v.canonical_js()));
     }
 
     #[test]
