@@ -240,11 +240,15 @@ fn parse_depth(src: &str, env: &Env, depth: usize) -> Parsed {
     // and so is a template reference (`arrange from template(deep-house, @tempest_such_stuff)`, template.rs)
     let (toks, template_diags) = crate::template::collapse(toks);
     diags.extend(template_diags);
+    // a `use` line's source is one word too, its canonical spelling (`use theme ode_to_joy as tune`, uses.rs); the phrases the
+    // lines name are what `sing NAME on ...` sings
+    let (toks, use_diags, phrases) = crate::uses::collapse(toks);
+    diags.extend(use_diags);
     // the same for a stored program's: its CID and `.section.role`, one word (stored.rs)
     let toks = crate::stored::collapse(toks);
     let pre = prepass(crate::algebra::collapse_lets(toks), src, env, depth, &mut diags, &mut imports, &mut scalar_lets, &mut ratios);
     let mut p = Parser { toks: pre.toks, at: 0, src, diags, depth: 0, ratios };
-    let mut stmts = p.statements(false);
+    let mut stmts = crate::uses::with_phrases(&phrases, || p.statements(false));
     // pin each import to its CID: the canonical text says which snippet, not what it was called
     let mut it = imports.iter();
     for st in &mut stmts {
@@ -382,6 +386,10 @@ pub(crate) fn is_syntax_here(w: &str, toks: &[Token], i: usize, out: &[Token], i
     // a duration's unit: `4 bars`, `(n + 1) beats` (`at bar step` has a `bar` that no number comes before)
     let after_duration = ["bars", "bar", "beats", "beat"].iter().any(|u| prev_word(u)) && matches!(out.len().checked_sub(2).map(|k| &out[k].tok), Some(Tok::Num { .. } | Tok::RParen));
     if prev == Some(&Tok::Dot) || next == Some(&Tok::Dot) {
+        return true;
+    }
+    // the name a `use` line gives its source, and a phrase's name after `sing` (uses.rs): names, whatever a `let` says
+    if (prev_word("as") && line_starts_with(out, "use")) || (prev_word("sing") && matches!(next, Some(Tok::Word(o)) if o == "on")) {
         return true;
     }
     match w {
@@ -1277,11 +1285,18 @@ impl<'a> Parser<'a> {
             }
             "use" => {
                 self.bump();
-                let w = self.word("`restricted`")?;
-                if w.text != "restricted" {
-                    return Err(Diagnostic::error(w.span, format!("`use {}`: only `use restricted` exists", w.text)).help("use restricted"));
+                // `use restricted`, or `use SOURCE as NAME` (its source one word since uses::collapse, which said what was wrong with it)
+                let w = self.word("`restricted` or a source to name: use theme ode_to_joy as tune")?;
+                if w.text == "restricted" && matches!(self.peek(), Tok::Newline | Tok::Eof | Tok::RBrace) {
+                    StmtKind::UseRestricted
+                } else {
+                    if !self.word_is("as") {
+                        return Err(self.expected(&["`as NAME`"], &format!("`use {}` names its source `as` a name, found {}", w.text, self.found())).help(format!("use {} as NAME", w.text)));
+                    }
+                    self.bump();
+                    let name = self.word("a name for the source")?;
+                    StmtKind::Use(UseDecl { source: w, name })
                 }
-                StmtKind::UseRestricted
             }
             "wire" => return self.wire_statement(start),
             "assert" => return self.assert_statement(start),

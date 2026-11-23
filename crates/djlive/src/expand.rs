@@ -538,7 +538,7 @@ impl<'a> Lower<'a> {
         let mut globals = Vec::new();
         for st in &parsed.program.stmts {
             match &st.kind {
-                StmtKind::Section(_) | StmtKind::Arrange(_) | StmtKind::ArrangeExpr(_) | StmtKind::ArrangeNamed(_) | StmtKind::Start(_) | StmtKind::Launch(_) | StmtKind::LetSection(_) | StmtKind::Let(_) | StmtKind::Def(_) | StmtKind::Import(_) | StmtKind::Setting(_) | StmtKind::End(_) | StmtKind::Loop | StmtKind::Sample(_) | StmtKind::UseRestricted | StmtKind::Wire(_) | StmtKind::Assert(_) | StmtKind::Set(_) | StmtKind::Station(_) | StmtKind::Seed(_) => {}
+                StmtKind::Section(_) | StmtKind::Arrange(_) | StmtKind::ArrangeExpr(_) | StmtKind::ArrangeNamed(_) | StmtKind::Start(_) | StmtKind::Launch(_) | StmtKind::LetSection(_) | StmtKind::Let(_) | StmtKind::Def(_) | StmtKind::Import(_) | StmtKind::Setting(_) | StmtKind::End(_) | StmtKind::Loop | StmtKind::Sample(_) | StmtKind::UseRestricted | StmtKind::Use(_) | StmtKind::Wire(_) | StmtKind::Assert(_) | StmtKind::Set(_) | StmtKind::Station(_) | StmtKind::Seed(_) => {}
                 StmtKind::Evolve(b) => {
                     if self.arranged && !timeline.is_empty() && timeline[0].0 == "evolve" {
                         self.evolves.push((0, b.clone()));
@@ -779,6 +779,7 @@ impl<'a> Lower<'a> {
             StmtKind::End(_) | StmtKind::Loop => self.err(Diagnostic::error(st.span, "`end` and `loop` belong at the top of the program")),
             StmtKind::Wire(_) => self.err(Diagnostic::error(st.span, "a `wire` belongs at the top of the program, outside blocks")),
             StmtKind::Seed(_) => self.err(Diagnostic::error(st.span, "`section ... from seed(...)` and `arrange from seed(...)` belong at the top of the program")),
+            StmtKind::Use(_) => self.err(Diagnostic::error(st.span, "a `use` goes at the top of the program").help("move the `use ... as NAME` line out of the block, above where the name is used")),
             StmtKind::Assert(_) => {
                 let d = Diagnostic::error(st.span, "an `assert` belongs at the top of the program, outside blocks").help("say which section it is about with `in`: `assert level A < B in drop`");
                 // said once, not once for every copy of a repeat

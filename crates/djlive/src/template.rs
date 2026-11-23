@@ -226,6 +226,8 @@ pub fn find(name: &str) -> Option<&'static Template> {
 pub enum PhraseRef {
     Id(String),
     Text(String),
+    /// A name a `use phrase @id as NAME` line gave (uses.rs): the use stage writes the `@id` in its place before this one.
+    Name(String),
 }
 
 /// `template(name, phrase, role=source ...)`, as read.
@@ -252,6 +254,7 @@ impl TemplateRef {
         match &self.phrase {
             PhraseRef::Id(id) => format!("template({}, @{id}{roles})", self.name),
             PhraseRef::Text(t) => format!("template({}, {}{roles})", self.name, quote(t)),
+            PhraseRef::Name(n) => format!("template({}, {n}{roles})", self.name),
         }
     }
 }
@@ -300,7 +303,7 @@ pub(crate) fn runs(toks: &[Token]) -> Vec<Run> {
 const SHAPE: &str = "template(deep-house, @tempest_such_stuff) or template(deep-house, \"words in quotes\"); a form's roles after the phrase: template(passacaglia, @eccl3_season, ground=gen@1 dubstep seed=54876 part=bass)";
 
 /// Read one reference from `toks[i]` (the word `template`): where it ends, and the reference or what is wrong with it.
-fn read_ref(toks: &[Token], i: usize) -> (usize, Result<TemplateRef, Diagnostic>) {
+pub(crate) fn read_ref(toks: &[Token], i: usize) -> (usize, Result<TemplateRef, Diagnostic>) {
     let mut j = i + 2;
     let at = |j: usize| toks.get(j).map(|t| &t.tok);
     let here = |j: usize| toks.get(j).or(toks.last()).map_or(Span::new(0, 0), |t| t.span);
@@ -338,6 +341,8 @@ fn read_ref(toks: &[Token], i: usize) -> (usize, Result<TemplateRef, Diagnostic>
     let (phrase, phrase_span) = match at(j).cloned() {
         Some(Tok::Word(w)) if w.starts_with('@') && w.len() > 1 => (PhraseRef::Id(w[1..].to_string()), toks[j].span),
         Some(Tok::Str(s)) => (PhraseRef::Text(s), toks[j].span),
+        // a phrase a `use phrase` line named (a word that is no role's: no `=` after it)
+        Some(Tok::Word(w)) if crate::roles::is_name(&w) && at(j + 1) != Some(&Tok::Eq) => (PhraseRef::Name(w), toks[j].span),
         _ => {
             let d = fail(j + 1, "the phrase of a template is a phrasebook id (@tempest_such_stuff) or words in quotes (\"robots on the road\")".into());
             return (close(j), Err(d));
@@ -854,7 +859,7 @@ fn slots(t: &TemplateRef, src: &Source, line: &Line) -> Vec<(String, String)> {
     let p = &src.profile;
     let phrase = match &t.phrase {
         PhraseRef::Id(id) => format!("@{id}, \"{}\"{}", one_line(&src.words), src.cite.as_ref().map_or(String::new(), |c| format!(" ({c})"))),
-        PhraseRef::Text(_) => format!("\"{}\"", one_line(&src.words)),
+        PhraseRef::Text(_) | PhraseRef::Name(_) => format!("\"{}\"", one_line(&src.words)),
     };
     let stress = p.stress_text();
     let shown: String = if stress.chars().count() > 40 { format!("{}...", stress.chars().take(40).collect::<String>()) } else { stress };
@@ -1001,6 +1006,13 @@ pub fn expand_drawing(src: &str, env: &Env) -> Option<Result<(Expansion, Vec<(St
                     continue;
                 }
             },
+            PhraseRef::Name(n) => {
+                errors.push(
+                    Diagnostic::error(t.phrase_span, format!("no `use phrase` line names `{n}`: the phrase of a template is a phrasebook id or words in quotes"))
+                        .help(format!("template({}, @tempest_such_stuff), or name the phrase first: use phrase @tempest_such_stuff as {n}", t.name)),
+                );
+                continue;
+            }
             PhraseRef::Text(text) => match Profile::from_text(text, env.voices) {
                 Ok(profile) => Source { profile, words: text.clone(), cite: None },
                 Err(e) => {

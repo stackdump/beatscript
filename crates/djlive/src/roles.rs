@@ -205,12 +205,12 @@ pub(crate) struct Reader<'t> {
     gens: Vec<crate::gen::Run>,
 }
 
-fn is_name(w: &str) -> bool {
+pub(crate) fn is_name(w: &str) -> bool {
     w.chars().next().is_some_and(|c| c.is_ascii_lowercase()) && w.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
 }
 
 /// A `gen` call the parser already made one word of, read back; its places are the word's.
-fn word_call(w: &str, at: Span) -> Result<GenCall, Diagnostic> {
+pub(crate) fn word_call(w: &str, at: Span) -> Result<GenCall, Diagnostic> {
     if w == "gen@0 error" {
         // a call gen.rs could not read, and has said why: no second error for it
         return Ok(GenCall { version: 0, version_span: at, genre: "error".into(), genre_span: at, seed: "0".into(), bpm: None, key: None, length: None, section: None, section_span: at, part: None, part_span: at, span: at });
@@ -461,7 +461,7 @@ impl<'t> Reader<'t> {
     }
 
     /// `template(NAME, ROLE=SOURCE ...)` at `toks[i]` as a source: where it ends, and the form.
-    fn form(&self, i: usize, depth: usize) -> Result<(usize, FormRef), Diagnostic> {
+    pub(crate) fn form(&self, i: usize, depth: usize) -> Result<(usize, FormRef), Diagnostic> {
         if depth > MAX_READ_DEPTH {
             return Err(Diagnostic::error(self.span(i), format!("templates nest more than {MAX_READ_DEPTH} deep here")).help(format!("a form takes forms {MAX_NESTING} deep")));
         }
@@ -818,7 +818,7 @@ fn minor(k: Key) -> bool {
 
 /// The semitones that move a theme into `to`: to its tonic, or to its relative key when the theme's mode is the other one; the
 /// nearest way, -6 to 5.
-fn theme_shift(t: &djengine::themes::Theme, to: Key) -> i32 {
+pub(crate) fn theme_shift(t: &djengine::themes::Theme, to: Key) -> i32 {
     let from = Key::parse(&t.key).map_or(0, |k| i32::from(k.tonic));
     let target = i32::from(to.tonic)
         + match (t.mode.as_str(), minor(to)) {
@@ -851,7 +851,7 @@ fn key_shift(from: Key, to: Key) -> i32 {
 }
 
 /// A bar's notes moved `n` semitones (sharps, as the canonical text spells them); steps that are no note with an octave stay.
-fn transpose_bar(bar: &str, n: i32) -> String {
+pub(crate) fn transpose_bar(bar: &str, n: i32) -> String {
     if n == 0 {
         return bar.to_string();
     }
@@ -962,7 +962,7 @@ impl Generated {
 }
 
 /// The sections a compiled program plays, in its order, each with its length (an evolving section is all its stretches).
-fn sequence(c: &crate::compile::Compiled) -> Vec<(String, u32)> {
+pub(crate) fn sequence(c: &crate::compile::Compiled) -> Vec<(String, u32)> {
     let mut out = Vec::new();
     for (k, s) in c.segments.iter().enumerate() {
         if s.header.is_some() && !s.chain && !s.name.contains('+') {

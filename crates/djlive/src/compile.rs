@@ -911,7 +911,17 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
     // a `gen` call (gen.rs) is resolved to the program the generator makes for it; its part lines and sections are then that
     // program's, borrowed as a stored program's are, with it known for as long as this check runs (`with_generated`)
     let mut generated: Vec<(String, String)> = Vec::new();
-    let expanded = crate::template::expand_drawing(src, env)
+    // `use SOURCE as NAME` lines first (uses.rs): written out as the definitions their sources make, the programs they borrow
+    // from (a canned section's, a genre template's) known to the stages after them as a gen call's program is
+    let used: Option<Result<(crate::seed::Expansion, Vec<(String, String)>), Vec<Diagnostic>>> = match crate::uses::expand(src, env) {
+        Some(Ok((e, progs))) => {
+            generated = progs;
+            Some(Ok((e, Vec::new())))
+        }
+        Some(Err(e)) => Some(Err(e)),
+        None => None,
+    };
+    let expanded = if used.is_some() { used } else { crate::template::expand_drawing(src, env)
         .or_else(|| crate::seed::expand(src).map(|r| r.map(|e| (e, Vec::new()))))
         .or_else(|| {
             crate::gen::expand(src).map(|r| {
@@ -921,7 +931,7 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
                 })
             })
         })
-        .or_else(|| crate::stored::expand(src, env));
+        .or_else(|| crate::stored::expand(src, env)) };
     if let Some(exp) = expanded {
         let (exp, uses) = match exp {
             Ok(e) => e,

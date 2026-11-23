@@ -53,6 +53,7 @@ pub const CLASSES: &[(&str, &str)] = &[
     ("GEN", "the generator's call word, its version glued with `@` (`gen@2`, `gen@1`), or a bare `gen` (gen@2)"),
     ("MACRO", "the macro line's word, its version glued with `@` (`macro@1`), or a bare `macro` (macro@1)"),
     ("SEED", "a seed's head, touching its `(`: `seed` (seeds v1), or its version glued with `@` (`seed@2`, `seed@1`)"),
+    ("GENRE", "the genre templates' word, its version glued with `@` (`genre@1`), or a bare `genre` (genre@1)"),
     // the classes of a lyric's text, read over characters ([`recognize_text`]), not tokens
     ("TEXT", "in a lyric: one character that is not `/`, a space and a letter alike"),
     ("SPACE", "in a lyric: one space, tab or line break"),
@@ -69,7 +70,9 @@ fn class_ends(name: &str, toks: &[Token], src: &str, at: usize) -> Vec<usize> {
     };
     match name {
         "NEWLINE" => one(matches!(t.tok, Tok::Newline)),
-        "NAME" | "WORD" => one(word(&|_| true)),
+        // (a word that starts with `@` is a phrase's id, PHRASE, and no name: `sing NAME on` takes a name a `use phrase` line gave)
+        "NAME" => one(word(&|w| !w.starts_with('@'))),
+        "WORD" => one(word(&|_| true)),
         "INT" => one(matches!(t.tok, Tok::Num { int: true, .. })),
         "NUMBER" => one(matches!(t.tok, Tok::Num { .. })),
         "DECIMAL" => one(matches!(t.tok, Tok::Num { .. }) && t.span.text(src).bytes().all(|b| b.is_ascii_digit() || b == b'.')),
@@ -89,6 +92,7 @@ fn class_ends(name: &str, toks: &[Token], src: &str, at: usize) -> Vec<usize> {
         "GEN" => one(word(&|w: &str| w == "gen" || w.strip_prefix("gen@").is_some_and(|n| !n.is_empty() && n.bytes().all(|c| c.is_ascii_digit())))),
         "MACRO" => one(word(&crate::macros::is_head)),
         "SEED" => one(word(&|w: &str| crate::seed::head_version(w).is_some())),
+        "GENRE" => one(word(&|w: &str| w == "genre" || w.strip_prefix("genre@").is_some_and(|n| !n.is_empty() && n.bytes().all(|c| c.is_ascii_digit())))),
         "GHOST" => one(matches!(t.tok, Tok::Ghost)),
         "RATCHET" => match toks.get(at + 1) {
             Some(n) if matches!(t.tok, Tok::Colon) && matches!(n.tok, Tok::Num { int: true, .. }) && n.span.start == t.span.end && at > 0 && toks[at - 1].span.end == t.span.start => vec![at + 2],

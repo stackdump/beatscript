@@ -123,6 +123,8 @@ const SEMANTIC: &[&str] = &[
     "`bpm=` is a tempo from 40 to 300",
     // TIME's UNIT is the lexer's class (ms, s, m, h ...); an `until` takes h, m and s (a set's `next` puts one in reach of the walk)
     "`until` takes a time",
+    // the same kind as a `let`'s name: a name in `sing NAME on` is a phrase only where a `use phrase @id as NAME` line gave it (uses.rs)
+    "no `use phrase` line names",
 ];
 
 #[test]

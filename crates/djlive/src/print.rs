@@ -381,6 +381,7 @@ pub fn stmt(s: &Stmt) -> String {
         StmtKind::LetSection(l) => format!("let {} = {}", l.name.text, l.expr.canonical()),
         StmtKind::Import(i) => format!("import {}", import_word(&i.what.text)),
         StmtKind::UseRestricted => "use restricted".into(),
+        StmtKind::Use(u) => format!("use {} as {}", u.source.text, u.name.text),
         StmtKind::Wire(w) => w.text(),
         StmtKind::Assert(a) => a.text(),
         StmtKind::Seed(s) => match &s.section {

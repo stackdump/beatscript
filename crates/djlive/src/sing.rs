@@ -64,6 +64,8 @@ pub struct SingCall {
     /// `@hands_up`: a phrase of the phrasebook (`djengine::vocal::phoneme::phrase_lyric`: the stock phrases, then the
     /// public-domain lines), by its id.
     pub phrase: Option<String>,
+    /// `sing tyger on melody`: the name a `use phrase @id as tyger` line gave the phrase (uses.rs), as written.
+    pub named: Option<String>,
     /// The part it is sung on.
     pub role: Word,
     /// `bars=N`: how many bars the sung line covers (the first N of the part).
@@ -76,9 +78,10 @@ pub struct SingCall {
 
 /// The canonical text of a `sing` statement (what follows the target): parameters sorted by name.
 pub fn print_call(s: &SingCall) -> String {
-    let said = match &s.phrase {
-        Some(id) => format!("@{id}"),
-        None => quote(&s.lyric),
+    let said = match (&s.named, &s.phrase) {
+        (Some(n), _) => n.clone(),
+        (None, Some(id)) => format!("@{id}"),
+        (None, None) => quote(&s.lyric),
     };
     let mut out = format!("sing {said} on {}", s.role.text);
     if let Some((n, _)) = &s.bars {
@@ -120,7 +123,20 @@ impl Parser<'_> {
     pub(crate) fn sing_call(&mut self) -> Result<SingCall, Diagnostic> {
         let start = self.expect_word("sing")?;
         let mut phrase = None;
+        let mut named = None;
         let (lyric, lyric_span) = match self.peek().clone() {
+            // a phrase a `use phrase @id as NAME` line named
+            Tok::Word(w) if crate::roles::is_name(&w) && matches!(self.peek_n(1), Tok::Word(on) if on == "on") => {
+                let sp = self.bump().span;
+                let Some((id, lyric)) = crate::uses::phrase_named(&w).and_then(|id| djengine::vocal::phoneme::phrase_lyric(&id).map(|l| (id, l))) else {
+                    return Err(Diagnostic::error(sp, format!("no `use phrase` line names `{w}`: `sing` needs the words in quotes or a phrase"))
+                        .found(format!("`{w}`"))
+                        .help(format!("sing @tempest_such_stuff on melody, or name the phrase first: use phrase @tempest_such_stuff as {w}")));
+                };
+                phrase = Some(id);
+                named = Some(w);
+                (lyric, sp)
+            }
             Tok::Str(t) => {
                 let sp = self.bump().span;
                 (t, sp)
@@ -216,7 +232,7 @@ impl Parser<'_> {
                 _ => voice = Some(self.word("a voice name")?),
             }
         }
-        Ok(SingCall { span: start.to(self.prev_span()), lyric, lyric_span, phrase, role, bars, key, voice })
+        Ok(SingCall { span: start.to(self.prev_span()), lyric, lyric_span, phrase, named, role, bars, key, voice })
     }
 }
 

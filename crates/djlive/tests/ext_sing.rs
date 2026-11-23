@@ -246,7 +246,8 @@ fn errors_say_where_and_what_would_do() {
     let r = e(src);
     assert_eq!((r.0, r.1, r.2.as_str()), (at(src, "\"_ _\"").0, at(src, "\"_ _\"").1, "there is nothing to sing: the lyric is all rests"));
     // the shape of the line
-    assert_eq!(e("sing la on melody\n").2, "`sing` needs the words in quotes or a phrase, found `la`");
+    // (a bare word is a phrase's name, which a `use phrase @id as la` line would give: docs/beatscript/ext-roles.md)
+    assert_eq!(e("sing la on melody\n").2, "no `use phrase` line names `la`: `sing` needs the words in quotes or a phrase");
     assert!(e("sing \"la\" melody\n").2.contains("expected `on`"));
     assert!(e("sing \"la\" on\n").2.contains("expected the part to sing on"));
     assert_eq!(e("sing \"la\" on melody voic=alto\n").3.as_deref(), Some("did you mean `voice`?"));

@@ -483,3 +483,33 @@ fn genre_graph_has_the_conventions_and_trap_its_808() {
         assert_eq!(v["warnings"], json!([]), "{}\n{text}", x.slug);
     }
 }
+
+/// The genre templates v1 (djengine's `data/genre-templates.txt`) are what `genre_template` writes for every genre of the
+/// conventions graph, frozen, so that `use genre@1 techno.drop as drop` means the same music for ever (djlive `uses.rs`). While
+/// the file holds no programs `BEATSCRIPT_BLESS=1` writes them; once it does, a template written differently is a version 2 in a file
+/// of its own, and this test says so rather than let v1 move.
+#[test]
+fn genre_templates_v1_are_frozen() {
+    let g = GenreGraph(genre_graph());
+    let (voices, kits) = beatscript_serve::genres::instrument_names();
+    let mut body = String::new();
+    for gn in beatscript_serve::genres::genres(&g) {
+        body.push_str(&format!("{}{}\n", djengine::genre_templates::HEAD, gn.slug));
+        body.push_str(&beatscript_serve::genres::template(&g, &gn, &voices, &kits));
+        body.push('\n');
+    }
+    let file = djengine::genre_templates::text(1).expect("v1");
+    let at = file.find(&format!("\n{}", djengine::genre_templates::HEAD)).map_or(file.len(), |i| i + 1);
+    let (header, programs) = file.split_at(at);
+    if programs.trim().is_empty() && std::env::var_os("BEATSCRIPT_BLESS").is_some() {
+        std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../djengine/data/genre-templates.txt"), format!("{header}{body}")).unwrap();
+        return;
+    }
+    assert!(!programs.trim().is_empty(), "djengine/data/genre-templates.txt has no programs: BEATSCRIPT_BLESS=1 cargo test -p beatscript-serve --bin beatscript-serve genre_templates_v1_are_frozen writes them");
+    assert!(programs == body, "genre_template now writes another program for a genre than genre@1 froze: keep v1 as it is and add the new ones as version 2 (djengine::genre_templates::VERSIONS), so a program that names genre@1 keeps its music");
+    // and each is a program a `use` can take a section of
+    for t in djengine::genre_templates::templates(1) {
+        let c = djlive::compile::check(&t.text);
+        assert!(c.compiled.is_some(), "{}: {:?}", t.genre, c.diagnostics.iter().map(|d| d.message.clone()).collect::<Vec<_>>());
+    }
+}

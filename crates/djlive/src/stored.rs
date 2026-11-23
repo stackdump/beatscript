@@ -164,6 +164,11 @@ fn runs(toks: &[Token]) -> Vec<Run> {
             continue;
         }
         let (end, names) = extent(toks, i);
+        // a CID on a `use` line is that line's source, which uses.rs writes out before this stage
+        if crate::uses::on_use_line(toks, i) {
+            i = end;
+            continue;
+        }
         let span = toks[i].span.to(toks[end - 1].span);
         let form = match form_of(toks, i, span) {
             Place::Is(f) => Ok(f),
@@ -459,6 +464,12 @@ pub fn cids_of(src: &str) -> Vec<String> {
             out.push(cid);
         }
     }
+    // and the ones a `use` line names
+    for c in crate::uses::stored_cids(&norm) {
+        if !out.contains(&c) {
+            out.push(c);
+        }
+    }
     out
 }
 
@@ -649,6 +660,31 @@ fn part_says(part: &PartIr, name: &str) -> bool {
 /// `beatscript expand`) answers: the text, the references in the order they were written out in (templates, seeds, then stored
 /// programs) and the warnings of the templates and seeds. Errors are at the references of `src`.
 pub fn expand_text(src: &str, env: &Env) -> Option<Result<(String, Vec<String>, Vec<Diagnostic>), Vec<Diagnostic>>> {
+    // the `use` lines first (uses.rs): what they borrow from is known to every stage after them
+    let Some(r) = crate::uses::expand(src, env) else { return expand_stages(src, env) };
+    let (e, programs) = match r {
+        Ok(x) => x,
+        Err(ds) => return Some(Err(ds)),
+    };
+    let back = |mut d: Diagnostic| {
+        d.span = e.back(d.span);
+        d
+    };
+    Some(match crate::gen::with_generated(&programs, || expand_stages(&e.text, env)) {
+        None => Ok((e.text.clone(), e.refs.clone(), e.warnings.clone())),
+        Some(Err(ds)) => Err(ds.into_iter().map(back).collect()),
+        Some(Ok((text, refs, warnings))) => {
+            let mut all = e.refs.clone();
+            all.extend(refs);
+            let mut ws = e.warnings.clone();
+            ws.extend(warnings.into_iter().map(back));
+            Ok((text, all, ws))
+        }
+    })
+}
+
+/// [`expand_text`] after the `use` stage: the templates, the seeds, the `gen` calls, the stored programs.
+fn expand_stages(src: &str, env: &Env) -> Option<Result<(String, Vec<String>, Vec<Diagnostic>), Vec<Diagnostic>>> {
     // a place in the text of stage `n` as a place in `src`
     fn back_through(stages: &[Expansion], mut sp: Span) -> Span {
         for st in stages.iter().rev() {

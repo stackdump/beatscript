@@ -1,0 +1,960 @@
+# BeatScript genre templates v1: the starting program of each genre of the bitwrap ontology, frozen.
+# This file is CC0 1.0 Universal. Each program is what the MCP genre_template tool wrote for the genre from the bitwrap ontology
+# 0.2.0 and its conventions module (crates/beatscript-serve/ontology/upstream), with the voices and kits of this build, on 2026-11-22:
+# its tempo, key, kit and voices, its family's standard song structure and its first chord progression. A program borrows a
+# section of one by name: `use genre@1 techno.drop as drop` (docs/beatscript/ext-roles.md, "Name a source"). The file is frozen: a
+# template the tool writes differently later is version 2, in a file of its own, and this one keeps meaning what it means.
+# Written by crates/beatscript-serve (src/ontology.rs, genre_templates_v1_are_frozen: BEATSCRIPT_BLESS=1 writes it while it has no programs).
+# A program opens with a line `=== <genre>`.
+version 1
+=== ambient
+#! name: ambient starter
+#! genre: ambient
+#! license: CC0-1.0
+# A starting point for ambient, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 72
+key c:pent
+
+let chords = <I iii vi IV>
+let bass1 = I ~ ~ ~ ~ ~ ~ ~ I ~ ~ ~ ~ ~ ~ ~
+let bass2 = iii ~ ~ ~ ~ ~ ~ ~ iii ~ ~ ~ ~ ~ ~ ~
+let bass3 = vi ~ ~ ~ ~ ~ ~ ~ vi ~ ~ ~ ~ ~ ~ ~
+let bass4 = IV ~ ~ ~ ~ ~ ~ ~ IV ~ ~ ~ ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = I*4
+let arp2 = iii*4
+let arp3 = vi*4
+let arp4 = IV*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tune2 = iii/5 ~ ~ ~ ~ ~ iii/3 ~ iii ~ ~ ~ ~ ~ ~ ~
+let tune3 = vi/5 ~ ~ ~ ~ ~ vi/3 ~ vi ~ ~ ~ ~ ~ ~ ~
+let tune4 = IV/5 ~ ~ ~ ~ ~ IV/3 ~ IV ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: bass bassline inst=sub-bass
+}
+
+section verse 16 bars {
+  deck A: hihat e(3,16) kit=drums | bass bassline inst=sub-bass
+  deck B: melody tuneline inst=warm-pad
+}
+
+section bridge 8 bars {
+  deck A: bass bassline inst=sub-bass
+  deck B: melody tuneline inst=warm-pad
+}
+
+section outro 8 bars {
+  deck B: melody tuneline inst=warm-pad
+}
+
+arrange intro verse bridge verse outro
+
+=== blues
+#! name: blues starter
+#! genre: blues
+#! license: CC0-1.0
+# A starting point for blues, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 95
+swing 0.5
+key c:blues
+
+let chords = <i i i i iv iv i i v iv i v>
+let bass1 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass2 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass3 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass4 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass5 = iv ~ ~ ~ ~ ~ iv ~ ~ ~ ~ iv ~ ~ ~ ~
+let bass6 = iv ~ ~ ~ ~ ~ iv ~ ~ ~ ~ iv ~ ~ ~ ~
+let bass7 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass8 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass9 = v ~ ~ ~ ~ ~ v ~ ~ ~ ~ v ~ ~ ~ ~
+let bass10 = iv ~ ~ ~ ~ ~ iv ~ ~ ~ ~ iv ~ ~ ~ ~
+let bass11 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass12 = v ~ ~ ~ ~ ~ v ~ ~ ~ ~ v ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4 bass5 bass6 bass7 bass8 bass9 bass10 bass11 bass12>
+let arp1 = i*4
+let arp2 = i*4
+let arp3 = i*4
+let arp4 = i*4
+let arp5 = iv*4
+let arp6 = iv*4
+let arp7 = i*4
+let arp8 = i*4
+let arp9 = v*4
+let arp10 = iv*4
+let arp11 = i*4
+let arp12 = v*4
+let arpline = <arp1 arp2 arp3 arp4 arp5 arp6 arp7 arp8 arp9 arp10 arp11 arp12>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune3 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune4 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune5 = iv/5 ~ ~ ~ ~ ~ iv/3 ~ iv ~ ~ ~ ~ ~ ~ ~
+let tune6 = iv/5 ~ ~ ~ ~ ~ iv/3 ~ iv ~ ~ ~ ~ ~ ~ ~
+let tune7 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune8 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune9 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tune10 = iv/5 ~ ~ ~ ~ ~ iv/3 ~ iv ~ ~ ~ ~ ~ ~ ~
+let tune11 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune12 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4 tune5 tune6 tune7 tune8 tune9 tune10 tune11 tune12>
+
+section intro 8 bars {
+  deck A: kick e(3,16) kit=drums-cr78 | hihat e(6,16) | bass bassline inst=bass
+}
+
+section verse 16 bars {
+  deck A: kick e(3,16) kit=drums-cr78 | snare e(2,16,4) | hihat e(6,16) | bass bassline inst=bass
+}
+
+section chorus 16 bars {
+  deck A: kick e(3,16) kit=drums-cr78 | snare e(2,16,4) | hihat e(6,16) | clap e(2,16,4) | bass bassline inst=bass
+  deck B: harmony chords | arp arpline inst=piano | melody tuneline inst=electric-guitar
+}
+
+section outro 8 bars {
+  deck A: kick e(3,16) kit=drums-cr78 | hihat e(6,16) | bass bassline inst=bass
+  deck B: melody tuneline inst=electric-guitar
+}
+
+arrange intro verse chorus verse chorus outro
+
+=== bossa
+#! name: bossa starter
+#! genre: bossa
+#! license: CC0-1.0
+# A starting point for bossa, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 88
+swing 0.4
+key f:dorian
+
+let chords = <ii v i vi°>
+let bass1 = ii ~ ~ ~ ~ ~ ii ~ ~ ~ ~ ii ~ ~ ~ ~
+let bass2 = v ~ ~ ~ ~ ~ v ~ ~ ~ ~ v ~ ~ ~ ~
+let bass3 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass4 = vi° ~ ~ ~ ~ ~ vi° ~ ~ ~ ~ vi° ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = ii*4
+let arp2 = v*4
+let arp3 = i*4
+let arp4 = vi°*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = ii/5 ~ ~ ~ ~ ~ ii/3 ~ ii ~ ~ ~ ~ ~ ~ ~
+let tune2 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tune3 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune4 = vi°/5 ~ ~ ~ ~ ~ vi°/3 ~ vi° ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: hihat e(6,8) kit=drums-cr78 | bass bassline inst=bass
+}
+
+section verse 16 bars {
+  deck A: hihat e(6,8) kit=drums-cr78 | bass bassline inst=bass
+  deck B: melody tuneline inst=flute
+}
+
+section solo 16 bars {
+  deck A: hihat e(6,8) kit=drums-cr78 | bass bassline inst=bass
+  deck B: melody tuneline inst=flute
+}
+
+section outro 8 bars {
+  deck A: kick e(3,16) kit=drums-cr78 | hihat e(6,8)
+  deck B: melody tuneline inst=flute
+}
+
+arrange intro verse solo verse outro
+
+=== country
+#! name: country starter
+#! genre: country
+#! license: CC0-1.0
+# A starting point for country, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 110
+swing 0.15
+key c
+
+let chords = <I IV V I>
+let bass1 = I ~ ~ ~ I ~ ~ ~ I ~ ~ ~ I ~ ~ ~
+let bass2 = IV ~ ~ ~ IV ~ ~ ~ IV ~ ~ ~ IV ~ ~ ~
+let bass3 = V ~ ~ ~ V ~ ~ ~ V ~ ~ ~ V ~ ~ ~
+let bass4 = I ~ ~ ~ I ~ ~ ~ I ~ ~ ~ I ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = I*4
+let arp2 = IV*4
+let arp3 = V*4
+let arp4 = I*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tune2 = IV/5 ~ ~ ~ ~ ~ IV/3 ~ IV ~ ~ ~ ~ ~ ~ ~
+let tune3 = V/5 ~ ~ ~ ~ ~ V/3 ~ V ~ ~ ~ ~ ~ ~ ~
+let tune4 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(8,16) | bass bassline inst=bass
+}
+
+section verse 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(4,16,4) | hihat e(8,16) | bass bassline inst=bass
+}
+
+section chorus 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(4,16,4) | hihat e(8,16) | clap e(4,16,4) | bass bassline inst=bass
+  deck B: harmony chords | arp arpline inst=pluck | melody tuneline inst=acoustic-guitar
+}
+
+section outro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(8,16) | bass bassline inst=bass
+  deck B: melody tuneline inst=acoustic-guitar
+}
+
+arrange intro verse chorus verse chorus outro
+
+=== dnb
+#! name: dnb starter
+#! genre: dnb
+#! license: CC0-1.0
+# A starting point for dnb, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 174
+swing 0.1
+key gm
+
+let chords = <i VI III v>
+let bass1 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass2 = VI ~ ~ ~ ~ ~ VI ~ ~ ~ ~ VI ~ ~ ~ ~
+let bass3 = III ~ ~ ~ ~ ~ III ~ ~ ~ ~ III ~ ~ ~ ~
+let bass4 = v ~ ~ ~ ~ ~ v ~ ~ ~ ~ v ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VI*4
+let arp3 = III*4
+let arp4 = v*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune3 = III/5 ~ ~ ~ ~ ~ III/3 ~ III ~ ~ ~ ~ ~ ~ ~
+let tune4 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(3,16) kit=drums-breakbeat | hihat e(7,8)
+}
+
+section buildup 8 bars {
+  deck A: kick e(3,16) kit=drums-breakbeat | snare e(2,8,2) | hihat e(7,8) | bass bassline
+  deck B: arp arpline inst=bright-pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(3,16) kit=drums-breakbeat | snare e(2,8,2) | hihat e(7,8) | clap e(2,8,2) | bass bassline
+  deck B: harmony chords | arp arpline inst=bright-pluck | melody tuneline inst=square-lead
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(7,8) kit=drums-breakbeat | bass bassline
+}
+
+section outro 8 bars {
+  deck A: kick e(3,16) kit=drums-breakbeat | hihat e(7,8)
+  deck B: melody tuneline inst=square-lead
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== dubstep
+#! name: dubstep starter
+#! genre: dubstep
+#! license: CC0-1.0
+# A starting point for dubstep, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 140
+swing 0.15
+key dm
+
+let chords = <i VII VI v>
+let bass1 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass2 = VII ~ ~ ~ ~ ~ VII ~ ~ ~ ~ VII ~ ~ ~ ~
+let bass3 = VI ~ ~ ~ ~ ~ VI ~ ~ ~ ~ VI ~ ~ ~ ~
+let bass4 = v ~ ~ ~ ~ ~ v ~ ~ ~ ~ v ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VII*4
+let arp3 = VI*4
+let arp4 = v*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tune3 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune4 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(3,16) kit=drums-v8 | hihat e(5,16)
+}
+
+section buildup 8 bars {
+  deck A: kick e(3,16) kit=drums-v8 | snare e(2,16,4) | hihat e(5,16) | bass bassline
+  deck B: arp arpline inst=rave-stab
+}
+
+section drop 16 bars {
+  deck A: kick e(3,16) kit=drums-v8 | snare e(2,16,4) | hihat e(5,16) | clap e(2,16,4) | bass bassline
+  deck B: harmony chords | arp arpline inst=rave-stab | melody tuneline inst=detuned-saw
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(5,16) kit=drums-v8 | bass bassline
+}
+
+section outro 8 bars {
+  deck A: kick e(3,16) kit=drums-v8 | hihat e(5,16)
+  deck B: melody tuneline inst=detuned-saw
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== edm
+#! name: edm starter
+#! genre: edm
+#! license: CC0-1.0
+# A starting point for edm, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 138
+key am
+
+let chords = <i VI III v>
+let bass1 = i ~ ~ ~ i ~ ~ ~ i ~ ~ ~ i ~ ~ ~
+let bass2 = VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~
+let bass3 = III ~ ~ ~ III ~ ~ ~ III ~ ~ ~ III ~ ~ ~
+let bass4 = v ~ ~ ~ v ~ ~ ~ v ~ ~ ~ v ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VI*4
+let arp3 = III*4
+let arp4 = v*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune3 = III/5 ~ ~ ~ ~ ~ III/3 ~ III ~ ~ ~ ~ ~ ~ ~
+let tune4 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(8,16)
+}
+
+section buildup 8 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(8,16) | bass bassline
+  deck B: arp arpline inst=bright-pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(8,16) | clap e(2,16,4) | bass bassline
+  deck B: harmony chords | arp arpline inst=bright-pluck | melody tuneline inst=trance-lead
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(8,16) kit=drums | bass bassline
+}
+
+section outro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(8,16)
+  deck B: melody tuneline inst=trance-lead
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== funk
+#! name: funk starter
+#! genre: funk
+#! license: CC0-1.0
+# A starting point for funk, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 108
+swing 0.3
+key c:mixolydian
+
+let chords = <I I IV I>
+let bass1 = I ~ ~ ~ I ~ ~ I ~ ~ I ~ ~ I ~ ~
+let bass2 = I ~ ~ ~ I ~ ~ I ~ ~ I ~ ~ I ~ ~
+let bass3 = IV ~ ~ ~ IV ~ ~ IV ~ ~ IV ~ ~ IV ~ ~
+let bass4 = I ~ ~ ~ I ~ ~ I ~ ~ I ~ ~ I ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = I*4
+let arp2 = I*4
+let arp3 = IV*4
+let arp4 = I*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tune2 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tune3 = IV/5 ~ ~ ~ ~ ~ IV/3 ~ IV ~ ~ ~ ~ ~ ~ ~
+let tune4 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(5,16) kit=drums | hihat e(8,16) | bass bassline inst=bass
+}
+
+section verse 16 bars {
+  deck A: kick e(5,16) kit=drums | snare e(4,16,4) | hihat e(8,16) | bass bassline inst=bass
+}
+
+section chorus 16 bars {
+  deck A: kick e(5,16) kit=drums | snare e(4,16,4) | hihat e(8,16) | clap e(4,16,4) | bass bassline inst=bass
+  deck B: harmony chords | arp arpline inst=electric-piano | melody tuneline inst=clavinet
+}
+
+section outro 8 bars {
+  deck A: kick e(5,16) kit=drums | hihat e(8,16) | bass bassline inst=bass
+  deck B: melody tuneline inst=clavinet
+}
+
+arrange intro verse chorus verse chorus outro
+
+=== garage
+#! name: garage starter
+#! genre: garage
+#! license: CC0-1.0
+# A starting point for garage, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 130
+swing 0.3
+key am
+
+let chords = <i VII VI VII>
+let bass1 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass2 = VII ~ ~ ~ ~ ~ VII ~ ~ ~ ~ VII ~ ~ ~ ~
+let bass3 = VI ~ ~ ~ ~ ~ VI ~ ~ ~ ~ VI ~ ~ ~ ~
+let bass4 = VII ~ ~ ~ ~ ~ VII ~ ~ ~ ~ VII ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VII*4
+let arp3 = VI*4
+let arp4 = VII*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tune3 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune4 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(3,16) kit=drums | hihat e(7,8)
+}
+
+section buildup 8 bars {
+  deck A: kick e(3,16) kit=drums | snare e(3,16,2) | hihat e(7,8) | bass bassline inst=sub-bass
+  deck B: arp arpline inst=bright-pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(3,16) kit=drums | snare e(3,16,2) | hihat e(7,8) | clap e(3,16,2) | bass bassline inst=sub-bass
+  deck B: harmony chords | arp arpline inst=bright-pluck | melody tuneline inst=electric-piano
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(7,8) kit=drums | bass bassline inst=sub-bass
+}
+
+section outro 8 bars {
+  deck A: kick e(3,16) kit=drums | hihat e(7,8)
+  deck B: melody tuneline inst=electric-piano
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== house
+#! name: house starter
+#! genre: house
+#! license: CC0-1.0
+# A starting point for house, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 124
+swing 0.2
+key cm
+
+let chords = <i VII VI VII>
+let bass1 = i ~ ~ ~ i ~ ~ ~ i ~ ~ ~ i ~ ~ ~
+let bass2 = VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~
+let bass3 = VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~
+let bass4 = VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VII*4
+let arp3 = VI*4
+let arp4 = VII*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tune3 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune4 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(6,8)
+}
+
+section buildup 8 bars {
+  deck A: kick e(4,16) kit=drums | snare e(3,8) | hihat e(6,8) | bass bassline inst=bass
+  deck B: arp arpline inst=bright-pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(3,8) | hihat e(6,8) | clap e(3,8) | bass bassline inst=bass
+  deck B: harmony chords | arp arpline inst=bright-pluck | melody tuneline inst=electric-piano
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(6,8) kit=drums | bass bassline inst=bass
+}
+
+section outro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(6,8)
+  deck B: melody tuneline inst=electric-piano
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== jazz
+#! name: jazz starter
+#! genre: jazz
+#! license: CC0-1.0
+# A starting point for jazz, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 110
+swing 0.6
+key g:dorian
+
+let chords = <ii v i vi°>
+let bass1 = ii ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+let bass2 = v ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+let bass3 = i ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+let bass4 = vi° ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = ii*4
+let arp2 = v*4
+let arp3 = i*4
+let arp4 = vi°*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = ii/5 ~ ~ ~ ~ ~ ii/3 ~ ii ~ ~ ~ ~ ~ ~ ~
+let tune2 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tune3 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune4 = vi°/5 ~ ~ ~ ~ ~ vi°/3 ~ vi° ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: hihat e(5,12) kit=drums-cr78 | bass bassline inst=sub-bass
+}
+
+section verse 16 bars {
+  deck A: hihat e(5,12) kit=drums-cr78 | bass bassline inst=sub-bass
+  deck B: melody tuneline inst=vibes
+}
+
+section solo 16 bars {
+  deck A: hihat e(5,12) kit=drums-cr78 | bass bassline inst=sub-bass
+  deck B: melody tuneline inst=vibes
+}
+
+section outro 8 bars {
+  deck A: kick e(3,12) kit=drums-cr78 | hihat e(5,12)
+  deck B: melody tuneline inst=vibes
+}
+
+arrange intro verse solo verse outro
+
+=== lofi
+#! name: lofi starter
+#! genre: lofi
+#! license: CC0-1.0
+# A starting point for lofi, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 82
+swing 0.35
+key g:minpent
+
+let chords = <ii° v i VI>
+let bass1 = ii° ~ ~ ~ ~ ~ ii° ~ ~ ~ ~ ii° ~ ~ ~ ~
+let bass2 = v ~ ~ ~ ~ ~ v ~ ~ ~ ~ v ~ ~ ~ ~
+let bass3 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass4 = VI ~ ~ ~ ~ ~ VI ~ ~ ~ ~ VI ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = ii°*4
+let arp2 = v*4
+let arp3 = i*4
+let arp4 = VI*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = ii°/5 ~ ~ ~ ~ ~ ii°/3 ~ ii° ~ ~ ~ ~ ~ ~ ~
+let tune2 = v/5 ~ ~ ~ ~ ~ v/3 ~ v ~ ~ ~ ~ ~ ~ ~
+let tune3 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune4 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: bass bassline inst=sub-bass
+}
+
+section verse 16 bars {
+  deck A: hihat e(5,8) kit=drums-lofi | bass bassline inst=sub-bass
+  deck B: melody tuneline inst=electric-piano
+}
+
+section bridge 8 bars {
+  deck A: bass bassline inst=sub-bass
+  deck B: melody tuneline inst=electric-piano
+}
+
+section outro 8 bars {
+  deck B: melody tuneline inst=electric-piano
+}
+
+arrange intro verse bridge verse outro
+
+=== metal
+#! name: metal starter
+#! genre: metal
+#! license: CC0-1.0
+# A starting point for metal, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 180
+key e:phrygian
+
+let chords = <i II vii i>
+let bass1 = i ~ i ~ i ~ i ~ i ~ i ~ i ~ i ~
+let bass2 = II ~ II ~ II ~ II ~ II ~ II ~ II ~ II ~
+let bass3 = vii ~ vii ~ vii ~ vii ~ vii ~ vii ~ vii ~ vii ~
+let bass4 = i ~ i ~ i ~ i ~ i ~ i ~ i ~ i ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = II*4
+let arp3 = vii*4
+let arp4 = i*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = II/5 ~ ~ ~ ~ ~ II/3 ~ II ~ ~ ~ ~ ~ ~ ~
+let tune3 = vii/5 ~ ~ ~ ~ ~ vii/3 ~ vii ~ ~ ~ ~ ~ ~ ~
+let tune4 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(8,16) kit=drums-v8 | hihat e(8,8) | bass bassline inst=bass
+}
+
+section verse 16 bars {
+  deck A: kick e(8,16) kit=drums-v8 | snare e(4,16,4) | hihat e(8,8) | bass bassline inst=bass
+}
+
+section chorus 16 bars {
+  deck A: kick e(8,16) kit=drums-v8 | snare e(4,16,4) | hihat e(8,8) | clap e(4,16,4) | bass bassline inst=bass
+  deck B: harmony chords | arp arpline inst=scream-lead | melody tuneline inst=distorted-guitar
+}
+
+section outro 8 bars {
+  deck A: kick e(8,16) kit=drums-v8 | hihat e(8,8) | bass bassline inst=bass
+  deck B: melody tuneline inst=distorted-guitar
+}
+
+arrange intro verse chorus verse chorus outro
+
+=== reggae
+#! name: reggae starter
+#! genre: reggae
+#! license: CC0-1.0
+# A starting point for reggae, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 75
+swing 0.25
+key c
+
+let chords = <I IV V I>
+let bass1 = I ~ ~ ~ ~ ~ I ~ ~ ~ ~ I ~ ~ ~ ~
+let bass2 = IV ~ ~ ~ ~ ~ IV ~ ~ ~ ~ IV ~ ~ ~ ~
+let bass3 = V ~ ~ ~ ~ ~ V ~ ~ ~ ~ V ~ ~ ~ ~
+let bass4 = I ~ ~ ~ ~ ~ I ~ ~ ~ ~ I ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = I*4
+let arp2 = IV*4
+let arp3 = V*4
+let arp4 = I*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tune2 = IV/5 ~ ~ ~ ~ ~ IV/3 ~ IV ~ ~ ~ ~ ~ ~ ~
+let tune3 = V/5 ~ ~ ~ ~ ~ V/3 ~ V ~ ~ ~ ~ ~ ~ ~
+let tune4 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(3,16) kit=drums | hihat e(8,16) | bass bassline inst=sub-bass
+}
+
+section verse 16 bars {
+  deck A: kick e(3,16) kit=drums | snare e(2,16,6) | hihat e(8,16) | bass bassline inst=sub-bass
+}
+
+section chorus 16 bars {
+  deck A: kick e(3,16) kit=drums | snare e(2,16,6) | hihat e(8,16) | clap e(2,16,6) | bass bassline inst=sub-bass
+  deck B: harmony chords | arp arpline inst=electric-guitar | melody tuneline inst=organ
+}
+
+section outro 8 bars {
+  deck A: kick e(3,16) kit=drums | hihat e(8,16) | bass bassline inst=sub-bass
+  deck B: melody tuneline inst=organ
+}
+
+arrange intro verse chorus verse chorus outro
+
+=== speedcore
+#! name: speedcore starter
+#! genre: speedcore
+#! license: CC0-1.0
+# A starting point for speedcore, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 220
+key em
+
+let chords = <i VII>
+let bass1 = i ~ i ~ i ~ i ~ i ~ i ~ i ~ i ~
+let bass2 = VII ~ VII ~ VII ~ VII ~ VII ~ VII ~ VII ~ VII ~
+let bassline = <bass1 bass2>
+let arp1 = i*4
+let arp2 = VII*4
+let arpline = <arp1 arp2>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2>
+
+section intro 8 bars {
+  deck A: kick e(8,16) kit=drums-v8 | hihat e(12,16)
+}
+
+section buildup 8 bars {
+  deck A: kick e(8,16) kit=drums-v8 | snare e(4,16,2) | hihat e(12,16) | bass bassline
+  deck B: arp arpline inst=pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(8,16) kit=drums-v8 | snare e(4,16,2) | hihat e(12,16) | clap e(4,16,2) | bass bassline
+  deck B: harmony chords | arp arpline inst=pluck | melody tuneline inst=scream-lead
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(12,16) kit=drums-v8 | bass bassline
+}
+
+section outro 8 bars {
+  deck A: kick e(8,16) kit=drums-v8 | hihat e(12,16)
+  deck B: melody tuneline inst=scream-lead
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== synthwave
+#! name: synthwave starter
+#! genre: synthwave
+#! license: CC0-1.0
+# A starting point for synthwave, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 108
+key cm
+
+let chords = <i VI III VII>
+let bass1 = i ~ ~ ~ i ~ ~ ~ i ~ ~ ~ i ~ ~ ~
+let bass2 = VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~
+let bass3 = III ~ ~ ~ III ~ ~ ~ III ~ ~ ~ III ~ ~ ~
+let bass4 = VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VI*4
+let arp3 = III*4
+let arp4 = VII*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune3 = III/5 ~ ~ ~ ~ ~ III/3 ~ III ~ ~ ~ ~ ~ ~ ~
+let tune4 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(4,8) | bass bassline inst=bass
+}
+
+section verse 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(4,8) | bass bassline inst=bass
+}
+
+section chorus 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(4,8) | clap e(2,16,4) | bass bassline inst=bass
+  deck B: harmony chords | arp arpline inst=bright-pluck | melody tuneline inst=pwm-lead
+}
+
+section outro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(4,8) | bass bassline inst=bass
+  deck B: melody tuneline inst=pwm-lead
+}
+
+arrange intro verse chorus verse chorus outro
+
+=== techno
+#! name: techno starter
+#! genre: techno
+#! license: CC0-1.0
+# A starting point for techno, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 128
+key c
+
+let chords = <I vii° I vii°>
+let bass1 = I ~ ~ ~ I ~ ~ ~ I ~ ~ ~ I ~ ~ ~
+let bass2 = vii° ~ ~ ~ vii° ~ ~ ~ vii° ~ ~ ~ vii° ~ ~ ~
+let bass3 = I ~ ~ ~ I ~ ~ ~ I ~ ~ ~ I ~ ~ ~
+let bass4 = vii° ~ ~ ~ vii° ~ ~ ~ vii° ~ ~ ~ vii° ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = I*4
+let arp2 = vii°*4
+let arp3 = I*4
+let arp4 = vii°*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tune2 = vii°/5 ~ ~ ~ ~ ~ vii°/3 ~ vii° ~ ~ ~ ~ ~ ~ ~
+let tune3 = I/5 ~ ~ ~ ~ ~ I/3 ~ I ~ ~ ~ ~ ~ ~ ~
+let tune4 = vii°/5 ~ ~ ~ ~ ~ vii°/3 ~ vii° ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(5,8)
+}
+
+section buildup 8 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(5,8) | bass bassline
+  deck B: arp arpline inst=pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(5,8) | clap e(2,16,4) | bass bassline
+  deck B: harmony chords | arp arpline inst=pluck | melody tuneline inst=trance-lead
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(5,8) kit=drums | bass bassline
+}
+
+section outro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(5,8)
+  deck B: melody tuneline inst=trance-lead
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== trance
+#! name: trance starter
+#! genre: trance
+#! license: CC0-1.0
+# A starting point for trance, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 140
+key am
+
+let chords = <i VI VII i>
+let bass1 = i ~ ~ ~ i ~ ~ ~ i ~ ~ ~ i ~ ~ ~
+let bass2 = VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~ VI ~ ~ ~
+let bass3 = VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~ VII ~ ~ ~
+let bass4 = i ~ ~ ~ i ~ ~ ~ i ~ ~ ~ i ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VI*4
+let arp3 = VII*4
+let arp4 = i*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune3 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tune4 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(8,16)
+}
+
+section buildup 8 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(8,16) | bass bassline inst=sub-bass
+  deck B: arp arpline inst=bright-pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(4,16) kit=drums | snare e(2,16,4) | hihat e(8,16) | clap e(2,16,4) | bass bassline inst=sub-bass
+  deck B: harmony chords | arp arpline inst=bright-pluck | melody tuneline inst=trance-lead
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(8,16) kit=drums | bass bassline inst=sub-bass
+}
+
+section outro 8 bars {
+  deck A: kick e(4,16) kit=drums | hihat e(8,16)
+  deck B: melody tuneline inst=trance-lead
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+
+=== trap
+#! name: trap starter
+#! genre: trap
+#! license: CC0-1.0
+# A starting point for trap, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# standard song structure and its first chord progression. Change anything.
+tempo 140
+swing 0.1
+key dm
+
+let chords = <i VII VI VII>
+let bass1 = i ~ ~ ~ ~ ~ i ~ ~ ~ ~ i ~ ~ ~ ~
+let bass2 = VII ~ ~ ~ ~ ~ VII ~ ~ ~ ~ VII ~ ~ ~ ~
+let bass3 = VI ~ ~ ~ ~ ~ VI ~ ~ ~ ~ VI ~ ~ ~ ~
+let bass4 = VII ~ ~ ~ ~ ~ VII ~ ~ ~ ~ VII ~ ~ ~ ~
+let bassline = <bass1 bass2 bass3 bass4>
+let arp1 = i*4
+let arp2 = VII*4
+let arp3 = VI*4
+let arp4 = VII*4
+let arpline = <arp1 arp2 arp3 arp4>
+let tune1 = i/5 ~ ~ ~ ~ ~ i/3 ~ i ~ ~ ~ ~ ~ ~ ~
+let tune2 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tune3 = VI/5 ~ ~ ~ ~ ~ VI/3 ~ VI ~ ~ ~ ~ ~ ~ ~
+let tune4 = VII/5 ~ ~ ~ ~ ~ VII/3 ~ VII ~ ~ ~ ~ ~ ~ ~
+let tuneline = <tune1 tune2 tune3 tune4>
+
+section intro 8 bars {
+  deck A: kick e(3,16) kit=drums-808 | hihat e(10,16)
+}
+
+section buildup 8 bars {
+  deck A: kick e(3,16) kit=drums-808 | snare e(2,16,4) | hihat e(10,16) | bass bassline inst=sub-bass
+  deck B: arp arpline inst=pluck
+}
+
+section drop 16 bars {
+  deck A: kick e(3,16) kit=drums-808 | snare e(2,16,4) | hihat e(10,16) | clap e(2,16,4) | bass bassline inst=sub-bass
+  deck B: harmony chords | arp arpline inst=pluck | melody tuneline inst=fm-bell
+}
+
+section breakdown 8 bars {
+  deck A: hihat e(10,16) kit=drums-808 | bass bassline inst=sub-bass
+}
+
+section outro 8 bars {
+  deck A: kick e(3,16) kit=drums-808 | hihat e(10,16)
+  deck B: melody tuneline inst=fm-bell
+}
+
+arrange intro buildup drop breakdown buildup drop outro
+

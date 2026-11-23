@@ -60,6 +60,7 @@ pub mod sugar;
 pub mod tempo;
 pub mod version;
 pub mod template;
+pub mod uses;
 
 pub use compile::{check, program_cid, Check, Compiled};
 pub use diag::{Diagnostic, Severity, Span};

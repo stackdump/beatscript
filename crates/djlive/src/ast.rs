@@ -45,6 +45,9 @@ pub enum StmtKind {
     Sample(SampleDecl),
     /// `use restricted`: the program says it is private and may use restricted assets.
     UseRestricted,
+    /// `use theme ode_to_joy as tune`, `use <cid>.drop as hook`: a name for a source (uses.rs). Written out before the program is
+    /// lowered, so the lowering never sees one.
+    Use(UseDecl),
     /// `set { play X  mix 8 bars with crossfade  play Y }`: programs of programs (set.rs).
     Set(SetBlock),
     /// `station { from gen@2 techno seed=42  next seed=~  forms seeded rondo }`: radio, an endless and deterministic run of
@@ -73,6 +76,13 @@ pub enum StmtKind {
     /// `section intro from seed(techno, 42)[1..8]`, `arrange from seed(techno, 42)`: sections of a generated track
     /// (seed.rs). Written out before the program is lowered, so the lowering never sees one.
     Seed(SeedStmt),
+}
+
+/// `use SOURCE as NAME`: the source in its canonical spelling (one word since uses::collapse) and the name it is given.
+#[derive(Clone, Debug, PartialEq)]
+pub struct UseDecl {
+    pub source: Word,
+    pub name: Word,
 }
 
 /// `launch NAME on pad(N) [next bar | next phrase [8 | 16 | 32]]`: the scene (a section or a named arrangement), the pad and the bar line.

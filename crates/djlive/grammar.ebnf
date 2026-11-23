@@ -4,7 +4,7 @@
 
    Notation (ISO 14977): name = ... ;   "text" a terminal   [ x ] optional   { x } none or more   ( x ) a group
    x | y one of, and comments between round brackets and stars.  An UPPER-CASE name that is no production is a token class of the lexer:
-   NEWLINE NAME WORD INT NUMBER DECIMAL STRING PARAM NOTE PITCH KEY CHORD ROMAN SDEG UNIT TOKEN GLOB SUGAR PHRASE CID GEN MACRO SEED (recognize.rs
+   NEWLINE NAME WORD INT NUMBER DECIMAL STRING PARAM NOTE PITCH KEY CHORD ROMAN SDEG UNIT TOKEN GLOB SUGAR PHRASE CID GEN MACRO SEED GENRE (recognize.rs
    what each matches; NEWLINE also ends the program at the end of the text). Comments go away before the grammar is read,
    and a `#` inside a word is a sharp.
    A production whose note says [host] needs a host's store to be read (saved snippets, saved programs): the
@@ -194,7 +194,7 @@ gen_param   = "bpm" "=" NUMBER | "key" "=" KEY | "length" "=" ( "short" | "stand
 structure   = "standard" | "loop" | "minimal" | "extended" ;  (* the generator's song structures; standard is the default *)
 
 (* == Phrase templates == *)
-template    = "template" "(" NAME "," ( PHRASE | STRING ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form's roles *)
+template    = "template" "(" NAME "," ( PHRASE | STRING | NAME ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes (NAME: one a `use phrase` line named): the phrase is the vocal line of a track; then a form's roles *)
 binding     = NAME [ "." role ] "=" ( source | [ "-" ] INT ) ;   (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass; one part of a seed role: a.bass=[d2 ~ a1 ~]; a form's number: delay=6 interval=-12 *)
 source      = gen | NAME | notes | form | stored | track ;    (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template, or one section of it; a stored program's part or sections; a stored set's track *)
 notes       = "[" pattern "]" | "<" "[" pattern "]" { "[" pattern "]" } ">" ;   (* a bar, or bars one after another *)
@@ -220,7 +220,7 @@ mixitem     = deck "level" arith | deck "eq" band arith [ "db" ] | "master" "lev
 band        = "low" | "mid" | "high" ;
 db          = DECIMAL "db" ;                                  (* glued: 6db *)
 time        = DECIMAL ( "ms" | "s" ) ;                        (* glued: 5ms *)
-sing        = "sing" ( lyric | PHRASE ) "on" role { "bars=" INT | "key=" KEY | "voice=" NAME } ;   (* a tonal role; PHRASE: a phrasebook id, @hands_up *)
+sing        = "sing" ( lyric | PHRASE | NAME ) "on" role { "bars=" INT | "key=" KEY | "voice=" NAME } ;   (* a tonal role; PHRASE: a phrasebook id, @hands_up; NAME: a phrase a `use phrase` line named *)
 lyric       = STRING ;   (* its text is lyric_text; docs/beatscript/phonemes.md *)
 lyric_text  = { TEXT | "/" SPACE | escape } [ "/" { TEXT } ] ;   (* "/" and a space is a phrase break; "/" and a phoneme opens an escape, to the next "/" (with none, a break too); a word touching "=" before an escape is its label, kept and not sung: jingle=/j ii ng g uh l/ *)
 escape      = "/" PHONES "/" ;   (* PHONES (beatscript-v1): aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, "_" a rest, "-" cuts a word, ":" holds a vowel one more note, "!" accents it *)
@@ -259,4 +259,12 @@ import      = "import" ( NAME | STRING ) ;                    (* a snippet's nam
 sample      = "sample" NAME "from" STRING [ "license" license ] [ "else" NAME ]
             | "loop" STRING "as" NAME [ "else" NAME ] ;       (* restricted sounds: a local file, an Apple Loop by its hash *)
 license     = "cc0" | "cc-by" | "all-rights-reserved" | "restricted-private" ;
-use         = "use" "restricted" ;
+use         = "use" "restricted"                                (* the program is private: it may use restricted assets *)
+            | "use" use_source "as" NAME ;                        (* a name for a source, written out where it is used (docs/beatscript/ext-roles.md) *)
+use_source  = stored                                            (* <cid>.drop: a section; <cid>.drop.bass: a line; <cid>: a source for a role *)
+            | gen                                               (* gen@2 techno seed=42 section=drop, part=bass: a section or a line; with neither, a source for a role *)
+            | form [ "." NAME ]                                 (* template(passacaglia, ground=...): a form, for a role; .ground: a canned section of it *)
+            | template "." NAME                                 (* template(deep-house, @tempest_such_stuff).night: a canned section, sung with that phrase *)
+            | "theme" NAME                                      (* a theme of the public-domain library: a line, in the program's key *)
+            | "phrase" PHRASE                                   (* a phrasebook line: a phrase, for sing and template *)
+            | GENRE NAME "." NAME ;                             (* genre@1 techno.drop: a section of a genre template, frozen *)

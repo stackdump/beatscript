@@ -23,6 +23,7 @@ pub mod agent;
 pub mod beatgrid;
 pub mod compose_options;
 pub mod console;
+pub mod genre_templates;
 pub mod import;
 pub mod key;
 pub mod keylock;

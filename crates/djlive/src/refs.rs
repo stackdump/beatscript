@@ -60,6 +60,9 @@ pub struct Site {
     pub generator: Option<String>,
     /// What a `gen` call was fitted to: `key`, `bpm` (the program's own, where the call says none).
     pub fitted: Vec<String>,
+    /// The other places eject writes it: a `use` line's name in a role or a phrase's place is written as its source there,
+    /// each (where in the source, what).
+    pub also: Vec<(Span, String)>,
 }
 
 /// The line `src[at..]` starts on: where it starts.
@@ -112,7 +115,7 @@ fn pieces(src: &str, exp: &Expansion, kind: &'static str, out: &mut Vec<Site>) {
             Some(i) if place != "part" => Span::new(orig.start + i, orig.end),
             _ => *orig,
         };
-        out.push(Site { kind, half, call, span, replaced: *orig, place, name, text, resolved: None, model: None, track: None, generator: None, fitted: Vec::new() });
+        out.push(Site { kind, half, call, span, replaced: *orig, place, name, text, resolved: None, model: None, track: None, generator: None, fitted: Vec::new(), also: Vec::new() });
     }
 }
 
@@ -120,6 +123,45 @@ fn pieces(src: &str, exp: &Expansion, kind: &'static str, out: &mut Vec<Site>) {
 pub fn sites(src: &str, env: &Env) -> Result<Vec<Site>, Vec<Diagnostic>> {
     let norm = crate::lex::normalise_input(src);
     let src: &str = &norm;
+    // the `use` lines first (uses.rs): each a reference of kind `use`; the stages after them read the program with the lines
+    // written out (their own definitions blanked: they are the line's), and their places are mapped back
+    let Some(r) = crate::uses::for_refs(src, env) else { return stage_sites(src, env) };
+    let (imports, masked, exp, programs) = r?;
+    let mut out: Vec<Site> = imports
+        .into_iter()
+        .map(|i| Site {
+            kind: "use",
+            half: i.source.half(),
+            call: i.call,
+            span: i.span,
+            replaced: i.line,
+            place: match i.makes {
+                crate::uses::Makes::Section => "section",
+                crate::uses::Makes::Line => "let",
+                _ => "use",
+            },
+            name: Some(i.name),
+            text: i.text,
+            resolved: i.resolved,
+            model: None,
+            track: None,
+            generator: i.generator,
+            fitted: i.fitted,
+            also: i.also,
+        })
+        .collect();
+    let rest = crate::gen::with_generated(&programs, || stage_sites(&masked, env))?;
+    for mut s in rest {
+        s.span = exp.back(s.span);
+        s.replaced = exp.back(s.replaced);
+        out.push(s);
+    }
+    out.sort_by_key(|s| s.replaced.start);
+    Ok(out)
+}
+
+/// [`sites`] of a text with no `use` line to write out.
+fn stage_sites(src: &str, env: &Env) -> Result<Vec<Site>, Vec<Diagnostic>> {
     let mut out = Vec::new();
     if let Some(r) = crate::template::expand(src, env) {
         let e = r?;
@@ -282,6 +324,24 @@ pub fn eject(src: &str, env: &Env, at: usize) -> Option<Result<String, Vec<Diagn
 
 /// [`eject`] of a site already found.
 pub fn eject_site(src: &str, s: &Site) -> String {
+    // a `use` line: its name is written as its source where a role or a phrase takes it (all after the line), then the line
+    if !s.also.is_empty() || (s.kind == "use" && s.text.is_empty()) {
+        let mut out = src.to_string();
+        let mut also = s.also.clone();
+        also.sort_by_key(|(sp, _)| std::cmp::Reverse(sp.start));
+        let len = out.len();
+        for (sp, w) in also.iter().filter(|(sp, _)| sp.start >= s.replaced.end && sp.end <= len) {
+            out.replace_range(sp.start..sp.end, w);
+        }
+        if s.text.is_empty() {
+            // nothing is written where the line was: it goes, with its line's end
+            let end = if out[s.replaced.end..].starts_with('\n') { s.replaced.end + 1 } else { s.replaced.end };
+            out.replace_range(s.replaced.start..end, "");
+            return out;
+        }
+        let only = Site { also: Vec::new(), ..s.clone() };
+        return eject_site(&out, &only);
+    }
     let mut text = s.text.clone();
     // a section's or a track's expansion opens with its own `# from ...` comment: the provenance line says it now
     if text.starts_with("# from") {
@@ -369,6 +429,10 @@ pub fn based_on(text: &str, notes: &[String]) -> Vec<Basis> {
     }
     for cid in crate::stored::cids_of(text) {
         out.push(Basis { call: cid.clone(), cid: Some(cid), how: "borrowed" });
+    }
+    // what a `use` line names beyond a CID or a call: a theme, a phrase, a template's or a genre template's section
+    for (call, cid) in crate::uses::bases(text) {
+        out.push(Basis { call, cid, how: "borrowed" });
     }
     for n in notes {
         if let Some((call, cid)) = pinned(&format!("# {n}")) {
