@@ -3247,3 +3247,41 @@ test('docs.js and docs.css read the old data-btw blocks beside data-beatscript o
   const css = fs.readFileSync(path.join(here, '..', 'docs-src', 'assets', 'docs.css'), 'utf8');
   assert.ok(css.includes('.code[data-beatscript] .lang, .code[data-btw] .lang'));
 });
+
+const { provenanceLine, provenanceLines, storedText: provenanceStoredText } = await J('provenance-model.js');
+
+test('provenance: a stored program is its canonical text and its pinned `# from:` lines, no other comment (refs::pinned)', () => {
+  const pin = 'z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf';
+  const other = 'z4EBG9j9np3XWihrjc8J6Pm3UaJtbMRqxCyT5QtXK87KVFexdQh';
+  const call = 'gen@2 techno seed=42 section=drop part=bass';
+  // fmt's comments: each comment's text, its `#` marks stripped and trimmed
+  assert.equal(provenanceLine(`from: ${call} -> ${pin}`), `${call} -> ${pin}`);
+  assert.equal(provenanceLine(`from:   ${call}   ->   ${pin}`), `${call} -> ${pin}`);
+  assert.equal(provenanceLine(`from ${pin}.drop`), `${pin}.drop -> ${pin}`, "expand's line over a borrowed section names its pin");
+  assert.equal(provenanceLine(`from ${pin}.drop.bass`), `${pin}.drop.bass -> ${pin}`);
+  for (const n of [`from: ${call}`, `from: ${call} -> zNOTaCID`, "from: an idea of Ann's", 'from seed(techno, 42)[17..20]', `! from: ${call} -> ${pin}`, 'from:',
+    `from: ${pin}.drop -> ${other}`, `from: ${pin} -> ${other}`, `from ${pin}`, `from ${pin}.drop and more`, 'drop: the kick and the bass', '! name: secret plan']) {
+    assert.equal(provenanceLine(n), null, n);
+  }
+  const comments = ['! name: my secret plan', 'intro: only I know why', `from: ${call} -> ${pin}`, 'from: no pin', `from: ${call} -> ${pin}`, `from ${other}.drop`];
+  assert.deepEqual(provenanceLines(comments), [`${call} -> ${pin}`, `${other}.drop -> ${other}`]);
+  const canonical = 'tempo 124\nkey am\ndeck A: kick x ~ x ~\n';
+  const sent = provenanceStoredText(canonical, comments);
+  assert.equal(sent, `${canonical}# from: ${call} -> ${pin}\n# from: ${other}.drop -> ${other}\n`);
+  assert.ok(!sent.includes('secret') && !sent.includes('only I know'), 'no other comment leaves the page');
+  assert.equal(provenanceStoredText(canonical, ['a comment', '! name: x']), canonical, 'no provenance: the canonical text alone');
+  assert.equal(provenanceStoredText('tempo 120', [`from: ${call} -> ${pin}`]), `tempo 120\n# from: ${call} -> ${pin}\n`);
+  assert.deepEqual(provenanceLines(undefined), []);
+});
+
+test('provenance: the real module keeps the CID of the text it stores', { skip: !realWasm }, () => {
+  const pin = 'z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf';
+  const text = `#! name: kept\n# the intro: a private note\ntempo 124\n# from: gen@2 techno seed=42 section=drop part=bass -> ${pin}\ndeck A: kick x ~ x ~\n`;
+  const f = facade.fmt(text);
+  assert.ok(f.ok, JSON.stringify(f));
+  const sent = provenanceStoredText(f.canonical, f.comments);
+  // BeatScript 2: the version line is the canonical text's first line (it is in the CID), so it goes first; no other `#!` line goes
+  assert.ok(sent.startsWith('#! beatscript 2\n') && sent.endsWith(`# from: gen@2 techno seed=42 section=drop part=bass -> ${pin}\n`), sent);
+  assert.ok(!sent.includes('private note') && !sent.includes('#! name'), sent);
+  assert.equal(facade.fmt(sent).cid, f.cid, 'the same program');
+});

@@ -29,6 +29,7 @@ import { Assist } from './assist.js';
 import { Scrubber } from './scrub.js';
 import { prefGet, prefSet } from './prefs.js';
 import { STARTER } from './starter.js';
+import { storedText } from './provenance-model.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -913,26 +914,28 @@ export class App {
   }
 
   /**
-   * Store a program as it was written: the server stores its canonical text and keeps what its comments say beside it (its
-   * `# from: <call> -> <cid>` lines as meta.based_on, the first store's meta for good). A text over the server's size limit
-   * goes as its canonical text, which is smaller and has the same CID. `put(cid, text)` is putProgram or a share's put.
+   * What the page sends to store the program `text` (whose CID and canonical text `report` gives): the canonical text with
+   * the text's provenance lines after it (`# from: <call> -> <cid>`: provenance-model.js), which the server keeps as
+   * meta.based_on, and no other comment (doc comments, `#!` lines and the rest stay here). The same CID; the canonical text
+   * alone when the text does not read or is not that program.
    */
-  async putAsWritten(put, cid, text, canonical) {
-    if (typeof text === 'string' && text !== canonical) {
-      try { return await put(cid, text); } catch (e) { if (!(e instanceof ApiError && e.code === 'too_large')) throw e; }
-    }
-    return put(cid, canonical);
+  storedText(report, text) {
+    if (typeof text !== 'string' || !this.beatscript) return report.canonical;
+    let f;
+    try { f = this.beatscript.fmt(text); } catch { return report.canonical; }
+    if (!f || !f.ok || f.cid !== report.cid) return report.canonical;
+    return storedText(report.canonical, f.comments);
   }
 
   async ensureStored(report, text) {
     if (this.stored.has(report.cid)) return;
     await this.storeClosure(report);
-    await this.putAsWritten((cid, t) => this.api.putProgram(cid, t), report.cid, text, report.canonical);
+    await this.api.putProgram(report.cid, this.storedText(report, text));
     this.stored.add(report.cid);
     // streaming is the server rendering the program, so the server keeps it: say so once (an example is the server's own)
     if (!this._toldStored && !this.examples.some((e) => e.cid === report.cid)) {
       this._toldStored = true;
-      this.toast('The server keeps the programs it streams: this one is now stored publicly as CC0-1.0, found by its CID. (A program marked #! visibility: private is never sent.)', 'info');
+      this.toast('The server keeps the programs it streams: this one is now stored publicly as CC0-1.0, found by its CID, with its `# from:` lines (what it vendored) and no other comment. (A program marked #! visibility: private is never sent.)', 'info');
     }
   }
 

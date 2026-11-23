@@ -690,15 +690,15 @@ export class Panels {
           const cur = this.lastShare;
           // what the program imports is kept first: the server checks it against what it keeps
           await app.storeClosure(app.report);
-          // the text as written (same CID): the server keeps its `# from:` lines and doc comments beside the canonical text
-          paintShort(await app.putAsWritten((cid, t) => app.api.putShare(cid, { text: t }), cur.cid, text, cur.canonical));
+          // the canonical text and the text's `# from:` lines (same CID), which the server keeps; no other comment is sent
+          paintShort(await app.api.putShare(cur.cid, { text: app.storedText({ cid: cur.cid, canonical: cur.canonical }, text) }));
         } catch (e) {
           mk.disabled = false;
           if (e instanceof ApiError && e.code === 'auth_required') { app.user = null; app.updateUser(); paintShort(); return; }
           app.showError(e);
         }
       } }, 'Make short link');
-      shortBox.replaceChildren(h('div', { class: 'note' }, 'A CID-only short link keeps the program on this server (public, CC0-1.0) instead of carrying it in the link.'), mk);
+      shortBox.replaceChildren(h('div', { class: 'note' }, 'A CID-only short link keeps the program on this server (public, CC0-1.0) instead of carrying it in the link, with its # from: lines (what it vendored) and no other comment.'), mk);
     };
     paintShort();
     paintQR();
