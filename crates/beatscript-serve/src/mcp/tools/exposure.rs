@@ -48,8 +48,11 @@ fn expect(ans: &Value, e: &Value, saved: &HashMap<String, String>) -> Result<(),
     }
 }
 
-fn call(t: &Tools, name: &str, args: Value) -> Result<Value, String> {
-    let c = Caller { uid: Some("u-exposure".into()), ip: "127.0.0.1".into(), key: "u:u-exposure".into() };
+/// One call of a row's, as one signed-in caller. The checker allows a caller 60 calls a minute, and the table makes more than that
+/// (68 with nested's and acid's rows): each row counts against a budget of its own (`row`, the limiter's key; the same account
+/// and address), so a row is never refused for the rows before it.
+fn call(t: &Tools, row: &str, name: &str, args: Value) -> Result<Value, String> {
+    let c = Caller { uid: Some("u-exposure".into()), ip: "127.0.0.1".into(), key: format!("u:u-exposure:{row}") };
     let Value::Object(m) = args else { return Err("args: an object".into()) };
     match t.dispatch(name, &c, Args(m)) {
         Ok(Text::Json(v)) => Ok(v),
@@ -108,7 +111,7 @@ fn every_shipped_feature_is_described_and_reachable_through_mcp() {
         let mut saved = HashMap::new();
         for c in calls {
             let tool = c["tool"].as_str().unwrap();
-            let ans = match call(&t, tool, fill(&c["args"], &saved)) {
+            let ans = match call(&t, id, tool, fill(&c["args"], &saved)) {
                 Ok(a) => a,
                 Err(e) => {
                     fails.push(format!("{id}: {e}"));
