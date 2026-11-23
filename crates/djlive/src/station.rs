@@ -46,7 +46,7 @@ pub const SPARSE: [&str; 4] = ["ambient", "bossa", "jazz", "lofi"];
 /// The knobs of a station, in the order the answer gives them.
 pub const KNOBS: [&str; 7] = ["genre", "seed", "step", "forms", "tempo", "key", "length"];
 /// How far a `seed=~` walk is worked out (each step is a CID).
-pub const MAX_WALK: u64 = 100_000;
+pub const MAX_WALK: u64 = 10_000;
 /// At most this many forms in a rotation.
 pub const MAX_FORMS: usize = 16;
 /// The public-domain phrasebook's lines a form sings, pinned for stations v1 (a new line in the book moves no track).
@@ -76,6 +76,14 @@ pub struct Station {
     /// The program's `tempo` and `key`: every track and segue is generated at them. None: the from call's own.
     pub tempo: Option<f64>,
     pub key: Option<String>,
+}
+
+/// A walk as a run of tracks reads it.
+enum Walk {
+    /// `seed=+n`: s_0 + n*i, on demand.
+    Counted(u32),
+    /// `seed=~`: s_0 ..= s_last, worked out.
+    Listed(Vec<u32>),
 }
 
 /// The track at a position of a station.
@@ -217,17 +225,26 @@ impl Station {
         call_cid(&self.from_call())
     }
 
-    /// The walk's seeds s_0 ..= s_upto.
+    /// The walk's seed at position i of a `seed=+n` station: s_0 + n*i, wrapping at 2^32.
+    fn counted(&self, n: u32, i: u64) -> u32 {
+        seed_value(&self.seed).wrapping_add((u64::from(n).wrapping_mul(i) & 0xffff_ffff) as u32)
+    }
+
+    /// The walk's seeds s_0 ..= s_upto (a `seed=+n` walk is worked out to any position; a `seed=~` one to [`MAX_WALK`]).
     pub fn seeds(&self, upto: u64) -> Result<Vec<u32>, String> {
-        let s0 = seed_value(&self.seed);
         match self.step {
-            SeedStep::By(n) => Ok((0..=upto).map(|i| s0.wrapping_add(((u64::from(n) * i) & 0xffff_ffff) as u32)).collect()),
+            SeedStep::By(n) => {
+                if upto > MAX_WALK {
+                    return Err(format!("the seeds of a walk are listed to position {MAX_WALK}: ask for a track, which any position has"));
+                }
+                Ok((0..=upto).map(|i| self.counted(n, i)).collect())
+            }
             SeedStep::Hash => {
                 if upto > MAX_WALK {
                     return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {upto} is past it"));
                 }
                 let mut out = Vec::with_capacity(upto as usize + 1);
-                out.push(s0);
+                out.push(seed_value(&self.seed));
                 let mut call = self.from_call();
                 for _ in 0..upto {
                     let next = fold32(&call_cid(&call));
@@ -252,12 +269,28 @@ impl Station {
         SPARSE.contains(&self.genre.as_str())
     }
 
-    /// The `arrange from` reference of the track at n, given the walk (s_0 ..= s_n at least).
-    fn reference(&self, n: u64, seeds: &[u32]) -> (String, String, Option<String>, u32, u32) {
+    /// The walk at the positions a run of tracks from `from` to `last` reads (the first chapter's theme, the parent): the
+    /// seeds of a `seed=~` walk from 0, or the counted ones on demand.
+    fn walk(&self, last: u64) -> Result<Walk, String> {
+        match self.step {
+            SeedStep::By(n) => Ok(Walk::Counted(n)),
+            SeedStep::Hash => self.seeds(last).map(Walk::Listed),
+        }
+    }
+
+    fn seed_in(&self, w: &Walk, i: u64) -> u32 {
+        match w {
+            Walk::Counted(n) => self.counted(*n, i),
+            Walk::Listed(v) => v[i as usize],
+        }
+    }
+
+    /// The `arrange from` reference of the track at n, given the walk.
+    fn reference(&self, n: u64, w: &Walk) -> (String, String, Option<String>, u32, u32) {
         let r = self.forms.len().max(1) as u64;
         let form = self.forms[(n % r) as usize].clone();
         let t_at = n - n % r;
-        let (s, t) = (seeds[n as usize], seeds[t_at as usize]);
+        let (s, t) = (self.seed_in(w, n), self.seed_in(w, t_at));
         let fresh = self.call(&self.seed_word(n, s));
         let theme = self.call(&self.seed_word(t_at, t));
         let phrase = PHRASES[(s % PHRASES.len() as u32) as usize];
@@ -290,7 +323,7 @@ impl Station {
     /// The tracks at n .. n+count.
     pub fn tracks(&self, n: u64, count: u64) -> Result<Vec<Track>, String> {
         let last = n.checked_add(count.saturating_sub(1)).ok_or("past the end of the walk")?;
-        let seeds = self.seeds(last)?;
+        let seeds = self.walk(last)?;
         let station = self.cid();
         let mut parent = (n > 0).then(|| {
             let (rf, ..) = self.reference(n - 1, &seeds);
@@ -319,8 +352,9 @@ impl Station {
 
     /// The segue from track n to n+1: the cross of their seeds.
     pub fn segue(&self, n: u64) -> Result<Segue, String> {
-        let seeds = self.seeds(n + 1)?;
-        let (a, b) = (seeds[n as usize], seeds[n as usize + 1]);
+        let last = n.checked_add(1).ok_or("past the end of the walk")?;
+        let seeds = self.walk(last)?;
+        let (a, b) = (self.seed_in(&seeds, n), self.seed_in(&seeds, last));
         let melody = if self.sparse() { " part=melody" } else { "" };
         let phrase = PHRASES[((u64::from(a) + u64::from(b)) % PHRASES.len() as u64) as usize];
         let rf = format!("template(cross, @{phrase}, a={}{melody}, b={}{melody})", self.call(&self.seed_word(n, a)), self.call(&b.to_string()));

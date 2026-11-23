@@ -67,7 +67,7 @@ fold32       FNV-1a 32 over the CID's bytes
 - **`+n` counts on**: s_N is one sum, whatever N is.
 - **`~` draws each seed from the track before**: s_{N+1} is "seeded from the previous track's CID", and the track the walk
   hashes is the generator call itself, `arrange from gen@V GENRE seed=s_N`, with the from call's `length=` when it has one.
-  The walk is N hashes long, so a `~` station is read up to N = 100000; a position past it is refused.
+  The walk is N hashes long, so a `~` station is read up to N = 10000 (some 800 hours of radio); a position past it is refused. A `+N` station has a track at any position.
 - **What moves the walk.** The tempo, the key and the form of a track are not in the call the walk hashes, so turning the
   `tempo`, `key` or `forms` knob keeps every seed. Under `~` the genre and the length are in it (and the generator's version),
   and turning either gives another walk after track 0. Under `+n` only the `seed` and `step` knobs move the seeds.
@@ -307,7 +307,7 @@ and `key dm` (the same seeds and forms in the keys either side round the circle)
   `next seed=+0`; a form that is not one of the seven; a `#! stations:` line other than `v1`; and anything beside the
   `station` block but `tempo`, `key` and comments: each is an error at it.
 - `check` of a station program compiles its track 0 and checks its first chapter and the segue from track 0 to track 1.
-- In a request: a `count` outside 1 to 16, a position past 100000 on a `~` station, a retune of a locked knob, and a notch
+- In a request: a `count` outside 1 to 16, a position past 10000 on a `~` station, a retune of a locked knob, and a notch
   (`"+1"`, `"-1"`) of `genre` are refused, in the error answer.
 - With `check`, each track and segue is checked as any program is (its gen calls resolved, its form written out), and its
   `check` says `ok`, `expanded_cid`, `bars`, `seconds` and `errors`.

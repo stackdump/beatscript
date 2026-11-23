@@ -92,6 +92,7 @@ pub const STATEMENTS: &[(&str, &str, &str)] = &[
     ("wire", "an output of one def glued to an input of another: `wire a.out -> b.in`", "wire ${1:a}.out -> ${2:b}.${3:in}"),
     ("assert", "a statement the program makes about itself: `assert length == 3m30s ± 5s`", "assert ${1:length} == ${2:3m30s}"),
     ("set", "programs of programs: `set { play X  mix 8 bars with crossfade  play Y }`", "set {\n  play ${1:a}\n  mix ${2:8} bars with ${3:crossfade}\n  play ${4:b}\n}"),
+    ("station", "radio: an endless, deterministic run of tracks, position N always the same track: `station { from gen@2 techno seed=42  next seed=~  forms seeded passacaglia }`", "station {\n  from gen@2 ${1:techno} seed=${2:42}\n  next seed=${3:~}\n  forms ${4:seeded passacaglia rondo fugue}\n}"),
     ("use", "`use restricted`: the program is private and may use restricted assets", "use restricted"),
     ("do", "a call on the control registry: `do noun verb key=value`", "do ${1:noun}"),
     ("control", "the control deck, beside `deck A:`, `deck B:` and `master:`: engine calls only (`move`, `swap pairs`, `queue`, `crossfader`, a timed `tempo`, `do` and its sugar), sequenced like any line: `at bar 12: control: swap pairs with filter_exit`", "control: ${1:move echo_out on B}"),

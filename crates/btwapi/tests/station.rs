@@ -219,7 +219,7 @@ fn a_bad_request_says_what_is_wrong() {
         (req(RADIO, ", \"retune\": {\"genre\": \"+1\"}"), "no notch"),
         (req(RADIO, ", \"locks\": [\"volume\"]"), "`volume` is no knob"),
         (req("station {\n  from gen@2 techno seed=42\n  forms seeded nope\n}\n", ""), "`nope` is no form"),
-        (req(RADIO, ", \"n\": 200000"), "100000"),
+        (req(RADIO, ", \"n\": 20000"), "10000"),
     ] {
         let v = JsonValue::parse(&btwapi::station_json(&r)).unwrap();
         assert_eq!(v.get("ok").and_then(JsonValue::as_bool), Some(false), "{r}");
