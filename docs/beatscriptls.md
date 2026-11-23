@@ -178,29 +178,42 @@ calls through that string surface, on a server made as `BeatscriptLs::new` makes
   whose own text holds it, else whose statement does). A shown expansion is a read-only note drawn at the end of the line
   the reference ends on, four columns past it (the lightbulb sits in the first ones): `⇒ <its first line>  … N more lines
   [z…cid]`, cut to the room the line leaves (the first line is cut first, then dropped for the line count, then the CID). It
-  is drawn over the code, never written into the textarea, so the text, its CID and undo do not move.
-- **The lens**: while the caret is on a reference whose expansion is hidden, `⇒ show expansion` stands where its note would;
-  a click shows it. This is the visible control for what VS Code's `show expansion` lens does.
+  is drawn over the code, never written into the textarea, so the text, its CID and undo do not move; and never over the
+  text: on a row nearly full the gap shrinks to one column, and a line that leaves fewer than three columns gets no note
+  (Alt+Enter, *Open* and the popup still reach the expansion). The key is taken only when there is something for it: a
+  reference at the caret, or a problem of one there (its reason is said). Off any reference, and in a quoted phrase or a
+  comment, Alt+E types as it would (Option+E is é, € or ę on a Mac).
+- **The lens**: while the caret is on a reference whose expansion is hidden, `⇒ show expansion` stands where its note would
+  (its title says what it does and the keys); a click shows it. This is the visible control for what VS Code's
+  `show expansion` lens does.
 - **Hover** a note: the call, its CID, kind and half, and the expansion under its `# from:` line, at most 12 lines or 1200
   characters, then how many more. **Click** a note: the whole expansion in the popup under the reference (scrolls), with
-  *Hide the expansion*, *Copy the expansion* and *Eject … into local text*.
-- **Alt+Shift+E**: every reference's expansion shown, or all hidden when any of them is.
+  *Hide the expansion*, *Copy the expansion* and *Eject … into local text*; the focus goes to the editor (so the popup's keys
+  work) and a screen reader is told what opened, its length and first line, and the keys.
+- **Alt+Shift+E**: every reference's expansion shown, or all hidden when any of them is (taken when the program has a
+  reference; otherwise it types).
 - **Alt+Enter** on a reference lists the service's *Eject … into local text* (a refactor: resolved, made and proved as the
   others are) and *Copy the expansion of …* (a command with no edit), then the page's own *Show/Hide the expansion of …*,
   *Show/Hide every reference's expansion* (when there are several) and *Open the whole expansion of …*.
 - **Commands are routed as the extension's middleware routes them** (`expansion-model.route`): `beatscript.expand.toggle` and
   `beatscript.expand.copy` are the page's (it asks `beatscript/expand`; they never go to the server), `beatscript.eject` goes to the server as
-  `workspace/executeCommand` with `[{uri, position}]` and its `{label, edit}` is applied as one undoable edit; an error
-  (the text cannot be ejected, or no reference there) is a toast with the server's reason.
+  `workspace/executeCommand` with `[{uri, position, length}]`, `length` the UTF-8 byte length of the text the popup was
+  opened for (what the server compares: an eject of a text that has changed since is refused, as a lens's is), and its
+  `{label, edit}` is applied as one undoable edit; an error (the text changed, it cannot be ejected, no reference there) is a
+  toast with the server's reason.
 - **Copy** writes the `# from:` line and the expansion (what eject would write, as VS Code copies it). Where the clipboard is
   shut (no permission, an insecure origin) the whole opens under the reference instead, to select and copy by hand.
 - **The state** is a set of keys in the page, `kind|call|place|name` (VS Code's), so an edit that moves a reference keeps
-  it shown. An edit hides the notes at once (they would sit on moved text) and they are drawn again for the new text when it
-  rests: after the caret's 120 ms and after the page's check; a resize or a font change redraws them where the text now
-  wraps. The references are asked once per text; when they could not be worked out (a stored program the page has not
-  fetched yet) they are asked again after the page's next check, the document opened afresh in `BeatscriptLs` (its analysis keeps
-  what it worked out for a text, and the program told to the module since is what it lacked). A screen reader is told what
-  was shown or hidden (an `aria-live` line), and `#ed-help` names the keys.
+  it shown; a program loaded in place of the text (an example, a link, an assistant's `eval`) drops it, as VS Code drops a
+  closed document's. An edit hides the notes at once (they would sit on moved text) and they are drawn again for the new
+  text when it rests: after the caret's 120 ms and after the page's check; a resize or a font change redraws them where the
+  text now wraps. Any edit (a paste with the mouse or a drop too, not only a key) and any load closes the fixes list, the
+  outline and an expansion's popup, which were made for the old text.
+- **A stored reference typed or pasted** (`<cid>.drop.bass`): the caret's first questions come before the page has fetched
+  the program, and `BeatscriptLs` works a text's references out once and keeps them. So whenever the page tells the module a
+  program (the Resolver's `know`), the document is opened afresh at the next request, and the caret's reference is asked
+  again after the check that follows: the lens, the eject action and Alt+E work as soon as the program is in. A screen
+  reader is told what was shown or hidden (an `aria-live` line), and `#ed-help` names the keys.
 
 Decisions:
 
@@ -210,11 +223,18 @@ Decisions:
 - **The whole on a click, a part on hover.** The editor's tip does not take the pointer, so it cannot scroll: it shows 12
   lines (the service's own hover shows 24, under its other facts) and says how many more; the click's popup scrolls.
 - **Alt+E toggles; it does not open the popup.** Hiding has to be a key too, and *Open the whole expansion* is in Alt+Enter.
-  Alt+E is matched by `code` as well as `key` (Option+E is a dead key on a Mac) and taken before the browser's menu.
+- **Alt+E is taken only where there is a reference.** It is matched by `code` as well as `key`, because Option+E is a dead
+  key on a Mac (and € or ę on other layouts), and that is how those characters are typed. So the page takes it only when
+  the caret has a reference, or a problem of one, and never in a quoted phrase or a comment; everywhere else it types. A
+  chord that never composes (Ctrl+Option+E) would be one more key to learn on one platform; on a reference there is
+  nothing to type with Option+E.
 - **The lens only at the caret**, not over every reference as VS Code's lenses are: the page has no lens rows, and a note
   on every reference line would crowd the code. Every reference's expansion is one key away.
 - **"Every" hides when any is shown**, counting only the program's references now (a key of a reference that is gone does
   not make the next press hide); hiding clears every key.
+- **Equal references show together.** Two references with the same kind, call, place and name (the same part call in two
+  sections) have one key and one expansion, so one Alt+E shows both, as in VS Code. Telling them apart by their order would
+  make an edit that adds an equal one above switch which is shown.
 
 Not done: VS Code's *open … beside* as a second editor (the popup is the page's), and a per-reference lens row.
 
