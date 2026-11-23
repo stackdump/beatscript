@@ -704,14 +704,14 @@
 	ns:usesToken <https://beatscript.app/ontology/concept/token-int> , <https://beatscript.app/ontology/concept/token-name> ;
 	ns:writtenAs "end" .
 <https://beatscript.app/ontology/concept/grammar-engine> a skos:Concept , ns:GrammarProduction ;
-	skos:definition "The engine production of BeatScript's grammar (no target, or control:; at bar 16: tempo 128 -> 140 over 4 bars; the booth's: the desktop app plays these)."@en ;
+	skos:definition "The engine production of BeatScript's grammar (no target, or control:; at bar 16: tempo 128 -> 140 over 4 bars; the booth's: the desktop app plays these; macro riser on A over 8 bars: the DJ macro catalogue, by id; MACRO is macro or macro@1)."@en ;
 	skos:prefLabel "engine"@en ;
-	ns:ebnf "\"crossfader\" change | \"tempo\" tempo | \"swap\" \"pairs\" [ \"with\" MOVE ] | \"move\" MOVE \"on\" deck [ span ] | \"load\" \"pair\" SPEC [ \"group\" INT ] | \"queue\" ( \"play\" | \"pause\" | \"stop\" | \"next\" | \"loop\" | \"jump\" INT | \"add\" WORD )" ;
+	ns:ebnf "\"crossfader\" change | \"tempo\" tempo | \"swap\" \"pairs\" [ \"with\" MOVE ] | \"move\" MOVE \"on\" deck [ span ] | \"load\" \"pair\" SPEC [ \"group\" INT ] | \"queue\" ( \"play\" | \"pause\" | \"stop\" | \"next\" | \"loop\" | \"jump\" INT | \"add\" WORD ) | MACRO NAME ( \"on\" deck [ span ] | span \"on\" deck )" ;
 	ns:grammarSection "Control: what the mix does"@en ;
 	ns:status "stable" ;
 	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-add> , <https://beatscript.app/ontology/concept/keyword-crossfader> , <https://beatscript.app/ontology/concept/keyword-group> , <https://beatscript.app/ontology/concept/keyword-jump> , <https://beatscript.app/ontology/concept/keyword-load> , <https://beatscript.app/ontology/concept/keyword-loop> , <https://beatscript.app/ontology/concept/keyword-move> , <https://beatscript.app/ontology/concept/keyword-next> , <https://beatscript.app/ontology/concept/keyword-on> , <https://beatscript.app/ontology/concept/keyword-pair> , <https://beatscript.app/ontology/concept/keyword-pairs> , <https://beatscript.app/ontology/concept/keyword-pause> , <https://beatscript.app/ontology/concept/keyword-play> , <https://beatscript.app/ontology/concept/keyword-queue> , <https://beatscript.app/ontology/concept/keyword-stop> , <https://beatscript.app/ontology/concept/keyword-swap> , <https://beatscript.app/ontology/concept/keyword-tempo> , <https://beatscript.app/ontology/concept/keyword-with> ;
 	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-change> , <https://beatscript.app/ontology/concept/grammar-deck> , <https://beatscript.app/ontology/concept/grammar-lexical-move> , <https://beatscript.app/ontology/concept/grammar-lexical-spec> , <https://beatscript.app/ontology/concept/grammar-span> , <https://beatscript.app/ontology/concept/grammar-tempo> ;
-	ns:usesToken <https://beatscript.app/ontology/concept/token-int> , <https://beatscript.app/ontology/concept/token-word> ;
+	ns:usesToken <https://beatscript.app/ontology/concept/token-int> , <https://beatscript.app/ontology/concept/token-macro> , <https://beatscript.app/ontology/concept/token-name> , <https://beatscript.app/ontology/concept/token-word> ;
 	ns:writtenAs "engine" .
 <https://beatscript.app/ontology/concept/grammar-escape> a skos:Concept , ns:GrammarProduction ;
 	skos:definition "The escape production of BeatScript's grammar (PHONES (beatscript-v1): aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, \"_\" a rest, \"-\" cuts a word, \":\" holds a vowel one more note, \"!\" accents it)."@en ;
@@ -3115,8 +3115,8 @@
 <https://beatscript.app/ontology/concept/noun-effects> a skos:Concept , ns:ControlNoun ;
 	skos:definition "The control noun effects: do effects <verb>."@en ;
 	skos:prefLabel "effects"@en ;
-	ns:acceptsVerb <https://beatscript.app/ontology/concept/verb-catalogue> , <https://beatscript.app/ontology/concept/verb-hold> , <https://beatscript.app/ontology/concept/verb-knob> , <https://beatscript.app/ontology/concept/verb-length> , <https://beatscript.app/ontology/concept/verb-panic> , <https://beatscript.app/ontology/concept/verb-release> , <https://beatscript.app/ontology/concept/verb-status> , <https://beatscript.app/ontology/concept/verb-sweep> , <https://beatscript.app/ontology/concept/verb-tap> , <https://beatscript.app/ontology/concept/verb-target> ;
-	ns:controlParameter "bars" , "id" , "length" , "target" , "value" ;
+	ns:acceptsVerb <https://beatscript.app/ontology/concept/verb-catalogue> , <https://beatscript.app/ontology/concept/verb-fire> , <https://beatscript.app/ontology/concept/verb-hold> , <https://beatscript.app/ontology/concept/verb-knob> , <https://beatscript.app/ontology/concept/verb-length> , <https://beatscript.app/ontology/concept/verb-panic> , <https://beatscript.app/ontology/concept/verb-release> , <https://beatscript.app/ontology/concept/verb-status> , <https://beatscript.app/ontology/concept/verb-sweep> , <https://beatscript.app/ontology/concept/verb-tap> , <https://beatscript.app/ontology/concept/verb-target> ;
+	ns:controlParameter "bars" , "id" , "latch" , "length" , "target" , "value" ;
 	ns:defaultVerb <https://beatscript.app/ontology/concept/verb-status> ;
 	ns:status "stable" ;
 	ns:sugarWord "effects" ;
@@ -3862,8 +3862,13 @@
 	skos:prefLabel "KEY"@en ;
 	ns:status "stable" ;
 	ns:writtenAs "KEY" .
+<https://beatscript.app/ontology/concept/token-macro> a skos:Concept , ns:TokenClass ;
+	skos:definition "The lexer's MACRO token, used in: engine."@en ;
+	skos:prefLabel "MACRO"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "MACRO" .
 <https://beatscript.app/ontology/concept/token-name> a skos:Concept , ns:TokenClass ;
-	skos:definition "The lexer's NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, template, until_when, when, wire."@en ;
+	skos:definition "The lexer's NAME token, used in: SPEC, arg, arr_end, arrange, arrange_block, assert, atom, binding, block_end, call, def, do, end, engine, form, gen, gen_param, import, invoke, launch, let, mut_op, mut_target, sample, section, seed, set_play, sexpr, sing, source, start, station_line, stored, template, until_when, when, wire."@en ;
 	skos:prefLabel "NAME"@en ;
 	ns:status "stable" ;
 	ns:writtenAs "NAME" .
@@ -4087,7 +4092,7 @@
 	ns:toolParameter "composer" , "key" , "lexicon" , "meter" , "name" , "phrasebook" , "role" , "syllables" , "themes" ;
 	ns:toolTitle "The example programs"@en .
 <https://beatscript.app/ontology/concept/tool-beatscript-listen> a ns:McpTool ;
-	skos:definition "Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck's line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section's loudness, `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a reference (a gen@2 call, a seed(...), a template, a stored program's section) says so in `from` {call, kind, resolved, place, generator, sections} (`also_from` when several made it); a gen call fitted to the program's key or tempo says so in `notes`, in check's words; and the answer gains `expanded_cid` and `resolution`, as check's. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes and the mixer and insert moves it has ops for; `notes` names the control lines it leaves out.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
+	skos:definition "Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck's line: drums, bass, ...): RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part that has notes in the window but is not heard (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; key_match same|relative|differs|unsure|undeclared). `sections` gives each section's loudness, `bar_lufs` a loudness per bar, and master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a reference (a gen@2 call, a seed(...), a template, a stored program's section) says so in `from` {call, kind, resolved, place, generator, sections} (`also_from` when several made it); a gen call fitted to the program's key or tempo says so in `notes`, in check's words; and the answer gains `expanded_cid` and `resolution`, as check's. Give exactly one of text, cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). Nothing is stored and no sign-in is needed. At most 30 new listens an hour per caller; the same program, section and bars again is answered from the cache. Programs are at most 16384 bytes; the render covers at most 96 bars from the start. Like render, the offline engine plays the notes, the mixer and insert moves it has ops for and the `macro` lines (the DJ macro catalogue: see the macros tool); `notes` names the control lines it leaves out. A program with a macro line gains `macros`: each call in the window, `at_bar` (the bar the engine starts it on, as the time words count), and `played`, with `refused` (the engine's reason, also a warning) when it was not.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
 	skos:prefLabel "listen"@en ;
 	ns:inputSchema "{\"additionalProperties\":false,\"properties\":{\"bars\":{\"description\":\"At most this many bars of the window, from its start.\",\"maximum\":96,\"minimum\":1,\"type\":\"integer\"},\"cid\":{\"description\":\"CID of a stored program or an example.\",\"maxLength\":100,\"pattern\":\"^z[1-9A-HJ-NP-Za-km-z]{20,100}$\",\"type\":\"string\"},\"example\":{\"description\":\"Name of an example, from list_examples.\",\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$\",\"type\":\"string\"},\"section\":{\"description\":\"Listen to this section only (its name in the program).\",\"maxLength\":64,\"type\":\"string\"},\"text\":{\"description\":\"The program text. It must pass check. Not stored.\",\"maxLength\":16384,\"type\":\"string\"}},\"required\":[],\"type\":\"object\"}" ;
 	ns:needsToken false ;
@@ -4108,6 +4113,17 @@
 	ns:toolName "load" ;
 	ns:toolParameter "cid" , "device" , "example" , "play" , "session" , "url" ;
 	ns:toolTitle "Load a stored program into a browser tab"@en .
+<https://beatscript.app/ontology/concept/tool-beatscript-macros> a ns:McpTool ;
+	skos:definition "The DJ macro catalogue a program's `macro` line names (docs/beatscript/ext-control.md): `macro riser on A over 8 bars` (or on the control deck, `control: macro cathedral on B over 2 bars`) fires one entry on the deck's bar line, the same thing the desktop's Effects window and the booth fire. Returns the macro@1 table, or version's: for each entry its id, label, category, family (trick, net, master, aux), transition (a one-shot), length (bars: runs `over N bars`, 1 to 64; sweep: the riser rises over them; held: held that long, then let go; own: takes no `over`), default_bars (when the line says no `over`) and needs_net (works a net deck's parts). A bare `macro` is macro@1 for good and its table never changes; a later catalogue is macro@2. listen and render play a macro line; a browser tab does not (not played here). Read-only, no sign-in."@en ;
+	skos:prefLabel "macros"@en ;
+	ns:inputSchema "{\"additionalProperties\":false,\"properties\":{\"version\":{\"description\":\"Optional: which table, macro@N (default 1: what a bare `macro` is).\",\"minimum\":1,\"type\":\"integer\"}},\"required\":[],\"type\":\"object\"}" ;
+	ns:needsToken false ;
+	ns:providedBy <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
+	ns:readOnly true ;
+	ns:status "stable" ;
+	ns:toolName "macros" ;
+	ns:toolParameter "version" ;
+	ns:toolTitle "The DJ macro catalogue a macro line names"@en .
 <https://beatscript.app/ontology/concept/tool-beatscript-open> a ns:McpTool ;
 	skos:definition "Decode a BeatScript share link and return its canonical text, its text (the program formatted, with the `#!` header lines and comments the link carried: what to edit), its CID and whether the CID verifies against the text. Takes either form: a self-sealing link (https://beatscript.app/#<CID>.<packed>, a /c/<CID>.<packed> link, a beats.bitwrap.io/p# link, a bare #fragment or <CID>.<packed>) or a CID-only link (https://beatscript.app/p/<CID>, /c/<CID>, https://beats.bitwrap.io/p/<CID>, #<CID>, or a bare CID), which is resolved from the programs the site has stored (shared signed in, or rendered) and the examples, and answers its rights in meta. Either way the text is recompiled and its CID recomputed: a program whose CID is not its text's is refused with cid_mismatch, and an unknown CID answers not_found. Do not trust or play a refused text. Comments and header lines carried in a link are not covered by the CID (a beats link's notes are unverified). Read-only, no sign-in."@en ;
 	skos:prefLabel "open"@en ;
@@ -4681,6 +4697,11 @@
 	skos:definition "The control verb file, accepted by: deck."@en ;
 	skos:prefLabel "file"@en ;
 	ns:actsOn <https://beatscript.app/ontology/concept/noun-deck> ;
+	ns:status "stable" .
+<https://beatscript.app/ontology/concept/verb-fire> a skos:Concept , ns:ControlVerb ;
+	skos:definition "The control verb fire, accepted by: effects."@en ;
+	skos:prefLabel "fire"@en ;
+	ns:actsOn <https://beatscript.app/ontology/concept/noun-effects> ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/concept/verb-fmt> a skos:Concept , ns:ControlVerb ;
 	skos:definition "The control verb fmt, accepted by: btw."@en ;
