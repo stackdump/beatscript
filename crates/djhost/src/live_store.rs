@@ -364,7 +364,7 @@ impl LiveStore {
             (None, None) => Rights::new(crate::tracks::default_author().as_deref()),
         };
         let mut warnings = Vec::new();
-        self.add_import_credits(text, &mut rights, &mut warnings);
+        self.add_import_credits(text, &comp.plays, &mut rights, &mut warnings);
         let links = links.unwrap_or_else(|| original.as_ref().map(|o| o.links.clone()).unwrap_or_default());
         let obj = Object { name: name.clone(), text: comp.text.clone(), rights, links };
         let entry = self.write(&obj)?;
@@ -429,11 +429,17 @@ impl LiveStore {
     }
 
     /// Every snippet the program imports is credited the way a fork credits its parent.
-    fn add_import_credits(&self, text: &str, rights: &mut Rights, warnings: &mut Vec<String>) {
+    fn add_import_credits(&self, text: &str, drew_on: &[(String, String)], rights: &mut Rights, warnings: &mut Vec<String>) {
         let be = BeatscriptEnv::new(Some(self));
         let parsed = djlive::parse::parse_with(text, &be.env());
-        // the programs a set plays, and the ones a part or a section is borrowed from, are credited the same way
-        let cids: Vec<String> = parsed.imports.iter().map(|i| i.cid.clone()).chain(parsed.plays.iter().map(|p| p.cid.clone())).chain(djlive::stored::cids_of(text)).collect();
+        // the programs a set plays, and the ones a part or a section is borrowed from, are credited the same way; then what the
+        // check drew on that the text does not name (a set's tracks, bound to a form's role)
+        let mut cids: Vec<String> = Vec::new();
+        for c in parsed.imports.iter().map(|i| i.cid.clone()).chain(parsed.plays.iter().map(|p| p.cid.clone())).chain(djlive::stored::cids_of(text)).chain(drew_on.iter().map(|(c, _)| c.clone())) {
+            if !cids.contains(&c) {
+                cids.push(c);
+            }
+        }
         for cid in &cids {
             let Some(e) = self.list().into_iter().find(|e| e.cid == *cid) else { continue };
             let f = e.rights.fork(&e.cid, Some(&e.name), rights.author.as_deref());
@@ -923,6 +929,24 @@ mod tests {
         let closed = s.save_with("closed", "tempo 90\nsection chorus 2 bars {\n  deck A: snare x ~ x ~\n}\narrange chorus\n", Some(Rights { license: License::AllRightsReserved, ..Rights::default() })).unwrap().0;
         let (_, warnings) = s.save_with("mine", &format!("tempo 90\nsection hook from {}.chorus\narrange hook\n", closed.cid), None).unwrap();
         assert!(warnings.iter().any(|w| w.contains("which is all rights reserved")), "{warnings:?}");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    /// A set bound to a form's role (`episodes=<set>`: a bare CID, or `<set>.track2.lift.melody`) is credited with the tracks it
+    /// draws on, which the text does not name: a CC BY track is credited, and an all-rights-reserved one is warned of, as an
+    /// import's is (docs/beatscript/forms.md "Extensions").
+    #[test]
+    fn a_set_in_a_forms_role_credits_its_tracks() {
+        let (s, dir) = store_named("set-role-credit");
+        let one = s.save_with("one", "tempo 120\nkey c\nsection verse 4 bars {\n  deck A: kick x ~ x ~ | bass c2 ~ g1 ~\n}\narrange verse\n", Some(Rights { license: License::CcBy4, author: Some("did:key:z6MkOne".into()), ..Rights::default() })).unwrap().0;
+        let two = s.save_with("two", "tempo 120\nkey am\nsection lift 4 bars {\n  deck A: kick x x x x | bass a1 ~ e2 ~\n  deck B: melody a4 e5 c5 e5\n}\narrange lift\n", Some(Rights { license: License::AllRightsReserved, author: Some("did:key:z6MkTwo".into()), ..Rights::default() })).unwrap().0;
+        let set = s.save_with("the set", &format!("set {{\n  play {}\n  play {}\n}}\nend\n", one.cid, two.cid), None).unwrap().0;
+        let (song, warnings) = s.save_with("rondo", &format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={})\n", set.cid), None).unwrap();
+        assert!(song.rights.credits.iter().any(|c| c.cid == one.cid && c.author.as_deref() == Some("did:key:z6MkOne")), "{:?}", song.rights);
+        assert!(warnings.iter().any(|w| w.contains("it draws on two") && w.contains("which is all rights reserved")), "{warnings:?}");
+        // one track's section's part: the track it is in is warned of too
+        let (_, warnings) = s.save_with("refrain", &format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={}.track2.lift.melody)\n", set.cid), None).unwrap();
+        assert!(warnings.iter().any(|w| w.contains("it draws on two") && w.contains("which is all rights reserved")), "{warnings:?}");
         let _ = std::fs::remove_dir_all(dir);
     }
 
