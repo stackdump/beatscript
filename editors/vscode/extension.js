@@ -188,6 +188,7 @@ function activate(context) {
     after: { color: new vscode.ThemeColor('editorCodeLens.foreground'), fontStyle: 'italic' },
     rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   });
+  require('./preview').registerPreview(context, vscode); // btw.preview: the document in the published player, beside it
   start(context);
   let repaint;
   context.subscriptions.push(

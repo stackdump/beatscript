@@ -50,10 +50,15 @@
       { "command": "btw.expand.all", "title": "BeatScript: Show or hide every reference's expansion" },
       { "command": "btw.expand.open", "title": "BeatScript: Open the expansion of the reference here beside" },
       { "command": "btw.expand.copy", "title": "BeatScript: Copy the expansion of the reference here" },
-      { "command": "btw.eject", "title": "BeatScript: Eject the reference here into local text" }
+      { "command": "btw.eject", "title": "BeatScript: Eject the reference here into local text" },
+      { "command": "btw.preview", "title": "BeatScript: Preview with the player", "icon": "$(open-preview)" }
     ],
     "menus": {
+      "editor/title": [
+        { "command": "btw.preview", "when": "editorLangId == btw", "group": "navigation" }
+      ],
       "commandPalette": [
+        { "command": "btw.preview", "when": "editorLangId == btw" },
         { "command": "btw.expand.toggle", "when": "editorLangId == btw" },
         { "command": "btw.expand.all", "when": "editorLangId == btw" },
         { "command": "btw.expand.open", "when": "editorLangId == btw" },
@@ -66,6 +71,6 @@
     "vscode-languageclient": "^9.0.1"
   },
   "scripts": {
-    "test": "node test/grammar.test.js"
+    "test": "node test/grammar.test.js && node test/preview.test.js"
   }
 }
