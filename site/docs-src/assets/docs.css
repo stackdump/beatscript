@@ -91,7 +91,7 @@ a { color: var(--link); }
 .code { margin: 0 0 18px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--stage); overflow: hidden; }
 .code figcaption { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; padding: 2px 6px 2px 12px; background: var(--panel-2); border-bottom: 1px solid var(--line-2); font-size: 12px; color: var(--faint); }
 .code .lang { text-transform: lowercase; letter-spacing: .04em; }
-.code[data-beatscript] .lang { color: var(--amber); text-transform: none; }
+.code[data-beatscript] .lang, .code[data-btw] .lang { color: var(--amber); text-transform: none; }
 .acts { display: flex; gap: 6px; }
 .acts button { background: var(--btn); border: 1px solid transparent; border-radius: 4px; padding: 3px 9px; font-size: 12px; line-height: 1.4; }
 .acts button:hover:not(:disabled) { background: var(--btn-hover); }

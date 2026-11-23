@@ -398,7 +398,7 @@ export class BeatscriptTrack extends HTMLElement {
     return this.ctx.resume();
   }
 
-  /** The module, the check, the CID and the links: {module, BeatScript, rep}. */
+  /** The module, the check, the CID and the links: {module, beatscript, rep}. */
   async prepare() {
     const { module, beatscript } = await loadModule();
     this.beatscript = beatscript;

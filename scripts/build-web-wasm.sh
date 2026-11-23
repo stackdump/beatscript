@@ -4,7 +4,10 @@
 #
 #   scripts/build-web-wasm.sh <outdir>
 #
-# writes  beatscript.js  beatscript_bg.wasm  beatscript.d.ts  beatscript_bg.wasm.d.ts  hashes.json
+# (rename-to-beatscript: keep: btw.js is the legacy shim's name)
+# writes  beatscript.js  beatscript_bg.wasm  beatscript.d.ts  beatscript_bg.wasm.d.ts  btw.js  hashes.json
+#         (btw.js: site/web/wasm-legacy/btw.js, the module under its names before the rename, for a tab left open across
+#         the deploy; one release)
 #
 # - cargo, release, wasm32-unknown-unknown, into target-web/ (its own target dir: it does not fight a
 #   native build for the lock; target-* is git-ignored)
@@ -20,7 +23,7 @@
 #   hosts in BUILD_HOSTS in order (a host is passed over when ssh does not reach it or it lacks cargo or the pinned
 #   wasm-bindgen; a remote one also needs GNU rsync, which on a Mac is Homebrew's: its own openrsync cannot talk to
 #   GNU rsync); BUILD_HOST=<ssh host> pins one; BUILD_HOST=local builds here, in place. On another host this tree
-#   is rsynced to ~/${BEATSCRIPT_WASM_BUILD_DIR:-btw-wasm-build} there, built with BUILD_HOST=local, and the output
+#   is rsynced to ~/${BEATSCRIPT_WASM_BUILD_DIR:-beatscript-wasm-build} there, built with BUILD_HOST=local, and the output
 #   rsynced back; its cargo target dir stays on that host, so a second build is incremental. The engine,
 #   stackdump/djrust, is a git dependency pinned in Cargo.toml, fetched by cargo there. The output is the same
 #   either way: paths are remapped and hashes.json carries this tree's git revision. On a Mac, wasm-bindgen is
@@ -42,7 +45,7 @@ if [ "${BUILD_HOST:-}" != local ]; then
   pick_build_host cargo "wasm-bindgen=$want" || exit 2
 fi
 if [ "${BH:-local}" != local ]; then
-  scratch=${BEATSCRIPT_WASM_BUILD_DIR:-btw-wasm-build}
+  scratch=${BEATSCRIPT_WASM_BUILD_DIR:-beatscript-wasm-build}
   echo "== build-web-wasm on $BH_NAME, scratch ~/$scratch"
   bh_sh "mkdir -p '$scratch' && rm -rf '$scratch/out'"
   RS="$BH_RSYNC -a --delete --delete-excluded --exclude=target/ --exclude=/target-*/ --exclude=.git/ --exclude=/dist/ --exclude=*.wav --exclude=*.sf2"
@@ -101,13 +104,15 @@ else
 fi
 
 for f in beatscript.js beatscript_bg.wasm beatscript.d.ts beatscript_bg.wasm.d.ts; do cp "$tmp/$f" "$out/$f"; done
+# the legacy shim, hand-written (not wasm-bindgen output): wasm/btw.js re-exports beatscript.js under the old names
+cp site/web/wasm-legacy/btw.js "$out/btw.js"
 
 rev=${BEATSCRIPT_GIT_REV:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}
 python3 - "$out" "$rev" "$opt" "$have" <<'PY'
 import hashlib, json, os, re, sys
 out, rev, opt, cli = sys.argv[1:5]
 files = {}
-for name in ("beatscript.js", "beatscript_bg.wasm", "beatscript.d.ts", "beatscript_bg.wasm.d.ts"):
+for name in ("beatscript.js", "beatscript_bg.wasm", "beatscript.d.ts", "beatscript_bg.wasm.d.ts", "btw.js"):
     data = open(os.path.join(out, name), "rb").read()
     files[name] = {"sha256": hashlib.sha256(data).hexdigest(), "size": len(data)}
 info = {}

@@ -1,20 +1,21 @@
-// Record mode and the test hook: window.__btw. The demo video is rendered frame by frame from this:
+// Record mode and the test hook: window.__beatscript, which is the same object as window.__btw (its name before the rename,
+// kept for the tools and the MCP record tool that drive it). The demo video is rendered frame by frame from this:
 //
 //   ?record=1&cid=<CID> | &example=<name>      the program, full screen, markers and follow on, play at once
-//   &clock=manual                              no audio, no wall clock: time is window.__btw.setTime(seconds)
+//   &clock=manual                              no audio, no wall clock: time is window.__beatscript.setTime(seconds)
 //
-//   __btw.ready            Promise: wasm up, program loaded and evaluated (manual: primed at t = 0)
-//   __btw.setTime(s)       the fake clock (manual mode); beat = s x bpm / 60 from the program's tempo
-//   __btw.frame([s])       one service() + marks() + paint pass at the current fake time, synchronous
-//   __btw.info()           {cid, name, bpm, bars, seconds, sections}
-//   __btw.reset()          evaluate again from bar 0 (the runtime only counts forward, so a rewind is a reset)
-//   __btw.recorder.start() / stop()   tap the page's master gain with MediaRecorder; stop() resolves to base64 webm/opus
+//   __beatscript.ready             Promise: wasm up, program loaded and evaluated (manual: primed at t = 0)
+//   __beatscript.setTime(s)        the fake clock (manual mode); beat = s x bpm / 60 from the program's tempo
+//   __beatscript.frame([s])        one service() + marks() + paint pass at the current fake time, synchronous
+//   __beatscript.info()            {cid, name, bpm, bars, seconds, sections}
+//   __beatscript.reset()           evaluate again from bar 0 (the runtime only counts forward, so a rewind is a reset)
+//   __beatscript.recorder.start() / stop()   tap the page's master gain with MediaRecorder; stop() resolves to base64 webm/opus
 //
 // Frames must be rendered in increasing time order: the runtime, like the follow-scroll, keeps state.
 
 import { ManualClock, VirtualSource } from './driver.js';
 
-/** Installed before anything loads, so a harness can wait on __btw.ready from the first moment. */
+/** Installed before anything loads, so a harness can wait on __beatscript.ready (or __btw.ready) from the first moment. */
 export function early(app) {
   let resolve;
   let reject;
@@ -44,13 +45,15 @@ export function early(app) {
     },
     recorder: makeRecorder(app),
   };
+  // one object, two names: window.__btw stays for the tools written against it
+  window.__beatscript = api;
   window.__btw = api;
   return api;
 }
 
 /** Called once the program is loaded: start playing the way the mode asks. */
 export async function install(app) {
-  const api = window.__btw;
+  const api = window.__beatscript || window.__btw;
   try {
     if (app.manual) await startManual(app);
     else if (app.record) await startReal(app);

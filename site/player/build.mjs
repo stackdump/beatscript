@@ -31,10 +31,10 @@ const wasmDir = path.resolve(arg('--wasm', path.join(web, 'wasm')));
 const out = path.resolve(arg('--out', path.join(here, 'dist')));
 
 // the engine's own files, and nothing of the editor: what engine.js, its worklet and composer import, and the facade
-// (station-model.js: wasm-mock.js imports it; highlight.js and util.js: the editor's syntax highlighting, for the
+// (station-model.js and version.js: wasm-mock.js imports them; highlight.js and util.js: the editor's syntax highlighting, for the
 // `highlight` attribute); and the render the editor's render source plays, the same files (render.js and its worker,
 // client and model)
-const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'embed-model.js', 'station-model.js', 'highlight.js', 'util.js', 'render.js', 'render-client.js', 'render-worker.js', 'render-model.js'];
+const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'version.js', 'embed-model.js', 'station-model.js', 'highlight.js', 'util.js', 'render.js', 'render-client.js', 'render-worker.js', 'render-model.js'];
 // the player's own files, at the package's top level
 const OWN = ['beatscript-track.js', 'beatscript-track.umd.js', 'beatscript-track.d.ts', 'beatscript-render.js', 'render-model.js', 'package.json'];
 

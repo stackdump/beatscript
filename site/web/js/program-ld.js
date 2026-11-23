@@ -3,6 +3,20 @@
 // <petri-view> reads its net. The server renders it into /?cid=<CID> and the program pages; the editor loads it from
 // here instead of fetching. Its text must hash to its @id: the app checks that before it plays (app.js loadEmbedded).
 
+const CID = /^z[1-9A-HJ-NP-Za-km-z]{20,80}$/;
+
+/**
+ * The CID a block's @id names: a bare CID (a BeatScript 1 block), the program's page `https://beatscript.app/p/<CID>` (a
+ * BeatScript 2 block; any http(s) origin, a dev server's too), or `https://beats.bitwrap.io/p#<CID>` (the older page form).
+ * Null for anything else. Whichever it is, the text must still hash to the CID (app.js checks before it plays).
+ */
+export function cidOfId(id) {
+  if (typeof id !== 'string') return null;
+  if (CID.test(id)) return id;
+  const m = /^https?:\/\/[^/?#\s]+\/p(?:\/|#)([^/?#\s]+)\/?$/.exec(id);
+  return m && CID.test(m[1]) ? m[1] : null;
+}
+
 /** The block's document, parsed and its shape checked: {cid, text, name, license (the id), licenseUri, signature, doc}. Throws when it is not a program. */
 export function parseProgramLd(json) {
   let d;
@@ -14,10 +28,11 @@ export function parseProgramLd(json) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('the page\'s program block is not an object');
   const types = Array.isArray(d['@type']) ? d['@type'] : [d['@type']];
   if (!types.includes('Program')) throw new Error('the page\'s program block is not a Program');
-  if (typeof d['@id'] !== 'string' || !/^z[1-9A-HJ-NP-Za-km-z]{20,80}$/.test(d['@id'])) throw new Error('the page\'s program block has no CID as its @id');
+  const cid = cidOfId(d['@id']);
+  if (!cid) throw new Error('the page\'s program block has no CID as its @id');
   if (typeof d.text !== 'string' || !d.text) throw new Error('the page\'s program block has no text');
   return {
-    cid: d['@id'],
+    cid,
     text: d.text,
     name: typeof d.name === 'string' ? d.name : '',
     // licenseId is the id (CC0-1.0); license the URI. A block with only an id in license is read the same way.

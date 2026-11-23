@@ -13,6 +13,7 @@ or a CDN, fetches only to the page's own origin, no frames.
 
 <beatscript-track>
   <script type="text/beatscript">
+#! beatscript 2
 tempo 120
 deck A: kick x ~ x ~ | snare ~ x ~ x
   </script>
@@ -51,6 +52,7 @@ without `clipboard-write`), it selects the text for the reader to copy.
 ```html
 <beatscript-track mode="render">
   <script type="text/beatscript">
+#! beatscript 2
 tempo 128
 section verse 8 bars {
   deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
@@ -99,6 +101,13 @@ to compile any WebAssembly module, and no wasm engine can play under it; the ele
 
 Only programs written for this engine play: a program that names sample or loop assets (`uses_assets`) has nothing to
 play them from here.
+
+### BeatScript 2
+
+From 0.3.0 the player reads BeatScript 2, the language under its new name: a program whose header says
+`#! beatscript 2` (the line the editor's fmt writes first). A program in the old spelling, `#! btw 1` or no version line
+at all (every program written before the rename), still plays as it did and keeps its CID; `cid` is checked against the
+program in the version it says. The element, its attributes, its events and its types are those of 0.2.0.
 
 ## Licence
 

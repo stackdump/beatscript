@@ -248,8 +248,10 @@ try {
     await sleep(400);
     await page.click('#btn-fmt');
     await sleep(300);
-    const formatted = '#! btw 1\n#! name: tidy\ntempo 126  # speed\nkey am\n\ndeck A: kick x ~ x ~ | snare ~ x ~ x\n';
+    // fmt upgrades: the `#! btw 1` line (BeatScript 1, the old spelling) becomes `#! beatscript 2`
+    const formatted = '#! beatscript 2\n#! name: tidy\ntempo 126  # speed\nkey am\n\ndeck A: kick x ~ x ~ | snare ~ x ~ x\n';
     check('fmt puts the formatted text in the editor: canonical lines, the header, the comment and one blank line kept', (await text()) === formatted, JSON.stringify(await text()));
+    check('and says it upgraded the program to BeatScript 2', /upgraded to BeatScript 2/.test(await q('#toasts')), await q('#toasts'));
     await page.eval('document.querySelector(".ed-ta").focus(); document.execCommand("undo")');
     await sleep(200);
     check('and Cmd+Z brings the old text back (the browser keeps its undo stack)', (await text()).includes('tempo   126  # speed'), JSON.stringify(await text()));
@@ -414,7 +416,7 @@ try {
     check('the page opens a session and an event stream', !!sid && (await page.eval('__app.session.connected')) === true, String(sid));
     await page.click('.ed-ta');
     // (the server formats a program before it sends it: its canonical lines with the header and comments kept)
-    const pushed = '#! btw 1\n#! name: pushed\ntempo 120\n# pushed by an assistant\ndeck A: kick x ~ x ~  # four\n';
+    const pushed = '#! beatscript 2\n#! name: pushed\ntempo 120\n# pushed by an assistant\ndeck A: kick x ~ x ~  # four\n';
     await fetch(T(`__push/${sid}`), { method: 'POST', body: JSON.stringify({ type: 'eval', text: pushed, play: true }) });
     await page.waitFor('document.getElementById("btn-play").classList.contains("on")', 8000);
     check('an eval event sets the text, evaluates and plays', (await text()) === pushed);
@@ -463,6 +465,7 @@ try {
     await ready();
     const info = JSON.parse(await page.eval('JSON.stringify(window.__btw.info())'));
     check('window.__btw.info() has cid, name, bpm, bars, seconds, sections', info.cid && info.name && info.bpm === 140 && info.bars === 68 && info.sections.length === 9, JSON.stringify(info).slice(0, 200));
+    check('window.__beatscript is window.__btw (one hook, both names)', (await page.eval('!!window.__beatscript && window.__beatscript === window.__btw')) === true);
     check('manual clock: no AudioContext was made', (await page.eval('__app.ctx === null')) === true);
     check('record mode hides the chrome (no top bar, no panels)', (await page.rect('#top')) && (await page.eval('getComputedStyle(document.getElementById("top")).display')) === 'none');
     const run = async (tag, times) => {

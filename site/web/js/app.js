@@ -1,7 +1,7 @@
 // The page. One App wires the editor, the checker, the driver (BeatscriptRun + a clock), the marker painter,
 // the header, the transport and the server. The same renderFrame(now) paints every frame: in the page
 // it is called from requestAnimationFrame with the wall clock, in record mode (?clock=manual) from
-// window.__btw.frame() with a fake clock, and nothing in it depends on which.
+// window.__beatscript.frame() (also window.__btw) with a fake clock, and nothing in it depends on which.
 
 import { loadBeatscript } from './wasm.js';
 import { makeApi } from './api.js';
@@ -27,23 +27,10 @@ import { Background } from './background.js';
 import { PresenceTracker, UpNext, pauseMessage } from './queue-model.js';
 import { Assist } from './assist.js';
 import { Scrubber } from './scrub.js';
-
-const STARTER = `# a first program: drums on deck A, harmony and an arpeggio on deck B.
-tempo 126
-key am
-
-deck A: kick e(5,8) | snare ~ x ~ x | bass markov(am, 0.7) | hihat x*8 vel=60..90
-deck B: harmony chord(am7) | arp arp(am7, up, 8)
-
-on phrase: deck A: filter lp 12k -> 400 over 4 bars
-master: filter lp 2k -> 8k over 8 bars
-`;
+import { prefGet, prefSet } from './prefs.js';
+import { STARTER } from './starter.js';
 
 const $ = (id) => document.getElementById(id);
-const store = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch { /* private window */ } },
-};
 
 export class App {
   constructor() {
@@ -58,7 +45,7 @@ export class App {
     this.beatscript = null;
     this.driver = null;
     this.follow = new Follow();
-    this.follow.on = store.get('btw-follow', '1') !== '0';
+    this.follow.on = prefGet('follow', '1') !== '0';
     this.ctx = null; this.master = null; this.analyser = null;
     this.engine = null; this.engineSrc = null; this.engineState = 'idle'; this.engineError = '';
     this.sourcePref = storedSource(store.get('btw-source', 'auto')); // the person's choice, kept per browser
@@ -192,9 +179,9 @@ export class App {
       const p = this.player;
       if (p && p.kind === 'render') p.setLoop(el['rd-loop'].checked);
     });
-    el.level.value = store.get('btw-level', '0.8');
+    el.level.value = prefGet('level', '0.8');
     el.level.addEventListener('input', () => {
-      store.set('btw-level', el.level.value);
+      prefSet('level', el.level.value);
       this.applyLevel();
     });
     // the user's scrolling pauses the follow
@@ -468,7 +455,8 @@ export class App {
       }
       // the programs the link carried are kept (each hashed by the module), so the text checks, and edits check, with nothing fetched
       if (this.resolver) this.resolver.keepBundle(r.bundle);
-      this.setProgram(r.canonical, { cid: r.cid, keepHash: true });
+      // the formatted program (comments kept) when the module gives it, else the canonical text
+      this.setProgram(r.text || r.canonical, { cid: r.cid, keepHash: true });
       this.openedBanner(r.cid, 'link verified: its text hashes to its CID', r.warnings);
     } catch (e) {
       this.showError(e);
@@ -974,7 +962,7 @@ export class App {
 
   setFollow(on) {
     this.follow.setOn(on);
-    store.set('btw-follow', on ? '1' : '0');
+    prefSet('follow', on ? '1' : '0');
     this.updateFollowButton();
   }
 
@@ -1380,10 +1368,11 @@ export class App {
       return;
     }
     const caret = this.editor.ta.selectionStart;
-    // The formatter keeps the `#!` header lines, the comments and the blank lines between blocks (`text`): the same text that
-    // eval, load, queue, share and push_private put in front of the user on the server, so this button and an assistant's
-    // program agree. A module that predates `text` answers the canonical form only (no header, no comments): the `#!` lines
-    // at the top (name, license, forked-from) are put back, and the dropped comments are said.
+    // The formatter keeps the `#!` header lines, the comments and the blank lines between blocks (`text`), as the server's does
+    // for eval, load, queue, share and push_private, so this button and an assistant's program agree; this button (like the MCP
+    // fmt tool and `beatscript fmt`) also upgrades a BeatScript 1 text to BeatScript 2, which the server's autoformat never does.
+    // A module that predates `text` answers the canonical form only (no header, no comments): the `#!` lines at the top (name,
+    // license, forked-from) are put back, and the dropped comments are said.
     const kept = typeof r.text === 'string';
     const head = kept ? '' : (/^(?:#![^\n]*\n)+/.exec(text) || [''])[0];
     const out = kept ? r.text : head + r.canonical;
@@ -1392,7 +1381,10 @@ export class App {
     const at = mapCaret(text, caret, out);
     this.editor.ta.setSelectionRange(at, at);
     const n = kept ? 0 : (r.comments || []).filter((c) => !/^#!/.test(String(c).trim())).length;
-    this.toast(`Formatted · ${shortCid(r.cid)}${n ? ` · ${n} comment${n === 1 ? '' : 's'} dropped (the canonical form has none; Cmd/Ctrl+Z restores them)` : ''}`, 'ok');
+    // fmt upgrades: a BeatScript 1 text (`#! btw 1`, or no version line) comes back as BeatScript 2, the same program under a
+    // new CID (`from_cid` is the one it had)
+    const up = r.from_cid && r.from_cid !== r.cid ? ` · upgraded to BeatScript 2 (was ${shortCid(r.from_cid)})` : '';
+    this.toast(`Formatted · ${shortCid(r.cid)}${up}${n ? ` · ${n} comment${n === 1 ? '' : 's'} dropped (the canonical form has none; Cmd/Ctrl+Z restores them)` : ''}`, 'ok');
     this.runCheckNow();
   }
 
@@ -1470,7 +1462,7 @@ export class App {
     }
   }
 
-  // ---- record mode: ?record=1 [&clock=manual], window.__btw ---------------------------------------------------------------------------------
+  // ---- record mode: ?record=1 [&clock=manual], window.__beatscript (window.__btw) ------------------------------------------------------------
 
   /** What a report to the server says (session link, MCP get). */
   reportState() {

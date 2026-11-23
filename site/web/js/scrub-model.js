@@ -3,7 +3,7 @@
 // is a function of numbers and strings, pinned in test/unit.mjs.
 //
 // The rules: a value never leaves [min, max]; an integer stays whole; the two ends of a range (a..b) or a ramp (a -> b) never
-// cross; a note or a numeral moves through the service's `choices`; the text written is the canonical spelling (`btw fmt`'s:
+// cross; a note or a numeral moves through the service's `choices`; the text written is the canonical spelling (`beatscript fmt`'s:
 // the shortest plain decimal, so a scrub keeps a canonical program canonical).
 
 import { offsetOf } from './assist-model.js';

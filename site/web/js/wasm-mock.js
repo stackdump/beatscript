@@ -5,6 +5,7 @@
 // line-shape check. It is only ever loaded on request; the real page runs on the real module.
 
 import * as station from './station-model.js';
+import { CANONICAL_HEAD, findVersionLine, upgradeSource, versionOf } from './version.js';
 
 const WORDS = ['tempo', 'swing', 'key', 'let', 'def', 'repeat', 'section', 'arrange', 'import', 'end', 'loop', 'evolve', 'deck', 'master', 'every', 'on', 'at', 'after', 'before', 'for', 'do', 'crossfader', 'swap', 'move', 'load', 'queue', 'play', 'stop', 'sync', 'mute', 'unmute', 'filter', 'delay', 'reverb', 'crush', 'level', 'low', 'mid', 'high', 'resonance'];
 const ROLES = ['kick', 'snare', 'hihat', 'clap', 'bass', 'melody', 'harmony', 'arp'];
@@ -90,6 +91,12 @@ export function parseProgram(text) {
   let swing = null;
   const stack = [];
   const problem = (line, col0, col1, message, expected, found, help) => diags.push({ severity: 'error', line: line.n + 1, col: col0 + 1, end_col: Math.max(col1, col0 + 1) + 1, start: line.start + col0, end: line.start + Math.max(col1, col0 + 1), message, expected, found, help });
+  // a version line that does not read (`#! beatscript 3`, two of them): djlive::version::check's error
+  const ver = findVersionLine(text);
+  if (ver && ver.error) {
+    const line = lines.find((l) => l.start <= ver.start && ver.start <= l.end);
+    problem(line, ver.start - line.start, ver.end - line.start, ver.error, [], '', 'the versions are `#! beatscript 2` and, in the old spelling, `#! btw 1`');
+  }
   const top = () => stack[stack.length - 1];
   const stmts = []; // part and control statements: {kind:'part'|'ctl'|'evolve'|'call', line, sectionIdx, defName?}
   for (const line of lines) {
@@ -249,13 +256,19 @@ export function mockCheck(text) {
   return {
     ok, errors, warnings: 0,
     diagnostics: p.diags.map((d) => ({ ...d, render: `error: ${d.message}\n  --> ${d.line}:${d.col}` })),
-    cid: ok ? mockCid(canonical) : null, canonical, nets: {}, song_nets: null,
+    cid: ok ? mockCid(canonical) : null, canonical,
+    // the language version, and the CID the program has in the other one (a fake CID, as all of the mock's are)
+    version: ok && canonical.startsWith(CANONICAL_HEAD) ? 2 : versionOf(text),
+    renamed_cid: ok ? mockCid(canonical.startsWith(CANONICAL_HEAD) ? canonical.slice(CANONICAL_HEAD.length) : CANONICAL_HEAD + canonical) : null,
+    nets: {}, song_nets: null,
     tempo: p.tempo, key: p.key, swing: p.swing, arranged: p.arranged, song_bars: p.songBars || 0, ends: p.arranged, loops: false,
     sections, decks: ['A', 'B'], evolve: [], lineage: [], uses_assets: /^\s*(sample|loop)\b/m.test(text), restricted: /^\s*use\s+restricted/m.test(text), seconds,
   };
 }
 
+/** The canonical text: BeatScript 2's keeps its version line first, BeatScript 1's has no `#!` line (djlive::version). */
 function canonicalOf(text) {
+  const head = versionOf(text) === 2 ? CANONICAL_HEAD : '';
   const out = [];
   let depth = 0;
   for (const l of splitLines(text)) {
@@ -265,7 +278,7 @@ function canonicalOf(text) {
     out.push(`${'  '.repeat(depth)}${t}`);
     if (/\{\s*$/.test(t)) depth++;
   }
-  return `${out.join('\n')}\n`;
+  return `${head}${out.join('\n')}\n`;
 }
 
 /**
@@ -291,11 +304,18 @@ function formattedOf(text) {
   return out.length ? `${out.join('\n')}\n` : '';
 }
 
+/** fmt: the program formatted and in BeatScript 2 (a BeatScript 1 text is upgraded: a new CID, `from_cid` the one it had), as beatscript_fmt answers. */
 export function mockFmt(text) {
   const c = mockCheck(text);
   const comments = [];
   for (const l of splitLines(text)) if (l.code.length < l.raw.length) comments.push(l.raw.slice(l.code.length).trim());
-  return c.ok ? { ok: true, canonical: c.canonical, cid: c.cid, comments, text: formattedOf(text), diagnostics: [] } : { ok: false, canonical: null, cid: null, comments, diagnostics: c.diagnostics };
+  if (!c.ok) return { ok: false, canonical: null, cid: null, comments, diagnostics: c.diagnostics };
+  const up = upgradeSource(text);
+  const u = up === text ? c : mockCheck(up);
+  const r = { ok: true, canonical: u.canonical, cid: u.cid, version: u.version, comments, diagnostics: [] };
+  if (u.cid !== c.cid) r.from_cid = c.cid;
+  r.text = formattedOf(up);
+  return r;
 }
 
 export function mockHighlight(text) {
@@ -342,7 +362,8 @@ function unb64url(s) {
 export function mockShare(text, _sig, _notes, origin = 'https://beatscript.app') {
   const c = mockCheck(text);
   if (!c.ok) return { ok: false, error: 'the program has errors' };
-  const packed = b64url(c.canonical);
+  // the link carries the program as fmt keeps it (comments and `#!` lines), which hashes to the same CID
+  const packed = b64url(formattedOf(text));
   return { ok: true, url: `${origin}/#${c.cid}.${packed}`, social_url: `${origin}/c/${c.cid}.${packed}`, beats_url: `https://beats.bitwrap.io/p#${c.cid}.${packed}`, cid: c.cid, chars: `${origin}/#${c.cid}.${packed}`.length, canonical: c.canonical, warnings: [] };
 }
 
@@ -355,7 +376,7 @@ export function mockOpen(s) {
   const c = mockCheck(text);
   if (!c.ok) return { ok: false, cid: m[1], error: 'the linked program has errors' };
   if (c.cid !== m[1]) return { ok: false, cid: m[1], canonical: c.canonical, verified: false, error: `refused: the link says ${m[1]} but its text is ${c.cid}` };
-  return { ok: true, cid: c.cid, canonical: c.canonical, verified: true, warnings: [], notes_unverified: [], error: null, bundle: {} };
+  return { ok: true, cid: c.cid, canonical: c.canonical, text: formattedOf(text), verified: true, warnings: [], notes_unverified: [], error: null, bundle: {} };
 }
 
 export const mockInstruments = () => ({ voices: ['wobble-lead', 'pwm-lead', 'warm-pad', 'sub-bass', 'detuned-saw'], families: ['bass', 'pad', 'acid', 'reese'], kits: ['drums-808', 'drums-909'], palettes: [] });

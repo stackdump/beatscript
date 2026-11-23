@@ -12,6 +12,8 @@
  * never touch the engine and the player's never touch the page. It is a classic script with no inline style (styles are
  * set through the CSSOM), so it loads under a strict CSP that allows the script itself. Only programs the site stores
  * as Creative Commons play; anything else shows the site's 404 in the frame.
+ *
+ * (rename-to-beatscript: keep. The link pattern reads the old .btw extension beside .beatscript.)
  */
 (function () {
   'use strict';
@@ -28,7 +30,8 @@
     var u;
     try { u = new URL(link, ORIGIN); } catch (e) { return null; }
     var name = '';
-    var m = /^\/(?:p|c|embed)\/([^/]+?)(?:\.jsonld|\.beatscript)?\/?$/.exec(u.pathname);
+    // a link to the program's text ends in .beatscript or, as one made before the rename does, .btw
+    var m = /^\/(?:p|c|embed)\/([^/]+?)(?:\.jsonld|\.beatscript|\.btw)?\/?$/.exec(u.pathname);
     if (m) name = decodeURIComponent(m[1]);
     else if (u.pathname === '/' && u.searchParams.get('cid')) name = u.searchParams.get('cid');
     else if (u.hash.length > 1) name = decodeURIComponent(u.hash.slice(1)).split('~')[0];

@@ -52,8 +52,10 @@ export class StreamPlayer {
       try { body = await res.json(); } catch { /* not JSON */ }
       throw apiErrorFrom(res.status, body, res.headers.get('Retry-After'));
     }
-    const h = res.headers;
-    this.info = { cid: h.get('X-Btw-Cid'), seconds: Number(h.get('X-Btw-Seconds')) || null, cache: h.get('X-Btw-Cache'), bpm: Number(h.get('X-Btw-Bpm')) || null };
+    // X-Beatscript-* (the server sends them beside the X-Btw-* it always sent; an older server sends only those)
+    const hh = res.headers;
+    const h = { get: (n) => hh.get(`X-Beatscript-${n}`) ?? hh.get(`X-Btw-${n}`) };
+    this.info = { cid: h.get('Cid'), seconds: Number(h.get('Seconds')) || null, cache: h.get('Cache'), bpm: Number(h.get('Bpm')) || null };
     if (this.info.bpm) this.bpm = this.info.bpm;
     if (!res.body || !res.body.getReader) throw new ApiError({ code: 'network', message: 'this browser cannot stream a response' });
     this._pump(res.body.getReader()).catch((e) => {

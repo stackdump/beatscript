@@ -6,6 +6,7 @@
 //     the program travels in the fragment, which is never sent to a server, never in a query string
 //   - marks the section being read in the table of contents
 // ?mock=1 uses the page's JS stand-in for the wasm, as the editor does.
+// (rename-to-beatscript: keep. It reads the attribute pages had before the rename, data-btw, beside data-beatscript.)
 
 // like the editor, ?mock=1 counts only on this machine
 const MOCK = new URLSearchParams(location.search).get('mock') === '1' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
@@ -17,7 +18,8 @@ const loadWasm = () => beatscriptP || (beatscriptP = import('/js/wasm.js').then(
 const highlightMod = () => import('/js/highlight.js');
 
 async function highlightAll() {
-  const blocks = $$('figure.code[data-beatscript] code');
+  // data-btw: how a page generated before the rename (a cached one) marks its BeatScript blocks
+  const blocks = $$('figure.code[data-beatscript] code, figure.code[data-btw] code');
   if (!blocks.length) return;
   const { spansToHtml, plainSpans } = await highlightMod();
   for (const code of blocks) {

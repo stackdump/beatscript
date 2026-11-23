@@ -34,14 +34,15 @@ fn init() {
 
 // ---- the language ----
 
-/// `check(text)` -> CheckReport JSON (docs: site/DESIGN.md "JSON shapes").
+/// `check(text)` -> CheckReport JSON (docs: site/DESIGN.md "JSON shapes"), with the language `version` and `renamed_cid`.
 #[wasm_bindgen]
 pub fn beatscript_check(text: &str) -> String {
     init();
     beatscript_api::check_json(text)
 }
 
-/// `fmt(text)` -> `{"ok","canonical","cid","comments","diagnostics"}`.
+/// `fmt(text)` -> `{"ok","canonical","cid","version","comments","diagnostics","text"}` (and `from_cid`): the program formatted
+/// and in BeatScript 2, a BeatScript 1 text upgraded (the editor's fmt button).
 #[wasm_bindgen]
 pub fn beatscript_fmt(text: &str) -> String {
     init();
@@ -266,7 +267,7 @@ mod tests {
     // The wasm-bindgen exports cannot be called off wasm32 (JsError, console); what they wrap is tested in
     // beatscript-api, and the built module by scripts/test-web-wasm.mjs. This only keeps the pieces that need no JS host honest.
     #[test]
-    fn the_runtime_wrapper_is_the_btwapi_one() {
+    fn the_runtime_wrapper_is_the_beatscript_api_one() {
         let mut r = beatscript_api::run::Run::new();
         let ev = r.eval_str("deck A: kick x ~ x ~\n");
         assert!(ev.contains("\"ok\":true"), "{ev}");

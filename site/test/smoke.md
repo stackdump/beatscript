@@ -62,7 +62,7 @@ browser. Exit code 1 if any check fails or the page logs a console error.
 8. **A phone and a failed module.** At 390 x 844 nothing overflows horizontally and the editor keeps most of the
    screen (`12-phone.png`). With `?wasm=off` the page says the module could not be loaded and stays a working plain
    editor (`13-no-wasm.png`).
-9. **Record mode.** `?record=1&clock=manual&example=hand-dubstep-140-v4` at 1920 x 1080: `window.__btw.ready`,
+9. **Record mode.** `?record=1&clock=manual&example=hand-dubstep-140-v4` at 1920 x 1080: `window.__btw.ready` (`window.__beatscript` is the same object),
    `info()`; no AudioContext is made; the chrome is hidden; stepping the fake clock (`setTime`, `frame`) to the same
    times twice gives byte-identical screenshots; bar 0 is at t = 0 (section 2 begins at 13.714 s, no bar of lag);
    `?record=1&cid=<CID>` works too; a new generation flashes the evolve block and says `gen N`

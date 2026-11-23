@@ -30,8 +30,10 @@ const { SHARE_RIGHTS, AUTHORSHIP_PATH } = await J('rights.js');
 const { mapCall } = await J('engine-calls.js');
 const mockMod = (await J('wasm-mock.js')).mockModule();
 
-// the real wasm when it is built, else the mock
+// the real wasm when it is built, else the mock. BEATSCRIPT_REQUIRE_WASM=1 (a build host's run) makes a missing module a
+// failure instead (the test below), so a run that should test the real module cannot pass on the mock by skipping.
 let realWasm = false;
+let realMod = null;
 let facade;
 {
   const glue = path.join(web, 'wasm', 'beatscript.js');
@@ -39,6 +41,7 @@ let facade;
     const m = await import(pathToFileURL(glue).href);
     m.initSync({ module: fs.readFileSync(path.join(web, 'wasm', 'beatscript_bg.wasm')) });
     facade = makeFacade(m);
+    realMod = m;
     realWasm = true;
   } else facade = makeFacade(mockMod);
 }
@@ -566,17 +569,26 @@ test('util: the caret keeps its place when the formatted text keeps the header a
   assert.ok(mapCaret(long, long.length - 3, 'tempo 1\n'.repeat(3000)) > 20000);
 });
 
-test('fmt: the header lines, the comments and the blank lines between blocks are kept, and formatting twice is formatting once', () => {
+test('fmt: it upgrades to BeatScript 2, keeps the header lines, the comments and the blank lines between blocks, and formatting twice is formatting once', () => {
   const src = '#! btw 1\n#! name: loose\n# a track\ntempo   120   # fast\n\n\ndeck A:   kick x ~ x ~ | snare ~ x ~ x\n';
   const r = facade.fmt(src);
   assert.equal(r.ok, true);
-  const want = '#! btw 1\n#! name: loose\n# a track\ntempo 120  # fast\n\ndeck A: kick x ~ x ~ | snare ~ x ~ x\n';
+  const want = '#! beatscript 2\n#! name: loose\n# a track\ntempo 120  # fast\n\ndeck A: kick x ~ x ~ | snare ~ x ~ x\n';
   assert.equal(r.text, want);
-  // the canonical text, which the CID is of, has none of them; formatting does not change it
-  assert.ok(!r.canonical.includes('#'));
-  assert.equal(r.canonical, facade.fmt(want).canonical);
-  assert.equal(r.cid, facade.fmt(want).cid);
-  assert.equal(facade.fmt(r.text).text, r.text);
+  assert.equal(r.version, 2);
+  // the canonical text, which the CID is of: BeatScript 2's version line, then the statements, no comment
+  assert.ok(r.canonical.startsWith('#! beatscript 2\n'), r.canonical);
+  assert.ok(!r.canonical.slice('#! beatscript 2\n'.length).includes('#'));
+  // upgraded: the same program under a new CID; from_cid is the one the text had
+  assert.equal(r.from_cid, facade.check(src).cid);
+  assert.notEqual(r.cid, r.from_cid);
+  assert.equal(r.cid, facade.check(want).cid);
+  // a BeatScript 2 text formats to its own CID: nothing to upgrade, nothing moves
+  const again = facade.fmt(want);
+  assert.equal(again.canonical, r.canonical);
+  assert.equal(again.cid, r.cid);
+  assert.equal(again.from_cid, undefined);
+  assert.equal(again.text, r.text);
   // text that does not read is not formatted
   assert.equal(facade.fmt('tempo\n').ok, false);
 });
@@ -618,6 +630,7 @@ test('stream: chunks are scheduled gaplessly, each starting where the one before
     assert.ok(Math.abs(ctx.starts[i].t - (a.t + a.n / sr)) < 1e-9, `buffer ${i} starts where ${i - 1} ends`);
   }
   assert.equal(p.info.seconds, 3);
+  assert.equal(p.info.cid, 'zX', 'an X-Btw-* header (all an older server sends)');
   assert.equal(p.done, true);
   assert.ok(Math.abs(p.received - 3) < 1e-9);
   const t0 = ctx.starts[0].t;
@@ -1645,6 +1658,14 @@ test('program-ld: the editor\'s program block is read from <beatscript-view data
   for (const bad of ['nope', '[]', JSON.stringify({ ...doc, '@type': 'Thing' }), JSON.stringify({ ...doc, '@id': 'not a cid' }), JSON.stringify({ ...doc, text: '' })]) {
     assert.throws(() => parseProgramLd(bad), /program block/, bad);
   }
+  // a BeatScript 2 block's @id is the program's page; the older page form and a dev server's origin read the same; the CID is bare
+  const cid = doc['@id'];
+  for (const id of [`https://beatscript.app/p/${cid}`, `https://beatscript.app/p/${cid}/`, `https://beats.bitwrap.io/p#${cid}`, `http://127.0.0.1:18097/p/${cid}`, `https://btw.bitwrap.io/p/${cid}`]) {
+    assert.equal(parseProgramLd(JSON.stringify({ ...doc, '@id': id })).cid, cid, id);
+  }
+  for (const id of [`https://beatscript.app/c/${cid}`, `https://beatscript.app/p/${cid}/tree`, `https://beatscript.app/p/${cid}.jsonld`, `https://beatscript.app/p/not-a-cid`, `ftp://x/p/${cid}`, `https://beatscript.app/p/${cid}?x=1`, 7]) {
+    assert.throws(() => parseProgramLd(JSON.stringify({ ...doc, '@id': id })), /no CID as its @id/, String(id));
+  }
   const script = { textContent: JSON.stringify(doc) };
   const view = { querySelector: (q) => (q === 'script[type="application/ld+json"]' ? script : null) };
   assert.equal(readProgramView({ querySelector: (q) => (q === 'beatscript-view[data-editor]' ? view : null) }).cid, doc['@id']);
@@ -2105,7 +2126,7 @@ test('wasm facade: know() tells the module a program, and an import of a CID it 
   assert.equal(f.check(text).ok, true);
   assert.equal(f.know('not a cid', 'x').ok, false);
   // a module that predates it has no know(): the facade says so, and the page fetches nothing
-  assert.equal(makeFacade({ beatscript_check: () => '{}' }).know, null);
+  assert.equal(makeFacade({ ...mod, beatscript_know: undefined }).know, null);
   assert.deepEqual(f.open('zNotALink').bundle ?? {}, {}, 'the mock hands no bundle back');
   wasm.mockForget();
 });
@@ -2427,6 +2448,9 @@ test('source switch: render as a choice, remembered per browser; the stutter hin
     const s = (link) => api.embedSrc({ link }, 'https://beatscript.app');
     assert.equal(s(`https://beatscript.app/p/${CIDX}`), `https://beatscript.app/embed/${CIDX}`);
     assert.equal(s(`https://beatscript.app/p/${CIDX}.jsonld`), `https://beatscript.app/embed/${CIDX}`);
+    // the program's text: .beatscript, and .btw, as a link made before the rename has it
+    assert.equal(s(`https://beatscript.app/p/${CIDX}.beatscript`), `https://beatscript.app/embed/${CIDX}`);
+    assert.equal(s(`https://beatscript.app/p/${CIDX}.btw`), `https://beatscript.app/embed/${CIDX}`);
     assert.equal(s(`https://beatscript.app/c/${CIDX}.eJwrSS0u`), `https://beatscript.app/embed/${CIDX}.eJwrSS0u`);
     assert.equal(s(`https://beatscript.app/?cid=${CIDX}`), `https://beatscript.app/embed/${CIDX}`);
     assert.equal(s(`https://beatscript.app/#${CIDX}.eJwrSS0u~notes`), `https://beatscript.app/embed/${CIDX}.eJwrSS0u`);
@@ -2759,3 +2783,269 @@ test('source switch: render as a choice, remembered per browser; the stutter hin
     }
   });
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// the rename (btw -> beatscript) and BeatScript 2: the module's names (and the old ones, for a release), the legacy shim
+// wasm/btw.js, the preference keys, window.__beatscript, the version line of what the page writes
+// (rename-to-beatscript: keep. These tests name the old names on purpose.)
+// ---------------------------------------------------------------------------------------------------------------
+
+const repo = path.join(here, '..', '..');
+const { FEATURES, LEGACY, featuresOf, exportOf } = await J('wasm.js');
+
+/** What djweb exports to JS (crates/djweb/src/lib.rs: each `#[wasm_bindgen] pub fn` and `pub struct`), the module's names. */
+function djwebExports() {
+  const src = fs.readFileSync(path.join(repo, 'crates', 'djweb', 'src', 'lib.rs'), 'utf8');
+  return [...src.matchAll(/#\[wasm_bindgen\]\s*pub (?:fn|struct) ([A-Za-z0-9_]+)/g)].map((m) => m[1]);
+}
+
+/** The exports of the module the release before the rename shipped (djweb at c943a28): what a tab left open calls. */
+const OLD_EXPORTS = ['btw_check', 'btw_fmt', 'btw_expand', 'btw_generate', 'btw_know', 'btw_instruments', 'btw_open', 'btw_share', 'btw_generation', 'btw_highlight', 'btw_cheatsheet', 'btw_build_info', 'BtwRun', 'BtwLs'];
+
+test('rename: djweb exports only the new names, and each had an old one the facade and the shim know', () => {
+  const names = djwebExports();
+  assert.ok(names.length >= 14, names.join(' '));
+  assert.ok(names.every((n) => /^(beatscript_|Beatscript)/.test(n)), `djweb's own exports are all beatscript_* / Beatscript*: ${names.join(' ')}`);
+  // every old export is a new one under LEGACY, and back
+  for (const old of OLD_EXPORTS) {
+    const now = Object.keys(LEGACY).find((k) => LEGACY[k] === old);
+    assert.ok(now && names.includes(now), `${old} is ${now}, which djweb exports`);
+  }
+  for (const n of names) assert.ok(LEGACY[n], `${n} has its old name in LEGACY`);
+});
+
+test('wasm facade: every feature the page looks for is found in the module djweb builds; a required one missing is an error at load', () => {
+  const names = djwebExports();
+  const stub = Object.fromEntries(names.map((n) => [n, n.startsWith('Beatscript') ? class {} : () => '{}']));
+  const f = featuresOf(stub);
+  // djweb has no beatscript_station: the radio asks POST /api/station. Anything else missing is a feature turned off
+  assert.deepEqual(f.missing, ['station']);
+  assert.deepEqual(f.missingRequired, []);
+  for (const [feature, [name]] of Object.entries(FEATURES)) if (feature !== 'station') assert.ok(names.includes(name), `${feature}: djweb exports ${name}`);
+  const facade2 = makeFacade(stub);
+  for (const k of ['know', 'generate', 'ls']) assert.equal(typeof facade2[k], 'function', `${k} is on`);
+  assert.equal(facade2.station, null);
+  // the module of the release before, under its old names: the same features
+  const old = Object.fromEntries(names.map((n) => [LEGACY[n], stub[n]]));
+  assert.deepEqual(featuresOf(old).found, f.found);
+  assert.equal(exportOf(old, 'beatscript_check'), stub.beatscript_check);
+  // a module without a required export is refused, by name, never a page that quietly cannot check
+  assert.throws(() => makeFacade({ ...stub, beatscript_check: undefined }), /lacks check \(beatscript_check\)/);
+  assert.throws(() => makeFacade({}), /lacks check \(beatscript_check\), fmt/);
+});
+
+test('real wasm: the built module has every feature the page looks for but the station (which djweb does not have)', { skip: !realWasm }, () => {
+  const f = featuresOf(realMod);
+  assert.deepEqual(f.missing, ['station']);
+  for (const old of OLD_EXPORTS) assert.equal(realMod[old], undefined, `the module itself has no ${old} (the shim has)`);
+});
+
+test('the build host must test the real module: BEATSCRIPT_REQUIRE_WASM=1 and no site/web/wasm/beatscript.js is a failure, not a skip', () => {
+  if (process.env.BEATSCRIPT_REQUIRE_WASM === '1') assert.ok(realWasm, 'BEATSCRIPT_REQUIRE_WASM=1 but site/web/wasm/beatscript.js is not built: scripts/build-web-wasm.sh site/web/wasm');
+  // a build from before the rename (btw.js + btw_bg.wasm, no beatscript.js) is a stale directory, not a reason to fall back to the mock
+  const dir = path.join(web, 'wasm');
+  const stale = fs.existsSync(path.join(dir, 'btw_bg.wasm')) && !fs.existsSync(path.join(dir, 'beatscript_bg.wasm'));
+  assert.ok(!stale, 'site/web/wasm holds the module under its old names (btw_bg.wasm) and not beatscript_bg.wasm: rebuild it with scripts/build-web-wasm.sh site/web/wasm');
+});
+
+/** site/web/wasm-legacy/btw.js beside a stand-in beatscript.js that exports djweb's names (and the engine's), in a scratch dir. */
+async function legacyShim() {
+  const dir = fs.mkdtempSync(path.join((await import('node:os')).tmpdir(), 'beatscript-shim-'));
+  const names = djwebExports();
+  const lines = [
+    'export const calls = [];',
+    'export default async function init(arg) { calls.push(["init", arg]); return "init"; }',
+    'export function initSync(arg) { calls.push(["initSync", arg]); return "initSync"; }',
+    // the engine's exports never said btw: they pass through as they are
+    'export class Dj {}', 'export class DjComposer {}', 'export function engine_version() { return "e"; }',
+    ...names.map((n) => (n.startsWith('Beatscript') ? `export class ${n} {}` : `export function ${n}() { return ${JSON.stringify(n)}; }`)),
+  ];
+  fs.writeFileSync(path.join(dir, 'beatscript.js'), lines.join('\n') + '\n');
+  fs.copyFileSync(path.join(web, 'wasm-legacy', 'btw.js'), path.join(dir, 'btw.js'));
+  const shim = await import(pathToFileURL(path.join(dir, 'btw.js')).href);
+  const now = await import(pathToFileURL(path.join(dir, 'beatscript.js')).href);
+  return { dir, shim, now };
+}
+
+test('legacy shim: wasm/btw.js exports every old name as the new export, passes the engine\'s through, and makes a working facade', async () => {
+  const { shim, now } = await legacyShim();
+  for (const old of OLD_EXPORTS) {
+    const name = Object.keys(LEGACY).find((k) => LEGACY[k] === old);
+    assert.equal(shim[old], now[name], `btw.js ${old} is beatscript.js ${name}`);
+  }
+  for (const n of djwebExports()) assert.equal(shim[n], now[n], `${n} too, under its own name`);
+  for (const n of ['Dj', 'DjComposer', 'engine_version']) assert.equal(shim[n], now[n]);
+  // the page's facade over the shim finds what it found over the module
+  assert.deepEqual(featuresOf(shim).found, featuresOf(now).found);
+  // the shim's alias list is LEGACY's (one list of old names, spelled twice: keep them equal)
+  const src = fs.readFileSync(path.join(web, 'wasm-legacy', 'btw.js'), 'utf8');
+  const aliases = Object.fromEntries([...src.matchAll(/^\s*(\w+) as (\w+),$/gm)].map((m) => [m[1], m[2]]));
+  const { beatscript_station: _station, ...known } = LEGACY;
+  assert.deepEqual(aliases, known);
+  assert.match(src, /rename-to-beatscript: keep/);
+});
+
+test('legacy shim: init loads beatscript_bg.wasm in place of the old file, and passes anything else through; initSync passes a module through', async () => {
+  const { dir, shim, now } = await legacyShim();
+  const fresh = pathToFileURL(path.join(dir, 'beatscript_bg.wasm')).href;
+  const last = () => now.calls[now.calls.length - 1];
+  // the old page: `default({ module_or_path: '<site>/wasm/btw_bg.wasm' })`
+  assert.equal(await shim.default({ module_or_path: 'https://beatscript.app/wasm/btw_bg.wasm' }), 'init');
+  assert.equal(String(last()[1].module_or_path), fresh);
+  await shim.default(new URL('https://beatscript.app/wasm/btw_bg.wasm?v=2'));
+  assert.equal(String(last()[1].module_or_path), fresh, 'a URL object, with a query: still the old file');
+  await shim.default('../wasm/btw_bg.wasm');
+  assert.equal(String(last()[1].module_or_path), fresh);
+  await shim.default();
+  assert.equal(String(last()[1].module_or_path), fresh, 'no argument: the module beside the shim');
+  await shim.default({ module_or_path: 'https://beatscript.app/wasm/beatscript_bg.wasm' });
+  assert.equal(last()[1].module_or_path, 'https://beatscript.app/wasm/beatscript_bg.wasm');
+  // initSync: a compiled module of this build goes through (a tiny valid module stands in)
+  const tiny = new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+  assert.equal(shim.initSync({ module: tiny }), 'initSync');
+  assert.equal(last()[1].module, tiny);
+  // a module of the old build (it exports btw_check) is said to be one, not handed to glue it does not fit
+  const oldBuild = new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 7, 13, 1, 9, 98, 116, 119, 95, 99, 104, 101, 99, 107, 0, 0, 10, 4, 1, 2, 0, 11]));
+  assert.deepEqual(WebAssembly.Module.exports(oldBuild).map((e) => e.name), ['btw_check']);
+  assert.throws(() => shim.initSync({ module: oldBuild }), /before the rename.*reload/);
+  await shim.default({ module_or_path: oldBuild });
+  assert.equal(String(last()[1].module_or_path), fresh, 'init swaps an old module for the new file');
+});
+
+test('prefs: a preference is read under its BeatScript key, else under its key before the rename (copied over); none is lost', async () => {
+  const prefs = await J('prefs.js');
+  const mem = new Map();
+  const st = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
+  assert.deepEqual(JSON.parse(JSON.stringify(prefs.PREFS)), {
+    follow: ['beatscript-follow', 'btw-follow'], level: ['beatscript-level', 'btw-level'],
+    composeMode: ['beatscript.composeMode', 'btw.composeMode'], betaEmail: ['beatscript_beta_email', 'btw_beta_email'],
+  });
+  // only the old key (a browser that used the page before the deploy): read, copied to the new key, the old one left
+  for (const [name, [key, legacy]] of Object.entries(prefs.PREFS)) {
+    mem.clear();
+    mem.set(legacy, `v-${name}`);
+    assert.equal(prefs.prefGet(name, 'dflt', st), `v-${name}`);
+    assert.equal(mem.get(key), `v-${name}`, `${name}: written under ${key}`);
+    assert.equal(mem.get(legacy), `v-${name}`, `${name}: ${legacy} is left (a rollback still finds it)`);
+    // a later change is the new key's, and the new key wins
+    prefs.prefSet(name, 'later', st);
+    assert.equal(prefs.prefGet(name, 'dflt', st), 'later');
+    assert.equal(mem.get(legacy), `v-${name}`);
+  }
+  // neither: the default, and nothing written
+  mem.clear();
+  assert.equal(prefs.prefGet('level', '0.8', st), '0.8');
+  assert.equal(mem.size, 0);
+  // removing clears both, so a cleared value does not come back from the old key
+  mem.set('btw_beta_email', 'a@b.c');
+  assert.equal(prefs.prefGet('betaEmail', '', st), 'a@b.c');
+  prefs.prefRemove('betaEmail', st);
+  assert.equal(prefs.prefGet('betaEmail', '', st), '');
+  // a storage that throws (a private window) gives the default; no storage at all, too
+  const broken = { getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); }, removeItem() { throw new Error('denied'); } };
+  assert.equal(prefs.prefGet('follow', '1', broken), '1');
+  prefs.prefSet('follow', '0', broken);
+  prefs.prefRemove('follow', broken);
+  assert.equal(prefs.prefGet('follow', '1', null), '1');
+  assert.throws(() => prefs.prefGet('nonesuch', null, st), /no preference nonesuch/);
+  // the account key is not a preference: it keeps its name for good
+  const auth = await J('auth.js');
+  assert.equal(auth.ED_KEY, 'btw-ed25519-v1');
+  assert.ok(!Object.values(prefs.PREFS).flat().includes(auth.ED_KEY));
+  assert.match(fs.readFileSync(path.join(web, 'js', 'auth.js'), 'utf8'), /const IDB_NAME = 'btw-keys';/);
+  // and no other file names a localStorage key of its own: every preference goes through prefs.js
+  for (const f of fs.readdirSync(path.join(web, 'js')).filter((f) => f.endsWith('.js') && !['prefs.js', 'auth.js'].includes(f))) {
+    const src = fs.readFileSync(path.join(web, 'js', f), 'utf8');
+    assert.ok(!/localStorage\.(getItem|setItem|removeItem)\(/.test(src), `${f} reads or writes localStorage itself: go through prefs.js`);
+  }
+});
+
+test('record: window.__beatscript is window.__btw, one object (the tools and the MCP record tool use __btw)', async () => {
+  const had = Object.prototype.hasOwnProperty.call(globalThis, 'window');
+  const saved = globalThis.window;
+  globalThis.window = {};
+  try {
+    const { early } = await J('record.js');
+    const api = early({ clock: null });
+    assert.equal(globalThis.window.__beatscript, api);
+    assert.equal(globalThis.window.__btw, api);
+    assert.equal(typeof api.ready.then, 'function');
+  } finally {
+    if (had) globalThis.window = saved;
+    else delete globalThis.window;
+  }
+});
+
+test('starter: a fresh editor opens on a BeatScript 2 program, its version line first, and it checks', async () => {
+  const { STARTER } = await J('starter.js');
+  const v = await J('version.js');
+  assert.ok(STARTER.startsWith('#! beatscript 2\n'), STARTER.slice(0, 40));
+  assert.equal(v.versionOf(STARTER), 2);
+  const c = facade.check(STARTER);
+  assert.equal(c.ok, true, JSON.stringify(c.diagnostics));
+  assert.equal(c.version, 2);
+  assert.ok(c.canonical.startsWith('#! beatscript 2\n'));
+  // the page opens with it, and has no other program text of its own
+  const app = fs.readFileSync(path.join(web, 'js', 'app.js'), 'utf8');
+  assert.match(app, /import \{ STARTER \} from '\.\/starter\.js';/);
+  assert.match(app, /this\.setProgram\(STARTER, /);
+  assert.ok(!/const STARTER\b/.test(app));
+});
+
+test('version.js says what djlive::version says (its unit tests, in JS)', async () => {
+  const v = await J('version.js');
+  assert.equal(v.versionOf('tempo 120\n'), 1);
+  assert.equal(v.versionOf('#! btw 1\ntempo 120\n'), 1);
+  assert.equal(v.versionOf('#! beatscript 2\ntempo 120\n'), 2);
+  assert.equal(v.versionOf('#! name: a\n#! beatscript 2\ntempo 120\n'), 2);
+  assert.equal(v.versionOf('tempo 120\n#! beatscript 2\n'), 1, 'only the header block counts');
+  assert.equal(v.versionOf('#! beatscript: 2\ntempo 120\n'), 1, 'a key: line is not a version line');
+  for (const bad of ['#! beatscript 3\n', '#! btw 2\n', '#! beatscript\n', '#! beatscript 1\n', '#! btw 1\n#! beatscript 2\n']) assert.ok(v.findVersionLine(bad).error, bad);
+  assert.equal(v.findVersionLine('#! hello there\ntempo 1\n'), null);
+  assert.equal(v.upgradeSource('tempo 120\n'), '#! beatscript 2\ntempo 120\n');
+  assert.equal(v.upgradeSource('#! btw 1\n#! name: x\n# a\ntempo 120\n'), '#! beatscript 2\n#! name: x\n# a\ntempo 120\n');
+  assert.equal(v.upgradeSource('#! name: x\n#! btw 1\ntempo 120\n'), '#! name: x\n#! beatscript 2\ntempo 120\n');
+  assert.equal(v.upgradeSource('#! beatscript 2\ntempo 120\n'), '#! beatscript 2\ntempo 120\n');
+  assert.equal(v.upgradeSource(v.upgradeSource('tempo 1\n')), v.upgradeSource('tempo 1\n'));
+  if (realWasm) {
+    // and the module agrees, on the same texts
+    for (const t of ['tempo 120\n', '#! btw 1\ntempo 120\n', '#! beatscript 2\ntempo 120\n', '#! name: a\n#! beatscript 2\ntempo 120\n']) assert.equal(facade.check(t).version, v.versionOf(t), t);
+    assert.equal(facade.check('#! beatscript 3\ntempo 120\n').ok, false);
+  }
+});
+
+test('mock: a link opens to the formatted program (comments kept), and a share link carries it; the mock fmt upgrades', () => {
+  const m = mockMod;
+  const text = '#! name: x\n# a riff\ntempo   120\ndeck A: kick x ~ x ~\n';
+  const sh = JSON.parse(m.beatscript_share(text, null, false));
+  assert.equal(sh.ok, true);
+  const op = JSON.parse(m.beatscript_open(sh.url));
+  assert.equal(op.verified, true);
+  assert.equal(op.text, '#! name: x\n# a riff\ntempo 120\ndeck A: kick x ~ x ~\n');
+  assert.equal(op.cid, sh.cid);
+  assert.ok(!op.canonical.includes('#'));
+  const f = JSON.parse(m.beatscript_fmt(text));
+  assert.equal(f.version, 2);
+  assert.ok(f.text.startsWith('#! beatscript 2\n#! name: x\n'));
+  assert.equal(f.from_cid, sh.cid);
+  const c = JSON.parse(m.beatscript_check(text));
+  assert.equal(c.version, 1);
+  assert.equal(c.renamed_cid, f.cid, 'its BeatScript 2 CID is what fmt makes of it');
+  assert.equal(JSON.parse(m.beatscript_check('#! beatscript 3\ntempo 1\n')).ok, false);
+});
+
+test('stream: X-Beatscript-* headers are read first, the X-Btw-* an older server sends after', async () => {
+  const ctx = new FakeCtx();
+  const p = new StreamPlayer({ context: ctx, url: '/x', bpm: 120, fetchFn: fakeFetch([wavHeader(), pcm16(4410)], { 'X-Beatscript-Cid': 'zNew', 'X-Btw-Cid': 'zOld', 'X-Btw-Seconds': '2', 'X-Beatscript-Bpm': '128' }) });
+  await p.start();
+  await settle();
+  assert.deepEqual([p.info.cid, p.info.seconds, p.info.bpm], ['zNew', 2, 128]);
+  p.stop();
+});
+
+test('docs.js and docs.css read the old data-btw blocks beside data-beatscript ones', () => {
+  const js = fs.readFileSync(path.join(here, '..', 'docs-src', 'assets', 'docs.js'), 'utf8');
+  assert.ok(js.includes("$$('figure.code[data-beatscript] code, figure.code[data-btw] code')"));
+  const css = fs.readFileSync(path.join(here, '..', 'docs-src', 'assets', 'docs.css'), 'utf8');
+  assert.ok(css.includes('.code[data-beatscript] .lang, .code[data-btw] .lang'));
+});

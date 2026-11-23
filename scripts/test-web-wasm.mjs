@@ -4,7 +4,12 @@
 //   scripts/build-web-wasm.sh <dir>                       # build the module first
 //   node scripts/test-web-wasm.mjs [--wasm <dir>] [--seconds 3] [--passes 640] [--native FILE]
 //
-// <dir> defaults to $BEATSCRIPT_WASM_DIR, else site/web/wasm of the beats worktree next to this one.
+// <dir> defaults to $BEATSCRIPT_WASM_DIR, else site/web/wasm. The native side and a built beatscript are looked for under
+// $CARGO_TARGET_DIR (default target/).
+//
+// Also: the page finds every feature it looks for in the module (site/web/js/wasm.js FEATURES), the legacy shim btw.js
+// built beside it answers the old names (btw_check, BtwRun, ...) with the module's own exports and is in hashes.json, fmt
+// upgrades a BeatScript 1 text and check says the version. (rename-to-beatscript: keep: btw.js is the shim's name.)
 //
 // For every program (crates/beatscript-api/tests/{corpus,extra}/*.beatscript, examples/*.beatscript, docs/beatscript/*.beatscript):
 //   - beatscript_check / beatscript_fmt / beatscript_share / beatscript_open / beatscript_highlight equal, byte for byte, what beatscript-api answers natively
@@ -34,7 +39,8 @@ const PASSES = Number(opt('--passes', 640));
 const SR = 48000;
 const BUDGET = 12 * 1024; // what the worklet takes of an install per quantum (engine-worklet.js DEFAULT_BUDGET)
 
-const wasmDir = path.resolve(opt('--wasm', process.env.BEATSCRIPT_WASM_DIR || path.join(root, '..', '..', 'beats-bitwrap-io', 'btw-site', 'btwsite', 'web', 'wasm')));
+const wasmDir = path.resolve(opt('--wasm', process.env.BEATSCRIPT_WASM_DIR || path.join(root, 'site', 'web', 'wasm')));
+const targetDir = process.env.CARGO_TARGET_DIR ? path.resolve(process.env.CARGO_TARGET_DIR) : path.join(root, 'target');
 if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm')) || !fs.existsSync(path.join(wasmDir, 'beatscript.js'))) {
     console.error(`test-web-wasm: no built module in ${wasmDir}: run scripts/build-web-wasm.sh ${wasmDir}`);
     process.exit(2);
@@ -51,7 +57,7 @@ const sha256 = (data) => crypto.createHash('sha256').update(data).digest('hex');
 
 // ---- the programs
 function programs() {
-    const dirs = ['crates/beatscript-api/tests/corpus', 'crates/beatscript-api/tests/extra', 'examples', 'docs/btw'];
+    const dirs = ['crates/beatscript-api/tests/corpus', 'crates/beatscript-api/tests/extra', 'examples', 'docs/beatscript'];
     const out = [];
     for (const d of dirs) {
         const full = path.join(root, d);
@@ -71,7 +77,7 @@ if (nativeFile) {
     const env = { ...process.env, CARGO_PROFILE_DEV_DEBUG: '0', CARGO_PROFILE_TEST_DEBUG: '0', CARGO_INCREMENTAL: '0' };
     const build = spawnSync('cargo', ['build', '-q', '--profile', 'test', '-p', 'djweb', '--example', 'native_dump'], { cwd: root, env, stdio: ['ignore', 'inherit', 'inherit'] });
     if (build.status !== 0) { console.error('test-web-wasm: could not build the native side (cargo build --profile test -p djweb --example native_dump)'); process.exit(2); }
-    const bin = path.join(root, 'target', 'debug', 'examples', 'native_dump');
+    const bin = path.join(targetDir, 'debug', 'examples', 'native_dump');
     const r = spawnSync(bin, ['--seconds', String(SECONDS), '--passes', String(PASSES), ...files], { cwd: root, env, maxBuffer: 1 << 30 });
     if (r.status !== 0) { console.error(`test-web-wasm: native_dump failed:\n${r.stderr}`); process.exit(2); }
     native = JSON.parse(r.stdout.toString());
@@ -94,7 +100,7 @@ probeComposer.free();
 const wasmBytes = fs.statSync(path.join(wasmDir, 'beatscript_bg.wasm')).size;
 
 // ---- beatscript, when it is built
-const beatscript = process.env.BEATSCRIPT_CLI || ['debug', 'release'].map((p) => path.join(root, 'target', p, 'beatscript')).find((p) => fs.existsSync(p));
+const beatscript = process.env.BEATSCRIPT_CLI || ['debug', 'release'].map((p) => path.join(targetDir, p, 'beatscript')).find((p) => fs.existsSync(p));
 function beatscriptCliRun(args, input) {
     const r = spawnSync(beatscript, args, { input, maxBuffer: 1 << 28 });
     return r.status === 0 ? r.stdout.toString() : null;
@@ -268,6 +274,38 @@ ok('beatscript_station(n 3) answers track 3 and the segue to 4', station.ok === 
 ok('engine_version is the engine crate', glue.engine_version() === JSON.parse(glue.beatscript_build_info()).engine);
 const bad = JSON.parse(glue.beatscript_check('deck A: kick x ~ y ~\n'));
 ok('an error has line, col, start16 and a render form', bad.ok === false && bad.diagnostics[0].line === 1 && 'start16' in bad.diagnostics[0] && bad.diagnostics[0].render.includes('-->'), JSON.stringify(bad.diagnostics && bad.diagnostics[0]).slice(0, 200));
+
+// ---- the names after the rename, and BeatScript 2
+const facadeJs = await import(pathToFileURL(path.join(root, 'site', 'web', 'js', 'wasm.js')).href);
+const feats = facadeJs.featuresOf(glue);
+ok('the page finds every feature it looks for in the module (all but the station, which djweb does not have)', JSON.stringify(feats.missing) === '["station"]', JSON.stringify(feats.missing));
+for (const old of Object.values(facadeJs.LEGACY)) ok(`the module has no ${old} of its own (the shim answers it)`, glue[old] === undefined);
+const shimFile = path.join(wasmDir, 'btw.js');
+ok('the legacy shim btw.js is built beside the module', fs.existsSync(shimFile));
+if (fs.existsSync(shimFile)) {
+    const shim = await import(pathToFileURL(shimFile).href);
+    for (const [now, old] of Object.entries(facadeJs.LEGACY)) {
+        if (glue[now] === undefined) continue;
+        ok(`btw.js ${old} is the module's ${now}`, typeof shim[old] === 'function' && shim[old] === glue[now]);
+    }
+    for (const n of ['Dj', 'DjComposer', 'engine_version', 'initSync']) ok(`btw.js passes ${n} through`, typeof shim[n] === 'function');
+    ok('a facade over btw.js finds what one over beatscript.js does', JSON.stringify(facadeJs.featuresOf(shim).found) === JSON.stringify(feats.found));
+    let hashes = null;
+    try { hashes = JSON.parse(fs.readFileSync(path.join(wasmDir, 'hashes.json'), 'utf8')); } catch { /* none */ }
+    const h = hashes && hashes.files && hashes.files['btw.js'];
+    ok('hashes.json lists btw.js with its sha256', !!h && h.sha256 === sha256(fs.readFileSync(shimFile)), JSON.stringify(h));
+}
+{
+    const v1 = 'tempo 120\ndeck A: kick x ~ x ~ | snare ~ x ~ x\n';
+    const c = JSON.parse(glue.beatscript_check(v1));
+    const f = JSON.parse(glue.beatscript_fmt(v1));
+    ok('beatscript_check says version 1 for a text with no version line, and its BeatScript 2 CID', c.version === 1 && /^z/.test(c.renamed_cid) && c.renamed_cid !== c.cid, JSON.stringify([c.version, c.renamed_cid]));
+    ok('beatscript_fmt upgrades it: version 2, the version line first, from_cid the CID it had, cid its renamed_cid', f.version === 2 && f.text.startsWith('#! beatscript 2\n') && f.from_cid === c.cid && f.cid === c.renamed_cid, JSON.stringify(f).slice(0, 300));
+    const c2 = JSON.parse(glue.beatscript_check(f.text));
+    ok('the upgraded text checks as BeatScript 2 to that CID', c2.version === 2 && c2.cid === f.cid && c2.renamed_cid === c.cid);
+    const again = JSON.parse(glue.beatscript_fmt(f.text));
+    ok('a BeatScript 2 text formats to its own CID, no from_cid', again.cid === f.cid && again.from_cid === undefined && again.text === f.text);
+}
 
 // ---- report
 const med = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };

@@ -6,6 +6,7 @@ import { describeError, ApiError } from './errors.js';
 import { qrChoice } from './qr-model.js';
 import { SHARE_RIGHTS } from './rights.js';
 import { signIn, hasWallet, localKeyInfo, resetLocalKey } from './auth.js';
+import { prefGet, prefSet, prefRemove } from './prefs.js';
 // the seeded generator's genres (beatscript-api::generate::genres, beats' catalogue): one list, shared with the radio's genre knob
 import { SEEDED_GENRES } from './station-model.js';
 import { generateBody } from './generate.js';
@@ -146,14 +147,14 @@ export class Panels {
       ...[['model', 'model (LLM)'], ['seeded', 'seeded (no model)']].map(([v, label]) => {
         const r = h('input', { type: 'radio', name: 'c-mode', value: v });
         r.checked = mode === v;
-        r.addEventListener('change', () => { try { localStorage.setItem('btw.composeMode', v); } catch { /* private mode */ } this.render(); });
+        r.addEventListener('change', () => { prefSet('composeMode', v); this.render(); });
         return h('label', { class: 'check' }, r, h('span', {}, label));
       }));
     return [sw, ...(mode === 'seeded' ? this.seededBody() : this.modelBody())];
   }
 
   composeMode() {
-    try { return localStorage.getItem('btw.composeMode') === 'seeded' ? 'seeded' : 'model'; } catch { return 'model'; }
+    return prefGet('composeMode') === 'seeded' ? 'seeded' : 'model';
   }
 
   /** The seeded generator: genre, BPM, key, length and a seed -> a whole program, the same every time. Runs in the
@@ -369,9 +370,8 @@ export class Panels {
    *  has added the address the same form shows the Google Play link. Nothing here needs a sign-in. */
   betaBody() {
     const app = this.app;
-    const KEY = 'btw_beta_email';
-    const remembered = () => { try { return localStorage.getItem(KEY) || ''; } catch { return ''; } };
-    const remember = (v) => { try { if (v) localStorage.setItem(KEY, v); else localStorage.removeItem(KEY); } catch { /* private mode */ } };
+    const remembered = () => prefGet('betaEmail') || '';
+    const remember = (v) => (v ? prefSet('betaEmail', v) : prefRemove('betaEmail'));
     const out = [h('p', { class: 'note' }, 'BeatScript for Android is in beta. Give the Google account email you use on your Android phone and you will be added to the beta; this page then shows the link to join on Google Play.')];
     const status = h('div', { role: 'status', class: 'note' });
     const email = h('input', { type: 'email', autocomplete: 'email', placeholder: 'you@gmail.com', 'aria-label': 'Google account email', maxlength: '254', value: remembered() });
