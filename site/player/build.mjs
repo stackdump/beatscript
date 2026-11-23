@@ -9,8 +9,9 @@
 // The output is the npm package and also the files to put beside a page:
 //   beatscript-track.js        the element (ESM)        beatscript-track.umd.js   a classic-script loader of it
 //   beatscript-render.js       the offline render (mode="render"; also usable on its own, in a page, a Worker or Node)
-//   render-worker.js           that render in a Worker  render-model.js           its arithmetic and the WAV writer
-//   js/                        the editor's engine, unchanged (engine.js, its worklet and composer, the facade)
+//   render-model.js            its arithmetic and the WAV writer (both re-export the editor's: js/render*.js)
+//   js/                        the editor's engine and render, unchanged (engine.js, its worklet and composer, the facade;
+//                              render.js, render-client.js, render-worker.js, render-model.js: the editor's render source's)
 //   wasm/btw.js                the wasm-bindgen glue    wasm/btw_bg.wasm.b64.js   the module, base64, as an ES module
 //   test/csp.html              a page under an artifact-like CSP that plays a program
 //   beatscript-track.d.ts      its types                LICENSE, LICENSES/         MIT (code), CC0-1.0 (programs, data)
@@ -31,10 +32,11 @@ const out = path.resolve(arg('--out', path.join(here, 'dist')));
 
 // the engine's own files, and nothing of the editor: what engine.js, its worklet and composer import, and the facade
 // (station-model.js: wasm-mock.js imports it; highlight.js and util.js: the editor's syntax highlighting, for the
-// `highlight` attribute)
-const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'embed-model.js', 'station-model.js', 'highlight.js', 'util.js'];
+// `highlight` attribute); and the render the editor's render source plays, the same files (render.js and its worker,
+// client and model)
+const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'embed-model.js', 'station-model.js', 'highlight.js', 'util.js', 'render.js', 'render-client.js', 'render-worker.js', 'render-model.js'];
 // the player's own files, at the package's top level
-const OWN = ['beatscript-track.js', 'beatscript-track.umd.js', 'beatscript-track.d.ts', 'beatscript-render.js', 'render-worker.js', 'render-model.js', 'package.json'];
+const OWN = ['beatscript-track.js', 'beatscript-track.umd.js', 'beatscript-track.d.ts', 'beatscript-render.js', 'render-model.js', 'package.json'];
 
 for (const f of ['btw.js', 'btw_bg.wasm']) {
   if (!fs.existsSync(path.join(wasmDir, f))) {

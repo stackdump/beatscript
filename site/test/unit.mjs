@@ -2161,10 +2161,10 @@ test('embed: the doc line is the playing section\'s doc comment, from the progra
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// the player's render mode (site/player/src/render-model.js): one pass, the caps, the WAV, the position line
+// the render (site/web/js/render-model.js: the editor's render source and the player's render mode): one pass, the caps, the WAV, the position line
 // ---------------------------------------------------------------------------------------------------------------
 
-const renderModel = await import(pathToFileURL(path.join(here, '..', 'player', 'src', 'render-model.js')).href);
+const renderModel = await import(pathToFileURL(path.join(here, '..', 'web', 'js', 'render-model.js')).href);
 
 test('player render: one pass is btwd render\'s plan (a song once, `end at bar N`, else 16), capped at 256 bars and 600 s', () => {
   const plan = renderModel.renderPlan;
@@ -2213,6 +2213,146 @@ test('player render: the position line at a time in the render, in the runtime\'
   assert.deepEqual(renderModel.statusAt(5, renderModel.renderPlan({ tempo: 120 }), []), { song_bar: 3, song_bars: 16 });
   assert.equal(renderModel.clock(0), '0:00');
   assert.equal(renderModel.clock(125.9), '2:05');
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// the editor's render source (render-player.js, source-model.js): the CID cache, the clock it gives BtwRun, the switch
+// ---------------------------------------------------------------------------------------------------------------
+
+const renderPlayerMod = await import(pathToFileURL(path.join(here, '..', 'web', 'js', 'render-player.js')).href);
+const sourceModel = await import(pathToFileURL(path.join(here, '..', 'web', 'js', 'source-model.js')).href);
+
+/** An AudioContext with a hand-set clock: enough for render-client.js's Web Audio transport. */
+function fakeCtx() {
+  const ctx = {
+    currentTime: 0, sampleRate: 44100, destination: {}, started: [],
+    resume: async () => {},
+    createBuffer(ch, frames, sr) { return { numberOfChannels: ch, length: frames, sampleRate: sr, duration: frames / sr, copyToChannel() {} }; },
+    createBufferSource() {
+      const src = { buffer: null, loop: false, onended: null, stopped: false, connect() {}, disconnect() {}, start(at, off) { src.off = off; ctx.started.push(src); }, stop() { src.stopped = true; } };
+      return src;
+    },
+  };
+  return ctx;
+}
+/** A render result: `bars` bars at `bpm`, silent (the clock is what is tested here, not the sound). */
+function fakeResult(bars, bpm, sr = 1000) {
+  const frames = Math.round(bars * (240 / bpm) * sr);
+  return { left: new Float32Array(frames), right: new Float32Array(frames), sampleRate: sr, frames, bars, seconds: frames / sr, ms: 5, notes: [] };
+}
+
+test('render source: renders by CID, least recently used dropped first, and by bytes', () => {
+  const c = new renderPlayerMod.RenderCache({ entries: 2, bytes: 1e9 });
+  c.put('a', { frames: 10 });
+  c.put('b', { frames: 10 });
+  assert.ok(c.get('a'), 'a is kept and is now the newest');
+  c.put('c', { frames: 10 });
+  assert.deepEqual([c.has('a'), c.has('b'), c.has('c')], [true, false, true], 'b, the least recently used, went');
+  const small = new renderPlayerMod.RenderCache({ entries: 4, bytes: 100 });
+  small.put('x', { frames: 20 });
+  small.put('y', { frames: 20 });
+  assert.deepEqual([small.has('x'), small.has('y')], [false, true], '160 bytes do not fit in 100: the older goes');
+  small.put('huge', { frames: 1000 });
+  assert.ok(small.has('huge'), 'one render is always kept, however big');
+});
+
+test('render source: renders once a CID, then plays from the cache; Stop is silent at once and drops a render under way', async () => {
+  const ctx = fakeCtx();
+  const cache = new renderPlayerMod.RenderCache();
+  let renders = 0;
+  const render = async (_m, _t, { onProgress }) => { renders++; onProgress({ fraction: 0.5, bars: 2, totalBars: 4 }); return { result: fakeResult(4, 120), via: 'worker' }; };
+  const report = { cid: 'zA', tempo: 120, arranged: true, song_bars: 4, ok: true };
+  const seen = [];
+  const p1 = new renderPlayerMod.RenderPlayer({ context: ctx, destination: {}, module: {}, text: 't', report, cache, render, element: false, onChange: (s) => seen.push(s) });
+  assert.equal(p1.state, 'rendering');
+  await p1.start();
+  assert.equal(renders, 1);
+  assert.ok(seen.includes('progress'), 'progress is reported while it renders');
+  assert.deepEqual([p1.state, p1.rendered.playback, p1.rendered.cached, p1.duration], ['playing', 'webaudio', false, 8]);
+  const src = ctx.started.at(-1);
+  p1.stop();
+  assert.deepEqual([p1.state, src.stopped, p1.transport], ['stopped', true, null], 'Stop: the source is stopped there and then');
+  const p2 = new renderPlayerMod.RenderPlayer({ context: ctx, destination: {}, module: {}, text: 't', report, cache, render, element: false });
+  await p2.start();
+  assert.deepEqual([renders, p2.rendered.cached], [1, true], 'the same CID plays its cached render: no second render');
+  p2.stop();
+  // a new CID renders; a Stop while it renders aborts it and nothing plays
+  let aborted = false;
+  const slow = (_m, _t, { signal }) => new Promise((_res, rej) => signal.addEventListener('abort', () => { aborted = true; rej(Object.assign(new Error('stopped'), { name: 'AbortError' })); }));
+  const p3 = new renderPlayerMod.RenderPlayer({ context: ctx, destination: {}, module: {}, text: 'u', report: { ...report, cid: 'zB' }, cache, render: slow, element: false });
+  const n = ctx.started.length;
+  const going = p3.start();
+  p3.stop();
+  await going;
+  assert.deepEqual([aborted, p3.state, ctx.started.length - n], [true, 'stopped', 0], 'the render is aborted and nothing starts');
+});
+
+test('render source: the clock BtwRun runs on is the audio position; forward seeks count on, back restarts on a fresh run from bar 0', async () => {
+  const ctx = fakeCtx();
+  const report = { cid: 'zC', tempo: 120, arranged: true, song_bars: 8, ok: true };
+  const p = new renderPlayerMod.RenderPlayer({ context: ctx, destination: {}, module: {}, text: 't', report, render: async () => ({ result: fakeResult(8, 120), via: 'page' }), element: false });
+  await p.start();
+  assert.equal(p.grid(), null, 'no grid before the runtime has played a deck (its bar 0 is the first grid it sees)');
+  p.echo([{ op: 'play', deck: 'A', on: true }]);
+  ctx.currentTime = 3; // 3 s at 120 = 6 beats
+  assert.equal(p.grid().beat, 6);
+  assert.equal(p.mediaTime(), 3);
+  p.seek(10); // forward: no restart
+  assert.deepEqual([p.epoch, p.grid().beat], [0, 20]);
+  p.seek(2); // back: a fresh run
+  assert.equal(p.epoch, 1);
+  assert.equal(p.grid(), null, 'the fresh run has not played yet');
+  p.echo([{ op: 'play', deck: 'A', on: true }]);
+  assert.equal(p.grid().beat, 0, "the fresh run's first grid is bar 0");
+  assert.equal(p.grid().beat, 4, 'then the position: the runtime counts the bars between');
+  p.pause();
+  const t = p.mediaTime();
+  ctx.currentTime += 5;
+  assert.deepEqual([p.state, p.mediaTime()], ['paused', t], 'paused: the position holds');
+  await p.resume();
+  assert.equal(p.state, 'playing');
+  p.stop();
+});
+
+test('render source: a looping song goes round with the audio; a song that does not loop restarts its run when the loop wraps', async () => {
+  const mk = async (loops) => {
+    const ctx = fakeCtx();
+    const report = { cid: 'zL', tempo: 120, arranged: true, song_bars: 4, loops, ok: true };
+    const p = new renderPlayerMod.RenderPlayer({ context: ctx, destination: {}, module: {}, text: 't', report, render: async () => ({ result: fakeResult(4, 120), via: 'page' }), element: false });
+    await p.start();
+    p.echo([{ op: 'play', deck: 'A', on: true }]);
+    return { ctx, p };
+  };
+  const a = await mk(true);
+  assert.equal(a.p.loop, true, 'a looping song loops its render');
+  a.ctx.currentTime = 7.9;
+  assert.equal(a.p.grid().beat, 15.8);
+  a.ctx.currentTime = 8.5; // 0.5 s into the second time round
+  assert.equal(a.p.grid().beat, 17, 'the beat goes on counting: the runtime loops the arrangement itself');
+  assert.equal(a.p.epoch, 0);
+  const b = await mk(false);
+  b.p.setLoop(true);
+  b.ctx.currentTime = 7.9;
+  b.p.grid();
+  b.ctx.currentTime = 8.5;
+  assert.equal(b.p.grid(), null);
+  assert.equal(b.p.epoch, 1, 'the wrap starts a fresh run, from bar 0');
+});
+
+test('source switch: render as a choice, remembered per browser; the stutter hint', () => {
+  const pick = (o) => sourceModel.chooseSource({ engine: true, stream: true, render: true, trigger: 'eval', loops: false, ...o });
+  assert.equal(pick({ pref: 'render' }), 'render');
+  assert.equal(pick({ pref: 'render', render: false }), null, 'render chosen but impossible here: nothing (the page says why)');
+  assert.equal(pick({ pref: 'auto' }), 'engine', 'auto never picks render on its own');
+  assert.equal(pick({ pref: 'auto', trigger: 'load' }), 'stream');
+  assert.deepEqual(['render', 'engine', 'stream', 'auto', 'bogus', null].map(sourceModel.storedSource), ['render', 'engine', 'stream', 'auto', 'auto', 'auto']);
+  const st = sourceModel.stuttering;
+  assert.equal(st({ underruns: 3 }, { underruns: 1 }), true, 'two new underruns');
+  assert.equal(st({ underruns: 2 }, { underruns: 1 }), false, 'one is not a stutter');
+  assert.equal(st({ inline: 1 }, { inline: 0 }), true, 'a net compiled on the audio thread glitches');
+  assert.equal(st({ slow: 3 }, {}), true);
+  assert.equal(st({}, {}), false);
+  assert.equal(sourceModel.STUTTER_HINT, 'Audio stuttering? Try render.');
 });
 
 // ---------------------------------------------------------------------------------------------------------------

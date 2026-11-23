@@ -696,7 +696,9 @@ async fn handle_status(State(app): State<AppState>, Path(cid): Path<String>, Que
 
 // ---------- the headers every response carries (securityHeaders, licenseHeaders, corsReadOnly) ----------
 
-const CSP: &str = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+// media-src allows blob:: the editor's render source plays the WAV it rendered in the page from a blob: URL (only the
+// page's own scripts can mint one).
+const CSP: &str = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 
 async fn site_headers(State(app): State<AppState>, req: Request, next: Next) -> Response<Body> {
     let path = req.uri().path().to_string();

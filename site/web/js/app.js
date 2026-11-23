@@ -11,10 +11,11 @@ import { deriveModel } from './markers-model.js';
 import { Follow } from './follow.js';
 import { Driver, EngineSource, VirtualSource, ManualClock } from './driver.js';
 import { StreamPlayer } from './stream-player.js';
+import { RenderPlayer, RenderSource, RenderCache } from './render-player.js';
 import { headerModel, programName, arrangePlay, arrangeLabel } from './header-model.js';
 import { readProgramView, defineProgramView } from './program-ld.js';
 import { reportedMixer } from './mixer-model.js';
-import { chooseSource, renderEndedMessage } from './source-model.js';
+import { chooseSource, renderEndedMessage, storedSource, stuttering, STUTTER_HINT } from './source-model.js';
 import { describeError, diagLine, diagDetails, summary, ApiError } from './errors.js';
 import { suggestionsFor } from './suggest.js';
 import { h, debounce, fmtTime, shortCid, accountKind, mapCaret, clamp, CID_RE, MAX_LOAD_TEXT, trunc, cleanName, isLoopbackHost, marksPrivate } from './util.js';
@@ -60,7 +61,10 @@ export class App {
     this.follow.on = store.get('btw-follow', '1') !== '0';
     this.ctx = null; this.master = null; this.analyser = null;
     this.engine = null; this.engineSrc = null; this.engineState = 'idle'; this.engineError = '';
-    this.sourcePref = 'auto';
+    this.sourcePref = storedSource(store.get('btw-source', 'auto')); // the person's choice, kept per browser
+    this.renderCache = new RenderCache(); // renders by CID: a program plays again without rendering until its CID changes
+    this.wasmModule = null; // the compiled btw_bg.wasm the render worker is handed (compiled on the first render)
+    this._renderEpoch = 0;
     this.info = null; this.examples = [];
     this.report = null; // the check of the text in the editor
     this.engineNotes = new Set(); // what the in-browser engine ignored of the program it plays (engine-calls.js): shown with the problems
@@ -124,7 +128,7 @@ export class App {
   }
 
   dom() {
-    const ids = ['top', 'hdr', 'h-sec', 'h-sec-txt', 'h-bar', 'h-phrase', 'h-gen', 'h-state', 'h-prog-fill', 'btn-follow', 'banner', 'problems', 'pr-sum', 'pr-sum-txt', 'pr-first', 'pr-dot', 'pr-list', 'decks', 'transport', 'btn-play', 'btn-decks', 't-source', 'st-long', 'st-short', 't-prob', 't-prob-dot', 't-prob-n', 'src-engine', 'src-stream', 't-status', 't-bpm', 't-time', 'level', 'meter', 'examples', 'h-name', 'toasts', 'btn-fmt', 'btn-share', 'btn-open', 'btn-export', 'btn-compose', 'btn-mcp', 'btn-phone', 'btn-beta', 'btn-user', 'user-lbl', 'drawer', 'drawer-title', 'drawer-body', 'drawer-close', 't-hint', 'btn-menu', 'tools'];
+    const ids = ['top', 'hdr', 'h-sec', 'h-sec-txt', 'h-bar', 'h-phrase', 'h-gen', 'h-state', 'h-prog-fill', 'btn-follow', 'banner', 'problems', 'pr-sum', 'pr-sum-txt', 'pr-first', 'pr-dot', 'pr-list', 'decks', 'transport', 'btn-play', 'btn-decks', 't-source', 'st-long', 'st-short', 't-prob', 't-prob-dot', 't-prob-n', 'src-engine', 'src-stream', 'src-render', 'rd-ctl', 'rd-pause', 'rd-seek', 'rd-loop', 't-status', 't-bpm', 't-time', 'level', 'meter', 'examples', 'h-name', 'toasts', 'btn-fmt', 'btn-share', 'btn-open', 'btn-export', 'btn-compose', 'btn-mcp', 'btn-phone', 'btn-beta', 'btn-user', 'user-lbl', 'drawer', 'drawer-title', 'drawer-body', 'drawer-close', 't-hint', 'btn-menu', 'tools'];
     this.el = {};
     for (const id of ids) this.el[id] = $(id);
     this.lights = [...this.el['h-phrase'].children];
@@ -133,7 +137,8 @@ export class App {
   wire() {
     const el = this.el;
     el['btn-play'].addEventListener('click', () => {
-      if (this.isPlaying()) return this.stop();
+      // a render under way is stopped too (nothing plays yet, but it is on its way)
+      if (this.isPlaying() || this.pendingPlayer) return this.stop();
       // "Still listening? Press play to continue": a paused queue goes on with its next item
       if (this.upNext.pausedReason && this.upNext.wants()) return this.upNext.resume();
       return this.play('eval');
@@ -169,6 +174,23 @@ export class App {
     }
     el.examples.addEventListener('change', () => this.loadExample(el.examples.value));
     for (const b of el['t-source'].querySelectorAll('button')) b.addEventListener('click', () => this.setSourcePref(b.dataset.src));
+    // the render's own transport: pause, a seek bar, loop (shown while a render plays)
+    el['rd-pause'].addEventListener('click', () => {
+      const p = this.player;
+      if (!p || p.kind !== 'render') return;
+      if (p.paused || p.state === 'ended') p.resume().catch((e) => this.showError(e)); else p.pause();
+      this.updateTransport();
+    });
+    el['rd-seek'].addEventListener('input', () => { this._seeking = true; });
+    el['rd-seek'].addEventListener('change', () => {
+      this._seeking = false;
+      const p = this.player;
+      if (p && p.kind === 'render') p.seek(Number(el['rd-seek'].value));
+    });
+    el['rd-loop'].addEventListener('change', () => {
+      const p = this.player;
+      if (p && p.kind === 'render') p.setLoop(el['rd-loop'].checked);
+    });
     el.level.value = store.get('btw-level', '0.8');
     el.level.addEventListener('input', () => {
       store.set('btw-level', el.level.value);
@@ -596,10 +618,44 @@ export class App {
     return this.ctx;
   }
 
+  /**
+   * While the live engine plays, watch for stutter: the context's underrun events where the browser counts them
+   * (playbackStats / playoutStats), nets compiled on the audio thread, the worklet's slow blocks (?perf=1). Two in a
+   * few seconds and the page says, once, "Audio stuttering? Try render."
+   */
+  watchStutter(engine) {
+    if (this.manual || this.record || this._stutterTimer) return;
+    const read = () => {
+      const c = this.ctx;
+      const ps = c && (c.playbackStats || c.playoutStats);
+      const st = engine.stats || {};
+      return {
+        underruns: ps ? Number(ps.underrunEvents ?? ps.fallbackFramesEvents ?? 0) || 0 : 0,
+        inline: Number(st.inline) || 0,
+        slow: Array.isArray(st.slow) ? st.slow.length : 0,
+      };
+    };
+    let was = read();
+    this._stutterTimer = setInterval(() => {
+      const now = read();
+      const live = this.isPlaying() && this.driver.kind === 'engine';
+      if (live && !this._stutterTold && stuttering(now, was)) this.stutterHint();
+      was = now;
+    }, 3000);
+  }
+
+  stutterHint() {
+    this._stutterTold = true;
+    this.emit('stutter');
+    this.banner({ kind: 'info', html: [h('span', { class: 'grow' }, STUTTER_HINT)], actions: [{ label: 'Use render', primary: true, run: () => { this.banner(null); if (this.sourcePref !== 'render') this.setSourcePref('render'); } }] });
+  }
+
   applyLevel() {
     if (!this.master) return;
     const v = Number(this.el.level.value);
     this.master.gain.value = v * v;
+    // a render on an <audio> element does not go through the context: its own volume
+    if (this.player && this.player.kind === 'render') this.player.setVolume(v * v);
   }
 
   async loadEngine() {
@@ -621,6 +677,7 @@ export class App {
       // heard either: say so beside the problems, so the strip does not read "no problems" over a program that plays without it
       if (engine.on) engine.on('ignored', (e) => { if (e && e.what && !this.engineNotes.has(e.what)) { this.engineNotes.add(e.what); this.renderProblems(); } });
       this.engine = engine;
+      this.watchStutter(engine);
       if (this.bg) this.bg.attachEngine(engine);
       this.engineSrc = new EngineSource(engine);
       this.engineState = 'ready';
@@ -649,7 +706,12 @@ export class App {
 
   /** Which source plays this program: 'engine' | 'stream' | null. `trigger`: 'eval' (an edit, Cmd+Enter) or 'load' (open, compose). */
   pickSource(trigger, report) {
-    return chooseSource({ engine: !!this.engineSrc, stream: this.canStream(report), pref: this.sourcePref, trigger, loops: !!(report && report.loops) });
+    return chooseSource({ engine: !!this.engineSrc, stream: this.canStream(report), render: this.canRender(report), pref: this.sourcePref, trigger, loops: !!(report && report.loops) });
+  }
+
+  /** A render here needs the real module (not the mock) and a program with no asset files (the bundled engine has none). */
+  canRender(report) {
+    return !!(this.btw && this.btw.wasmUrl && !this.mock && !this.manual && (!report || !report.uses_assets));
   }
 
   async play(trigger = 'eval') {
@@ -679,6 +741,7 @@ export class App {
       const want = this.pickSource(trigger, report);
       if (want === 'engine') await this.playEngine(text, report);
       else if (want === 'stream') await this.playStream(text, report);
+      else if (want === 'render') await this.playRender(text, report);
       else if (this.engineState === 'loading') this.toast(this.isPrivate(text, report) ? 'The engine is still loading. This program is private (it never goes to the server to stream), so it plays on the engine only: try again in a moment.' : 'The engine is still loading. Try again in a moment, or use stream.', 'warn');
       else this.toast(this.isPrivate(text, report) ? 'This program is private (restricted sounds, assets or #! visibility: private): it stays in this page and is never sent to the server to stream, so it plays on the engine only.' : 'No sound source is available: the engine did not load and the server is not reachable.', 'warn');
     } catch (e) {
@@ -753,6 +816,82 @@ export class App {
     this.afterEval(text, report, res);
   }
 
+  /** The compiled btw_bg.wasm, once (the render worker is handed the module, not its bytes). */
+  async compiledModule() {
+    if (!this.wasmModule) {
+      const url = this.btw.wasmUrl;
+      this.wasmModule = (async () => {
+        if (WebAssembly.compileStreaming) {
+          try { return await WebAssembly.compileStreaming(fetch(url)); } catch { /* a server without application/wasm: the bytes */ }
+        }
+        const res = await fetch(url);
+        return WebAssembly.compile(await res.arrayBuffer());
+      })();
+      this.wasmModule.catch(() => { this.wasmModule = null; });
+    }
+    return this.wasmModule;
+  }
+
+  /**
+   * The render source: the program rendered in this browser (faster than real time, in a Worker), then played as one
+   * audio file. The same CID plays its cached render; while a new one renders, what was playing goes on.
+   */
+  async playRender(text, report) {
+    if (this.player && this.player.kind === 'render' && this.player.cid === report.cid && this.isPlaying() && this.player.state !== 'error') {
+      if (this.player.paused) await this.player.resume();
+      return; // the same program: its render plays on
+    }
+    const module = await this.compiledModule();
+    const v = Number(this.el.level.value);
+    const player = new RenderPlayer({ context: this.ctx, destination: this.master, module, text, report, cache: this.renderCache, volume: v * v, onChange: () => this.updateTransport() });
+    if (this.pendingPlayer) this.pendingPlayer.stop();
+    this.pendingPlayer = player;
+    this.updateTransport();
+    try {
+      await player.start({ play: false });
+    } catch (e) {
+      if (player.stopped) return;
+      throw e;
+    } finally {
+      if (this.pendingPlayer === player) this.pendingPlayer = null;
+      this.updateTransport();
+    }
+    if (player.stopped) return; // Esc while it rendered
+    const res = this.driver.evaluate(text, new RenderSource(player));
+    if (!res.ok) {
+      player.stop();
+      this.editor.setDiagnostics(res.diagnostics || []);
+      return;
+    }
+    // what played before has stopped (evaluate let it go): now the render sounds, alone
+    this.player = player;
+    this._renderEpoch = player.epoch;
+    this.el['rd-loop'].checked = player.loop;
+    this.el['rd-seek'].max = String(player.duration);
+    this.afterEval(text, report, res);
+    try {
+      await player.play();
+    } catch (e) {
+      // an <audio> the browser will not start without a fresh gesture (the render outlasted the click's): paused, ready
+      if (e && e.name === 'NotAllowedError') { this.toast('Rendered: press ▶ beside the seek bar to listen.', 'info'); this.updateTransport(); return; }
+      throw e;
+    }
+  }
+
+  /** The render went back (a seek back, or the loop wrapping a program that does not loop itself): a fresh run on it. */
+  syncRenderRun() {
+    const p = this.player;
+    const d = this.driver;
+    if (!p || p.kind !== 'render' || !d || !d.src || p.epoch === this._renderEpoch) return;
+    this._renderEpoch = p.epoch;
+    const text = d.evalText;
+    d.src.detached = true;
+    const res = d.evaluate(text, new RenderSource(p));
+    if (!res.ok) return;
+    this._lastRun = d.run;
+    this.follow.reset();
+  }
+
   /** Wait for what the text in the editor draws on, then check it again: a program fetched by CID that imports is not checked until what it imports is here. */
   async settleClosure() {
     if (!this.resolver || !this.resolver.on) return;
@@ -809,6 +948,7 @@ export class App {
     if (this.pendingPlayer) {
       this.pendingPlayer.stop();
       this.pendingPlayer = null;
+      this.updateTransport();
     }
     if (!this.driver || !this.driver.src) return;
     this.driver.stopSound();
@@ -823,6 +963,7 @@ export class App {
 
   setSourcePref(src) {
     this.sourcePref = this.sourcePref === src ? 'auto' : src;
+    store.set('btw-source', this.sourcePref);
     this.updateTransport();
     if (this.isPlaying()) this.play('switch');
   }
@@ -858,6 +999,7 @@ export class App {
     // runtime is still serviced, so sections, loads and ramps go on with the sound
     if (this.bg && document.hidden) return this.serviceOnly();
     this.meter();
+    this.syncRenderRun();
     const d = this.driver;
     const f = d ? d.tick() : null;
     if (!f) {
@@ -904,7 +1046,8 @@ export class App {
 
   /** The song ended, or the streamed render ran out of audio and nothing more is coming. */
   checkEnded(ended) {
-    const over = ended || (this.player && this.player.state === 'ended');
+    // a render's end is its audio's (with loop on it never ends, whatever the runtime says of the song)
+    const over = this.player && this.player.kind === 'render' ? this.player.state === 'ended' : ended || (this.player && this.player.state === 'ended');
     if (over && !this._ended && this.driver.src) {
       this._ended = true;
       // with something up next the end is a track boundary: the queue goes on at once (no tail), if a listener is there
@@ -915,6 +1058,7 @@ export class App {
 
   /** Service the runtime and nothing else: no painting. What runs while the page is hidden (background.js calls it). */
   serviceOnly() {
+    this.syncRenderRun();
     const f = this.driver ? this.driver.tick() : null;
     if (!f) return null;
     this.checkEnded(!!(f.marks && f.marks.ended));
@@ -998,7 +1142,7 @@ export class App {
 
   songEnded() {
     if (this.driver && this.driver.src && !this.record) {
-      this.toast(this.player ? renderEndedMessage(!!(this.evalReport && this.evalReport.loops)) : 'The song ended.', 'info');
+      this.toast(this.player && this.player.kind !== 'render' ? renderEndedMessage(!!(this.evalReport && this.evalReport.loops)) : 'The song ended.', 'info');
       this.stop();
     }
   }
@@ -1117,15 +1261,30 @@ export class App {
   updateTransport() {
     const el = this.el;
     const playing = this.isPlaying();
-    el['btn-play'].classList.toggle('on', playing);
-    el['btn-play'].setAttribute('aria-label', playing ? 'Stop' : 'Play');
-    el['btn-play'].title = playing ? 'Stop (Esc)' : 'Evaluate and play (Cmd/Ctrl+Enter)';
+    const going = playing || !!this.pendingPlayer;
+    el['btn-play'].classList.toggle('on', going);
+    el['btn-play'].setAttribute('aria-label', going ? 'Stop' : 'Play');
+    el['btn-play'].title = going ? 'Stop (Esc)' : 'Evaluate and play (Cmd/Ctrl+Enter)';
     const eng = this.engineSrc ? 'ready' : this.engineState;
-    const kind = playing ? this.driver.kind : this.sourcePref === 'auto' ? (this.engineSrc ? 'engine' : 'stream') : this.sourcePref;
+    const pending = this.pendingPlayer && this.pendingPlayer.kind === 'render' ? this.pendingPlayer : null;
+    const kind = pending ? 'render' : playing ? this.driver.kind : this.sourcePref === 'auto' ? (this.engineSrc ? 'engine' : 'stream') : this.sourcePref;
     const be = el['src-engine'];
     const bs = el['src-stream'];
+    const br = el['src-render'];
     be.setAttribute('aria-pressed', String(kind === 'engine'));
     bs.setAttribute('aria-pressed', String(kind === 'stream'));
+    br.setAttribute('aria-pressed', String(kind === 'render'));
+    br.disabled = !this.canRender(null);
+    br.title = br.disabled ? 'Rendering here needs the language module' : 'Render the whole track in this browser first, then play it as one audio file: no live engine, no stutter';
+    const rp = playing && this.player && this.player.kind === 'render' ? this.player : null;
+    el['rd-ctl'].hidden = !rp;
+    if (rp) {
+      const paused = rp.paused || rp.state === 'ended';
+      el['rd-pause'].setAttribute('aria-label', paused ? 'Resume' : 'Pause');
+      el['rd-pause'].title = paused ? 'Resume the render' : 'Pause the render';
+      el['rd-pause'].classList.toggle('paused', paused);
+      el['rd-loop'].checked = rp.loop;
+    }
     be.disabled = eng === 'failed';
     be.title = eng === 'failed' ? `The engine did not load: ${this.engineError}` : eng === 'ready' ? 'Live engine in this page: edits land on the next bar' : 'The engine loads when you first press play';
     bs.disabled = this.serverOk === false;
@@ -1136,7 +1295,19 @@ export class App {
     let kindIcon = 'idle';
     let busy = false;
     if (this.record) { status = this.progName || ''; short = status; }
-    else if (playing && this.player) {
+    else if (pending && pending.state === 'rendering') {
+      const pr = pending.progress;
+      status = `render · rendering ${Math.floor(100 * (pr.fraction || 0))}% · bar ${pr.bars || 0}/${pr.totalBars || 0}`;
+      short = `${Math.floor(100 * (pr.fraction || 0))}%`;
+      busy = true;
+    } else if (pending && pending.state === 'error') { status = `render error: ${pending.error && pending.error.message}`; short = 'error'; kindIcon = 'error'; }
+    else if (rp) {
+      const st = rp.state;
+      const r = rp.rendered || {};
+      if (st === 'paused') { status = 'render · paused'; short = 'paused'; }
+      else if (st === 'ended') { status = 'render · ended'; short = 'ended'; }
+      else { status = `render · rendered audio${r.cached ? ' (cached)' : r.ms ? ` in ${(r.ms / 1000).toFixed(1)} s` : ''}`; short = 'rendered'; kindIcon = 'stream'; }
+    } else if (playing && this.player) {
       const st = this.player.state;
       if (st === 'connecting') { status = 'stream · rendering…'; short = 'rendering'; busy = true; }
       else if (st === 'buffering') { status = 'stream · buffering…'; short = 'buffering'; busy = true; }
@@ -1168,7 +1339,7 @@ export class App {
     const el = this.el['t-time'];
     const playing = this.isPlaying();
     // the song's length: the evaluated program's while it plays, else the checked text's (a looping program has none)
-    const secs = (playing && this.evalReport && this.evalReport.seconds) || (this.report && this.report.seconds) || (this.evalReport && this.evalReport.seconds) || null;
+    const secs = (playing && this.player && this.player.kind === 'render' && this.player.duration) || (playing && this.evalReport && this.evalReport.seconds) || (this.report && this.report.seconds) || (this.evalReport && this.evalReport.seconds) || null;
     let cur = null;
     if (playing && f) {
       if (this.player) cur = this.player.mediaTime();
@@ -1177,10 +1348,14 @@ export class App {
     if (cur == null) cur = 0; // stopped (or not yet sounding): 0:00 / <length>
     this.setText(el, secs ? `${fmtTime(cur)} / ${fmtTime(secs)}` : fmtTime(cur));
     if (!f) return;
+    if (this.player && this.player.kind === 'render') {
+      const sk = this.el['rd-seek'];
+      if (!this._seeking) sk.value = String(cur);
+    }
     if (this.player && this.player.state !== this._lastPlayerState) {
       this._lastPlayerState = this.player.state;
       this.updateTransport();
-    } else if (this.player && this.player.state === 'playing') {
+    } else if (this.player && this.player.kind !== 'render' && this.player.state === 'playing') {
       const b = this.player.buffered().toFixed(1);
       if (b !== this._lastBuf) { this._lastBuf = b; this.updateTransport(); }
     }

@@ -64,7 +64,7 @@ export function clockKeptUp({ audioS, wallS }) {
 /** What the lock screen shows. */
 export function mediaInfo({ name, source, tempo }) {
   const title = (name && String(name).trim()) || 'BeatScript';
-  const how = source === 'stream' ? 'streamed render' : source === 'engine' ? 'live engine' : '';
+  const how = source === 'stream' ? 'streamed render' : source === 'render' ? 'rendered audio' : source === 'engine' ? 'live engine' : '';
   const album = [how, tempo ? `${Math.round(tempo)} bpm` : ''].filter(Boolean).join(' · ');
   return { title, artist: 'BeatScript', album };
 }

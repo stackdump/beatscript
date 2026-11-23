@@ -33,7 +33,7 @@ const PORT = Number(arg('port', 18197));
 const WEB = path.resolve(arg('web', path.join(here, '..', 'web')));
 const EXAMPLES = path.resolve(arg('examples', path.join(here, '..', 'examples')));
 const FORCE_MOCK = arg('mock-wasm', false) === true;
-const STRICT_CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+const STRICT_CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 const CSP = arg('csp', null) === 'strict' ? STRICT_CSP : typeof arg('csp', null) === 'string' ? arg('csp', null) : null;
 
 // ---- the checker: the real wasm if it is built, else the page's JS mock ----------------------------------------

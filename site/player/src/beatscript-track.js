@@ -17,7 +17,7 @@
 //
 // Two ways to play, one engine:
 //   live    (the default) the engine runs as it plays: an AudioWorklet, the runtime serviced every 25 ms.
-//   render  the first Play renders one pass of the arrangement offline, faster than real time (beatscript-render.js:
+//   render  the first Play renders one pass of the arrangement offline, faster than real time (js/render.js:
 //           the same engine and worklet code on a clock of its own; in a Worker when the package is on the page's
 //           origin, else on the page's thread in slices), shows how far it has got, then plays the result from memory
 //           with a seek bar, pause and loop: through an <audio> element on a blob: WAV where the page allows blob:
@@ -40,17 +40,14 @@ import { makeFacade } from './js/wasm.js';
 import { createEngine } from './js/engine.js';
 import { positionModel } from './js/embed-model.js';
 import { normClass, plainSpans } from './js/highlight.js';
-import { renderPlan, statusAt, clock, wav, RENDER_LIMITS } from './render-model.js';
+import { renderPlan, statusAt, clock, RENDER_LIMITS } from './js/render-model.js';
+import { renderOnce, playable } from './js/render-client.js';
 
 const TICK_MS = 25;
 const SITE = 'https://beatscript.app';
 const CID_RE = /^z[1-9A-HJ-NP-Za-km-z]{20,120}$/;
-/** The render's sample rate (btwd render's default). */
-const RENDER_RATE = 44100;
 /** After a stop, the context is suspended this much later (the output is already cut: this only lets the device sleep). */
 const SUSPEND_AFTER_MS = 300;
-/** How long a blob: WAV may take to load before Web Audio plays it instead. */
-const BLOB_PROBE_MS = 4000;
 
 const CSS = `
 :host { display: block; max-width: 480px; font: 14px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -180,139 +177,6 @@ const h = (tag, attrs = {}, ...kids) => {
   e.append(...kids);
   return e;
 };
-
-// ---- the render, in a Worker when the browser allows one from where this file is, else here
-
-let workerState = null; // null untried | {worker} | false (none: render here)
-function renderWorker() {
-  if (workerState !== null) return Promise.resolve(workerState);
-  workerState = (async () => {
-    try {
-      const url = new URL('./render-worker.js', import.meta.url);
-      // a Worker's script must be on the page's origin: from a CDN the constructor throws (or the CSP refuses it)
-      if (typeof Worker !== 'function' || typeof location === 'undefined' || url.origin !== location.origin) return false;
-      const w = new Worker(url, { type: 'module' });
-      await new Promise((resolve, reject) => {
-        const t = setTimeout(() => reject(new Error('the render worker did not start')), 10000);
-        w.onmessage = (e) => { if (e.data && e.data.type === 'ready') { clearTimeout(t); resolve(); } };
-        w.onerror = (e) => { clearTimeout(t); reject(new Error((e && e.message) || 'the render worker failed')); };
-      });
-      return { worker: w, next: 1, jobs: new Map() };
-    } catch {
-      return false;
-    }
-  })().then((s) => {
-    workerState = s;
-    if (s) {
-      s.worker.onmessage = (e) => {
-        const m = e.data;
-        const job = m && s.jobs.get(m.id);
-        if (!job) return;
-        if (m.type === 'progress') job.onProgress && job.onProgress(m);
-        else { s.jobs.delete(m.id); if (m.type === 'done') job.resolve(m.result); else job.reject(new Error(m.error)); }
-      };
-    }
-    return s;
-  });
-  return workerState;
-}
-
-/** Render `text` once: {result, via} (via 'worker' | 'page'). */
-async function renderOnce(module, text, onProgress, signal) {
-  const ws = await renderWorker();
-  if (ws) {
-    const id = ws.next++;
-    const p = new Promise((resolve, reject) => ws.jobs.set(id, { resolve, reject, onProgress }));
-    ws.worker.postMessage({ type: 'render', id, module, text, sampleRate: RENDER_RATE, limits: RENDER_LIMITS });
-    if (signal) signal.addEventListener('abort', () => { const j = ws.jobs.get(id); if (j) { ws.jobs.delete(id); j.reject(Object.assign(new Error('the render was stopped'), { name: 'AbortError' })); } }, { once: true });
-    return { result: await p, via: 'worker' };
-  }
-  const { renderProgram } = await import('./beatscript-render.js');
-  return { result: await renderProgram({ module, text, sampleRate: RENDER_RATE, limits: RENDER_LIMITS, onProgress, signal }), via: 'page' };
-}
-
-// ---- the render's playback: an <audio> on a blob: WAV, or Web Audio on the same samples
-
-/** An <audio> element playing `url`, or null when the page will not load it (a CSP without blob: in media-src). */
-function audioPlayer(url) {
-  return new Promise((resolve) => {
-    const a = new Audio();
-    a.preload = 'auto';
-    let done = false;
-    const end = (ok) => { if (done) return; done = true; clearTimeout(t); a.onloadedmetadata = a.onerror = null; resolve(ok ? a : null); };
-    const t = setTimeout(() => end(false), BLOB_PROBE_MS);
-    a.onloadedmetadata = () => end(Number.isFinite(a.duration) && a.duration > 0);
-    a.onerror = () => end(false);
-    a.src = url;
-  });
-}
-
-/** The same interface for both: play(), pause(), seek(t), time, duration, loop, paused, onended. */
-function elementTransport(a) {
-  const tr = {
-    kind: 'audio',
-    el: a,
-    get time() { return a.currentTime; },
-    get duration() { return a.duration; },
-    get paused() { return a.paused; },
-    set loop(v) { a.loop = !!v; },
-    get loop() { return a.loop; },
-    onended: null,
-    play: () => a.play(),
-    pause: () => a.pause(),
-    seek: (t) => { a.currentTime = Math.max(0, Math.min(t, a.duration || 0)); },
-    dispose: () => { a.pause(); a.removeAttribute('src'); a.load(); },
-  };
-  a.addEventListener('ended', () => { if (tr.onended) tr.onended(); });
-  return tr;
-}
-
-function bufferTransport(getCtx, getOut, buffer) {
-  let src = null;
-  let offset = 0;
-  let startedAt = 0;
-  let loop = false;
-  const duration = buffer.duration;
-  const stopSrc = () => { if (src) { src.onended = null; try { src.stop(); } catch { /* not started */ } src.disconnect(); src = null; } };
-  const tr = {
-    kind: 'webaudio',
-    get time() {
-      if (!src) return offset;
-      const t = getCtx().currentTime - startedAt;
-      return loop ? t % duration : Math.min(t, duration);
-    },
-    duration,
-    get paused() { return !src; },
-    set loop(v) {
-      const t = tr.time;
-      loop = !!v;
-      if (src) { src.loop = loop; startedAt = getCtx().currentTime - t; }
-    },
-    get loop() { return loop; },
-    onended: null,
-    async play() {
-      const ctx = getCtx();
-      await ctx.resume();
-      stopSrc();
-      if (offset >= duration) offset = 0;
-      src = ctx.createBufferSource();
-      src.buffer = buffer;
-      src.loop = loop;
-      src.connect(getOut());
-      src.onended = () => { src = null; offset = 0; if (tr.onended) tr.onended(); };
-      startedAt = ctx.currentTime - offset;
-      src.start(0, offset);
-    },
-    pause() { offset = tr.time; stopSrc(); },
-    seek(t) {
-      const was = !!src;
-      offset = Math.max(0, Math.min(t, duration));
-      if (was) { stopSrc(); tr.play(); }
-    },
-    dispose() { stopSrc(); offset = 0; },
-  };
-  return tr;
-}
 
 export class BeatscriptTrack extends HTMLElement {
   constructor() {
@@ -596,7 +460,7 @@ export class BeatscriptTrack extends HTMLElement {
     let r;
     let via;
     try {
-      ({ result: r, via } = await renderOnce(module, this.text, onProgress, this.abort.signal));
+      ({ result: r, via } = await renderOnce(module, this.text, { onProgress, signal: this.abort.signal }));
     } catch (e) {
       if (e && e.name === 'AbortError') { this.say('render stopped'); return; }
       throw e;
@@ -605,22 +469,11 @@ export class BeatscriptTrack extends HTMLElement {
       this.progress = null;
     }
     this.say('encoding…');
-    const bytes = wav(r.left, r.right, r.sampleRate);
-    this.blob = new Blob([bytes], { type: 'audio/wav' });
-    this.blobUrl = URL.createObjectURL(this.blob);
-    let playback = 'audio';
-    const a = await audioPlayer(this.blobUrl);
-    if (a) {
-      this.transport = elementTransport(a);
-    } else {
-      // no blob: media here: the same samples through Web Audio
-      playback = 'webaudio';
-      const buf = this.ctx.createBuffer(2, r.frames, r.sampleRate);
-      buf.copyToChannel(r.left, 0);
-      buf.copyToChannel(r.right, 1);
-      this.buffer = buf;
-      this.transport = bufferTransport(() => this.ctx, () => this.out, buf);
-    }
+    const pb = await playable(r, { ctx: () => this.ctx, out: () => this.out });
+    this.blob = pb.blob;
+    this.blobUrl = pb.url;
+    this.transport = pb.transport;
+    const playback = pb.playback;
     this.transport.onended = () => this.ended();
     this.rendered = { plan, sections: rep.sections || [], frames: r.frames, sampleRate: r.sampleRate, seconds: r.seconds, bars: r.bars, loops: r.loops, ms: r.ms, via, playback, cid: rep.cid, notes: r.notes, lead: r.lead };
     this.loopBox.checked = !!r.loops;

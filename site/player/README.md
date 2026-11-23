@@ -88,6 +88,10 @@ const module = await WebAssembly.compile(wasmBytes); // wasm/btw_bg.wasm (the pa
 const { left, right, sampleRate, frames, bars } = await renderProgram({ module, text, onProgress: (p) => console.log(p.fraction) });
 ```
 
+It is the editor's own render, not a copy: beatscript.app's "render" source plays the same files (`js/render.js`, its
+Worker, `js/render-client.js` for the WAV and its playback, `js/render-model.js`), which `build.mjs` copies from
+`site/web/js` byte for byte; `site/test/render-shared.mjs` checks both render the same PCM.
+
 **The page must allow WebAssembly.** A CSP whose `script-src` lacks `'wasm-unsafe-eval'` (or `'unsafe-eval'`) refuses
 to compile any WebAssembly module, and no wasm engine can play under it; the element then says so instead of playing.
 `test/csp.html` is a page under an artifact-like policy with `'wasm-unsafe-eval'` added.

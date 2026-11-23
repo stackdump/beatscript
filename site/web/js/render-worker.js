@@ -1,11 +1,12 @@
-// render-worker.js: beatscript-render.js in a dedicated Worker, so a long render never holds the page's thread.
-// beatscript-track.js starts it when the package is on the page's own origin (a Worker's script must be: from a CDN
-// the browser refuses it, and the element renders on the page's thread instead, in slices).
+// render-worker.js: render.js in a dedicated Worker, so a long render never holds the page's thread. Shared by the
+// editor's render source and <beatscript-track mode="render">: render-client.js starts it when this file is on the page's
+// own origin (a Worker's script must be: from a CDN the browser refuses it, and the page renders on its own thread
+// instead, in slices).
 //
 //   page -> worker  {type:'render', id, module, text, sampleRate, limits}
 //   worker -> page  {type:'progress', id, ...}  {type:'done', id, result}  (left/right transferred)  {type:'failed', id, error}
 
-import { renderProgram } from './beatscript-render.js';
+import { renderProgram } from './render.js';
 
 self.onmessage = async (e) => {
   const m = e.data;
