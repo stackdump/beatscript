@@ -48,6 +48,16 @@ pub fn head_version(w: &str) -> Option<u32> {
     (!n.is_empty() && n.bytes().all(|c| c.is_ascii_digit())).then(|| n.parse::<u32>().unwrap_or(u32::MAX))
 }
 
+/// The swing the track of a reference (its canonical text) writes at its version: `seed@2(jazz, 7)` is 0.6, a bare seed or a
+/// straight genre None ([`swing_of`]).
+pub fn swing_of_call(call: &str) -> Option<f64> {
+    let s = runs(&lex(call).tokens).into_iter().next()?.r.ok()?;
+    if !GENRES.contains(&s.genre.as_str()) {
+        return None;
+    }
+    swing_of(&track(&s.genre, s.n, s.structure()), s.version)
+}
+
 /// The generator and version a reference (its canonical text) resolves with: `seeds@v1`, `seeds@v2`.
 pub fn generator_of(call: &str) -> String {
     let v = call.split('(').next().and_then(head_version).unwrap_or(1);
@@ -164,14 +174,21 @@ const SHAPE: &str = "seed(genre, n), seed(genre, n, structure), then `.part` and
 /// Read one reference from `toks[i]` (the word `seed` or `seed@N`): where it ends, and the reference or what is wrong with it.
 fn read_ref(toks: &[Token], i: usize) -> (usize, Result<SeedRef, Diagnostic>) {
     let (end, r) = read_body(toks, i);
-    let version = match &toks[i].tok {
-        Tok::Word(w) => head_version(w).unwrap_or(1),
-        _ => 1,
+    let head = match &toks[i].tok {
+        Tok::Word(w) => w.as_str(),
+        _ => "seed",
     };
+    let version = head_version(head).unwrap_or(1);
     if !VERSIONS.contains(&version) {
         let have: Vec<String> = VERSIONS.iter().map(|v| if *v == 1 { "seed (v1)".to_string() } else { format!("seed@{v}") }).collect();
-        let d = Diagnostic::error(toks[i].span, format!("this BeatScript has {}, not `seed@{version}`", have.join(" and ")))
-            .help(format!("seed@{}(techno, 42) (a version always means the same music)", VERSIONS[VERSIONS.len() - 1]));
+        let latest = VERSIONS[VERSIONS.len() - 1];
+        // the head as written (`seed@99999999999` is not read as a number that fits), the help from the reference's own arguments
+        let fixed = match &r {
+            Ok(s) => SeedRef { version: latest, ..s.clone() }.text(),
+            Err(_) => format!("seed@{latest}(techno, 42)"),
+        };
+        let d = Diagnostic::error(toks[i].span, format!("this BeatScript has {}, not `{head}`", have.join(" and ")))
+            .help(format!("{fixed} (a version always means the same music)"));
         return (end, Err(d));
     }
     (end, r.map(|s| SeedRef { version, version_span: toks[i].span, ..s }))
@@ -774,6 +791,14 @@ pub fn expand(src: &str) -> Option<Result<Expansion, Vec<Diagnostic>>> {
             }
         }
         let refx = s.text();
+        // a piece of a swung seed@2 (a part, a let, a section) brings its notes and never its swing, which is the whole
+        // program's: say so where the program does not say its own
+        if let (Some(sw), false, false) = (swing_of(&t, s.version).filter(|_| s.version >= SWING), matches!(form, Form::Arrange(_)), has("swing")) {
+            warnings.push(
+                Diagnostic::info(run.span, format!("{refx} brings its notes here, not its swing: `swing` is a setting of the whole program, and only `arrange from` writes it"))
+                    .help(format!("swing {}   (at the top of the program: {}'s swing)", crate::print::num(sw), s.genre)),
+            );
+        }
         let roles: Vec<&str> = match role {
             Some(r) => vec![r],
             None => ROLES.to_vec(),

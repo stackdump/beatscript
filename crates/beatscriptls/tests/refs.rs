@@ -133,6 +133,12 @@ fn hover_on_a_seed_at_2_says_its_version_and_shows_its_swing() {
     let md = hover_text(&mut s, text, text.find("seed@2").unwrap() + 2);
     assert!(md.contains("```beatscript\nseed@2(jazz, 7)") && md.contains("seeds v2") && md.contains("**engine call**"), "{md}");
     assert!(md.contains(&format!("resolves to `{}`", ss[0].resolved.as_deref().unwrap())), "{md}");
+    assert!(md.contains("writes `swing 0.6`"), "{md}");
+    // a piece of it brings its notes, not its swing, and its hover says so
+    let part = "deck A: bass seed@2(jazz, 7).bass[1..4]\n";
+    let mut s = server(part);
+    let md = hover_text(&mut s, part, part.find("seed@2").unwrap() + 2);
+    assert!(md.contains("seeds v2") && md.contains("not its swing") && md.contains("say `swing 0.6`"), "{md}");
     // a bare seed is v1, and says so
     let v1 = "arrange from seed(jazz, 7)\n";
     let mut s = server(v1);

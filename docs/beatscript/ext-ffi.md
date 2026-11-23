@@ -133,11 +133,20 @@ its own. A reference resolves (`refs`, the pin) to the piece as a program of its
 `seeds@v2`. The expansion's `# from seed@2(...)` line ends `seeds v2`.
 
 **What it refuses.**
-- `seed@3(techno, 42)`: "this BeatScript has seed (v1) and seed@2, not `seed@3`", help `seed@2(techno, 42)`. One error, at the head.
+- `seed@3(jazz, 7)`: "this BeatScript has seed (v1) and seed@2, not `seed@3`", help `seed@2(jazz, 7)`. It is one error, at the
+  head. The head is quoted as written (`seed@99999999999`), and the help keeps the reference's own arguments.
+- `arrange from seed@2 (jazz, 7)`: "`seed@2` touches its `(`", help `seed@2(jazz, 7)`. A bare `arrange from seed@2` is told the
+  same (help `seed@2(jazz, 7)`), and so is a bare `seed (...)`.
 - `#! seeds: v2`: "this BeatScript has seeds v1, not `v2`", help: write the version in the reference, `seed@2(techno, 42)`. A `#!`
   line is a comment and is outside the CID, so it pins nothing.
 - Everything `seed(...)` refuses, the same way: an unknown genre (with the nearest names), bars outside the track, a part that is
   no role, a `let` that names no part.
+
+**What it says (not an error).** A piece of a swung seed@2 (a section, a part line or a `let`) brings its notes and not its
+swing, because the swing is a setting of the whole program. Where the program says no `swing` of its own, `check` gives an Info
+diagnostic at the reference: "seed@2(jazz, 7)[1..8] brings its notes here, not its swing: `swing` is a setting of the whole
+program, and only `arrange from` writes it", help `swing 0.6`. The editor's hover says the same by place. For the whole track it
+says "writes `swing 0.6`".
 
 **Decisions.**
 - **The version went where the bug was (taste call, 2026-11-22).** Matt asked for "a NEW generator version, seeded@3 / gen@3",
@@ -166,16 +175,19 @@ and of the same bare seeds). Example: `examples/beatscript/swung-seed.beatscript
 **Not done.**
 - `seed@2` does not carry the beats project's `humanize`. BeatScript has no song-wide setting for it: `humanize()` is a pattern's
   velocity function.
-- Nobody has measured whether BeatScript's `swing` is heard as strongly as beats' own swing. The program carries it as `swing`
-  on its nets' envelope, as every `swing` line does.
+- **A `swing` line is not heard (measured 2026-11-22).** The review rendered programs with `beatscript render` at 48 kHz, groove on, 4
+  bars: a kick on the off-sixteenths only (`deck A: kick ~ x ~ x ...`), and `hihat x*16`. It took the onsets by threshold
+  (`scratchpad/gen3-review/onsets.py`). At 120 BPM, `swing 0.6` delays every off-step by exactly 18 samples (0.375 ms, 0.0030
+  of a sixteenth; the minimum equals the maximum over 32 hits). `swing 1` delays them by 30 samples (0.625 ms, 0.0050). At 90 BPM,
+  `swing 0.6` gives 24 samples (0.500 ms, again 0.0030 of a sixteenth). The hats give a mean of 19.4 samples on odd steps and 0
+  on even ones. That is djrust's runner formula, `swing / 100 * sixteenth * 0.5`, applied to the unscaled 0..1 value that
+  `DeckIr::envelope` hands it. beats' own jazz (60) is 0.3 of a sixteenth (37.5 ms at 120 BPM), so a program's `swing 0.6`
+  is 1/100 of it.
 
 **Proposals.**
-- Check how strong the engine plays the setting, for Matt. I have only read the code, not run or listened to it. Going by that
-  reading, a program's `swing` goes into the nets' envelope unscaled (`djlive::compile::DeckIr::envelope`). djrust then reads it as
-  `Project.swing`, and its runner uses that as a percentage of half a sixteenth (`wave/runner.rs`: `swing / 100 * tick_ms *
-  0.5`, and only with the groove on). If so, `swing 0.6` delays the off-steps by 0.3% of a sixteenth, where beats' jazz at 60
-  delays them by 30%. That would affect every `swing` line, hand-written or generated, and changing it would change the
-  audio and the envelope pins, but not any program's text or CID.
+- Scale the setting where it enters the engine (`DeckIr::envelope`, `swing * 100`), so that `swing 0.6` is beats' 60, which
+  is 0.3 of a sixteenth. That is the mapping gen@N and seed@2 already write. It changes the audio and the nets' envelope pins of
+  every program with a `swing` line, but no program's text or CID.
 
 ## Offline, missing, CC0
 

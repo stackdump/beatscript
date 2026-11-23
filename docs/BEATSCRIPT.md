@@ -1194,12 +1194,14 @@ arrange from template(rondo, @hands_up, refrain=ode_to_joy)  a form, a role boun
   15, dnb and trap 10, the rest 0), and v2 writes it as the program's `swing`, the value / 100 held to 0.6, as the
   seeded generator (`gen@N`) prints it: `arrange from seed@2(jazz, 7)` says `swing 0.6`, a straight genre says none, so
   `seed@2(techno, 42)` writes out the same program as `seed(techno, 42)`. Only `arrange from` writes the swing (it is a
-  setting of the whole program, and a section, a part or a `let` brings none), and the program's own `swing` wins.
+  setting of the whole program, and a section, a part or a `let` brings none: `check` says so there, with the `swing` line
+  that would), and the program's own `swing` wins.
   `seed@2` stands wherever `seed` does, with the same parts, bars and structures. A `#! seeds: v2` line is refused: a
   comment is outside the CID and pins nothing, so the version goes in the reference. Long note: `docs/beatscript/ext-ffi.md`,
   "`seed@2`".
 - `check`: an unknown genre is an error with the nearest names; bars outside the track an error; a part the genre does
-  not have a warning (it is silent); a version this BeatScript has not got (`seed@3(...)`) an error naming the ones it has.
+  not have a warning (it is silent); a version this BeatScript has not got (`seed@3(...)`) an error naming the ones it has; a
+  head apart from its `(` (`seed@2 (jazz, 7)`) an error with the reference it would be.
   A structure is `seed(house, 7, loop)`: standard (the default), loop, minimal or extended.
 
 ### Borrow from a stored program

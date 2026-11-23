@@ -97,16 +97,37 @@ fn short_call(call: &str) -> String {
     }
 }
 
-/// What a kind of reference is, in a phrase (a seed's says its version: `seed@2(...)` writes its genre's swing).
-fn kind_doc(s: &Site) -> &'static str {
+/// What a kind of reference is, in a phrase (a seed's says its version, read from its head: `seed@2(...)` is seeds v2, which
+/// writes its genre's swing).
+fn kind_doc(s: &Site) -> String {
     match s.kind {
-        "gen" => "a call of the seeded generator",
-        "seed" if djlive::seed::generator_of(&s.call) != format!("seeds@{}", djlive::seed::VERSION) => "a track of the beats generator (seeds v2: the track and its genre's swing)",
-        "seed" => "a track of the beats generator (seeds v1)",
-        "stored" => "a stored program's section or part, by its CID",
-        "template" => "a template, written out as a whole program",
-        _ => "a reference",
+        "gen" => "a call of the seeded generator".into(),
+        "seed" => {
+            let v = s.call.split('(').next().and_then(djlive::seed::head_version).unwrap_or(1);
+            if v >= djlive::seed::SWING {
+                format!("a track of the beats generator (seeds v{v}: the track and its genre's swing)")
+            } else {
+                format!("a track of the beats generator (seeds v{v})")
+            }
+        }
+        "stored" => "a stored program's section or part, by its CID".into(),
+        "template" => "a template, written out as a whole program".into(),
+        _ => "a reference".into(),
     }
+}
+
+/// What a swung seed@2 brings where it stands: the whole track (`arrange from`) brings its swing, a piece of it its notes alone.
+fn swing_doc(s: &Site) -> Option<String> {
+    if s.kind != "seed" {
+        return None;
+    }
+    let sw = djlive::seed::swing_of_call(&s.call)?;
+    let n = djlive::print::num(sw);
+    Some(if s.place == "arrange" {
+        format!("writes `swing {n}` (unless the program says its own)")
+    } else {
+        format!("brings its notes here, not its swing: `swing` is a setting of the whole program, and only `arrange from` writes it; say `swing {n}` at the top for its genre's")
+    })
 }
 
 /// Where a reference stands, in a phrase.
@@ -173,6 +194,9 @@ pub fn hover_markdown(a: &Analysis, s: &Site) -> String {
     }
     if let Some(f) = fitted_doc(a, s) {
         facts.push(f);
+    }
+    if let Some(w) = swing_doc(s) {
+        facts.push(w);
     }
     facts.push(format!("written out as {}", place_doc(s)));
     m.push_str("\n\n");

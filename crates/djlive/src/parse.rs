@@ -1548,9 +1548,37 @@ impl<'a> Parser<'a> {
             Tok::Word(w) if crate::seed::is_ref_word(w) || w.starts_with("template(") => self.word("a seed"),
             Tok::Word(w) if stored && crate::stored::is_ref_word(w) => self.word("a stored program"),
             Tok::Word(w) if crate::stored::is_ref_word(w) => Err(Diagnostic::error(self.span(), "`arrange from` takes a seed of the generator or a template: another program as a whole is a fork").help("fork it and edit the copy, or borrow its sections: section hook from <cid>.drop")),
+            // a seed's head with its `(` apart, or none: `seed@2 (jazz, 7)` is no reference (seed.rs reads one only touching)
+            Tok::Word(w) if crate::seed::head_version(w).is_some() => Err(self.detached_seed(w.clone())),
             _ if stored => Err(self.expected(&["seed(genre, n)", "template(name, phrase)", "a stored program's CID"], &format!("`from` takes a seed of the generator, a template or a stored program, found {}", self.found())).help("section intro from seed(techno, 42)[1..8]   section hook from <cid>.drop")),
             _ => Err(self.expected(&["seed(genre, n)", "template(name, phrase)"], &format!("`from` takes a seed of the generator or a template, found {}", self.found())).help("section intro from seed(techno, 42)[1..8]   arrange from seed(techno, 42)   arrange from template(deep-house, @tempest_such_stuff)")),
         }
+    }
+
+    /// `seed@2 (jazz, 7)` or a bare `seed@2` after `from`: the head is there but its `(` does not touch it. The help is the
+    /// reference as it would be, from the arguments the line has (`seed@2(jazz, 7)`), or an example when it has none.
+    fn detached_seed(&self, head: String) -> Diagnostic {
+        let mut args: Vec<String> = Vec::new();
+        let mut closed = false;
+        if self.peek_n(1) == &Tok::LParen {
+            let mut k = self.at + 2;
+            while let Some(t) = self.toks.get(k) {
+                match &t.tok {
+                    Tok::RParen => {
+                        closed = true;
+                        break;
+                    }
+                    Tok::Newline | Tok::Eof => break,
+                    Tok::Comma => args.push(",".into()),
+                    _ => args.push(t.span.text(self.src).to_string()),
+                }
+                k += 1;
+            }
+        }
+        let inner = args.join(" ").replace(" ,", ",");
+        let fixed = if closed && !inner.is_empty() { format!("{head}({inner})") } else { format!("{head}(jazz, 7)") };
+        let msg = if self.peek_n(1) == &Tok::LParen { format!("`{head}` touches its `(`: a space between them is no seed reference") } else { format!("`{head}` takes its genre and seed in `(...)`, touching it") };
+        Diagnostic::error(self.span(), msg).help(fixed)
     }
 
     pub(crate) fn sample_name(&mut self) -> R<Word> {

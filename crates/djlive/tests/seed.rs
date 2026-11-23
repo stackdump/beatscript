@@ -295,6 +295,44 @@ fn an_unknown_seed_version_is_refused_with_the_ones_there_are() {
     // a mistake inside seed@2's parentheses is the same error as a seed's
     let d = diags("arrange from seed@2(tecno, 42)\n");
     assert!(d.iter().any(|(s, at, m)| *s == Severity::Error && at == "tecno" && m.contains("`techno`")), "{d:?}");
+    // the head is quoted as written, and the help is the reference's own arguments at the version there is
+    let d = diags("arrange from seed@99999999999(jazz, 7, loop)\n");
+    assert!(d.iter().any(|(s, at, m)| *s == Severity::Error && at == "seed@99999999999" && m.contains("not `seed@99999999999`") && m.contains("seed@2(jazz, 7, loop)")), "{d:?}");
+    // a head whose `(` does not touch it, or that has none, is refused as that, with the reference it would be
+    for (src, at, help) in [
+        ("arrange from seed@2 (jazz, 7)\n", "seed@2", "seed@2(jazz, 7)"),
+        ("section intro from seed@2 ( house , 7 )\narrange intro\n", "seed@2", "seed@2(house, 7)"),
+        ("arrange from seed@2\n", "seed@2", "seed@2(jazz, 7)"),
+        ("arrange from seed (techno, 42)\n", "seed", "seed(techno, 42)"),
+    ] {
+        let d = diags(src);
+        assert!(d.iter().any(|(s, a, m)| *s == Severity::Error && a == at && m.contains(&format!("`{at}`")) && m.ends_with(help)), "{src}: {d:?}");
+    }
+}
+
+/// A piece of a swung seed@2 (a section, a part line, a let) brings its notes and never its swing, the whole program's
+/// setting: check says so, with the line that would bring it, unless the program says its own; the whole track does not need
+/// it, nor a straight genre, nor a bare seed.
+#[test]
+fn a_piece_of_a_swung_seed_at_2_says_its_swing_is_the_programs() {
+    let hint = |src: &str| -> Vec<String> { djlive::check(src).diagnostics.into_iter().filter(|d| d.severity == Severity::Info && d.message.contains("not its swing")).map(|d| format!("{} {}", d.message, d.help.unwrap_or_default())).collect() };
+    for src in ["section intro from seed@2(jazz, 7)[1..8]\narrange intro\n", "deck A: bass seed@2(jazz, 7).bass[1..4]\n", "let riff = seed@2(jazz, 7).bass[1..4]\ndeck A: bass riff\n"] {
+        let h = hint(src);
+        assert_eq!(h.len(), 1, "{src}: {h:?}");
+        assert!(h[0].contains("seed@2(jazz, 7") && h[0].contains("only `arrange from` writes it") && h[0].contains("swing 0.6"), "{src}: {h:?}");
+        assert!(djlive::check(src).ok(), "{src}: a hint, not an error");
+    }
+    for src in [
+        "arrange from seed@2(jazz, 7)\n",
+        "swing 0.3\nsection intro from seed@2(jazz, 7)[1..8]\narrange intro\n",
+        "section intro from seed@2(techno, 42)[1..8]\narrange intro\n",
+        "section intro from seed(jazz, 7)[1..8]\narrange intro\n",
+    ] {
+        assert!(hint(src).is_empty(), "{src}: {:?}", hint(src));
+    }
+    assert_eq!(seed::swing_of_call("seed@2(jazz, 7).bass[1..4]"), Some(0.6));
+    assert_eq!(seed::swing_of_call("seed(jazz, 7)"), None);
+    assert_eq!(seed::swing_of_call("seed@2(techno, 42)"), None);
 }
 
 /// seeds v2 are pinned as v1 are: what a sample of programs (swung and straight genres, each place, a structure) and the same
