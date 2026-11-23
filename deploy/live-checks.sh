@@ -253,6 +253,18 @@ r=json.load(sys.stdin)["result"]; assert not r.get("isError"), r
 d=json.loads(r["content"][0]["text"]); assert isinstance(d["lexicon"]["words"], list), d.get("lexicon")
 print("mcp list_examples lexicon=true answers", len(d["lexicon"]["words"]), "harvested words")'
 # --- 6679: every shipped feature described and reachable through MCP, live (the table cargo test runs) ---
+# radio (docs/radio.md), in a build that has it: the MCP station tool is listed, POST /api/station answers track 3 of a
+# station, its segue a cross with its own CID, and a retune keeps the position
+if printf '%s' "$T" | grep -q '"name":"station"'; then
+  echo "mcp tool station ok"
+  st() { curl -s -m 30 -H 'Content-Type: application/json' -d "$1" $U/api/station; }
+  ST='tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n'
+  st "{\"station\": \"$ST\", \"n\": 3, \"segue\": true}" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["ok"] is True, d; t=d["tracks"][0]; s=d["segues"][0]; assert t["n"] == 3 and t["cid"].startswith("z") and s["cid"].startswith("z") and s["cid"] != t["cid"] and s["form"] == "cross", d'
+  st "{\"station\": \"$ST\", \"n\": 3, \"retune\": {\"tempo\": \"+1\"}}" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["ok"] is True and d["n"] == 3 and d["tracks"][0]["n"] == 3 and d["station"]["tempo"] == 130, d'
+  echo "radio: /api/station ok"
+else
+  echo "radio: this build has no station tool (skipped)"
+fi
 python3 -I crates/btwserve/deploy/mcp-exposure.py $U
 site/deploy/deploy.sh verify-beatscript
 # live smoke: 5 = share (incl. the rights line linking /authorship), 13 = caret on the glyph, 14 = gutter rows
