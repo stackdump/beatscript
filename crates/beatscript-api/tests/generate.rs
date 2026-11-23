@@ -72,6 +72,38 @@ fn inputs_are_honoured_and_checked() {
     assert_eq!(j.get("seed").and_then(JsonValue::as_str), Some("42"));
 }
 
+/// Swing: a genre that swings in the beats tables (`swing`, 0..100: jazz 60, blues 50, house 20 ...) prints the program-wide
+/// `swing` setting on BeatScript's 0..1 scale (the table's value / 100, at most 0.6), and a straight genre prints none. Every
+/// version has done so since seeded@1 (docs/beatscript/ext-ffi.md, "Swing"); `seed(...)`, another generator, does not.
+#[test]
+fn a_swung_genre_prints_its_swing_in_every_version() {
+    let tables = djengine::gen::tables::BeatsTables::shared();
+    let mut swung = Vec::new();
+    for g in genres() {
+        let table = tables.genres.get(&g).map_or(0.0, |d| d.swing);
+        let want = (table / 100.0).clamp(0.0, 0.6);
+        for v in beatscript_api::generate::VERSIONS {
+            let Ok(out) = beatscript_api::generate::generate_version(v, &req(&g, "42")) else { continue };
+            let lines: Vec<&str> = out.body.lines().filter(|l| l.starts_with("swing ")).collect();
+            let heard = check(&out.text).get("swing").and_then(JsonValue::as_f64);
+            if want > 0.0 {
+                assert_eq!(lines.len(), 1, "seeded@{v} {g} (table swing {table}):\n{}", out.body);
+                assert_eq!(heard, Some(want), "seeded@{v} {g}: {lines:?}");
+                assert!(out.body.starts_with(&format!("tempo {}\nkey {}\nswing ", djlive::print::num(out.bpm), out.key)), "seeded@{v} {g}:\n{}", out.body);
+            } else {
+                assert!(lines.is_empty() && heard.is_none(), "seeded@{v} {g} is straight (table swing {table}) and says {lines:?}");
+            }
+        }
+        if want > 0.0 {
+            swung.push(g);
+        }
+    }
+    // (the walk met the swung genres it is about)
+    for g in ["jazz", "blues", "bossa", "lofi", "funk", "house"] {
+        assert!(swung.iter().any(|s| s == g), "{g} does not swing: {swung:?}");
+    }
+}
+
 #[test]
 fn reads_like_beatscript() {
     let out = generate(&req("techno", "1234")).unwrap();

@@ -147,6 +147,24 @@ fn every_version_is_callable_and_pinned() {
     assert!(e.iter().any(|(at, m)| at == "gen@4" && m.contains("gen@1, gen@2, gen@3")), "{e:?}");
 }
 
+/// A swung genre's call brings its swing to the whole program (`arrange from`), in every version, unless the program says its
+/// own; a part never brings it (it is a setting of the whole program). docs/beatscript/ext-ffi.md, "Swing".
+#[test]
+fn a_swung_genres_call_brings_its_swing_to_the_whole_program() {
+    beatscript_api::generate::install();
+    for v in beatscript_api::generate::VERSIONS {
+        assert_eq!(compiled(&format!("arrange from gen@{v} jazz seed=1\n")).swing, Some(0.6), "gen@{v} jazz");
+        assert_eq!(compiled(&format!("arrange from gen@{v} house seed=1\n")).swing, Some(0.2), "gen@{v} house");
+        assert_eq!(compiled(&format!("arrange from gen@{v} techno seed=1\n")).swing, None, "gen@{v} techno is straight");
+        assert_eq!(compiled(&format!("swing 0.1\narrange from gen@{v} jazz seed=1\n")).swing, Some(0.1), "the program's own swing wins");
+    }
+    let jazz = generated("jazz", "1", None, "");
+    let bass = beatscript_api::generate::parts_of(&jazz, "gen@2 jazz seed=1", false, Some("bass"), None).unwrap().remove(0);
+    let part = compiled(&format!("tempo 110\nkey dm\ndeck A: bass gen@2 jazz seed=1 section={}\n", bass.section));
+    assert_eq!(part.swing, None, "a part brings no swing: {}", bass.gen);
+    assert!(part.decks.values().any(|d| d.parts.iter().any(|p| p.role == "bass" && p.cycles.iter().any(|c| !c.is_empty()))), "the part plays");
+}
+
 /// A call takes the program's key and tempo unless it says its own: two seeds in different keys cross without a clash, and
 /// check says what each was fitted to.
 #[test]
