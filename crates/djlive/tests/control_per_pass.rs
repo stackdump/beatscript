@@ -101,6 +101,16 @@ fn a_one_shot_is_for_the_next_section_only() {
     // on top of what the switches say from here on: the next section fires, then the deck is off again
     let t = table(&song("arrange {\n  ~ control off\n  drop\n  @ control on\n  drop\n  drop\n}"));
     assert_eq!(plays(&t), [p("drop", &["freeze", "mix"]), p("drop@2", &[]), p("drop", &["freeze", "mix"])]);
+    // a one-shot is laid over the `~` state the next section has: a `~` written after it still reaches that section, in either
+    // order, on the whole deck or another call; on the one-shot's own call the one-shot wins
+    let t = table(&song("arrange {\n  drop\n  @ control freeze off\n  ~ control off\n  drop\n  drop\n}"));
+    assert_eq!(plays(&t), [p("drop", &[]), p("drop@2", &["freeze", "mix"]), p("drop@2", &["freeze", "mix"])]);
+    for block in ["arrange {\n  drop\n  @ control freeze off\n  ~ control mix off\n  drop\n  drop\n}", "arrange {\n  drop\n  ~ control mix off\n  @ control freeze off\n  drop\n  drop\n}"] {
+        let t = table(&song(block));
+        assert_eq!(plays(&t), [p("drop", &[]), p("drop@2", &["freeze", "mix"]), p("drop@3", &["mix"])], "{block}");
+    }
+    let t = table(&song("arrange {\n  drop\n  @ control freeze off\n  ~ control freeze on\n  drop\n  drop\n}"));
+    assert_eq!(plays(&t), [p("drop", &[]), p("drop@2", &["freeze"]), p("drop", &[])]);
     // a one-shot at the end of a pass is read by the next pass's first section
     let t = table(&song("arrange {\n  drop calm\n  @ control off\n} loop 2 then end"));
     assert_eq!(plays(&t), [p("drop", &[]), p("calm", &[]), p("drop@2", &["freeze", "mix"]), p("calm", &[])]);
@@ -118,6 +128,23 @@ fn a_call_switches_its_own_lines() {
     assert!(!second.is_empty() && second.iter().all(|k| k.starts_with("mix")), "the mix alone: {second:?}");
     let last_lift = controls_at(&c, "[lift@2@10] ");
     assert!(!last_lift.is_empty() && last_lift.iter().all(|k| k.contains("move filter_exit")), "the move alone: {last_lift:?}");
+}
+
+/// `swap` (the `swap pairs` call) and `voice` (a sugar noun) are also mutation operators: before `on` or `off` at the end of the
+/// line they are the switch's calls, as the line would be refused as a mutation. An operator that takes a pattern stays a mutation.
+#[test]
+fn a_call_that_is_also_an_operator_is_switched() {
+    let src = "tempo 120\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  at bar 1: control: swap pairs with filter_exit\n  control: voice robot\n}\n\
+               arrange {\n  drop\n  ~ control swap off\n  drop\n  ~ control off\n  @ control voice on\n  drop\n  drop\n}\n";
+    let ms = mutations(src);
+    let calls: Vec<(Option<String>, bool, bool)> = ms.iter().map(|m| (m.switch.as_ref().and_then(|s| s.call.as_ref().map(|c| c.text.clone())), m.switch.as_ref().is_some_and(|s| s.on), m.once)).collect();
+    assert_eq!(calls, [(Some("swap".into()), false, false), (None, false, false), (Some("voice".into()), true, true)]);
+    let t = table(src);
+    assert_eq!(plays(&t), [p("drop", &[]), p("drop@2", &["swap"]), p("drop@2", &["swap"]), p("drop@3", &["swap", "voice"])]);
+    assert!(ok(src).text.contains("\n  ~ control swap off\n"));
+    // `xfer` takes a pattern: `~ control xfer off` is a mutation of a `let control` (by a `let off`)
+    let ms = mutations("tempo 120\nlet control = x ~ x ~\nsection drop 1 bars {\n  deck A: kick control\n}\narrange {\n  drop\n  ~ control xfer off\n  drop\n}\n");
+    assert!(ms[0].switch.is_none() && ms[0].targets[0].ops[0].name.text == "xfer");
 }
 
 #[test]
@@ -204,6 +231,13 @@ fn what_a_switch_refuses_and_what_it_warns_about() {
         let d = has(&ds, Severity::Error, "says `on` or `off`").unwrap_or_else(|| panic!("{line}: {ds:?}"));
         assert!(d.help.as_deref().unwrap_or("").contains("control off"), "{d:?}");
     }
+    // more than a call before its `on` or `off`: said as a switch, not as a mutation of a `let control`
+    for line in ["@ control foo bar off", "~ control 3 off", "~ control move echo_out on"] {
+        let ds = diags(&song(&format!("arrange {{\n  drop\n  {line}\n  drop\n}}")));
+        let d = has(&ds, Severity::Error, "is `control`, at most one call, and `on` or `off`").unwrap_or_else(|| panic!("{line}: {ds:?}"));
+        assert!(d.help.as_deref().unwrap_or("").contains("~3 control off") || d.help.as_deref().unwrap_or("").contains("@3 control off"), "{d:?}");
+        assert!(!ds.iter().any(|d| d.message.contains("is not a `let` pattern")), "{line}: {ds:?}");
+    }
     // nothing on the control deck in a section: an engine call with no head is not on it, and the help says so
     let headless = "tempo 120\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  move echo_out on B\n}\narrange {\n  drop\n  ~ control off\n  drop\n}\n";
     let ds = diags(headless);
@@ -231,6 +265,12 @@ fn a_line_the_switch_holds_back_is_still_checked() {
     // said once, where one play fires it and another holds it back
     let twice = bad.replace("  ~ control off\n  drop\n", "  drop\n  ~ control off\n  drop\n");
     assert_eq!(diags(&twice).iter().filter(|d| d.message.contains("needs something that can be put back")).count(), 1);
+    // a held-back duck is read by the mix pass in its section: deck A has no snare to key it
+    let duck = "tempo 120\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  deck B: bass a1 ~ a1 ~\n  control: duck B under A.snare 6db\n}\narrange {\n  ~ control off\n  drop\n}\n";
+    let held: Vec<(djlive::diag::Span, String)> = diags(duck).into_iter().filter(Diagnostic::is_error).map(|d| (d.span, d.message)).collect();
+    let plain: Vec<(djlive::diag::Span, String)> = diags(&duck.replace("  ~ control off\n", "")).into_iter().filter(Diagnostic::is_error).map(|d| (d.span, d.message)).collect();
+    assert!(!held.is_empty(), "the held-back duck is checked");
+    assert_eq!(held, plain);
     // a held-back tempo is no event of the tempo map
     let tempo = "tempo 120\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  at bar 1: control: tempo 140\n}\narrange {\n  drop\n  ~ control off\n  drop\n}\n";
     let c = ok(tempo);

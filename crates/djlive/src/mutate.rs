@@ -287,8 +287,10 @@ impl<'a> Parser<'a> {
 
     /// `control off` / `control on` / `control CALL off` after the mark: the control deck's switch (docs/beatscript/ext-control.md), as
     /// many tokens as it takes. `control` with an operator after it is a mutation of a `let` that is called `control` (`~
-    /// control rot 2`): it is no reserved word, and `on` and `off` are no operators, so no program that read before reads
-    /// otherwise now.
+    /// control rot 2`): it is no reserved word, and `on` and `off` are no operators. A call that is also an operator (`swap`, the
+    /// `swap pairs` call; `voice`, a sugar noun) is the switch's when `on` or `off` ends the line after it: as a mutation that
+    /// line is refused (`swap` takes no argument, `voice` a number), so no program that read before reads otherwise now. An
+    /// operator that takes a pattern (`xfer`, `mask`, `morph`) stays the mutation's: `on` or `off` could be a `let`'s name there.
     fn switch_shape(&self) -> Option<usize> {
         if !self.word_is("control") {
             return None;
@@ -297,9 +299,14 @@ impl<'a> Parser<'a> {
             Tok::Word(w) => Some(w.as_str()),
             _ => None,
         };
+        let ends = matches!(self.peek_n(3), Tok::Newline | Tok::RBrace | Tok::Eof | Tok::Comma);
         match (word(1), word(2)) {
             (Some("on" | "off"), _) => Some(2),
-            (Some(call), Some("on" | "off")) if op_spec(call).is_none() => Some(3),
+            (Some(call), Some("on" | "off")) => match op_spec(call) {
+                None => Some(3),
+                Some((args, _)) if ends && !args.contains(&Pat) => Some(3),
+                Some(_) => None,
+            },
             _ => None,
         }
     }
@@ -307,11 +314,24 @@ impl<'a> Parser<'a> {
     /// The control deck's switch, if the line is one; an error where it starts like one and does not say `on` or `off`.
     fn switch(&mut self, mark: &str) -> R<Option<Switch>> {
         let Some(n) = self.switch_shape() else {
-            // `~ control` and `~ control freeze`, the line ending there: a switch with its `on` or `off` left out
+            // `control` with no operator after it is no mutation of a `let control`: a switch, written wrong. With nothing or one
+            // word after it, its `on` or `off` is left out (`~ control`, `~ control freeze`); ending in `on` or `off`, it has more
+            // between than a call (`~ control foo bar off`, `~ control 3 off`)
+            if !self.word_is("control") || matches!(self.peek_n(1), Tok::Word(w) if op_spec(w).is_some()) {
+                return Ok(None);
+            }
             let ends = |t: &Tok| matches!(t, Tok::Newline | Tok::RBrace | Tok::Eof | Tok::Comma);
-            let bare = self.word_is("control") && (ends(self.peek_n(1)) || matches!(self.peek_n(1), Tok::Word(w) if op_spec(w).is_none()) && ends(self.peek_n(2)));
-            if bare {
-                return Err(Diagnostic::error(self.span(), "a switch of the control deck says `on` or `off`").help(format!("{mark} control off   (every line of the control deck)   {mark} control freeze on   (its `freeze` lines)")));
+            let (mut k, mut last) = (1, None);
+            while k < 64 && !ends(self.peek_n(k)) {
+                last = Some(self.peek_n(k).clone());
+                k += 1;
+            }
+            let help = format!("{mark} control off   (every line of the control deck)   {mark} control freeze on   (its `freeze` lines)   {mark}3 control off   (a count goes after the mark)");
+            if k == 1 || (k == 2 && matches!(last, Some(Tok::Word(_)))) {
+                return Err(Diagnostic::error(self.span(), "a switch of the control deck says `on` or `off`").help(help));
+            }
+            if matches!(&last, Some(Tok::Word(w)) if w == "on" || w == "off") {
+                return Err(Diagnostic::error(self.span(), "a switch of the control deck is `control`, at most one call, and `on` or `off`").help(help));
             }
             return Ok(None);
         };
@@ -1949,9 +1969,12 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
     }
     let mut raws: Vec<Raw> = Vec::new();
     let mut once: BTreeMap<String, Pair> = BTreeMap::new();
-    // the switches of the control deck: from here on (`~`), and on top of that for the next section only (`@`)
+    // the switches of the control deck: from here on (`~`), and the one-shots (`@`) for the next section only, kept as the
+    // switches they are and laid over the `~` state the section has, so a `~` written after a one-shot still reaches it (on
+    // another call; on the one-shot's own call the one-shot wins, as a one-shot pattern does)
     let mut ctl = Switches::default();
-    let mut ctl_once: Option<Switches> = None;
+    let mut ctl_once: Vec<Switch> = Vec::new();
+    let next_ctl = |ctl: &Switches, once: &mut Vec<Switch>| once.drain(..).fold(ctl.clone(), |s, x| s.with(&x));
     // One target's chain on a pattern. Operators before a `jux` work on the pattern (both copies, when it is already a
     // pair); at the `jux` the right copy is made from the left one and its operator works on it; what follows works on
     // the right copy only. The right copy has dice of its own, so the left one is what it would be without the `jux`.
@@ -1990,7 +2013,7 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         for it in &block.items {
             match it {
                 ArrItem::Section(w) => {
-                    let sw = ctl_once.take().unwrap_or_else(|| ctl.clone());
+                    let sw = next_ctl(&ctl, &mut ctl_once);
                     raws.push(Raw { section: w.text.clone(), word: w.clone(), pass, coda: false, at: current.clone(), once: std::mem::take(&mut once), ctl: sw });
                 }
                 ArrItem::Mutation(m) => {
@@ -2005,7 +2028,7 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
                             record_fire(&mut table.fires, mi, m, pass, raws.len());
                         }
                         if m.once {
-                            ctl_once = Some(ctl_once.take().unwrap_or_else(|| ctl.clone()).with(s));
+                            ctl_once.push(s.clone());
                         } else {
                             ctl = ctl.with(s);
                         }
@@ -2045,10 +2068,10 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         }
     }
     for w in &coda {
-        let sw = ctl_once.take().unwrap_or_else(|| ctl.clone());
+        let sw = next_ctl(&ctl, &mut ctl_once);
         raws.push(Raw { section: w.text.clone(), word: w.clone(), pass: passes.saturating_sub(1), coda: true, at: current.clone(), once: std::mem::take(&mut once), ctl: sw });
     }
-    if !once.is_empty() || ctl_once.is_some() {
+    if !once.is_empty() || !ctl_once.is_empty() {
         diags.push(Diagnostic::warning(block.span, "a one-shot `@` mutation at the end of the `arrange` has no next section to play in"));
     }
     // keep only the patterns a mutation touched in the table

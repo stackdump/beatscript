@@ -1090,8 +1090,8 @@ arrange {
   ~3 acid_* drift 0.15               # a glob, on every 3rd pass only
   peak
   @ hoov_b rev                       # the next section only
+  @ control off                      # the control deck: none of its lines fire in the next section
   outro
-  ~ control off                      # the control deck: its lines stop firing from here on
 } loop 4 then outro end
 ```
 

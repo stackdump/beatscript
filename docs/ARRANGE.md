@@ -127,6 +127,8 @@ arrange {
 - `~ control freeze off` switches the lines of one call: the line's first word (`move`, `swap`, `load`, `queue`, `crossfader`,
   `tempo`, `duck`, `mix`) or its registry noun (`freeze`, `vocoder`). There is no switch for one line by itself: two `move` lines
   of one section switch together.
+- A one-shot is laid over what the `~` lines say when the next section plays: `@ control freeze off` then `~ control mix off`
+  holds both back in the next section, and the mix alone after it.
 - It reaches a section's own `control:` lines, those in its repeats and those of the defs it calls. A `control:` line outside
   every section plays the whole song, and a line with no head (`move echo_out on B`) is not on the control deck: no switch
   reaches either (a switch that reaches nothing is a warning that says which).

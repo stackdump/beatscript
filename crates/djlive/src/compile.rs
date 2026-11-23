@@ -1004,7 +1004,7 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
     let section_keys = crate::scale::section_keys(&lowered, key, &mut diags);
     let mut segments = c.build(&lowered, key);
     // the control-deck lines an `arrange { }` switch holds back in a play are checked as the lines they are, and fire nowhere
-    c.check_quiet(&lowered.quiet);
+    c.check_quiet(&lowered);
     crate::meter::report_period(&mut c, &lowered);
     crate::perform::report(&mut c);
     let (lineage, evolves, top_total) = c.evolve(&lowered, &mut segments);
@@ -1287,15 +1287,23 @@ impl<'a> Compiler<'a> {
     }
 
     /// The control-deck lines a switch of an `arrange { }` holds back ([`expand::Lowered::quiet`], docs/beatscript/ext-control.md): each
-    /// is compiled as a control line is, for what the compiler says of it, and kept nowhere (no control, no tempo event), so a line
-    /// that no play fires is checked all the same. What a line said where another play fires it is not said twice.
-    pub(crate) fn check_quiet(&mut self, lines: &[FlatLine]) {
-        if lines.is_empty() {
+    /// is compiled as a control line is (a `duck` or a `mix` by the mix pass, in the section it was held back in), for what the
+    /// compiler says of it, and kept nowhere (no control, no tempo event), so a line that no play fires is checked all the same.
+    /// What a line said where another play fires it is not said twice.
+    pub(crate) fn check_quiet(&mut self, lw: &expand::Lowered) {
+        if lw.quiet.is_empty() {
             return;
         }
         let (controls, tempos, said) = (self.controls.len(), self.tempos.len(), self.diags.len());
         let seg_end = self.seg_end.take();
-        self.controls_of(lines);
+        for (seg, fl) in &lw.quiet {
+            // an lfo with no `over` runs to the end of the section it was held back in, as where it plays (F4)
+            self.seg_end = seg.and_then(|i| lw.segments.get(i)).map(|s| crate::mixmoves::section_span(fl, s, lw).1);
+            self.controls_of(std::slice::from_ref(fl));
+        }
+        self.seg_end = None;
+        // a `duck` and a `mix` are the mix pass's (mixmoves.rs), read in the section they were held back in
+        self.check_quiet_mixes(lw);
         self.controls.truncate(controls);
         self.tempos.truncate(tempos);
         self.seg_end = seg_end;

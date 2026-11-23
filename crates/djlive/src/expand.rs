@@ -124,7 +124,8 @@ pub struct Lowered {
     pub launches: Vec<crate::launch::Launch>,
     /// The control-deck lines a switch of an `arrange { }` holds back in the copy of a section a play reads (`~ control off`,
     /// mutate.rs): expanded and timed like every line, so the compiler checks them, and in no segment, so nothing fires them.
-    pub quiet: Vec<FlatLine>,
+    /// Each with the segment it would have played in (None: outside every section).
+    pub quiet: Vec<(Option<usize>, FlatLine)>,
 }
 
 pub(crate) struct DefInfo {
@@ -161,7 +162,7 @@ pub(crate) struct Lower<'a> {
     /// Typed ports on defs and the wires between them (ports.rs).
     pub(crate) ports: crate::ports::PortState,
     /// The control-deck lines a switch holds back ([`Lowered::quiet`]).
-    pub(crate) quiet: Vec<FlatLine>,
+    pub(crate) quiet: Vec<(Option<usize>, FlatLine)>,
 }
 
 #[derive(Clone)]
@@ -869,7 +870,7 @@ impl<'a> Lower<'a> {
         let fl = FlatLine { span, line, timing, hold: l.hold.map(|(d, _)| d), path: sc.path.clone(), via: sc.via.clone(), phase: None, untimed };
         // a control-deck line an `arrange { }` switch holds back in this play (`~ control off`): checked, never fired
         if l.control.is_some() && l.body.call_name().is_some_and(|c| sc.quiet.iter().any(|q| q == c)) {
-            self.quiet.push(fl);
+            self.quiet.push((sc.segment, fl));
             return;
         }
         out.push(fl);

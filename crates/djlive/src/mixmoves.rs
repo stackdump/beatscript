@@ -1046,6 +1046,27 @@ impl Compiler<'_> {
         }
     }
 
+    /// The `duck` and `mix` lines an `arrange { }` switch holds back ([`Lowered::quiet`], docs/beatscript/ext-control.md): each is read
+    /// as the pass above reads it in the section it was held back in, for what it says of the line; the caller keeps none of the
+    /// controls. Each is read against the mixer the song has (no other held-back line), so two of them never clash.
+    pub(crate) fn check_quiet_mixes(&mut self, lw: &Lowered) {
+        if !lw.quiet.iter().any(|(_, f)| matches!(f.line.body, Body::Duck(_) | Body::Mix(_))) {
+            return;
+        }
+        let global = roles_of(&lw.globals);
+        let per_seg: Vec<Roles> = lw.segments.iter().map(|s| global.iter().cloned().chain(roles_of(&s.lines)).collect()).collect();
+        let mut all = global;
+        for r in &per_seg {
+            all.extend(r.iter().cloned());
+        }
+        let scopes = Scopes { all, per_seg };
+        let mixer = Known::from_controls(&self.controls);
+        for (seg, fl) in &lw.quiet {
+            let mut known = Known { events: mixer.events.clone(), ducks: Vec::new(), held: Vec::new() };
+            self.mix_line(fl, *seg, &scopes, lw, &mut known);
+        }
+    }
+
     fn mix_line(&mut self, fl: &FlatLine, seg: Option<usize>, scopes: &Scopes, lw: &Lowered, known: &mut Known) {
         let section = seg.map(|i| &lw.segments[i]);
         // (F10: a line carried into a later stretch of a stacked section already fired in the first)
