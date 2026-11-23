@@ -29,7 +29,9 @@ const A_DECK: &[Action] = &[
     Action::new("section", "jump to a section", Effect::Write),
     Action::new("hot_cue", "set / jump to a hot cue", Effect::Write),
     Action::new("clear_cue", "clear a hot cue", Effect::Write),
-    Action::new("loop", "loop in / out / halve / double / exit / beats", Effect::Write),
+    Action::new("loop", "loop in / out / halve / double / exit / beats, on a sample deck's grid or a net deck's steps", Effect::Write),
+    Action::new("jump", "beat jump: the deck `beats` beats along its music, in its place in the beat", Effect::Write)
+        .with(&[Param::new("beats", "number", "how far; negative is back (a net deck: whole steps, a quarter beat each, landing on its next bar line while it plays)").req()]),
     Action::new("seek", "seek in a sample deck", Effect::Write),
     Action::new("role", "switch a role", Effect::Write),
     Action::new("macro", "fire a net macro", Effect::Write),
@@ -1218,7 +1220,10 @@ pub(super) const NOUNS: &[Noun] = &[
          stop, cue, load (genre, seed?, structure? | spec 'genre:seed:structure'), demo, file \
          (path: an audio file), next, seed_step (delta), tempo (bpm), pitch (value), \
          pitch_range (value), nudge (ratio), sync (align beat|bar), section (index), hot_cue / \
-         clear_cue (slot), loop (op in|out|halve|double|exit|beats, beats), seek (seconds), \
+         clear_cue (slot), loop (op in|out|halve|double|exit|beats, beats; a net deck loops its \
+         own steps too), jump (beats: negative is back; a beat jump in the deck's place in the \
+         beat: a sample deck by its grid, a net deck in whole steps on its next bar line while it \
+         plays; refused with why: no grid, past the song's end), seek (seconds), \
          role (role, on), macro (id: a net macro), master_macro (id, bars?), panic, rewind, \
          focus, sound (palette: an id or null = the default | step: ±n along the playable ones; \
          neither lists them: the track's whole sound from a palette, the same song from the next \
@@ -1240,7 +1245,8 @@ pub(super) const NOUNS: &[Noun] = &[
         actions: &[],
         doc:
         "Any DeckAction through the engine's single perform entry, in its session JSON: \
-         {op, deck, ...}. Ops include play, cue, hotCue, clearCue, loop, param (name: volume|\
+         {op, deck, ...}. Ops include play, cue, hotCue, clearCue, loop (loop: in|out|halve|\
+         double|exit), beatJump (beats, negative is back), param (name: volume|\
          filter|gain|eqLow|eqMid|eqHigh|pitch|mute|reverbWet|reverbSize|reverbTone|autoGain, \
          value), crossfader, master, load, queueNext, nextTrack, autoAdvance, section, role, \
          roleDisable, macro, panic, stinger, sync, quantize, follow, grid, loopRecord, \

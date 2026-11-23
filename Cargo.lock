@@ -831,7 +831,7 @@ dependencies = [
 [[package]]
 name = "djrust"
 version = "0.3.0"
-source = "git+https://github.com/stackdump/djrust?rev=dbfb2558430bc531acda9f3d14c15fdac8310eeb#dbfb2558430bc531acda9f3d14c15fdac8310eeb"
+source = "git+https://github.com/stackdump/djrust?rev=78e7d9b5ea84d0d842e7503385752bbe937d900e#78e7d9b5ea84d0d842e7503385752bbe937d900e"
 dependencies = [
  "cpal",
  "libc",
@@ -849,7 +849,7 @@ dependencies = [
 [[package]]
 name = "djrust-wallet"
 version = "0.1.0"
-source = "git+https://github.com/stackdump/djrust?rev=dbfb2558430bc531acda9f3d14c15fdac8310eeb#dbfb2558430bc531acda9f3d14c15fdac8310eeb"
+source = "git+https://github.com/stackdump/djrust?rev=78e7d9b5ea84d0d842e7503385752bbe937d900e#78e7d9b5ea84d0d842e7503385752bbe937d900e"
 dependencies = [
  "getrandom 0.2.17",
  "k256",

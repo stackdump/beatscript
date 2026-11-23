@@ -27,8 +27,8 @@ homepage = "https://beatscript.app"
 [workspace.dependencies]
 # The public engine, stackdump/djrust, pinned by commit. Every crate here builds against exactly this revision;
 # to move it, change both revs (they must be equal) and run `cargo update -p djrust -p djrust-wallet`.
-djrust = { git = "https://github.com/stackdump/djrust", rev = "dbfb2558430bc531acda9f3d14c15fdac8310eeb", default-features = false }
-djrust-wallet = { git = "https://github.com/stackdump/djrust", rev = "dbfb2558430bc531acda9f3d14c15fdac8310eeb" }
+djrust = { git = "https://github.com/stackdump/djrust", rev = "78e7d9b5ea84d0d842e7503385752bbe937d900e", default-features = false }
+djrust-wallet = { git = "https://github.com/stackdump/djrust", rev = "78e7d9b5ea84d0d842e7503385752bbe937d900e" }
 # The Wheel (a linear tonewheel), public stackdump/windwheel-bitwrap-io. Experimental: only djhost's off-by-default
 # `windwheel` feature pulls it in. No default build has it (scripts/check-public-build.sh).
 windwheel = { git = "https://github.com/stackdump/windwheel-bitwrap-io", rev = "9e396405794e8c218b8618ea887cbfde8cc70ba4", default-features = false }

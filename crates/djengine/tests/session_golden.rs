@@ -171,9 +171,11 @@ fn every_deck_action_matches_swift() {
         );
         assert_eq!(entry.line(), s(row, "line"), "{text}: journal line");
     }
-    let swift_ops: BTreeSet<String> = JSON_OPS.iter().map(|o| o.to_string()).collect();
+    // Swift's 75 first, then the ones beyond Swift, which its dump cannot have
+    let swift_ops: BTreeSet<String> = JSON_OPS[..75].iter().map(|o| o.to_string()).collect();
     assert_eq!(swift_ops.len(), 75);
-    assert_eq!(ops, swift_ops, "the dump covers every op");
+    assert_eq!(&JSON_OPS[75..], ["beatJump"], "the ops beyond Swift");
+    assert_eq!(ops, swift_ops, "the dump covers every op Swift has");
 }
 
 /// One session with every action as an event: its canonical text and CID are Swift's, built
