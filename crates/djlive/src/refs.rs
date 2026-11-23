@@ -213,6 +213,32 @@ pub fn read_from_line(line: &str) -> Option<(String, Option<String>)> {
     })
 }
 
+/// A comment that is provenance, `# from: <call> -> <cid>`, as a save keeps it in `meta.based_on`: `<call> -> <cid>`. None for any
+/// other comment, and for a `# from:` line that names no pin (no ` -> ` and a CID after it): a line that pins nothing is a comment
+/// like any other, so the save, the JSON-LD's `isBasedOn` and lineage all leave it out (docs/beatscript/ext-ffi.md, "Saved").
+pub fn vendored_line(line: &str) -> Option<String> {
+    match read_from_line(line)? {
+        (call, Some(cid)) => Some(format!("{call} -> {cid}")),
+        _ => None,
+    }
+}
+
+/// The provenance lines among the comments of `src` ([`vendored_line`]), in the order they are written, each once: what a save
+/// keeps in `meta.based_on` beside the canonical text, which has no comments. Read from the lexer's comments, so a `#` inside a
+/// quoted word is not one.
+pub fn from_lines(src: &str) -> Vec<String> {
+    let norm = crate::lex::normalise_input(src);
+    let mut out: Vec<String> = Vec::new();
+    for sp in crate::lex::lex(&norm).comments {
+        if let Some(l) = vendored_line(sp.text(&norm)) {
+            if !out.contains(&l) {
+                out.push(l);
+            }
+        }
+    }
+    out
+}
+
 /// `src` with the reference at byte `at` written out in place (the others left as they are), under its `# from:` line. The
 /// line goes above the statement the reference is in, indented as it is; a section's or a whole track's `# from ...` comment is
 /// replaced by it. None when nothing at `at` is a reference.
@@ -292,8 +318,9 @@ pub struct Basis {
     pub how: &'static str,
 }
 
-/// What a program is based on, from its canonical text and its comments (`Compiled.notes`): the calls and borrows it makes,
-/// then the ones it vendored. Resolving a `gen` call needs the generator (none: its CID is left out). The provenance a
+/// What a program is based on, from its canonical text and its comments (`Compiled.notes`, or a stored program's `meta.based_on`
+/// lines as `from: <call> -> <cid>`): the calls and borrows it makes, then the ones it vendored, each once (a `# from:` line with
+/// no pin is not one: [`vendored_line`]). Resolving a `gen` call needs the generator (none: its CID is left out). The provenance a
 /// program's JSON-LD carries as `isBasedOn` (progld.rs) and lineage counts.
 pub fn based_on(text: &str, notes: &[String]) -> Vec<Basis> {
     let mut out: Vec<Basis> = Vec::new();
@@ -315,11 +342,47 @@ pub fn based_on(text: &str, notes: &[String]) -> Vec<Basis> {
         out.push(Basis { call: cid.clone(), cid: Some(cid), how: "borrowed" });
     }
     for n in notes {
-        if let Some((call, cid)) = read_from_line(&format!("# {n}")) {
+        if let Some((call, Some(cid))) = read_from_line(&format!("# {n}")) {
+            let cid = Some(cid);
             if !out.iter().any(|b| b.call == call && b.cid == cid) {
                 out.push(Basis { call, cid, how: "vendored" });
             }
         }
     }
     out
+}
+
+#[cfg(test)]
+mod provenance_tests {
+    use super::*;
+
+    const PIN: &str = "z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf";
+
+    #[test]
+    fn a_from_line_is_kept_only_with_its_pin() {
+        let call = "gen@2 techno seed=42 section=drop part=bass";
+        assert_eq!(vendored_line(&format!("# from: {call} -> {PIN}")), Some(format!("{call} -> {PIN}")));
+        assert_eq!(vendored_line(&format!("    #   from:   {call}   ->   {PIN}  ")), Some(format!("{call} -> {PIN}")), "spacing around the parts");
+        // no pin, a pin that is no CID, prose, an expansion's own `# from seed(...)` line, a header line
+        for l in [format!("# from: {call}"), format!("# from: {call} -> zNOTaCID"), "# from: my friend's idea".into(), "# from seed(techno, 42)[17..20]".into(), format!("#! from: {call} -> {PIN}"), "# from:".into()] {
+            assert_eq!(vendored_line(&l), None, "{l}");
+        }
+    }
+
+    #[test]
+    fn the_from_lines_of_a_text_in_order_each_once() {
+        let other = "z4EBG9j9np3XWihrjc8J6Pm3UaJtbMRqxCyT5QtXK87KVFexdQh";
+        let src = format!(
+            "#! name: kept\n# from: gen@2 techno seed=42 section=drop part=kick -> {PIN}\nlet k = x ~ x ~\n  # from: seed(trance, 42)[17..20] -> {other}\n\
+             section a 1 bars {{\n  deck A: kick k  # from: gen@2 techno seed=42 section=drop part=kick -> {PIN}\n}}\n# from: no pin here\narrange a\n"
+        );
+        assert_eq!(from_lines(&src), [format!("gen@2 techno seed=42 section=drop part=kick -> {PIN}"), format!("seed(trance, 42)[17..20] -> {other}")]);
+        assert!(from_lines("tempo 120\ndeck A: kick x ~ x ~\n").is_empty());
+        // what based_on reads back from them is what the save kept: vendored, the line without a pin left out
+        let notes: Vec<String> = src.lines().filter_map(|l| l.split_once('#').map(|(_, c)| c.trim().to_string())).collect();
+        let b = based_on("tempo 120\n", &notes);
+        assert_eq!(b.iter().map(|b| (b.call.as_str(), b.cid.as_deref(), b.how)).collect::<Vec<_>>(), [("gen@2 techno seed=42 section=drop part=kick", Some(PIN), "vendored"), ("seed(trance, 42)[17..20]", Some(other), "vendored")]);
+        let kept: Vec<String> = from_lines(&src).iter().map(|l| format!("from: {l}")).collect();
+        assert_eq!(based_on("tempo 120\n", &kept), b, "the stored lines read back as the text's");
+    }
 }

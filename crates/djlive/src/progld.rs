@@ -53,6 +53,9 @@ pub struct Facts<'a> {
     /// The doc comments of the text as written (djlive::doc; the canonical text has none): each documented section is in
     /// `section` with its doc as `description`. Empty: no `section` key.
     pub docs: &'a [crate::doc::DocComment],
+    /// The `# from:` lines the text had when it was saved (a stored program's `meta.based_on`, each `<call> -> <cid>`; the
+    /// canonical text has none): each is in `isBasedOn` as `vendored`, as the text's own `# from:` lines are.
+    pub based_on: &'a [String],
 }
 
 /// The IRI of a licence: the Creative Commons deed for CC0 and CC BY, rightsstatements.org's "In Copyright" for all rights
@@ -139,8 +142,9 @@ pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
     }
     d.set("text", JsonValue::str(c.text.clone()));
     // what it is based on (refs.rs `based_on`): the engine calls and borrows its text makes, each with the CID it resolves to,
-    // and what an eject vendored into it (its `# from:` lines); outside the CID, like the doc comments
-    let basis = crate::refs::based_on(&c.text, &c.notes);
+    // and what an eject vendored into it (its `# from:` lines, or the ones its save kept); outside the CID, like the doc comments
+    let notes: Vec<String> = c.notes.iter().cloned().chain(f.based_on.iter().map(|l| format!("from: {l}"))).collect();
+    let basis = crate::refs::based_on(&c.text, &notes);
     if !basis.is_empty() {
         let generator = crate::gen::generator().map(|g| g.name().to_string());
         let items: Vec<JsonValue> = basis
@@ -364,6 +368,28 @@ mod tests {
         assert_eq!(bare.cid, c.cid);
         assert!(!document(&bare, &Facts::default()).js_stringified().contains(r#""section""#));
         assert!(read_document(&j).is_ok(), "the block still reads back as its CID");
+    }
+
+    /// A stored program's text is canonical (no comments): the `# from:` lines its save kept (`meta.based_on`) say what it
+    /// vendored, exactly as the lines in the text it was saved from do.
+    #[test]
+    fn the_lines_a_save_kept_are_vendored_as_the_texts_own_are() {
+        let pin = "z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf";
+        let line = format!("gen@2 techno seed=42 section=drop part=bass -> {pin}");
+        let written = compiled(&format!("tempo 128\nkey am\n# from: {line}\n# from: no pin, a comment\ndeck A: kick x ~ x ~ | bass a1 ~ c2 ~\n"));
+        let stored = compiled(&written.text);
+        assert_eq!(stored.cid, written.cid);
+        let want = format!(r#""isBasedOn":[{{"@type":"CreativeWork","name":"gen@2 techno seed=42 section=drop part=bass","resolves":"{pin}","#);
+        let from_text = document(&written, &Facts::default()).js_stringified();
+        assert!(from_text.contains(&want) && from_text.contains(r#""derivation":"vendored"}]"#), "{from_text}");
+        assert!(!from_text.contains("no pin"), "a line with no pin is not provenance: {from_text}");
+        assert!(!document(&stored, &Facts::default()).js_stringified().contains("isBasedOn"));
+        let kept = crate::refs::from_lines(&format!("# from: {line}\n"));
+        assert_eq!(kept, [line.clone()]);
+        let from_meta = document(&stored, &Facts { based_on: &kept, ..Facts::default() }).js_stringified();
+        assert_eq!(from_meta, from_text, "the stored program's document is the written one's");
+        // the same line twice (the text's and the meta's) is one entry
+        assert_eq!(document(&written, &Facts { based_on: &kept, ..Facts::default() }).js_stringified(), from_text);
     }
 
     #[test]
