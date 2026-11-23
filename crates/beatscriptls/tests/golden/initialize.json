@@ -15,6 +15,7 @@
       "referencesProvider": true,
       "documentHighlightProvider": true,
       "renameProvider": {"prepareProvider":true},
+      "documentFormattingProvider": true,
       "experimental": {"beatscript":{"numberAt":true,"diagnostics":true,"expand":true}},
       "codeActionProvider": {
         "codeActionKinds": ["quickfix","source.fixAll.beatscript","refactor.extract","refactor.inline","refactor.rewrite"],
