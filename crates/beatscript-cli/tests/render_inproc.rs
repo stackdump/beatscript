@@ -520,3 +520,24 @@ fn a_macro_on_a_deck_that_comes_in_later_starts_on_its_bar() {
     let first = a.pcm.chunks_exact(4).zip(p.pcm.chunks_exact(4)).position(|(x, y)| x != y).expect("the macro is heard");
     assert!(first >= 4 * bar && first < 4 * bar + bar / 4, "the wash starts on bar 4, not bar {:.3}", first as f64 / bar as f64);
 }
+
+/// A recipe and its expansion (roadmap 6680): a form with a theme and a seed in its roles, and the program its references write
+/// out to (djlive::refs::expanded, in the render's own environment), render the same audio, sample for sample; the expansion is
+/// another CID and has no reference left in it.
+#[test]
+fn a_recipe_and_its_expansion_render_the_same_audio() {
+    let recipe = "arrange from template(passacaglia, @eccl3_season, ground=gen@1 dubstep seed=54876, upper=ode_to_joy)\n";
+    beatscript_api::generate::install();
+    let mut env = djhost::beatscript_env::BeatscriptEnv::new(Some(&beatscript_api::known::Known));
+    env.voices.in_nets = true;
+    let (text, cid) = djlive::refs::expanded(recipe, &env.env()).unwrap().expect("the recipe has references");
+    assert_ne!(cid, djlive::compile::program_cid(recipe));
+    assert!(!text.contains("template(") && !text.contains("gen@"), "{text}");
+    for o in [Options { max_bars: 4, ..opts() }, Options { from_bar: 8, max_bars: 12, ..opts() }] {
+        let a = run(recipe, &o);
+        let b = run(&text, &o);
+        assert!(a.result.is_ok() && b.result.is_ok(), "{:?} {:?}", a.result, b.result);
+        assert!(!a.pcm.is_empty() && a.pcm.iter().any(|x| *x != 0), "the recipe renders sound");
+        assert!(a.pcm == b.pcm, "the recipe and its expansion render different audio (from bar {})", o.from_bar);
+    }
+}
