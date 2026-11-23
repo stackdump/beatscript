@@ -16,7 +16,7 @@ const imp = (p) => import(pathToFileURL(path.join(site, p)).href);
 const { createToolSurface, LOCAL_TOOLS, CAP_TOOLS, PROTOCOL_VERSION, zipOne, crc32 } = await imp('studio/src/tool-surface.js');
 const { makeFacade } = await imp('web/js/wasm.js');
 const { mockModule } = await imp('web/js/wasm-mock.js');
-const { wav } = await imp('player/src/render-model.js');
+const { wav } = await imp('web/js/render-model.js');
 
 const wasmFile = path.join(site, 'web', 'wasm', 'btw_bg.wasm');
 const noWasm = fs.existsSync(wasmFile) ? false : 'site/web/wasm/btw_bg.wasm is not built';
