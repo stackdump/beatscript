@@ -168,7 +168,7 @@ impl WebEnv {
             ("palettes", strs(&self.catalog.palettes)),
             (
                 "note",
-                JsonValue::str("inst=NAME takes a voice (its own sound) or contains a family word (it plays that family's generic voice, and says so); kit=NAME a drum kit; sound=OPTION a role option (own, synth, synth:NAME, inst:NAME)"),
+                JsonValue::str("inst=NAME takes a voice (its own sound) or contains a family word (it plays that family's generic voice, and says so); kit=NAME a drum kit; sound=OPTION a role option (own, synth, synth:NAME, inst:NAME); acid and acid-square are a 303-style voice: an accent (!) is louder and opens its filter further, a slide (^) glides into the next note without striking it again (60 ms, or glide=), and decay= is its filter's decay"),
             ),
         ]))
     }

@@ -313,6 +313,15 @@
         {"tool": "list_examples", "args": {"imports": true}, "expect": [["/imports/templates", "~", "use template(passacaglia).ground as ground"], ["/imports/genres", "~", "use genre@1 techno.drop as drop"]]},
         {"tool": "genre_template", "args": {"genre": "techno"}, "expect": [["/use", "~", "use genre@1 techno.drop as drop"]]}
       ]
+    },
+    {
+      "id": "acid-voice",
+      "docs": ["ext-acid.md"],
+      "say": [["instruments", "acid (a saw) and acid-square are a 303-style voice"], ["instruments", "a slide ^ glides into the next note (60 ms, or glide=)"]],
+      "calls": [
+        {"tool": "instruments", "args": {}, "expect": [["/voices", "~", "\"acid\""], ["/voices", "~", "\"acid-square\""], ["/note", "~", "303-style voice"]]},
+        {"tool": "check", "args": {"text": "tempo 126\ndeck B: bass a1 a1! a2^ a1 c2! ~ e2^ d2 decay=200 inst=acid\n"}, "expect": [["/ok", "=", true], ["/diagnostics", "!~", "family voice"]]}
+      ]
     }
   ]
 }
