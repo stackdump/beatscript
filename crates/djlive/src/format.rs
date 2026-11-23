@@ -20,26 +20,11 @@ use crate::diag::{Diagnostic, Span};
 use crate::env::Env;
 use crate::print::{self, LineRole, PrintedLine};
 
-/// `src` formatted and in BeatScript 2 spelling (version.rs): a BeatScript 1 text (`#! btw 1`, or no version line) comes out
-/// with `#! beatscript 2` as its version line, which is a new CID for the same program, by design; a BeatScript 2 text formats
-/// to its own CID. Its diagnostics when it does not read, spans in `src` as given. [`format_as_is`] formats without the upgrade.
-pub fn format(src: &str, env: &Env) -> Result<String, Vec<Diagnostic>> {
-    let up = crate::version::upgrade_source(src);
-    if up == src {
-        return format_as_is(src, env);
-    }
-    // the text as given reads first, so a diagnostic points into it and not into the upgraded text
-    let parsed = crate::parse::parse_with(src, env);
-    if parsed.diagnostics.iter().any(Diagnostic::is_error) {
-        return Err(parsed.diagnostics);
-    }
-    format_as_is(&up, env)
-}
-
 /// `src` formatted in the version it is in: the formatted program has the CID of the program it was made from (a BeatScript 1
-/// text stays BeatScript 1). Its diagnostics when it does not read. Also an error, with a diagnostic that says so, in the case
-/// that should not happen: the text it made does not read back as the same program (then it is not used).
-pub fn format_as_is(src: &str, env: &Env) -> Result<String, Vec<Diagnostic>> {
+/// text stays BeatScript 1: nothing changes a program's identity silently). Its diagnostics when it does not read. Also an
+/// error, with a diagnostic that says so, in the case that should not happen: the text it made does not read back as the same
+/// program (then it is not used). [`format_upgrading`] is the fmt that also upgrades.
+pub fn format(src: &str, env: &Env) -> Result<String, Vec<Diagnostic>> {
     let (text, canon) = layout(src, env)?;
     // the guard: what is made is the program it was made from, or nothing is made
     let again = crate::parse::parse_with(&text, env);
@@ -47,6 +32,23 @@ pub fn format_as_is(src: &str, env: &Env) -> Result<String, Vec<Diagnostic>> {
         return Err(vec![Diagnostic::error(Span::new(0, 0), "the formatted text did not read back as the same program, so it is not used (this is a bug in fmt)")]);
     }
     Ok(text)
+}
+
+/// `src` formatted and in BeatScript 2 spelling (version.rs): a BeatScript 1 text (`#! btw 1`, or no version line) comes out
+/// with `#! beatscript 2` as its first line, which is a new CID for the same program, by design; a BeatScript 2 text formats as
+/// [`format`] formats it. The fmt a person or an agent asks for (the editor's fmt, the `fmt` tool, `beatscript fmt`). Its
+/// diagnostics when it does not read, with spans in `src` as given.
+pub fn format_upgrading(src: &str, env: &Env) -> Result<String, Vec<Diagnostic>> {
+    let up = crate::version::upgrade_source(src);
+    if up == src {
+        return format(src, env);
+    }
+    // the text as given reads first, so a diagnostic points into it and not into the upgraded text
+    let parsed = crate::parse::parse_with(src, env);
+    if parsed.diagnostics.iter().any(Diagnostic::is_error) {
+        return Err(parsed.diagnostics);
+    }
+    format(&up, env)
 }
 
 /// The formatted text and the canonical text of the program it is of.

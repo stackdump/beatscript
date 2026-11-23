@@ -812,6 +812,13 @@ pub fn program_doc(canonical: &str) -> JsonValue {
     ]))
 }
 
+/// The CID a program's sound is seeded from where a CID seeds it (the dice of `arrange { }`'s mutations, the control net's
+/// name): its BeatScript 1 CID, of its canonical text without the version line. For a BeatScript 1 program that is its CID;
+/// a program and its upgrade play the same.
+pub fn sound_cid(canonical: &str) -> String {
+    program_cid(crate::version::legacy_canonical(canonical))
+}
+
 /// The CID a program has in the other version: for a BeatScript 2 canonical text its legacy CID (BeatScript 1, the old
 /// spelling), and for a BeatScript 1 canonical text the CID it is renamed to. The store's `renamed` lineage is this pair.
 pub fn renamed_cid(canonical: &str) -> String {
@@ -960,7 +967,9 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
     // `arrange { }` with mutations: lowered to plain sections and lets (mutate.rs), the canonical text kept as written
     let as_written = parsed.program.clone();
     if as_written.stmts.iter().any(|s| matches!(s.kind, StmtKind::ArrangeBlock(_))) {
-        let cid = program_cid(&print::canonical(&as_written));
+        // the dice are seeded from the program's sound, which the version line is not: its BeatScript 1 CID (version.rs), the
+        // CID it always had, so an upgraded program plays as it did
+        let cid = sound_cid(&print::canonical(&as_written));
         crate::mutate::apply(&mut parsed, src, &cid, &mut diags);
         if diags.iter().any(Diagnostic::is_error) {
             return Check { compiled: None, diagnostics: diags };

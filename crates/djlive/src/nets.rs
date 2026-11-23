@@ -1,3 +1,4 @@
+// rename-to-beatscript: keep (the control-net name and the btw ACTION are identities, not prose)
 //! Control lines as a Petri net (docs/design/NETS-ALL-THE-WAY-DOWN.md, phase 1: the proof).
 //!
 //! Until now a ramp (`master: filter lp 2k -> 8k over 8 bars`) or a move (`move filter_exit on A`) ran
@@ -459,7 +460,9 @@ pub fn control_net(c: &Compiled, bars: u32) -> ControlNet {
             }
         }
     }
-    let name = format!("btw control {}", &c.cid[..c.cid.len().min(12)]);
+    // named by the program's sound (compile::sound_cid), so a program and its BeatScript 2 upgrade have one control net
+    let sound = crate::compile::sound_cid(&c.text);
+    let name = format!("btw control {}", &sound[..sound.len().min(12)]);
     ControlNet { project: b.project(&name, tempo), ticks: h, lines, residual, tempo }
 }
 
