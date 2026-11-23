@@ -392,3 +392,50 @@ fn a_section_is_a_line_and_a_part_is_bound_alone() {
     let e: Vec<String> = djlive::compile::check_with(&format!("arrange from template(cross, @psalm42_deep_calleth, a={A} part=bass, a.bass=[d2 ~])\n"), &with).diagnostics.iter().filter(|d| d.is_error()).map(|d| d.message.clone()).collect();
     assert!(e.iter().any(|m| m.contains("bass is bound twice")), "{e:?}");
 }
+
+/// A set in a set: its tracks are named by their place (`ep_t2_1_...`: track 1 of track 2), as `.trackN` counts them; `.track0`
+/// and its kin are told that tracks count from 1; the 128-bar cap's way out names the set's real track only for a set.
+#[test]
+fn a_set_in_a_set_and_what_a_track_is_not() {
+    let (mut s, set, t1, t2) = a_set();
+    let three = "tempo 122\nkey am\nsection drop 4 bars {\n  deck A: kick x x x x | bass a1 ~ ~ ~\n}\narrange drop\n";
+    let c3 = compiled(three);
+    s.items.push(("three".into(), c3.cid.clone(), c3.text.clone()));
+    let with = Env { snippets: Some(&s), ..env() };
+    let outer_text = format!("set {{\n  play {t1}\n  play {set}\n}}\nend\n");
+    let outer = djlive::compile::check_with(&outer_text, &with).compiled.expect("the outer set compiles");
+    drop(with);
+    s.items.push(("outer".into(), outer.cid.clone(), outer.text.clone()));
+    let with = Env { snippets: Some(&s), ..env() };
+    let src = format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={})\n", outer.cid);
+    let c = djlive::compile::check_with(&src, &with);
+    assert!(c.compiled.is_some(), "{:?}", complaints(&c));
+    let text = match djlive::template::expand(&src, &with) {
+        Some(Ok(e)) => e.text,
+        other => panic!("{other:?}"),
+    };
+    let short = djengine::rights::short_cid(&outer.cid);
+    assert!(text.contains(&format!("# ep_t2_2_lift: the lift of track 2 of track 2 of the set {short}\nsection ep_t2_2_lift from {t2}.lift")), "{text}");
+    assert!(text.contains("section ep_t1_verse from ") && !text.contains("ep_t2_1_verse"), "track 1 of the inner set is the outer's track 1, written once:\n{text}");
+    let errs = |src: &str| -> Vec<String> { djlive::compile::check_with(src, &with).diagnostics.into_iter().filter(|d| d.is_error()).map(|d| format!("{} {}", d.message, d.help.unwrap_or_default())).collect() };
+    for bad in ["track0", "track01", "trackx"] {
+        let e = errs(&format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={set}.{bad})\n"));
+        assert!(e.iter().any(|m| m.contains("counted from 1") && m.contains(&format!("episodes={set}.track1"))), "{bad}: {e:?}");
+    }
+    // the cap's way out: a set's real track for a set, nothing of tracks for a program that is no set
+    let long: String = (0..9).map(|i| format!("section s{i} 16 bars {{\n  deck A: kick x ~ x ~\n}}\n")).collect::<String>() + &format!("arrange {}\n", (0..9).map(|i| format!("s{i}")).collect::<Vec<_>>().join(" "));
+    let lc = compiled(&long);
+    drop(with);
+    s.items.push(("long".into(), lc.cid.clone(), lc.text.clone()));
+    let big_set = format!("set {{\n  play {}\n}}\nend\n", lc.cid);
+    let with = Env { snippets: Some(&s), ..env() };
+    let bs = djlive::compile::check_with(&big_set, &with).compiled.expect("the big set compiles");
+    drop(with);
+    s.items.push(("big".into(), bs.cid.clone(), bs.text.clone()));
+    let with = Env { snippets: Some(&s), ..env() };
+    let errs = |src: &str| -> Vec<String> { djlive::compile::check_with(src, &with).diagnostics.into_iter().filter(|d| d.is_error()).map(|d| format!("{} {}", d.message, d.help.unwrap_or_default())).collect() };
+    let e = errs(&format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={})\n", lc.cid));
+    assert!(e.iter().any(|m| m.contains("at most 128") && !m.contains("track")), "{e:?}");
+    let e = errs(&format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={})\n", bs.cid));
+    assert!(e.iter().any(|m| m.contains("at most 128") && m.contains(&format!("episodes={}.track1", bs.cid))), "{e:?}");
+}

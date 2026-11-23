@@ -169,6 +169,27 @@ pub fn bindings_text(form: &str, roles: &[Binding]) -> String {
     v.iter().map(|b| format!(", {}={}", b.role, b.source.text())).collect()
 }
 
+/// The stored programs (and sets) every template reference in `toks` binds a role to, its inner forms' too, in order, once
+/// each: what a store credits (stored::cids_of). A set's tracks are not here: only a check that has the set knows them.
+pub(crate) fn stored_cids(toks: &[Token]) -> Vec<String> {
+    fn walk(roles: &[Binding], out: &mut Vec<String>) {
+        for b in roles {
+            match &b.source {
+                Source::Stored { cid, .. } if !out.contains(cid) => out.push(cid.clone()),
+                Source::Form(f) => walk(&f.roles, out),
+                _ => {}
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for r in crate::template::runs(toks) {
+        if let Ok(t) = r.r {
+            walk(&t.roles, &mut out);
+        }
+    }
+    out
+}
+
 /// `trackN` after a CID: the stored set's track N (1 on).
 fn track_number(n: &str) -> Option<u32> {
     let d = n.strip_prefix("track")?;
@@ -898,6 +919,8 @@ struct LineOut {
     bars: usize,
     cycle: String,
     note: String,
+    /// The line is one let however long it is (a stored part, written out by the stored stage): its bars cannot be named.
+    one_let: bool,
 }
 
 /// A run of sections a binding writes: the text (lets and sections), the plays in order (a section with the mutation lines
@@ -1036,14 +1059,19 @@ impl Ctx<'_, '_> {
         }
     }
 
-    /// The CID of track `k` of the stored set `cid` (`<cid>.track2`), or why not.
-    fn track_of(&mut self, cid: &str, k: u32, at: Span) -> Option<String> {
+    /// What `<cid>.trackN` names, with the section after it (if any): track N of a stored set (its CID, and that section), or,
+    /// after a program that is no set, its section called `trackN`, as such a reference always read (a section may be named
+    /// `track2`). (the CID, the section, the description of where it is), or why not.
+    fn track_ref(&mut self, cid: &str, k: u32, section: Option<&String>, at: Span) -> Option<(String, Option<String>, String)> {
         let comp = self.stored(cid, at)?;
         let short = djengine::rights::short_cid(cid);
         let Some(set) = &comp.set else {
+            let name = format!("track{k}");
             let names: Vec<String> = sequence(&comp).into_iter().map(|(n, _)| n).collect();
-            let also = if names.iter().any(|n| *n == format!("track{k}")) { format!("; its section `track{k}` is borrowed with section NAME from {cid}.track{k}") } else { String::new() };
-            self.err(Diagnostic::error(at, format!("{short} is not a set: `.track{k}` names a track of a stored set")).help(format!("bind a section or a part of it: {cid}.SECTION.bass{also}")));
+            if section.is_none() && names.contains(&name) {
+                return Some((cid.to_string(), Some(name), short));
+            }
+            self.err(Diagnostic::error(at, format!("{short} is not a set, and has no section `{name}`: `.{name}` names a track of a stored set")).help(format!("its sections: {}", names.join(", "))));
             return None;
         };
         let n = set.tracks.len();
@@ -1052,22 +1080,37 @@ impl Ctx<'_, '_> {
             return None;
         }
         self.draw(cid, &comp.text);
-        Some(set.tracks[k as usize - 1].cid.clone())
+        Some((set.tracks[k as usize - 1].cid.clone(), section.cloned(), format!("track {k} of the set {short}")))
     }
 
-    /// The tracks of a stored set, in order, a track that is itself a set its tracks in turn: (cid, compiled).
-    fn set_tracks(&mut self, cid: &str, comp: &crate::compile::Compiled, at: Span, depth: usize, out: &mut Vec<(String, crate::compile::Compiled)>) -> Option<()> {
-        if depth > crate::stored::MAX_DEPTH {
-            self.err(Diagnostic::error(at, format!("sets nest more than {} deep here", crate::stored::MAX_DEPTH)).help("bind one of its tracks: <cid>.track1"));
+    /// A name after a set's CID that is no track (`.track0`, `.verse`): the error that says a set has tracks, counted from 1.
+    fn not_a_track(&mut self, b: &Binding, cid: &str, comp: &crate::compile::Compiled, name: &str) {
+        let short = djengine::rights::short_cid(cid);
+        let n = comp.set.as_ref().map_or(0, |s| s.tracks.len());
+        let d = if name.starts_with("track") {
+            Diagnostic::error(b.source_span, format!("the set {short} has {n} track{}, counted from 1: `.{name}` is none of them", if n == 1 { "" } else { "s" }))
+        } else {
+            Diagnostic::error(b.source_span, format!("{short} is a set: it has tracks, not sections, and `.{name}` is no track"))
+        };
+        self.err(d.help(format!("{}={cid}.track1 (track1 to track{n})", b.role)));
+    }
+
+    /// The tracks of a stored set, in order, a track that is itself a set its tracks in turn: (its path, the track numbers from the
+    /// outer set in: `[2, 1]` is track 1 of track 2; cid; compiled).
+    fn set_tracks(&mut self, cid: &str, comp: &crate::compile::Compiled, at: Span, path: &[usize], out: &mut Vec<(Vec<usize>, String, crate::compile::Compiled)>) -> Option<()> {
+        if path.len() >= crate::stored::MAX_DEPTH {
+            self.err(Diagnostic::error(at, format!("sets nest more than {} deep here", crate::stored::MAX_DEPTH)).help(format!("bind one of its tracks: {cid}.track1")));
             return None;
         }
         self.draw(cid, &comp.text);
-        for t in comp.set.as_ref().map(|s| s.tracks.clone()).unwrap_or_default() {
+        for (i, t) in comp.set.as_ref().map(|s| s.tracks.clone()).unwrap_or_default().into_iter().enumerate() {
             let tc = self.stored(&t.cid, at)?;
+            let mut here = path.to_vec();
+            here.push(i + 1);
             if tc.set.is_some() {
-                self.set_tracks(&t.cid, &tc, at, depth + 1, out)?;
+                self.set_tracks(&t.cid, &tc, at, &here, out)?;
             } else {
-                out.push((t.cid.clone(), tc));
+                out.push((here, t.cid.clone(), tc));
             }
         }
         Some(())
@@ -1079,32 +1122,35 @@ impl Ctx<'_, '_> {
         let at = b.source_span;
         let short = djengine::rights::short_cid(cid);
         let mut tracks = Vec::new();
-        self.set_tracks(cid, comp, at, 1, &mut tracks)?;
+        self.set_tracks(cid, comp, at, &[], &mut tracks)?;
         let (mut text, mut plays, mut bars) = (Vec::new(), Vec::new(), 0u32);
-        let mut named: Vec<(String, usize)> = Vec::new();
+        let mut named: Vec<(String, Vec<usize>)> = Vec::new();
         let mut written: Vec<String> = Vec::new();
-        for (i, (tcid, tc)) in tracks.iter().enumerate() {
-            // a track the set plays twice is written once, under its first number
+        // a path as a name (`2_1`) and in words (`track 1 of track 2`)
+        let tag = |path: &[usize]| path.iter().map(usize::to_string).collect::<Vec<_>>().join("_");
+        let words = |path: &[usize]| path.iter().rev().map(|k| format!("track {k}")).collect::<Vec<_>>().join(" of ");
+        for (path, tcid, tc) in &tracks {
+            // a track the set plays twice is written once, under its first place
             let k = match named.iter().find(|x| x.0 == *tcid) {
-                Some(x) => x.1,
+                Some(x) => x.1.clone(),
                 None => {
-                    named.push((tcid.clone(), i + 1));
-                    i + 1
+                    named.push((tcid.clone(), path.clone()));
+                    path.clone()
                 }
             };
             let seq = sequence(tc);
             if seq.is_empty() {
-                self.err(Diagnostic::error(at, format!("track {} of the set {short} has no sections: `{}` takes a track's sections", i + 1, b.role)).help(format!("bind another track, or a section of one: {}={cid}.track1.SECTION", b.role)));
+                self.err(Diagnostic::error(at, format!("{} of the set {short} has no sections: `{}` takes a track's sections", words(path), b.role)).help(format!("bind another track, or a section of one: {}={cid}.track1.SECTION", b.role)));
                 return None;
             }
             let mut play = Vec::new();
             for (n, nb) in &seq {
                 // (a section's later generations, `drop@2`, are borrowed as the section: its first)
                 let n = n.split('@').next().unwrap_or(n);
-                let sec = format!("{p}t{k}_{n}");
+                let sec = format!("{p}t{}_{n}", tag(&k));
                 if !written.contains(&sec) {
                     written.push(sec.clone());
-                    text.push(format!("# {sec}: the {n} of track {k} of the set {short}"));
+                    text.push(format!("# {sec}: the {n} of {} of the set {short}", words(&k)));
                     text.push(format!("section {sec} from {tcid}.{n}"));
                 }
                 play.push(sec);
@@ -1116,17 +1162,32 @@ impl Ctx<'_, '_> {
         Some((Run { text, plays, bars }, note))
     }
 
-    /// A form written out on its own and compiled (for one of its sections): its program and its key, made once a check.
+    /// A form written out on its own and compiled (for one of its sections): its program and its key, made once a check. The
+    /// program is a function of the reference alone, so its plan's dice (a program's CID seeds them) are the same in any program:
+    /// it is in the form's own key (no section of it says another) and at the form's own tempo, the host's only when a role in
+    /// it is bound to a seed (a seed is generated at the program's tempo). What its bindings say is its own, not the user's.
     fn form_program(&mut self, f: &FormRef, depth: usize) -> Option<(Rc<crate::compile::Compiled>, String)> {
         let bare = FormRef { section: None, part: None, ..f.clone() };
         let id = bare.text();
         if let Some((_, c, k)) = self.forms.iter().find(|x| x.0 == id) {
             return Some((c.clone(), k.clone()));
         }
-        let run = inner_form(self, &bare, "", depth)?;
-        let key = own_key(crate::template::find(&f.name)?);
+        let Some(tpl) = crate::template::find(&f.name) else {
+            // (inner_form says what is wrong with the name)
+            let _ = inner_form(self, &bare, "", depth);
+            return None;
+        };
+        let key = own_key(tpl);
+        let own_tempo = tpl.text().lines().find_map(|l| l.strip_prefix("tempo ")).and_then(|t| t.trim().parse::<f64>().ok());
+        let tempo = if binds_gen(&bare.roles) { self.host.tempo.or(own_tempo) } else { own_tempo };
+        let host = std::mem::replace(&mut self.host, Host { key: Some(key.clone()), tempo });
+        let said = self.notes.len();
+        let run = inner_form(self, &bare, "", depth);
+        self.host = host;
+        self.notes.truncate(said);
+        let run = run?;
         let mut prog = String::new();
-        if let Some(t) = self.host.tempo {
+        if let Some(t) = tempo {
             prog.push_str(&format!("tempo {}\n", crate::print::num(t)));
         }
         prog.push_str(&format!("key {key}\n"));
@@ -1222,7 +1283,7 @@ impl Ctx<'_, '_> {
         let mut lets: Vec<String> = texts[..per].iter().enumerate().map(|(i, t)| format!("let {name}_{} = {}", i + 1, bar(t))).collect();
         lets.push(format!("let {name} = <{}>", (1..=per).map(|i| format!("{name}_{i}")).collect::<Vec<_>>().join(" ")));
         let moved = if n == 0 { format!("in {from}") } else { format!("moved {n:+} semitones from {from} into {key}") };
-        Some(LineOut { lets, bars: per, cycle: String::new(), note: format!("the {want} of the {s} of {bare} as it first plays: {per} bar{}, {moved}", if per == 1 { "" } else { "s" }) })
+        Some(LineOut { lets, bars: per, cycle: String::new(), note: format!("the {want} of the {s} of {bare} as it first plays: {per} bar{}, {moved}", if per == 1 { "" } else { "s" }), one_let: false })
     }
 
     /// A form's section where sections go (`episodes=template(cross).both`): that section as it first plays, its parts written
@@ -1292,7 +1353,7 @@ impl Ctx<'_, '_> {
                 }
                 let call = c.text();
                 let fitted = if c.key.is_some() && b_key(b).is_none() { format!(", in {key}") } else { String::new() };
-                Some(LineOut { lets: vec![format!("let {name} = {call}")], bars, cycle: String::new(), note: format!("{call}: {bars} bar{}{fitted}", if bars == 1 { "" } else { "s" }) })
+                Some(LineOut { lets: vec![format!("let {name} = {call}")], bars, cycle: String::new(), note: format!("{call}: {bars} bar{}{fitted}", if bars == 1 { "" } else { "s" }), one_let: false })
             }
             Source::Theme(id) => {
                 let Some(t) = djengine::themes::theme(id) else {
@@ -1314,7 +1375,7 @@ impl Ctx<'_, '_> {
                 let mut lets: Vec<String> = t.bars.iter().enumerate().map(|(i, bar)| format!("let {name}_{} = {}", i + 1, transpose_bar(bar, n))).collect();
                 lets.push(format!("let {name} = <{}>", (1..=t.bars.len()).map(|i| format!("{name}_{i}")).collect::<Vec<_>>().join(" ")));
                 let moved = if n == 0 { format!("in {}", t.key) } else { format!("moved {n:+} semitones from {} into {key}", t.key) };
-                Some(LineOut { lets, bars: t.bars.len(), cycle: t.cycle_mark(), note: format!("{id} ({}, {}, {}): {} bar{}, {moved}", t.work, t.composer, t.year, t.bars.len(), if t.bars.len() == 1 { "" } else { "s" }) })
+                Some(LineOut { lets, bars: t.bars.len(), cycle: t.cycle_mark(), note: format!("{id} ({}, {}, {}): {} bar{}, {moved}", t.work, t.composer, t.year, t.bars.len(), if t.bars.len() == 1 { "" } else { "s" }), one_let: false })
             }
             Source::Notes(bars) => {
                 if bars.len() > MAX_LINE_BARS {
@@ -1323,7 +1384,7 @@ impl Ctx<'_, '_> {
                 }
                 let mut lets: Vec<String> = bars.iter().enumerate().map(|(i, bar)| format!("let {name}_{} = {bar}", i + 1)).collect();
                 lets.push(format!("let {name} = <{}>", (1..=bars.len()).map(|i| format!("{name}_{i}")).collect::<Vec<_>>().join(" ")));
-                Some(LineOut { lets, bars: bars.len(), cycle: String::new(), note: format!("notes: {} bar{}", bars.len(), if bars.len() == 1 { "" } else { "s" }) })
+                Some(LineOut { lets, bars: bars.len(), cycle: String::new(), note: format!("notes: {} bar{}", bars.len(), if bars.len() == 1 { "" } else { "s" }), one_let: false })
             }
             Source::Stored { cid, track, section, part: p } => {
                 let short = djengine::rights::short_cid(cid);
@@ -1333,21 +1394,24 @@ impl Ctx<'_, '_> {
                     self.err(Diagnostic::error(at, format!("`{}` takes a line: one part of a stored program{}", b.role, if set { "; this is a set, so one part of one of its tracks" } else { "" })).help(help));
                     return None;
                 }
-                // a set's track is that track's program
-                let (cid, of) = match track {
-                    Some(k) => (self.track_of(cid, *k, at)?, format!("track {k} of the set {short}")),
-                    None => (cid.clone(), short.clone()),
+                // a set's track is that track's program (and after a program that is no set, `.track2` is its section `track2`)
+                let (cid, section, of) = match track {
+                    Some(k) => self.track_ref(cid, *k, section.as_ref(), at)?,
+                    None => (cid.clone(), section.clone(), short.clone()),
                 };
                 // a section where a line goes: the role's own part of it
                 let inferred = p.is_none();
                 let p = p.clone().unwrap_or_else(|| part.to_string());
                 if let Some(comp) = self.stored(&cid, at) {
                     if comp.set.is_some() {
-                        self.err(Diagnostic::error(at, format!("{} is a set: `{}` takes one part of one of its tracks", djengine::rights::short_cid(&cid), b.role)).help(format!("{}={cid}.track1.{}.{p}", b.role, section.as_deref().unwrap_or("SECTION"))));
+                        match &section {
+                            Some(s) => self.not_a_track(b, &cid, &comp, s),
+                            None => self.err(Diagnostic::error(at, format!("{} is a set: `{}` takes one part of one of its tracks", djengine::rights::short_cid(&cid), b.role)).help(format!("{}={cid}.track1.SECTION.{p}", b.role))),
+                        }
                         return None;
                     }
                     let plays = sequence(&comp);
-                    if let Some(s) = section {
+                    if let Some(s) = &section {
                         if !plays.iter().any(|(n, _)| n == s) {
                             let names: Vec<String> = plays.iter().map(|(n, _)| n.clone()).collect();
                             self.err(Diagnostic::error(at, format!("{of} has no section `{s}`")).help(format!("its sections: {}", names.join(", "))));
@@ -1361,11 +1425,11 @@ impl Ctx<'_, '_> {
                     }
                 }
                 let r = Source::Stored { cid: cid.clone(), track: None, section: section.clone(), part: Some(p.clone()) }.text();
-                let note = match (inferred, section) {
+                let note = match (inferred, &section) {
                     (true, Some(s)) => format!("the {p} of the {s} of {of}: one let"),
                     _ => format!("the {p} of {of}: one let"),
                 };
-                Some(LineOut { lets: vec![format!("let {name}_1 = {r}"), format!("let {name} = <{name}_1>")], bars: 1, cycle: String::new(), note })
+                Some(LineOut { lets: vec![format!("let {name}_1 = {r}"), format!("let {name} = <{name}_1>")], bars: 1, cycle: String::new(), note, one_let: true })
             }
             Source::Form(f) if f.section.is_some() => self.form_line(b, f, name, part, key, depth),
             Source::Form(f) => {
@@ -1378,6 +1442,15 @@ impl Ctx<'_, '_> {
             }
         }
     }
+}
+
+/// Does any role (of this form, or of a form in it) bind a seed of the generator?
+fn binds_gen(roles: &[Binding]) -> bool {
+    roles.iter().any(|b| match &b.source {
+        Source::Gen(_) => true,
+        Source::Form(f) => binds_gen(&f.roles),
+        _ => false,
+    })
 }
 
 /// The key a binding's own call says, if any.
@@ -1636,6 +1709,7 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
     let mut doc = Doc::new(text);
     let mut bound: BTreeMap<&str, String> = BTreeMap::new();
     let mut lens: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut one_let: Vec<&str> = Vec::new();
     for spec in specs {
         let whole = roles.iter().find(|b| b.role == spec.name);
         // a seed role: a line for each of its parts; a part bound alone (`a.bass=`) in place of what the whole gives it
@@ -1763,6 +1837,7 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
         if let (Some(section), true) = (spec.section, sections_source) {
             let p = format!("{prefix}{}", spec.prefix);
             let mut said: Option<String> = None;
+            let mut set_cid: Option<String> = None;
             let run = match &b.source {
                 Source::Form(f) if f.section.is_some() => cx.form_section(b, f, &format!("{prefix}{section}"), key, depth)?,
                 Source::Form(f) => inner_form(cx, f, &p, depth + 1)?,
@@ -1785,24 +1860,25 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
                 }
                 Source::Stored { cid, track, section: s, .. } => {
                     let short = djengine::rights::short_cid(cid);
-                    // a set's track is that track's program
-                    let (cid, of) = match track {
-                        Some(k) => (cx.track_of(cid, *k, b.source_span)?, format!("track {k} of the set {short}")),
-                        None => (cid.clone(), short.clone()),
+                    // a set's track is that track's program (and after a program that is no set, `.track2` is its section `track2`)
+                    let (cid, s, of) = match track {
+                        Some(k) => cx.track_ref(cid, *k, s.as_ref(), b.source_span)?,
+                        None => (cid.clone(), s.clone(), short.clone()),
                     };
                     let comp = cx.stored(&cid, b.source_span)?;
                     if comp.set.is_some() {
                         // a set: its tracks in order, each its sections
-                        if let Some(s) = s {
-                            cx.err(Diagnostic::error(b.source_span, format!("{} is a set: it has tracks, not sections", djengine::rights::short_cid(&cid))).help(format!("{}={cid}.track1.{s}", b.role)));
+                        if let Some(s) = &s {
+                            cx.not_a_track(b, &cid, &comp, s);
                             return None;
                         }
                         let (run, note) = cx.set_run(b, &cid, &comp, &p)?;
                         said = Some(note);
+                        set_cid = Some(cid.clone());
                         run
                     } else {
                         let plays = sequence(&comp);
-                        let pick: Vec<(String, u32)> = match s {
+                        let pick: Vec<(String, u32)> = match &s {
                             Some(s) => match plays.iter().find(|(n, _)| n == s) {
                                 Some(x) => vec![x.clone()],
                                 None => {
@@ -1823,7 +1899,8 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
                 _ => unreachable!("a sections source"),
             };
             if run.bars > MAX_SECTION_BARS {
-                cx.err(Diagnostic::error(b.source_span, format!("this is {} bars of sections a pass: `{}` takes at most {MAX_SECTION_BARS}", run.bars, b.role)).help("bind a section of it, or a shorter one (length=standard; a set's one track: <cid>.track1)"));
+                let one = set_cid.map_or(String::new(), |c| format!("; or one of the set's tracks: {}={c}.track1", b.role));
+                cx.err(Diagnostic::error(b.source_span, format!("this is {} bars of sections a pass: `{}` takes at most {MAX_SECTION_BARS}", run.bars, b.role)).help(format!("bind a section of it, or a shorter one (length=standard){one}")));
                 return None;
             }
             let Some((d, _, e)) = doc.section(&format!("{prefix}{section}")) else {
@@ -1856,6 +1933,9 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
         }
         cx.notes.push(Diagnostic::info(b.source_span, format!("{}: {} (`{name}_*`)", spec.name, out.note)));
         lens.insert(spec.name, out.bars);
+        if out.one_let {
+            one_let.push(spec.name);
+        }
         bound.insert(spec.name, src);
     }
     // the canon's copies are made of its subject's bars: a bar behind is the last bar first
@@ -1873,7 +1953,27 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
                 }
             }
         }
-        canon_numbers(cx, &mut doc, roles, &lens, prefix)?;
+        canon_numbers(cx, &mut doc, roles, &lens, one_let.contains(&"subject"), prefix)?;
+    }
+    // a bar of one step the plan morphs or crosses toward is written in brackets (`[d2]`, as a seed's is): a bare `d2` is no
+    // pattern `morph` or `xfer` takes. Only there: anywhere else the bare step checks, and its text (so its CID, so the plan's
+    // dice) stays as it always was
+    let targets: Vec<String> = doc
+        .lines
+        .iter()
+        .filter(|l| matches!(l.trim_start().chars().next(), Some('~' | '@')))
+        .flat_map(|l| l.split_whitespace().collect::<Vec<_>>().windows(2).filter(|w| w[0] == "morph" || w[0] == "xfer").map(|w| w[1].to_string()).collect::<Vec<_>>())
+        .collect();
+    for (l, fixed) in doc.lines.iter_mut().zip(&doc.fixed) {
+        if !*fixed {
+            continue;
+        }
+        if let Some((head, body)) = l.split_once(" = ") {
+            // (a stored program's part is a reference the stored stage writes out: it stays as it is)
+            if head.strip_prefix("let ").is_some_and(|n| targets.iter().any(|t| t == n)) && !body.contains(' ') && !body.starts_with('[') && !crate::stored::is_ref_word(body) {
+                *l = format!("{head} = [{body}]");
+            }
+        }
     }
     if depth == 1 {
         // the header says what fills each role: the fourth comment line, the one that named the themes
@@ -1890,7 +1990,7 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
 /// The canon's `delay=` and `interval=`: the chase's copy (`follow`) that many beats behind the leader, played at that interval
 /// from it. Without them the copy is a bar behind (half a bar for a one-bar subject) and an octave down, as it always was. The
 /// round's third voice (`close`) stays a beat behind, in unison.
-fn canon_numbers(cx: &mut Ctx, doc: &mut Doc, roles: &[Binding], lens: &BTreeMap<&str, usize>, prefix: &str) -> Option<()> {
+fn canon_numbers(cx: &mut Ctx, doc: &mut Doc, roles: &[Binding], lens: &BTreeMap<&str, usize>, one_let: bool, prefix: &str) -> Option<()> {
     let num = |name: &str| roles.iter().find(|b| b.role == name).and_then(|b| if let Source::Number(n) = b.source { Some((n, b.source_span)) } else { None });
     let follow = format!("{prefix}follow");
     if let Some((d, at)) = num("delay") {
@@ -1900,6 +2000,11 @@ fn canon_numbers(cx: &mut Ctx, doc: &mut Doc, roles: &[Binding], lens: &BTreeMap
             None => (format!("{prefix}{}", CANON[0].id), djengine::themes::theme(CANON[0].id).map_or(1, |t| t.bars.len())),
         };
         let most = 4 * k as i64 - 1;
+        if one_let && d > most {
+            // (a stored part is one let, however many bars it has: its copy moves within the bar)
+            cx.err(Diagnostic::error(at, format!("`delay` is 1 to {most} beats here: the subject is a stored part, one let (`{prefix}subject_1`), so its copy moves within the bar")).help("delay=2; for a delay of a bar or more bind the subject as notes, a theme or a seed"));
+            return None;
+        }
         if d > most {
             cx.err(Diagnostic::error(at, format!("`delay` is 1 to {most} beats for a subject of {k} bar{}: {} beats is the subject itself, in unison", if k == 1 { "" } else { "s" }, 4 * k)).help(if k == 1 { "delay=2 (half a bar behind)".to_string() } else { "delay=4 (a bar behind)".to_string() }));
             return None;

@@ -306,3 +306,129 @@ fn the_examples_of_the_extensions_are_what_they_say() {
         assert!(src.lines().filter(|l| l.starts_with("# ")).count() >= 3, "{name} says what it is and what you hear");
     }
 }
+
+// ---------------------------------------------------------------- what the review found (val run 16aa6899)
+
+/// A program and its CID, in a store `check` reads from.
+fn stored_env(texts: &[&str]) -> (djlive::env::StaticSnippets, Vec<String>) {
+    let mut s = djlive::env::StaticSnippets::default();
+    let mut cids = Vec::new();
+    for (i, t) in texts.iter().enumerate() {
+        let c = clean(t);
+        s.items.push((format!("p{i}"), c.cid.clone(), c.text.clone()));
+        cids.push(c.cid);
+    }
+    (s, cids)
+}
+
+fn with_store<'a>(s: &'a djlive::env::StaticSnippets, v: &'a StaticVoices) -> Env<'a> {
+    Env { voices: Some(v), snippets: Some(s), ..Env::default() }
+}
+
+/// After a program that is no set, `.track2` is its section called `track2`, as such a reference always read: written out as it
+/// was before sets were sources (`section episode from <cid>.track2`, `let tune_1 = <cid>.track2.melody`). Only a program that
+/// has no such section is told it is no set.
+#[test]
+fn track_n_after_a_program_that_is_no_set_is_its_section_as_it_always_was() {
+    let tr = "tempo 120\nkey c\nsection track2 4 bars {\n  deck A: kick x ~ x ~ | bass c2 ~ g1 ~\n  deck B: melody e4 g4 c5 g4\n}\narrange track2\n";
+    let (s, cids) = stored_env(&[tr]);
+    let cid = &cids[0];
+    let v = StaticVoices::default();
+    let env = with_store(&s, &v);
+    let short = djengine::rights::short_cid(cid);
+    let ok = |src: &str| -> String {
+        let c = check_with(src, &env);
+        let bad: Vec<String> = c.diagnostics.iter().filter(|d| d.severity != djlive::Severity::Info).map(|d| d.message.clone()).collect();
+        assert!(bad.is_empty() && c.compiled.is_some(), "{src}\n{bad:#?}");
+        match template::expand(src, &env) {
+            Some(Ok(e)) => e.text,
+            other => panic!("{other:?}"),
+        }
+    };
+    let t = ok(&format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={cid}.track2)\n"));
+    assert!(t.contains(&format!("# episodes, bound: {cid}.track2\n# episode: the track2 of {short}\nsection episode from {cid}.track2\n")), "{t}");
+    let t = ok(&format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={cid}.track2.melody)\n"));
+    assert!(t.contains(&format!("# refrain, bound: {cid}.track2.melody\nlet tune_1 = {cid}.track2.melody\nlet tune = <tune_1>\n")), "{t}");
+    let n: Vec<String> = check_with(&format!("arrange from template(rondo, @shanty_drunken_sailor, refrain={cid}.track2.melody)\n"), &env).diagnostics.into_iter().filter(|d| d.severity == djlive::Severity::Info).map(|d| d.message).collect();
+    assert!(n.iter().any(|m| m == &format!("refrain: the melody of {short}: one let (`tune_*`)")), "{n:?}");
+    // the canonical spelling is the one it always had
+    assert_eq!(clean_with(&format!("arrange from template( rondo,@shanty_drunken_sailor,episodes = {cid}.track2 )\n"), &env).text, format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={cid}.track2)\n"));
+    // a section it does not have is still refused
+    let e: Vec<String> = check_with(&format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={cid}.track3)\n"), &env).diagnostics.into_iter().filter(|d| d.is_error()).map(|d| format!("{} {}", d.message, d.help.unwrap_or_default())).collect();
+    assert!(e.iter().any(|m| m.contains("is not a set, and has no section `track3`") && m.contains("its sections: track2")), "{e:?}");
+}
+
+fn clean_with(src: &str, env: &Env) -> Compiled {
+    let c = check_with(src, env);
+    let bad: Vec<String> = c.diagnostics.iter().filter(|d| d.severity != djlive::Severity::Info).map(|d| d.message.clone()).collect();
+    assert!(bad.is_empty() && c.compiled.is_some(), "{src}\n{bad:#?}");
+    c.compiled.unwrap()
+}
+
+/// The notes of a form's section are a function of the reference alone: the program's tempo (written or not, 96 or 97) leaves
+/// them as they are, and its key moves them by the key rule and nothing else (B minor, D's relative, is D's notes; E is D's
+/// moved up a whole tone).
+#[test]
+fn a_forms_section_is_the_same_notes_at_any_tempo_and_moved_by_key_only() {
+    let reference = "arrange from template(canon, @mgm_pease_porridge_hot, subject=template(cross).both.arp)\n";
+    let subject = |head: &str| lets_of(&expanded(&format!("{head}{reference}")), "subject");
+    let d = subject("");
+    assert!(!d.is_empty());
+    for head in ["tempo 96\n", "tempo 97\n", "tempo 120\n", "tempo 96\nswing 0.1\n", "tempo 96\nkey bm\n"] {
+        assert_eq!(subject(head), d, "{head}");
+    }
+    let up = |line: &str| -> String {
+        line.split(' ').map(|w| {
+            let (body, bang) = w.strip_suffix('!').map_or((w, ""), |b| (b, "!"));
+            match djlive::music::parse_note(body) {
+                Some((pc, Some(oct))) => format!("{}{bang}", djlive::seed::note_name((djlive::music::midi(pc, oct) + 2) as u8)),
+                _ => w.to_string(),
+            }
+        }).collect::<Vec<_>>().join(" ")
+    };
+    let e = subject("tempo 96\nkey e\n");
+    assert_eq!(e, d.iter().map(|l| up(l)).collect::<Vec<_>>(), "E is D moved up 2");
+    // what the inner form's own bindings say is its own: no note names a let the program does not have
+    let n = notes("arrange from template(canon, @mgm_pease_porridge_hot, subject=template(canon, delay=6, interval=7).chase.arp)\n");
+    assert!(n.iter().all(|m| !m.starts_with("delay:") && !m.starts_with("interval:") && !m.contains("pachelbel_violin")), "{n:?}");
+}
+
+/// A bar of one step that the plan morphs or crosses toward is written in brackets, as a seed's is, so `morph` and `xfer` take
+/// it (bare, it was refused). Anywhere else it stays bare, as it always was: its text, so its CID, so the plan's dice, do not move.
+#[test]
+fn a_bar_of_one_step_the_plan_morphs_toward_is_written_in_brackets() {
+    let t = plays_as_written("arrange from template(cross, @psalm42_deep_calleth, a.bass=[d2], a.melody=[d5])\n");
+    assert!(t.contains("let a_bass_1 = [d2]\n") && t.contains("let a_melody_1 = [d5]\n"), "{t}");
+    assert!(t.contains("morph a_bass_1 0.25") && t.contains("morph a_melody_1 0.25"), "{t}");
+    let t = plays_as_written("arrange from template(canon, @mgm_pease_porridge_hot, ground=[d2])\n");
+    assert!(t.contains("let ground_1 = d2\n"), "no plan moves toward the ground: as it was\n{t}");
+}
+
+/// A stored subject is one let however many bars it has: the canon's delay is then within the bar, and the refusal says why.
+#[test]
+fn a_stored_subjects_delay_is_within_the_bar_and_says_why() {
+    let song = "tempo 90\nkey d\nsection verse 8 bars {\n  deck A: kick x ~ x ~ | bass d2 ~ a1 ~\n  deck B: melody <[d5 c#5 b4 a4] [b4 a4 g4 f#4]>\n}\narrange verse\n";
+    let (s, cids) = stored_env(&[song]);
+    let v = StaticVoices::default();
+    let env = with_store(&s, &v);
+    let cid = &cids[0];
+    let e: Vec<String> = check_with(&format!("arrange from template(canon, @mgm_pease_porridge_hot, subject={cid}.verse.melody, delay=4)\n"), &env).diagnostics.into_iter().filter(|d| d.is_error()).map(|d| format!("{} {}", d.message, d.help.unwrap_or_default())).collect();
+    assert!(e.iter().any(|m| m.contains("the subject is a stored part, one let (`subject_1`)") && !m.contains("subject of 1 bar")), "{e:?}");
+    clean_with(&format!("arrange from template(canon, @mgm_pease_porridge_hot, subject={cid}.verse.melody, delay=2)\n"), &env);
+}
+
+/// What a template's roles name by CID is what a store credits (stored::cids_of): a bare CID, a section, a set's track, and the
+/// stored programs of a form in a role.
+#[test]
+fn the_cids_a_role_names_are_credited() {
+    let a = "z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx";
+    let b = "z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1";
+    let c = "z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw";
+    let src = format!("arrange from template(rondo, @x, refrain={a}.track1.hook.melody, episodes=template(cross, a={b}, b={c}.verse))\n");
+    let got = djlive::stored::cids_of(&src);
+    assert_eq!(got.len(), 3, "once each: {got:?}");
+    for want in [a, b, c] {
+        assert!(got.iter().any(|g| g == want), "{want}: {got:?}");
+    }
+    assert_eq!(djlive::stored::cids_of(&format!("arrange from template(rondo, @x, episodes={a})\n")), [a.to_string()]);
+}

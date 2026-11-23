@@ -441,6 +441,8 @@ fn own_key(toks: &[Token]) -> Key {
 }
 
 /// Every reference of `src` that reads, by CID, once each, in order: what a store credits like an `import` (live_store.rs).
+/// Then the stored programs a template's roles name (`episodes=<cid>`, a set's `<cid>.track2.drop.bass`: roles.rs), which a
+/// reference of its own does not read.
 pub fn cids_of(src: &str) -> Vec<String> {
     let norm = crate::lex::normalise_input(src);
     let toks = lex(&norm).tokens;
@@ -450,6 +452,11 @@ pub fn cids_of(src: &str) -> Vec<String> {
             if !out.contains(&r.cid) {
                 out.push(r.cid);
             }
+        }
+    }
+    for cid in crate::roles::stored_cids(&toks) {
+        if !out.contains(&cid) {
+            out.push(cid);
         }
     }
     out
