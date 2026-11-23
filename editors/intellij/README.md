@@ -9,7 +9,8 @@ plugin, Community and Ultimate editions alike). No plugin of our own is needed.
 2. Install LSP4IJ: Settings → Plugins → Marketplace → "LSP4IJ".
 3. Settings → Languages & Frameworks → Language Servers → `+`:
    - **Server**: name `BeatScript`, command `/path/to/beatscript lsp`.
-   - **Mappings** → *File name patterns*: `*.beatscript` (and `*.btw`, the extension before the rename), language id `beatscript`.
+   - **Mappings** → *File name patterns*: `*.beatscript` and `*.btw` (the extension before the rename), language id
+     `beatscript`.
    - **Configuration**: nothing needed.
 4. Colours: Settings → Editor → TextMate Bundles → `+` → choose `editors/vscode` of this repo (IntelliJ reads the VS Code
    grammar as a TextMate bundle). Without it LSP4IJ still gives everything but the colours.

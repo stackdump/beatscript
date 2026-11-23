@@ -9,7 +9,8 @@
 'use strict';
 
 const vscode = require('vscode');
-const { LanguageClient } = require('vscode-languageclient/node');
+const { LanguageClient, Trace } = require('vscode-languageclient/node');
+const settings = require('./settings');
 
 let client;
 
@@ -165,10 +166,12 @@ const middleware = {
 
 // ---- the client -------------------------------------------------------------------------------------------------------
 
+const inspect = (section, key) => vscode.workspace.getConfiguration(section).inspect(key);
+
 function start(context) {
-  const cfg = vscode.workspace.getConfiguration('beatscript');
-  const command = cfg.get('server.path', 'beatscript');
-  const args = cfg.get('server.args', ['lsp']);
+  // beatscript.server.*, else the btw.server.* of a settings.json from before the rename (settings.js)
+  const command = settings.read(inspect, 'server.path', 'beatscript').value;
+  const args = settings.read(inspect, 'server.args', ['lsp']).value;
   const serverOptions = { run: { command, args }, debug: { command, args } };
   const clientOptions = {
     // files and unsaved buffers; not the beatscript-expansion: documents opened beside (they are the server's answers)
@@ -176,8 +179,13 @@ function start(context) {
     outputChannelName: 'BeatScript',
     middleware,
   };
-  client = new LanguageClient('beatscript', 'BeatScript', serverOptions, clientOptions);
-  client.start().catch((e) => {
+  // the client's id is the settings section: the client reads `beatscript.trace.server` itself
+  client = new LanguageClient(settings.SECTION, 'BeatScript', serverOptions, clientOptions);
+  client.start().then(() => {
+    // a trace set only under its old name, btw.trace.server: the client does not read that one, so it is set here
+    const trace = settings.read(inspect, 'trace.server', 'off');
+    if (trace.from && trace.from.startsWith(`${settings.LEGACY_SECTION}.`)) client.setTrace(Trace.fromString(trace.value));
+  }, (e) => {
     vscode.window.showErrorMessage(`BeatScript: could not start \`${command} ${args.join(' ')}\` (${e.message}). Set beatscript.server.path to the beatscript binary.`);
   });
   context.subscriptions.push({ dispose: () => client && client.stop() });
@@ -202,7 +210,7 @@ function activate(context) {
     vscode.commands.registerCommand('beatscript.expand.all', toggleAll),
     vscode.commands.registerCommand('beatscript.expand.open', openBeside),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration('beatscript.server')) vscode.commands.executeCommand('beatscript.restartServer');
+      if (settings.affectsServer(e)) vscode.commands.executeCommand('beatscript.restartServer');
     }),
     // an edit moves the references: paint the shown ones again once the text rests (the server has the change by then)
     vscode.workspace.onDidChangeTextDocument((e) => {

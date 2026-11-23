@@ -15,7 +15,7 @@
       {
         "id": "beatscript",
         "aliases": ["BeatScript", "beatscript"],
-        "extensions": [".beatscript"],
+        "extensions": [".beatscript", ".btw"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -41,6 +41,23 @@
           "enum": ["off", "messages", "verbose"],
           "default": "off",
           "description": "Log the LSP traffic to the BeatScript output channel."
+        },
+        "btw.server.path": {
+          "type": "string",
+          "description": "The setting's name before the rename: read when beatscript.server.path is not set.",
+          "deprecationMessage": "Renamed to beatscript.server.path (read in its place while that is not set)."
+        },
+        "btw.server.args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The setting's name before the rename: read when beatscript.server.args is not set.",
+          "deprecationMessage": "Renamed to beatscript.server.args (read in its place while that is not set)."
+        },
+        "btw.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "description": "The setting's name before the rename: read when beatscript.trace.server is not set.",
+          "deprecationMessage": "Renamed to beatscript.trace.server (read in its place while that is not set)."
         }
       }
     },
@@ -71,6 +88,6 @@
     "vscode-languageclient": "^9.0.1"
   },
   "scripts": {
-    "test": "node test/grammar.test.js && node test/preview.test.js"
+    "test": "node test/grammar.test.js && node test/preview.test.js && node test/manifest.test.js"
   }
 }

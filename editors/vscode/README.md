@@ -30,7 +30,13 @@ code --extensionDevelopmentPath="$PWD" ../../examples/beatscript/showcase.beatsc
 Set `beatscript.server.path` to the `beatscript` binary if it is not on `PATH` (Settings → BeatScript). `BeatScript: Restart the language
 server` picks up a rebuilt `beatscript`. `beatscript.trace.server: verbose` logs the traffic.
 
+`.beatscript` files and `.btw` files (the extension before the rename) are both BeatScript. The settings were called
+`btw.server.path`, `btw.server.args` and `btw.trace.server` before the rename: they are still read when the `beatscript.`
+setting is not set, and VS Code marks them deprecated. *Format Document* formats and upgrades a BeatScript 1 text (the old
+spelling: `#! btw 1`, or no version line) to BeatScript 2 (`#! beatscript 2` first: the same program under a new CID);
+the lightbulb on the first line of such a text offers *Upgrade to BeatScript 2*, which writes the version line alone.
+
 To install it for good, package it: `npx @vscode/vsce package --allow-missing-repository --skip-license` makes
 `beatscript-0.1.0.vsix`; then `code --install-extension beatscript-0.1.0.vsix`.
 
-`npm test` checks the grammar's patterns.
+`npm test` checks the grammar's patterns, and the manifest and the settings (the old names read as a fallback).
