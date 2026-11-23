@@ -21,6 +21,7 @@ SPDX-License-Identifier = "CC0-1.0"
 path = [
   "README.md",
   "CONTRIBUTING.md",
+  "CHANGELOG.md",
   "docs/**",
   "examples/**",
   "site/examples/**",
@@ -40,6 +41,7 @@ path = [
   "crates/beatscript-round/fixtures/**",
   "crates/*/tests/fixtures/**",
   "crates/*/tests/corpus/**",
+  "crates/*/tests/legacy/**",
   "crates/*/tests/goldens/**",
   "tools/listen/fixtures/**",
   "tools/listen/goldens/**",
