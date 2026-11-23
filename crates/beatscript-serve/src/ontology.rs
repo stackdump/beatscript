@@ -59,7 +59,7 @@ pub const FILES: [(&str, &[u8]); 10] = [
 pub const LOCK: &str = include_str!("../ontology/release.lock");
 const CSS: &str = include_str!("../ontology/ontology.css");
 
-/// The bitwrap ontology's own site: the upstream the fork derives from (linked, never fetched).
+/// The bitwrap ontology's own site: the upstream the fork derives from (named as attribution text, never linked or fetched).
 pub const UPSTREAM: &str = "https://ontology.bitwrap.io";
 
 pub struct Ontology {
@@ -134,9 +134,9 @@ pub fn shared(public_url: &str) -> Option<Arc<Ontology>> {
         .clone()
 }
 
-/// The genre conventions' graph (`beatscript_serve::genres`: check's `style`, the MCP `genre_template`): the vendored bitwrap ontology
-/// 0.2.0 the fork derives from, with bitwrap's conventions module ([`genre_graph`]), in bitwrap's own IRIs, the ones
-/// `genres` reads (`ontology::tests` holds the 0.2.0 part to the fork's answers).
+/// The genre conventions' graph (`beatscript_serve::genres`: check's `style`, the MCP `genre_template`): the fork's own
+/// release (`ns.nt`, served at /ontology/ns.nt), which carries the bitwrap 0.2.0 terms and bitwrap's conventions module
+/// re-homed under https://beatscript.app/ontology/, so every IRI `genres` answers with is this site's.
 struct GenreGraph(graph::Index);
 
 impl beatscript_serve::genres::Graph for GenreGraph {
@@ -148,25 +148,9 @@ impl beatscript_serve::genres::Graph for GenreGraph {
     }
 }
 
-/// The vendored bitwrap ontology 0.2.0, the genres' generator data.
-const GENRES_UPSTREAM_NT: &[u8] = include_bytes!("../ontology/upstream/bitwrap-0.2.0/ns.nt");
-/// The bitwrap conventions module (`ontology/upstream/bitwrap-conventions/conventions.ttl`, pinned by
-/// `ontology/conventions.lock`): each genre's tempo range, the usual kit and voices of the genres the generator gives
-/// none (trap's kit, drums-808, is only here), the BeatScript voice of an instrument named otherwise and each section's
-/// usual length. `genres` was written against it; without it trap had no kit and a drums-808 program was "unusual" (6672).
-const GENRES_CONVENTIONS_TTL: &[u8] = include_bytes!("../ontology/upstream/bitwrap-conventions/conventions.ttl");
-
-/// The genre conventions' graph: the bitwrap 0.2.0 release and its conventions module, as N-Triples.
+/// The genre conventions' graph: the release's asserted graph, as N-Triples.
 pub fn genre_graph() -> graph::Index {
-    let mut nt = GENRES_UPSTREAM_NT.to_vec();
-    nt.push(b'\n');
-    for t in oxigraph::io::RdfParser::from_format(oxigraph::io::RdfFormat::Turtle).for_slice(GENRES_CONVENTIONS_TTL) {
-        match t {
-            Ok(q) => nt.extend_from_slice(format!("{} .\n", oxigraph::model::Triple::from(q)).as_bytes()),
-            Err(e) => eprintln!("beatscript-serve: warning: the genre conventions module does not parse: {e}"),
-        }
-    }
-    graph::Index::from_nt(&nt)
+    graph::Index::from_nt(FILES[1].1)
 }
 
 /// Give the process its genre conventions, once (genres::install ignores a second call). Until this ran, check's style and
@@ -575,7 +559,7 @@ pub fn render_page(o: &Ontology) -> String {
 <p>The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the language itself: every production and keyword of its grammar, its voices and kits, the control nouns and verbs, its operators and the tools of both MCP servers, generated from the code that implements them.</p>
 <ul class="facts">
 <li>Version <strong>{ver}</strong>, released {rel}: <code>{viri}</code></li>
-<li>Derived from the <a href="{up}/">bitwrap ontology</a> {upver}, and evolving on its own</li>
+<li>Derived from the bitwrap ontology {upver} (ontology.bitwrap.io), and evolving on its own</li>
 <li>{triples} triples in the materialized graph</li>
 <li>Pack digest <code class="hash">{digest}</code></li>
 <li>License <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a>: use it for anything, no attribution required</li>
@@ -614,7 +598,7 @@ pub fn render_page(o: &Ontology) -> String {
 <tbody>
 {files}</tbody>
 </table>
-<p>The certificate in <a href="/ontology/cert/derivations.tsv"><code>cert/</code></a> covers: {scope}. It is in open-ontologies' <code>oo-cert/1</code> format, one derivation step per inferred triple, and the pack binds it to the graph with the <code>oo-pack-content/1</code> digest. Matching digests prove the files are intact and belong together, not that the ontology is correct. The release is built reproducibly from three inputs: the bitwrap {upver} release, the fork's own module, and the vocabulary generated from BeatScript's code.</p>
+<p>The certificate in <a href="/ontology/cert/derivations.tsv"><code>cert/</code></a> covers: {scope}. It is in open-ontologies' <code>oo-cert/1</code> format, one derivation step per inferred triple, and the pack binds it to the graph with the <code>oo-pack-content/1</code> digest. Matching digests prove the files are intact and belong together, not that the ontology is correct. The release is built reproducibly from four inputs: the bitwrap {upver} release, bitwrap's genre conventions module, the fork's own module, and the vocabulary generated from BeatScript's code.</p>
 "##,
         up = UPSTREAM,
         ns = NS,

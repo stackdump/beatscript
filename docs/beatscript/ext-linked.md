@@ -9,11 +9,11 @@ builder), `djhost::ontology` (the cached vocabulary), `djhost::live_store` (the 
 A program can say what it is. Two more `#!` header lines, read with the rights lines (`#! license:` ...) of a `.beatscript` file:
 
 ```text
-#! genre: https://ontology.bitwrap.io/genre/techno          (or: techno, genre:techno, bw:Techno)
+#! genre: https://beatscript.app/ontology/genre/techno          (or: techno, genre:techno, bw:Techno)
 #! tags: acid, supersaw, four on floor, drop                 (terms of the ontology)
 ```
 
-They link the program to the **bitwrap ontology** (https://ontology.bitwrap.io/ns#), a public (CC0) vocabulary of the genres the
+They link the program to the **BeatScript ontology** (https://beatscript.app/ontology/ns#, a CC0 fork of the bitwrap ontology), a public (CC0) vocabulary of the genres the
 engine generates, and of the scales, grooves, instruments, song sections, structures, Euclidean rhythms and chord progressions
 around them. A host that has the vocabulary checks them and exports the program as linked data (JSON-LD).
 
@@ -30,7 +30,9 @@ header-line = "#!" key ":" value NEWLINE ;
 genre-line  = "#!" "genre" ":" term ;                          (* one genre: a term of kind genre *)
 tags-line   = "#!" "tags"  ":" term { "," term } ;             (* any terms; several lines are one set *)
 term        = iri | curie | name ;
-iri         = "https://ontology.bitwrap.io/" kind "/" local ;  (* a published term; also the namespace spelling bw-ns "#" Name *)
+iri         = "https://beatscript.app/ontology/" kind "/" local ;  (* a published term; also the namespace spelling bw-ns "#" Name;
+                                                                  the same path under https://ontology.bitwrap.io/, what programs wrote
+                                                                  before the BeatScript ontology, is read as this IRI *)
 curie       = "bw" ":" name                                    (* the vocabulary's namespace: any kind *)
             | kind ":" name ;                                  (* genre:techno  instrument:acid  groove:four-on-floor *)
 name        = local-name | label ;                             (* techno   four on floor   Four-On-Floor   four_on_floor *)
@@ -53,7 +55,7 @@ the genre whatever else it is. Every spelling is **stored as the full IRI** of t
 
 ## What is checked, and where
 
-The vocabulary is a cached snapshot (`crates/djhost/data/bitwrap-ontology.json`, below). `djlive` is handed it through the
+The vocabulary is a cached snapshot (`crates/djhost/data/beatscript-ontology.json`, below). `djlive` is handed it through the
 `djlive::linked::Ontology` trait in a new optional field `Env::ontology`, so the language crate stays pure and a test can use a fake.
 
 | where | an unknown, misspelt or wrong-kind term is | with |
@@ -73,19 +75,21 @@ warning: unknown genre `tehcno`
 A warning, not an error, in `check`: a comment must never stop a live program. The messages: `unknown genre `X`` / `unknown tag `X``
 (help: `did you mean `Y`?`, or several; with no near name a genre line lists the genres in `expected`, a tag points at
 `djctl btw terms`), `` `groove:bossa` is a groove, not a genre ``, `a program has one genre` (a second `genre:` line, or commas in
-it), ``a genre line names no genre``. An IRI under `https://ontology.bitwrap.io/` that is not a term suggests the IRIs it may have
+it), ``a genre line names no genre``. An IRI under `https://beatscript.app/ontology/` (or the old `https://ontology.bitwrap.io/`) that is not a term suggests the IRIs it may have
 meant (`.../genre/tehcno` gives `.../genre/techno`; `.../section/acid` gives `.../instrument/acid`); an IRI of someone else's is
 unknown.
 
 ## The vocabulary: a cached snapshot
 
-`crates/djhost/data/bitwrap-ontology.json` is the source of truth for tests and for a machine that is offline; it is compiled in
-(`include_str!`, `djhost::ontology::vocabulary()`), so **nothing at run time and nothing in a test fetches anything**. It holds the
-namespace, the version and release date, the day it was fetched, where from (`https://ontology.bitwrap.io/ns.nt`) and that file's
-SHA-256, the ontology's pack digest, `verified`, how to refresh it, and 253 terms sorted by IRI, one a line: `iri`, `kind`, `local`,
+`crates/djhost/data/beatscript-ontology.json` is the source of truth for tests and for a machine that is offline; it is compiled in
+(`include_str!`, `djhost::ontology::vocabulary()`), so **nothing at build time, at run time or in a test fetches anything**. It is the
+music terms of the BeatScript ontology release in this repository (`tools/ontology/refresh.py` reads
+`crates/beatscript-serve/ontology/release/ns.nt`, checked against its manifest and lock). It holds the namespace, the version and
+release date, the day it was taken, where it is served (`https://beatscript.app/ontology/ns.nt`) and that file's SHA-256, the
+ontology's pack digest, `verified`, how to refresh it, and 265 terms sorted by IRI, one a line: `iri`, `kind`, `local`,
 `label`, and for a Euclidean rhythm its `pulses`, `steps` and `rotation`. It is 41 KB.
 
-The terms by kind: genre 19, genre family 4, scale 9, groove 7, instrument 20, instrument role 8, song section 10, song structure 71,
+The terms by kind: genre 19, genre family 4, scale 9, groove 7, instrument 30, instrument role 8, song section 10, song structure 71,
 Euclidean rhythm 57, chord progression 32, engine concept 16. (Not kept: the structures' numbered slots, the drum variants and the
 section profiles, which are scaffolding, not names an author writes; and the ontology's classes and properties, which are not tags.)
 
@@ -108,8 +112,8 @@ run that made it; the published files were fetched over HTTPS instead.)
 #! license: CC0-1.0
 #! visibility: public
 #! author: did:key:z6Mk...
-#! genre: https://ontology.bitwrap.io/genre/techno
-#! tags: https://ontology.bitwrap.io/groove/four-on-floor, https://ontology.bitwrap.io/instrument/acid
+#! genre: https://beatscript.app/ontology/genre/techno
+#! tags: https://beatscript.app/ontology/groove/four-on-floor, https://beatscript.app/ontology/instrument/acid
 tempo 128
 ...
 ```
@@ -143,18 +147,18 @@ no timestamp, no random number and no path of this machine in it.
 
 | key | is | from |
 |---|---|---|
-| `@context` | the URL `https://beatscript.app/context/v1.jsonld` (`share`/`linked::CONTEXT_URL`), which defines `bw` the ontology's namespace, `djrust` the program's, `dct` and the terms below; `btw jsonld FILE --inline` spells them out, `btw context` prints the definition. Published (CORS, `application/ld+json`, immutable): a change to the terms is `v2`, never an edit of `v1`; `docs/btw-context-v1.jsonld` is v1 and a test keeps it equal to `linked::context()` | fixed |
-| `@id` | `https://beats.bitwrap.io/p#<program CID>`: the share link of a CID alone (`share::BASE`) | the CID |
-| `@type` | `djrust:Program` | |
+| `@context` | the URL `https://beatscript.app/context/beatscript-v1.jsonld` (`linked::DOCUMENT_CONTEXT_URL`), the BeatScript context: `bs:` the program's terms (`https://beatscript.app/schema#`), `bw` the BeatScript ontology's namespace (`https://beatscript.app/ontology/ns#`), and the terms below; `jsonld FILE --inline` spells them out. Published (CORS, `application/ld+json`, immutable). The first context, `https://beatscript.app/context/v1.jsonld` (`docs/btw-context-v1.jsonld`, `linked::context()`), stays served for the documents made before 2026-11-23; no document names it now | fixed |
+| `@id` | `https://beatscript.app/p/<program CID>`: the program's page, as the program block names it (`progld::IRI_PREFIX`) | the CID |
+| `@type` | `Program` (`bs:Program`) | |
 | `cid` | the program CID, as a plain string | |
 | `name` | `dct:title` | the saved name |
 | `genre` | IRI | `#! genre:` |
 | `tag` | IRIs, sorted | `#! tags:` |
 | `key`, `tempo` | `am`, `128` (the canonical spelling; absent when the program sets none) | `key`, `tempo` |
-| `sections` | an ordered list of `{@type djrust:Section, name, start, bars, key?}`: **the song's sections, one for each time the arrangement places one**, by start bar (not the compiled stretches: `stack(groove, wash)` lists `groove` and `wash`, each from bar 0 with its own length, never a `groove+wash`). `start` is the 0-based bar; `key` is the one the section sets itself (its first `key` statement), absent when it sets none. A section's chained stretches and an `evolve`'s generations are one section with its bars as written. Absent for a program with no sections | `arrange` |
+| `sections` | an ordered list of `{@type Section, name, start, bars, key?}`: **the song's sections, one for each time the arrangement places one**, by start bar (not the compiled stretches: `stack(groove, wash)` lists `groove` and `wash`, each from bar 0 with its own length, never a `groove+wash`). `start` is the 0-based bar; `key` is the one the section sets itself (its first `key` statement), absent when it sets none. A section's chained stretches and an `evolve`'s generations are one section with its bars as written. Absent for a program with no sections | `arrange` |
 | `licenseId`, `license`, `visibility`, `author` | `CC-BY-4.0`, `https://creativecommons.org/licenses/by/4.0/` (`dct:license`; none for all-rights-reserved), `public`, `dct:creator` | the rights |
-| `forkedFrom` | IRI: the parent's `https://beats.bitwrap.io/p#<CID>` | `forked-from` |
-| `credit` | the credited programs: `{@id, @type djrust:Program, cid, name, author, licenseId, license}` | `credit` |
+| `forkedFrom`, `isBasedOn` | the parent's CID, and its IRI `https://beatscript.app/p/<CID>` | `forked-from` |
+| `credit` | the credited programs: `{@id, @type Program, cid, name, author, licenseId, license}` | `credit` |
 | `euclid` | one node per distinct Euclidean shape of the program: `@type bw:EuclideanRhythm`, `bw:pulses`, `bw:steps`, `bw:rotation`, `uses` (how many times the expanded song says it), `name` when the ontology has exactly one rhythm of that shape, and `sameShapeAs`: the IRIs of the ontology's named rhythms of exactly that shape | the program's `e(k,n[,rot])` |
 
 The Euclidean terms are the `e(k, n[, rot])` (and `euclid(...)`) calls **of the expanded song** (`Compiled::linked`, read from the lowered program by
@@ -184,61 +188,13 @@ tags kept `check` busy for 15 s and `jsonld` for 43 s. The 65th item is an error
 
 `examples/beatscript/linked.beatscript` as a document (against the cached vocabulary):
 
-The document below is shown with its `@context` spelled out (`btw jsonld --inline`); the default names the URL.
+The document below names its `@context` by URL, the default; `jsonld --inline` spells the BeatScript context's terms out instead.
 
 ```json
 {
-  "@context": {
-    "author": "dct:creator",
-    "bars": "djrust:bars",
-    "bw": "https://ontology.bitwrap.io/ns#",
-    "cid": "djrust:cid",
-    "credit": {
-      "@container": "@set",
-      "@id": "djrust:credit"
-    },
-    "dct": "http://purl.org/dc/terms/",
-    "djrust": "https://beats.bitwrap.io/ns/djrust#",
-    "euclid": {
-      "@container": "@set",
-      "@id": "djrust:euclid"
-    },
-    "forkedFrom": {
-      "@id": "djrust:forkedFrom",
-      "@type": "@id"
-    },
-    "genre": {
-      "@id": "djrust:genre",
-      "@type": "@id"
-    },
-    "key": "djrust:key",
-    "license": {
-      "@id": "dct:license",
-      "@type": "@id"
-    },
-    "licenseId": "djrust:licenseId",
-    "name": "dct:title",
-    "sameShapeAs": {
-      "@container": "@set",
-      "@id": "djrust:sameShapeAs",
-      "@type": "@id"
-    },
-    "sections": {
-      "@container": "@list",
-      "@id": "djrust:section"
-    },
-    "start": "djrust:start",
-    "tag": {
-      "@container": "@set",
-      "@id": "djrust:tag",
-      "@type": "@id"
-    },
-    "tempo": "djrust:tempo",
-    "uses": "djrust:uses",
-    "visibility": "djrust:visibility"
-  },
-  "@id": "https://beats.bitwrap.io/p#z4EBG9j4u6fpnAHQStTXMchz4DxYovWLf9RAfPH2f157ESLSwxg",
-  "@type": "djrust:Program",
+  "@context": "https://beatscript.app/context/beatscript-v1.jsonld",
+  "@id": "https://beatscript.app/p/z4EBG9j4u6fpnAHQStTXMchz4DxYovWLf9RAfPH2f157ESLSwxg",
+  "@type": "Program",
   "cid": "z4EBG9j4u6fpnAHQStTXMchz4DxYovWLf9RAfPH2f157ESLSwxg",
   "euclid": [
     {
@@ -247,8 +203,8 @@ The document below is shown with its `@context` spelled out (`btw jsonld --inlin
       "bw:rotation": 0,
       "bw:steps": 8,
       "sameShapeAs": [
-        "https://ontology.bitwrap.io/rhythm/lofi-hihat",
-        "https://ontology.bitwrap.io/rhythm/techno-hihat"
+        "https://beatscript.app/ontology/rhythm/lofi-hihat",
+        "https://beatscript.app/ontology/rhythm/techno-hihat"
       ],
       "uses": 2
     },
@@ -258,14 +214,14 @@ The document below is shown with its `@context` spelled out (`btw jsonld --inlin
       "bw:rotation": 4,
       "bw:steps": 16,
       "sameShapeAs": [
-        "https://ontology.bitwrap.io/rhythm/blues-snare",
-        "https://ontology.bitwrap.io/rhythm/dubstep-snare",
-        "https://ontology.bitwrap.io/rhythm/edm-snare",
-        "https://ontology.bitwrap.io/rhythm/lofi-snare",
-        "https://ontology.bitwrap.io/rhythm/synthwave-snare",
-        "https://ontology.bitwrap.io/rhythm/techno-snare",
-        "https://ontology.bitwrap.io/rhythm/trance-snare",
-        "https://ontology.bitwrap.io/rhythm/trap-snare"
+        "https://beatscript.app/ontology/rhythm/blues-snare",
+        "https://beatscript.app/ontology/rhythm/dubstep-snare",
+        "https://beatscript.app/ontology/rhythm/edm-snare",
+        "https://beatscript.app/ontology/rhythm/lofi-snare",
+        "https://beatscript.app/ontology/rhythm/synthwave-snare",
+        "https://beatscript.app/ontology/rhythm/techno-snare",
+        "https://beatscript.app/ontology/rhythm/trance-snare",
+        "https://beatscript.app/ontology/rhythm/trap-snare"
       ],
       "uses": 1
     },
@@ -275,37 +231,37 @@ The document below is shown with its `@context` spelled out (`btw jsonld --inlin
       "bw:rotation": 0,
       "bw:steps": 16,
       "sameShapeAs": [
-        "https://ontology.bitwrap.io/rhythm/country-kick",
-        "https://ontology.bitwrap.io/rhythm/edm-kick",
-        "https://ontology.bitwrap.io/rhythm/house-kick",
-        "https://ontology.bitwrap.io/rhythm/synthwave-kick",
-        "https://ontology.bitwrap.io/rhythm/techno-kick",
-        "https://ontology.bitwrap.io/rhythm/trance-kick"
+        "https://beatscript.app/ontology/rhythm/country-kick",
+        "https://beatscript.app/ontology/rhythm/edm-kick",
+        "https://beatscript.app/ontology/rhythm/house-kick",
+        "https://beatscript.app/ontology/rhythm/synthwave-kick",
+        "https://beatscript.app/ontology/rhythm/techno-kick",
+        "https://beatscript.app/ontology/rhythm/trance-kick"
       ],
       "uses": 2
     }
   ],
-  "genre": "https://ontology.bitwrap.io/genre/techno",
+  "genre": "https://beatscript.app/ontology/genre/techno",
   "key": "am",
   "sections": [
     {
-      "@type": "djrust:Section",
+      "@type": "Section",
       "bars": 8,
       "name": "intro",
       "start": 0
     },
     {
-      "@type": "djrust:Section",
+      "@type": "Section",
       "bars": 16,
       "name": "drop",
       "start": 8
     }
   ],
   "tag": [
-    "https://ontology.bitwrap.io/groove/four-on-floor",
-    "https://ontology.bitwrap.io/instrument/acid",
-    "https://ontology.bitwrap.io/instrument/supersaw",
-    "https://ontology.bitwrap.io/section/drop"
+    "https://beatscript.app/ontology/groove/four-on-floor",
+    "https://beatscript.app/ontology/instrument/acid",
+    "https://beatscript.app/ontology/instrument/supersaw",
+    "https://beatscript.app/ontology/section/drop"
   ],
   "tempo": 128
 }
@@ -332,8 +288,8 @@ at random and demands the same document, and an edit a different `@id`.
 
 ## Decisions
 
-* **The IRIs.** The contract writes `https://ontology.bitwrap.io/ns#Techno` and `bw:Techno`. The published ontology has its **classes and properties** in
-  `ns#` (`bw:Genre`, `bw:pulses`) and its **terms** at `https://ontology.bitwrap.io/<kind>/<slug>` (`.../genre/techno`, `.../instrument/acid`), where
+* **The IRIs.** The contract writes `https://beatscript.app/ontology/ns#Techno` and `bw:Techno`. The published ontology has its **classes and properties** in
+  `ns#` (`bw:Genre`, `bw:pulses`) and its **terms** at `https://beatscript.app/ontology/<kind>/<slug>` (`.../genre/techno`, `.../instrument/acid`), where
   each is a page (Turtle, N-Triples, HTML). I store and export the published term IRIs; `bw:Techno`, `bw:techno` and `ns#Techno` are accepted spellings of
   the genre `techno` (matched by local name, any kind), so what the contract wrote works.
 * **Warning in check, error in save and import.** A header line is a comment, so a typo must not stop a live program; keeping a typo in a saved object
@@ -345,9 +301,9 @@ at random and demands the same document, and an edit a different `@id`.
   local name (`techno-kick`), `rhythm:techno-kick` or its IRI.
 * **IRIs in the file, short names allowed in.** An exported file always has full IRIs (unambiguous, readable by any tool, no vocabulary needed to read it);
   a human may write `techno`. Reading is lenient, writing is canonical.
-* **`@id` is the share form** `https://beats.bitwrap.io/p#<CID>`, the repo's own way to name a program by CID alone, rather than an unregistered `urn:cid:`.
-  The `djrust:` namespace is `https://beats.bitwrap.io/ns/djrust#` (the host the share links already use): **nothing is published at it yet**; it is a name.
-  `DJRUST_NS` is one constant to change.
+* **`@id` is the program's page** `https://beatscript.app/p/<CID>`, rather than an unregistered `urn:cid:`; the terms are the BeatScript context's `bs:` ones.
+  Until 2026-11-23 the `@id` was `https://beats.bitwrap.io/p#<CID>` and the terms `djrust:` (`https://beats.bitwrap.io/ns/djrust#`, never published):
+  BeatScript data lives on beatscript.app only.
 * **`btw jsonld {text}` claims rights only if the text's header has them**, so a bare program does not come out CC0 by default.
 * **`sections` are the song's sections**, one entry each time the arrangement places one (a section arranged twice is listed twice), in the order of their start
   bars (two stacked ones start on one bar, in the order of the normal form), with the section's own bars and `start`. They are read from F10's placements
@@ -369,7 +325,7 @@ at random and demands the same document, and an edit a different `@id`.
   run time depend on the network). A refresh that drops a term leaves old programs readable but their next save asks for a new term.
 * **Folk names of rhythms** ("tresillo", "cinquillo") are not in the ontology, so the document has none (F6 decided the same).
 * **A tempo that moves** (F3 curves) is not in the document: `tempo` is the program's own setting.
-* **No SHACL / OWL validation** of the document, and the `djrust:` namespace (`https://beats.bitwrap.io/ns/djrust#`) is not published (the `@context` is: `https://beatscript.app/context/v1.jsonld`).
+* **No SHACL / OWL validation** of the document.
 * **Genre-aware checks** (tempo against the genre's `bw:bpm`, key against its scale) are not done; the vocabulary carries them, the snapshot does not.
 * **The window** (`djapp/src/live_panel.rs`) does not show the links; they are in `btw list` / `btw get` rows and the files.
 * The **Bitwrap Ontology MCP tools** were denied in the unattended run that built this; the published files were fetched with `curl` (and checked against the

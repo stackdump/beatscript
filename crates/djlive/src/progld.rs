@@ -405,10 +405,10 @@ mod tests {
         let tags = vec!["four on floor".to_string(), "not a term".to_string()];
         let d = document(&c, &Facts { genre: Some("techno"), tags: &tags, ontology: Some(&o), ..Facts::default() });
         let s = |k: &str| d.get(k).map(JsonValue::js_stringified);
-        assert_eq!(s("genre").as_deref(), Some(r#""https://ontology.bitwrap.io/genre/techno""#));
-        assert_eq!(s("scale").as_deref(), Some(r#""https://ontology.bitwrap.io/scale/minor""#));
-        assert_eq!(s("instrument").as_deref(), Some(r#"["https://ontology.bitwrap.io/instrument/acid"]"#));
-        assert_eq!(s("tag").as_deref(), Some(r#"["https://ontology.bitwrap.io/groove/four-on-floor"]"#));
+        assert_eq!(s("genre").as_deref(), Some(r#""https://beatscript.app/ontology/genre/techno""#));
+        assert_eq!(s("scale").as_deref(), Some(r#""https://beatscript.app/ontology/scale/minor""#));
+        assert_eq!(s("instrument").as_deref(), Some(r#"["https://beatscript.app/ontology/instrument/acid"]"#));
+        assert_eq!(s("tag").as_deref(), Some(r#"["https://beatscript.app/ontology/groove/four-on-floor"]"#));
         // with no vocabulary there are no links (and the key stays a plain word)
         let bare = document(&c, &Facts { genre: Some("techno"), ..Facts::default() });
         assert!(bare.get("genre").is_none() && bare.get("scale").is_none() && bare.get("key").is_some());

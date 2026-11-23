@@ -534,7 +534,7 @@ fn r24_a_program_has_at_most_sixty_four_tags_and_the_rest_are_not_looked_up() {
     use djlive::compile::check_with;
     use djlive::env::Env;
     use djlive::linked::{self, Ontology, StaticOntology};
-    let onto = StaticOntology::from_json(r#"{"version":"1","verified":true,"terms":[{"iri":"https://ontology.bitwrap.io/genre/techno","kind":"genre","local":"techno","label":"techno"},{"iri":"https://ontology.bitwrap.io/instrument/acid","kind":"instrument","local":"acid","label":"acid"}]}"#).unwrap();
+    let onto = StaticOntology::from_json(r#"{"version":"1","verified":true,"terms":[{"iri":"https://beatscript.app/ontology/genre/techno","kind":"genre","local":"techno","label":"techno"},{"iri":"https://beatscript.app/ontology/instrument/acid","kind":"instrument","local":"acid","label":"acid"}]}"#).unwrap();
     let many = |n: usize| (0..n).map(|i| format!("acid{i}")).collect::<Vec<_>>().join(", ");
     // 64 is fine (the unknown ones are said, one each: the vocabulary has no `acid0`); 65 is said once, at the first one over
     let (_, ds) = linked::check_headers(&format!("#! tags: {}\n", many(64)), &onto, Severity::Error);

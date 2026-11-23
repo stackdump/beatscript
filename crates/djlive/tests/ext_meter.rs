@@ -143,14 +143,14 @@ fn the_table_is_the_ontologys_fifty_seven_rhythms_and_well_formed() {
     iris.sort();
     iris.dedup();
     assert_eq!(iris.len(), 57);
-    assert_eq!(meter::euclid_class_iri(), "https://ontology.bitwrap.io/ns#EuclideanRhythm");
-    assert_eq!(meter::ONTOLOGY_NS, "https://ontology.bitwrap.io/ns#");
+    assert_eq!(meter::euclid_class_iri(), "https://beatscript.app/ontology/ns#EuclideanRhythm");
+    assert_eq!(meter::ONTOLOGY_NS, "https://beatscript.app/ontology/ns#");
 }
 
 #[test]
 fn a_rhythm_is_named_by_its_pulses_steps_and_rotation() {
     let t = meter::euclid_name(3, 8, 0).unwrap();
-    assert_eq!((t.label, t.role, t.iri), ("house snare", "snare", "https://ontology.bitwrap.io/rhythm/house-snare"));
+    assert_eq!((t.label, t.role, t.iri), ("house snare", "snare", "https://beatscript.app/ontology/rhythm/house-snare"));
     assert_eq!((t.pulses, t.steps, t.rotation, t.midi_note), (3, 8, 0, 38));
     assert_eq!(t.parameters(), "E(3,8) rotation 0");
     // the rotation counts modulo the steps, as the engine's own does
@@ -176,10 +176,10 @@ fn check_says_the_ontology_name_of_a_euclidean_term_for_its_role() {
     let n = notes("#! genre: techno\ndeck A: hihat e(5,8)\n");
     assert_eq!(n.len(), 1, "{n:?}");
     assert!(n[0].starts_with("e(5,8): the ontology's hihat rhythm of lofi and techno"), "{}", n[0]);
-    assert!(n[0].contains("https://ontology.bitwrap.io/rhythm/lofi-hihat"), "{}", n[0]);
+    assert!(n[0].contains("https://beatscript.app/ontology/rhythm/lofi-hihat"), "{}", n[0]);
     let n = notes("#! genre: techno\ndeck A: snare e(3,8)\n");
     assert_eq!(n.len(), 1);
-    assert!(n[0].starts_with("e(3,8): the ontology's house snare rhythm (https://ontology.bitwrap.io/rhythm/house-snare)"), "{}", n[0]);
+    assert!(n[0].starts_with("e(3,8): the ontology's house snare rhythm (https://beatscript.app/ontology/rhythm/house-snare)"), "{}", n[0]);
     // with a rotation, written as it is
     let n = notes("#! tags: acid\ndeck A: snare e(2,16,4)\n");
     assert!(n[0].starts_with("e(2,16,4): the ontology's snare rhythm of blues, dubstep, edm"), "{}", n[0]);

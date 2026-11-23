@@ -1,4 +1,4 @@
-// Sign-in: a challenge-response on the identity beats.bitwrap.io already uses (DESIGN.md "Auth"). The page
+// Sign-in: a challenge-response on the identity the beats sequencer already uses (DESIGN.md "Auth"). The page
 // signs the server's challenge message (UTF-8 bytes) with either an eth wallet (window.ethereum
 // personal_sign, EIP-191) or a browser-local Ed25519 key (WebCrypto), then POSTs the signature to
 // /api/auth/login, which sets the session cookie.

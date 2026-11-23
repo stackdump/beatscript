@@ -335,7 +335,7 @@ fn sprop(desc: &str, extra: &[(&str, Value)]) -> Value {
 }
 
 /// The `genre` argument of check.
-const GENRE_ARG: &str = "Optional: a genre of the bitwrap ontology (techno, house, jazz, ... or its https://ontology.bitwrap.io/genre/ IRI); else the program's own `#! genre:` line. The answer gains style {genre, label, warnings[{severity: \"style\", code, message, line?, col?}]}: advice from the genre's conventions in the ontology (a tempo outside its range, a kit or voice the genre and its family do not use, chords far from its progressions). Style warnings never make ok false.";
+const GENRE_ARG: &str = "Optional: a genre of the BeatScript ontology (techno, house, jazz, ... or its https://beatscript.app/ontology/genre/ IRI); else the program's own `#! genre:` line. The answer gains style {genre, label, warnings[{severity: \"style\", code, message, line?, col?}]}: advice from the genre's conventions in the ontology (a tempo outside its range, a kit or voice the genre and its family do not use, chords far from its progressions). Style warnings never make ok false.";
 
 const CID_PAT: &str = "^z[1-9A-HJ-NP-Za-km-z]{20,100}$";
 const NAME_PAT: &str = "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$";
@@ -536,7 +536,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 vec![
                     ("cid", sprop("CID of a program the site has stored (render and a signed-in share store theirs) or of an example.", &[("maxLength", json!(100)), ("pattern", json!(CID_PAT))])),
                     ("example", sprop("Name of an example, from list_examples.", &[("maxLength", json!(64)), ("pattern", json!(NAME_PAT))])),
-                    ("url", sprop(&format!("A share link: {p}/#<CID>.<packed>, a /c/ link, a beats.bitwrap.io/p# link, or a short /p/<CID> link (the program must be stored here)."), &[("maxLength", json!(32768))])),
+                    ("url", sprop(&format!("A share link: {p}/#<CID>.<packed>, a /c/ link, or a short /p/<CID> link (one made on an older host opens too) (the program must be stored here)."), &[("maxLength", json!(32768))])),
                     ("play", play.clone()),
                     ("session", session.clone()),
                     ("device", device.clone()),
@@ -612,7 +612,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 format!("{} {} {}", crate::music_tools::genre_template_description(), text::TEMPLATE_REFS, text::TEMPLATE_ROLES),
                 [true, false, true, false],
                 vec![
-                    ("genre", sprop("A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://ontology.bitwrap.io/genre/ IRI.", &[("maxLength", json!(200))])),
+                    ("genre", sprop("A genre of the BeatScript ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://beatscript.app/ontology/genre/ IRI.", &[("maxLength", json!(200))])),
                     ("phrase", sprop("Optional, for vocals (found phrases, see docs/beatscript/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.", &[("maxLength", json!(400))])),
                     ("form", sprop("Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.", &[("maxLength", json!(64))])),
                     ("roles", json!({"type": "object", "additionalProperties": {"type": "string", "maxLength": 400}, "description": text::GENRE_TEMPLATE_ROLES})),
@@ -1329,7 +1329,7 @@ impl Tools {
         let st_id = out.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
         if !st_cid.is_empty() {
             out.insert("jsonld_url".into(), json!(format!("{}/c/{st_cid}.jsonld", self.public)));
-            out.insert("context".into(), json!(format!("{}/context/v1.jsonld", self.public)));
+            out.insert("context".into(), json!(format!("{}/context/beatscript-v1.jsonld", self.public)));
         }
         // the program as its `<beatscript-view>` block's JSON-LD (djlive progld): canonical text, @id its CID; the same
         // document the pages embed, so a client reads one shape everywhere
@@ -1529,16 +1529,15 @@ impl Tools {
         }
         let (url, social) = self.site_links(rep["url"].as_str().unwrap_or(""), rep["social_url"].as_str().unwrap_or(""));
         let mut out = json!({
-            "ok": true, "url": url, "social_url": social, "beats_url": rep["beats_url"], "cid": rep["cid"], "chars": rep["chars"],
+            "ok": true, "url": url, "social_url": social, "cid": rep["cid"], "chars": rep["chars"],
             "canonical": rep["canonical"], "warnings": rep.get("warnings").cloned().unwrap_or(json!([])),
-            "jsonld_url": format!("{social}.jsonld"), "context": format!("{}/context/v1.jsonld", self.public),
+            "jsonld_url": format!("{social}.jsonld"), "context": format!("{}/context/beatscript-v1.jsonld", self.public),
             "note": "jsonld_url is the program as linked data (its @context is the context URL). url is the self-sealing link (the program is in the link; opening it checks the CID). Post social_url where a link preview is wanted.",
             "lexicon": self.harvest(&text, Some(&chk)),
         });
         let none = |out: &mut Value, note: String| {
             out["short_url"] = Value::Null;
             out["short_social_url"] = Value::Null;
-            out["short_beats_url"] = Value::Null;
             out["embed_url"] = Value::Null;
             out["stored"] = json!(false);
             out["short_note"] = json!(note);
@@ -1559,7 +1558,6 @@ impl Tools {
                 let cid = prog["cid"].as_str().unwrap_or("");
                 out["short_url"] = json!(format!("{}/p/{cid}", self.public));
                 out["short_social_url"] = json!(format!("{}/c/{cid}", self.public));
-                out["short_beats_url"] = json!(format!("https://beats.bitwrap.io/p/{cid}"));
                 // a stored program is a public Creative Commons one (the storage gate), so it embeds (6664)
                 out["embed_url"] = json!(format!("{}{}{cid}", self.public, crate::cards::EMBED_PREFIX));
                 out["stored"] = json!(true);

@@ -509,7 +509,7 @@ const A_LIVE: &[Action] = &[
             Param::new("text", "string", "a program, or a .beatscript file's text: its `#!` header lines give its genre and tags, and its rights when it has license / visibility / author lines"),
         ])
         .probe(r#"{"id":"__no_such_snippet__"}"#),
-    Action::new("terms", "the vocabulary the `#! genre:` and `#! tags:` header lines are checked against (a cached copy of the bitwrap ontology, https://ontology.bitwrap.io/ns#): each term's kind, local name, IRI and label, and where the copy is from", Effect::Read)
+    Action::new("terms", "the vocabulary the `#! genre:` and `#! tags:` header lines are checked against (a snapshot of the BeatScript ontology, https://beatscript.app/ontology/ns#): each term's kind, local name, IRI and label, and where the copy is from", Effect::Read)
         .with(&[Param::new("kind", "string", "genre, instrument, scale, groove, section, family, role, rhythm, progression, structure or concept; none: all of them")])
         .probe(r#"{"kind":"__no_such_kind__"}"#),
     Action::new("test", "judge a program's `assert` statements (F12): the static ones (`ends`, `period`, `length`, `key`) are re-checked, the `level` ones are measured on an offline render (each deck's RMS in the section, from the renderer's per-strip stems) and reported pass or fail with the measured values; `ok` is false when one fails, and a program with an error is refused; refused while a program is running or staged (the render would hold the window and its bar clock): `stop` first, or `djctl btw test FILE`", Effect::Read)

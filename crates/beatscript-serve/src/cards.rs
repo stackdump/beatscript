@@ -859,28 +859,18 @@ fn generic_content(site: &str) -> Content {
 
 // ---------- JSON-LD (ld.Document) ----------
 
-/// A BeatScript 1 program's document is what it always was, byte for byte (it is cached immutable and in the dumps): the
-/// first context and the djrust: types, its IRI under beats.bitwrap.io. A BeatScript 2 program's names the BeatScript
-/// context (`/context/beatscript-v1.jsonld`, which has the rights terms too), its types in that vocabulary, its IRI
-/// `https://beatscript.app/p/<cid>`, and its parent by CID (`forkedFrom`, as the program block says it) and by IRI
-/// (`isBasedOn`).
+/// Every program's document, BeatScript 1 or 2, names the BeatScript context (`/context/beatscript-v1.jsonld`, which has
+/// the rights terms too), its types in that vocabulary, its IRI `https://beatscript.app/p/<cid>`, and its parent by CID
+/// (`forkedFrom`, as the program block says it) and by IRI (`isBasedOn`). BeatScript data lives on beatscript.app only
+/// (2026-11-22): until then a BeatScript 1 program's document named the first context, the djrust: types and an IRI
+/// under beats.bitwrap.io. The CID is the text's, so no CID moved with it; `cid` says which text the document is of.
 fn ld_document(origin: &str, p: &Prog) -> Value {
     let r = p.report.clone().unwrap();
-    let v2 = djlive::version::of_canonical(&p.canonical) == djlive::version::Version::V2;
     // keys in sorted order: encoding/json writes a map sorted
     let mut d: std::collections::BTreeMap<&str, Value> = std::collections::BTreeMap::new();
-    if v2 {
-        d.insert("@context", json!(format!("{origin}/context/beatscript-v1.jsonld")));
-        d.insert("@id", json!(program_iri_v2(&p.cid)));
-        d.insert("@type", json!("Program"));
-    } else {
-        // v1 is published immutable (a new term is v2, never an edit of v1), so the rights terms it lacks are a local
-        // context beside it: schema.org's usageInfo (who authored a program and what rights it has: /authorship) and
-        // isBasedOn
-        d.insert("@context", json!([format!("{origin}/context/v1.jsonld"), RIGHTS_CONTEXT.clone()]));
-        d.insert("@id", json!(program_iri(&p.cid)));
-        d.insert("@type", json!("djrust:Program"));
-    }
+    d.insert("@context", json!(format!("{origin}/context/beatscript-v1.jsonld")));
+    d.insert("@id", json!(program_iri(&p.cid)));
+    d.insert("@type", json!("Program"));
     d.insert("cid", json!(p.cid));
     d.insert("name", json!(p.label()));
     if !r.key.is_empty() {
@@ -897,7 +887,7 @@ fn ld_document(origin: &str, p: &Prog) -> Value {
                 r.sections
                     .iter()
                     .map(|s| {
-                        let mut o = json!({"@type": if v2 { "Section" } else { "djrust:Section" }, "bars": s.bars, "name": s.name, "start": s.start});
+                        let mut o = json!({"@type": "Section", "bars": s.bars, "name": s.name, "start": s.start});
                         if let Some(doc) = p.meta.section_doc(&s.name) {
                             o["description"] = json!(doc);
                         }
@@ -923,37 +913,19 @@ fn ld_document(origin: &str, p: &Prog) -> Value {
     if !credits.is_empty() {
         d.insert("credit", json!(credits));
     }
-    if !p.meta.forked_from.is_empty() && v2 {
+    if !p.meta.forked_from.is_empty() {
         d.insert("forkedFrom", json!(p.meta.forked_from));
-        d.insert("isBasedOn", json!(program_iri_v2(&p.meta.forked_from)));
-    } else if !p.meta.forked_from.is_empty() {
-        let parent = program_iri(&p.meta.forked_from);
-        d.insert("forkedFrom", json!(parent));
-        d.insert("isBasedOn", json!(parent));
+        d.insert("isBasedOn", json!(program_iri(&p.meta.forked_from)));
     }
     d.insert("usageInfo", json!(beatscript_serve::rights::url(origin)));
     Value::Object(d.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
 }
 
-/// A program's IRI in its JSON-LD document (`@id`, and `forkedFrom` / `isBasedOn` of its forks).
+/// A program's IRI in its JSON-LD document (`@id`, and `isBasedOn` of its forks): its page, the same name the program
+/// block gives it (djlive progld).
 fn program_iri(cid: &str) -> String {
-    format!("https://beats.bitwrap.io/p#{cid}")
-}
-
-/// A program's IRI in a BeatScript 2 document: its page, the same name the program block gives it (djlive progld).
-fn program_iri_v2(cid: &str) -> String {
     format!("{}{cid}", djlive::progld::IRI_PREFIX)
 }
-
-/// The terms a program's document uses that the published v1 context does not define (schema.org's).
-static RIGHTS_CONTEXT: std::sync::LazyLock<Value> = std::sync::LazyLock::new(|| {
-    json!({
-        "schema": "https://schema.org/",
-        "usageInfo": {"@id": "schema:usageInfo", "@type": "@id"},
-        "isBasedOn": {"@id": "schema:isBasedOn", "@type": "@id"},
-        "description": "schema:description",
-    })
-});
 
 /// The program as a `<beatscript-view data-editor data-ui="bar">` block (djlive `progld`): its canonical text, whose CID
 /// is the block's `@id`, and the rights and provenance its meta keeps. The editor loads it, the phone and the MCP read
@@ -1799,7 +1771,6 @@ async fn put_share(State(c): State<Arc<Cards>>, req: Request) -> Response<Body> 
             m.insert("created".into(), json!(created));
             m.insert("fetch_url".into(), json!(format!("{}/api/programs/{cid}", c.app.cfg.public_url)));
             m.insert("meta".into(), meta.to_json());
-            m.insert("short_beats_url".into(), json!(format!("https://beats.bitwrap.io/p/{cid}")));
             m.insert("short_social_url".into(), json!(format!("{site}/c/{cid}")));
             m.insert("short_url".into(), json!(format!("{site}/p/{cid}")));
             m.insert("warnings".into(), json!(rep["warnings"].as_i64().unwrap_or(0)));
@@ -1959,13 +1930,11 @@ mod tests {
         let prog = |meta: Value| Prog { canonical: text.into(), report: Some(Arc::new(Report { ok: true, cid: cid.clone(), ..Report::default() })), meta: Meta::from_json(&meta), ..Prog::bare(&cid, St::Ok) };
         let d = ld_document("https://beatscript.app", &prog(json!({"license": "CC0-1.0", "visibility": "public", "name": "night bus", "forked_from": "z4EBG9parent", "credits": ["ann", " "]})));
         assert_eq!(d["usageInfo"], "https://beatscript.app/authorship");
-        assert_eq!(d["@context"][0], "https://beatscript.app/context/v1.jsonld", "v1 stays the context, unedited");
-        assert_eq!(d["@context"][1]["usageInfo"], json!({"@id": "schema:usageInfo", "@type": "@id"}));
-        assert_eq!(d["@context"][1]["schema"], "https://schema.org/");
+        assert_eq!(d["@context"], "https://beatscript.app/context/beatscript-v1.jsonld", "the BeatScript context, which has the rights terms");
         assert_eq!((d["licenseId"].as_str(), d["license"].as_str()), (Some("CC0-1.0"), Some("https://creativecommons.org/publicdomain/zero/1.0/")));
         assert_eq!(d["credit"], json!(["ann"]));
-        assert_eq!(d["forkedFrom"], "https://beats.bitwrap.io/p#z4EBG9parent");
-        assert_eq!(d["isBasedOn"], d["forkedFrom"]);
+        assert_eq!(d["forkedFrom"], "z4EBG9parent");
+        assert_eq!(d["isBasedOn"], "https://beatscript.app/p/z4EBG9parent");
         assert!(d.get("author").is_none(), "no author is stored, so none is said");
         // a program with nothing but its licence: still the link, and no parent or credits invented
         let bare = ld_document("https://beatscript.app", &prog(json!({"license": "CC0-1.0", "visibility": "public"})));
@@ -1978,9 +1947,8 @@ mod tests {
         assert!(v1["@context"].get("usageInfo").is_none() && v1["@context"].get("isBasedOn").is_none());
     }
 
-    /// A BeatScript 1 program's JSON-LD is what it was, key for key (it is cached immutable and in the dumps); a BeatScript 2
-    /// program's names the BeatScript context, its IRI under beatscript.app/p/, its types in the BeatScript vocabulary, and
-    /// its parent by CID and by IRI.
+    /// A program's JSON-LD, BeatScript 1 or 2, names the BeatScript context, its IRI under beatscript.app/p/, its types in the
+    /// BeatScript vocabulary, and its parent by CID and by IRI: nothing in it names bitwrap.io. Only `cid` differs.
     #[test]
     fn a_beatscript_2_programs_json_ld_names_the_beatscript_context() {
         let doc = |text: &str, meta: Value| {
@@ -1991,27 +1959,19 @@ mod tests {
         };
         let meta = json!({"license": "CC0-1.0", "visibility": "public", "name": "night bus", "forked_from": "z4EBG9parent"});
         let (c1, v1) = doc("tempo 128\nkey am\ndeck A: kick x ~ x ~\n", meta.clone());
-        let parent = "https://beats.bitwrap.io/p#z4EBG9parent";
-        assert_eq!(
-            v1,
-            json!({
-                "@context": ["https://beatscript.app/context/v1.jsonld", {"schema": "https://schema.org/", "usageInfo": {"@id": "schema:usageInfo", "@type": "@id"}, "isBasedOn": {"@id": "schema:isBasedOn", "@type": "@id"}, "description": "schema:description"}],
-                "@id": format!("https://beats.bitwrap.io/p#{c1}"), "@type": "djrust:Program", "cid": c1, "forkedFrom": parent, "isBasedOn": parent,
-                "license": "https://creativecommons.org/publicdomain/zero/1.0/", "licenseId": "CC0-1.0", "name": "night bus",
-                "sections": [{"@type": "djrust:Section", "bars": 4, "name": "drop", "start": 0}], "usageInfo": "https://beatscript.app/authorship",
-            })
-        );
-        let (c2, v2) = doc("#! beatscript 2\ntempo 128\nkey am\ndeck A: kick x ~ x ~\n", meta);
-        assert_ne!(c1, c2);
-        assert_eq!(
-            v2,
+        let shape = |cid: &str| {
             json!({
                 "@context": "https://beatscript.app/context/beatscript-v1.jsonld",
-                "@id": format!("https://beatscript.app/p/{c2}"), "@type": "Program", "cid": c2, "forkedFrom": "z4EBG9parent", "isBasedOn": "https://beatscript.app/p/z4EBG9parent",
+                "@id": format!("https://beatscript.app/p/{cid}"), "@type": "Program", "cid": cid, "forkedFrom": "z4EBG9parent", "isBasedOn": "https://beatscript.app/p/z4EBG9parent",
                 "license": "https://creativecommons.org/publicdomain/zero/1.0/", "licenseId": "CC0-1.0", "name": "night bus",
                 "sections": [{"@type": "Section", "bars": 4, "name": "drop", "start": 0}], "usageInfo": "https://beatscript.app/authorship",
             })
-        );
+        };
+        assert_eq!(v1, shape(&c1));
+        assert!(!v1.to_string().contains("bitwrap.io"));
+        let (c2, v2) = doc("#! beatscript 2\ntempo 128\nkey am\ndeck A: kick x ~ x ~\n", meta);
+        assert_ne!(c1, c2);
+        assert_eq!(v2, shape(&c2));
         // every term the BeatScript 2 document uses is the BeatScript context's (it needs no local context)
         let ctx: Value = serde_json::from_slice(crate::public::CONTEXT_BEATSCRIPT_V1).unwrap();
         for k in v2.as_object().unwrap().keys().chain(v2["sections"][0].as_object().unwrap().keys()).filter(|k| !k.starts_with('@')) {
@@ -2049,7 +2009,8 @@ mod tests {
         let d = ld_document("https://beatscript.app", &p);
         assert_eq!(d["sections"][0]["description"], "the kick and the bass");
         assert!(d["sections"][1].get("description").is_none(), "an undocumented section has none");
-        assert_eq!(d["@context"][1]["description"], "schema:description");
+        let ctx: Value = serde_json::from_slice(crate::public::CONTEXT_BEATSCRIPT_V1).unwrap();
+        assert_eq!((d["@context"].as_str(), &ctx["@context"]["description"]), (Some("https://beatscript.app/context/beatscript-v1.jsonld"), &json!("schema:description")));
         // the block (the editor's, the MCP's) says it too, and still reads back as its CID
         let v = program_view(&p, None).expect("a block");
         let r = djlive::progld::read_view(&v, true).unwrap();

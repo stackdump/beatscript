@@ -77,19 +77,39 @@ fn with_no_vocabulary_nothing_is_said_about_the_lines() {
 #[test]
 fn a_genre_is_found_by_iri_curie_kind_prefix_local_name_and_label() {
     let o = fake();
-    let want = "https://ontology.bitwrap.io/genre/techno";
+    let want = "https://beatscript.app/ontology/genre/techno";
     for spelling in [
-        "https://ontology.bitwrap.io/genre/techno",
-        "https://ontology.bitwrap.io/ns#Techno", // the contract's spelling
+        "https://beatscript.app/ontology/genre/techno",
+        "https://beatscript.app/ontology/ns#Techno", // the contract's spelling
         "bw:Techno",
         "bw:techno",
         "genre:techno",
         "Genre:Techno",
         "techno",
         "  TECHNO ",
+        // what programs wrote before the BeatScript ontology: the bitwrap IRIs it was forked from
+        "https://ontology.bitwrap.io/genre/techno",
+        "https://ontology.bitwrap.io/ns#Techno",
     ] {
         assert_eq!(linked::resolve_genre(&o, spelling).unwrap().iri, want, "{spelling}");
     }
+}
+
+/// BeatScript data lives on beatscript.app: a header written with a bitwrap IRI still reads, and comes back on
+/// beatscript.app; nothing the engine writes names bitwrap.io.
+#[test]
+fn a_bitwrap_iri_reads_and_is_written_back_on_beatscript_app() {
+    assert_eq!(linked::BW_BASE, "https://beatscript.app/ontology/");
+    assert_eq!(linked::rehome("https://ontology.bitwrap.io/instrument/acid"), "https://beatscript.app/ontology/instrument/acid");
+    assert_eq!(linked::rehome("https://example.org/x"), "https://example.org/x");
+    let o = real();
+    let b = linked::canonical_links(&o, Some("https://ontology.bitwrap.io/genre/techno"), &["https://ontology.bitwrap.io/instrument/acid".into(), "bw:four-on-floor".into()]).unwrap();
+    let header = b.header_text();
+    assert!(header.contains("https://beatscript.app/ontology/genre/techno") && header.contains("https://beatscript.app/ontology/instrument/acid"), "{header}");
+    assert!(!header.contains("bitwrap.io"), "{header}");
+    // a near miss under the old base is suggested under the new one
+    let e = linked::resolve_genre(&o, "https://ontology.bitwrap.io/genre/tehcno").unwrap_err();
+    assert_eq!(e.help.as_deref(), Some("did you mean `https://beatscript.app/ontology/genre/techno`?"));
 }
 
 #[test]
@@ -107,7 +127,7 @@ fn a_bare_word_two_kinds_have_goes_to_the_first_kind_and_the_prefix_says_the_oth
 fn a_tag_is_found_by_label_with_any_spacing_and_case() {
     let o = fake();
     for spelling in ["four on floor", "Four On Floor", "four-on-floor", "four_on_floor", "groove:four-on-floor", "  four   on  floor "] {
-        assert_eq!(linked::resolve_tag(&o, spelling).unwrap().iri, "https://ontology.bitwrap.io/groove/four-on-floor", "{spelling}");
+        assert_eq!(linked::resolve_tag(&o, spelling).unwrap().iri, "https://beatscript.app/ontology/groove/four-on-floor", "{spelling}");
     }
 }
 
@@ -119,7 +139,7 @@ fn a_wrong_kind_says_what_it_is() {
     let e = linked::resolve_genre(&o, "acid").unwrap_err();
     assert!(e.message.contains("an instrument, not a genre"), "{}", e.message);
     // by IRI too
-    let e = linked::resolve_genre(&o, "https://ontology.bitwrap.io/instrument/acid").unwrap_err();
+    let e = linked::resolve_genre(&o, "https://beatscript.app/ontology/instrument/acid").unwrap_err();
     assert!(e.message.contains("an instrument, not a genre"), "{}", e.message);
 }
 
@@ -134,11 +154,11 @@ fn an_unknown_term_has_a_did_you_mean() {
     assert_eq!(e.message, "unknown tag `acidd`");
     assert_eq!(e.help.as_deref(), Some("did you mean `acid`?"));
     // an IRI under the vocabulary's base gets IRIs back
-    let e = linked::resolve_genre(&o, "https://ontology.bitwrap.io/genre/tehcno").unwrap_err();
-    assert_eq!(e.help.as_deref(), Some("did you mean `https://ontology.bitwrap.io/genre/techno`?"));
+    let e = linked::resolve_genre(&o, "https://beatscript.app/ontology/genre/tehcno").unwrap_err();
+    assert_eq!(e.help.as_deref(), Some("did you mean `https://beatscript.app/ontology/genre/techno`?"));
     // the right name under the wrong path is pointed at
-    let e = linked::resolve_tag(&o, "https://ontology.bitwrap.io/section/acid").unwrap_err();
-    assert_eq!(e.help.as_deref(), Some("did you mean `https://ontology.bitwrap.io/instrument/acid`?"));
+    let e = linked::resolve_tag(&o, "https://beatscript.app/ontology/section/acid").unwrap_err();
+    assert_eq!(e.help.as_deref(), Some("did you mean `https://beatscript.app/ontology/instrument/acid`?"));
     // an IRI of somebody else's is unknown, with nothing to suggest
     let e = linked::resolve_tag(&o, "http://example.org/genre/techno").unwrap_err();
     assert!(e.message.starts_with("unknown tag"), "{}", e.message);
@@ -153,11 +173,11 @@ fn an_unknown_term_has_a_did_you_mean() {
 fn links_are_canonical_sorted_and_a_set() {
     let o = fake();
     let a = linked::canonical_links(&o, Some("bw:Techno"), &["drop".into(), "acid".into(), "four on floor".into(), "acid".into()]).unwrap();
-    let b = linked::canonical_links(&o, Some("https://ontology.bitwrap.io/genre/techno"), &["Four-On-Floor".into(), "instrument:acid".into(), "section:drop".into()]).unwrap();
+    let b = linked::canonical_links(&o, Some("https://beatscript.app/ontology/genre/techno"), &["Four-On-Floor".into(), "instrument:acid".into(), "section:drop".into()]).unwrap();
     assert_eq!(a, b, "the same links in any spelling or order");
     assert_eq!(a.tags.len(), 3);
     assert!(a.tags.windows(2).all(|w| w[0] < w[1]), "sorted, each once: {:?}", a.tags);
-    assert_eq!(a.header_text(), "#! genre: https://ontology.bitwrap.io/genre/techno\n#! tags: https://ontology.bitwrap.io/groove/four-on-floor, https://ontology.bitwrap.io/instrument/acid, https://ontology.bitwrap.io/section/drop\n");
+    assert_eq!(a.header_text(), "#! genre: https://beatscript.app/ontology/genre/techno\n#! tags: https://beatscript.app/ontology/groove/four-on-floor, https://beatscript.app/ontology/instrument/acid, https://beatscript.app/ontology/section/drop\n");
     // what is written back reads back as the same links
     let back = linked::read_links(&a.header_text());
     let again = linked::canonical_links(&o, back.genre.as_deref(), &back.tags).unwrap();
@@ -205,8 +225,8 @@ fn the_same_check_is_an_error_when_the_host_asks_for_one() {
     assert!(ds[0].is_error());
     let (links, ds) = linked::check_headers("#! genre: bw:Techno\n#! tags: acid\n", &o, Severity::Error);
     assert!(ds.is_empty());
-    assert_eq!(links.genre.as_deref(), Some("https://ontology.bitwrap.io/genre/techno"));
-    assert_eq!(links.tags, vec!["https://ontology.bitwrap.io/instrument/acid".to_string()]);
+    assert_eq!(links.genre.as_deref(), Some("https://beatscript.app/ontology/genre/techno"));
+    assert_eq!(links.tags, vec!["https://beatscript.app/ontology/instrument/acid".to_string()]);
 }
 
 #[test]
@@ -308,7 +328,7 @@ fn rights() -> Rights {
 fn document(src: &str, o: Option<&dyn Ontology>) -> JsonValue {
     let comp = check(src).compiled.unwrap();
     let r = rights();
-    let links = Links::new(Some("https://ontology.bitwrap.io/genre/techno".into()), vec!["https://ontology.bitwrap.io/instrument/acid".into(), "https://ontology.bitwrap.io/groove/four-on-floor".into()]);
+    let links = Links::new(Some("https://beatscript.app/ontology/genre/techno".into()), vec!["https://beatscript.app/ontology/instrument/acid".into(), "https://beatscript.app/ontology/groove/four-on-floor".into()]);
     linked::jsonld(&comp, &Facts { name: Some("night bus 2"), rights: Some(&r), links: Some(&links) }, o)
 }
 
@@ -344,7 +364,7 @@ fn kick_e_3_8_is_the_ontologys_house_snare_golden() {
     assert_eq!(eu.len(), 1);
     let e = &eu[0];
     assert_eq!(e.get("name").and_then(JsonValue::as_str), Some("house snare"));
-    assert_eq!(e.get("sameShapeAs").unwrap().strings().unwrap(), ["https://ontology.bitwrap.io/rhythm/house-snare"]);
+    assert_eq!(e.get("sameShapeAs").unwrap().strings().unwrap(), ["https://beatscript.app/ontology/rhythm/house-snare"]);
     assert_eq!((e.get("bw:pulses").and_then(JsonValue::as_f64), e.get("bw:steps").and_then(JsonValue::as_f64), e.get("bw:rotation").and_then(JsonValue::as_f64)), (Some(3.0), Some(8.0), Some(0.0)));
     // the names are the table's, so the snapshot of the host never contradicts them: every rhythm of the snapshot is in the table
     for t in real.terms().iter().filter(|t| t.shape.is_some()) {
@@ -360,10 +380,10 @@ fn the_document_has_the_program_its_links_its_sections_and_its_rhythms() {
     let o = fake();
     let doc = document(&song(), Some(&o));
     let cid = check(&song()).compiled.unwrap().cid;
-    assert_eq!(doc.get("@type").and_then(JsonValue::as_str), Some("djrust:Program"));
-    assert_eq!(doc.get("@id").and_then(JsonValue::as_str), Some(format!("https://beats.bitwrap.io/p#{cid}").as_str()));
+    assert_eq!(doc.get("@type").and_then(JsonValue::as_str), Some("Program"));
+    assert_eq!(doc.get("@id").and_then(JsonValue::as_str), Some(format!("https://beatscript.app/p/{cid}").as_str()));
     assert_eq!(doc.get("cid").and_then(JsonValue::as_str), Some(cid.as_str()));
-    assert_eq!(doc.get("genre").and_then(JsonValue::as_str), Some("https://ontology.bitwrap.io/genre/techno"));
+    assert_eq!(doc.get("genre").and_then(JsonValue::as_str), Some("https://beatscript.app/ontology/genre/techno"));
     assert_eq!(doc.get("tag").and_then(JsonValue::as_array).map(Vec::len), Some(2));
     assert_eq!(doc.get("key").and_then(JsonValue::as_str), Some("am"));
     assert_eq!(doc.get("tempo").and_then(JsonValue::as_f64), Some(128.0));
@@ -371,7 +391,8 @@ fn the_document_has_the_program_its_links_its_sections_and_its_rhythms() {
     assert_eq!(secs.iter().map(|s| (s.get("name").and_then(JsonValue::as_str).unwrap(), s.get("bars").and_then(JsonValue::as_f64).unwrap())).collect::<Vec<_>>(), [("intro", 8.0), ("drop", 16.0)]);
     assert_eq!(doc.get("license").and_then(JsonValue::as_str), Some("https://creativecommons.org/licenses/by/4.0/"));
     assert_eq!(doc.get("licenseId").and_then(JsonValue::as_str), Some("CC-BY-4.0"));
-    assert_eq!(doc.get("forkedFrom").and_then(JsonValue::as_str), Some("https://beats.bitwrap.io/p#z4EBG9parentparentparent"));
+    assert_eq!(doc.get("forkedFrom").and_then(JsonValue::as_str), Some("z4EBG9parentparentparent"));
+    assert_eq!(linked::pretty(doc.get("isBasedOn").unwrap()), linked::pretty(&JsonValue::Array(vec![JsonValue::str("https://beatscript.app/p/z4EBG9parentparentparent")])));
     assert_eq!(doc.get("credit").and_then(JsonValue::as_array).map(Vec::len), Some(1));
     // the Euclidean terms are of the ontology's class, with their shape, and linked to the named rhythms of that shape
     let eu = doc.get("euclid").and_then(JsonValue::as_array).unwrap();
@@ -384,12 +405,12 @@ fn the_document_has_the_program_its_links_its_sections_and_its_rhythms() {
     assert_eq!(
         kick.get("sameShapeAs").unwrap().strings().unwrap(),
         [
-            "https://ontology.bitwrap.io/rhythm/country-kick",
-            "https://ontology.bitwrap.io/rhythm/edm-kick",
-            "https://ontology.bitwrap.io/rhythm/house-kick",
-            "https://ontology.bitwrap.io/rhythm/synthwave-kick",
-            "https://ontology.bitwrap.io/rhythm/techno-kick",
-            "https://ontology.bitwrap.io/rhythm/trance-kick"
+            "https://beatscript.app/ontology/rhythm/country-kick",
+            "https://beatscript.app/ontology/rhythm/edm-kick",
+            "https://beatscript.app/ontology/rhythm/house-kick",
+            "https://beatscript.app/ontology/rhythm/synthwave-kick",
+            "https://beatscript.app/ontology/rhythm/techno-kick",
+            "https://beatscript.app/ontology/rhythm/trance-kick"
         ]
     );
     assert!(kick.get("name").is_none());
@@ -397,7 +418,7 @@ fn the_document_has_the_program_its_links_its_sections_and_its_rhythms() {
     let tres = eu.iter().find(|e| e.get("bw:steps").and_then(JsonValue::as_f64) == Some(8.0)).unwrap();
     assert_eq!(tres.get("uses").and_then(JsonValue::as_f64), Some(2.0));
     assert_eq!(tres.get("name").and_then(JsonValue::as_str), Some("house snare"));
-    assert_eq!(tres.get("sameShapeAs").unwrap().strings().unwrap(), ["https://ontology.bitwrap.io/rhythm/house-snare"]);
+    assert_eq!(tres.get("sameShapeAs").unwrap().strings().unwrap(), ["https://beatscript.app/ontology/rhythm/house-snare"]);
     // with no vocabulary handed in the terms are the same: the names are F6's table, which is constant
     let bare = document(&song(), None);
     assert_eq!(bare.get("euclid").and_then(JsonValue::as_array).map(Vec::len), Some(3));
@@ -407,7 +428,7 @@ fn the_document_has_the_program_its_links_its_sections_and_its_rhythms() {
     more = StaticOntology::new(more.terms().iter().cloned().chain([Term::rhythm("made-up-snare", "made up snare: E(3,8) rotation 0", 3, 8, 0)]).collect());
     let doc = document(&song(), Some(&more));
     let tres = doc.get("euclid").unwrap().at(0).unwrap();
-    assert_eq!(tres.get("sameShapeAs").unwrap().strings().unwrap(), ["https://ontology.bitwrap.io/rhythm/house-snare", "https://ontology.bitwrap.io/rhythm/made-up-snare"]);
+    assert_eq!(tres.get("sameShapeAs").unwrap().strings().unwrap(), ["https://beatscript.app/ontology/rhythm/house-snare", "https://beatscript.app/ontology/rhythm/made-up-snare"]);
 }
 
 #[test]
@@ -427,7 +448,7 @@ fn the_document_is_deterministic_has_no_timestamps_and_sorted_keys() {
     // what it says about the program, and nothing about when or where it was written
     let doc = document(&song(), Some(&o));
     let keys: Vec<&str> = doc.as_object().unwrap().keys().collect();
-    let mut want = ["@context", "@id", "@type", "cid", "name", "genre", "tag", "key", "tempo", "sections", "licenseId", "license", "visibility", "author", "forkedFrom", "credit", "euclid"];
+    let mut want = ["@context", "@id", "@type", "cid", "name", "genre", "tag", "key", "tempo", "sections", "licenseId", "license", "visibility", "author", "forkedFrom", "isBasedOn", "credit", "euclid"];
     want.sort();
     let mut got = keys.clone();
     got.sort();
@@ -435,7 +456,7 @@ fn the_document_is_deterministic_has_no_timestamps_and_sorted_keys() {
     // `pretty` sorts the keys of every object, whatever order the document was built in
     let lines: Vec<&str> = a.lines().collect();
     assert_eq!(lines[0], "{");
-    assert_eq!(lines[1], format!("  \"@context\": \"{}\",", linked::CONTEXT_URL), "{}", lines[1]);
+    assert_eq!(lines[1], format!("  \"@context\": \"{}\",", linked::DOCUMENT_CONTEXT_URL), "{}", lines[1]);
     let top: Vec<&str> = lines.iter().filter(|l| l.starts_with("  \"")).map(|l| l.trim_start().split('"').nth(1).unwrap()).collect();
     let mut sorted_top = top.clone();
     sorted_top.sort_by(|a, b| djengine::json::utf16_cmp(a, b));
@@ -482,7 +503,7 @@ fn a_semantic_edit_changes_the_id_and_formatting_does_not() {
 // ---- the real vocabulary (the snapshot djhost caches), read off disk
 
 fn real() -> StaticOntology {
-    StaticOntology::from_json(include_str!("../../djhost/data/bitwrap-ontology.json")).expect("the cached snapshot reads")
+    StaticOntology::from_json(include_str!("../../djhost/data/beatscript-ontology.json")).expect("the cached snapshot reads")
 }
 
 #[test]
@@ -496,7 +517,7 @@ fn the_cached_snapshot_is_what_the_published_ontology_said() {
         assert!(o.terms().iter().any(|t| t.kind == k), "no {k}");
     }
     let t = linked::resolve_genre(&o, "techno").unwrap();
-    assert_eq!(t.iri, "https://ontology.bitwrap.io/genre/techno");
+    assert_eq!(t.iri, "https://beatscript.app/ontology/genre/techno");
 }
 
 #[test]
@@ -518,14 +539,14 @@ fn the_example_validates_against_the_real_vocabulary_and_typos_get_the_real_sugg
     assert!(about_the_header(&c, &src).is_empty(), "{}", djlive::diag::render_all(&c.diagnostics, &src));
     assert!(c.diagnostics.iter().all(|d| d.message.contains("the ontology's")), "only F6's notes on the rhythms:\n{}", djlive::diag::render_all(&c.diagnostics, &src));
     let (links, _) = linked::check_headers(&src, &o, Severity::Error);
-    assert_eq!(links.genre.as_deref(), Some("https://ontology.bitwrap.io/genre/techno"));
+    assert_eq!(links.genre.as_deref(), Some("https://beatscript.app/ontology/genre/techno"));
     assert_eq!(
         links.tags,
         [
-            "https://ontology.bitwrap.io/groove/four-on-floor",
-            "https://ontology.bitwrap.io/instrument/acid",
-            "https://ontology.bitwrap.io/instrument/supersaw",
-            "https://ontology.bitwrap.io/section/drop"
+            "https://beatscript.app/ontology/groove/four-on-floor",
+            "https://beatscript.app/ontology/instrument/acid",
+            "https://beatscript.app/ontology/instrument/supersaw",
+            "https://beatscript.app/ontology/section/drop"
         ]
     );
     let e = linked::resolve_genre(&o, "tehcno").unwrap_err();
@@ -538,9 +559,9 @@ fn the_example_validates_against_the_real_vocabulary_and_typos_get_the_real_sugg
     let eu = doc.get("euclid").and_then(JsonValue::as_array).unwrap();
     assert_eq!(eu.len(), 3);
     let same = |steps: f64, pulses: f64| -> Vec<String> { eu.iter().find(|e| e.get("bw:steps").and_then(JsonValue::as_f64) == Some(steps) && e.get("bw:pulses").and_then(JsonValue::as_f64) == Some(pulses)).and_then(|e| e.get("sameShapeAs")).and_then(JsonValue::strings).unwrap_or_default() };
-    assert!(same(16.0, 4.0).contains(&"https://ontology.bitwrap.io/rhythm/techno-kick".to_string()));
-    assert!(same(8.0, 5.0).contains(&"https://ontology.bitwrap.io/rhythm/techno-hihat".to_string()));
-    assert!(same(16.0, 2.0).contains(&"https://ontology.bitwrap.io/rhythm/techno-snare".to_string()), "e(2,16,4) is techno's snare");
+    assert!(same(16.0, 4.0).contains(&"https://beatscript.app/ontology/rhythm/techno-kick".to_string()));
+    assert!(same(8.0, 5.0).contains(&"https://beatscript.app/ontology/rhythm/techno-hihat".to_string()));
+    assert!(same(16.0, 2.0).contains(&"https://beatscript.app/ontology/rhythm/techno-snare".to_string()), "e(2,16,4) is techno's snare");
 }
 
 #[test]
@@ -697,6 +718,9 @@ fn the_inline_form_spells_out_the_terms_the_default_names_by_url() {
     let o = fake();
     let comp = check(&song()).compiled.unwrap();
     let c = linked::pretty(&linked::jsonld_inline(&comp, &linked::Facts::default(), Some(&o)));
-    assert!(!linked::pretty(&linked::jsonld(&comp, &linked::Facts::default(), Some(&o))).contains("djrust:cid"));
-    assert!(c.contains("\"djrust:cid\""), "{c}");
+    assert!(!linked::pretty(&linked::jsonld(&comp, &linked::Facts::default(), Some(&o))).contains("bs:cid"));
+    assert!(c.contains("\"bs:cid\""), "{c}");
+    // both name only beatscript.app: the document's context is the BeatScript one, not the immutable v1
+    assert!(!c.contains("bitwrap.io"), "{c}");
+    assert!(!linked::pretty(&linked::jsonld(&comp, &linked::Facts::default(), Some(&o))).contains("bitwrap.io"));
 }

@@ -62,11 +62,11 @@ In the linked data, `license` is a URI and `licenseId` is the SPDX id beside it:
 | `CC-BY-4.0` | `https://creativecommons.org/licenses/by/4.0/` |
 | `all-rights-reserved` | `http://rightsstatements.org/vocab/InC/1.0/` (In Copyright) |
 
-### Links to the bitwrap ontology
+### Links to the BeatScript ontology
 
-Where the [bitwrap ontology](https://ontology.bitwrap.io/ns#) has a term, a program's linked data links to it:
+Where the [BeatScript ontology](https://beatscript.app/ontology/ns#) has a term, a program's linked data links to it:
 
-- `scale`: the key's mode, e.g. `key am` gives `https://ontology.bitwrap.io/scale/minor`;
+- `scale`: the key's mode, e.g. `key am` gives `https://beatscript.app/ontology/scale/minor`;
 - `instrument`: the voices its parts name that are ontology instruments, e.g. `inst=acid`;
 - `genre`: from `#! genre:`;
 - `tag`: from `#! tags:`.
@@ -93,7 +93,7 @@ Each feed item is a program:
 - **enclosures / attachments**: its `.beatscript`, `.jsonld` and render.
 
 The JSON Feed's `_beatscript` member carries the CID and licence of each item, and at the top it links the dump, the
-sitemap, the Atom feed and the schema. The item shape follows beats.bitwrap.io's `/feed.rss`.
+sitemap, the Atom feed and the schema. The item shape follows the beats sequencer's `/feed.rss`.
 
 ## All of it at once: the dumps
 
@@ -117,7 +117,7 @@ To check an archive:
    `{"format":1,"text":<the file>,"type":"djrust.live"}` (BeatScript 1);
 3. each `.jsonld`'s `@id` must be that CID.
 
-The manifest follows beats.bitwrap.io's snapshot manifest (`version`, `count`, `cids`, `docs`).
+The manifest follows the beats sequencer's snapshot manifest (`version`, `count`, `cids`, `docs`).
 
 ### Making a dump
 

@@ -145,7 +145,7 @@ test('real wasm: share then open is a round trip on the configured site', { skip
   const from = new URL(raw.url).origin;
   assert.equal(sh.url, `https://beatscript.app${raw.url.slice(from.length)}`);
   assert.equal(sh.social_url, `https://beatscript.app${raw.social_url.slice(from.length)}`);
-  assert.equal(sh.beats_url, raw.beats_url);
+  assert.equal(sh.beats_url, undefined, 'no beats.bitwrap.io link');
   const o = ok(await s.call('open', { url: sh.url }));
   assert.equal(o.ok, true);
   assert.equal(o.verified, true);
@@ -234,7 +234,7 @@ test('share: only a share link\'s origin moves to the site; path, fragment and a
   const sh = await shareWith('https://example.test/studio/?x=1#top');
   assert.equal(sh.url, `https://example.test/#${frag}`);
   assert.equal(sh.social_url, 'https://example.test/c/zAbc123.cGFja2Vk');
-  assert.equal(sh.beats_url, `https://beats.bitwrap.io/p#${frag}`);
+  assert.equal(sh.beats_url, undefined, 'an older module\'s beats_url is dropped');
   assert.equal(sh.chars, sh.url.length);
   assert.equal((await shareWith('http://localhost:8080')).url, `http://localhost:8080/#${frag}`);
   // not a share link: left as the module gave it

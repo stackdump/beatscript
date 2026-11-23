@@ -476,7 +476,7 @@ pub fn shape_open(v: &Value) -> Value {
 pub fn shape_share(v: &Value) -> Value {
     let mut m = Map::new();
     m.insert("ok".into(), json!(b_of(v, "ok")));
-    for k in ["url", "social_url", "beats_url", "cid"] {
+    for k in ["url", "social_url", "cid"] {
         m.insert(k.into(), json!(s_of(v, k)));
     }
     m.insert("chars".into(), json!(i_of(v, "chars")));
@@ -765,15 +765,17 @@ async fn instruments(State(st): St, req: Request) -> Response<Body> {
 
 // the linked-data contexts (ld/)
 /// The first context (`/context/v1.jsonld`, the djrust: terms), published immutable: served byte for byte, with its ETag,
-/// for the documents that name it (every BeatScript 1 program's).
+/// for the documents made before 2026-11-23 that name it. No document names it now: every program's names the BeatScript
+/// context, whatever the version of its text.
 const CONTEXT_V1: &[u8] = include_bytes!("public/btw-context-v1.jsonld");
 const CONTEXT_V1_ETAG: &str = "\"btw-context-v1\"";
 /// The BeatScript context (`/context/beatscript-v1.jsonld`): the v1 terms and the program block's in the BeatScript
-/// vocabulary (`https://beatscript.app/schema#`, the one `/schema` defines), named by every BeatScript 2 program's
-/// documents. Immutable too: a change to its terms is a new file and URL. `/context.jsonld` and `/context` answer it.
+/// vocabulary (`https://beatscript.app/schema#`, the one `/schema` defines), named by every program's
+/// documents (its `bw:` is the BeatScript ontology, beatscript.app/ontology/ns#). Immutable too: a change to its terms is a new file and URL. `/context.jsonld` and `/context` answer it.
 pub const CONTEXT_BEATSCRIPT_V1: &[u8] = include_bytes!("public/beatscript-context-v1.jsonld");
 const CONTEXT_BEATSCRIPT_V1_ETAG: &str = "\"beatscript-context-v1\"";
-const ONTOLOGY_LINK: &str = "<https://ontology.bitwrap.io/ns.ttl>; rel=\"describedby\"; type=\"text/turtle\"";
+/// The vocabulary a context's terms are described by: the BeatScript ontology, on this site.
+const ONTOLOGY_LINK: &str = "<https://beatscript.app/ontology/ns.ttl>; rel=\"describedby\"; type=\"text/turtle\"";
 
 fn ld_serve(req: &Request, cache: &'static str, body: &'static [u8], etag: &'static str) -> Response<Body> {
     let mut b = Response::builder()

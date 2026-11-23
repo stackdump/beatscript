@@ -56,8 +56,7 @@ Ask for `retry_after` seconds and try again; do not loop.
 
 ## Sign-in and tokens
 
-Identity is a key, not an account: an Ethereum wallet (`personal_sign`, EIP-191) or a browser-local Ed25519 key. The same wallet identity
-works on beats.bitwrap.io. Sign-in is challenge and response:
+Identity is a key, not an account: an Ethereum wallet (`personal_sign`, EIP-191) or a browser-local Ed25519 key. Sign-in is challenge and response:
 
 1. `GET /api/auth/challenge` gives `{"nonce": "...", "message": "beatscript.app sign-in\nnonce: ...\nissued: ...\nexpires: ...", "expires": "..."}`.
    The nonce is single use and lives 5 minutes.
@@ -96,7 +95,7 @@ error at its line:col**; a program with an error is refused whole.
 - `POST /api/fmt` `{"text"}` gives `{"ok", "text", "canonical", "cid", "comments": [...], "diagnostics": [...]}`: `text` is the program formatted with its `#!` header lines, comments and blank lines between blocks kept, and upgraded to BeatScript 2 (`#! beatscript 2` first); `canonical` has none of them but the version line (the CID is of it); `from_cid` is the CID of the text sent, so a BeatScript 1 text's old and new CIDs are both in the answer.
 - `POST /api/open` `{"url": "<link, #fragment, <CID>.<packed> or CID>"}` gives `{"ok", "cid", "canonical", "verified", "warnings", "notes_unverified", "error"}`.
   A link whose CID is not its text's is refused (`verified: false`, never trust its text).
-- `POST /api/share` `{"text"}` gives `{"ok", "url", "social_url", "beats_url", "cid", "chars", "canonical", "warnings"}`, see [Share links](#share-links).
+- `POST /api/share` `{"text"}` gives `{"ok", "url", "social_url", "cid", "chars", "canonical", "warnings"}`, see [Share links](#share-links).
 
 ```bash
 curl -s https://beatscript.app/api/check -H 'content-type: application/json' \
@@ -242,7 +241,7 @@ name"), so use a voice that starts with a letter (`inst=sub-bass` for a deep bas
 |---|---|---|---|
 | `check` | | `text`, `same_as`? | check a program: diagnostics with line:col, cid, canonical text. **Run it before anything else and fix the errors**. With `same_as` (a CID or another program's text) it also answers whether the two are the same song by their compiled nets and song-level settings, and, when they are not, a `diff` saying what changed in music: song settings, sections inserted/removed/moved/repeated/renamed, and per part a transform (transposed, rotated, reversed, ...) or the notes changed at bar:step, each with a one-line summary |
 | `fmt` | | `text` | the program formatted (`text`, header lines and comments kept) and upgraded to BeatScript 2, its canonical form (`canonical`), its CID and `from_cid`, the CID of the text given |
-| `share` | for the short links | `text`, `license`, `forked_from`, `credits`, `name` | the self-sealing link, the social link, the CID; with a token also stores the program and gives the CID-only `short_url`, `short_social_url`, `short_beats_url` and `fetch_url` |
+| `share` | for the short links | `text`, `license`, `forked_from`, `credits`, `name` | the self-sealing link, the social link, the CID; with a token also stores the program and gives the CID-only `short_url`, `short_social_url` and `fetch_url` |
 | `open` | | `url` | decode a link (self-sealing or CID-only: `/p/<CID>`, `/c/<CID>`, `#<CID>`, a bare CID), verified, with its rights |
 | `render` | | `text` or `cid` or `example`, `format` | store the program and answer `stream_url`, `status_url`, `cid`, `seconds` |
 | `record` | | `text` or `cid` or `example` | store the program and answer the demo-recording setup: `record_url` (the page in record mode), `record_url_manual_clock` (a fake clock a script steps frame by frame), `audio_url`, and the `recipe` for `site/tools/record-demo.mjs` (captures nothing itself) |
@@ -285,7 +284,7 @@ licence and only what the site keeps beside it (credits, the program it was fork
 who authored a program and what rights it has.
 
 `/c/<CID>` embeds that document in a `<script type="application/ld+json">` block and answers with `Link: <.../c/<CID>.jsonld>; rel="describedby"`.
-The context's vocabulary is the bitwrap ontology (`https://ontology.bitwrap.io/ns#`); the MCP `share` tool returns `jsonld_url` and `context`, and `get` does too.
+The context's vocabulary is the BeatScript ontology (`https://beatscript.app/ontology/ns#`); the MCP `share` tool returns `jsonld_url` and `context`, and `get` does too.
 The engine's own JSON-LD export (on the command line, `djctl btw jsonld FILE`) names the same context URL. Genre, tags and Euclidean
 rhythms need the engine's ontology, so only that export adds them.
 
@@ -307,7 +306,6 @@ for any other: a new version of the corpus is a new CID. All are public reads, c
 
 ```text
 https://beatscript.app/#<CID>.<base64url(deflate(canonical text))>
-https://beats.bitwrap.io/p#<CID>.<base64url(deflate(canonical text))>      (the same sealed part on beats.bitwrap.io)
 https://beatscript.app/c/<CID>.<base64url(deflate(canonical text))>        (for posts: link unfurlers can fetch it, and it has a card image)
 ```
 
@@ -321,7 +319,6 @@ Who authored a program and what rights it has, in plain language: [/authorship](
 
 ```text
 https://beatscript.app/p/<CID>        (opens the page; it fetches the program and checks it against the CID)
-https://beats.bitwrap.io/p/<CID>      (the same, on beats.bitwrap.io)
 https://beatscript.app/c/<CID>        (for posts: the link-preview page of a stored program)
 ```
 

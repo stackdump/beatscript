@@ -56,8 +56,7 @@ fn an_import_by_cid_resolves_from_the_programs_the_host_knows() {
     let sh = parse(&beatscript_api::share_json(&text, None, false, ""));
     assert!(b(&sh, "ok"), "{}", sh.js_stringified());
     let url = s(&sh, "url").to_string();
-    let beats = s(&sh, "beats_url").to_string();
-    assert!(beats.contains('*') && url.contains('*'), "the bundle rides the link");
+    assert!(url.contains('*'), "the bundle rides the link");
     assert!(!s(&sh, "social_url").contains('*'), "the social form is the sealed part only");
     assert!(get(&sh, "warnings").as_array().unwrap().iter().any(|w| w.as_str().is_some_and(|w| w.contains("carries the 1 program"))));
     beatscript_api::known::forget_all();

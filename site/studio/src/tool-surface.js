@@ -220,11 +220,14 @@ export function createToolSurface({ beatscript, caps = {}, site = 'https://beats
 
   /**
    * makeFacade's share passes the module no origin, so the module answers links on its own default site. They are
-   * moved to the origin of `site`: the CID and the packed text do not depend on it. beats_url stays where it is.
+   * moved to the origin of `site`: the CID and the packed text do not depend on it. A `beats_url` an older module gives
+   * is dropped: BeatScript links are made on beatscript.app only.
    */
   const onSite = (ans) => {
-    if (!ans?.ok || !origin) return ans;
+    if (!ans?.ok) return ans;
     const out = { ...ans };
+    delete out.beats_url;
+    if (!origin) return out;
     for (const k of Object.keys(SHARE_PATH)) if (typeof out[k] === 'string') out[k] = rehome(out[k], origin, k);
     if (typeof out.url === 'string') out.chars = [...out.url].length; // the module counts characters, not UTF-16 units
     return out;

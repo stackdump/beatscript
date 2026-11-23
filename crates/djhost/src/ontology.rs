@@ -1,12 +1,14 @@
-//! The bitwrap ontology as BeatScript's `#! genre:` and `#! tags:` header lines see it (docs/beatscript/ext-linked.md): a cached,
-//! deterministic snapshot of the published vocabulary (https://ontology.bitwrap.io/ns#), compiled in.
+//! The BeatScript ontology as BeatScript's `#! genre:` and `#! tags:` header lines see it (docs/beatscript/ext-linked.md): a
+//! deterministic snapshot of its music terms (https://beatscript.app/ontology/ns#, forked from the bitwrap ontology 0.2.0),
+//! compiled in.
 //!
-//! `data/bitwrap-ontology.json` is the source of truth for tests and for a machine that is offline: the terms an
+//! `data/beatscript-ontology.json` is the source of truth for tests and for a machine that is offline: the terms an
 //! author may name (genres, genre families, scales, grooves, instruments, instrument roles, song sections, song
 //! structures, Euclidean rhythms, chord progressions, engine concepts), sorted by IRI, one a line, with their local
 //! name, label and kind. It says where it came from, when, and whether it was checked against the release's
-//! checksums (`verified`). Refresh it from the published namespace with `python3 tools/ontology/refresh.py` (network
-//! needed; nothing at run time or in the test suite fetches anything), then `cargo test -p djhost`.
+//! checksums (`verified`: the release's manifest and lock). Refresh it from the ontology release in this repository with
+//! `python3 tools/ontology/refresh.py` (offline; nothing at build time, run time or in the test suite fetches anything),
+//! then `cargo test -p djhost`.
 
 use std::sync::OnceLock;
 
@@ -14,20 +16,20 @@ use djengine::json::{JsonObject, JsonValue};
 use djlive::linked::{Ontology, StaticOntology, KIND_ORDER};
 
 /// The snapshot file's text.
-pub const SNAPSHOT: &str = include_str!("../data/bitwrap-ontology.json");
+pub const SNAPSHOT: &str = include_str!("../data/beatscript-ontology.json");
 
 /// The cached vocabulary, read once.
 pub fn vocabulary() -> &'static StaticOntology {
     static V: OnceLock<StaticOntology> = OnceLock::new();
-    V.get_or_init(|| StaticOntology::from_json(SNAPSHOT).expect("crates/djhost/data/bitwrap-ontology.json is a snapshot (a test reads it)"))
+    V.get_or_init(|| StaticOntology::from_json(SNAPSHOT).expect("crates/djhost/data/beatscript-ontology.json is a snapshot (a test reads it)"))
 }
 
-/// One line on where the vocabulary is from: `bitwrap ontology 0.1.0, 253 terms, fetched 2026-11-18, checked against the
-/// published checksums`.
+/// One line on where the vocabulary is from: `BeatScript ontology 0.3.0, 265 terms, taken 2026-11-22, checked against the
+/// release's checksums`.
 pub fn describe() -> String {
     let v = vocabulary();
-    let proof = if v.verified { "checked against the published checksums" } else { "UNVERIFIED: not checked against the published checksums" };
-    format!("bitwrap ontology {}, {} terms, fetched {}, {proof}", v.version, v.terms().len(), v.fetched)
+    let proof = if v.verified { "checked against the release's checksums" } else { "UNVERIFIED: not checked against the release's checksums" };
+    format!("BeatScript ontology {}, {} terms, taken {}, {proof}", v.version, v.terms().len(), v.fetched)
 }
 
 /// The terms (of one `kind`, or all) as `btw terms` answers them: kind, local name, IRI and label, in the
@@ -64,11 +66,11 @@ mod tests {
     #[test]
     fn the_snapshot_reads_and_says_where_it_is_from() {
         let v = vocabulary();
-        assert_eq!(v.terms().len(), 253);
+        assert_eq!(v.terms().len(), 265);
         assert!(v.verified, "the committed snapshot was checked against the release's checksums");
-        assert_eq!(v.version, "0.1.0");
+        assert_eq!(v.version, "0.3.0");
         assert!(v.fetched.len() == 10 && v.fetched.starts_with("20"), "{}", v.fetched);
-        assert!(describe().contains("checked against the published checksums"), "{}", describe());
+        assert!(describe().contains("checked against the release's checksums"), "{}", describe());
     }
 
     #[test]
@@ -97,10 +99,10 @@ mod tests {
     #[test]
     fn the_vocabulary_has_what_a_tag_may_name_and_the_euclidean_class() {
         let v = vocabulary();
-        for (kind, n) in [("genre", 19), ("scale", 9), ("groove", 7), ("instrument", 20), ("section", 10), ("role", 8), ("family", 4), ("rhythm", 57)] {
+        for (kind, n) in [("genre", 19), ("scale", 9), ("groove", 7), ("instrument", 30), ("section", 10), ("role", 8), ("family", 4), ("rhythm", 57)] {
             assert_eq!(v.terms().iter().filter(|t| t.kind == kind).count(), n, "{kind}");
         }
-        assert_eq!(v.euclid_class(), Some("https://ontology.bitwrap.io/ns#EuclideanRhythm"));
+        assert_eq!(v.euclid_class(), Some("https://beatscript.app/ontology/ns#EuclideanRhythm"));
         // a rhythm has its shape, so a program's e(k,n,rot) can be linked to the ones of that shape
         let kick = v.terms().iter().find(|t| t.local == "techno-kick").unwrap();
         assert_eq!(kick.shape, Some(linked::Shape { steps: 16, pulses: 4, rotation: 0 }));
@@ -111,10 +113,10 @@ mod tests {
     #[test]
     fn terms_are_listed_by_kind_and_a_wrong_kind_says_the_kinds() {
         let all = terms_json(None).unwrap();
-        assert_eq!(all.get("count").and_then(JsonValue::as_f64), Some(253.0));
+        assert_eq!(all.get("count").and_then(JsonValue::as_f64), Some(265.0));
         let g = terms_json(Some("genre")).unwrap();
         assert_eq!(g.get("count").and_then(JsonValue::as_f64), Some(19.0));
-        assert!(g.get("terms").and_then(JsonValue::as_array).unwrap().iter().any(|t| t.get("iri").and_then(JsonValue::as_str) == Some("https://ontology.bitwrap.io/genre/techno")));
+        assert!(g.get("terms").and_then(JsonValue::as_array).unwrap().iter().any(|t| t.get("iri").and_then(JsonValue::as_str) == Some("https://beatscript.app/ontology/genre/techno")));
         assert!(terms_json(Some("flavour")).unwrap_err().contains("one of genre, instrument"));
     }
 }

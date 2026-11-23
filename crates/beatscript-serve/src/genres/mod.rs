@@ -1,4 +1,5 @@
-//! Genre conventions, read from the bitwrap ontology (https://ontology.bitwrap.io/ns#, CC0): what a genre's tempo,
+//! Genre conventions, read from the BeatScript ontology (https://beatscript.app/ontology/ns#, CC0; forked from the
+//! bitwrap ontology 0.2.0 and its conventions module): what a genre's tempo,
 //! kit, voices, chord progressions and song sections usually are, as the ontology's own data says.
 //!
 //! - [`Genre::load`] / [`find`]: one genre and what the ontology says of it, through a [`Graph`] (the server's
@@ -21,9 +22,9 @@ use djlive::music::{Key, MODES};
 use djlive::scale::Roman;
 use serde_json::{json, Map, Value};
 
-/// The ontology's namespace and the base of its individuals.
-pub const NS: &str = "https://ontology.bitwrap.io/ns#";
-pub const BASE: &str = "https://ontology.bitwrap.io/";
+/// The ontology's namespace and the base of its individuals (the BeatScript ontology's, served at beatscript.app/ontology/).
+pub const NS: &str = "https://beatscript.app/ontology/ns#";
+pub const BASE: &str = "https://beatscript.app/ontology/";
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const RDFS_LABEL: &str = "http://www.w3.org/2000/01/rdf-schema#label";
 
@@ -433,7 +434,7 @@ fn euclid(r: Rhythm) -> Vec<bool> {
 pub fn template(g: &dyn Graph, genre: &Genre, voices: &BTreeSet<String>, kits: &BTreeSet<String>) -> String {
     let mut s = String::new();
     s.push_str(&format!("#! name: {} starter\n#! genre: {}\n#! license: CC0-1.0\n", genre.label, genre.slug));
-    s.push_str(&format!("# A starting point for {}, from the bitwrap ontology: its tempo, key, kit and voices, its family's\n# standard song structure and its first chord progression. Change anything.\n", genre.label));
+    s.push_str(&format!("# A starting point for {}, from the BeatScript ontology: its tempo, key, kit and voices, its family's\n# standard song structure and its first chord progression. Change anything.\n", genre.label));
     if let Some(b) = genre.bpm {
         s.push_str(&format!("tempo {}\n", fmt_bpm(b)));
     }
@@ -610,7 +611,7 @@ pub fn check_style(g: Option<&dyn Graph>, text: &str, genre: &str) -> Value {
         return json!({"genre": genre, "warnings": [], "note": "genre conventions are not available on this server right now"});
     };
     let Some(gn) = find(g, genre) else {
-        return json!({"genre": genre, "warnings": [], "note": format!("the bitwrap ontology has no genre {genre:?}: see list_genres at https://ontology.bitwrap.io")});
+        return json!({"genre": genre, "warnings": [], "note": format!("the BeatScript ontology has no genre {genre:?}: see list_genres at https://beatscript.app/ontology/mcp")});
     };
     let env = beatscript_api::web_env().env();
     let warnings: Vec<Value> = match djlive::compile::check_with(text, &env).compiled {
@@ -649,7 +650,7 @@ pub fn with_vocal(text: &str, sing: &str) -> (String, usize) {
 /// in `phrase.note` and the program is the genre's own, unsung.
 pub fn template_answer_with(g: Option<&dyn Graph>, genre: &str, phrase: Option<&str>) -> Result<Value, String> {
     let g = g.ok_or_else(|| "genre conventions are not available on this server right now".to_string())?;
-    let gn = find(g, genre).ok_or_else(|| format!("the bitwrap ontology has no genre {genre:?}; known: {}", genres(g).iter().map(|x| x.slug.clone()).collect::<Vec<_>>().join(", ")))?;
+    let gn = find(g, genre).ok_or_else(|| format!("the BeatScript ontology has no genre {genre:?}; known: {}", genres(g).iter().map(|x| x.slug.clone()).collect::<Vec<_>>().join(", ")))?;
     let (voices, kits) = instrument_names();
     let mut text = template(g, &gn, &voices, &kits);
     let mut sung = None;
@@ -705,7 +706,7 @@ pub fn template_answer_roles(g: Option<&dyn Graph>, genre: &str, phrase: Option<
         let mut out = template_answer_with(g, genre, phrase)?;
         if let Some(id) = theme {
             let gr = g.ok_or_else(|| "genre conventions are not available on this server right now".to_string())?;
-            let gn = find(gr, genre).ok_or_else(|| format!("the bitwrap ontology has no genre {genre:?}"))?;
+            let gn = find(gr, genre).ok_or_else(|| format!("the BeatScript ontology has no genre {genre:?}"))?;
             let (text, j) = crate::themes::splice(out["text"].as_str().unwrap_or(""), id, i32::from((gn.root_note.unwrap_or(0) % 12) as u8))?;
             let rep: Value = serde_json::from_str(&beatscript_api::check_json(&text)).map_err(|e| e.to_string())?;
             if rep["ok"] != true {
@@ -721,7 +722,7 @@ pub fn template_answer_roles(g: Option<&dyn Graph>, genre: &str, phrase: Option<
         return Ok(out);
     };
     let g = g.ok_or_else(|| "genre conventions are not available on this server right now".to_string())?;
-    let gn = find(g, genre).ok_or_else(|| format!("the bitwrap ontology has no genre {genre:?}; known: {}", genres(g).iter().map(|x| x.slug.clone()).collect::<Vec<_>>().join(", ")))?;
+    let gn = find(g, genre).ok_or_else(|| format!("the BeatScript ontology has no genre {genre:?}; known: {}", genres(g).iter().map(|x| x.slug.clone()).collect::<Vec<_>>().join(", ")))?;
     let (t, f) = crate::forms::find(form)?;
     let (sing, sung) = match phrase.map(str::trim).filter(|p| !p.is_empty()) {
         Some(p) => {

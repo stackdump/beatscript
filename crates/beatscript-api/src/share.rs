@@ -1,8 +1,7 @@
 //! Self-sealing links (`djlive::share`) as JSON, for any origin: the page's own
-//! `https://beatscript.app/#<CID>.<packed>`, the social form `/c/<CID>.<packed>` link unfurlers can fetch,
-//! and beats' `https://beats.bitwrap.io/p#...`. The site's two pack the formatted text (the `#!` headers and the
-//! comments kept), beats' the canonical text (its page hashes what it unpacks as it is); the CID is the canonical
-//! text's in all three.
+//! `https://beatscript.app/#<CID>.<packed>` and the social form `/c/<CID>.<packed>` link unfurlers can fetch. Both pack
+//! the formatted text (the `#!` headers and the comments kept); the CID is the canonical text's. BeatScript links are
+//! made on beatscript.app only: there is no beats.bitwrap.io form (`beats_url` was dropped on 2026-11-22).
 
 use djengine::json::{JsonObject, JsonValue};
 use djlive::compile::check_with;
@@ -17,8 +16,8 @@ pub const DEFAULT_ORIGIN: &str = links::ORIGIN;
 
 /// `share(text, sig, notes, origin)`: the link for a program. `sig` is the author's signature over the CID,
 /// carried as given (the wallet makes and checks it). The link packs the program formatted, so its `#!` header lines
-/// and comments come along (unsealed: the CID is the canonical text's); `notes` adds them to beats' link only, as
-/// its `~notes`. A program with errors, or one that is private (`use restricted`, a restricted asset), gets no link.
+/// and comments come along (unsealed: the CID is the canonical text's). `notes` is accepted for the callers that pass
+/// it and changes nothing: it only ever added the comments to the beats link, which is no longer made. A program with errors, or one that is private (`use restricted`, a restricted asset), gets no link.
 pub fn share_json(text: &str, sig: Option<&str>, notes: bool, origin: &str) -> String {
     let env = web_env().env();
     let ix = Utf16Index::new(text);
@@ -29,7 +28,6 @@ pub fn share_json(text: &str, sig: Option<&str>, notes: bool, origin: &str) -> S
             ("error", JsonValue::str(error)),
             ("url", JsonValue::Null),
             ("social_url", JsonValue::Null),
-            ("beats_url", JsonValue::Null),
             ("cid", JsonValue::Null),
             ("chars", JsonValue::Null),
             ("canonical", JsonValue::Null),
@@ -45,13 +43,13 @@ pub fn share_json(text: &str, sig: Option<&str>, notes: bool, origin: &str) -> S
     }
     let sig = sig.map(str::trim).filter(|s| !s.is_empty());
     // The link carries every program this one draws on (an `import`, a set's tracks), so that it opens on a machine that
-    // has none of them. The site's link packs the formatted text; beats' form packs the canonical text
+    // has none of them. The link packs the formatted text
     let formatted = links::formatted(text, &env, c);
     let (url, carried) = links::encode_formatted(c, &formatted, origin, sig);
     if !c.plays.is_empty() && !carried {
         return fail(format!("not shared: the {} programs it draws on add up to more than a link carries ({} KiB)", c.plays.len(), links::MAX_CARRIED >> 10));
     }
-    let beats = links::encode_with_tracks(c, sig, notes).0;
+    let _ = notes;
     let (origin, frag) = url.split_once("/#").unwrap_or((DEFAULT_ORIGIN, ""));
     let sealed = frag.split(['~', '*']).next().unwrap_or(frag);
     let social = format!("{origin}/c/{sealed}");
@@ -72,7 +70,6 @@ pub fn share_json(text: &str, sig: Option<&str>, notes: bool, origin: &str) -> S
         ("ok", JsonValue::Bool(true)),
         ("url", JsonValue::str(url.clone())),
         ("social_url", JsonValue::str(social)),
-        ("beats_url", JsonValue::str(beats)),
         ("cid", JsonValue::str(c.cid.clone())),
         ("chars", JsonValue::int(url.chars().count() as i64)),
         ("canonical", JsonValue::str(c.text.clone())),

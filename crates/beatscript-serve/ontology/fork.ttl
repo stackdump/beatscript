@@ -8,11 +8,14 @@
 @prefix concept: <https://beatscript.app/ontology/concept/> .
 @prefix program: <https://beatscript.app/ontology/program/> .
 
-# The BeatScript ontology's own hand-written module. A release is three inputs (src/ontology/fork.rs builds it):
+# The BeatScript ontology's own hand-written module. A release is four inputs (src/ontology/fork.rs builds it):
 #
 #   upstream/bitwrap-0.2.0/ns.nt   the bitwrap ontology 0.2.0 (CC0), re-homed from https://ontology.bitwrap.io/ into
 #                                  https://beatscript.app/ontology/, each term with one prov:wasDerivedFrom to the
 #                                  bitwrap IRI it came from; its owl:Ontology header is replaced by the one below
+#   upstream/bitwrap-conventions/conventions.ttl
+#                                  bitwrap's genre conventions module (CC0), re-homed and linked back the same way
+#                                  (since 0.3.0: what check's style and genre_template read)
 #   fork.ttl                       this file: the header, the terms the fork adds by hand, and the wording it restates
 #   generated/beatscript.ttl       the BeatScript vocabulary, generated from beatscript-serve's own code (tools/ontology/beatscript.py)
 #
@@ -21,9 +24,9 @@
 
 <https://beatscript.app/ontology/ns> a owl:Ontology ;
     dct:title "BeatScript ontology"@en ;
-    owl:versionInfo "0.2.0" ;
-    owl:versionIRI <https://beatscript.app/ontology/0.2.0> ;
-    owl:priorVersion <https://beatscript.app/ontology/0.1.0> ;
+    owl:versionInfo "0.3.0" ;
+    owl:versionIRI <https://beatscript.app/ontology/0.3.0> ;
+    owl:priorVersion <https://beatscript.app/ontology/0.2.0> ;
     dct:issued "2026-11-22"^^xsd:date ;
     dct:creator "stackdump" ;
     dct:publisher <https://beatscript.app> ;

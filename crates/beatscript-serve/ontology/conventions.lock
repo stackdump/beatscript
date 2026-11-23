@@ -1,4 +1,4 @@
 # The bitwrap ontology's conventions module (ns/conventions.ttl: tempo ranges, typical instruments, section lengths),
-# vendored verbatim for btwserve::genres only (src/ontology.rs install_genres): sha256. Not part of the fork's release.
+# vendored verbatim: an input of the fork's release since 0.2.0 (src/ontology/fork.rs), re-homed there; sha256.
 source ontology-bitwrap-io 4062047e99fcf783c15cb75cdcd28df037c63225 feat/genre-conventions
 9716c2863d08d577213f2fb609c3ebaf50f1835220a2e129f1abc7b1e44a03cc  conventions.ttl

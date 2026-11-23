@@ -364,7 +364,7 @@ export function mockShare(text, _sig, _notes, origin = 'https://beatscript.app')
   if (!c.ok) return { ok: false, error: 'the program has errors' };
   // the link carries the program as fmt keeps it (comments and `#!` lines), which hashes to the same CID
   const packed = b64url(formattedOf(text));
-  return { ok: true, url: `${origin}/#${c.cid}.${packed}`, social_url: `${origin}/c/${c.cid}.${packed}`, beats_url: `https://beats.bitwrap.io/p#${c.cid}.${packed}`, cid: c.cid, chars: `${origin}/#${c.cid}.${packed}`.length, canonical: c.canonical, warnings: [] };
+  return { ok: true, url: `${origin}/#${c.cid}.${packed}`, social_url: `${origin}/c/${c.cid}.${packed}`, cid: c.cid, chars: `${origin}/#${c.cid}.${packed}`.length, canonical: c.canonical, warnings: [] };
 }
 
 export function mockOpen(s) {

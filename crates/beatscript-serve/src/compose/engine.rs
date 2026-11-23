@@ -239,7 +239,6 @@ impl Engine {
             ("ok", b(&r["ok"])),
             ("url", json!(s(&r["url"]))),
             ("social_url", json!(s(&r["social_url"]))),
-            ("beats_url", json!(s(&r["beats_url"]))),
             ("cid", json!(s(&r["cid"]))),
             ("chars", i(&r["chars"])),
             ("canonical", json!(s(&r["canonical"]))),

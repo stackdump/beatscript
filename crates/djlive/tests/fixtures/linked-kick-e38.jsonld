@@ -1,7 +1,7 @@
 {
-  "@context": "https://beatscript.app/context/v1.jsonld",
-  "@id": "https://beats.bitwrap.io/p#z4EBG9j8bRXBEoLq7jPF8xdf8wJLXBQ4MfcarSWc1x8VPRKsCtd",
-  "@type": "djrust:Program",
+  "@context": "https://beatscript.app/context/beatscript-v1.jsonld",
+  "@id": "https://beatscript.app/p/z4EBG9j8bRXBEoLq7jPF8xdf8wJLXBQ4MfcarSWc1x8VPRKsCtd",
+  "@type": "Program",
   "cid": "z4EBG9j8bRXBEoLq7jPF8xdf8wJLXBQ4MfcarSWc1x8VPRKsCtd",
   "euclid": [
     {
@@ -11,7 +11,7 @@
       "bw:steps": 8,
       "name": "house snare",
       "sameShapeAs": [
-        "https://ontology.bitwrap.io/rhythm/house-snare"
+        "https://beatscript.app/ontology/rhythm/house-snare"
       ],
       "uses": 1
     }

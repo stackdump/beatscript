@@ -1,7 +1,7 @@
 //! F6 Euclidean rhythms and polymeter (docs/BEATSCRIPT-EXTENSIONS.md, docs/beatscript/ext-meter.md).
 //!
 //! * `e(k, n[, rot])` is checked here ([`eval_euclid`]): `0 <= k <= n`, `1 <= n <= 64`, any whole rotation; `check` names
-//!   it when the bitwrap ontology does ([`euclid_name`]).
+//!   it when the BeatScript ontology does ([`euclid_name`]).
 //! * `role/N` ([`Parser::part_cycle`]): the part's cycle is `N` sixteenth steps, not 16. Its hits are unrolled over
 //!   `lcm(N, 16)` steps into the bar cycles of the net ([`part_bars`]); the program's period is reported by `check`
 //!   ([`report_period`]) and exposed ([`period_of`]).
@@ -30,32 +30,32 @@ pub const MAX_EUCLID_STEPS: i64 = 64;
 // ---------------------------------------------------------------------------------------------------------------
 // the ontology's Euclidean rhythms
 
-/// The namespace of the bitwrap ontology (https://ontology.bitwrap.io/ns#).
-pub const ONTOLOGY_NS: &str = "https://ontology.bitwrap.io/ns#";
+/// The namespace of the BeatScript ontology (https://beatscript.app/ontology/ns#, forked from the bitwrap ontology 0.2.0).
+pub const ONTOLOGY_NS: &str = "https://beatscript.app/ontology/ns#";
 /// Where the ontology keeps its rhythm individuals: `<RHYTHM_NS><genre>-<role>`.
-pub const RHYTHM_NS: &str = "https://ontology.bitwrap.io/rhythm/";
+pub const RHYTHM_NS: &str = "https://beatscript.app/ontology/rhythm/";
 
 /// The ontology's class of Euclidean rhythms: "K pulses spread as evenly as possible over N steps, then rotated".
 pub fn euclid_class_iri() -> &'static str {
-    "https://ontology.bitwrap.io/ns#EuclideanRhythm"
+    "https://beatscript.app/ontology/ns#EuclideanRhythm"
 }
 
 /// The ontology's properties of a Euclidean rhythm, for a JSON-LD export (F14): `(pulses, steps, rotation, midiNote,
 /// forRole)`, all in [`ONTOLOGY_NS`].
 pub const EUCLID_PROPERTY_IRIS: [&str; 5] = [
-    "https://ontology.bitwrap.io/ns#pulses",
-    "https://ontology.bitwrap.io/ns#steps",
-    "https://ontology.bitwrap.io/ns#rotation",
-    "https://ontology.bitwrap.io/ns#midiNote",
-    "https://ontology.bitwrap.io/ns#forRole",
+    "https://beatscript.app/ontology/ns#pulses",
+    "https://beatscript.app/ontology/ns#steps",
+    "https://beatscript.app/ontology/ns#rotation",
+    "https://beatscript.app/ontology/ns#midiNote",
+    "https://beatscript.app/ontology/ns#forRole",
 ];
 
-/// One Euclidean rhythm the bitwrap ontology names: an individual of `ns:EuclideanRhythm`.
+/// One Euclidean rhythm the BeatScript ontology names: an individual of `ns:EuclideanRhythm`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EuclidTerm {
     /// The ontology's own words for it: "house snare" (the label is "house snare: E(3,8) rotation 0").
     pub label: &'static str,
-    /// Its IRI: `https://ontology.bitwrap.io/rhythm/house-snare`.
+    /// Its IRI: `https://beatscript.app/ontology/rhythm/house-snare`.
     pub iri: &'static str,
     /// The drum role it is for (`ns:forRole`): kick, snare or hihat.
     pub role: &'static str,
@@ -74,70 +74,70 @@ impl EuclidTerm {
 }
 
 /// Where the table came from. It is the 57 `ns:EuclideanRhythm` individuals of the published ontology
-/// (https://ontology.bitwrap.io/ns, Turtle, read on 2026-11-17): the genres' kick, snare and hihat rhythms. The
+/// (https://beatscript.app/ontology/ns, Turtle, read on 2026-11-17): the genres' kick, snare and hihat rhythms. The
 /// ontology has no traditional names (tresillo, cinquillo ...): a pattern is named when it is one of these.
-pub const EUCLID_TABLE_SOURCE: &str = "https://ontology.bitwrap.io/ns (57 ns:EuclideanRhythm individuals, read 2026-11-17)";
+pub const EUCLID_TABLE_SOURCE: &str = "https://beatscript.app/ontology/ns (57 ns:EuclideanRhythm individuals, read 2026-11-17)";
 
 /// Every Euclidean rhythm the ontology names, in the order the ontology lists them (by genre, then kick, snare,
 /// hihat).
 pub const EUCLID_TABLE: [EuclidTerm; 57] = [
-    EuclidTerm { label: "ambient kick", iri: "https://ontology.bitwrap.io/rhythm/ambient-kick", role: "kick", pulses: 2, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "ambient snare", iri: "https://ontology.bitwrap.io/rhythm/ambient-snare", role: "snare", pulses: 1, steps: 16, rotation: 8, midi_note: 38 },
-    EuclidTerm { label: "ambient hihat", iri: "https://ontology.bitwrap.io/rhythm/ambient-hihat", role: "hihat", pulses: 3, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "blues kick", iri: "https://ontology.bitwrap.io/rhythm/blues-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "blues snare", iri: "https://ontology.bitwrap.io/rhythm/blues-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "blues hihat", iri: "https://ontology.bitwrap.io/rhythm/blues-hihat", role: "hihat", pulses: 6, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "bossa kick", iri: "https://ontology.bitwrap.io/rhythm/bossa-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "bossa snare", iri: "https://ontology.bitwrap.io/rhythm/bossa-snare", role: "snare", pulses: 5, steps: 16, rotation: 3, midi_note: 37 },
-    EuclidTerm { label: "bossa hihat", iri: "https://ontology.bitwrap.io/rhythm/bossa-hihat", role: "hihat", pulses: 6, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "country kick", iri: "https://ontology.bitwrap.io/rhythm/country-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "country snare", iri: "https://ontology.bitwrap.io/rhythm/country-snare", role: "snare", pulses: 4, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "country hihat", iri: "https://ontology.bitwrap.io/rhythm/country-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "dnb kick", iri: "https://ontology.bitwrap.io/rhythm/dnb-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "dnb snare", iri: "https://ontology.bitwrap.io/rhythm/dnb-snare", role: "snare", pulses: 2, steps: 8, rotation: 2, midi_note: 38 },
-    EuclidTerm { label: "dnb hihat", iri: "https://ontology.bitwrap.io/rhythm/dnb-hihat", role: "hihat", pulses: 7, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "dubstep kick", iri: "https://ontology.bitwrap.io/rhythm/dubstep-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "dubstep snare", iri: "https://ontology.bitwrap.io/rhythm/dubstep-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "dubstep hihat", iri: "https://ontology.bitwrap.io/rhythm/dubstep-hihat", role: "hihat", pulses: 5, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "edm kick", iri: "https://ontology.bitwrap.io/rhythm/edm-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "edm snare", iri: "https://ontology.bitwrap.io/rhythm/edm-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 40 },
-    EuclidTerm { label: "edm hihat", iri: "https://ontology.bitwrap.io/rhythm/edm-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "funk kick", iri: "https://ontology.bitwrap.io/rhythm/funk-kick", role: "kick", pulses: 5, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "funk snare", iri: "https://ontology.bitwrap.io/rhythm/funk-snare", role: "snare", pulses: 4, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "funk hihat", iri: "https://ontology.bitwrap.io/rhythm/funk-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "garage kick", iri: "https://ontology.bitwrap.io/rhythm/garage-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "garage snare", iri: "https://ontology.bitwrap.io/rhythm/garage-snare", role: "snare", pulses: 3, steps: 16, rotation: 2, midi_note: 38 },
-    EuclidTerm { label: "garage hihat", iri: "https://ontology.bitwrap.io/rhythm/garage-hihat", role: "hihat", pulses: 7, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "house kick", iri: "https://ontology.bitwrap.io/rhythm/house-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "house snare", iri: "https://ontology.bitwrap.io/rhythm/house-snare", role: "snare", pulses: 3, steps: 8, rotation: 0, midi_note: 38 },
-    EuclidTerm { label: "house hihat", iri: "https://ontology.bitwrap.io/rhythm/house-hihat", role: "hihat", pulses: 6, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "jazz kick", iri: "https://ontology.bitwrap.io/rhythm/jazz-kick", role: "kick", pulses: 3, steps: 12, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "jazz snare", iri: "https://ontology.bitwrap.io/rhythm/jazz-snare", role: "snare", pulses: 2, steps: 12, rotation: 3, midi_note: 38 },
-    EuclidTerm { label: "jazz hihat", iri: "https://ontology.bitwrap.io/rhythm/jazz-hihat", role: "hihat", pulses: 5, steps: 12, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "lofi kick", iri: "https://ontology.bitwrap.io/rhythm/lofi-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "lofi snare", iri: "https://ontology.bitwrap.io/rhythm/lofi-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "lofi hihat", iri: "https://ontology.bitwrap.io/rhythm/lofi-hihat", role: "hihat", pulses: 5, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "metal kick", iri: "https://ontology.bitwrap.io/rhythm/metal-kick", role: "kick", pulses: 8, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "metal snare", iri: "https://ontology.bitwrap.io/rhythm/metal-snare", role: "snare", pulses: 4, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "metal hihat", iri: "https://ontology.bitwrap.io/rhythm/metal-hihat", role: "hihat", pulses: 8, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "reggae kick", iri: "https://ontology.bitwrap.io/rhythm/reggae-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "reggae snare", iri: "https://ontology.bitwrap.io/rhythm/reggae-snare", role: "snare", pulses: 2, steps: 16, rotation: 6, midi_note: 37 },
-    EuclidTerm { label: "reggae hihat", iri: "https://ontology.bitwrap.io/rhythm/reggae-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "speedcore kick", iri: "https://ontology.bitwrap.io/rhythm/speedcore-kick", role: "kick", pulses: 8, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "speedcore snare", iri: "https://ontology.bitwrap.io/rhythm/speedcore-snare", role: "snare", pulses: 4, steps: 16, rotation: 2, midi_note: 40 },
-    EuclidTerm { label: "speedcore hihat", iri: "https://ontology.bitwrap.io/rhythm/speedcore-hihat", role: "hihat", pulses: 12, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "synthwave kick", iri: "https://ontology.bitwrap.io/rhythm/synthwave-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "synthwave snare", iri: "https://ontology.bitwrap.io/rhythm/synthwave-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "synthwave hihat", iri: "https://ontology.bitwrap.io/rhythm/synthwave-hihat", role: "hihat", pulses: 4, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "techno kick", iri: "https://ontology.bitwrap.io/rhythm/techno-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "techno snare", iri: "https://ontology.bitwrap.io/rhythm/techno-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
-    EuclidTerm { label: "techno hihat", iri: "https://ontology.bitwrap.io/rhythm/techno-hihat", role: "hihat", pulses: 5, steps: 8, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "trance kick", iri: "https://ontology.bitwrap.io/rhythm/trance-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "trance snare", iri: "https://ontology.bitwrap.io/rhythm/trance-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 40 },
-    EuclidTerm { label: "trance hihat", iri: "https://ontology.bitwrap.io/rhythm/trance-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
-    EuclidTerm { label: "trap kick", iri: "https://ontology.bitwrap.io/rhythm/trap-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
-    EuclidTerm { label: "trap snare", iri: "https://ontology.bitwrap.io/rhythm/trap-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 40 },
-    EuclidTerm { label: "trap hihat", iri: "https://ontology.bitwrap.io/rhythm/trap-hihat", role: "hihat", pulses: 10, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "ambient kick", iri: "https://beatscript.app/ontology/rhythm/ambient-kick", role: "kick", pulses: 2, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "ambient snare", iri: "https://beatscript.app/ontology/rhythm/ambient-snare", role: "snare", pulses: 1, steps: 16, rotation: 8, midi_note: 38 },
+    EuclidTerm { label: "ambient hihat", iri: "https://beatscript.app/ontology/rhythm/ambient-hihat", role: "hihat", pulses: 3, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "blues kick", iri: "https://beatscript.app/ontology/rhythm/blues-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "blues snare", iri: "https://beatscript.app/ontology/rhythm/blues-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "blues hihat", iri: "https://beatscript.app/ontology/rhythm/blues-hihat", role: "hihat", pulses: 6, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "bossa kick", iri: "https://beatscript.app/ontology/rhythm/bossa-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "bossa snare", iri: "https://beatscript.app/ontology/rhythm/bossa-snare", role: "snare", pulses: 5, steps: 16, rotation: 3, midi_note: 37 },
+    EuclidTerm { label: "bossa hihat", iri: "https://beatscript.app/ontology/rhythm/bossa-hihat", role: "hihat", pulses: 6, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "country kick", iri: "https://beatscript.app/ontology/rhythm/country-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "country snare", iri: "https://beatscript.app/ontology/rhythm/country-snare", role: "snare", pulses: 4, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "country hihat", iri: "https://beatscript.app/ontology/rhythm/country-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "dnb kick", iri: "https://beatscript.app/ontology/rhythm/dnb-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "dnb snare", iri: "https://beatscript.app/ontology/rhythm/dnb-snare", role: "snare", pulses: 2, steps: 8, rotation: 2, midi_note: 38 },
+    EuclidTerm { label: "dnb hihat", iri: "https://beatscript.app/ontology/rhythm/dnb-hihat", role: "hihat", pulses: 7, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "dubstep kick", iri: "https://beatscript.app/ontology/rhythm/dubstep-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "dubstep snare", iri: "https://beatscript.app/ontology/rhythm/dubstep-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "dubstep hihat", iri: "https://beatscript.app/ontology/rhythm/dubstep-hihat", role: "hihat", pulses: 5, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "edm kick", iri: "https://beatscript.app/ontology/rhythm/edm-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "edm snare", iri: "https://beatscript.app/ontology/rhythm/edm-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 40 },
+    EuclidTerm { label: "edm hihat", iri: "https://beatscript.app/ontology/rhythm/edm-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "funk kick", iri: "https://beatscript.app/ontology/rhythm/funk-kick", role: "kick", pulses: 5, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "funk snare", iri: "https://beatscript.app/ontology/rhythm/funk-snare", role: "snare", pulses: 4, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "funk hihat", iri: "https://beatscript.app/ontology/rhythm/funk-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "garage kick", iri: "https://beatscript.app/ontology/rhythm/garage-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "garage snare", iri: "https://beatscript.app/ontology/rhythm/garage-snare", role: "snare", pulses: 3, steps: 16, rotation: 2, midi_note: 38 },
+    EuclidTerm { label: "garage hihat", iri: "https://beatscript.app/ontology/rhythm/garage-hihat", role: "hihat", pulses: 7, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "house kick", iri: "https://beatscript.app/ontology/rhythm/house-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "house snare", iri: "https://beatscript.app/ontology/rhythm/house-snare", role: "snare", pulses: 3, steps: 8, rotation: 0, midi_note: 38 },
+    EuclidTerm { label: "house hihat", iri: "https://beatscript.app/ontology/rhythm/house-hihat", role: "hihat", pulses: 6, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "jazz kick", iri: "https://beatscript.app/ontology/rhythm/jazz-kick", role: "kick", pulses: 3, steps: 12, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "jazz snare", iri: "https://beatscript.app/ontology/rhythm/jazz-snare", role: "snare", pulses: 2, steps: 12, rotation: 3, midi_note: 38 },
+    EuclidTerm { label: "jazz hihat", iri: "https://beatscript.app/ontology/rhythm/jazz-hihat", role: "hihat", pulses: 5, steps: 12, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "lofi kick", iri: "https://beatscript.app/ontology/rhythm/lofi-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "lofi snare", iri: "https://beatscript.app/ontology/rhythm/lofi-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "lofi hihat", iri: "https://beatscript.app/ontology/rhythm/lofi-hihat", role: "hihat", pulses: 5, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "metal kick", iri: "https://beatscript.app/ontology/rhythm/metal-kick", role: "kick", pulses: 8, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "metal snare", iri: "https://beatscript.app/ontology/rhythm/metal-snare", role: "snare", pulses: 4, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "metal hihat", iri: "https://beatscript.app/ontology/rhythm/metal-hihat", role: "hihat", pulses: 8, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "reggae kick", iri: "https://beatscript.app/ontology/rhythm/reggae-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "reggae snare", iri: "https://beatscript.app/ontology/rhythm/reggae-snare", role: "snare", pulses: 2, steps: 16, rotation: 6, midi_note: 37 },
+    EuclidTerm { label: "reggae hihat", iri: "https://beatscript.app/ontology/rhythm/reggae-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "speedcore kick", iri: "https://beatscript.app/ontology/rhythm/speedcore-kick", role: "kick", pulses: 8, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "speedcore snare", iri: "https://beatscript.app/ontology/rhythm/speedcore-snare", role: "snare", pulses: 4, steps: 16, rotation: 2, midi_note: 40 },
+    EuclidTerm { label: "speedcore hihat", iri: "https://beatscript.app/ontology/rhythm/speedcore-hihat", role: "hihat", pulses: 12, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "synthwave kick", iri: "https://beatscript.app/ontology/rhythm/synthwave-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "synthwave snare", iri: "https://beatscript.app/ontology/rhythm/synthwave-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "synthwave hihat", iri: "https://beatscript.app/ontology/rhythm/synthwave-hihat", role: "hihat", pulses: 4, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "techno kick", iri: "https://beatscript.app/ontology/rhythm/techno-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "techno snare", iri: "https://beatscript.app/ontology/rhythm/techno-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 38 },
+    EuclidTerm { label: "techno hihat", iri: "https://beatscript.app/ontology/rhythm/techno-hihat", role: "hihat", pulses: 5, steps: 8, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "trance kick", iri: "https://beatscript.app/ontology/rhythm/trance-kick", role: "kick", pulses: 4, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "trance snare", iri: "https://beatscript.app/ontology/rhythm/trance-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 40 },
+    EuclidTerm { label: "trance hihat", iri: "https://beatscript.app/ontology/rhythm/trance-hihat", role: "hihat", pulses: 8, steps: 16, rotation: 0, midi_note: 42 },
+    EuclidTerm { label: "trap kick", iri: "https://beatscript.app/ontology/rhythm/trap-kick", role: "kick", pulses: 3, steps: 16, rotation: 0, midi_note: 36 },
+    EuclidTerm { label: "trap snare", iri: "https://beatscript.app/ontology/rhythm/trap-snare", role: "snare", pulses: 2, steps: 16, rotation: 4, midi_note: 40 },
+    EuclidTerm { label: "trap hihat", iri: "https://beatscript.app/ontology/rhythm/trap-hihat", role: "hihat", pulses: 10, steps: 16, rotation: 0, midi_note: 42 },
 ];
 
 /// The ontology's rhythms with these pulses, steps and rotation (the rotation taken modulo the steps, as the engine's

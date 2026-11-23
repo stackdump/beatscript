@@ -235,7 +235,7 @@ fn with_gives_check_the_programs_an_import_names_and_never_fetches() {
     assert_eq!(a.get("cid"), b.get("cid"));
     assert_eq!(a.get("uses").and_then(JsonValue::as_array).map(Vec::len), Some(1));
     let share = JsonValue::parse(&out(&run(&["share", "--with", lib.to_str().unwrap(), "--file", song.to_str().unwrap()], None))).unwrap();
-    let url = share.get("beats_url").and_then(JsonValue::as_str).unwrap().to_string();
+    let url = share.get("url").and_then(JsonValue::as_str).unwrap().to_string();
     let c = check(&["--with", &url]);
     assert_eq!(c.get("cid"), a.get("cid"));
     // --with a file that does not read, or names nothing, is a usage error

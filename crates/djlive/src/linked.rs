@@ -1,8 +1,8 @@
 //! F14 ontology links (docs/beatscript/ext-linked.md): the `#! genre:` and `#! tags:` header lines of a `.beatscript` file,
-//! checked against the bitwrap ontology, and the JSON-LD document a program becomes.
+//! checked against the BeatScript ontology (beatscript.app/ontology/), and the JSON-LD document a program becomes.
 //!
 //! ```text
-//! #! genre: https://ontology.bitwrap.io/genre/techno      (or `techno`, `genre:techno`, `bw:Techno`)
+//! #! genre: https://beatscript.app/ontology/genre/techno      (or `techno`, `genre:techno`, `bw:Techno`)
 //! #! tags: acid, instrument:supersaw, four on floor        (terms of the ontology: local name, label, CURIE or IRI)
 //! ```
 //!
@@ -23,15 +23,29 @@ use crate::compile::Compiled;
 use crate::diag::{Diagnostic, Severity, Span};
 use crate::env::suggest;
 
-/// The vocabulary's namespace: its classes and properties (`bw:Genre`, `bw:pulses`). The CURIE prefix `bw:`.
-pub const BW_NS: &str = "https://ontology.bitwrap.io/ns#";
-/// Every term an author names is under this (`https://ontology.bitwrap.io/genre/techno`).
-pub const BW_BASE: &str = "https://ontology.bitwrap.io/";
-/// The namespace of the properties of a program in the JSON-LD (`djrust:genre`, `djrust:Program`). Nothing is
-/// published at it yet: it is a name, not a place to fetch.
-pub const DJRUST_NS: &str = "https://beats.bitwrap.io/ns/djrust#";
+/// The vocabulary's namespace: its classes and properties (`bw:Genre`, `bw:pulses`): the BeatScript ontology, served at
+/// beatscript.app/ontology/ (a CC0 fork of the bitwrap ontology 0.2.0). The CURIE prefix `bw:` is kept as a spelling.
+pub const BW_NS: &str = "https://beatscript.app/ontology/ns#";
+/// Every term an author names is under this (`https://beatscript.app/ontology/genre/techno`).
+pub const BW_BASE: &str = "https://beatscript.app/ontology/";
+/// The bitwrap ontology's base, where the BeatScript ontology's terms came from. Read as a spelling only: an IRI under it
+/// names the term of the same path under [`BW_BASE`] (`.../genre/techno`), and nothing is ever written with it.
+pub const LEGACY_BASE: &str = "https://ontology.bitwrap.io/";
+/// The `bw:` prefix of the published v1 `@context` ([`CONTEXT_URL`]): immutable, so it keeps naming the namespace it named.
+const LEGACY_NS: &str = "https://ontology.bitwrap.io/ns#";
+
+/// An IRI under [`LEGACY_BASE`] moved under [`BW_BASE`]; any other text unchanged.
+pub fn rehome(iri: &str) -> std::borrow::Cow<'_, str> {
+    match iri.strip_prefix(LEGACY_BASE) {
+        Some(rest) => std::borrow::Cow::Owned(format!("{BW_BASE}{rest}")),
+        None => std::borrow::Cow::Borrowed(iri),
+    }
+}
+/// The `djrust:` prefix of the published v1 `@context` ([`CONTEXT_URL`]), kept as it was because v1 is immutable. No
+/// document names v1 now: their properties are the BeatScript context's `bs:` terms ([`DOCUMENT_CONTEXT_URL`]).
+const DJRUST_NS: &str = "https://beats.bitwrap.io/ns/djrust#";
 /// The class of a Euclidean rhythm, as the published ontology names it.
-pub const EUCLID_CLASS: &str = "https://ontology.bitwrap.io/ns#EuclideanRhythm";
+pub const EUCLID_CLASS: &str = "https://beatscript.app/ontology/ns#EuclideanRhythm";
 
 /// The kinds of term a header may name, in the order that settles a bare word two kinds both have (`bossa` is a
 /// genre and a groove: the genre; `groove:bossa` says the other). The kind is also the path segment of its IRI.
@@ -48,7 +62,7 @@ pub struct Shape {
 /// One term of the vocabulary.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Term {
-    /// `https://ontology.bitwrap.io/genre/techno`.
+    /// `https://beatscript.app/ontology/genre/techno`.
     pub iri: String,
     /// One of [`KIND_ORDER`] (a fake vocabulary may add its own).
     pub kind: String,
@@ -110,7 +124,7 @@ impl StaticOntology {
         StaticOntology { terms, euclid_class: Some(EUCLID_CLASS.to_string()), ..StaticOntology::default() }
     }
 
-    /// The snapshot file of `djhost` (`crates/djhost/data/bitwrap-ontology.json`).
+    /// The snapshot file of `djhost` (`crates/djhost/data/beatscript-ontology.json`).
     pub fn from_json(text: &str) -> Result<StaticOntology, String> {
         let v = JsonValue::parse(text).map_err(|e| format!("the ontology snapshot is not JSON: {e}"))?;
         let list = v.get("terms").and_then(JsonValue::as_array).ok_or("the ontology snapshot has no `terms`")?;
@@ -186,6 +200,8 @@ pub fn find<'a>(o: &'a dyn Ontology, text: &str, want: Option<&str>) -> Result<&
     if t.is_empty() {
         return Err(Miss::Empty);
     }
+    // a bitwrap IRI (the base the terms came from, and what programs wrote before) names the same path here
+    let t: &str = &rehome(t);
     let terms = o.terms();
     let wanted = |x: &Term| want.is_none_or(|w| w == x.kind);
     // the terms named `name`, optionally of one kind: the wanted kind first, else the wrong kind it is
@@ -654,13 +670,29 @@ pub(crate) fn structure(lw: &crate::expand::Lowered) -> Structure {
 
 // ---- the JSON-LD document
 
-fn share_iri(cid: &str) -> String {
-    format!("{}#{cid}", crate::share::BASE)
+/// A program's IRI in its document: its page on beatscript.app (`https://beatscript.app/p/<cid>`), as the program block
+/// and the site's documents name it.
+fn program_iri(cid: &str) -> String {
+    format!("{}{cid}", crate::progld::IRI_PREFIX)
 }
 
-/// Where the program's `@context` is published: a stable, versioned URL (a change to the vocabulary is a new version,
-/// never an edit in place), served as `application/ld+json` with CORS, the way https://pflow.xyz/schema is. The
-/// document a program gets names this URL; [`context`] is the definition it serves, and `tests/ext_linked.rs` keeps the
+/// The context a program's document names: the BeatScript context (`/context/beatscript-v1.jsonld`), whose `bs:` terms
+/// are beatscript.app's and whose `bw:` is the BeatScript ontology. Every document names it, whatever the version of the
+/// program's text: nothing a document says expands to a name outside beatscript.app.
+pub const DOCUMENT_CONTEXT_URL: &str = crate::progld::BEATSCRIPT_CONTEXT_URL;
+
+/// The BeatScript context's definition, as [`DOCUMENT_CONTEXT_URL`] serves it (`docs/beatscript-context-v1.jsonld`).
+pub const DOCUMENT_CONTEXT: &str = include_str!("../../../docs/beatscript-context-v1.jsonld");
+
+/// The terms of [`DOCUMENT_CONTEXT`], for a document that spells them out ([`jsonld_inline`]).
+pub fn document_context() -> JsonValue {
+    JsonValue::parse(DOCUMENT_CONTEXT).ok().and_then(|v| v.get("@context").cloned()).unwrap_or_else(|| JsonValue::Object(JsonObject::new()))
+}
+
+/// The first published `@context`: a stable, versioned URL (a change to the vocabulary is a new version, never an edit in
+/// place), served as `application/ld+json` with CORS, the way https://pflow.xyz/schema is. Documents made before
+/// 2026-11-23 name it, so it stays served as it was; no document names it now ([`DOCUMENT_CONTEXT_URL`] instead).
+/// [`context`] is the definition it serves, and `tests/ext_linked.rs` keeps the
 /// copy the site embeds (`docs/btw-context-v1.jsonld`) equal to it.
 pub const CONTEXT_URL: &str = "https://beatscript.app/context/v1.jsonld";
 
@@ -682,7 +714,9 @@ pub fn context() -> JsonValue {
         JsonValue::Object(o)
     };
     let mut c = JsonObject::new();
-    c.set("bw", JsonValue::str(BW_NS));
+    // v1 is published and immutable: its `bw:` prefix stays the bitwrap namespace it named. Documents write their
+    // ontology terms as full beatscript.app IRIs, never as `bw:` CURIEs, so nothing they say expands to bitwrap.
+    c.set("bw", JsonValue::str(LEGACY_NS));
     c.set("djrust", JsonValue::str(DJRUST_NS));
     c.set("dct", JsonValue::str("http://purl.org/dc/terms/"));
     c.set("author", JsonValue::str("dct:creator"));
@@ -757,17 +791,17 @@ pub fn sections(c: &Compiled) -> Vec<SectionFact> {
 pub fn jsonld(c: &Compiled, f: &Facts, onto: Option<&dyn Ontology>) -> JsonValue {
     let mut d = jsonld_inline(c, f, onto);
     if let JsonValue::Object(o) = &mut d {
-        o.set("@context", JsonValue::str(CONTEXT_URL));
+        o.set("@context", JsonValue::str(DOCUMENT_CONTEXT_URL));
     }
     d
 }
 
-/// [`jsonld`] with the terms spelled out in `@context` instead of named by URL: for a reader that is offline (`btw jsonld --inline`).
+/// [`jsonld`] with the BeatScript context's terms spelled out in `@context` instead of named by URL: for a reader that is offline (`btw jsonld --inline`).
 pub fn jsonld_inline(c: &Compiled, f: &Facts, onto: Option<&dyn Ontology>) -> JsonValue {
     let mut d = JsonObject::new();
-    d.set("@context", context());
-    d.set("@id", JsonValue::str(share_iri(&c.cid)));
-    d.set("@type", JsonValue::str("djrust:Program"));
+    d.set("@context", document_context());
+    d.set("@id", JsonValue::str(program_iri(&c.cid)));
+    d.set("@type", JsonValue::str("Program"));
     d.set("cid", JsonValue::str(c.cid.clone()));
     if let Some(n) = f.name.filter(|n| !n.is_empty()) {
         d.set("name", JsonValue::str(n));
@@ -789,7 +823,7 @@ pub fn jsonld_inline(c: &Compiled, f: &Facts, onto: Option<&dyn Ontology>) -> Js
     let secs = sections(c);
     if !secs.is_empty() {
         let nodes = secs.into_iter().map(|x| {
-            let mut o = JsonObject::from_pairs([("@type", JsonValue::str("djrust:Section")), ("name", JsonValue::str(x.name)), ("start", JsonValue::int(i64::from(x.start))), ("bars", JsonValue::int(i64::from(x.bars)))]);
+            let mut o = JsonObject::from_pairs([("@type", JsonValue::str("Section")), ("name", JsonValue::str(x.name)), ("start", JsonValue::int(i64::from(x.start))), ("bars", JsonValue::int(i64::from(x.bars)))]);
             if let Some(k) = x.key {
                 o.set("key", JsonValue::str(crate::music::canonical_pitch_word(&k.text())));
             }
@@ -807,13 +841,15 @@ pub fn jsonld_inline(c: &Compiled, f: &Facts, onto: Option<&dyn Ontology>) -> Js
             d.set("author", JsonValue::str(a.clone()));
         }
         if let Some(p) = &r.forked_from {
-            d.set("forkedFrom", JsonValue::str(share_iri(p)));
+            // the parent by CID, as the program block says it, and by IRI
+            d.set("forkedFrom", JsonValue::str(p.clone()));
+            d.set("isBasedOn", JsonValue::Array(vec![JsonValue::str(program_iri(p))]));
         }
         if !r.credits.is_empty() {
             let credits = r.credits.iter().map(|cr| {
                 let mut o = JsonObject::new();
-                o.set("@id", JsonValue::str(share_iri(&cr.cid)));
-                o.set("@type", JsonValue::str("djrust:Program"));
+                o.set("@id", JsonValue::str(program_iri(&cr.cid)));
+                o.set("@type", JsonValue::str("Program"));
                 o.set("cid", JsonValue::str(cr.cid.clone()));
                 if let Some(n) = &cr.name {
                     o.set("name", JsonValue::str(n.clone()));
@@ -933,7 +969,7 @@ mod tests {
         assert!(StaticOntology::from_json("not json").unwrap_err().contains("not JSON"));
         assert!(StaticOntology::from_json("{}").unwrap_err().contains("no `terms`"));
         assert!(StaticOntology::from_json(r#"{"terms":[{"iri":"x"}]}"#).unwrap_err().contains("no `kind`"));
-        let o = StaticOntology::from_json(r#"{"version":"9","verified":true,"terms":[{"iri":"https://ontology.bitwrap.io/genre/b","kind":"genre","local":"b","label":"b"},{"iri":"https://ontology.bitwrap.io/genre/a","kind":"genre","local":"a","label":"a"}]}"#).unwrap();
+        let o = StaticOntology::from_json(r#"{"version":"9","verified":true,"terms":[{"iri":"https://beatscript.app/ontology/genre/b","kind":"genre","local":"b","label":"b"},{"iri":"https://beatscript.app/ontology/genre/a","kind":"genre","local":"a","label":"a"}]}"#).unwrap();
         assert_eq!(o.terms().iter().map(|t| t.local.as_str()).collect::<Vec<_>>(), ["a", "b"], "sorted by IRI");
         assert_eq!((o.version.as_str(), o.verified, o.euclid_class()), ("9", true, None));
     }

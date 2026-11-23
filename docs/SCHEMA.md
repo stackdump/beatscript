@@ -16,7 +16,7 @@ The editor loads the program from that script, and so can anything else that rea
  "licenseId":"CC0-1.0",
  "tempo":132,
  "key":"am",
- "scale":"https://ontology.bitwrap.io/scale/minor",
+ "scale":"https://beatscript.app/ontology/scale/minor",
  "text":"#! beatscript 2\ntempo 132\nkey am\nlet acid_a = ...\n"}
 </script></beatscript-view>
 ```
@@ -38,7 +38,7 @@ gets the context below. A browser gets this page. `https://beatscript.app/schema
 | `licenseId` | the same licence's id: `CC0-1.0`, `CC-BY-4.0` or `all-rights-reserved` |
 | `tempo` | beats per minute, when the program sets one |
 | `key` | the program's key (`am`, `c`, `d:dorian`), when it sets one |
-| `scale` | the key's mode as a [bitwrap ontology](https://ontology.bitwrap.io/ns#) term (`https://ontology.bitwrap.io/scale/minor`), when the ontology has it |
+| `scale` | the key's mode as a [BeatScript ontology](https://beatscript.app/ontology/ns#) term (`https://beatscript.app/ontology/scale/minor`), when the ontology has it |
 | `genre` | the `#! genre:` line as an ontology term, when it names one |
 | `tag` | the `#! tags:` that are ontology terms |
 | `instrument` | the voices its parts name (`inst=acid`) that are ontology instruments |
@@ -85,7 +85,7 @@ The context is served at `https://beatscript.app/schema.jsonld`, and at `/schema
 `application/ld+json`. It is built by the same code that builds the block (`djlive::progld::schema_context`), so it
 cannot drift from it. In outline:
 - `@vocab` and the prefix `bs:` are `https://beatscript.app/schema#`;
-- `bw:` is the [bitwrap ontology](https://ontology.bitwrap.io/ns#);
+- `bw:` is the [BeatScript ontology](https://beatscript.app/ontology/ns#);
 - every term below maps to `bs:<term>`;
 - `license`, `genre`, `scale`, `tag` and `instrument` are IRIs (`@type: @id`), and `tag` and `instrument` are sets.
 
@@ -109,13 +109,13 @@ hashes to it.
 
 <a id="key"></a>**key**: the program's key as BeatScript writes it (`am`, `c`, `d:dorian`).
 
-<a id="scale"></a>**scale**: the key's mode, as a bitwrap ontology scale.
+<a id="scale"></a>**scale**: the key's mode, as a BeatScript ontology scale.
 
-<a id="genre"></a>**genre**: a bitwrap ontology genre.
+<a id="genre"></a>**genre**: a BeatScript ontology genre.
 
-<a id="tag"></a>**tag**: a bitwrap ontology term the program is tagged with.
+<a id="tag"></a>**tag**: a BeatScript ontology term the program is tagged with.
 
-<a id="instrument"></a>**instrument**: a bitwrap ontology instrument one of the program's parts plays.
+<a id="instrument"></a>**instrument**: a BeatScript ontology instrument one of the program's parts plays.
 
 <a id="section"></a>**section**: the program's documented sections, in order, each a `name` and a `description` (schema.org's
 terms). A section's doc comment is the run of `#` lines directly above its `section` line, with no blank line between
@@ -174,12 +174,12 @@ Each is named by its `@id` and `cid`, with its `name`, `author`, `licenseId` and
 <a id="visibility"></a>**visibility**: `public` or `private`. A private program is never stored or shared by the site.
 
 <a id="euclid"></a>**euclid**: the Euclidean rhythms the program's song plays (its `e(k, n[, rot])` calls, written out), one node
-for each distinct shape: a bitwrap ontology `EuclideanRhythm` with its pulses, steps and rotation, its `uses`, and the named
+for each distinct shape: a BeatScript ontology `EuclideanRhythm` with its pulses, steps and rotation, its `uses`, and the named
 rhythms of the same shape (`sameShapeAs`).
 
 <a id="uses"></a>**uses**: how many times the written-out song plays a Euclidean rhythm.
 
-<a id="sameShapeAs"></a>**sameShapeAs**: the bitwrap ontology's named rhythms of exactly this shape, as IRIs (the ontology
+<a id="sameShapeAs"></a>**sameShapeAs**: the BeatScript ontology's named rhythms of exactly this shape, as IRIs (the ontology
 names its rhythms by genre and role, so a shape may have several, or none).
 
 <a id="ProgramDump"></a>**ProgramDump**: an archive of programs: `count`, the sorted `cids`, and the files (see
@@ -195,8 +195,8 @@ The block is the program with its source. A program also has a fuller linked-dat
   `usageInfo`, `https://beatscript.app/authorship`: who authored a program and what rights it has, in plain language.
   A section the shared text documented (a `#` comment line directly above its `section` line) has that doc comment as
   its `description`. The context it names is its program's version's ([the two contexts](#the-two-contexts), below).
-- The engine's own JSON-LD export (on the command line, `djctl btw jsonld FILE`) says more in the same vocabulary: Euclidean rhythms linked to the bitwrap
-  ontology (`https://ontology.bitwrap.io/ns#`), the genre and tags as ontology IRIs, credits and `forkedFrom`.
+- The engine's own JSON-LD export (on the command line, `djctl btw jsonld FILE`) says more in the same vocabulary: Euclidean rhythms linked to the BeatScript
+  ontology (`https://beatscript.app/ontology/ns#`), the genre and tags as ontology IRIs, credits and `forkedFrom`.
 - `https://beatscript.app/phrasebook.jsonld` (and `/phrasebook/<CID>.jsonld`): the public-domain phrasebook as linked data, a
   `Dataset` whose `@id` is the CID of the corpus's text and whose `hasPart` is one `Quotation` node a line. Its `@context` is
   `[this vocabulary, schema.org, {a local context}]`: the local one maps each key a node writes (`stress`, `family`, `feel`,
@@ -214,7 +214,7 @@ A program document names one of two contexts, by the version its program is writ
 
 - **`https://beatscript.app/context/beatscript-v1.jsonld`** (`docs/beatscript-context-v1.jsonld`): BeatScript 2 programs.
   The document's `@id` is `https://beatscript.app/p/<CID>`. Its vocabulary is this page's, `https://beatscript.app/schema#`
-  (prefix `bs:`), beside `bw:` (the bitwrap ontology) and `schema:` (schema.org): each `bs:` term it maps is defined under
+  (prefix `bs:`), beside `bw:` (the BeatScript ontology, beatscript.app/ontology/ns#) and `schema:` (schema.org): each `bs:` term it maps is defined under
   [Terms](#terms). Three terms moved from the old context: `author` is `bs:author` (it was `dct:creator`), `license` is
   `bs:license` (it was `dct:license`) and `name` is `schema:name` (it was `dct:title`). `description`, `isBasedOn` and
   `usageInfo` are schema.org's, in the context itself.
@@ -224,7 +224,7 @@ A program document names one of two contexts, by the version its program is writ
 
 ## What changed from the beats conventions, and why
 
-This format reuses the conventions of beats.bitwrap.io and its `djrust:` context where it can:
+This format reuses the conventions of the beats sequencer and the first (`djrust:`) context where it can:
 
 - the term names `name`, `tempo`, `key`, `license`, `author`, `forkedFrom` and `signature`;
 - the CID scheme;
@@ -234,10 +234,10 @@ This format reuses the conventions of beats.bitwrap.io and its `djrust:` context
 
 Where it differs:
 
-| beats.bitwrap.io / `djrust:` | this block | why |
+| beats / the first `djrust:` context | this block | why |
 |---|---|---|
-| `@id` is a URL, `https://beats.bitwrap.io/p#<CID>` (the share IRI) | `@id` is the bare CID | Programs moved to beatscript.app and the CID is the name: it is the same wherever the block is embedded, and a reader checks it against `text`. As an IRI it resolves relative to the page's URL; the canonical page is `https://beatscript.app/p/<CID>` |
-| `@context` is one URL, `…/context/v1.jsonld` | `["https://beatscript.app/schema", "https://schema.org"]` | The block is also meant to be read as schema.org (`MusicComposition`, `name`, `license`, `text`) by tools that know nothing of BeatScript. The `djrust:` document still uses `context/v1` |
+| `@id` was a share IRI on the beats host (before 2026-11-23) | `@id` is the bare CID | Programs moved to beatscript.app and the CID is the name: it is the same wherever the block is embedded, and a reader checks it against `text`. As an IRI it resolves relative to the page's URL; the canonical page is `https://beatscript.app/p/<CID>` |
+| `@context` is one URL, `…/context/v1.jsonld` | `["https://beatscript.app/schema", "https://schema.org"]` | The block is also meant to be read as schema.org (`MusicComposition`, `name`, `license`, `text`) by tools that know nothing of BeatScript. Since 2026-11-23 every program document names the BeatScript context (`context/beatscript-v1.jsonld`); `context/v1` stays served, unchanged, for the documents made before |
 | `@type` is `djrust:Program` (or `BeatsShare` for a beats track) | `["Program", "MusicComposition"]` | The same class in this vocabulary, plus its schema.org reading |
 | The source is not in the document: a beats envelope is its own payload, and the `djrust:` document points to the program by its share IRI | `text` holds the canonical program | The block is the program's source: the editor loads it from the page without another request, and the phone and MCP read the same bytes |
 | `license` is a URI and `licenseId` the SPDX id (`djrust:`), the URI only for CC0; beats tracks are always CC BY 4.0 | `license` a URI and `licenseId` the id, for every licence | The same two fields. Every licence now has a URI, rightsstatements.org's "In Copyright" for all rights reserved (no CC licence says that), and the `djrust:` document gives the same URIs |

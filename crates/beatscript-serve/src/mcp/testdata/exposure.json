@@ -99,7 +99,7 @@
         {
           "tool": "check",
           "args": {"genre": "trap", "text": "tempo 140\nkey em\ndeck A: kick x ~ ~ ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ ~ kit=drums-808 | snare ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ kit=drums-808 | hihat x*16 kit=drums-808\n"},
-          "expect": [["/ok", "=", true], ["/style/genre", "=", "https://ontology.bitwrap.io/genre/trap"], ["/style/warnings", "=", []]]
+          "expect": [["/ok", "=", true], ["/style/genre", "=", "https://beatscript.app/ontology/genre/trap"], ["/style/warnings", "=", []]]
         },
         {
           "tool": "check",

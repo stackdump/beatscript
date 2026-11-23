@@ -401,7 +401,7 @@ class Run:
         # open: links, fragments, CIDs, the refusals
         sh = json.loads(send(self.a.go, "POST", "/api/share", J, json.dumps({"text": good}).encode())["body"])
         frag = sh["url"].split("#", 1)[1]
-        for u in [sh["url"], sh["social_url"], sh["beats_url"], "#" + frag, frag, info[0]["cid"], "  " + info[0]["cid"] + "\n", "-x", "a\x00b",
+        for u in [sh["url"], sh["social_url"], sh["url"].replace("/#", "/p#", 1).replace("://beatscript.app", "://beats.bitwrap.io", 1), "#" + frag, frag, info[0]["cid"], "  " + info[0]["cid"] + "\n", "-x", "a\x00b",
                   "https://beatscript.app/p/" + info[0]["cid"], frag[:-3] + "AAA", "nonsense", "x" * ((100 << 10) + 1)]:
             post("/api/open", {"url": u})
         post("/api/open", {"url": "", "text": info[0]["cid"]})

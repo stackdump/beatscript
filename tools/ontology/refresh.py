@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
-"""Refresh crates/djhost/data/bitwrap-ontology.json from the published bitwrap ontology.
+"""Refresh crates/djhost/data/beatscript-ontology.json from the BeatScript ontology release in this repository.
 
-The snapshot is of the bitwrap ontology itself, not of the BeatScript ontology served at beatscript.app/ontology/ (a
-fork of bitwrap 0.2.0, crates/beatscript-serve/ontology/README.md): programs link to bitwrap's IRIs, which are upstream and stay
-valid. Offline, the bitwrap release the fork was derived from is vendored at
-crates/beatscript-serve/ontology/upstream/bitwrap-0.2.0/ns.nt (pass it with --from).
+The snapshot is of the BeatScript ontology (https://beatscript.app/ontology/, a CC0 fork of the bitwrap ontology 0.2.0,
+crates/beatscript-serve/ontology/README.md): it is read from the release files in git
+(crates/beatscript-serve/ontology/release/ns.nt, checked against release.lock and manifest.json). Nothing is fetched.
 
-    python3 tools/ontology/refresh.py                       # fetch https://ontology.bitwrap.io/ns.nt (needs network)
-    python3 tools/ontology/refresh.py --from ns.nt --fetched 2026-11-18   # offline, from a saved copy of ns.nt
+    python3 tools/ontology/refresh.py            # after crates/beatscript-serve/ontology/build.sh
+    python3 tools/ontology/refresh.py --fetched 2026-11-22
 
 The snapshot is what a BeatScript program's `#! genre:` / `#! tags:` header lines are validated against (docs/beatscript/ext-linked.md).
 It is small and deterministic: the terms an author may name (genres, genre families, scales, grooves, instruments,
 instrument roles, song sections, song structures, Euclidean rhythms, chord progressions, engine concepts), sorted by
 IRI, one per line, with their local name, label and kind; a Euclidean rhythm also has its pulses, steps and rotation
-(so a program's e(k,n,rot) can be linked to the rhythms that have the same shape). Nothing else of the ontology is kept.
-
-The fetched file is checked against the release's SHA256SUMS before it is believed. Python standard library only.
-The published data is untrusted input: only IRIs under https://ontology.bitwrap.io/ are read, and only as strings.
+(so a program's e(k,n,rot) can be linked to the rhythms that have the same shape). Only the music terms the release
+carries from its upstream (those with a prov:wasDerivedFrom) are kept: the BeatScript vocabulary's own individuals (the
+grammar, voices, tools) are not header terms. Nothing else of the ontology is kept. Python standard library only.
 """
 
 import argparse
@@ -26,9 +24,11 @@ import json
 import os
 import re
 import sys
-import urllib.request
 
-BASE = "https://ontology.bitwrap.io/"
+BASE = "https://beatscript.app/ontology/"
+PROV_DERIVED = "http://www.w3.org/ns/prov#wasDerivedFrom"
+HERE = os.path.dirname(os.path.abspath(__file__))
+ONTOLOGY = os.path.join(HERE, "..", "..", "crates", "beatscript-serve", "ontology")
 NS = BASE + "ns#"
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
@@ -57,14 +57,8 @@ def unescape(s):
     return re.sub(r'\\(["\\nrt]|u[0-9a-fA-F]{4})', lambda m: {'"': '"', "\\": "\\", "n": "\n", "r": "\r", "t": "\t"}.get(m.group(1)) or chr(int(m.group(1)[1:], 16)), s)
 
 
-def fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "djrust-ontology-refresh"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.read(), r.headers.get("Date")
-
-
 def parse(nt_text):
-    types, labels, ints = {}, {}, {}
+    types, labels, ints, derived = {}, {}, {}, set()
     for line in nt_text.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
@@ -76,7 +70,9 @@ def parse(nt_text):
         if not s.startswith("<" + BASE) or s.startswith("<" + NS):
             continue
         s = s[1:-1]
-        if p == RDF_TYPE and o.startswith("<"):
+        if p == PROV_DERIVED:
+            derived.add(s)
+        elif p == RDF_TYPE and o.startswith("<"):
             types.setdefault(s, set()).add(o[1:-1])
         elif p in (RDFS_LABEL, SKOS_PREF):
             lm = LITERAL.match(o)
@@ -86,7 +82,7 @@ def parse(nt_text):
             lm = LITERAL.match(o)
             if lm and lm.group(1).lstrip("-").isdigit():
                 ints.setdefault(s, {})[p[len(NS):]] = int(lm.group(1))
-    return types, labels, ints
+    return {k: v for k, v in types.items() if k in derived}, labels, ints
 
 
 def terms(types, labels, ints):
@@ -111,35 +107,27 @@ def terms(types, labels, ints):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--from", dest="src", help="read this saved ns.nt instead of fetching it")
-    ap.add_argument("--fetched", help="the date to record (YYYY-MM-DD); default: the server's Date, or today")
-    ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "crates", "djhost", "data", "bitwrap-ontology.json"))
+    ap.add_argument("--release", default=os.path.join(ONTOLOGY, "release"), help="the release directory (default: the repository's)")
+    ap.add_argument("--fetched", help="the date to record (YYYY-MM-DD); default: today")
+    ap.add_argument("--out", default=os.path.join(HERE, "..", "..", "crates", "djhost", "data", "beatscript-ontology.json"))
     a = ap.parse_args()
 
-    version, released, pack_digest, fetched = "unknown", "unknown", "unknown", a.fetched
-    if a.src:
-        raw = open(a.src, "rb").read()
-        verified = False
-    else:
-        raw, date = fetch(BASE + "ns.nt")
-        sums, _ = fetch(BASE + "release/SHA256SUMS")
-        want = {l.split()[1]: l.split()[0] for l in sums.decode().splitlines() if len(l.split()) == 2}.get("ns.nt")
-        got = hashlib.sha256(raw).hexdigest()
-        if want != got:
-            sys.exit(f"ns.nt does not match the release's SHA256SUMS ({got} against {want}): not written")
-        verified = True
-        void, _ = fetch(BASE + ".well-known/void")
-        m = re.search(r'owl:versionInfo "([^"]+)"', void.decode())
-        version = m.group(1) if m else version
-        m = re.search(r'dcterms:modified "([^"]+)"', void.decode())
-        released = m.group(1) if m else released
-        llms, _ = fetch(BASE + "llms.txt")
-        m = re.search(r"Pack content digest: ([0-9a-f]{64})", llms.decode())
-        pack_digest = m.group(1) if m else pack_digest
-        if not fetched:
-            fetched = datetime.datetime.strptime(date, "%a, %d %b %Y %H:%M:%S %Z").strftime("%Y-%m-%d") if date else datetime.date.today().isoformat()
-    if not fetched:
-        fetched = datetime.date.today().isoformat()
+    raw = open(os.path.join(a.release, "ns.nt"), "rb").read()
+    manifest = json.load(open(os.path.join(a.release, "manifest.json"), encoding="utf-8"))
+    got = hashlib.sha256(raw).hexdigest()
+    want = manifest.get("files", {}).get("ns.nt")
+    lock = os.path.join(a.release, "..", "release.lock")
+    locked = None
+    if os.path.exists(lock):
+        for l in open(lock, encoding="utf-8"):
+            f = l.split()
+            if len(f) == 2 and f[1] == "ns.nt":
+                locked = f[0]
+    if got != want or (locked is not None and got != locked):
+        sys.exit(f"ns.nt ({got}) does not match the release's manifest ({want}) / release.lock ({locked}): not written")
+    verified = True
+    version, released, pack_digest = manifest.get("version", "unknown"), manifest.get("released", "unknown"), manifest.get("pack_content_sha256", "unknown")
+    fetched = a.fetched or datetime.date.today().isoformat()
 
     types, labels, ints = parse(raw.decode("utf-8"))
     ts = terms(types, labels, ints)
@@ -159,7 +147,7 @@ def main():
         "pack_digest": pack_digest,
         "verified": verified,
         "classes": {"euclidean_rhythm": NS + "EuclideanRhythm", "genre": NS + "Genre"},
-        "refresh": "python3 tools/ontology/refresh.py   (needs network; rewrites this file; then cargo test -p djhost)",
+        "refresh": "python3 tools/ontology/refresh.py   (offline, from crates/beatscript-serve/ontology/release; then cargo test -p djhost)",
     }
     lines = ["{"]
     for k, v in head.items():

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// A small stand-in for the btw.bitwrap.io server, to develop and smoke-test the page against (no npm:
+// A small stand-in for the beatscript.app server, to develop and smoke-test the page against (no npm:
 // node:http only). It speaks the routes of site/DESIGN.md "HTTP API" well enough for the page:
 // static files, /api/info, examples, check/fmt/share/open (through the REAL wasm when site/web/wasm is
 // built, else the page's JS mock), programs (PUT verifies the CID), a render stream (a synthesised click
@@ -45,7 +45,7 @@ async function loadChecker() {
     const m = await import(pathToFileURL(wasmJs).href);
     m.initSync({ module: fs.readFileSync(path.join(WEB, 'wasm', 'beatscript_bg.wasm')) });
     realWasm = true;
-    M = { check: (t) => JSON.parse(m.beatscript_check(t)), fmt: (t) => JSON.parse(m.beatscript_fmt(t)), open: (s) => JSON.parse(m.beatscript_open(s)), share: (t) => JSON.parse(m.beatscript_share(t, null, false, 'https://btw.bitwrap.io')), instruments: () => JSON.parse(m.beatscript_instruments()) };
+    M = { check: (t) => JSON.parse(m.beatscript_check(t)), fmt: (t) => JSON.parse(m.beatscript_fmt(t)), open: (s) => JSON.parse(m.beatscript_open(s)), share: (t) => JSON.parse(m.beatscript_share(t, null, false, 'https://beatscript.app')), instruments: () => JSON.parse(m.beatscript_instruments()) };
     if (typeof m.beatscript_station === 'function') M.station = (req) => JSON.parse(m.beatscript_station(JSON.stringify(req)));
   } else {
     const w = await import(pathToFileURL(path.join(WEB, 'js', 'wasm-mock.js')).href);
@@ -192,7 +192,7 @@ async function route(req, res) {
   const p = url.pathname;
   const m = req.method;
   if (p === '/healthz') return send(res, 200, 'ok');
-  if (p === '/api/info') return send(res, 200, { name: 'btw.bitwrap.io (mock)', version: 'mock', model: 'fake', public_url: 'https://btw.bitwrap.io', compose: { enabled: true, configured: true, limits: { user_per_hour: 10 } }, render: { max_bars: 256 }, auth: ['eth', 'ed25519'], real_wasm: realWasm });
+  if (p === '/api/info') return send(res, 200, { name: 'beatscript.app (mock)', version: 'mock', model: 'fake', public_url: 'https://beatscript.app', compose: { enabled: true, configured: true, limits: { user_per_hour: 10 } }, render: { max_bars: 256 }, auth: ['eth', 'ed25519'], real_wasm: realWasm });
   if (p === '/api/examples') return send(res, 200, examples.map(({ text, ...e }) => e));
   let mm;
   if ((mm = /^\/examples\/([\w.-]+)\.beatscript$/.exec(p))) { const e = examples.find((x) => x.name === mm[1]); return e ? send(res, 200, e.text) : err(res, 404, 'not_found', 'no such example'); }
@@ -225,7 +225,7 @@ async function route(req, res) {
     return handleRender(req, res, decodeURIComponent(mm[1]), url);
   }
   // auth
-  if (p === '/api/auth/challenge') { const nonce = crypto.randomBytes(12).toString('hex'); nonces.set(nonce, Date.now()); const issued = new Date().toISOString(); return send(res, 200, { nonce, message: `btw.bitwrap.io sign-in\nnonce: ${nonce}\nissued: ${issued}\nexpires: ${new Date(Date.now() + 300000).toISOString()}`, expires: new Date(Date.now() + 300000).toISOString() }); }
+  if (p === '/api/auth/challenge') { const nonce = crypto.randomBytes(12).toString('hex'); nonces.set(nonce, Date.now()); const issued = new Date().toISOString(); return send(res, 200, { nonce, message: `beatscript.app sign-in\nnonce: ${nonce}\nissued: ${issued}\nexpires: ${new Date(Date.now() + 300000).toISOString()}`, expires: new Date(Date.now() + 300000).toISOString() }); }
   if (m === 'POST' && p === '/api/auth/login') {
     const b = await readJson(req);
     if (!nonces.delete(b.nonce)) return err(res, 401, 'challenge_stale', 'that challenge is stale: try again');

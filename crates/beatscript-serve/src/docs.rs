@@ -25,7 +25,7 @@ use serde_json::json;
 use crate::content;
 use crate::site::{html_escape, Examples};
 
-pub const EXTERNAL_LINKS: [&str; 2] = ["https://blog.stackdump.com/posts/generator-you-can-read", "https://ontology.bitwrap.io"];
+pub const EXTERNAL_LINKS: [&str; 1] = ["https://blog.stackdump.com/posts/generator-you-can-read"];
 
 pub struct Docs {
     docs_dir: Option<PathBuf>,
@@ -959,7 +959,7 @@ impl Docs {
         b.push_str(&format!("- [JSON Feed]({p}/feed.json) and [Atom]({p}/feed.atom): the newest public CC0 programs, each with its .beatscript, .jsonld and render\n"));
         b.push_str(&format!("- [Sitemap]({p}/sitemap.xml): every public CC0 program's page\n"));
         b.push_str(&format!("- [Dumps]({p}/dumps/): content-addressed archives of all of them (programs/<CID>.beatscript, programs/<CID>.jsonld, a manifest of CIDs); [the newest]({p}/dumps/latest.json)\n"));
-        b.push_str(&format!("- [Schema]({p}/schema): the vocabulary (@vocab {p}/schema#), the embedded <beatscript-view> block, and links to the bitwrap ontology (https://ontology.bitwrap.io/ns#)\n"));
+        b.push_str(&format!("- [Schema]({p}/schema): the vocabulary (@vocab {p}/schema#), the embedded <beatscript-view> block, and links to the BeatScript ontology ({p}/ontology/ns#)\n"));
         b.push_str(&format!("- [Phrasebook]({p}{}): lines of verse, scripture, speech and work song first published before 1929 (CC0; each with its source, its meter as a step pattern and a sing example), to sing by id (sing @tempest_such_stuff on melody); [the file]({p}/phrasebook.txt) and [linked data]({p}/phrasebook.jsonld), and by CID at {p}/phrasebook/<CID>.txt and {p}/phrasebook/<CID>.jsonld (404 for any CID this server does not ship)\n", beatscript_serve::phrasebook::PATH));
         b.push_str(&format!("- [Theme library]({p}{}): melodies, basses and figures composed and first published before 1929 (CC0; each as BeatScript bars in a stated key, let-ready, with its role, meter, work, composer, year and pairings), to borrow as found material and build forms from; [the file]({p}/themes.txt) and [linked data]({p}/themes.jsonld), and by CID at {p}/themes/<CID>.txt and {p}/themes/<CID>.jsonld\n", beatscript_serve::themes::PATH));
         b.push_str(&format!("- [Open data]({p}/docs/open-data): what is published, what never is (private and non-CC0 programs), and how to mirror it\n\n"));
@@ -998,7 +998,6 @@ impl Docs {
         b.push_str(&format!("- [Sign-in and tokens]({p}/docs/api.md#sign-in-and-tokens): wallet or browser-key challenge, cookie, bearer tokens for MCP\n\n"));
         b.push_str("## Optional\n");
         b.push_str(&format!("- [Generator you can read]({}): the post behind the language: a generator whose output is text you can read and edit\n", EXTERNAL_LINKS[0]));
-        b.push_str(&format!("- [bitwrap ontology]({}): the bitwrap music-genre ontology (genres, scales, grooves, instruments) as linked data, the upstream the BeatScript ontology was derived from (0.2.0)\n", EXTERNAL_LINKS[1]));
         b
     }
 

@@ -40,7 +40,7 @@ const DECK_B: [&str; 3] = ["melody", "harmony", "arp"];
 /// The most bars of changing music a part can carry (an alternation's cap).
 pub(crate) const MAX_PERIOD: usize = 64;
 
-/// The genres of seeds v1: beats.bitwrap.io's, the genres of the bitwrap ontology (https://ontology.bitwrap.io/genre/...).
+/// The genres of seeds v1: beats.bitwrap.io's, the genres of the BeatScript ontology (https://beatscript.app/ontology/genre/...), forked from the bitwrap ontology.
 /// The engine's tables have a few more (dj-only); a seed names only these, so that every seed is a beats track and
 /// `tests/seed.rs` can hold it to beats' own JavaScript.
 pub const GENRES: [&str; 19] = [

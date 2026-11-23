@@ -354,24 +354,28 @@ fn a_link_opens_to_the_program_that_made_it_in_every_form() {
         assert!(url.starts_with("https://beatscript.app/#z"), "{url}");
         assert_eq!(n(&sh, "chars") as usize, url.chars().count());
         assert!(s(&sh, "social_url").starts_with("https://beatscript.app/c/z") && !s(&sh, "social_url").contains('#'));
-        assert!(s(&sh, "beats_url").starts_with("https://beats.bitwrap.io/p#z"));
+        assert!(sh.get("beats_url").is_none(), "no beats.bitwrap.io link: BeatScript links are made on beatscript.app only");
+        assert!(!sh.js_stringified().contains("bitwrap.io"), "{name}");
         // the site's two links seal the same part: the CID and the formatted text (comments and `#!` headers kept)
         let frag = url.split_once('#').unwrap().1;
         assert_eq!(s(&sh, "social_url").split_once("/c/").unwrap().1, frag);
         // (formatted in the version it is in: a share never upgrades a program, so the link's CID is the text's)
         let formatted = beatscript_api::format_text(&text).unwrap();
         assert_eq!(unpacked(url), formatted, "{name}");
-        // beats' form is djlive's own and packs the canonical text (beats' page hashes what it unpacks)
+        // the engine's own form (djlive, what the apps and the booth make) packs the canonical text, on beatscript.app too
         let comp = djlive::compile::check_with(&text, &beatscript_api::web_env().env()).compiled.unwrap();
-        assert_eq!(s(&sh, "beats_url"), djlive::share::encode(&comp, None, false));
-        assert_eq!(unpacked(s(&sh, "beats_url")), s(&c, "canonical"), "{name}");
-        for form in [url.to_string(), s(&sh, "social_url").to_string(), s(&sh, "beats_url").to_string(), format!("#{frag}"), frag.to_string(), format!("  {url}\n")] {
+        let engine = djlive::share::encode(&comp, None, false);
+        assert!(engine.starts_with("https://beatscript.app/#z"), "{engine}");
+        assert_eq!(unpacked(&engine), s(&c, "canonical"), "{name}");
+        // a link made on an older host still opens: only the part after `#` is read
+        let legacy = engine.replacen("https://beatscript.app/#", "https://beats.bitwrap.io/p#", 1);
+        for form in [url.to_string(), s(&sh, "social_url").to_string(), engine.clone(), legacy, format!("#{frag}"), frag.to_string(), format!("  {url}\n")] {
             let o = parse(&beatscript_api::open_json(&form));
             assert!(b(&o, "ok") && b(&o, "verified"), "{name} {form}: {}", o.js_stringified());
             assert_eq!(s(&o, "cid"), s(&c, "cid"), "{name}");
             assert_eq!(s(&o, "canonical"), s(&c, "canonical"), "{name}");
             // the editor's text: the program as written (formatted), or the canonical text where the link carries only that
-            let want = if form.contains("beats.bitwrap.io") { s(&c, "canonical") } else { formatted.as_str() };
+            let want = if form.contains("beats.bitwrap.io") || form == engine { s(&c, "canonical") } else { formatted.as_str() };
             assert_eq!(s(&o, "text"), want, "{name} {form}");
             assert!(matches!(get(&o, "error"), JsonValue::Null));
             assert_eq!(get(&o, "notes_unverified").as_array().unwrap().len(), 0);
@@ -397,15 +401,17 @@ fn a_custom_origin_and_a_signature_and_notes_travel_as_given() {
         assert!(get(&o, "notes_unverified").as_array().unwrap().is_empty());
         assert!(get(&o, "warnings").as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("unsealed")));
     }
-    // beats' link carries them as `~notes`, unverified, beside the canonical text
-    assert!(s(&sh, "beats_url").contains('~'), "{}", s(&sh, "beats_url"));
-    let o = parse(&beatscript_api::open_json(s(&sh, "beats_url")));
+    // the engine's link carries them as `~notes`, unverified, beside the canonical text
+    let comp = djlive::compile::check_with(text, &beatscript_api::web_env().env()).compiled.unwrap();
+    let engine = djlive::share::encode(&comp, Some("sigAAAA_-"), true);
+    assert!(engine.contains('~'), "{engine}");
+    let o = parse(&beatscript_api::open_json(&engine));
     assert!(b(&o, "ok") && s(&o, "sig") == "sigAAAA_-", "{}", o.js_stringified());
     assert_eq!(get(&o, "notes_unverified").js_stringified(), r#"["a note"]"#);
     assert_eq!(s(&o, "text"), "tempo 120\ndeck A: kick x ~ x ~\n");
-    // no notes asked: none in beats' link; the site's link still carries the comment in its text
+    // no notes asked: none in the engine's link; the site's link still carries the comment in its text
     let sh = parse(&beatscript_api::share_json(text, None, false, ""));
-    assert!(!s(&sh, "url").contains('~') && !s(&sh, "beats_url").contains('~'));
+    assert!(!s(&sh, "url").contains('~') && !djlive::share::encode(&comp, None, false).contains('~'));
     assert_eq!(unpacked(s(&sh, "url")), text);
 }
 

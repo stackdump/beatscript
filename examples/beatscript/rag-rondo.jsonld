@@ -3,7 +3,7 @@
   "@type": "MusicComposition",
   "@id": "https://beatscript.app/p/z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW",
   "identifier": "z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW",
-  "sameAs": "https://beats.bitwrap.io/p#z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw",
+  "sameAs": "https://beatscript.app/p/z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw",
   "name": "Rag Rondo",
   "description": "The reference program of the rondo form: the refrain returns mutated between contrasting strains. Themes after Joplin's The Entertainer and Maple Leaf Rag; the Maple Leaf figure is an approximation in C, not a transcription.",
   "license": "https://creativecommons.org/publicdomain/zero/1.0/",

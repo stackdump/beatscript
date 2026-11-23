@@ -228,7 +228,7 @@ deck B: harmony $PAD" trap | python3 -c '
 import json,sys
 d=json.load(sys.stdin); s=d.get("style") or {}
 assert d["ok"] is True, d.get("diagnostics")
-assert s.get("genre") == "https://ontology.bitwrap.io/genre/trap", s
+assert s.get("genre") == "https://beatscript.app/ontology/genre/trap", s
 w=s.get("warnings")
 assert w == [], w
 print("live check: genre=trap, kit=drums-808, pad", sys.argv[1], ": no style warning")' "$PAD"
@@ -301,6 +301,9 @@ else
   echo "radio: this build has no station tool (skipped)"
 fi
 python3 -I crates/beatscript-serve/deploy/mcp-exposure.py $U
+# BeatScript data lives on beatscript.app only (2026-11-22): no served page, program document or MCP answer says
+# bitwrap.io, except the history and attribution deploy/bitwrap-allowlist.tsv lists
+python3 -I deploy/check-data-on-beatscript-app.py $U
 site/deploy/deploy.sh verify-beatscript
 # live smoke: 5 = share (incl. the rights line linking /authorship), 13 = caret on the glyph, 14 = gutter rows
 CHROME=${CHROME:-/usr/bin/google-chrome} BEATSCRIPT_CHROME_ARGS=--disable-audio-output node site/test/smoke.mjs --server $U --only 5,13,14

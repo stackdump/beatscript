@@ -7,7 +7,7 @@ const CID = /^z[1-9A-HJ-NP-Za-km-z]{20,80}$/;
 
 /**
  * The CID a block's @id names: a bare CID (a BeatScript 1 block), the program's page `https://beatscript.app/p/<CID>` (a
- * BeatScript 2 block; any http(s) origin, a dev server's too), or `https://beats.bitwrap.io/p#<CID>` (the older page form).
+ * BeatScript 2 block; any http(s) origin, a dev server's too), or `…/p#<CID>` (the older page form, as an older host wrote it).
  * Null for anything else. Whichever it is, the text must still hash to the CID (app.js checks before it plays).
  */
 export function cidOfId(id) {

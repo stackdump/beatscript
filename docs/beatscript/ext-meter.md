@@ -80,16 +80,16 @@ A program with no part of its own cycle is not held to this limit: a long altern
 
 ## The ontology
 
-The Bitwrap Ontology (`https://ontology.bitwrap.io/ns#`) models a Euclidean rhythm as an individual of the class
+The Bitwrap Ontology (`https://beatscript.app/ontology/ns#`) models a Euclidean rhythm as an individual of the class
 `ns:EuclideanRhythm` ("K pulses spread as evenly as possible over N steps, then rotated") with the datatype properties `ns:pulses`,
 `ns:steps`, `ns:rotation` and `ns:midiNote`, and `ns:forRole` (a `role:kick`, `role:snare` or `role:hihat`). Its individuals are the genres'
-drum rhythms, one IRI each under `https://ontology.bitwrap.io/rhythm/` (`rhythm:house-snare` is "house snare: E(3,8) rotation 0").
-**The table in `meter.rs` is copied from the published ontology** (the Turtle at `https://ontology.bitwrap.io/ns`, read on 2026-11-17: 57
+drum rhythms, one IRI each under `https://beatscript.app/ontology/rhythm/` (`rhythm:house-snare` is "house snare: E(3,8) rotation 0").
+**The table in `meter.rs` is copied from the published ontology** (the bitwrap ontology's Turtle, read on 2026-11-17, now the BeatScript ontology's IRIs: 57
 individuals; the ontology MCP tools were not reachable in the run that wrote it, so it was read with `curl`; nothing in the code or tests
 touches the network): `EUCLID_TABLE`, and
 
 ```rust
-meter::euclid_class_iri()                    // "https://ontology.bitwrap.io/ns#EuclideanRhythm"
+meter::euclid_class_iri()                    // "https://beatscript.app/ontology/ns#EuclideanRhythm"
 meter::EUCLID_PROPERTY_IRIS                  // pulses, steps, rotation, midiNote, forRole
 meter::euclid_name(k, n, rot) -> Option<EuclidTerm>          // the first named rhythm with these parameters
 meter::euclid_names(k, n, rot) -> Vec<&EuclidTerm>           // all of them, in the ontology's order
@@ -101,7 +101,7 @@ The ontology has **no traditional names** (tresillo, cinquillo, clave ...): sear
 named when it is one of the 57. `check` says so for a drum part (`kick`, `snare`, `hihat`) whose own role has the rhythm:
 
 ```text
-e(3,8): the ontology's house snare rhythm (https://ontology.bitwrap.io/rhythm/house-snare)           (snare e(3,8))
+e(3,8): the ontology's house snare rhythm (https://beatscript.app/ontology/rhythm/house-snare)           (snare e(3,8))
 e(4,16): the ontology's kick rhythm of country, edm, house, synthwave, techno and trance (https://.../country-kick and 5 more)
 ```
 

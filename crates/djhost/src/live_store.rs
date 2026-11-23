@@ -19,8 +19,8 @@
 //! #! author: did:key:z6Mk...
 //! #! forked-from: z4EBG9...
 //! #! credit: z4EBG9... | did:key:z6Mk... | CC-BY-4.0 | night bus
-//! #! genre: https://ontology.bitwrap.io/genre/techno
-//! #! tags: https://ontology.bitwrap.io/instrument/acid, https://ontology.bitwrap.io/section/drop
+//! #! genre: https://beatscript.app/ontology/genre/techno
+//! #! tags: https://beatscript.app/ontology/instrument/acid, https://beatscript.app/ontology/section/drop
 //! tempo 140
 //! ...
 //! ```
@@ -954,12 +954,12 @@ mod tests {
             name: "n".into(),
             text: "deck A: kick x\n".into(),
             rights: Rights { author: Some("a".into()), ..Rights::default() },
-            links: Links::new(Some("https://ontology.bitwrap.io/genre/techno".into()), vec!["https://ontology.bitwrap.io/section/drop".into(), "https://ontology.bitwrap.io/instrument/acid".into()]),
+            links: Links::new(Some("https://beatscript.app/ontology/genre/techno".into()), vec!["https://beatscript.app/ontology/section/drop".into(), "https://beatscript.app/ontology/instrument/acid".into()]),
         };
         let file = o.to_file();
         assert_eq!(
             file,
-            "#! btw 1\n#! name: n\n#! license: CC0-1.0\n#! visibility: public\n#! author: a\n#! genre: https://ontology.bitwrap.io/genre/techno\n#! tags: https://ontology.bitwrap.io/instrument/acid, https://ontology.bitwrap.io/section/drop\ndeck A: kick x\n"
+            "#! btw 1\n#! name: n\n#! license: CC0-1.0\n#! visibility: public\n#! author: a\n#! genre: https://beatscript.app/ontology/genre/techno\n#! tags: https://beatscript.app/ontology/instrument/acid, https://beatscript.app/ontology/section/drop\ndeck A: kick x\n"
         );
         let (back, header) = Object::from_file(&file).unwrap();
         assert_eq!(back, o);

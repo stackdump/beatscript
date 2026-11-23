@@ -10,10 +10,10 @@ use djengine::rights::{License, Rights};
 use djhost::live_store::{LinkEdit, LiveStore, Object};
 use djlive::linked::{self, Links};
 
-const TECHNO: &str = "https://ontology.bitwrap.io/genre/techno";
-const ACID: &str = "https://ontology.bitwrap.io/instrument/acid";
-const FLOOR: &str = "https://ontology.bitwrap.io/groove/four-on-floor";
-const DROP: &str = "https://ontology.bitwrap.io/section/drop";
+const TECHNO: &str = "https://beatscript.app/ontology/genre/techno";
+const ACID: &str = "https://beatscript.app/ontology/instrument/acid";
+const FLOOR: &str = "https://beatscript.app/ontology/groove/four-on-floor";
+const DROP: &str = "https://beatscript.app/ontology/section/drop";
 
 const PROGRAM: &str = "tempo 128\nkey am\ndeck A: kick e(4,16) | snare e(2,16,4)\n";
 
@@ -90,7 +90,7 @@ fn a_btw_file_round_trips_its_links_through_export_and_import() {
     assert_eq!(s2.load_object("night bus").unwrap().links, a.links);
     // import takes any spelling too, and a file with no link lines has no links
     let (d, _) = s2.import_text(&format!("#! name: other\n#! genre: genre:house\n#! tags: bw:Acid\ndeck A: snare ~ x ~ x\n"), "o").unwrap();
-    assert_eq!(d.links, Links { genre: Some("https://ontology.bitwrap.io/genre/house".into()), tags: vec![ACID.into()] });
+    assert_eq!(d.links, Links { genre: Some("https://beatscript.app/ontology/genre/house".into()), tags: vec![ACID.into()] });
     let (e, _) = s2.import_text("#! name: bare\ndeck A: hihat x*8\n", "o").unwrap();
     assert!(e.links.is_empty());
     let _ = std::fs::remove_dir_all(dir);
@@ -115,7 +115,7 @@ fn links_survive_fork_resave_and_a_rights_change() {
     assert_eq!(b.links, a.links);
     // header lines in the text are the statement: they replace
     let (c, _) = s.save_with("the night bus", &headed("#! genre: house\n"), None).unwrap();
-    assert_eq!(c.links, Links { genre: Some("https://ontology.bitwrap.io/genre/house".into()), tags: vec![] });
+    assert_eq!(c.links, Links { genre: Some("https://beatscript.app/ontology/genre/house".into()), tags: vec![] });
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -135,7 +135,7 @@ fn a_change_of_genre_or_tags_is_a_new_object_of_the_same_program() {
     assert!(!dir.join(format!("{}.beatscript", a.object)).exists() && !dir.join(format!("{}.jsonld", a.object)).exists());
     // genre only, then clear the tags
     let c = s.set_links("night bus", &LinkEdit::new(Some("dnb"), None)).unwrap();
-    assert_eq!(c.links.genre.as_deref(), Some("https://ontology.bitwrap.io/genre/dnb"));
+    assert_eq!(c.links.genre.as_deref(), Some("https://beatscript.app/ontology/genre/dnb"));
     assert_eq!(c.links.tags.len(), 2);
     let d = s.set_links("night bus", &LinkEdit::new(Some(""), Some(""))).unwrap();
     assert!(d.links.is_empty());
@@ -198,8 +198,8 @@ fn a_jsonld_is_written_beside_each_object_and_follows_it() {
     assert!(on_disk.ends_with("}\n"));
     let doc = s.jsonld("night bus").unwrap();
     assert_eq!(on_disk, format!("{}\n", linked::pretty(&doc)), "the file is the verb's answer");
-    assert_eq!(text_of(&doc, "@type"), Some("djrust:Program"));
-    assert_eq!(text_of(&doc, "@id"), Some(format!("https://beats.bitwrap.io/p#{}", a.cid).as_str()));
+    assert_eq!(text_of(&doc, "@type"), Some("Program"));
+    assert_eq!(text_of(&doc, "@id"), Some(format!("https://beatscript.app/p/{}", a.cid).as_str()));
     assert_eq!(text_of(&doc, "genre"), Some(TECHNO));
     assert_eq!(doc.get("tag").unwrap().strings().unwrap(), [ACID]);
     assert_eq!((text_of(&doc, "key"), doc.get("tempo").and_then(JsonValue::as_f64)), (Some("am"), Some(128.0)));
@@ -213,7 +213,7 @@ fn a_jsonld_is_written_beside_each_object_and_follows_it() {
     assert_eq!(eu.len(), 2);
     assert_eq!(text_of(&eu[0], "@type"), Some("bw:EuclideanRhythm"));
     let kick = eu.iter().find(|e| e.get("bw:pulses").and_then(JsonValue::as_f64) == Some(4.0)).unwrap();
-    assert!(kick.get("sameShapeAs").unwrap().strings().unwrap().contains(&"https://ontology.bitwrap.io/rhythm/techno-kick".to_string()));
+    assert!(kick.get("sameShapeAs").unwrap().strings().unwrap().contains(&"https://beatscript.app/ontology/rhythm/techno-kick".to_string()));
     // a new license: a new object, and its JSON-LD with it; the old pair goes
     let b = s.set_rights("night bus", Some(License::CcBy4), None).unwrap();
     assert_eq!(files(&dir), [format!("{}.beatscript", b.object), format!("{}.jsonld", b.object)]);
@@ -221,7 +221,7 @@ fn a_jsonld_is_written_beside_each_object_and_follows_it() {
     // a fork has its own, naming its parent
     let (f, _) = s.fork("night bus", Some("fork"), Some("did:key:z6MkFork")).unwrap();
     let fdoc = std::fs::read_to_string(dir.join(format!("{}.jsonld", f.object))).unwrap();
-    assert!(fdoc.contains(&format!("\"forkedFrom\": \"https://beats.bitwrap.io/p#{}\"", a.cid)), "{fdoc}");
+    assert!(fdoc.contains(&format!("\"forkedFrom\": \"{}\"", a.cid)) && fdoc.contains(&format!("\"https://beatscript.app/p/{}\"", a.cid)), "{fdoc}");
     assert!(fdoc.contains("\"credit\": ["), "a CC BY parent is credited: {fdoc}");
     // a .jsonld is not a program: the list has two, and a delete takes both files
     assert_eq!(s.list().len(), 2);
@@ -240,7 +240,7 @@ fn jsonld_of_a_text_takes_its_links_and_its_rights_from_its_header_only() {
     // a bare program: no links, no claim about rights
     let doc = s.jsonld_text(PROGRAM).unwrap();
     assert!(doc.get("genre").is_none() && doc.get("licenseId").is_none() && doc.get("name").is_none());
-    assert_eq!(text_of(&doc, "@id"), Some(format!("https://beats.bitwrap.io/p#{}", djlive::check(PROGRAM).compiled.unwrap().cid).as_str()));
+    assert_eq!(text_of(&doc, "@id"), Some(format!("https://beatscript.app/p/{}", djlive::check(PROGRAM).compiled.unwrap().cid).as_str()));
     // a .beatscript file: its name, links and rights
     let file = headed("#! btw 1\n#! name: night bus\n#! license: CC-BY-4.0\n#! author: matt\n#! genre: genre:techno\n#! tags: acid, four on floor\n");
     let doc = s.jsonld_text(&file).unwrap();
@@ -313,12 +313,12 @@ fn a_file_edited_by_hand_is_not_listed_and_one_with_a_withdrawn_term_is_still_re
     let _ = std::fs::remove_dir_all(&dir);
     // a term the vocabulary no longer has (it was refreshed) does not lose the program: the store reads what it kept
     let comp = djlive::check(PROGRAM).compiled.unwrap();
-    let o = Object { name: "old".into(), text: comp.text.clone(), rights: Rights::default(), links: Links::new(Some("https://ontology.bitwrap.io/genre/withdrawn".into()), vec![]) };
+    let o = Object { name: "old".into(), text: comp.text.clone(), rights: Rights::default(), links: Links::new(Some("https://beatscript.app/ontology/genre/withdrawn".into()), vec![]) };
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join(format!("{}.beatscript", o.cid())), o.to_file()).unwrap();
     let l = s.list();
     assert_eq!(l.len(), 1);
-    assert_eq!(l[0].links.genre.as_deref(), Some("https://ontology.bitwrap.io/genre/withdrawn"));
+    assert_eq!(l[0].links.genre.as_deref(), Some("https://beatscript.app/ontology/genre/withdrawn"));
     // but saving it again names the problem, and a re-save of its text without header lines keeps what it has
     assert_eq!(s.save_with("old", PROGRAM, None).unwrap().0.links, l[0].links);
     let _ = std::fs::remove_dir_all(dir);
@@ -327,7 +327,7 @@ fn a_file_edited_by_hand_is_not_listed_and_one_with_a_withdrawn_term_is_still_re
 #[test]
 fn the_vocabulary_is_in_the_binary_and_says_where_it_is_from() {
     let d = djhost::ontology::describe();
-    assert!(d.starts_with("bitwrap ontology 0.1.0, 253 terms, fetched 20"), "{d}");
+    assert!(d.starts_with("BeatScript ontology 0.3.0, 265 terms, taken 20"), "{d}");
     // BeatScript's own environment has it, so any check through the host does
     let be = djhost::beatscript_env::BeatscriptEnv::new(None);
     assert!(be.env().ontology.is_some());

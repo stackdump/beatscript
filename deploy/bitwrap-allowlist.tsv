@@ -1,0 +1,13 @@
+# BeatScript data lives on beatscript.app only (Matt, 2026-11-22). Nothing the site serves, and nothing its MCP
+# answers, may say "bitwrap.io", except the exact texts below. Each line: where (a path prefix, or mcp:<tool>), the
+# exact text that may appear there, and why. Read by deploy/check-data-on-beatscript-app.py (the live check, run by
+# deploy/live-checks.sh) and by crates/beatscript-serve/tests/data_on_beatscript_app.rs (the same check, offline).
+# Columns are separated by one TAB. Add a line only for history or attribution, never for a link or data a reader follows.
+#
+# where	text	why
+/ontology/	Derived from the bitwrap ontology 0.2.0 (ontology.bitwrap.io)	attribution: the fork's origin, as text
+/ontology/	<code>https://ontology.bitwrap.io/genre/techno</code>	attribution: the page shows what a prov:wasDerivedFrom link names
+/privacy/	btw.bitwrap.io, its old address, redirects there	history: the site's old address, as text
+/context/v1.jsonld	"bw": "https://ontology.bitwrap.io/ns#"	legacy: the v1 @context is published and immutable (documents made before 2026-11-23 name it); nothing new names v1
+/context/v1.jsonld	"djrust": "https://beats.bitwrap.io/ns/djrust#"	legacy: as above
+/docs/	(`btw.bitwrap.io`, `beats.bitwrap.io/p#`) still opens	legacy: the language doc says which older hosts' links still open (none is made there)

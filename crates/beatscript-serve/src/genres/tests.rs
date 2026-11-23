@@ -64,7 +64,7 @@ fn check_ok(text: &str) -> Value {
 fn a_genre_is_read_from_the_graph() {
     let g = onto();
     let t = find(&g, "techno").unwrap();
-    assert_eq!(t.iri, "https://ontology.bitwrap.io/genre/techno");
+    assert_eq!(t.iri, "https://beatscript.app/ontology/genre/techno");
     assert_eq!(t.bpm, Some(128.0));
     assert_eq!((t.min_bpm, t.max_bpm), (Some(120.0), Some(150.0)));
     assert_eq!(t.scale.as_deref(), Some("major"));
@@ -73,7 +73,7 @@ fn a_genre_is_read_from_the_graph() {
     assert_eq!(t.voices["bass"].name, "acid");
     assert_eq!(t.progressions, [vec![1, 7, 1, 7]]);
     assert_eq!(t.rhythms["kick"], Rhythm { pulses: 4, steps: 16, rotation: 0 });
-    for name in ["Techno", "genre:techno", "https://ontology.bitwrap.io/genre/techno", " TECHNO "] {
+    for name in ["Techno", "genre:techno", "https://beatscript.app/ontology/genre/techno", " TECHNO "] {
         assert_eq!(find(&g, name).unwrap().slug, "techno", "{name}");
     }
     assert!(find(&g, "polka").is_none());
@@ -192,7 +192,7 @@ fn check_style_reads_the_header_and_never_fails() {
     assert_eq!(wanted(text, Some("jazz")).as_deref(), Some("jazz"));
     assert_eq!(wanted("tempo 90\n", Some("  ")), None);
     let v = check_style(Some(&g), text, "techno");
-    assert_eq!(v["genre"], "https://ontology.bitwrap.io/genre/techno");
+    assert_eq!(v["genre"], "https://beatscript.app/ontology/genre/techno");
     assert_eq!(v["warnings"][0]["code"], "tempo");
     assert_eq!(v["warnings"][0]["line"], 2);
     let v = check_style(Some(&g), text, "polka");

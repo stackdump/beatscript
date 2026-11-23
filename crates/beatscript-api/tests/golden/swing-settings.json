@@ -49,7 +49,6 @@
     "ok": true,
     "url": "https://beatscript.app/#z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV.LY9LSsRAEIb3OcUPbhLpCYkhkyGShd6kTReTkH6E7p5HYPASbgVXLly7duVNXAjewppRiqKgHt9f_xUCxTjabYC0CrOWo8UsfQwtwoH7AhJmtM6vZrJRRmfHHhMtAkb6ye0FFG09UbjFjkdOEZgg0Ttj-KDF8PmmtcPX8xN-Xt6_Xz-SSGZ22DR5nVwkUORlnTATqmWps06iqJ9w12IauVJaCWwEbjKcEKz0hEccL3nCMA4y4nhdrtkKqa7CnnRXFXneFH-Y-xaGtFPL_8tpka8FyjKDJsv7ro9dzaQHGQJKxlao2USInaK4s6RWQR7OStIbZxf0g_MqVaYRqDJe50h-AQ",
     "social_url": "https://beatscript.app/c/z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV.LY9LSsRAEIb3OcUPbhLpCYkhkyGShd6kTReTkH6E7p5HYPASbgVXLly7duVNXAjewppRiqKgHt9f_xUCxTjabYC0CrOWo8UsfQwtwoH7AhJmtM6vZrJRRmfHHhMtAkb6ye0FFG09UbjFjkdOEZgg0Ttj-KDF8PmmtcPX8xN-Xt6_Xz-SSGZ22DR5nVwkUORlnTATqmWps06iqJ9w12IauVJaCWwEbjKcEKz0hEccL3nCMA4y4nhdrtkKqa7CnnRXFXneFH-Y-xaGtFPL_8tpka8FyjKDJsv7ro9dzaQHGQJKxlao2USInaK4s6RWQR7OStIbZxf0g_MqVaYRqDJe50h-AQ",
-    "beats_url": "https://beats.bitwrap.io/p#z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV.JY1NCoMwGET3nmKWWmwwDVYRXLQ3Sc1HDZpETOoPSM_etGUYZvN4E8hMDnXFysSv2j5RMF4mA-1QjdF2IhsSRd2AW4NBx6VU5KhzXDIc8FbOhDe2Xw_0upcB24lf4YlUK7DQ2IqCsar4a-4NDI1O7TByHtySFuyag_MMI9nIuy60ZTQ9pPfgUStQQlsfWkXhZUmdvVy_T3I2zu7oejerVJkqh8giHpN8AA",
     "cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
     "chars": 422,
     "canonical": "tempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",

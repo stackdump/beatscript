@@ -22,7 +22,7 @@ gen@2 GENRE seed=N [bpm=B] [key=K] [length=short|standard|long] [section=NAME] [
 **Which generator.** The seeded generator, `beatscript_api::generate`: the one beatscript.app's compose panel runs as "seeded, no
 model", the MCP `generate` tool, `POST /api/generate`. It already shipped versioned (`#! generator: seeded@1`, then
 `seeded@2` on 2026-11-22, which wrote chords as Roman numerals). `gen@N` is `seeded@N`, and its params are seeded's own
-(`seed`, `bpm`, `key`, `length`), so nothing is invented. `seed(...)` is a different generator (beats.bitwrap.io's `compose`,
+(`seed`, `bpm`, `key`, `length`), so nothing is invented. `seed(...)` is a different generator (the beats sequencer's `compose`,
 byte for byte) and stays what it was; a first cut of `gen` on `compose` (exposing its densities and traits) was set aside for
 this.
 

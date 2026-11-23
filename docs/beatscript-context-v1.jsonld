@@ -2,7 +2,7 @@
   "@context": {
     "@vocab": "https://beatscript.app/schema#",
     "bs": "https://beatscript.app/schema#",
-    "bw": "https://ontology.bitwrap.io/ns#",
+    "bw": "https://beatscript.app/ontology/ns#",
     "schema": "https://schema.org/",
     "MusicComposition": "schema:MusicComposition",
     "Program": "bs:Program",

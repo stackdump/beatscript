@@ -63,13 +63,13 @@ fn fork_integrity() {
         assert_eq!(hex(b), sum, "upstream {name} differs from upstream.lock");
     }
 
-    // version 0.2.0, its version IRI, the version before it, derived from the bitwrap 0.2.0 release
+    // version 0.3.0 (0.2.0 plus bitwrap's conventions module), its version IRI, the version before it, derived from the bitwrap 0.2.0 release
     let g = &o.graph;
     let onto_iri = format!("{}ns", fork::BASE);
-    assert_eq!(o.version, "0.2.0");
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionInfo")), "0.2.0");
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionIRI")), format!("{}0.2.0", fork::BASE));
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}priorVersion")), format!("{}0.1.0", fork::BASE));
+    assert_eq!(o.version, "0.3.0");
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionInfo")), "0.3.0");
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionIRI")), format!("{}0.3.0", fork::BASE));
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}priorVersion")), format!("{}0.2.0", fork::BASE));
     assert_eq!(g.first(&onto_iri, fork::PROV_DERIVED), fork::UPSTREAM_RELEASE);
     assert!(fork::UPSTREAM_RELEASE.contains(&format!("-{}.", fork::UPSTREAM_VERSION)));
     let up: Value = serde_json::from_str(fork::UPSTREAM_MANIFEST).unwrap();
@@ -94,7 +94,7 @@ fn fork_integrity() {
     // every bitwrap 0.2.0 term (and every triple but its header) has its counterpart, linked back, or is wording fork.ttl
     // restates (fork::RESTATABLE), replaced by fork.ttl's
     let have: BTreeSet<String> = fork_g.iter().map(fork::nt).collect();
-    let restated = fork::restatements(fork::UPSTREAM_NT, fork::FORK_TTL).unwrap();
+    let restated = fork::restatements(fork::UPSTREAM_NT, fork::CONVENTIONS_TTL, fork::FORK_TTL).unwrap();
     for (old, new) in &restated {
         assert!(!have.contains(old) && have.contains(new), "{old} is restated as {new}");
     }
@@ -259,12 +259,13 @@ async fn routes_serve_the_release_bytes() {
     assert_eq!(h["content-type"], "text/html; charset=utf-8");
     let page = String::from_utf8(b).unwrap();
     assert!(page.contains("https://beatscript.app/ontology/ns#") && page.contains(&onto().version));
-    assert!(page.contains("Derived from the <a href=\"https://ontology.bitwrap.io/\">bitwrap ontology</a> 0.2.0"));
+    assert!(page.contains("Derived from the bitwrap ontology 0.2.0 (ontology.bitwrap.io)"));
+    assert!(!page.contains("href=\"https://ontology.bitwrap.io"), "attribution is text, not a link to follow");
     assert!(!page.contains("byte for byte") && !page.contains("rel=\"alternate\" type=\"text/turtle\" href=\"https://ontology.bitwrap.io"));
     assert!(!page.contains("style=") && !page.contains("<style"), "no inline styles: the site's CSP is style-src 'self'");
     assert_eq!(send(get("/ontology", "")).await.0, 308);
     // the version IRI is the release
-    let (s, _, b) = send(get("/ontology/0.2.0", "text/turtle")).await;
+    let (s, _, b) = send(get(&format!("/ontology/{}", onto().version), "text/turtle")).await;
     assert_eq!((s.as_u16(), b.as_slice()), (200, file("ns.ttl").unwrap()));
     // a term's IRI answers with its triples
     let (s, h, b) = send(get("/ontology/genre/techno", "text/turtle")).await;
@@ -379,22 +380,22 @@ async fn mcp_tools_match_fixtures() {
     }
 }
 
-/// Genre conventions (beatscript_serve::genres) read the fork exactly as they read bitwrap 0.2.0: the same genres, the same
-/// conventions, the same check style warnings. genres keeps bitwrap's IRIs (they are upstream, and what a program's
-/// `#! genre:` line names); a reader over the fork only moves them.
+/// Genre conventions (beatscript_serve::genres) read the fork exactly as they read bitwrap 0.2.0 and its conventions
+/// module: the same genres, the same conventions, the same check style warnings and templates. genres names the fork's
+/// IRIs (beatscript.app/ontology/); a reader over the vendored bitwrap inputs only moves them.
 #[test]
 fn genres_read_the_fork_as_bitwrap() {
     use beatscript_serve::genres::{self, Graph};
     struct G {
         idx: graph::Index,
-        fork: bool,
+        upstream: bool,
     }
     impl G {
         fn into_(&self, iri: &str) -> String {
-            if self.fork { fork::rehome(iri) } else { iri.to_string() }
+            if self.upstream { iri.replacen(fork::BASE, fork::UPSTREAM_BASE, 1) } else { iri.to_string() }
         }
         fn out(&self, v: String) -> String {
-            if self.fork { v.replacen(fork::BASE, fork::UPSTREAM_BASE, 1) } else { v }
+            if self.upstream { fork::rehome(&v) } else { v }
         }
     }
     impl Graph for G {
@@ -409,10 +410,17 @@ fn genres_read_the_fork_as_bitwrap() {
             v
         }
     }
-    let up = G { idx: graph::Index::from_nt(fork::UPSTREAM_NT), fork: false };
-    let fk = G { idx: graph::Index::from_nt(file("ns.nt").unwrap()), fork: true };
+    let mut nt = fork::UPSTREAM_NT.to_vec();
+    nt.push(b'\n');
+    for t in fork::parse(oxigraph::io::RdfFormat::Turtle, fork::CONVENTIONS_TTL.as_bytes(), Some("c")).unwrap() {
+        nt.extend_from_slice(format!("{} .\n", t).as_bytes());
+    }
+    let up = G { idx: graph::Index::from_nt(&nt), upstream: true };
+    let fk = G { idx: genre_graph(), upstream: false };
+    assert_eq!(genres::NS, format!("{}ns#", fork::BASE));
     let names = up.of_type(&format!("{}Genre", genres::NS));
     assert!(names.len() >= 19, "{names:?}");
+    assert!(names.iter().all(|n| n.starts_with(fork::BASE)), "{names:?}");
     assert_eq!(names, fk.of_type(&format!("{}Genre", genres::NS)));
     let text = "#! genre: techno\ntempo 128\nkick x . x . x . x .\nbass inst=sub-bass c2 . c2 .\n";
     for iri in &names {
@@ -420,7 +428,13 @@ fn genres_read_the_fork_as_bitwrap() {
         assert_eq!(genres::Genre::load(&up, iri), genres::Genre::load(&fk, iri), "{slug}");
         assert_eq!(genres::check_style(Some(&up as &dyn Graph), text, &slug), genres::check_style(Some(&fk as &dyn Graph), text, &slug), "{slug}");
         assert_eq!(genres::template_answer(Some(&up as &dyn Graph), &slug).ok(), genres::template_answer(Some(&fk as &dyn Graph), &slug).ok(), "{slug}");
+        // what a program wrote before (a bitwrap IRI) still names the genre
+        let old = iri.replacen(fork::BASE, fork::UPSTREAM_BASE, 1);
+        assert_eq!(genres::find(&fk, &old).map(|g| g.iri), Some(iri.clone()), "{old}");
     }
+    // nothing genres answers names bitwrap
+    let answer = genres::template_answer(Some(&fk as &dyn Graph), "techno").unwrap().to_string();
+    assert!(!answer.contains("bitwrap.io"), "{answer}");
 }
 
 /// 6672: the installed genre graph has bitwrap's conventions module (pinned by `ontology/conventions.lock`), so trap's
@@ -430,7 +444,7 @@ fn genre_graph_has_the_conventions_and_trap_its_808() {
     use beatscript_serve::genres::{self, Graph};
     let lock = include_str!("../../ontology/conventions.lock");
     let pinned: Vec<(&str, &str)> = lock.lines().filter(|l| !l.starts_with('#') && !l.starts_with("source ")).filter_map(|l| l.split_once("  ")).collect();
-    assert_eq!(pinned, [(hex(GENRES_CONVENTIONS_TTL).as_str(), "conventions.ttl")], "conventions.ttl differs from conventions.lock");
+    assert_eq!(pinned, [(hex(fork::CONVENTIONS_TTL.as_bytes()).as_str(), "conventions.ttl")], "conventions.ttl differs from conventions.lock");
 
     let g = GenreGraph(genre_graph());
     let trap = genres::find(&g, "trap").unwrap();

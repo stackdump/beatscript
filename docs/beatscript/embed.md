@@ -240,7 +240,7 @@ It answers any window that can post to it. The capability tools still act only a
 | Obsidian and other Markdown apps | player, card | yes, in the frame | the iframe only: scripts are stripped | degraded | the iframe's tests and the snippet in `mcp/embed.rs`'s; not tested in the apps |
 | plain `<audio>` | audio | no | the site's render, Ogg Opus | works, but not in older Safari | `embed_routes.rs` |
 | RSS enclosure | audio | no | the site's render as the item's `audio/ogg` enclosure | works | `opendata.rs` unit tests (the site's own feeds); the snippet in `mcp/embed.rs`'s tests |
-| the Android app | player, studio, card | yes, the app's own | the self-sealing link opens the program in the app | degraded: the app claims `/p` on beats.bitwrap.io and btw.bitwrap.io, not yet on beatscript.app | `site/test/unit.mjs` (the link the QR code holds); not the app |
+| the Android app | player, studio, card | yes, the app's own | the self-sealing link opens the program in the app | the app claims `/p` on beatscript.app (and, for links made before the move, on the site's older hosts) | `site/test/unit.mjs` (the link the QR code holds); not the app |
 
 Where the engine cannot run, the target gets the server's work instead:
 
@@ -428,8 +428,8 @@ The site's own feeds, `/feed.atom` and `/feed.json`, give each new public progra
 
 The self-sealing link, `https://beatscript.app/p#<CID>.<packed>`, is the one the Share panel's QR code holds. The
 program travels in the link, so the BeatScript Android app opens it offline and checks the CID itself. Android offers
-the app for the link; without the app, the link opens the program in the editor on the site. Today the app claims `/p`
-on beats.bitwrap.io and btw.bitwrap.io only, so a beatscript.app link opens on the site.
+the app for the link; without the app, the link opens the program in the editor on the site. The app claims `/p`
+on beatscript.app, and on the site's older hosts for links made before the move.
 
 ## The `embed` MCP tool
 

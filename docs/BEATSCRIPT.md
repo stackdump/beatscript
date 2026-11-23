@@ -462,7 +462,7 @@ their own (F14):
 
 ```text
 #! beatscript 2                               the version line ("Versions"): BeatScript 2; none, or #! btw 1, is BeatScript 1
-#! genre: techno                              one genre of the bitwrap ontology: a name, genre:techno, bw:Techno or an IRI
+#! genre: techno                              one genre of the BeatScript ontology: a name, genre:techno, bw:Techno or an IRI
 #! tags: acid, four on floor, drop            terms of it, by local name, label or IRI
 ```
 
@@ -1140,7 +1140,7 @@ file say it in words.
 
 ### Start from a seed
 
-`seed(genre, n)` is a track of the beats generator (beats.bitwrap.io's, the same notes), as BeatScript: a value, never
+`seed(genre, n)` is a track of the beats generator (the beats sequencer's, the same notes), as BeatScript: a value, never
 audio. Start a program from one line, write it out, and make it yours:
 
 ```text
@@ -1154,7 +1154,7 @@ arrange from template(deep-house, @tempest_such_stuff)  a phrase as a track
 arrange from template(rondo, @hands_up, refrain=ode_to_joy)  a form, a role bound: docs/forms.md
 ```
 
-- The genre is one of the bitwrap ontology's (ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal
+- The genre is one of the BeatScript ontology's (ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal
   reggae speedcore synthwave techno trance trap), `n` a whole number 0 to 4294967295, and a third argument a structure:
   standard (the default), loop, minimal or extended (`seed(house, 7, loop)[1..2]`). `[a..b]` picks bars (from 1, both
   in; `[9]` one bar), `.kick` `.bass` `.melody` ... a part, and they combine: `seed(techno, 42).bass[1..8]`. A part line's
@@ -1253,7 +1253,7 @@ arrange from gen@2 techno seed=42 bpm=128 key=am            the whole program
   line. The line is a comment: the ejected program has the CID of the same notes typed by hand, and the line keeps where they
   came from.
 - **No fetch**: the generator is compiled into the host (`beatscript`, beatscript.app, the page's wasm, the editor). A host without it
-  says `gen@2 is not here` at the call. `seed(techno, 42)` is another generator (beats.bitwrap.io's, seeds v1) and stays as it was.
+  says `gen@2 is not here` at the call. `seed(techno, 42)` is another generator (the beats sequencer's, seeds v1) and stays as it was.
 - `check`: an unknown genre or section is an error with the nearest names; a `let` names one section and one part; a `bpm=`,
   `key=` or `length=` it does not take is an error at the param. Long note: `docs/beatscript/ext-ffi.md`.
 
@@ -1633,7 +1633,7 @@ deck B: bass/12 e(5,12) oct=2 | melody/10 d4 ~ f4 ~ a4 vel=70..95 | harmony/32 c
 ```
 
 - **`e(k, n[, rot])`**: `0 <= k <= n`, `1 <= n <= 64`, any whole rotation (taken modulo `n`). `check` names the rhythm when the
-  bitwrap ontology names it for the part's own role (`e(3,8)` on a snare is "house snare"; `kick e(5,8)` is not named), to a
+  BeatScript ontology names it for the part's own role (`e(3,8)` on a snare is "house snare"; `kick e(5,8)` is not named), to a
   program that is linked to the ontology (it has a `#! genre:` or `#! tags:` line: an old program that never asked is not told,
   there being no information level for a note). The ontology has no folk names, so none is invented.
 - **`role/N`**: the part's cycle is `N` sixteenth steps (1 to 64) instead of 16, its terms sharing it as a bar's terms share the
@@ -1979,11 +1979,11 @@ program's text or CID. Long note: `docs/beatscript/ext-perform.md`.
 
 ### Links to the ontology
 
-Two more `#!` header lines say what a program is and link it to the bitwrap ontology (https://ontology.bitwrap.io/ns#).
+Two more `#!` header lines say what a program is and link it to the BeatScript ontology (https://beatscript.app/ontology/ns#).
 
 ```text
 #! beatscript 2
-#! genre: https://ontology.bitwrap.io/genre/techno
+#! genre: https://beatscript.app/ontology/genre/techno
 #! tags: acid, supersaw, four on floor, drop
 
 tempo 128
@@ -2004,8 +2004,9 @@ arrange intro drop
 - **`#! genre:`** names one genre and **`#! tags:`** terms of the vocabulary (instruments, grooves, scales, sections
   ...), by local name, label or IRI; every spelling is stored as the full IRI. They are comments to the language,
   **not in the program's CID**; a change of genre or tags is a new object of the same program, as a new licence is.
-- **Checked against a cached snapshot** of the vocabulary (`crates/djhost/data/bitwrap-ontology.json`, 253 terms,
-  compiled in, refreshed by `tools/ontology/refresh.py`; nothing fetches anything at run time). An unknown or
+- **Checked against a cached snapshot** of the vocabulary (`crates/djhost/data/beatscript-ontology.json`, 265 terms
+  of the BeatScript ontology, compiled in, refreshed offline from the in-repo release by `tools/ontology/refresh.py`;
+  nothing fetches anything). An unknown or
   wrong-kind term is a **warning** in `check` and `eval` (a comment must not stop a live program) and an **error** in
   `save` and `import` (a typo kept in a saved object would be a lie that persists), with line, column and a
   did-you-mean. **At most 64 tags**: each is looked up (about a millisecond), so the 65th is an error and the rest are not looked up.
@@ -2773,8 +2774,8 @@ language, all but the version line), so any `.beatscript` runs as it stands (and
 #! author: did:key:z6Mk...
 #! forked-from: z4EBG9...
 #! credit: z4EBG9... | did:key:z6Mk... | CC-BY-4.0 | the riffs
-#! genre: https://ontology.bitwrap.io/genre/techno
-#! tags: https://ontology.bitwrap.io/groove/four-on-floor, https://ontology.bitwrap.io/instrument/acid
+#! genre: https://beatscript.app/ontology/genre/techno
+#! tags: https://beatscript.app/ontology/groove/four-on-floor, https://beatscript.app/ontology/instrument/acid
 tempo 140
 ...
 ```
@@ -2783,7 +2784,7 @@ tempo 140
 (its header's rights kept, a private one stays private). Older `<cid>.json` snippets are still read, as CC0
 public. `track save` of a deck that plays a BeatScript program saves the program, not nothing.
 
-The `genre` and `tags` lines link the program to the bitwrap ontology ("Links to the ontology"). They are read in any
+The `genre` and `tags` lines link the program to the BeatScript ontology ("Links to the ontology"). They are read in any
 spelling (`techno`, `genre:techno`, `bw:Techno`, an IRI) and kept as full IRIs, tags sorted and unique, genre first;
 `btw save {genre, tags}` sets them; an unknown term is an error when the program is saved or imported (and a warning
 in `check`). A change of genre or tags is a new object of the same program, as a new licence is; an object that links
@@ -2800,7 +2801,7 @@ its own: it names its program by the program CID, so changing a program's tags o
 
 ```text
 https://beatscript.app/#<CID>.<base64url(deflate(formatted text))>[.<sig>][*<base64url(deflate(programs))>]
-https://beats.bitwrap.io/p#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<base64url(deflate(notes))>][*<base64url(deflate(programs))>]
+https://beatscript.app/#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<base64url(deflate(notes))>][*<base64url(deflate(programs))>]
 ```
 
 `btw share` makes one: the sealed part is the CID and the program's **formatted** text (what `fmt` prints: the
@@ -2808,9 +2809,10 @@ canonical text with the `#!` header lines, the comments and one blank line betwe
 opens as it was written. The CID is still the canonical text's: the header lines and comments are in neither the
 CID nor the signature, and come along **unsealed** (open says so). `sig` is the author's wallet signature over the
 CID, carried as given (the wallet makes and checks it). The site's links are on `https://beatscript.app` unless
-another origin is named; `btw.bitwrap.io` is only a legacy host the server still answers. beats' form (second line)
-packs the canonical text, since beats' page hashes what it unpacks as it is; there `~notes` carries the comments,
-shown as **unverified**. `btw open <url or CID>` decodes it, parses and canonicalises the text, recompiles it and
+another origin is named. BeatScript links are made on beatscript.app only: a link made on an older host
+(`btw.bitwrap.io`, `beats.bitwrap.io/p#`) still opens, since only the part after `#` is read, and none is made there. The
+engine's form (second line, what the apps and the booth make) packs the canonical text; there `~notes` carries the
+comments, shown as **unverified**. `btw open <url or CID>` decodes it, parses and canonicalises the text, recompiles it and
 recomputes the CID, and **refuses** a link whose CID is not its text's (`refused: the link says z... but its text
 is z...`). It answers the canonical text (what is stored and hashed) and the text formatted, with what the link
 carried beside the program, for the editor. A link made before links carried the formatted text packs the
@@ -3194,7 +3196,7 @@ logs are the "Decisions" of each `docs/beatscript/ext-*.md`.)
   is read. *Each is an error with the way out, not a rule that reads the input at expansion.*
 - `btw test` and the offline render read every input as 1/2 and say so. *The render has no controllers.*
 - The links store the published term IRIs (`.../genre/techno`), and accept the contract's `bw:Techno` and the
-  namespace IRI `https://ontology.bitwrap.io/ns#Techno` as spellings. *The published ontology keeps its classes in `ns#` and its terms at `/<kind>/<slug>`.*
+  namespace IRI `https://beatscript.app/ontology/ns#Techno` as spellings. *The published ontology keeps its classes in `ns#` and its terms at `/<kind>/<slug>`.*
 - A bad term is a warning in `check` and an error in `save` and `import`. *A header line is a comment and must not
   stop a live program; a typo kept in a saved object persists.*
 - A Euclidean node of the JSON-LD has a `name` only when the ontology names the shape once, and `sections` are the

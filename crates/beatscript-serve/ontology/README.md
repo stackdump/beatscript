@@ -3,19 +3,21 @@
 What `/ontology/` on beatscript.app serves (`src/ontology.rs`): the vocabulary behind BeatScript as Turtle,
 JSON-LD, N-Triples and RDF/XML, a read-only SPARQL endpoint and an MCP server, CC0.
 
-It is the **BeatScript ontology**, version 0.2.0 (`owl:versionIRI https://beatscript.app/ontology/0.2.0`, after 0.1.0:
-0.2.0 is the release of BeatScript 2, the language's second version, with the name BeatScript where bitwrap's wording
-said btw), namespace `https://beatscript.app/ontology/ns#`. It was **derived from the bitwrap ontology 0.2.0**
+It is the **BeatScript ontology**, version 0.3.0 (`owl:versionIRI https://beatscript.app/ontology/0.3.0`). 0.2.0 was
+the release of BeatScript 2, the language's second version, with the name BeatScript where bitwrap's wording said btw;
+0.3.0 adds bitwrap's genre conventions module, re-homed, so that everything BeatScript links to is here. Its
+namespace is `https://beatscript.app/ontology/ns#`. It was **derived from the bitwrap ontology 0.2.0**
 (ontology.bitwrap.io, CC0) and **evolves on its own** from here. ontology.bitwrap.io and its repository are not
 touched by anything in this directory, and nothing here is fetched from them, at build or at serve time.
 
 ## What is in a release
 
-A release is built from three inputs:
+A release is built from four inputs:
 
 | Input | What |
 |---|---|
 | `upstream/bitwrap-0.2.0/ns.nt` (+ `manifest.json`, pinned by `upstream.lock`) | the bitwrap 0.2.0 release, vendored by `sync.sh upstream` |
+| `upstream/bitwrap-conventions/conventions.ttl` (pinned by `conventions.lock`) | bitwrap's genre conventions module (tempo ranges, usual kits and voices, section lengths), CC0; re-homed and linked back like the 0.2.0 terms. `beatscript_serve::genres` (check's style, `genre_template`) reads it from the release |
 | `fork.ttl` | the fork's own module: its `owl:Ontology` header (title, version, version IRI, issued, creator, licence, `prov:wasDerivedFrom` the bitwrap release) and the few terms it adds by hand (the products its MCP tools belong to) |
 | `generated/beatscript.ttl` | the BeatScript vocabulary, generated from beatscript-serve's own code: every production and keyword of `crates/djlive/grammar.ebnf`, the voices, kits, families and palettes (`beatscript_api::instruments_json()`), the control registry's nouns and verbs, djlive's generators, transforms and evolve and mutation operators, and both MCP servers' tools |
 
@@ -79,11 +81,13 @@ are the vendored ones, the vendored ones are what the inputs build, the lock and
 every bitwrap 0.2.0 term and triple has its counterpart (or is wording `fork.ttl` restates, and the restatement is in),
 the serializations are one graph, the certificate replays to the pack's graph, and the vocabulary has no drift.
 
-## What still reads bitwrap
+## Nothing reads bitwrap
 
-BeatScript programs link to the bitwrap ontology, not to this fork: a `#! genre:` / `#! tags:` line resolves against
-`crates/djhost/data/bitwrap-ontology.json` (a snapshot of bitwrap's terms, refreshed by `tools/ontology/refresh.py`),
-the program JSON-LD's `bw:` prefix is `https://ontology.bitwrap.io/ns#`, and `beatscript_serve::genres` reads bitwrap's IRIs.
-Those IRIs are upstream and stay valid, and nothing a program's CID covers changes.
-`ontology::tests::genres_read_the_fork_as_bitwrap` shows the genre conventions and `check`'s style warnings read the
-same from the fork, so they can move to it later without a change in what they say.
+BeatScript data lives on beatscript.app only (2026-11-22). Programs link to this ontology: a `#! genre:` / `#! tags:` line
+resolves against `crates/djhost/data/beatscript-ontology.json` (the music terms of this release, refreshed offline by
+`tools/ontology/refresh.py`), and is written with this ontology's IRIs; an IRI under `https://ontology.bitwrap.io/`, which
+programs wrote before, is read as the same path here (`djlive::linked::rehome`). The program JSON-LD's `bw:` prefix is
+`https://beatscript.app/ontology/ns#` (the BeatScript context), `beatscript_serve::genres` reads this release (bitwrap's
+conventions module is one of its inputs since 0.3.0), and `ontology::tests::genres_read_the_fork_as_bitwrap` shows they
+answer exactly what they answered from bitwrap's files, in this ontology's IRIs. Header lines are not in a program's CID,
+so no CID moved. The only bitwrap IRIs left are the `prov:wasDerivedFrom` links in this ontology's own files.

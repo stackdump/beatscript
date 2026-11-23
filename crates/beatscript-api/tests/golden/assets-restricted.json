@@ -80,7 +80,6 @@
     "error": "not shared: it uses `harp` (a local sample, ~/samples/harp.wav), which is restricted: a program that uses restricted assets is private and is never shared or made public (fork it with substitute=true to play `bright-pluck` instead)",
     "url": null,
     "social_url": null,
-    "beats_url": null,
     "cid": null,
     "chars": null,
     "canonical": null,

@@ -1,9 +1,9 @@
 #! beatscript 2
-#! genre: https://ontology.bitwrap.io/genre/techno
+#! genre: https://beatscript.app/ontology/genre/techno
 #! tags: acid, supersaw, four on floor, drop
 # linked.beatscript: a program that says what it is. The two lines above are header lines: comments to the language, so
 # this runs anywhere and its CID is the same with or without them. A host that has the bitwrap ontology
-# (https://ontology.bitwrap.io/ns#) reads them: `genre` is one genre (an IRI, or `techno`, `genre:techno`, `bw:Techno`),
+# (https://beatscript.app/ontology/ns#) reads them: `genre` is one genre (an IRI, or `techno`, `genre:techno`, `bw:Techno`),
 # `tags` are terms of the vocabulary by local name, label or IRI (an instrument, a groove, a section ...). A misspelt
 # one is a warning in `btw check` ("unknown tag `acidd`: did you mean `acid`?") and an error when it is saved.
 # `btw jsonld` turns the program into linked data: its genre and tags, key, tempo, sections, licence, and the Euclidean

@@ -371,12 +371,12 @@ guard       = "when" expr-with-inputs ;                          (* on a control
 ### F14 Ontology links (module `linked`)
 
 ```text
-#! genre: https://ontology.bitwrap.io/ns#Techno       (or a CURIE: bw:Techno; stored as the full IRI)
+#! genre: https://beatscript.app/ontology/ns#Techno       (or a CURIE: bw:Techno; stored as the full IRI)
 #! tags: acid, driving, 303                            (terms or IRIs of the ontology)
 ```
 
-* Two more `#!` header lines (comments to the language, read by `live_store` with the rights lines). `genre` names a genre of the bitwrap
-  ontology (https://ontology.bitwrap.io/ns#); `tags` are terms of it (genres, instruments, scales, grooves, sections ...), by local
+* Two more `#!` header lines (comments to the language, read by `live_store` with the rights lines). `genre` names a genre of the BeatScript
+  ontology (https://beatscript.app/ontology/ns#); `tags` are terms of it (genres, instruments, scales, grooves, sections ...), by local
   name, label or IRI. **Validated against a cached copy of the vocabulary** (a file under `crates/djhost/data/`, refreshed from the
   published namespace when online; offline with the cache is fine): an unknown IRI or term is an error with a did-you-mean from the
   cache. The cache is the source of truth for tests; nothing in the test suite touches the network.

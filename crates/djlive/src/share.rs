@@ -4,10 +4,10 @@
 //! https://beatscript.app/#<CID>.<base64url(deflate(formatted text))>[.<sig>][*<carried programs>]
 //! ```
 //!
-//! and beats' own form, which beats.bitwrap.io/p opens, is
+//! and the engine's own form ([`encode`], what the apps and the booth make; beatscript.app opens it too) is
 //!
 //! ```text
-//! https://beats.bitwrap.io/p#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<notes>]
+//! https://beatscript.app/#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<notes>]
 //! ```
 //!
 //! The CID is the program's own (docs/BEATSCRIPT.md, "Canonical form"): whoever opens the link decodes the
@@ -15,10 +15,10 @@
 //! it carries. So a link cannot say one thing and play another. The site's link packs the *formatted*
 //! text (`format::format`: the canonical text with the `#!` header lines, the comments and the blank
 //! lines put back), so the program opens as it was written; its CID is still the canonical text's, and
-//! the comments and headers are not covered by it. beats' page hashes the text it unpacks as it is, so
-//! its form packs the canonical text. A link made before the site packed the formatted text carries the
+//! the comments and headers are not covered by it. The engine's form packs the canonical text and carries
+//! the comments as unsealed notes. A link made before the site packed the formatted text carries the
 //! canonical text, which formats to itself: it opens as it always did. `sig` is the author's signature
-//! over the CID (opaque here: the wallet makes and checks it). `notes` (beats' form only) are the
+//! over the CID (opaque here: the wallet makes and checks it). `notes` (the engine's form only) are the
 //! program's comments, deflated and tacked on after the sealed part: they are not covered by the CID or
 //! the signature and are shown as unverified.
 
@@ -28,7 +28,10 @@ use crate::compile::{check_with, program_cid, Check, Compiled};
 use crate::env::Env;
 use crate::print;
 
-pub const BASE: &str = "https://beats.bitwrap.io/p";
+/// Where a link opens: beatscript.app's editor, which reads the fragment. [`parse_link`] reads only what follows the `#`, so
+/// a link made on an older host (`https://beats.bitwrap.io/p#...`, `https://btw.bitwrap.io/#...`) still opens; none is
+/// ever made on one.
+pub const BASE: &str = "https://beatscript.app/";
 
 /// Where a BeatScript link opens when the caller names no site: beatscript.app. (btw.bitwrap.io, the site's
 /// old name, is only a legacy host the server still answers; no link is made on it.)
@@ -136,7 +139,7 @@ pub fn parse_link(s: &str) -> Result<Link, String> {
     let mut parts = sealed.split('.');
     let cid = parts.next().unwrap_or("").to_string();
     if cid.is_empty() || !cid.chars().all(|c| c.is_ascii_alphanumeric()) {
-        return Err("that is not a BeatScript link or CID (https://beats.bitwrap.io/p#<CID>.<text>)".into());
+        return Err("that is not a BeatScript link or CID (https://beatscript.app/#<CID>.<text>)".into());
     }
     let text = match parts.next() {
         Some(t) if !t.is_empty() => Some(unpack(t)?),

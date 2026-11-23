@@ -1,6 +1,6 @@
 //! The BeatScript ontology's release builder: the fork of the bitwrap ontology 0.2.0 that `/ontology/` serves.
 //!
-//! A release is built from three inputs, all in `ontology/` and all in git, and nothing is fetched:
+//! A release is built from four inputs, all in `ontology/` and all in git, and nothing is fetched:
 //!
 //! - `upstream/bitwrap-0.2.0/ns.nt`: the bitwrap release the fork derives from (vendored by `sync.sh upstream`, pinned
 //!   by `upstream.lock`). Every IRI under `https://ontology.bitwrap.io/` is re-homed under
@@ -8,6 +8,9 @@
 //!   `https://beatscript.app/ontology/genre/techno`), its `owl:Ontology` header is dropped, and every term it describes
 //!   gets one `prov:wasDerivedFrom` to the bitwrap IRI it came from. That is the only link back: no `owl:sameAs` or
 //!   equivalence, so reasoning over the fork never pulls bitwrap's IRIs in.
+//! - `upstream/bitwrap-conventions/conventions.ttl`: bitwrap's genre conventions module (tempo ranges, usual kits and
+//!   voices, section lengths; pinned by `conventions.lock`), CC0, re-homed and linked back the same way. It is what
+//!   `beatscript_serve::genres` reads (check's style, `genre_template`), so those answers name only this ontology's IRIs.
 //! - `fork.ttl`: the fork's header (version, version IRI, `prov:wasDerivedFrom` the bitwrap 0.2.0 release), the terms
 //!   it adds by hand, and the wording it restates for terms it took from bitwrap ([`RESTATABLE`], [`restated`]).
 //! - `generated/beatscript.ttl`: the BeatScript vocabulary, generated from beatscript-serve's own code (`vocab.rs` dumps it,
@@ -48,6 +51,7 @@ const SCOPE_TSV: &str = "oo-scope/1\nselector\twhole-store\nsemantics_version\tt
 pub const UPSTREAM_NT: &[u8] = include_bytes!("../../ontology/upstream/bitwrap-0.2.0/ns.nt");
 pub const UPSTREAM_MANIFEST: &str = include_str!("../../ontology/upstream/bitwrap-0.2.0/manifest.json");
 pub const UPSTREAM_LOCK: &str = include_str!("../../ontology/upstream.lock");
+pub const CONVENTIONS_TTL: &str = include_str!("../../ontology/upstream/bitwrap-conventions/conventions.ttl");
 pub const FORK_TTL: &str = include_str!("../../ontology/fork.ttl");
 pub const VOCAB_TTL: &str = include_str!("../../ontology/generated/beatscript.ttl");
 
@@ -141,13 +145,14 @@ pub fn nt(t: &Triple) -> String {
     format!("{t} .")
 }
 
-/// The upstream release re-homed, keyed and sorted by N-Triples line, without bitwrap's header; and the bitwrap IRIs of
-/// the terms it describes.
-fn rehomed(upstream_nt: &[u8]) -> Result<(BTreeMap<String, Triple>, BTreeSet<String>), String> {
+/// The upstream release and bitwrap's conventions module, re-homed, keyed and sorted by N-Triples line, without bitwrap's
+/// header; and the bitwrap IRIs of the terms they describe.
+fn rehomed(upstream_nt: &[u8], conventions_ttl: &str) -> Result<(BTreeMap<String, Triple>, BTreeSet<String>), String> {
     let header = format!("{UPSTREAM_BASE}ns");
     let mut g = BTreeMap::new();
     let mut terms = BTreeSet::new();
-    for t in parse(RdfFormat::NTriples, upstream_nt, Some("b"))? {
+    let conventions = parse(RdfFormat::Turtle, conventions_ttl.as_bytes(), Some("c")).map_err(|e| format!("conventions.ttl: {e}"))?;
+    for t in parse(RdfFormat::NTriples, upstream_nt, Some("b"))?.into_iter().chain(conventions) {
         if let NamedOrBlankNode::NamedNode(s) = &t.subject {
             if s.as_str() == header {
                 continue; // bitwrap's own header: the fork has its own
@@ -199,16 +204,16 @@ pub fn restated(upstream: &BTreeMap<String, Triple>, fork: &[Triple]) -> Result<
 }
 
 /// [`restated`] from the raw inputs (the release's `fork_integrity` test reads it).
-pub fn restatements(upstream_nt: &[u8], fork_ttl: &str) -> Result<BTreeMap<String, String>, String> {
-    let (up, _) = rehomed(upstream_nt)?;
+pub fn restatements(upstream_nt: &[u8], conventions_ttl: &str, fork_ttl: &str) -> Result<BTreeMap<String, String>, String> {
+    let (up, _) = rehomed(upstream_nt, conventions_ttl)?;
     let fork = parse(RdfFormat::Turtle, fork_ttl.as_bytes(), Some("f")).map_err(|e| format!("fork.ttl: {e}"))?;
     restated(&up, &fork)
 }
 
-/// The fork's asserted graph: the re-homed upstream with its derivation links (less what `fork.ttl` restates), `fork.ttl`
+/// The fork's asserted graph: the re-homed upstream and conventions module with their derivation links (less what `fork.ttl` restates), `fork.ttl`
 /// and the vocabulary, keyed and sorted by N-Triples line.
-pub fn assemble(upstream_nt: &[u8], fork_ttl: &str, vocab_ttl: &str) -> Result<BTreeMap<String, Triple>, String> {
-    let (mut g, terms) = rehomed(upstream_nt)?;
+pub fn assemble(upstream_nt: &[u8], conventions_ttl: &str, fork_ttl: &str, vocab_ttl: &str) -> Result<BTreeMap<String, Triple>, String> {
+    let (mut g, terms) = rehomed(upstream_nt, conventions_ttl)?;
     let fork = parse(RdfFormat::Turtle, fork_ttl.as_bytes(), Some("f")).map_err(|e| format!("fork.ttl: {e}"))?;
     for old in restated(&g, &fork)?.keys() {
         g.remove(old);
@@ -526,10 +531,10 @@ fn header(g: &BTreeMap<String, Triple>, p: &str) -> Result<String, String> {
         .ok_or_else(|| format!("fork.ttl: the ontology header has no {p}"))
 }
 
-/// Every release file from the three inputs (and the upstream manifest, for the provenance the manifest records).
-pub fn build(upstream_nt: &[u8], upstream_manifest: &str, fork_ttl: &str, vocab_ttl: &str) -> Result<BTreeMap<&'static str, Vec<u8>>, String> {
+/// Every release file from the four inputs (and the upstream manifest, for the provenance the manifest records).
+pub fn build(upstream_nt: &[u8], upstream_manifest: &str, conventions_ttl: &str, fork_ttl: &str, vocab_ttl: &str) -> Result<BTreeMap<&'static str, Vec<u8>>, String> {
     debug_assert_eq!(SITE_BASE, BASE.trim_end_matches('/'));
-    let g = assemble(upstream_nt, fork_ttl, vocab_ttl)?;
+    let g = assemble(upstream_nt, conventions_ttl, fork_ttl, vocab_ttl)?;
     let version = header(&g, &format!("{OWL}versionInfo"))?;
     let version_iri = header(&g, &format!("{OWL}versionIRI"))?;
     let released = header(&g, "http://purl.org/dc/terms/issued")?;
@@ -609,6 +614,7 @@ pub fn build(upstream_nt: &[u8], upstream_manifest: &str, fork_ttl: &str, vocab_
             "namespace": up["namespace"],
             "pack_content_sha256": up["pack_content_sha256"],
             "ns.nt": sha(upstream_nt),
+            "conventions.ttl": sha(conventions_ttl.as_bytes()),
         },
         "pack_content_sha256": digest,
         "pack_tool_version": TOOL,
@@ -625,13 +631,19 @@ pub fn build(upstream_nt: &[u8], upstream_manifest: &str, fork_ttl: &str, vocab_
 
 /// [`build`] from the vendored inputs.
 pub fn build_vendored() -> Result<BTreeMap<&'static str, Vec<u8>>, String> {
-    build(UPSTREAM_NT, UPSTREAM_MANIFEST, FORK_TTL, VOCAB_TTL)
+    build(UPSTREAM_NT, UPSTREAM_MANIFEST, CONVENTIONS_TTL, FORK_TTL, VOCAB_TTL)
 }
 
 /// `release.lock`: the sha256 of every release file, as `sha256sum` prints them, under a header naming the inputs.
 pub fn lock(files: &BTreeMap<&'static str, Vec<u8>>) -> String {
     let mut s = String::from("# The BeatScript ontology release, built by ontology/build.sh (src/ontology/fork.rs): sha256 per file. Do not edit; rebuild.\n");
-    s.push_str(&format!("inputs upstream/bitwrap-0.2.0/ns.nt {} fork.ttl {} generated/beatscript.ttl {}\n", sha(UPSTREAM_NT), sha(FORK_TTL.as_bytes()), sha(VOCAB_TTL.as_bytes())));
+    s.push_str(&format!(
+        "inputs upstream/bitwrap-0.2.0/ns.nt {} upstream/bitwrap-conventions/conventions.ttl {} fork.ttl {} generated/beatscript.ttl {}\n",
+        sha(UPSTREAM_NT),
+        sha(CONVENTIONS_TTL.as_bytes()),
+        sha(FORK_TTL.as_bytes()),
+        sha(VOCAB_TTL.as_bytes())
+    ));
     for n in FILE_NAMES {
         s.push_str(&format!("{}  {n}\n", sha(&files[n])));
     }
@@ -710,7 +722,7 @@ mod tests {
         let line = |p: &str, o: &str| format!("{x} <{p}> {o} .");
         let (label, comment, hidden) = (format!("{RDFS}label"), format!("{RDFS}comment"), "http://www.w3.org/2004/02/skos/core#hiddenLabel");
 
-        let g = assemble(up, &format!("{px}ns:X rdfs:comment \"new comment\"@en, \"une remarque\"@fr ; rdfs:subClassOf ns:Z ."), "").unwrap();
+        let g = assemble(up, "", &format!("{px}ns:X rdfs:comment \"new comment\"@en, \"une remarque\"@fr ; rdfs:subClassOf ns:Z ."), "").unwrap();
         assert!(!has(&g, &line(&comment, "\"old comment\"@en")) && has(&g, &line(&comment, "\"new comment\"@en")));
         assert!(has(&g, &line(&comment, "\"une remarque\"@fr")), "another language is added");
         assert!(has(&g, &line(&format!("{RDFS}subClassOf"), "<https://beatscript.app/ontology/ns#Y>")), "a class is never replaced");
@@ -718,18 +730,18 @@ mod tests {
         assert!(has(&g, &line(&label, "\"old x\"@en")), "what fork.ttl does not restate stays");
         assert!(has(&g, &format!("{x} <{PROV_DERIVED}> <https://ontology.bitwrap.io/ns#X> .")), "and the term keeps its derivation link");
 
-        let e = assemble(up, &format!("{px}ns:X rdfs:label \"new x\"@en ."), "").unwrap_err();
+        let e = assemble(up, "", &format!("{px}ns:X rdfs:label \"new x\"@en ."), "").unwrap_err();
         assert!(e.contains("hiddenLabel"), "{e}");
         let ttl = format!("{px}ns:X rdfs:label \"new x\"@en ; skos:hiddenLabel \"old x\"@en .");
-        let g = assemble(up, &ttl, "").unwrap();
+        let g = assemble(up, "", &ttl, "").unwrap();
         assert!(!has(&g, &line(&label, "\"old x\"@en")) && has(&g, &line(&label, "\"new x\"@en")) && has(&g, &line(hidden, "\"old x\"@en")));
-        let r = restatements(up, &ttl).unwrap();
+        let r = restatements(up, "", &ttl).unwrap();
         assert_eq!(r.into_iter().collect::<Vec<_>>(), [(line(&label, "\"old x\"@en"), line(&label, "\"new x\"@en"))]);
 
-        let e = assemble(up, &format!("{px}ns:X rdfs:comment \"one\"@en, \"two\"@en ."), "").unwrap_err();
+        let e = assemble(up, "", &format!("{px}ns:X rdfs:comment \"one\"@en, \"two\"@en ."), "").unwrap_err();
         assert!(e.contains("twice"), "{e}");
         // restating bitwrap's own value replaces nothing
-        assert!(restatements(up, &format!("{px}ns:X rdfs:comment \"old comment\"@en .")).unwrap().is_empty());
+        assert!(restatements(up, "", &format!("{px}ns:X rdfs:comment \"old comment\"@en .")).unwrap().is_empty());
     }
 
     #[test]

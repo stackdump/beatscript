@@ -257,7 +257,8 @@ fn the_same_cids_as_djctl_btw_on_every_program() {
         if !b(&r, "restricted") {
             let sh = parse(&beatscript_api::share_json(&text, None, false, ""));
             assert_eq!(link.trim(), s(&sh, "url"), "{name}");
-            assert_eq!(beats.trim(), s(&sh, "beats_url"), "{name}");
+            let comp = djlive::compile::check_with(&text, &beatscript_api::web_env().env()).compiled.unwrap();
+            assert_eq!(beats.trim(), djlive::share::encode(&comp, None, false), "{name}");
         }
         compared += 1;
     }

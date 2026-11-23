@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# build.sh: build the BeatScript ontology release (release/ and release.lock) from its three inputs, then check it.
+# build.sh: build the BeatScript ontology release (release/ and release.lock) from its four inputs, then check it.
 #
 #   upstream/bitwrap-0.2.0/ns.nt   the bitwrap ontology 0.2.0 the fork derives from (vendored by sync.sh upstream)
+#   upstream/bitwrap-conventions/conventions.ttl  bitwrap's genre conventions module (pinned by conventions.lock)
 #   fork.ttl                       the fork's header and the terms it adds by hand
 #   generated/beatscript.ttl       regenerated here: beatscript-serve's vocab dump (src/ontology/vocab.rs) through
 #                                  tools/ontology/beatscript.py
