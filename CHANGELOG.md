@@ -42,6 +42,10 @@ service.
   `POST /api/station`.
 - **The player and the artifact.** `@stackdump/beatscript-player` 0.1.0 and 0.2.0 (render-then-play mode), and the
   MCP `artifact` tool, which makes a program a page to publish with the pinned player or inline audio.
+- **Embeds.** One configurable embed system: `<beatscript-player>` and `<beatscript-track>`, the embed config
+  (`embed-config.schema.json`), `@stackdump/beatscript-studio`, README cards (`/card/<CID>.svg`), and clients for
+  Jupyter and VS Code.
+- **The seeded generator** on its own toolbar button in the editor, with no model and no sign-in.
 - **Share links keep comments.** A link packs the formatted program (header, comments and blank lines), and its CID
   is still the canonical text's; links are made on beatscript.app.
 - **OAuth.** MCP clients connect to beatscript.app with OAuth and capability grants.
