@@ -11,8 +11,7 @@
 # A host that is this machine (its short hostname, an alias on its BUILD_HOST_ALIASES line, or one of its addresses)
 # is used in place.
 #
-#   pick_build_host NEED...  NEED: what the build host must have. A command name; `docker` (a daemon this user may
-#                            use, not just the CLI); `wasm-bindgen=X.Y.Z` (that exact CLI, on PATH or side by side in
+#   pick_build_host NEED...  NEED: what the build host must have. A command name; `wasm-bindgen=X.Y.Z` (that exact CLI, on PATH or side by side in
 #                            ~/.local/opt/wasm-bindgen-X.Y.Z/bin); `rust-target=T` (rustup's stable toolchain has
 #                            target T). `darwin:NEED` and `linux:NEED` apply only on that OS. A host reached over ssh
 #                            must also have GNU rsync (below). The probe runs under BH_ENV, since a non-interactive
@@ -70,7 +69,6 @@ bh_probe_cmd() {
       linux:*) _only=Linux; _n=${_n#linux:} ;;
     esac
     case $_n in
-      docker) _c="docker info >/dev/null 2>&1 || { echo 'no usable docker (installed, daemon up, user in the docker group?)'; exit 3; }" ;;
       wasm-bindgen=*)
         _v=${_n#wasm-bindgen=}
         _c="{ [ -x \"\$HOME/.local/opt/wasm-bindgen-$_v/bin/wasm-bindgen\" ] || [ \"\$(wasm-bindgen --version 2>/dev/null | awk '{print \$2}')\" = $_v ]; } || { echo 'no wasm-bindgen $_v'; exit 3; }" ;;

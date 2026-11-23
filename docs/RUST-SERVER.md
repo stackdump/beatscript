@@ -187,8 +187,7 @@ pflow.dev over ssh). The first plan used port 18098, but that port is taken on p
 ontology.pflow.xyz), so beatscript-serve listens on **127.0.0.1:18099**. That port was checked free on pflow.dev and is
 claimed by no console manifest.
 
-1. Build: `BEATSCRIPT_PKG=beatscript-serve scripts/build-linux.sh` (on the build Mac by default, cross-compiled with cargo-zigbuild;
-   an ubuntu:24.04 container on a Linux build host; glibc ≤ 2.39 either way) → `dist/beatscript-serve-linux-x86_64`. Run on
+1. Build: `BEATSCRIPT_PKG=beatscript-serve scripts/build-linux.sh` (cross-compiled with cargo-zigbuild for glibc 2.39 on the build host, Mac or Linux, no docker) → `dist/beatscript-serve-linux-x86_64`. Run on
    the ops host it builds on the Mac over ssh and copies the binary back: the ops host only orchestrates.
 2. `cutover.sh preflight`: read-only checks (port, binary, env file, both /healthz, `nginx -t`).
 3. `cutover.sh install`: copies the binary to `btwsite/bin/btwserve`, adds the `btw-rust` entry to `~/services`

@@ -9,35 +9,26 @@
 # beatscript-linux-x86_64.sha256`). dist/ is gitignored: the binary is never committed; deploy/deploy.sh copies it to the
 # serving host.
 #
-# Two ways to build, by the build host's OS:
-#
-# A Mac: cross-compiled with cargo-zigbuild for --target x86_64-unknown-linux-gnu.2.39 (zig links against glibc
-#   2.39's symbol versions, so the binary needs nothing newer than the deploy host has). No docker.
-#   - On the Mac itself: in place, into target-linux/ (BEATSCRIPT_TARGET_DIR overrides; target-* is git-ignored), so the
-#     next build is incremental.
-#   - From another machine (the deploy orchestrator): rsync this tree into ~/beatscript-web-build/beatscript-web on the Mac
-#     (never target/, .git/ or dist/), run this script there with BUILD_HOST=local, and copy the binary back. The
-#     engine (stackdump/djrust) is a git dependency pinned in Cargo.toml: cargo fetches it there over HTTPS.
-#   Needs zig (brew install zig), cargo-zigbuild (cargo install cargo-zigbuild), rustup's x86_64-unknown-linux-gnu
-#   target for the stable toolchain (rust-toolchain.toml's), and for the ssh route Homebrew's GNU rsync.
-#   The Mac cannot run the binary: the smoke runs on BEATSCRIPT_SMOKE_HOST (see below).
+# Always cross-compiled with cargo-zigbuild for --target x86_64-unknown-linux-gnu.2.39 (zig links against glibc 2.39's
+# symbol versions, so the binary needs nothing newer than the deploy host has, whatever glibc the build host has). No
+# docker: a Linux build host with a newer glibc (Ubuntu 26.04 has 2.43) builds the same binary a Mac does.
+#   - On the build host itself: in place, into target-linux/ (BEATSCRIPT_TARGET_DIR overrides; target-* is git-ignored), so
+#     the next build is incremental.
+#   - From another machine (the deploy orchestrator): rsync this tree into ~/beatscript-web-build/beatscript-web on the
+#     build host (never target/, .git/ or dist/), run this script there with BUILD_HOST=local, and copy the binary back.
+#     The engine (stackdump/djrust) is a git dependency pinned in Cargo.toml: cargo fetches it there over HTTPS.
+#   Needs on the build host: zig (a Mac: brew install zig; Linux: scripts/install-zig.sh, which puts `zig`
+#   in ~/.local/bin), cargo-zigbuild (cargo install cargo-zigbuild --locked), rustup's
+#   x86_64-unknown-linux-gnu target for the stable toolchain (rust-toolchain.toml's), and for the ssh route GNU rsync
+#   (a Mac: Homebrew's). scripts/build-host.sh says which of these a host lacks.
+#   The build host need not run the binary: the smoke runs on BEATSCRIPT_SMOKE_HOST (see below).
 #   A crate whose build script will not cross-compile (a C dependency: ring, openssl-sys, an audio -sys crate) is
-#   named in the error; build that one on a Linux host (BUILD_HOST=<linux host>).
+#   named in the error; build that one on a host with the matching glibc.
 #
-# A Linux host: in an ubuntu:24.04 container, as before.
-#   1. rsync this tree into ~/beatscript-web-build/beatscript-web on the build host (as above).
-#   2. builds the image beatscript-build:ubuntu24.04 once (ubuntu:24.04 + gcc + rustup stable): the toolchain is
-#      in the image, the crate registry and target/ are kept under the scratch dir, so a second build is
-#      incremental.
-#   3. `cargo build --release -p beatscript-cli --locked` (or -p beatscript-serve) in that container, as the host user (no root-owned files),
-#      symbols stripped. The container's glibc is the deploy host's (2.39), so the binary needs nothing newer.
-#   4. copies the binary back, and (unless --no-smoke) runs it in a fresh ubuntu:24.04 container with
-#      nothing installed: `ldd`, then a render of a corpus program, timed.
-#
-# Either way the script checks the highest GLIBC symbol version the binary asks for (objdump -T: binutils on
-# Linux, LLVM's /usr/bin/objdump on a Mac) and refuses one above 2.39.
-#   --clean removes the scratch dir (or, in place on the Mac, target-linux/) and the image's build cache from
-#   the build host afterwards (for a one-off on a host short of disk).
+# The script checks the highest GLIBC symbol version the binary asks for (objdump -T: binutils on Linux, LLVM's
+# /usr/bin/objdump on a Mac) and refuses one above 2.39.
+#   --clean removes the scratch dir (or, in place, target-linux/) from the build host afterwards (for a one-off on a
+#   host short of disk).
 #
 # The smoke of a cross-compiled binary (unless --no-smoke): scp it and a corpus program to BEATSCRIPT_SMOKE_HOST (an ssh
 # host that is x86_64 Linux; `local` = this machine, which must be x86_64 Linux; unset: this machine when it is
@@ -45,16 +36,15 @@
 # and a nonzero byte count, timed); for beatscript-serve a start with `-version smoke`, GET /healthz (it must report that
 # version), and a stop. Nothing is left on the smoke host.
 #
-# Why glibc and not musl: it is exactly the libc of the host it runs on, the toolchain is the stock one, and the
-# render is a tight float loop with allocations that musl's allocator would only slow down. A musl build
-# (`--target x86_64-unknown-linux-musl`) is a one-line change if a host ever has an older glibc.
+# Why glibc and not musl: it is exactly the libc of the host it runs on, and the render is a tight float loop with
+# allocations that musl's allocator would only slow down. A musl build (`--target x86_64-unknown-linux-musl`) is a
+# one-line change if a host ever has an older glibc.
 #
 # Environment: BUILD_HOST, BUILD_HOSTS (scripts/build-host.sh; BEATSCRIPT_BUILD_HOST is the older name of BUILD_HOST),
-# BEATSCRIPT_BUILD_DIR (default beatscript-web-build, relative to the build host's $HOME), BEATSCRIPT_TARGET_DIR (the Mac's in-place
+# BEATSCRIPT_BUILD_DIR (default beatscript-web-build, relative to the build host's $HOME), BEATSCRIPT_TARGET_DIR (the in-place
 # target dir, default <repo>/target-linux), BEATSCRIPT_SMOKE_HOST (above), BEATSCRIPT_UNLOCKED=1 (drop --locked: for a
 # Cargo.lock that is mid-edit), BEATSCRIPT_PKG=beatscript-serve (build the server instead: dist/beatscript-serve-linux-x86_64; its smoke
-# is a server start and stop, in the bare container on a Linux build host, with /healthz on the smoke host for a
-# cross-compiled one; BEATSCRIPT_PKG=beatscript, the default, is the CLI: dist/beatscript-linux-x86_64).
+# is a server start, /healthz and stop on the smoke host; BEATSCRIPT_PKG=beatscript, the default, is the CLI: dist/beatscript-linux-x86_64).
 # The names before the rename are read when the new one is unset: BTWD_BUILD_HOST, BTWD_BUILD_DIR, BTWD_TARGET_DIR,
 # BTWD_SMOKE_HOST (the staged deploy scripts pass BTWD_SMOKE_HOST=gir.local), BTWD_UNLOCKED and BTWD_PKG (btwd is
 # beatscript, btwserve is beatscript-serve).
@@ -73,7 +63,6 @@ case $PKG in
   *) echo "build-linux: BEATSCRIPT_PKG is beatscript (the CLI, crate beatscript-cli) or beatscript-serve" >&2; exit 2 ;;
 esac
 SCRATCH=${BEATSCRIPT_BUILD_DIR:-${BTWD_BUILD_DIR:-beatscript-web-build}}
-IMAGE=beatscript-build:ubuntu24.04
 # the deploy host's glibc, and the zig target that links against exactly it
 GLIBC_MAX=2.39
 ZIG_TARGET=x86_64-unknown-linux-gnu.$GLIBC_MAX
@@ -95,13 +84,8 @@ smoke=$(ls "$root"/crates/beatscript-api/tests/corpus/markers-demo.beatscript 2>
 
 [ -n "${BUILD_HOST:-}" ] || BUILD_HOST=${BEATSCRIPT_BUILD_HOST:-}
 . "$root/scripts/build-host.sh"
-pick_build_host darwin:cargo darwin:zig darwin:cargo-zigbuild "darwin:rust-target=x86_64-unknown-linux-gnu" linux:docker || exit 2
+pick_build_host cargo zig cargo-zigbuild rust-target=x86_64-unknown-linux-gnu || exit 2
 HOST=$BH_NAME
-case $BH_OS in
-  Darwin) METHOD=zig ;;
-  Linux) METHOD=docker ;;
-  *) echo "build-linux: no way to build on $HOST ($BH_OS)" >&2; exit 2 ;;
-esac
 RS="$BH_RSYNC -a --delete --delete-excluded --exclude=target/ --exclude=/target-*/ --exclude=.git/ --exclude=/dist/ --exclude=*.wav --exclude=*.sf2"
 LOCKED=--locked
 [ "$BEATSCRIPT_UNLOCKED" = 1 ] && LOCKED=
@@ -126,7 +110,7 @@ fetched() {
   ls -l "$dist/$PKG-linux-x86_64" | awk '{printf "size %.1f MB\n", $5/1048576}'
 }
 
-# the smoke of a cross-compiled binary, on an x86_64 Linux host that is not the Mac
+# the smoke of the cross-compiled binary, on an x86_64 Linux host
 zig_smoke() {
   SH=
   for n in $(bh_names "${BEATSCRIPT_SMOKE_HOST:-local}"); do
@@ -183,8 +167,8 @@ SMOKE
   [ "$rc" = 0 ] || { echo "build-linux: the smoke failed on $SH" >&2; return 1; }
 }
 
-if [ "$METHOD" = zig ] && [ "$BH" = local ]; then
-  # this Mac, in place
+if [ "$BH" = local ]; then
+  # the build host itself, in place
   tdir=${BEATSCRIPT_TARGET_DIR:-$root/target-linux}
   mkdir -p "$tdir"
   log="$tdir/build-$PKG.log"
@@ -195,7 +179,7 @@ if [ "$METHOD" = zig ] && [ "$BH" = local ]; then
       cargo zigbuild --release -p "$CRATE" $LOCKED --target "$ZIG_TARGET" ) >"$log" 2>&1; then
     tail -n 40 "$log" >&2
     crate=$(grep -o 'failed to run custom build command for `[^`]*`' "$log" | head -n 1 | sed 's/^.*for `//; s/`$//')
-    [ -z "$crate" ] || echo "build-linux: $crate does not cross-compile with zig: build $PKG on a Linux host (BUILD_HOST=<linux host>)" >&2
+    [ -z "$crate" ] || echo "build-linux: $crate does not cross-compile with zig: build $PKG on a host whose glibc is 2.39 or older (BUILD_HOST=<host>)" >&2
     echo "build-linux: cargo zigbuild failed (log: $log)" >&2
     exit 1
   fi
@@ -212,93 +196,19 @@ if [ "$METHOD" = zig ] && [ "$BH" = local ]; then
   exit 0
 fi
 
-echo "== build host $HOST$( [ "$BH" = local ] && echo ' (this machine)') ($METHOD), scratch ~/$SCRATCH"
+echo "== build host $HOST, scratch ~/$SCRATCH"
 bh_sh "mkdir -p '$SCRATCH'"
 
 echo "== rsync sources"
 $RS "$root/" "$(bh_path "$SCRATCH/beatscript-web/")"
 
-if [ "$METHOD" = zig ]; then
-  # the Mac over ssh: this script, there, in place in the scratch copy
-  echo "== build on $HOST (cargo zigbuild, BUILD_HOST=local there)"
-  bh_sh "$BH_ENV cd '$SCRATCH/beatscript-web' && BUILD_HOST=local BEATSCRIPT_PKG='$PKG' BEATSCRIPT_UNLOCKED='$BEATSCRIPT_UNLOCKED' BEATSCRIPT_TARGET_DIR=\"\$HOME/$SCRATCH/target-linux\" sh scripts/build-linux.sh --no-smoke"
-  echo "== fetch"
-  scp -q "$(bh_path "$SCRATCH/beatscript-web/dist/$PKG-linux-x86_64")" "$dist/$PKG-linux-x86_64"
-  glibc_check "$dist/$PKG-linux-x86_64"
-  fetched
-  [ "$SMOKE" = 0 ] || zig_smoke
-  if [ "$CLEAN" = 1 ]; then echo "== clean the build host"; bh_sh "rm -rf '$SCRATCH' && echo cleaned"; fi
-  echo "== done: $dist/$PKG-linux-x86_64"
-  exit 0
-fi
-
-echo "== build (image if needed, then cargo build --release -p $CRATE)"
-bh_sh "HOST='$HOST' PKG='$PKG' CRATE='$CRATE' SCRATCH='$SCRATCH' IMAGE='$IMAGE' UNLOCKED='$BEATSCRIPT_UNLOCKED' sh -s" <<'REMOTE'
-set -eu
-cd "$HOME/$SCRATCH"
-if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
-  echo "-- building $IMAGE (once)"
-  docker build -t "$IMAGE" - <<'DOCKERFILE'
-FROM ubuntu:24.04
-ENV DEBIAN_FRONTEND=noninteractive RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl gcc libc6-dev \
- && rm -rf /var/lib/apt/lists/* \
- && curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path \
- && chmod -R a+rX /opt/rustup /opt/cargo
-DOCKERFILE
-fi
-mkdir -p cargo-home target
-LOCKED=--locked
-[ "$UNLOCKED" = 1 ] && LOCKED=
-# RUSTUP_TOOLCHAIN overrides the repo's rust-toolchain.toml (which asks for the wasm target too)
-rm -f "target/release/$PKG"
-docker run --rm -u "$(id -u):$(id -g)" \
-  -e CARGO_HOME=/work/cargo-home -e CARGO_TARGET_DIR=/work/target -e HOME=/work/cargo-home \
-  -e RUSTUP_TOOLCHAIN=stable-x86_64-unknown-linux-gnu \
-  -e CARGO_PROFILE_RELEASE_STRIP=symbols -e CARGO_INCREMENTAL=0 -e CARGO_TERM_COLOR=never \
-  -v "$PWD:/work" -w /work/beatscript-web "$IMAGE" \
-  cargo build --release -p "$CRATE" $LOCKED >build.log 2>&1 || { tail -n 40 build.log >&2; echo "build-linux: cargo failed (log: $HOST:~/$SCRATCH/build.log)" >&2; exit 1; }
-tail -n 3 build.log
-test -x "target/release/$PKG"
-REMOTE
-
+# this script, there, in place in the scratch copy
+echo "== build on $HOST (cargo zigbuild, BUILD_HOST=local there)"
+bh_sh "$BH_ENV cd '$SCRATCH/beatscript-web' && BUILD_HOST=local BEATSCRIPT_PKG='$PKG' BEATSCRIPT_UNLOCKED='$BEATSCRIPT_UNLOCKED' BEATSCRIPT_TARGET_DIR=\"\$HOME/$SCRATCH/target-linux\" sh scripts/build-linux.sh --no-smoke"
 echo "== fetch"
-scp -q "$(bh_path "$SCRATCH/target/release/$PKG")" "$dist/$PKG-linux-x86_64"
+scp -q "$(bh_path "$SCRATCH/beatscript-web/dist/$PKG-linux-x86_64")" "$dist/$PKG-linux-x86_64"
+glibc_check "$dist/$PKG-linux-x86_64"
 fetched
-
-echo "== the binary in a fresh ubuntu:24.04 (nothing installed)"
-scp -q "$smoke" "$(bh_path "$SCRATCH/smoke.beatscript")"
-bh_sh "PKG='$PKG' SCRATCH='$SCRATCH' IMAGE='$IMAGE' SMOKE='$SMOKE' sh -s" <<'REMOTE'
-set -eu
-cd "$HOME/$SCRATCH"
-# the newest glibc symbol the binary names, and every shared library it wants
-docker run --rm -v "$PWD/target/release:/b:ro" ubuntu:24.04 sh -c "echo '-- ldd'; ldd /b/$PKG"
-need=$(docker run --rm -v "$PWD/target/release:/b:ro" "$IMAGE" sh -c "objdump -T /b/$PKG | grep -o 'GLIBC_[0-9.]*' | sort -u -V | tail -n 1")
-echo "-- newest glibc symbol version: $need (the deploy host has 2.39)"
-newest=$(printf '%s\nGLIBC_2.39\n' "$need" | sort -V | tail -n 1)
-if [ "$newest" != GLIBC_2.39 ]; then echo "build-linux: the binary needs $need, newer than the deploy host's glibc 2.39" >&2; exit 1; fi
-if [ "$SMOKE" = 1 ] && [ "$PKG" = beatscript-serve ]; then
-  echo "-- beatscript-serve in ubuntu:24.04: start, render smoke.beatscript over HTTP (WAV and Opus), stop"
-  docker run --rm -i -v "$PWD/target/release:/b:ro" -v "$PWD/beatscript-web/crates/beatscript-serve/bench:/bench:ro" ubuntu:24.04 sh -c '
-    mkdir -p /d/programs && cat > /tmp/p.beatscript
-    /b/beatscript-serve -addr 127.0.0.1:18098 -data /d -log-dir off >/tmp/log 2>&1 &
-    sleep 1; cat /tmp/log
-    echo "(no curl in a bare image: the HTTP smoke is the listen line above; renders are checked by parity.py)"
-    kill $!' < smoke.beatscript
-elif [ "$SMOKE" = 1 ]; then
-  echo "-- render smoke.beatscript in ubuntu:24.04"
-  docker run --rm -i -v "$PWD/target/release:/b:ro" ubuntu:24.04 sh -c '
-    start=$(date +%s%N)
-    /b/beatscript render 2>/tmp/err | wc -c
-    end=$(date +%s%N)
-    tail -n 1 /tmp/err
-    echo "wall $(( (end - start) / 1000000 )) ms"' < smoke.beatscript
-fi
-REMOTE
-
-if [ "$CLEAN" = 1 ]; then
-  echo "== clean the build host"
-  bh_sh "rm -rf '$SCRATCH' && docker rmi '$IMAGE' >/dev/null 2>&1; docker builder prune -f >/dev/null 2>&1; echo cleaned"
-fi
+[ "$SMOKE" = 0 ] || zig_smoke
+if [ "$CLEAN" = 1 ]; then echo "== clean the build host"; bh_sh "rm -rf '$SCRATCH' && echo cleaned"; fi
 echo "== done: $dist/$PKG-linux-x86_64"

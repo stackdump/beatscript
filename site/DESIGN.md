@@ -136,9 +136,9 @@ only for usage/IO/panic):
   render has the same limit: say so in `start.notes`).
 - Reads/writes nothing on disk except what it is told. No network.
 - Build recipe for pflow.dev (Ubuntu 24.04, glibc 2.39, x86_64): `scripts/build-linux.sh` in the djrust
-  worktree, on a build host (`scripts/build-host.sh`: a Mac cross-compiles with cargo-zigbuild for
-  `x86_64-unknown-linux-gnu.2.39`, smoked on an x86_64 Linux box; a Linux host builds in an `ubuntu:24.04` container).
-  Either way it refuses a binary that needs a GLIBC symbol version above 2.39; writes `dist/beatscript-linux-x86_64`
+  worktree, on a build host (`scripts/build-host.sh`: any host cross-compiles with cargo-zigbuild for
+  `x86_64-unknown-linux-gnu.2.39`, smoked on an x86_64 Linux box; no docker).
+  It refuses a binary that needs a GLIBC symbol version above 2.39; writes `dist/beatscript-linux-x86_64`
   and its sha256. The binary is **not** committed anywhere.
 
 ### `beatscript-api` and `beatscript` as built (R1) — what differs from, or adds to, the shapes above (all additive)

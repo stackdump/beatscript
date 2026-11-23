@@ -146,6 +146,6 @@ leaves.
 ## Linux
 
 `scripts/build-linux.sh` builds `dist/beatscript-linux-x86_64` (+ `.sha256`) for Ubuntu 24.04 (glibc 2.39) on a build
-host (`scripts/build-host.sh`): on the Mac cross-compiled with cargo-zigbuild for
-`x86_64-unknown-linux-gnu.2.39` and smoked on an x86_64 Linux box, on a Linux host in an `ubuntu:24.04` container. Either way it
+host (`scripts/build-host.sh`): cross-compiled with cargo-zigbuild (Mac or Linux host, no docker) for
+`x86_64-unknown-linux-gnu.2.39` and smoked on an x86_64 Linux box. It
 refuses a binary that needs a GLIBC symbol version above 2.39; see the script's header.
