@@ -23,6 +23,15 @@ pub const SCHEMA_URL: &str = "https://beatscript.app/schema";
 /// version.
 pub const FORMAT_VERSION: &str = "1";
 
+/// A BeatScript 2 program's block (`#! beatscript 2`) is format 2: it names the BeatScript context first (the same
+/// vocabulary as [`SCHEMA_URL`]'s, with the djrust: terms in it too) and its `@id` is the IRI [`IRI_PREFIX`]`<cid>`. A
+/// BeatScript 1 program's block is format 1, byte for byte what it was.
+pub const FORMAT_VERSION_2: &str = "2";
+/// The context a format-2 block names first.
+pub const BEATSCRIPT_CONTEXT_URL: &str = "https://beatscript.app/context/beatscript-v1.jsonld";
+/// A format-2 block's `@id` is this and its CID ([`read_document`] takes either form).
+pub const IRI_PREFIX: &str = "https://beatscript.app/p/";
+
 /// What the block says besides the compiled program: the rights and provenance kept outside the CID (as the stored
 /// program's meta has them).
 #[derive(Clone, Copy, Default)]
@@ -69,11 +78,12 @@ fn scale_iri(o: &dyn crate::linked::Ontology, k: crate::music::Key) -> Option<St
 
 /// The block's document for a compiled program. Keys in this order (a reader may rely on nothing but the names).
 pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
+    let v2 = crate::version::of_canonical(&c.text) == crate::version::Version::V2;
     let mut d = JsonObject::new();
-    d.set("@context", JsonValue::Array(vec![JsonValue::str(SCHEMA_URL), JsonValue::str("https://schema.org")]));
+    d.set("@context", JsonValue::Array(vec![JsonValue::str(if v2 { BEATSCRIPT_CONTEXT_URL } else { SCHEMA_URL }), JsonValue::str("https://schema.org")]));
     d.set("@type", JsonValue::Array(vec![JsonValue::str("Program"), JsonValue::str("MusicComposition")]));
-    d.set("@version", JsonValue::str(FORMAT_VERSION));
-    d.set("@id", JsonValue::str(c.cid.clone()));
+    d.set("@version", JsonValue::str(if v2 { FORMAT_VERSION_2 } else { FORMAT_VERSION }));
+    d.set("@id", JsonValue::str(if v2 { format!("{IRI_PREFIX}{}", c.cid) } else { c.cid.clone() }));
     if let Some(n) = f.name.map(str::trim).filter(|n| !n.is_empty()) {
         d.set("name", JsonValue::str(n));
     }
@@ -235,7 +245,9 @@ pub fn read_view(html: &str, editor: bool) -> Result<Read, String> {
 /// The block's JSON on its own (a `.jsonld` body, the MCP `get` field), checked as [`read_view`] checks it.
 pub fn read_document(json: &str) -> Result<Read, String> {
     let doc = JsonValue::parse(json.trim()).map_err(|e| format!("the program block is not JSON: {e:?}"))?;
-    let cid = doc.get("@id").and_then(JsonValue::as_str).ok_or("the program block has no @id")?.to_string();
+    let id = doc.get("@id").and_then(JsonValue::as_str).ok_or("the program block has no @id")?;
+    // a format-2 block names the program by its IRI, a format-1 block by the bare CID
+    let cid = id.strip_prefix(IRI_PREFIX).unwrap_or(id).to_string();
     let text = doc.get("text").and_then(JsonValue::as_str).ok_or("the program block has no text")?.to_string();
     let types_ok = match doc.get("@type") {
         Some(JsonValue::Array(a)) => a.iter().any(|t| t.as_str() == Some("Program")),
@@ -320,6 +332,24 @@ mod tests {
         assert_eq!(r.cid, c.cid);
         assert_eq!(r.text, c.text);
         assert_eq!(r.doc, d);
+    }
+
+    /// A BeatScript 2 program's block is format 2: the BeatScript context first and its IRI as `@id`; it reads back to the
+    /// same CID and text. A BeatScript 1 program's block (above) is unchanged.
+    #[test]
+    fn a_beatscript_2_block_names_its_iri_and_the_beatscript_context() {
+        let c = compiled(&format!("{}\n{SRC}", crate::version::LINE));
+        assert_eq!(crate::version::of_canonical(&c.text), crate::version::Version::V2);
+        let d = document(&c, &Facts::default());
+        let j = d.js_stringified();
+        let head = format!(r#"{{"@context":["{BEATSCRIPT_CONTEXT_URL}","https://schema.org"],"@type":["Program","MusicComposition"],"@version":"2","@id":"{IRI_PREFIX}{}","#, c.cid);
+        assert!(j.starts_with(&head), "{j}");
+        let r = read_view(&view_html(&d, true, "bar"), true).unwrap();
+        assert_eq!((r.cid, r.text), (c.cid.clone(), c.text.clone()));
+        // either form of @id names the program; another CID in it is still refused
+        let bare = j.replacen(&format!("{IRI_PREFIX}{}", c.cid), &c.cid, 1);
+        assert_eq!(read_document(&bare).unwrap().cid, c.cid);
+        assert!(read_document(&j.replacen(&c.cid, "zNotThisOne1234567890abcdefgh", 1)).is_err());
     }
 
     #[test]
