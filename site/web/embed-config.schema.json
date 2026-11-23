@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beatscript.app/embed-config.schema.json",
+  "title": "BeatScript embed config",
+  "description": "One config for every way BeatScript is embedded: the <beatscript-track> player, the <beatscript-studio> editor, a static card and plain audio, on a Claude artifact, any web page, an iframe, oEmbed, a README, a notebook, an editor's preview or the Android app. Every surface reads it: as JSON (the `config` attribute or a child <script type=\"application/json\" class=\"beatscript-config\">), as single attributes (which override it), or as the btwserve `embed` MCP tool's `config` argument. A surface that cannot do something the config asks for says so and does what it can (docs/btw/embed.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string", "description": "This schema's URL, if the author wants an editor to check the config." },
+    "v": { "const": 1, "default": 1, "description": "The config's own version." },
+    "kind": {
+      "enum": ["player", "studio", "card", "audio"],
+      "default": "player",
+      "description": "player: a card with a Play button (<beatscript-track>). studio: the editor, its checker and the player in one element (<beatscript-studio>); the deterministic tools run in the page. card: a static card (name, CID, rights, links), no script and no sound. audio: a plain <audio> of the server's render."
+    },
+    "source": {
+      "description": "What plays. Exactly one of text, cid, set or station; cid may go with text, as the CID the text must have (a text that is not that program is refused).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string", "maxLength": 65536, "description": "The program text." },
+        "cid": { "type": "string", "pattern": "^z[1-9A-HJ-NP-Za-km-z]{20,120}$", "description": "A program's CID: with text, the CID it must have; alone, a program stored on the site (a page that may fetch nothing from the site needs the text too)." },
+        "set": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "description": "A set or playlist, played in order.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": { "type": "string", "maxLength": 65536 },
+              "cid": { "type": "string", "pattern": "^z[1-9A-HJ-NP-Za-km-z]{20,120}$" },
+              "title": { "type": "string", "maxLength": 80 }
+            },
+            "anyOf": [{ "required": ["text"] }, { "required": ["cid"] }]
+          }
+        },
+        "station": { "type": "string", "minLength": 1, "maxLength": 64, "description": "A radio station's name: position n always gives the same track (/radio)." },
+        "n": { "type": "integer", "minimum": 0, "default": 0, "description": "With station: the position to start at." },
+        "count": { "type": "integer", "minimum": 1, "maximum": 64, "default": 8, "description": "With station: how many tracks to queue." }
+      },
+      "oneOf": [
+        { "required": ["text"], "not": { "anyOf": [{ "required": ["set"] }, { "required": ["station"] }] } },
+        { "required": ["cid"], "not": { "anyOf": [{ "required": ["text"] }, { "required": ["set"] }, { "required": ["station"] }] } },
+        { "required": ["set"], "not": { "anyOf": [{ "required": ["text"] }, { "required": ["cid"] }, { "required": ["station"] }] } },
+        { "required": ["station"], "not": { "anyOf": [{ "required": ["text"] }, { "required": ["cid"] }, { "required": ["set"] }] } }
+      ]
+    },
+    "audio": {
+      "enum": ["live", "render", "inline", "url"],
+      "description": "How it sounds. live: the wasm engine plays as it goes (the default for player and studio). render: the engine renders one whole pass in the page first, then plays it with a seek bar. inline: the site's Ogg Opus render carried in the page as a data: URI (no script, no engine; a stored program only; the default for audio). url: the site's render by URL (<audio src>, an RSS enclosure; the host fetches it from the site)."
+    },
+    "features": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["highlight", "editor", "mixer", "knobs", "download", "share", "compose"] },
+      "description": "What the surface shows. highlight: the program, highlighted, with Copy. editor: the text is editable and re-checked as it is typed (studio). mixer: deck levels and mutes. knobs: the program's control-deck knobs as sliders. download: save the .btw text and a WAV. share: the self-sealing link and the CID. compose: ask a model for a program or a change (needs the sample capability). Defaults by kind: player [share], studio [highlight, editor, share, download, compose], card [share], audio [download]."
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["sample", "mcp", "db", "downloads", "room", "dictation", "tts"] },
+      "description": "Host capabilities to use when the host allows them (a Claude artifact's claude.use()); anything else works without them. sample: compose and repair ask Claude. mcp: store, share, render and queue through the viewer's BeatScript connector. db: a library of programs and playlists. downloads: save WAV and .btw. room: a live jam with everyone who has the page open. dictation: speak a compose prompt. tts: read the problems aloud. Defaults by kind: player [downloads], studio [sample, mcp, db, downloads], card and audio []."
+    },
+    "theme": { "enum": ["dark", "light", "auto"], "default": "dark", "description": "auto follows prefers-color-scheme." },
+    "compact": { "type": "boolean", "default": false, "description": "The small form: an 80-pixel player, a studio without the side panel." },
+    "width": { "type": "integer", "minimum": 80, "maximum": 4096, "description": "Width in CSS pixels, where the host needs one (an iframe, oEmbed)." },
+    "height": { "type": "integer", "minimum": 40, "maximum": 4096, "description": "Height in CSS pixels, where the host needs one." },
+    "title": { "type": "string", "maxLength": 80, "description": "The name shown and the page's title (default the program's `#! name:`)." },
+    "site": { "type": "string", "format": "uri", "pattern": "^https://", "default": "https://beatscript.app", "description": "Where plain links point and what the server-backed forms (iframe, card, audio) are served from." },
+    "bridge": { "type": "boolean", "default": false, "description": "studio: answer MCP-shaped JSON-RPC (tools/list, tools/call) from the parent frame over postMessage." },
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "For generators that emit script tags: the exact package version to load and whether to give each tag its Subresource Integrity hash (from the lock file the generator keeps).",
+      "properties": {
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" },
+        "sri": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

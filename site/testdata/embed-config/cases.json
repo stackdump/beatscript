@@ -1,0 +1,769 @@
+[
+  {
+    "name": "player from text: every default",
+    "input": {
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n"
+      }
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n"
+      },
+      "audio": "live",
+      "features": [
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [],
+      "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n"
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "player: a stored cid, render mode, light theme, compact",
+    "input": {
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "audio": "render",
+      "theme": "light",
+      "compact": true
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "audio": "render",
+      "features": [
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "light",
+      "compact": true,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [
+        [
+          "cid",
+          "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+        ],
+        [
+          "mode",
+          "render"
+        ],
+        [
+          "theme",
+          "light"
+        ],
+        [
+          "compact",
+          ""
+        ]
+      ],
+      "text": null
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "player: text with the cid it must have, features out of order",
+    "input": {
+      "kind": "player",
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n",
+        "cid": "z4EBG9izQ2vdt6yHQJqteXPWr7oLi72nVxbvhsXR47CGc5QxAjt"
+      },
+      "features": [
+        "share",
+        "highlight"
+      ]
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n",
+        "cid": "z4EBG9izQ2vdt6yHQJqteXPWr7oLi72nVxbvhsXR47CGc5QxAjt"
+      },
+      "audio": "live",
+      "features": [
+        "highlight",
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [
+        [
+          "cid",
+          "z4EBG9izQ2vdt6yHQJqteXPWr7oLi72nVxbvhsXR47CGc5QxAjt"
+        ],
+        [
+          "highlight",
+          ""
+        ]
+      ],
+      "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n"
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "player: inline audio",
+    "input": {
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "audio": "inline"
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "audio": "inline",
+      "features": [
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [
+        [
+          "cid",
+          "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+        ],
+        [
+          "audio",
+          "inline"
+        ]
+      ],
+      "text": null
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "player: url audio from another site, auto theme",
+    "input": {
+      "source": {
+        "cid": "z4EBG9j23CnEjyBqxsRCaWQyWgSWhWrxNm7tb627KwCkjVe9HTJ"
+      },
+      "audio": "url",
+      "site": "https://example.org",
+      "theme": "auto"
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "cid": "z4EBG9j23CnEjyBqxsRCaWQyWgSWhWrxNm7tb627KwCkjVe9HTJ"
+      },
+      "audio": "url",
+      "features": [
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "auto",
+      "compact": false,
+      "site": "https://example.org",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [
+        [
+          "cid",
+          "z4EBG9j23CnEjyBqxsRCaWQyWgSWhWrxNm7tb627KwCkjVe9HTJ"
+        ],
+        [
+          "audio",
+          "url"
+        ],
+        [
+          "site",
+          "https://example.org"
+        ],
+        [
+          "config",
+          "{\"theme\":\"auto\"}"
+        ]
+      ],
+      "text": null
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "player: a set",
+    "input": {
+      "source": {
+        "set": [
+          {
+            "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi",
+            "title": "Nachtfahrt – one"
+          },
+          {
+            "text": "tempo 90\ndeck A: hat x x x x\n"
+          }
+        ]
+      }
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "set": [
+          {
+            "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi",
+            "title": "Nachtfahrt – one"
+          },
+          {
+            "text": "tempo 90\ndeck A: hat x x x x\n"
+          }
+        ]
+      },
+      "audio": "live",
+      "features": [
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [
+        [
+          "config",
+          "{\"source\":{\"set\":[{\"cid\":\"z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi\",\"title\":\"Nachtfahrt – one\"},{\"text\":\"tempo 90\\ndeck A: hat x x x x\\n\"}]}}"
+        ]
+      ],
+      "text": null
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "player: a station at a position",
+    "input": {
+      "source": {
+        "station": "night-drive",
+        "n": 3,
+        "count": 4
+      }
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "station": "night-drive",
+        "n": 3,
+        "count": 4
+      },
+      "audio": "live",
+      "features": [
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [
+        [
+          "config",
+          "{\"source\":{\"station\":\"night-drive\",\"n\":3,\"count\":4}}"
+        ]
+      ],
+      "text": null
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "player: a station with no share, no capabilities and a title",
+    "input": {
+      "source": {
+        "station": "lofi"
+      },
+      "features": [],
+      "capabilities": [],
+      "title": "Lo-fi \"radio\""
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "source": {
+        "station": "lofi",
+        "n": 0,
+        "count": 8
+      },
+      "audio": "live",
+      "features": [],
+      "capabilities": [],
+      "theme": "dark",
+      "compact": false,
+      "title": "Lo-fi \"radio\"",
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [
+        [
+          "config",
+          "{\"source\":{\"station\":\"lofi\"},\"features\":[],\"capabilities\":[],\"title\":\"Lo-fi \\\"radio\\\"\"}"
+        ]
+      ],
+      "text": null
+    },
+    "capabilities": {}
+  },
+  {
+    "name": "studio from text: every default",
+    "input": {
+      "kind": "studio",
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n"
+      }
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "studio",
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n"
+      },
+      "audio": "live",
+      "features": [
+        "highlight",
+        "editor",
+        "download",
+        "share",
+        "compose"
+      ],
+      "capabilities": [
+        "sample",
+        "mcp",
+        "db",
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-studio",
+      "attrs": [],
+      "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n"
+    },
+    "capabilities": {
+      "sample": {},
+      "mcp": {
+        "servers": [
+          {
+            "server": "Beatscript",
+            "tools": [
+              "share",
+              "render",
+              "queue"
+            ]
+          }
+        ]
+      },
+      "db": {},
+      "user": {},
+      "downloads": true
+    }
+  },
+  {
+    "name": "studio: features and capabilities out of order, a bridge and a size",
+    "input": {
+      "kind": "studio",
+      "source": {
+        "text": "tempo 90\ndeck A: hat x x x x\n"
+      },
+      "features": [
+        "mixer",
+        "share",
+        "editor",
+        "highlight"
+      ],
+      "capabilities": [
+        "room",
+        "sample",
+        "tts",
+        "mcp"
+      ],
+      "width": 800,
+      "height": 600,
+      "bridge": true
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "studio",
+      "source": {
+        "text": "tempo 90\ndeck A: hat x x x x\n"
+      },
+      "audio": "live",
+      "features": [
+        "highlight",
+        "editor",
+        "mixer",
+        "share"
+      ],
+      "capabilities": [
+        "sample",
+        "mcp",
+        "room",
+        "tts"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "width": 800,
+      "height": 600,
+      "site": "https://beatscript.app",
+      "bridge": true
+    },
+    "element": {
+      "tag": "beatscript-studio",
+      "attrs": [
+        [
+          "config",
+          "{\"features\":[\"highlight\",\"editor\",\"mixer\",\"share\"],\"capabilities\":[\"sample\",\"mcp\",\"room\",\"tts\"],\"width\":800,\"height\":600,\"bridge\":true}"
+        ]
+      ],
+      "text": "tempo 90\ndeck A: hat x x x x\n"
+    },
+    "capabilities": {
+      "sample": {},
+      "mcp": {
+        "servers": [
+          {
+            "server": "Beatscript",
+            "tools": [
+              "share",
+              "render",
+              "queue"
+            ]
+          }
+        ]
+      },
+      "room": {
+        "topics": {
+          "program": "interact"
+        }
+      },
+      "tts": {}
+    }
+  },
+  {
+    "name": "studio: render audio, no highlight, no source, pinned",
+    "input": {
+      "v": 1,
+      "kind": "studio",
+      "audio": "render",
+      "features": [
+        "editor",
+        "compose",
+        "download",
+        "share"
+      ],
+      "pin": {
+        "version": "0.3.0"
+      }
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "studio",
+      "audio": "render",
+      "features": [
+        "editor",
+        "download",
+        "share",
+        "compose"
+      ],
+      "capabilities": [
+        "sample",
+        "mcp",
+        "db",
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false,
+      "pin": {
+        "version": "0.3.0",
+        "sri": true
+      }
+    },
+    "element": {
+      "tag": "beatscript-studio",
+      "attrs": [
+        [
+          "audio",
+          "render"
+        ],
+        [
+          "config",
+          "{\"features\":[\"editor\",\"download\",\"share\",\"compose\"],\"pin\":{\"version\":\"0.3.0\",\"sri\":true}}"
+        ]
+      ],
+      "text": null
+    },
+    "capabilities": {
+      "sample": {},
+      "mcp": {
+        "servers": [
+          {
+            "server": "Beatscript",
+            "tools": [
+              "share",
+              "render",
+              "queue"
+            ]
+          }
+        ]
+      },
+      "db": {},
+      "user": {},
+      "downloads": true
+    }
+  },
+  {
+    "name": "card",
+    "input": {
+      "kind": "card",
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "title": "A card"
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "card",
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "audio": "url",
+      "features": [
+        "share"
+      ],
+      "capabilities": [],
+      "theme": "dark",
+      "compact": false,
+      "title": "A card",
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": null,
+      "attrs": [],
+      "text": null
+    },
+    "capabilities": {}
+  },
+  {
+    "name": "audio, pinned without SRI",
+    "input": {
+      "kind": "audio",
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "pin": {
+        "version": "0.2.0",
+        "sri": false
+      }
+    },
+    "normalized": {
+      "v": 1,
+      "kind": "audio",
+      "source": {
+        "cid": "z4EBG9izEDKtK6ErJfgHcqL5VTiaPVyz3BvCzju4znbxpQjCNDi"
+      },
+      "audio": "inline",
+      "features": [
+        "download"
+      ],
+      "capabilities": [],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false,
+      "pin": {
+        "version": "0.2.0",
+        "sri": false
+      }
+    },
+    "element": {
+      "tag": null,
+      "attrs": [],
+      "text": null
+    },
+    "capabilities": {}
+  },
+  {
+    "name": "null: the player with no source",
+    "input": null,
+    "normalized": {
+      "v": 1,
+      "kind": "player",
+      "audio": "live",
+      "features": [
+        "share"
+      ],
+      "capabilities": [
+        "downloads"
+      ],
+      "theme": "dark",
+      "compact": false,
+      "site": "https://beatscript.app",
+      "bridge": false
+    },
+    "element": {
+      "tag": "beatscript-track",
+      "attrs": [],
+      "text": null
+    },
+    "capabilities": {
+      "downloads": true
+    }
+  },
+  {
+    "name": "invalid: unknown keys",
+    "input": {
+      "kind": "player",
+      "colour": "red",
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n",
+        "tempo": 120
+      }
+    },
+    "errors": [
+      "/colour",
+      "/source/tempo"
+    ]
+  },
+  {
+    "name": "invalid: bad enums",
+    "input": {
+      "kind": "widget",
+      "audio": "loud",
+      "features": [
+        "sparkle"
+      ]
+    },
+    "errors": [
+      "/audio",
+      "/features/0",
+      "/kind"
+    ]
+  },
+  {
+    "name": "invalid: two sources at once",
+    "input": {
+      "source": {
+        "text": "#! name: Four on the floor\ntempo 120\ndeck A: kick x ~ x ~ x ~ x ~\n",
+        "station": "lofi"
+      }
+    },
+    "errors": [
+      "/source"
+    ]
+  },
+  {
+    "name": "invalid: a CID that is not one",
+    "input": {
+      "source": {
+        "cid": "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG"
+      }
+    },
+    "errors": [
+      "/source/cid"
+    ]
+  },
+  {
+    "name": "invalid: a set item with neither text nor cid",
+    "input": {
+      "source": {
+        "set": [
+          {
+            "title": "nothing"
+          }
+        ]
+      }
+    },
+    "errors": [
+      "/source/set/0"
+    ]
+  },
+  {
+    "name": "invalid: duplicate features",
+    "input": {
+      "kind": "studio",
+      "features": [
+        "editor",
+        "share",
+        "editor"
+      ]
+    },
+    "errors": [
+      "/features"
+    ]
+  }
+]

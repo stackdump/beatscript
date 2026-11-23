@@ -25,6 +25,8 @@ export interface BeatscriptRenderInfo {
 
 /** What `report` gives: the state the card shows, for a test or a page that watches the player. */
 export interface BeatscriptTrackReport {
+  /** What the player cannot do of its embed config (`config`), one plain sentence each; [] without one. */
+  notes: string[];
   playing: boolean;
   mode: 'live' | 'render';
   /** The section line ("verse 1/2", "not playing", "rendering", "paused"). */

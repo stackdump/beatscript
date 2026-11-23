@@ -13,7 +13,8 @@
 // is refused), site (where the plain links point, default https://beatscript.app), stored (the program is stored on the
 // site: its CID links to /p/<CID>), highlight (the program's text under the card, coloured as the editor colours it,
 // with a Copy button: comments at once, everything once the engine's btw_highlight is loaded, which fetches the module
-// the player uses, once).
+// the player uses, once), config (the embed config every BeatScript surface reads, as JSON: embed-config.js; also a child
+// <script type="application/json" class="beatscript-config">; the attributes above win over it).
 //
 // Two ways to play, one engine:
 //   live    (the default) the engine runs as it plays: an AudioWorklet, the runtime serviced every 25 ms.
@@ -42,6 +43,7 @@ import { positionModel } from './js/embed-model.js';
 import { normClass, plainSpans } from './js/highlight.js';
 import { renderPlan, statusAt, clock, RENDER_LIMITS } from './js/render-model.js';
 import { renderOnce, playable } from './js/render-client.js';
+import { fromElement, normalize } from './embed-config.js';
 
 const TICK_MS = 25;
 const SITE = 'https://beatscript.app';
@@ -128,11 +130,43 @@ function sourceOf(el) {
   const a = el.getAttribute('text');
   if (a != null) return a;
   const s = el.querySelector('script[type="text/beatscript"], script[type="text/x-beatscript"]');
-  const t = s ? s.textContent : el.textContent;
+  // the element's own text, without a child script (a config's JSON is not the program)
+  const t = s ? s.textContent : [...el.childNodes].filter((n) => !(n.nodeType === 1 && n.localName === 'script')).map((n) => n.textContent).join('');
   // the indentation of the markup is not part of the program
   const lines = String(t || '').replace(/^\n+/, '').replace(/\s+$/, '').split('\n');
   const ind = Math.min(...lines.filter((l) => l.trim()).map((l) => l.match(/^\s*/)[0].length));
   return lines.map((l) => l.slice(Number.isFinite(ind) ? ind : 0)).join('\n') + '\n';
+}
+
+/**
+ * The embed config (embed-config.js, the one config every BeatScript surface reads), when the element has one: a
+ * `config` attribute or a child <script type="application/json" class="beatscript-config">. Its values become the
+ * attributes this element already reads (theme, compact, site, cid, mode, highlight, text), unless the element sets
+ * them itself, so a config and plain attributes play alike. Without a config nothing changes. Returns what the
+ * player cannot do of it, as plain sentences (a set plays its first item; an editor needs <beatscript-studio>).
+ */
+function applyConfig(el) {
+  if (!el.hasAttribute('config') && !el.querySelector('script[type="application/json"].beatscript-config')) return [];
+  const { config, errors } = normalize(fromElement(el));
+  if (errors.length) return errors.map((e) => `config ${e.path || '/'}: ${e.message}`);
+  const set = (k, v) => { if (v != null && !el.hasAttribute(k)) el.setAttribute(k, v); };
+  const src = config.source || {};
+  const dark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
+  set('theme', config.theme === 'auto' ? (dark ? 'dark' : 'light') : config.theme);
+  if (config.compact) set('compact', '');
+  set('site', config.site);
+  if (config.audio === 'live' || config.audio === 'render') set('mode', config.audio);
+  if ((config.features || []).includes('highlight')) set('highlight', '');
+  const first = src.set ? src.set[0] : src;
+  if (first.text != null && el.getAttribute('text') == null && !el.querySelector('script[type="text/beatscript"], script[type="text/x-beatscript"]')) el.setAttribute('text', first.text);
+  set('cid', first.cid);
+  const notes = [];
+  if (first.cid && first.text == null && el.getAttribute('text') == null) notes.push('a CID alone cannot play here: the player fetches nothing, so give the text too');
+  if (src.set && src.set.length > 1) notes.push(`the player plays the set's first item; <beatscript-studio> plays the whole list`);
+  if (src.station) notes.push('the player cannot tune a station: open /radio on the site');
+  if (config.audio === 'inline' || config.audio === 'url') notes.push(`audio ${config.audio} is the site's render: the player plays it live`);
+  for (const f of config.features || []) if (['editor', 'mixer', 'knobs', 'compose'].includes(f)) notes.push(`${f} needs <beatscript-studio>`);
+  return notes;
 }
 
 /** `#! name:`, else ''. */
@@ -210,6 +244,7 @@ export class BeatscriptTrack extends HTMLElement {
 
   connectedCallback() {
     if (this.shadowRoot) return;
+    this.embedNotes = applyConfig(this);
     const root = this.attachShadow({ mode: 'open' });
     const s = styles();
     if (s) root.adoptedStyleSheets = [s];
@@ -546,6 +581,7 @@ export class BeatscriptTrack extends HTMLElement {
     return {
       playing: this.playing,
       mode: this.mode,
+      notes: this.embedNotes || [],
       sec: this.sec && this.sec.textContent,
       bar: this.bar && this.bar.textContent,
       state: this.state && this.state.textContent,

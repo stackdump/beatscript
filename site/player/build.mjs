@@ -51,6 +51,8 @@ fs.mkdirSync(path.join(out, 'wasm'), { recursive: true });
 fs.mkdirSync(path.join(out, 'test'), { recursive: true });
 const cp = (from, to) => fs.copyFileSync(from, path.join(out, to));
 for (const f of OWN) cp(path.join(here, 'src', f), f);
+// the embed config (site/embed/embed-config.js): the one config the player, the studio and btwserve's embed tool read
+cp(path.join(here, '..', 'embed', 'embed-config.js'), 'embed-config.js');
 cp(path.join(here, 'README.md'), 'README.md');
 cp(path.join(here, 'test', 'csp.html'), 'test/csp.html');
 // the licences: the code is MIT; the bundled programs (test/csp.html's) and the engine's data (kits, voices, the sing
@@ -73,7 +75,7 @@ for (const dir of ['', 'js', 'wasm']) {
       const target = path.join(out, dir, m[1]);
       if (!fs.existsSync(target)) throw new Error(`${path.join(dir, f)} imports ${m[1]}, which the package does not have`);
     }
-    if (/https?:\/\/beatscript\.app\/(?!p\/|docs|#)/.test(src)) throw new Error(`${path.join(dir, f)} names a beatscript.app URL that is not a plain link`);
+    if (/https?:\/\/beatscript\.app\/(?!p\/|docs|#|embed-config\.schema\.json)/.test(src)) throw new Error(`${path.join(dir, f)} names a beatscript.app URL that is not a plain link`);
   }
 }
 

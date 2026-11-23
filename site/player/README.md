@@ -9,7 +9,7 @@ It is made for pages with a strict Content Security Policy, such as a Claude art
 or a CDN, fetches only to the page's own origin, no frames.
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.2.0/beatscript-track.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.3.0/beatscript-track.js"></script>
 
 <beatscript-track>
   <script type="text/beatscript">
@@ -34,6 +34,7 @@ scripts only can use `beatscript-track.umd.js` (it imports the module from besid
 | `site` | where the plain links point (default `https://beatscript.app`) |
 | `stored` | the site has the program stored: its CID links to `/p/<CID>` |
 | `highlight` | show the program under the card, coloured as the editor colours it, with a Copy button |
+| `config` | the embed config as JSON (`https://beatscript.app/embed-config.schema.json`, also a child `<script type="application/json" class="beatscript-config">`): one config for the player, `<beatscript-studio>` and the site's `embed` tool. Its theme, compact, site, cid, audio (`live` or `render`), features (`highlight`) and source text become the attributes above, which win over it; what the player cannot do of it (an editor, a station) is in `report.notes` |
 
 The element fires `play` and `stop`, and in render mode `pause` and `rendered`. Stop is silent at once (the engine and
 what it had scheduled are let go), and the next Play starts from bar 1.
