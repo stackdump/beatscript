@@ -70,5 +70,8 @@ its engine and expose arm / cancel / state as above (its engine must be a `MoveH
   kill. It needs a dry gain on the dub delay (as `wash` has) in djrust's `fx::tricks`.
 - **A roll on a net deck across a section line of a program**: the section hands the deck
   another net, and the engine ends a loop when that happens, so the stages after the line
-  halve nothing and the roll is let go there (the stutter rolled on through it). A roll that
-  sits inside one section, released on the next one's line, is whole.
+  halve nothing and the roll is let go there (the stutter rolled on through it). The offline
+  render hands the next section's net over two beats before its line, so a roll released on
+  that line loses the end of its last stage, and the deck plays the next section a beat or so
+  out of phase. A roll let go a bar or more before the line is whole
+  (`examples/beatscript/perform-moves.beatscript` lets go a bar before its drop).
