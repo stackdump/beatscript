@@ -103,7 +103,7 @@ impl Source {
     /// The canonical spelling: what the canonical text writes after `use`.
     pub fn text(&self) -> String {
         match self {
-            Source::Stored { cid, section, part } => crate::roles::Source::Stored { cid: cid.clone(), section: section.clone(), part: part.clone() }.text(),
+            Source::Stored { cid, section, part } => crate::roles::Source::Stored { cid: cid.clone(), track: None, section: section.clone(), part: part.clone() }.text(),
             Source::Gen(c) => c.text(),
             Source::Form(f) => f.text(),
             Source::Canned { tpl, phrase, roles, section } => {
