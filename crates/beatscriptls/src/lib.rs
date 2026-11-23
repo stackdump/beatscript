@@ -19,6 +19,7 @@ pub mod hover;
 pub mod inlay;
 pub mod json;
 pub mod lang;
+pub mod legacy;
 pub mod nav;
 pub mod number;
 pub mod refactor;
@@ -26,6 +27,7 @@ pub mod refs;
 pub mod server;
 pub mod text;
 pub mod timeline;
+pub mod upgrade;
 
 pub use analysis::Analysis;
 pub use server::Server;

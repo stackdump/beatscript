@@ -42,7 +42,7 @@ pub struct Server {
     /// The client said `workspace.applyEdit` in `initialize`: an eject run as a command is also sent to it as a
     /// `workspace/applyEdit` request ([`Server::handle`]).
     pub apply_edit: bool,
-    /// The requests this server has sent the client (their ids: `btw/<n>`).
+    /// The requests this server has sent the client (their ids: `beatscript/<n>`).
     sent: u64,
 }
 
@@ -141,11 +141,11 @@ impl Server {
     /// takes it), and for a show or a copy a `window/showMessage` with the expansion, for a client that has no show/hide of its
     /// own (LSP4IJ; the VS Code extension and the web page keep that state themselves and ask `beatscript/expand` instead).
     fn after_command(&mut self, params: &JsonValue, answer: &JsonValue) -> Vec<JsonValue> {
-        let command = params.get("command").and_then(JsonValue::as_str).unwrap_or("");
+        let command = crate::legacy::command(params.get("command").and_then(JsonValue::as_str).unwrap_or(""));
         match command {
             crate::refs::EJECT if self.apply_edit => {
                 self.sent += 1;
-                vec![obj([("jsonrpc", s("2.0")), ("id", s(format!("btw/{}", self.sent))), ("method", s("workspace/applyEdit")), ("params", answer.clone())])]
+                vec![obj([("jsonrpc", s("2.0")), ("id", s(format!("beatscript/{}", self.sent))), ("method", s("workspace/applyEdit")), ("params", answer.clone())])]
             }
             crate::refs::TOGGLE | crate::refs::COPY => match crate::refs::notice(command, answer) {
                 Some(m) => vec![obj([("jsonrpc", s("2.0")), ("method", s("window/showMessage")), ("params", obj([("type", JsonValue::int(3)), ("message", s(m))]))])],
@@ -201,9 +201,10 @@ impl Server {
         Ok(a.index.offset(&a.text, p, self.encoding))
     }
 
-    /// Answer one request.
+    /// Answer one request. A custom method under its name before the rename (`btw/expand`) is answered as the one it is now
+    /// (crate::legacy).
     pub fn request(&mut self, method: &str, params: &JsonValue) -> Reply {
-        match method {
+        match crate::legacy::method(method) {
             "initialize" => Ok(self.initialize(params)),
             "shutdown" => {
                 self.shutdown = true;
@@ -242,7 +243,8 @@ impl Server {
                 Ok(crate::refs::code_lenses(a, uri, self.encoding))
             }
             "workspace/executeCommand" => {
-                let command = params.get("command").and_then(JsonValue::as_str).ok_or_else(|| invalid("command"))?;
+                // a command id from before the rename (`btw.eject`) is the one it is now
+                let command = crate::legacy::command(params.get("command").and_then(JsonValue::as_str).ok_or_else(|| invalid("command"))?);
                 if !crate::refs::COMMANDS.contains(&command) {
                     return Err(invalid(&format!("command: {command} is not one of {}", crate::refs::COMMANDS.join(", "))));
                 }
@@ -306,6 +308,11 @@ impl Server {
                 let at = self.offset_of(a, params)?;
                 Ok(crate::hover::signature_help(a, at, &self.env_names()))
             }
+            // fmt that upgrades: a BeatScript 1 text comes back in BeatScript 2 (upgrade.rs)
+            "textDocument/formatting" => {
+                let a = self.doc_of(params)?;
+                Ok(crate::upgrade::formatting(a, self.encoding))
+            }
             "textDocument/inlayHint" => {
                 let a = self.doc_of(params)?;
                 let range = match params.get("range").and_then(get_range) {
@@ -331,6 +338,7 @@ impl Server {
                 let only: Vec<String> = params.get("context").and_then(|c| c.get("only")).and_then(JsonValue::strings).unwrap_or_default();
                 let mut actions = crate::fix::code_actions(a, uri, range, &only, self.encoding);
                 actions.extend(self.refactors(a, uri, range, &only));
+                actions.extend(crate::upgrade::action(a, uri, range, &only, self.encoding));
                 Ok(arr(actions))
             }
             _ => Err((METHOD_NOT_FOUND, format!("unhandled method {method}"))),
@@ -362,6 +370,7 @@ impl Server {
         c.set("referencesProvider", JsonValue::Bool(true));
         c.set("documentHighlightProvider", JsonValue::Bool(true));
         c.set("renameProvider", obj([("prepareProvider", JsonValue::Bool(true))]));
+        c.set("documentFormattingProvider", JsonValue::Bool(true));
         // the requests beyond LSP this server answers
         c.set("experimental", obj([("beatscript", obj([("numberAt", JsonValue::Bool(true)), ("diagnostics", JsonValue::Bool(true)), ("expand", JsonValue::Bool(true))]))]));
         c.set("codeActionProvider", obj([("codeActionKinds", arr(Self::ACTION_KINDS.iter().map(|k| s(*k)).collect())), ("resolveProvider", JsonValue::Bool(true))]));

@@ -197,7 +197,7 @@ pub fn decimals(step: f64) -> usize {
     d
 }
 
-/// The canonical text of a number (what `btw fmt` prints: the shortest plain decimal, no marks).
+/// The canonical text of a number (what `beatscript fmt` prints: the shortest plain decimal, no marks).
 pub fn spell(v: f64, decimals: usize) -> String {
     let r = (v * 10f64.powi(decimals as i32)).round() / 10f64.powi(decimals as i32);
     djlive::print::num(if r == 0.0 { 0.0 } else { r })
@@ -273,7 +273,7 @@ fn key_at(a: &Analysis, at: usize) -> Option<Key> {
 const SHARP: [&str; 12] = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"];
 
 /// The notes a note word can be moved through: the key's scale (every semitone with no key), octave -1 to 9 when it has an
-/// octave, one octave of pitch classes when it has none. Spelled as `btw fmt` spells them (sharps).
+/// octave, one octave of pitch classes when it has none. Spelled as `beatscript fmt` spells them (sharps).
 fn note_choices(w: &str, key: Option<Key>) -> Option<(Vec<String>, usize)> {
     let (pc, oct) = djlive::music::parse_note(w)?;
     let in_key = |p: u8| match key {

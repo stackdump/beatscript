@@ -173,12 +173,14 @@ pub fn code_actions(a: &Analysis, uri: &str, range: Span, only: &[String], enc: 
         }
     }
     let all = fix_all(a);
-    let explicit = only.iter().any(|o| o == "source.fixAll" || o == "source.fixAll.beatscript" || o == "source");
+    // `source.fixAll.btw`: what an editor set up before the rename asks for (crate::legacy); it gets the kind it asked for
+    let legacy = only.iter().any(|o| o == crate::legacy::FIX_ALL);
+    let explicit = legacy || only.iter().any(|o| o == "source.fixAll" || o == "source.fixAll.beatscript" || o == "source");
     if (all.len() > 1 && wants("quickfix")) || (explicit && !all.is_empty()) {
         let edits: Vec<(Span, String)> = all.iter().map(|(_, f)| (f.span, f.replacement.clone())).collect();
         out.push(obj([
             ("title", s(format!("Fix all certain problems ({})", all.len()))),
-            ("kind", s(if explicit { "source.fixAll.beatscript" } else { "quickfix" })),
+            ("kind", s(if legacy { crate::legacy::FIX_ALL } else if explicit { "source.fixAll.beatscript" } else { "quickfix" })),
             ("diagnostics", arr(all.iter().map(|(i, _)| crate::diagnostics::to_lsp(a, &a.diagnostics()[*i], *i, enc)).collect())),
             ("edit", workspace_edit(a, uri, &edits, enc)),
         ]));

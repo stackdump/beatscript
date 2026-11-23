@@ -306,13 +306,14 @@ fn code_lenses_and_their_commands_round_trip() {
     let out = s.handle(&msg);
     assert_eq!(out.len(), 2, "{:?}", out.iter().map(JsonValue::js_stringified).collect::<Vec<_>>());
     assert_eq!(out[0].get("method").and_then(JsonValue::as_str), Some("workspace/applyEdit"));
+    assert_eq!(out[0].get("id").and_then(JsonValue::as_str), Some("beatscript/1"));
     let edit = out[0].get("params").and_then(|p| p.get("edit")).unwrap();
     let want = refs::eject(SECTIONS, &env(), ss[0].span.start).unwrap().unwrap();
     assert_eq!(apply(SECTIONS, edit), want);
     assert_eq!(out[1].get("id").and_then(JsonValue::as_i64), Some(9));
     assert_eq!(apply(SECTIONS, out[1].get("result").and_then(|r| r.get("edit")).unwrap()), want);
     // the client's answer to our request is taken quietly
-    assert!(s.handle(&JsonValue::parse(r#"{"jsonrpc":"2.0","id":"btw/1","result":{"applied":true}}"#).unwrap()).is_empty());
+    assert!(s.handle(&JsonValue::parse(r#"{"jsonrpc":"2.0","id":"beatscript/1","result":{"applied":true}}"#).unwrap()).is_empty());
     // a show over the wire also tells a client with no show of its own
     let msg = JsonValue::parse(&format!(r#"{{"jsonrpc":"2.0","id":10,"method":"workspace/executeCommand","params":{}}}"#, lenses[0].get("command").unwrap().js_stringified())).unwrap();
     let out = s.handle(&msg);
