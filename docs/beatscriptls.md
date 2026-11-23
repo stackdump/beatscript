@@ -163,46 +163,70 @@ What each client gets:
 |---|---|---|---|---|
 | VS Code (`editors/vscode`) | yes | lens, or *Show or hide the expansion of the reference here*: a decoration after the reference (its first line, how many more, `[z…cid]`; the whole in its hover); *every reference's*; *open … beside* (a read-only document) | lens-less: the lightbulb or the palette, to the clipboard | lens, lightbulb, palette (`workspace/applyEdit`) |
 | IntelliJ (LSP4IJ) | yes (Ctrl+Q) | lens: a notification with the expansion | Alt+Enter: a notification | lens, Alt+Enter |
-| the web page (`BeatscriptLs`) | yes | the JS below | the JS below | Alt+Enter as it is (the existing `run` resolves it) |
+| the web page (`BeatscriptLs`) | yes | Alt+E, or the `⇒ show expansion` lens at the line's end while the caret is on a reference: a note after the reference (its first line, how many more, `[z…cid]`; hover it for up to 12 lines, click it for the whole); Alt+Shift+E or the Alt+Enter list: every reference's; *Open the whole expansion* (Alt+Enter) | the note's popup, or *Copy the expansion* in Alt+Enter: to the clipboard | Alt+Enter (the refactor, resolved), or the note's popup (`beatscript.eject`, as the lens) |
 
 ### The web editor
 
-beats-bitwrap-io `site/web/js/assist.js` needs no change for the hover or for eject (it is a refactor in the Alt+Enter
-list, resolved by `run` as the others are). Showing an expansion and copying one are three small additions:
+The page (this repo's `site/`, served at beatscript.app) does what the VS Code extension does, with the same calls:
+`site/web/js/assist.js` draws it and `site/web/js/expansion-model.js` is its pure side (what is shown, where a note goes, what
+it says, how a command is routed), pinned by `site/test/unit.mjs`; smoke.mjs step 17 drives it in headless Chrome against the
+built module. Nothing new was needed of the module: `BeatscriptLs.request` already reaches `beatscript/expand`, `workspace/executeCommand`
+and `codeAction/resolve` (`tests/refs.rs` `the_web_page_shows_copies_and_ejects_through_the_string_surface` drives the page's
+calls through that string surface, on a server made as `BeatscriptLs::new` makes it).
 
-```js
-// onKey, beside Alt+Enter: Alt+E shows or hides the expansion of the reference at the caret
-if (e.altKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); this.toggleExpansion(); return true; }
+- **Alt+E** shows or hides the expansion of the reference at the caret (`beatscript/expand` with the caret's position: the reference
+  whose own text holds it, else whose statement does). A shown expansion is a read-only note drawn at the end of the line
+  the reference ends on, four columns past it (the lightbulb sits in the first ones): `⇒ <its first line>  … N more lines
+  [z…cid]`, cut to the room the line leaves (the first line is cut first, then dropped for the line count, then the CID). It
+  is drawn over the code, never written into the textarea, so the text, its CID and undo do not move.
+- **The lens**: while the caret is on a reference whose expansion is hidden, `⇒ show expansion` stands where its note would;
+  a click shows it. This is the visible control for what VS Code's `show expansion` lens does.
+- **Hover** a note: the call, its CID, kind and half, and the expansion under its `# from:` line, at most 12 lines or 1200
+  characters, then how many more. **Click** a note: the whole expansion in the popup under the reference (scrolls), with
+  *Hide the expansion*, *Copy the expansion* and *Eject … into local text*.
+- **Alt+Shift+E**: every reference's expansion shown, or all hidden when any of them is.
+- **Alt+Enter** on a reference lists the service's *Eject … into local text* (a refactor: resolved, made and proved as the
+  others are) and *Copy the expansion of …* (a command with no edit), then the page's own *Show/Hide the expansion of …*,
+  *Show/Hide every reference's expansion* (when there are several) and *Open the whole expansion of …*.
+- **Commands are routed as the extension's middleware routes them** (`expansion-model.route`): `beatscript.expand.toggle` and
+  `beatscript.expand.copy` are the page's (it asks `beatscript/expand`; they never go to the server), `beatscript.eject` goes to the server as
+  `workspace/executeCommand` with `[{uri, position}]` and its `{label, edit}` is applied as one undoable edit; an error
+  (the text cannot be ejected, or no reference there) is a toast with the server's reason.
+- **Copy** writes the `# from:` line and the expansion (what eject would write, as VS Code copies it). Where the clipboard is
+  shut (no permission, an insecure origin) the whole opens under the reference instead, to select and copy by hand.
+- **The state** is a set of keys in the page, `kind|call|place|name` (VS Code's), so an edit that moves a reference keeps
+  it shown. An edit hides the notes at once (they would sit on moved text) and they are drawn again for the new text when it
+  rests: after the caret's 120 ms and after the page's check; a resize or a font change redraws them where the text now
+  wraps. The references are asked once per text; when they could not be worked out (a stored program the page has not
+  fetched yet) they are asked again after the page's next check, the document opened afresh in `BeatscriptLs` (its analysis keeps
+  what it worked out for a text, and the program told to the module since is what it lacked). A screen reader is told what
+  was shown or hidden (an `aria-live` line), and `#ed-help` names the keys.
 
-// run(action), first: an action with a command and no edit (Copy the expansion) is the page's to carry out
-if (a.command && !a.edit && !(a.data && a.data.refactor)) {
-  const r = this.req('workspace/executeCommand', a.command);
-  if (!r || r.error) { this.toast(r && r.error ? r.error : 'Nothing to copy here.', 'warn'); return; }
-  navigator.clipboard.writeText(`${r.text}\n`).then(() => this.toast('Copied the expansion.', 'ok'));
-  return;
-}
+Decisions:
 
-// a method: the expansion in the popup, under the reference (which one is shown is the page's state: the list)
-toggleExpansion() {
-  if (this.list && this.list.kind === 'expansion') { this.close(); return; }
-  const res = this.req('beatscript/expand', { position: this.caretPos() });
-  const ref = res && res.references && res.references[0];
-  if (!ref) { this.toast(res && res.errors && res.errors.length ? res.errors[0].message : 'No reference here.', 'ok'); return; }
-  const doc = `\`${ref.call}\` → \`${ref.resolved || ''}\`\n\n\`\`\`btw\n${ref.from}\n${ref.text}\n\`\`\``;
-  this.list = { kind: 'expansion', rows: [{ label: ref.kind, detail: ref.half, doc }], sel: 0, anchor: offsetOf(this.ed.text, ref.range.start) };
-  this.paint();
-}
-```
+- **A note at the line's end, not a block under the reference.** The editor is a textarea under a highlighted `<pre>`: a
+  line the text does not have cannot be drawn between two that it does without writing it, and a written expansion is
+  eject. VS Code draws its decoration the same way (after the line).
+- **The whole on a click, a part on hover.** The editor's tip does not take the pointer, so it cannot scroll: it shows 12
+  lines (the service's own hover shows 24, under its other facts) and says how many more; the click's popup scrolls.
+- **Alt+E toggles; it does not open the popup.** Hiding has to be a key too, and *Open the whole expansion* is in Alt+Enter.
+  Alt+E is matched by `code` as well as `key` (Option+E is a dead key on a Mac) and taken before the browser's menu.
+- **The lens only at the caret**, not over every reference as VS Code's lenses are: the page has no lens rows, and a note
+  on every reference line would crowd the code. Every reference's expansion is one key away.
+- **"Every" hides when any is shown**, counting only the program's references now (a key of a reference that is gone does
+  not make the next press hide); hiding clears every key.
 
-(`.as-doc` wants a `max-height` and `overflow: auto` for a long expansion.) Positions are UTF-16 there, as `BeatscriptLs` counts.
+Not done: VS Code's *open … beside* as a second editor (the popup is the page's), and a per-reference lens row.
+
+Positions are UTF-16 throughout, as `BeatscriptLs` counts and as JS strings index.
 
 ## Try it
 
 - **VS Code**: `cargo build --release -p beatscript-cli`, then `editors/vscode/README.md` (`npm install`, `code
   --extensionDevelopmentPath=editors/vscode some.beatscript`, set `beatscript.server.path`).
 - **IntelliJ**: LSP4IJ pointed at `beatscript lsp`, `editors/intellij/README.md`.
-- **Web**: `scripts/build-web-wasm.sh <beats>/site/web/wasm` (the module now has `BeatscriptLs`), then the page's
-  `site/web/js/assist.js`: Ctrl+Space, hover, Alt+Enter, Mod+Shift+O, F12.
+- **Web**: `scripts/build-web-wasm.sh site/web/wasm` (the module has `BeatscriptLs`), then `node site/test/mock-server.mjs` and the
+  page it serves (`site/web/js/assist.js`): Ctrl+Space, hover, Alt+Enter, Mod+Shift+O, F12, Alt+E and Alt+Shift+E.
 - **Any client**: `beatscript lsp` on stdio.
 
 ## Merging with feat/btw-fixer
