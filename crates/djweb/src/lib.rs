@@ -63,6 +63,15 @@ pub fn btw_generate(request_json: &str) -> String {
     btwapi::generate_json(request_json)
 }
 
+/// `station(json)`: radio (docs/btw/radio.md). A station request, `{"station": "<program>", "n", "count", "segue", "check",
+/// "retune", "locks", "neighbours"}` -> `{"ok","version","station","n","tracks","segues",...}` or `{"ok":false,"error",
+/// "diagnostics"}`: the answer the MCP `station` tool and `POST /api/station` give (btwapi::station_json).
+#[wasm_bindgen]
+pub fn btw_station(request_json: &str) -> String {
+    init();
+    btwapi::station_json(request_json)
+}
+
 /// Tell the module a program by CID and canonical text (what `/api/programs/<cid>` answers, or a link carried): an `import`
 /// of that CID then checks, plays and shares as it does where the program is saved. The text is re-hashed; one that is not
 /// the program its CID names is refused (`{"ok":false,"error"}`).

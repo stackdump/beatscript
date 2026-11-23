@@ -261,6 +261,10 @@ if (btwd) {
 }
 const gen = JSON.parse(glue.btw_generation(fs.readFileSync(path.join(root, 'crates/btwapi/tests/corpus/markers-demo.btw'), 'utf8'), null, 2));
 ok('btw_generation(markers-demo, 2) answers a CID', gen.ok === true && /^z/.test(gen.cid), JSON.stringify(gen));
+// radio (docs/btw/radio.md): btw_station answers what the MCP station tool and POST /api/station do (crates/djweb/tests/drift.rs
+// holds the native exports to station_json byte for byte; this is the module itself)
+const station = JSON.parse(glue.btw_station(JSON.stringify({ station: 'tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n', n: 3 })));
+ok('btw_station(n 3) answers track 3 and the segue to 4', station.ok === true && station.tracks[0].n === 3 && /^z/.test(station.tracks[0].cid) && station.segues[0].to === 4 && /^z/.test(station.segues[0].cid), JSON.stringify(station).slice(0, 400));
 ok('engine_version is the engine crate', glue.engine_version() === JSON.parse(glue.btw_build_info()).engine);
 const bad = JSON.parse(glue.btw_check('deck A: kick x ~ y ~\n'));
 ok('an error has line, col, start16 and a render form', bad.ok === false && bad.diagnostics[0].line === 1 && 'start16' in bad.diagnostics[0] && bad.diagnostics[0].render.includes('-->'), JSON.stringify(bad.diagnostics && bad.diagnostics[0]).slice(0, 200));

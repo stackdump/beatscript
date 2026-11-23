@@ -112,6 +112,28 @@ fn generator_output_checks_the_same_on_the_server_and_in_the_page() {
     assert!(n >= btwapi::generate::genres().len(), "too few programs: {n}");
 }
 
+/// Radio (docs/btw/radio.md): the page's `btw_station` is the server's answer byte for byte (the MCP `station` tool and
+/// `POST /api/station` answer `station_json`), retuned or not, and a station program checks the same in the page and the
+/// editor as on the server.
+#[test]
+fn the_page_tunes_a_station_as_the_server_does() {
+    native_hook();
+    let station = "tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n";
+    let quote = |s: &str| djrust::json::JsonValue::str(s.to_string()).js_stringified();
+    for req in [
+        format!("{{\"station\": {}, \"n\": 3}}", quote(station)),
+        format!("{{\"station\": {}, \"n\": 3, \"count\": 2, \"retune\": {{\"tempo\": \"+1\"}}, \"locks\": [\"key\"], \"neighbours\": true}}", quote(station)),
+        "{\"station\": \"tempo 120\\n\"}".to_string(),
+        "not json".to_string(),
+    ] {
+        let page = djweb::btw_station(&req);
+        assert_eq!(page, btwapi::station_json(&req), "btw_station (the page) and station_json (the server) differ for {req}");
+        assert!(JsonValue::parse(&page).is_ok(), "{page}");
+    }
+    let mut ls = djweb::BtwLs::new();
+    same_everywhere("a station", station, &mut ls, true);
+}
+
 /// The program of the report: MCP generate (trap, seed 54877, dm, 140) prints its arps as Roman numerals, `arp(i, up, 16)`,
 /// which the editor of a page built before 425458c (6596, numerals in chord() and arp()) refused as "`i` is not a chord".
 #[test]
