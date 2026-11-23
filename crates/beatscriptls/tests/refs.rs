@@ -54,8 +54,13 @@ fn server_applying(text: &str) -> Server {
 
 /// A WorkspaceEdit's edits on the test document, made to its text.
 fn apply(text: &str, edit: &JsonValue) -> String {
+    apply_on(URI, text, edit)
+}
+
+/// A WorkspaceEdit's edits on document `uri`, made to its text.
+fn apply_on(uri: &str, text: &str, edit: &JsonValue) -> String {
     let ix = LineIndex::new(text);
-    let edits = edit.get("changes").and_then(|c| c.get(URI)).and_then(JsonValue::as_array).unwrap();
+    let edits = edit.get("changes").and_then(|c| c.get(uri)).and_then(JsonValue::as_array).unwrap();
     let mut spans: Vec<(usize, usize, String)> = edits
         .iter()
         .map(|e| {
@@ -340,4 +345,60 @@ fn the_server_says_it_has_lenses_commands_and_expand() {
     assert_eq!(c.get("codeLensProvider").map(JsonValue::js_stringified).as_deref(), Some(r#"{"resolveProvider":false}"#));
     assert_eq!(c.get("executeCommandProvider").and_then(|e| e.get("commands")).and_then(JsonValue::strings), Some(beatscriptls::refs::COMMANDS.iter().map(|c| c.to_string()).collect()));
     assert_eq!(c.get("experimental").and_then(|e| e.get("beatscript")).and_then(|b| b.get("expand")).and_then(JsonValue::as_bool), Some(true));
+}
+
+/// The web page's calls (site/web/js/assist.js; docs/beatscriptls.md "The web editor") through the string surface djweb's `BeatscriptLs`
+/// wraps, on a server made as `BeatscriptLs::new` makes it (UTF-16, the check deferred, the document `main`): every reference
+/// (`beatscript/expand`), the one at the caret, the copy command's text (what the page copies out of `beatscript/expand`: the `from` line and
+/// the text), and eject as the page's note runs it (`workspace/executeCommand` with the caret's place and no length), which is
+/// the edit `refs::eject` writes and the eject refactor's (Alt+Enter) once resolved. Off a reference, eject says why not.
+#[test]
+fn the_web_page_shows_copies_and_ejects_through_the_string_surface() {
+    beatscript_api::generate::install();
+    let text = format!("# é𝄞 a bed\n{LET}");
+    let site = &sites(&text)[0];
+    let mut s = Server::with_encoding(Encoding::Utf16);
+    s.deferred = true;
+    beatscriptls::wasm::open(&mut s, "main", &text);
+    let call = |s: &mut Server, method: &str, params: String| {
+        let out = beatscriptls::wasm::request(s, method, &params);
+        JsonValue::parse(&out).unwrap_or_else(|e| panic!("{method}: {out}: {e}"))
+    };
+    let pos = |byte: usize| {
+        let p = LineIndex::new(&text).position(&text, byte, Encoding::Utf16);
+        format!(r#"{{"line":{},"character":{}}}"#, p.line, p.character)
+    };
+    // every reference, its range in UTF-16 units (after a comment whose characters count differently in UTF-8)
+    let all = call(&mut s, "beatscript/expand", r#"{"textDocument":{"uri":"main"}}"#.to_string());
+    let list = all.get("references").and_then(JsonValue::as_array).unwrap();
+    assert_eq!(list.len(), 1, "{}", all.js_stringified());
+    let r = &list[0];
+    assert_eq!(span_of(&text, r.get("range").unwrap(), Encoding::Utf16), (site.span.start, site.span.end));
+    // the one at the caret: on the let's name, its statement holds the caret
+    let caret = pos(text.find("bed =").unwrap());
+    let one = call(&mut s, "beatscript/expand", format!(r#"{{"textDocument":{{"uri":"main"}},"position":{caret}}}"#));
+    assert_eq!(one.get("references").and_then(|l| l.at(0)).map(JsonValue::js_stringified), Some(r.js_stringified()));
+    // what the page copies (out of beatscript/expand) is the copy command's text
+    let f = |k: &str| r.get(k).and_then(JsonValue::as_str).unwrap().to_string();
+    let copied = call(&mut s, "workspace/executeCommand", format!(r#"{{"command":"{}","arguments":[{{"uri":"main","position":{caret}}}]}}"#, beatscriptls::refs::COPY));
+    assert_eq!(copied.get("text").and_then(JsonValue::as_str), Some(format!("{}\n{}", f("from"), f("text")).as_str()));
+    // eject from the caret, no length (the page asks for the text it has): what refs::eject writes
+    let ej = call(&mut s, "workspace/executeCommand", format!(r#"{{"textDocument":{{"uri":"main"}},"command":"{}","arguments":[{{"uri":"main","position":{caret}}}]}}"#, beatscriptls::refs::EJECT));
+    let got = apply_on("main", &text, ej.get("edit").unwrap_or_else(|| panic!("{}", ej.js_stringified())));
+    let want = refs::eject(&text, &env(), site.span.start).unwrap().unwrap();
+    assert_eq!(got, want);
+    assert!(ej.get("label").and_then(JsonValue::as_str).is_some_and(|l| l.starts_with("Eject `gen@2")), "{}", ej.js_stringified());
+    // the same edit as the eject refactor's, resolved
+    let start = pos(site.span.start);
+    let acts = call(&mut s, "textDocument/codeAction", format!(r#"{{"textDocument":{{"uri":"main"}},"range":{{"start":{start},"end":{start}}},"context":{{"diagnostics":[]}}}}"#));
+    let eject = acts.as_array().unwrap().iter().find(|a| a.get("data").and_then(|d| d.get("refactor")).and_then(JsonValue::as_str) == Some("eject")).unwrap().clone();
+    let resolved = call(&mut s, "codeAction/resolve", eject.js_stringified());
+    assert_eq!(apply_on("main", &text, resolved.get("edit").unwrap()), want);
+    // off a reference: refused, with the reason
+    let off = call(&mut s, "workspace/executeCommand", format!(r#"{{"command":"{}","arguments":[{{"uri":"main","position":{}}}]}}"#, beatscriptls::refs::EJECT, pos(text.find("kick").unwrap())));
+    let msg = off.get("error").and_then(|e| e.get("message")).and_then(JsonValue::as_str).unwrap_or_else(|| panic!("{}", off.js_stringified())).to_string();
+    assert!(msg.contains("no reference here"), "{msg}");
+    // the ejected text has no reference left to show
+    beatscriptls::wasm::open(&mut s, "main", &got);
+    assert_eq!(call(&mut s, "beatscript/expand", r#"{"textDocument":{"uri":"main"}}"#.to_string()).js_stringified(), r#"{"references":[]}"#);
 }
