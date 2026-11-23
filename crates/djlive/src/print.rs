@@ -486,7 +486,7 @@ pub fn line(l: &Line) -> String {
         s.push_str(&target(t));
         s.push_str(": ");
     }
-    // the control deck's head (docs/btw/ext-control.md): its own spelling, so `control: move echo_out on B` and
+    // the control deck's head (docs/beatscript/ext-control.md): its own spelling, so `control: move echo_out on B` and
     // `move echo_out on B` are two texts (and two CIDs) of one lowering
     if l.control.is_some() {
         s.push_str("control: ");

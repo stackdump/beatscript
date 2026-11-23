@@ -1,4 +1,4 @@
-//! Hardware controls (docs/btw/ext-perform.md, "Follow"): a control line that names an input follows it. Four rules on the
+//! Hardware controls (docs/beatscript/ext-perform.md, "Follow"): a control line that names an input follows it. Four rules on the
 //! performed tier: **R1** an untimed value line follows its input on every bar, **R2** an input written alone covers a filter's
 //! range, **R3** an input is read when a line is due (not once a bar), **R4** a knob that nothing answers for rests at 1/2. Each
 //! test here fails on the code before them.

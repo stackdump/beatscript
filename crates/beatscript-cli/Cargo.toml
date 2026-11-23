@@ -1,0 +1,19 @@
+[package]
+name = "beatscript-cli"
+description = "beatscript from a shell and for the beatscript.app server: check / fmt / open / share / highlight / cheatsheet / instruments / render (streaming PCM). No audio or MIDI features: builds on a bare Linux box."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "beatscript"
+path = "src/main.rs"
+
+[dependencies]
+beatscript-api = { path = "../beatscript-api" }
+beatscriptls = { path = "../beatscriptls" }
+djengine.workspace = true
+djhost.workspace = true
+djlive.workspace = true

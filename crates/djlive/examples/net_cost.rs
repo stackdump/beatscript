@@ -3,7 +3,7 @@
 //!
 //!   cargo run --release -p djlive --example net_cost -- 64 128 256 512
 //!
-//! (docs/BTW.md, "How long a program can be": the numbers there are this example's.)
+//! (docs/BEATSCRIPT.md, "How long a program can be": the numbers there are this example's.)
 
 use std::time::Instant;
 

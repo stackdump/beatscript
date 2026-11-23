@@ -1,0 +1,102 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": [],
+    "cid": "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE",
+    "canonical": "tempo 124\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet riff = a2 ~ a2 a2 ~ c3 ~ a2 e2 ~ e2 g2 ~ e2 ~ e2\nlet lead = <[e5 ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ a4 ~ ~ ~] [~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~]>\ndef groove(deck, bars) {\n  deck $deck: kick kk | hihat hh vel=70..95 | bass riff inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection build 8 bars {\n  deck A: kick kk | hihat hh\n  master: filter hp 100 -> 5000 over 8 bars\n}\nsection drop 16 bars {\n  groove(A, 16)\n  deck B: melody lead inst=pwm-lead\n  evolve every 4 bars {\n    melody: rotate 2 | transpose <0 5 7 0>\n    stop when gen == 3\n  }\n  at bar 2: master: reverb 0.3\n}\narrange build drop\n",
+    "nets": {
+      "build@0:A": "z4EBG9j6P21Thqfe5e5nT7yj3HurxM75eDjN5SaxygV7KH94Ndv",
+      "drop@12:A": "z4EBG9j8svJ21nmLoXFRw4uKLpMjSGuMYc94tx6aDFAeRKigyTY",
+      "drop@12:B": "z4EBG9j5HGM5rSMQURA34dpxcZJQRuFqWgCxjSdRZiZE4FAHg9r",
+      "drop@16:A": "z4EBG9j8svJ21nmLoXFRw4uKLpMjSGuMYc94tx6aDFAeRKigyTY",
+      "drop@16:B": "z4EBG9j78kirdrFHqDJXuMX6qKLDsqLmVZU7XvvdfAgPohTLzH7",
+      "drop@20:A": "z4EBG9j8svJ21nmLoXFRw4uKLpMjSGuMYc94tx6aDFAeRKigyTY",
+      "drop@20:B": "z4EBG9jFU27vYmS7vPgb9PUTnwYzLmu1TXPFAxrrrYKjwf6R7uq",
+      "drop@8:A": "z4EBG9j8svJ21nmLoXFRw4uKLpMjSGuMYc94tx6aDFAeRKigyTY",
+      "drop@8:B": "z4EBG9jErBHCXSjdswSD9i1dDr9uQKbpG9DsNAFFTQtz7sdE8wg"
+    },
+    "song_nets": null,
+    "tempo": 124,
+    "key": "am",
+    "swing": null,
+    "arranged": true,
+    "song_bars": 24,
+    "ends": true,
+    "end_bar": 24,
+    "loops": false,
+    "sections": [
+      {
+        "name": "build",
+        "start": 0,
+        "bars": 8
+      },
+      {
+        "name": "drop",
+        "start": 8,
+        "bars": 16
+      }
+    ],
+    "decks": ["A","B"],
+    "evolve": [
+      "evolve in drop: tail 19 generations (76 bars), then it cycles: period 8 generations = period 32 bars ≈ 1m02s at 124"
+    ],
+    "lineage": [
+      {
+        "scope": "drop",
+        "gen": 0,
+        "cid": "z4EBG9j7iGe1d4V4HsgVQUFZgEHkzwCVhhMcGgVCQawDDqHERQg",
+        "forkedFrom": null,
+        "start_bar": 8,
+        "bars": 4
+      },
+      {
+        "scope": "drop",
+        "gen": 1,
+        "cid": "z4EBG9j54spTnz1Bvr52VJvhYknkJhGoew5xCV5Jqv9nrULcyXM",
+        "forkedFrom": "z4EBG9j7iGe1d4V4HsgVQUFZgEHkzwCVhhMcGgVCQawDDqHERQg",
+        "start_bar": 12,
+        "bars": 4
+      },
+      {
+        "scope": "drop",
+        "gen": 2,
+        "cid": "z4EBG9j9hMGTfJGdmEdoVxr5dwGwL4KuoQLsLpUPJECNnLnE18d",
+        "forkedFrom": "z4EBG9j54spTnz1Bvr52VJvhYknkJhGoew5xCV5Jqv9nrULcyXM",
+        "start_bar": 16,
+        "bars": 4
+      },
+      {
+        "scope": "drop",
+        "gen": 3,
+        "cid": "z4EBG9jGzjnxfCJ6sHA3Pskmw7ZRZ3TaGud2X88F3aaEr9vCYTU",
+        "forkedFrom": "z4EBG9j9hMGTfJGdmEdoVxr5dwGwL4KuoQLsLpUPJECNnLnE18d",
+        "start_bar": 20,
+        "bars": 4
+      }
+    ],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": 46.452,
+    "expanded_cid": "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE"
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 124\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet riff = a2 ~ a2 a2 ~ c3 ~ a2 e2 ~ e2 g2 ~ e2 ~ e2\nlet lead = <[e5 ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ a4 ~ ~ ~] [~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~]>\ndef groove(deck, bars) {\n  deck $deck: kick kk | hihat hh vel=70..95 | bass riff inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection build 8 bars {\n  deck A: kick kk | hihat hh\n  master: filter hp 100 -> 5000 over 8 bars\n}\nsection drop 16 bars {\n  groove(A, 16)\n  deck B: melody lead inst=pwm-lead\n  evolve every 4 bars {\n    melody: rotate 2 | transpose <0 5 7 0>\n    stop when gen == 3\n  }\n  at bar 2: master: reverb 0.3\n}\narrange build drop\n",
+    "cid": "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE",
+    "comments": ["! beatscript 1","! name: markers-demo","! license: CC0-1.0","! visibility: public"],
+    "diagnostics": [],
+    "text": "#! btw 1\n#! name: markers-demo\n#! license: CC0-1.0\n#! visibility: public\ntempo 124\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet riff = a2 ~ a2 a2 ~ c3 ~ a2 e2 ~ e2 g2 ~ e2 ~ e2\nlet lead = <[e5 ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ a4 ~ ~ ~] [~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~]>\ndef groove(deck, bars) {\n  deck $deck: kick kk | hihat hh vel=70..95 | bass riff inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection build 8 bars {\n  deck A: kick kk | hihat hh\n  master: filter hp 100 -> 5000 over 8 bars\n}\nsection drop 16 bars {\n  groove(A, 16)\n  deck B: melody lead inst=pwm-lead\n  evolve every 4 bars {\n    melody: rotate 2 | transpose <0 5 7 0>\n    stop when gen == 3\n  }\n  at bar 2: master: reverb 0.3\n}\narrange build drop\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://beatscript.app/#z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE.fVLbbtswDH3XV5yifViBJnCcZO2MOkDXzyj6INtMLFi2DEl1Fmzdt4-S7WWXtjBMivQhDw_lywsU_oiVuLxAJ1vK0ErbkHWLiloTslqV1Dn-8PiYLFbLJOQG5VShtPKnDP1LwRDhqe0NVulGNHSCbIUmj6ZBjm_4GZ93fATWNQM_AAUfgVbt9wyVKefYRF-ux4BCwOYw-WBikSZZcdH9E22ndlU4lHMUHrkZD894-jd1Bs71zztR0R4Ha8xAnyoqmxsU0rprfBdAiHEVbIZG8ZnX8AO1qmUUOpDOb5Pl8suWs4V0bhSlOufzoykKTYswMDey1BPXXIXWoIHsCavIE2nAV-U82Qx7pdlD91gnCRY7pHfseTQ74Rn9Kl6Fo9Ir06F4UbrC3blVnPjhrWnFfyx1j9XIsk1mlrHVHwyVNQz7fGaYVvVww9nrmfEr_22kTXUabyhuoD-2s3wajB5oEr75S3isymCNl56Q8sDeys71xhHuE2xxi2QXoc7zJMeaOhz4zXOs4zIAlscdkWa_BdrAVCBZrlmJtNzwQNOugh7xCw",
+    "social_url": "https://beatscript.app/c/z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE.fVLbbtswDH3XV5yifViBJnCcZO2MOkDXzyj6INtMLFi2DEl1Fmzdt4-S7WWXtjBMivQhDw_lywsU_oiVuLxAJ1vK0ErbkHWLiloTslqV1Dn-8PiYLFbLJOQG5VShtPKnDP1LwRDhqe0NVulGNHSCbIUmj6ZBjm_4GZ93fATWNQM_AAUfgVbt9wyVKefYRF-ux4BCwOYw-WBikSZZcdH9E22ndlU4lHMUHrkZD894-jd1Bs71zztR0R4Ha8xAnyoqmxsU0rprfBdAiHEVbIZG8ZnX8AO1qmUUOpDOb5Pl8suWs4V0bhSlOufzoykKTYswMDey1BPXXIXWoIHsCavIE2nAV-U82Qx7pdlD91gnCRY7pHfseTQ74Rn9Kl6Fo9Ir06F4UbrC3blVnPjhrWnFfyx1j9XIsk1mlrHVHwyVNQz7fGaYVvVww9nrmfEr_22kTXUabyhuoD-2s3wajB5oEr75S3isymCNl56Q8sDeys71xhHuE2xxi2QXoc7zJMeaOhz4zXOs4zIAlscdkWa_BdrAVCBZrlmJtNzwQNOugh7xCw",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE.fVHbboJAEH3nK85DH9pEDaJWS8TE_obxYZFRCItLdrdY09pv7-wCtfdsmFvOzJkzWKpqhXE0DUo6Q1SBJIuyRIJnvPn3h_fAPGfgPyDnPVAX-z1DRcQ1Nt7vJm1CLmFz6LwzvkmSyLhpuaFZNy5zwa7P3BPTNthi8710Bfb921WQ0R4HrVRDtxntygFSoc0dXgLA5bhxNkZZcMxneEVe5MILbUgm83A0ephxNRXGtKKKo7HJSaWppKFbmAdpqol7btxoUEP6jLHn8TRAJYwlHWNfSPaQNSZhiOEK0YI9r6Y7PKMvwSUwtLOFOiJ9KmSGxXWU33j927bBD5a8xrhlmYU9SzvqE0OmFcPurwzdqdYDrt71jI8xKpIqO7d_yF-gPlW9fGqUbKgTPv0i3HfF0MoKS4h4YavF0dTKEJYhZpgjXHmosbzJKacjDvwlCSb-GADL44mI4g-B2jGlCEcTViI0DzxQdyunJ3gH",
+    "cid": "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE",
+    "chars": 634,
+    "canonical": "tempo 124\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet riff = a2 ~ a2 a2 ~ c3 ~ a2 e2 ~ e2 g2 ~ e2 ~ e2\nlet lead = <[e5 ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ a4 ~ ~ ~] [~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~]>\ndef groove(deck, bars) {\n  deck $deck: kick kk | hihat hh vel=70..95 | bass riff inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection build 8 bars {\n  deck A: kick kk | hihat hh\n  master: filter hp 100 -> 5000 over 8 bars\n}\nsection drop 16 bars {\n  groove(A, 16)\n  deck B: melody lead inst=pwm-lead\n  evolve every 4 bars {\n    melody: rotate 2 | transpose <0 5 7 0>\n    stop when gen == 3\n  }\n  at bar 2: master: reverb 0.3\n}\narrange build drop\n",
+    "warnings": []
+  }
+}

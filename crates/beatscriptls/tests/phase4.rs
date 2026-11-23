@@ -6,7 +6,7 @@ use beatscriptls::complete::{candidates, EnvNames, Item};
 use beatscriptls::Analysis;
 use common::*;
 
-const PROGRAM: &str = include_str!("programs/symbols.btw");
+const PROGRAM: &str = include_str!("programs/symbols.beatscript");
 
 /// The labels offered with `text` cut... no: with `insert` put at the `nth` `marker` of PROGRAM, the cursor after it.
 fn offered_at(text: &str, at: usize) -> Vec<Item> {

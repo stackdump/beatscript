@@ -1,11 +1,11 @@
-//! beatscriptls: the btw language service. Everything an editor asks of a language (diagnostics, quick-fixes, the outline, go to
+//! beatscriptls: the BeatScript language service. Everything an editor asks of a language (diagnostics, quick-fixes, the outline, go to
 //! definition, references, rename, completion, hover, signature help, inlay hints, refactors, and a program's references to a
 //! generator, a seed, a stored program or a template shown, hidden and ejected: [`refs`]) as pure functions of the text,
-//! shaped like LSP so that one [`Server`] answers both `btwd lsp` (stdio, any LSP client: VS Code, IntelliJ via LSP4IJ,
+//! shaped like LSP so that one [`Server`] answers both `beatscript lsp` (stdio, any LSP client: VS Code, IntelliJ via LSP4IJ,
 //! Neovim, Helix) and the browser editor (djweb's `BeatscriptLs`, the same JSON through wasm).
 //!
-//! Pure: no I/O, no clock, no threads. A document is checked against `btwapi::web_env` (the registry and catalog
-//! snapshot the site checks against), so the editor, `btwd check` and the page cannot disagree.
+//! Pure: no I/O, no clock, no threads. A document is checked against `beatscript_api::web_env` (the registry and catalog
+//! snapshot the site checks against), so the editor, `beatscript check` and the page cannot disagree.
 //!
 //! Positions are LSP positions (`{line, character}`, 0-based); `character` counts UTF-16 units unless the client asked for
 //! `utf-8` in `initialize` ([`text::Encoding`]).

@@ -1,0 +1,35 @@
+# mix.beatscript: a duck and a mix snapshot in one small song (CC0-1.0, original).
+#
+# `duck B under A.kick 6db attack=5ms release=120ms` lowers deck B by 6 dB on every kick of deck A: the engine's
+# sidechain pump, so the pad breathes with the kick. It lasts the section it is written in.
+#
+# A `mix { }` in a section is applied on the section's first bar and put back when the section ends: the drop pushes
+# deck A up and takes the low end off the pad, and the break after it finds the mixer as it was (the runtime reads each
+# value off the mixer before it changes it). Outside a section a `mix` just sets. Items are separated by commas or by
+# new lines; `eq` is in dB (-24 to +6), `level` is the fader's 0 to 1.
+tempo 124
+key am
+
+section intro 8 bars {
+  deck A: kick x ~ x ~ | hihat x*8 vel=50..80
+  deck B: harmony chord(am7) inst=warm-pad
+}
+
+section drop 16 bars {
+  deck A: kick x ~ x ~ | snare ~ x ~ x | hihat x*8 vel=60..90
+  deck B: harmony chord(am7) inst=warm-pad | bass <a1 ~ c2 ~>
+  duck B under A.kick 6db attack=5ms release=120ms
+  mix {
+    A level 0.85
+    B level 0.7
+    B eq low -6
+    master level 0.9
+  }
+}
+
+section break 8 bars {
+  deck B: harmony chord(am7) inst=warm-pad
+  mix { B level 0.9, master level 0.8 }
+}
+
+arrange intro drop break drop

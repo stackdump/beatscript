@@ -1,10 +1,10 @@
 // render-model.js: the render mode's arithmetic, pure so Node tests it without the engine (site/test/unit.mjs).
 //
-// - renderPlan(report, limits): how long one pass of a program is, as btwd render plans it (crates/btwd/src/render.rs
+// - renderPlan(report, limits): how long one pass of a program is, as beatscript render plans it (crates/beatscript-cli/src/render.rs
 //   `plan`): an arranged song is its sections once (an `end` cuts it shorter), else `end at bar N`, else 16 bars; then
-//   capped at the limits the site renders to (btwserve -render-max-bars / -render-max-seconds as deployed: 256, 600).
-// - framesOf(bars, bpm, sampleRate): the frames of `bars` bars, rounded as btwd's frame_of.
-// - s16(x) and wav(left, right, sampleRate): 16-bit PCM, rounded as btwd's s16 writer (half away from zero), in a WAV.
+//   capped at the limits the site renders to (beatscript-serve -render-max-bars / -render-max-seconds as deployed: 256, 600).
+// - framesOf(bars, bpm, sampleRate): the frames of `bars` bars, rounded as beatscript's frame_of.
+// - s16(x) and wav(left, right, sampleRate): 16-bit PCM, rounded as beatscript's s16 writer (half away from zero), in a WAV.
 // - statusAt(seconds, plan, sections): what the position line says at a place in the render, in the runtime's
 //   status words (embed-model.js reads them), so the card says "verse 2/3 bar 3/8" in either mode.
 
@@ -12,7 +12,7 @@ export const RENDER_LIMITS = Object.freeze({ maxBars: 256, maxSeconds: 600 });
 
 /**
  * One pass of the program: {bars, programBars, bpm, seconds, loops, cut, notes}. `report` is the check report
- * (btw.check: tempo, arranged, song_bars, end_bar, loops). A cut says which limit made it shorter.
+ * (beatscript.check: tempo, arranged, song_bars, end_bar, loops). A cut says which limit made it shorter.
  */
 export function renderPlan(report, limits = RENDER_LIMITS) {
   const r = report || {};
@@ -42,12 +42,12 @@ export function renderPlan(report, limits = RENDER_LIMITS) {
   return { bars, programBars, bpm, seconds: (bars * 240) / bpm, loops: !!(r.loops && r.arranged), cut, notes };
 }
 
-/** Frames of `bars` bars at `bpm` and `sampleRate`, as btwd's frame_of: (beat · 60 / bpm · sr) rounded. */
+/** Frames of `bars` bars at `bpm` and `sampleRate`, as beatscript's frame_of: (beat · 60 / bpm · sr) rounded. */
 export function framesOf(bars, bpm, sampleRate) {
   return Math.max(1, Math.round(((bars * 4 * 60) / bpm) * sampleRate));
 }
 
-/** One sample as 16 bits: clamped, then rounded half away from zero, as btwd's s16 writer (and parity.html). */
+/** One sample as 16 bits: clamped, then rounded half away from zero, as beatscript's s16 writer (and parity.html). */
 export function s16(x) {
   const c = x < -1 ? -1 : x > 1 ? 1 : x !== x ? 0 : x;
   return c < 0 ? -Math.round(-c * 32768) : Math.round(c * 32767);

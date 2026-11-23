@@ -1,6 +1,6 @@
 //! From the surface language to flat lines: `let` patterns put where they are used, `def` calls and
 //! `repeat` blocks expanded, `section`s laid on the `arrange` timeline, every time word turned into
-//! the bar it means. What comes out is the plain language of docs/BTW.md's first pages (parts, controls) plus
+//! the bar it means. What comes out is the plain language of docs/BEATSCRIPT.md's first pages (parts, controls) plus
 //! when each control fires, and which part of the song each line is in.
 //!
 //! Everything here is total. There is no recursion (a `def` that calls itself, even through
@@ -825,7 +825,7 @@ impl<'a> Lower<'a> {
             return;
         }
         // the control deck's tempo is a change at a place: a tempo with no time word is the program's setting (or a section's,
-        // from its first bar), structure, written with no head (docs/btw/ext-control.md)
+        // from its first bar), structure, written with no head (docs/beatscript/ext-control.md)
         if let (Some(head), Body::Action(Action::Tempo(_)), None) = (l.control, &l.body, &l.when) {
             let d = Diagnostic::error(head, "a tempo with no time word is a setting, structure: it takes no `control:`")
                 .help("tempo 140   (in a section, from its first bar); on the control deck a tempo is a change at a place: at bar 16: control: tempo 128 -> 140 over 4 bars");

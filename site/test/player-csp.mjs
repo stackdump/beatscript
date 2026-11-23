@@ -1,6 +1,6 @@
 // The self-contained player (site/player, project-datum 6669) under a Claude-artifact-like CSP, in headless Chrome.
 //
-//   node site/test/player-csp.mjs        (needs site/web/wasm, or BTW_WASM=<dir>; skips without it)
+//   node site/test/player-csp.mjs        (needs site/web/wasm, or BEATSCRIPT_WASM=<dir>; skips without it)
 //
 // Builds the package, then plays player/test/csp.html's program (drums on an 808 kit, a melody, a sung line) three ways:
 //   files   the package beside the page (one origin)
@@ -32,9 +32,9 @@ import { pathToFileURL } from 'node:url';
 import { launch, sleep } from './cdp.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const wasm = process.env.BTW_WASM || path.join(here, '..', 'web', 'wasm');
-if (!fs.existsSync(path.join(wasm, 'btw_bg.wasm'))) {
-  console.log(`# skip: no ${wasm}/btw_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
+const wasm = process.env.BEATSCRIPT_WASM || path.join(here, '..', 'web', 'wasm');
+if (!fs.existsSync(path.join(wasm, 'beatscript_bg.wasm'))) {
+  console.log(`# skip: no ${wasm}/beatscript_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
   process.exit(0);
 }
 const dist = fs.mkdtempSync(path.join(os.tmpdir(), 'btw-player-'));
@@ -100,7 +100,7 @@ async function play(b, url, label) {
   if (r.playing) for (let i = 0; i < 20; i++) { await sleep(200); const q = await b.eval(`document.getElementById('track').report`); seen.add(`${q.sec} ${q.bar}`); }
   // what the engine installed by the end (a deck's net lands on a bar line, after the first report)
   const installed = r.playing ? (await b.eval(`document.getElementById('track').report`)).installed : [];
-  if (process.env.BTW_SHOT) await b.shot(process.env.BTW_SHOT.replace(/\.png$/, `-${label}.png`));
+  if (process.env.BEATSCRIPT_SHOT) await b.shot(process.env.BEATSCRIPT_SHOT.replace(/\.png$/, `-${label}.png`));
   const v = await b.eval('window.__violations');
   const fetched = await b.eval(`performance.getEntriesByType('resource').map((e) => e.name)`);
   const errors = b.errors().map((e) => e.text);
@@ -132,7 +132,7 @@ const LINK = /^https:\/\/beatscript\.app\/#z[1-9A-HJ-NP-Za-km-z]{20,120}\.[A-Za-
 // the same text rendered in Node: what the browser's render must equal, byte for byte
 const { renderProgram } = await import(pathToFileURL(path.join(dist, 'beatscript-render.js')).href);
 const { pcm16 } = await import(pathToFileURL(path.join(dist, 'render-model.js')).href);
-const nodeModule = await WebAssembly.compile(fs.readFileSync(path.join(wasm, 'btw_bg.wasm')));
+const nodeModule = await WebAssembly.compile(fs.readFileSync(path.join(wasm, 'beatscript_bg.wasm')));
 const nodeSha = new Map();
 async function nodeRender(text) {
   if (!nodeSha.has(text)) {

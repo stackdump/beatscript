@@ -1,4 +1,4 @@
-//! Sets: programs of programs (docs/BTW.md, "Sets"). `set { play X  mix 8 bars with crossfade  play Y ... }`
+//! Sets: programs of programs (docs/BEATSCRIPT.md, "Sets"). `set { play X  mix 8 bars with crossfade  play Y ... }`
 //! compiles to an ordinary arranged program: one segment list and one control clock, so the runtime, `end`, `loop`,
 //! hot reload and the markers treat it as one timeline. The tracks are pinned by CID (parse.rs), so a set's CID
 //! covers them.

@@ -4,7 +4,7 @@
 // turning one knob a notch (to a neighbouring station that already exists) or to a value, and they lock knobs; a retune
 // keeps the position N.
 //
-// The server (btwapi::station, POST /api/station, and later the page wasm's btw_station) is where a station's answer is
+// The server (beatscript-api::station, POST /api/station, and later the page wasm's beatscript_station) is where a station's answer is
 // made: its canonical text, CIDs, tracks and segues. This module holds what the page needs to ask it and to show its
 // answer: the knobs and their notch rules, locks, the position N, now playing and up next, the request JSON, applying an
 // answer, scan (a neighbour picked from the station's CID and N, never Math.random) and the share URL. It also writes the
@@ -16,7 +16,7 @@
 import { CID_RE, MAX_LOAD_TEXT } from './util.js';
 
 export const VERSION = 'stations/1';
-/** The seeded generator's genres (btwapi::generate::genres, beats' catalogue): the genre knob's values. */
+/** The seeded generator's genres (beatscript-api::generate::genres, beats' catalogue): the genre knob's values. */
 export const SEEDED_GENRES = ['techno', 'house', 'jazz', 'ambient', 'dnb', 'edm', 'speedcore', 'dubstep', 'country', 'blues', 'synthwave', 'trance', 'lofi', 'reggae', 'funk', 'bossa', 'trap', 'garage', 'metal'];
 /** The knobs, in the order the page shows them. */
 export const KNOBS = ['genre', 'seed', 'step', 'forms', 'tempo', 'key', 'length'];

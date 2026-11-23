@@ -1,7 +1,7 @@
 // What to light, as a pure function of (marks JSON, the evaluated text, a time). No DOM, no clock:
 // the page paints the result with inline styles, so the same marks and the same time are the same pixels
 // (the demo video is rendered frame by frame from this). Colours and rules are the desktop window's
-// (docs/BTW.md "Seeing it play"): a quiet green dot on every playing line, bright amber on a line whose
+// (docs/BEATSCRIPT.md "Seeing it play"): a quiet green dot on every playing line, bright amber on a line whose
 // token just sounded, teal on a control line, red on one that holds something changed; a lamp behind a
 // token for a beat, a control line glowing for two, a purple flash for a new generation.
 

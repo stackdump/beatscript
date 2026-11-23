@@ -273,10 +273,99 @@ dependencies = [
 ]
 
 [[package]]
+name = "beatscript-api"
+version = "0.1.0"
+dependencies = [
+ "djengine",
+ "djhost",
+ "djlive",
+ "miniz_oxide 0.8.9",
+]
+
+[[package]]
+name = "beatscript-cli"
+version = "0.1.0"
+dependencies = [
+ "beatscript-api",
+ "beatscriptls",
+ "djengine",
+ "djhost",
+ "djlive",
+]
+
+[[package]]
+name = "beatscript-round"
+version = "0.1.0"
+dependencies = [
+ "beatscript-api",
+ "djengine",
+]
+
+[[package]]
+name = "beatscript-seal"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "chacha20poly1305",
+ "ed25519-dalek",
+ "getrandom 0.3.4",
+ "hkdf",
+ "serde_json",
+ "sha2 0.10.9",
+ "x25519-dalek",
+ "zeroize",
+]
+
+[[package]]
+name = "beatscript-serve"
+version = "0.1.0"
+dependencies = [
+ "ab_glyph",
+ "ab_glyph_rasterizer",
+ "axum",
+ "base64 0.22.1",
+ "beatscript-api",
+ "beatscript-seal",
+ "bytes",
+ "djengine",
+ "djhost",
+ "djlive",
+ "ed25519-dalek",
+ "futures-util",
+ "getrandom 0.3.4",
+ "hex",
+ "hmac",
+ "http-body",
+ "hyper",
+ "hyper-util",
+ "k256",
+ "libc",
+ "memmap2",
+ "miniz_oxide 0.8.9",
+ "ogg",
+ "oxigraph",
+ "png",
+ "pprof",
+ "pulldown-cmark",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sha3",
+ "subtle",
+ "tempfile",
+ "tiny-skia",
+ "tokio",
+ "tower",
+ "unsafe-libopus",
+ "ureq",
+]
+
+[[package]]
 name = "beatscriptls"
 version = "0.1.0"
 dependencies = [
- "btwapi",
+ "beatscript-api",
  "djengine",
  "djlive",
 ]
@@ -318,95 +407,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5"
 dependencies = [
  "objc2",
-]
-
-[[package]]
-name = "btwapi"
-version = "0.1.0"
-dependencies = [
- "djengine",
- "djhost",
- "djlive",
- "miniz_oxide 0.8.9",
-]
-
-[[package]]
-name = "btwd"
-version = "0.1.0"
-dependencies = [
- "beatscriptls",
- "btwapi",
- "djengine",
- "djhost",
- "djlive",
-]
-
-[[package]]
-name = "btwround"
-version = "0.1.0"
-dependencies = [
- "btwapi",
- "djengine",
-]
-
-[[package]]
-name = "btwseal"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "chacha20poly1305",
- "ed25519-dalek",
- "getrandom 0.3.4",
- "hkdf",
- "serde_json",
- "sha2 0.10.9",
- "x25519-dalek",
- "zeroize",
-]
-
-[[package]]
-name = "btwserve"
-version = "0.1.0"
-dependencies = [
- "ab_glyph",
- "ab_glyph_rasterizer",
- "axum",
- "base64 0.22.1",
- "btwapi",
- "btwseal",
- "bytes",
- "djengine",
- "djhost",
- "djlive",
- "ed25519-dalek",
- "futures-util",
- "getrandom 0.3.4",
- "hex",
- "hmac",
- "http-body",
- "hyper",
- "hyper-util",
- "k256",
- "libc",
- "memmap2",
- "miniz_oxide 0.8.9",
- "ogg",
- "oxigraph",
- "png",
- "pprof",
- "pulldown-cmark",
- "regex",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "sha3",
- "subtle",
- "tempfile",
- "tiny-skia",
- "tokio",
- "tower",
- "unsafe-libopus",
- "ureq",
 ]
 
 [[package]]
@@ -864,8 +864,8 @@ dependencies = [
 name = "djweb"
 version = "0.1.0"
 dependencies = [
+ "beatscript-api",
  "beatscriptls",
- "btwapi",
  "djrust",
  "sha2 0.10.9",
  "wasm-bindgen",

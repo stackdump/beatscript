@@ -1,7 +1,7 @@
 // The stream source: /api/render/<cid>?format=wav, read chunk by chunk with a ReadableStream reader,
 // decoded by WavStream and scheduled gaplessly on one AudioContext (each AudioBufferSourceNode starts
 // exactly where the one before it ends). Its grid() is derived from the AudioContext's clock and the
-// program's tempo, so BtwRun can run on it in virtual mode and the markers follow what is heard.
+// program's tempo, so BeatscriptRun can run on it in virtual mode and the markers follow what is heard.
 //
 // Injected for tests: `context` (anything with currentTime, sampleRate, createBuffer, createBufferSource)
 // and `fetchFn`.
@@ -32,7 +32,7 @@ export class StreamPlayer {
     this.error = null;
     this.stopped = false;
     this.sources = new Set();
-    this.playing = { A: false, B: false }; // virtual-mode echo of BtwRun's play commands
+    this.playing = { A: false, B: false }; // virtual-mode echo of BeatscriptRun's play commands
     this.info = { cid: null, seconds: null, cache: null, bpm: null };
     this._pending = [];
     this._pendingFrames = 0;
@@ -40,7 +40,7 @@ export class StreamPlayer {
     this._lastState = '';
   }
 
-  /** Echo BtwRun's commands into the playing flags (virtual mode: the commands themselves are discarded). */
+  /** Echo BeatscriptRun's commands into the playing flags (virtual mode: the commands themselves are discarded). */
   echo(cmds) {
     for (const c of cmds || []) if (c && c.op === 'play') this.playing[c.deck] = !!c.on;
   }
@@ -140,7 +140,7 @@ export class StreamPlayer {
   }
 
   /**
-   * The clock BtwRun runs on: beat = media seconds x tempo / 60. null until the first sound and until BtwRun has
+   * The clock BeatscriptRun runs on: beat = media seconds x tempo / 60. null until the first sound and until BeatscriptRun has
    * played a deck (virtual mode): the runtime puts the program's bar 0 on the first grid it sees with a clock, so
    * a grid before its `play` command would make every bar count one late.
    */

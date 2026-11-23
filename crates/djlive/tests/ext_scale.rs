@@ -1,5 +1,5 @@
 //! F5: scale degrees (`deg( )` with accidentals and octave marks), Roman numerals as steps, a key per section and
-//! voice leading (docs/btw/ext-scale.md). Pitches are checked against hand-computed notes: harmony is octave 3
+//! voice leading (docs/beatscript/ext-scale.md). Pitches are checked against hand-computed notes: harmony is octave 3
 //! (C3 = 48), bass 2 (C2 = 36), melody and arp 4 (C4 = 60).
 
 mod common;
@@ -730,7 +730,7 @@ fn the_key_lines_at_the_head_of_a_section_are_read_and_the_last_wins() {
     let e = one_error(src);
     assert!(e.message.contains("head of a `section`"), "{}", e.message);
     assert_eq!(e.position(src).0, 4);
-    // not in a def or a repeat, and not with swing (`tempo` may stand in a section since F3, docs/btw/ext-tempo.md)
+    // not in a def or a repeat, and not with swing (`tempo` may stand in a section since F3, docs/beatscript/ext-tempo.md)
     let e = &errors("section s1 2 bars {\n  repeat 2 {\n    key d\n  }\n}\narrange s1\n")[0];
     assert!(e.message.contains("head of a `section`"), "{}", e.message);
     let src = "section s1 2 bars {\n  swing 0.1\n  deck A: bass 1\n}\narrange s1\n";
@@ -1189,14 +1189,14 @@ fn a_changed_numeral_or_degree_is_another_program() {
 fn old_programs_keep_their_cids() {
     // the fixtures and examples that were there before F5: their program CIDs, pinned from the base commit
     for (name, src, cid) in [
-        ("acid-rave-138", include_str!("fixtures/acid-rave-138.btw"), "z4EBG9jDqdJiCPANzF2EYvMTjnh6k4g66cMwwxtSKAYhaZLMUb2"),
-        ("hand-dubstep-140", include_str!("fixtures/hand-dubstep-140.btw"), "z4EBG9jD5z7Kk3J1PeAG7PmE1hTNikEv1rNXWTdpYux1EDAEmMR"),
-        ("hand-proghouse-124", include_str!("fixtures/hand-proghouse-124.btw"), "z4EBG9jCfiLnPMeYSVLsEYac76udGyYPwuJ5iy5xgd3GRncvasZ"),
+        ("acid-rave-138", include_str!("fixtures/acid-rave-138.beatscript"), "z4EBG9jDqdJiCPANzF2EYvMTjnh6k4g66cMwwxtSKAYhaZLMUb2"),
+        ("hand-dubstep-140", include_str!("fixtures/hand-dubstep-140.beatscript"), "z4EBG9jD5z7Kk3J1PeAG7PmE1hTNikEv1rNXWTdpYux1EDAEmMR"),
+        ("hand-proghouse-124", include_str!("fixtures/hand-proghouse-124.beatscript"), "z4EBG9jCfiLnPMeYSVLsEYac76udGyYPwuJ5iy5xgd3GRncvasZ"),
         ("trance-138 longhand", include_str!("fixtures/trance-138.live"), "z4EBG9jE4UEek5HkFX1ier8wannZ8AaokXoyG5o72ZBMkZcHURk"),
-        ("hand-dubstep-140-v2", include_str!("../../../docs/btw/hand-dubstep-140-v2.btw"), "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi"),
-        ("trance-138", include_str!("../../../examples/trance-138.btw"), "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ"),
-        ("markers-demo", include_str!("../../../examples/markers-demo.btw"), "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE"),
-        ("baseline", include_str!("../../../examples/btw/baseline.btw"), "z4EBG9j7F6VjLQ8Q3kqEQXdgxKKcKM3nMN2qDt1ukwv8gwgJ6dv"),
+        ("hand-dubstep-140-v2", include_str!("../../../docs/beatscript/hand-dubstep-140-v2.beatscript"), "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi"),
+        ("trance-138", include_str!("../../../examples/trance-138.beatscript"), "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ"),
+        ("markers-demo", include_str!("../../../examples/markers-demo.beatscript"), "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE"),
+        ("baseline", include_str!("../../../examples/beatscript/baseline.beatscript"), "z4EBG9j7F6VjLQ8Q3kqEQXdgxKKcKM3nMN2qDt1ukwv8gwgJ6dv"),
     ] {
         assert_eq!(compile(src).cid, cid, "{name}");
     }

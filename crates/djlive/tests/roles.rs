@@ -1,5 +1,5 @@
-//! Roles of the form templates (roles.rs, docs/btw/ext-roles.md), with no generator: themes, notes and forms in a role.
-//! (A seed in a role needs the seeded generator: crates/btwapi/tests/forms_roles.rs.)
+//! Roles of the form templates (roles.rs, docs/beatscript/ext-roles.md), with no generator: themes, notes and forms in a role.
+//! (A seed in a role needs the seeded generator: crates/beatscript-api/tests/forms_roles.rs.)
 //! - a role nobody binds is the form's own: an unbound reference is the text it always was (templates_v1_are_pinned);
 //! - a theme in a role is its bars moved into the key the role plays in, read by the sections and the plan by its new name;
 //! - notes are a bar each; a nested form is its sections, its names given the role's prefix, its plan over the role's places;

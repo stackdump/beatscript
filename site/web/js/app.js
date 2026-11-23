@@ -1,9 +1,9 @@
-// The page. One App wires the editor, the checker, the driver (BtwRun + a clock), the marker painter,
+// The page. One App wires the editor, the checker, the driver (BeatscriptRun + a clock), the marker painter,
 // the header, the transport and the server. The same renderFrame(now) paints every frame: in the page
 // it is called from requestAnimationFrame with the wall clock, in record mode (?clock=manual) from
 // window.__btw.frame() with a fake clock, and nothing in it depends on which.
 
-import { loadBtw } from './wasm.js';
+import { loadBeatscript } from './wasm.js';
 import { makeApi } from './api.js';
 import { Editor } from './editor.js';
 import { MarkerPainter } from './markers.js';
@@ -55,7 +55,7 @@ export class App {
     this.manual = q.get('clock') === 'manual';
     this.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.api = makeApi();
-    this.btw = null;
+    this.beatscript = null;
     this.driver = null;
     this.follow = new Follow();
     this.follow.on = store.get('btw-follow', '1') !== '0';
@@ -63,7 +63,7 @@ export class App {
     this.engine = null; this.engineSrc = null; this.engineState = 'idle'; this.engineError = '';
     this.sourcePref = storedSource(store.get('btw-source', 'auto')); // the person's choice, kept per browser
     this.renderCache = new RenderCache(); // renders by CID: a program plays again without rendering until its CID changes
-    this.wasmModule = null; // the compiled btw_bg.wasm the render worker is handed (compiled on the first render)
+    this.wasmModule = null; // the compiled beatscript_bg.wasm the render worker is handed (compiled on the first render)
     this._renderEpoch = 0;
     this.info = null; this.examples = [];
     this.report = null; // the check of the text in the editor
@@ -253,23 +253,23 @@ export class App {
   async loadWasm() {
     try {
       if (this.q.get('wasm') === 'off') throw new Error('the module is switched off by ?wasm=off');
-      this.btw = await loadBtw({ mock: this.mock });
+      this.beatscript = await loadBeatscript({ mock: this.mock });
       // the programs a text draws on (an `import`): fetched once by CID and told to the module, which never fetches (closure.js)
       this.resolver = new Resolver({
         fetchProgram: async (cid) => { const p = await this.api.getProgram(cid); this.stored.add(cid); return p; },
-        know: this.btw.know,
+        know: this.beatscript.know,
         onChange: () => this.checkSoon(),
       });
-      this.driver = new Driver(this.btw);
-      this.editor.setHighlighter((t) => this.btw.highlight(t));
+      this.driver = new Driver(this.beatscript);
+      this.editor.setHighlighter((t) => this.beatscript.highlight(t));
       // completion, hover, fixes, the outline (assist.js): off in record mode, and where the module has no language service
       if (!this.record) {
-        this.assist = new Assist(this.editor, this.btw, (m, k) => this.toast(m, k));
+        this.assist = new Assist(this.editor, this.beatscript, (m, k) => this.toast(m, k));
         if (!this.assist.on) this.assist = null;
         // number and range scrubbing (scrub.js): it asks the same language service what a literal is
         if (this.assist) {
           this.scrub = new Scrubber(this.editor, this.assist, {
-            check: (t) => this.btw.check(t),
+            check: (t) => this.beatscript.check(t),
             baseline: () => (this.report ? { text: this.reportText, report: this.report } : null),
             evaluate: (t, r) => this.scrubEvaluate(t, r),
           });
@@ -279,7 +279,7 @@ export class App {
       this.updateTransport();
     } catch (e) {
       this.wasmOk = false;
-      console.warn('btw: the module did not load', e);
+      console.warn('beatscript: the module did not load', e);
       this.banner({ kind: 'error', text: 'The BeatScript module could not be loaded, so checking, formatting and sound are off. You can still edit text.', detail: String(e && e.message ? e.message : e) });
       this.el['btn-play'].disabled = true;
       this.el['btn-fmt'].disabled = true;
@@ -418,7 +418,7 @@ export class App {
   /** A program from the page's own <beatscript-view> block: loaded only when its text checks to its @id (program-ld.js). */
   async loadEmbedded(p, { play } = {}) {
     this.setProgram(p.text, { name: p.name || '', cid: p.cid });
-    if (!this.btw) {
+    if (!this.beatscript) {
       // nothing to check it with: say so, rather than call a program we could not read a different one
       this.banner({ kind: 'error', text: `The page's program ${shortCid(p.cid)} is in the editor, but it could not be checked (the language module did not load), so it does not play.` });
       throw new Error('no module to check with');
@@ -454,14 +454,14 @@ export class App {
         this.openedBanner(s, 'fetched by CID and checked');
         return;
       }
-      if (!this.btw) throw new Error('the module is not loaded, so a link cannot be opened');
+      if (!this.beatscript) throw new Error('the module is not loaded, so a link cannot be opened');
       // what a link inflates to is looked at before the module checks it: a few KB can say a megabyte of program
       const g = await guardLink(s);
       if (!g.ok) {
         this.banner({ kind: 'error', text: `Refused: ${g.error}.` });
         return;
       }
-      const r = this.btw.open(s);
+      const r = this.beatscript.open(s);
       if (!r.ok || !r.verified) {
         this.banner({ kind: 'error', text: `Refused: ${String(r.error || 'the link does not match its own CID').replace(/^refused:\s*/i, '')}.` });
         return;
@@ -504,17 +504,17 @@ export class App {
 
   runCheckNow() {
     if (this._checkSoon) this._checkSoon.cancel();
-    if (!this.btw) return null;
+    if (!this.beatscript) return null;
     const text = this.editor.text;
     let r;
     try {
-      r = this.btw.check(text);
+      r = this.beatscript.check(text);
       // a program the text draws on is fetched if it is not had; a "not here" at one on its way is not shown yet
       if (this.resolver && this.resolver.on) {
         this.resolver.want(text);
         r = this.resolver.settle(r, text);
       }
-    } catch (e) { console.warn('btw: check failed', e); return null; }
+    } catch (e) { console.warn('beatscript: check failed', e); return null; }
     this.report = r;
     this.reportText = text;
     this.editor.setDiagnostics(r.diagnostics || []);
@@ -608,7 +608,7 @@ export class App {
       const hint = lq && /^[0-9.]+$/.test(lq) ? Number(lq) : ['interactive', 'balanced', 'playback'].includes(lq) ? lq : 0.1;
       this.ctx = new Ctx({ latencyHint: hint });
     } catch (e) {
-      console.warn('btw: no audio', e);
+      console.warn('beatscript: no audio', e);
       return null;
     }
     this.master = this.ctx.createGain();
@@ -673,7 +673,7 @@ export class App {
         engine = await m.createMockEngine({ context: this.ctx, destination: this.master });
       } else {
         const m = await import('./engine.js');
-        engine = await m.createEngine({ context: this.ctx, destination: this.master, wasmUrl: this.btw && this.btw.wasmUrl, perf: this.q.get('perf') === '1' });
+        engine = await m.createEngine({ context: this.ctx, destination: this.master, wasmUrl: this.beatscript && this.beatscript.wasmUrl, perf: this.q.get('perf') === '1' });
       }
       await engine.ready;
       if (engine.on) engine.on('error', (e) => { if (e && e.message) this.toast(`Engine: ${e.message}`, 'error'); });
@@ -688,7 +688,7 @@ export class App {
     } catch (e) {
       this.engineState = 'failed';
       this.engineError = e && e.message ? e.message : String(e);
-      console.warn('btw: the engine did not load', e);
+      console.warn('beatscript: the engine did not load', e);
     }
     this.updateTransport();
   }
@@ -715,11 +715,11 @@ export class App {
 
   /** A render here needs the real module (not the mock) and a program with no asset files (the bundled engine has none). */
   canRender(report) {
-    return !!(this.btw && this.btw.wasmUrl && !this.mock && !this.manual && (!report || !report.uses_assets));
+    return !!(this.beatscript && this.beatscript.wasmUrl && !this.mock && !this.manual && (!report || !report.uses_assets));
   }
 
   async play(trigger = 'eval') {
-    if (!this.btw) {
+    if (!this.beatscript) {
       this.toast(this.wasmOk === false ? 'The language module did not load, so nothing can play.' : 'Still loading the language module (about 6 MB). Try again in a moment.', 'warn');
       return;
     }
@@ -820,10 +820,10 @@ export class App {
     this.afterEval(text, report, res);
   }
 
-  /** The compiled btw_bg.wasm, once (the render worker is handed the module, not its bytes). */
+  /** The compiled beatscript_bg.wasm, once (the render worker is handed the module, not its bytes). */
   async compiledModule() {
     if (!this.wasmModule) {
-      const url = this.btw.wasmUrl;
+      const url = this.beatscript.wasmUrl;
       this.wasmModule = (async () => {
         if (WebAssembly.compileStreaming) {
           try { return await WebAssembly.compileStreaming(fetch(url)); } catch { /* a server without application/wasm: the bytes */ }
@@ -991,7 +991,7 @@ export class App {
   loop() {
     const step = () => {
       if (this.bg) this.bg.frame();
-      try { this.renderFrame(this.clockNow()); } catch (e) { console.error('btw: frame', e); }
+      try { this.renderFrame(this.clockNow()); } catch (e) { console.error('beatscript: frame', e); }
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -1112,7 +1112,7 @@ export class App {
       this.banner({ kind: 'info', html: [h('span', { class: 'grow' }, pauseMessage(why))], actions: [{ label: 'Play', primary: true, run: () => { this.banner(null); this.upNext.resume(); } }] });
       return;
     }
-    if (err) console.warn('btw: up next', err);
+    if (err) console.warn('beatscript: up next', err);
     if (this._ended) this.songEnded();
   }
 
@@ -1141,7 +1141,7 @@ export class App {
   /** The page is visible again: the sound is audible again and the paint catches up at once, not at the next frame. */
   resync() {
     this.updateTransport();
-    try { this.renderFrame(this.clockNow()); } catch (e) { console.error('btw: resync', e); }
+    try { this.renderFrame(this.clockNow()); } catch (e) { console.error('beatscript: resync', e); }
   }
 
   songEnded() {
@@ -1368,10 +1368,10 @@ export class App {
   // ---- fmt, share, open ------------------------------------------------------------------------------------------------------
 
   fmt() {
-    if (!this.btw) return;
+    if (!this.beatscript) return;
     const text = this.editor.text;
     let r;
-    try { r = this.btw.fmt(text); } catch (e) { this.showError(e); return; }
+    try { r = this.beatscript.fmt(text); } catch (e) { this.showError(e); return; }
     if (!r.ok) {
       this.runCheckNow();
       this.toast('Cannot format: fix the errors first.', 'warn');
@@ -1420,7 +1420,7 @@ export class App {
       this.session = new m.SessionLink(this);
       this.session.start();
     } catch (e) {
-      console.warn('btw: no session link', e);
+      console.warn('beatscript: no session link', e);
     }
   }
 
@@ -1466,7 +1466,7 @@ export class App {
 
   emit(type, data) {
     for (const fn of this.listeners) {
-      try { fn(type, data); } catch (e) { console.warn('btw: listener', e); }
+      try { fn(type, data); } catch (e) { console.warn('beatscript: listener', e); }
     }
   }
 
@@ -1479,7 +1479,7 @@ export class App {
     const st = (f && f.status) || {};
     const text = this.editor.text;
     // a private program (restricted, assets, `#! visibility: private`) is not reported: no text, no CID, none of the diagnostics (they quote it)
-    const checked = this.btw ? (this.reportText === text ? this.report : this.runCheckNow()) : null;
+    const checked = this.beatscript ? (this.reportText === text ? this.report : this.runCheckNow()) : null;
     const withheld = this.isPrivate(text, checked);
     return {
       text: withheld ? '' : text,

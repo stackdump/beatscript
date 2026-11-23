@@ -6,11 +6,11 @@
 #
 #   site/deploy/deploy.sh host        checkout $BRANCH (default main) into ~/Workspace/btw-bitwrap-io on the host
 #   site/deploy/deploy.sh artifacts   copy what is built from the PRIVATE repo (wasm + sidecars, docs); never in git
-#   site/deploy/deploy.sh docs        copy only btwsite/web/docs (BTW.md redacted by scripts/btw-gen-docs.sh, cheatsheet.md)
+#   site/deploy/deploy.sh docs        copy only site/web/docs (BEATSCRIPT.md redacted by scripts/beatscript-gen-docs.sh, cheatsheet.md)
 #   site/deploy/deploy.sh restart     restart btw-rust only, /healthz on :18099
 #   site/deploy/deploy.sh upstream    install conf.d/btw-front.conf (upstream btw_front -> :18099) if it is missing
 #   site/deploy/deploy.sh retire-go         one time: stop the Go server, drop its btw-bitwrap entry from ~/services
-#                                               (backup first; refuses unless btw_front -> :18099 and btwserve is healthy)
+#                                               (backup first; refuses unless btw_front -> :18099 and beatscript-serve is healthy)
 #   site/deploy/deploy.sh retire-go-binary  one time, after retire-go: delete the old Go binary ./btw-bitwrap-io
 #   site/deploy/deploy.sh nginx-http  port-80 vhost only (ACME), reload
 #   site/deploy/deploy.sh cert        certbot (webroot) for btw.bitwrap.io
@@ -23,17 +23,17 @@
 #   site/deploy/deploy.sh nginx-redirect-btw      btw.bitwrap.io becomes a 301 to beatscript.app, except /api/, /mcp, /context/
 #                                                    (nginx/btw.bitwrap.io.redirect.conf), nginx -t, reload; restores on failure
 #
-# The btwserve binary, the wasm and the docs are built and installed by deploy/deploy.sh, which also owns btw-rust's
+# The beatscript-serve binary, the wasm and the docs are built and installed by deploy/deploy.sh, which also owns btw-rust's
 # ~/services CMD and runs the live checks.
 # `build` is kept as a no-op so an older runbook that calls it still runs; `services` and `public-url` (which wrote
 # the Go server's ~/services entry) refuse.
 #
 # beatscript.app is the public origin (since 2026-11-19); btw.bitwrap.io is a second name for the SAME process
-# that redirects pages there. Phones paired under btw.bitwrap.io sign that host; btwserve's -legacy-hosts
+# that redirects pages there. Phones paired under btw.bitwrap.io sign that host; beatscript-serve's -legacy-hosts
 # btw.bitwrap.io keeps their signatures good, so nobody has to re-pair.
 #
 # Env: HOST (default pflow.dev), BRANCH (default main). RUST (the private engine checkout) is no longer needed here:
-# the wasm is built into btwsite/web/wasm of this checkout. The Gemini key is NEVER read here: it is on the host in
+# the wasm is built into site/web/wasm of this checkout. The Gemini key is NEVER read here: it is on the host in
 # ~/.env-services/btw-bitwrap (mode 0600; ~/.env-services/btw-rust links to it) and only ever sourced by ~/services.
 set -euo pipefail
 
@@ -53,7 +53,7 @@ case "$step" in
 host)
   echo "host: retired: deploy/deploy.sh (repo root) builds, ships and checks beatscript.app from one pin" >&2; exit 1 ;;
 build)
-  echo "build: nothing to build on the host: deploy/deploy.sh (repo root) builds and installs btwserve."
+  echo "build: nothing to build on the host: deploy/deploy.sh (repo root) builds and installs beatscript-serve."
   ;;
 artifacts)
   echo "artifacts: retired: deploy/deploy.sh (repo root) builds, ships and checks beatscript.app from one pin" >&2; exit 1 ;;
@@ -63,13 +63,13 @@ services|public-url)
   exit 1 ;;
 retire-go)
   # One time: stop the retired Go server and take its btw-bitwrap entry out of ~/services (backup first). Refuses
-  # unless nginx's btw_front names btwserve (:18099) and btwserve answers /healthz. Touches nothing of btw-rust:
+  # unless nginx's btw_front names beatscript-serve (:18099) and beatscript-serve answers /healthz. Touches nothing of btw-rust:
   # not its entry, not ~/.env-services/btw-bitwrap (btw-rust's env links to it), not data/. Idempotent.
   run "bash -s -- '${FRONT_CONF:-/etc/nginx/conf.d/btw-front.conf}'" <<'EOS'
 set -euo pipefail
 conf=$1; f=$HOME/services
 grep -Eq '^\s*server 127\.0\.0\.1:18099;' "$conf" || { echo "$conf does not send btw_front to 127.0.0.1:18099: not retiring Go" >&2; exit 1; }
-curl -sf -m 5 http://127.0.0.1:18099/healthz >/dev/null || { echo "btwserve on :18099 is not healthy: not retiring Go" >&2; exit 1; }
+curl -sf -m 5 http://127.0.0.1:18099/healthz >/dev/null || { echo "beatscript-serve on :18099 is not healthy: not retiring Go" >&2; exit 1; }
 if ! grep -q '"btw-bitwrap"' "$f"; then echo "no btw-bitwrap entry in $f: already retired"; exit 0; fi
 b="$f.bak-retire-go-$(date +%Y%m%d%H%M%S)"; cp -p "$f" "$b"; echo "backup: $b"
 "$f" stop btw-bitwrap

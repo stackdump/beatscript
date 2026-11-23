@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Listening tests for BeatScript: `btwd listen` summaries of every example and fixture, held to goldens.
+"""Listening tests for BeatScript: `beatscript listen` summaries of every example and fixture, held to goldens.
 
-    listen_ci.py [--btwd PATH] [--examples DIR] [--only NAME]... [--update] [--json] [--publish]
+    listen_ci.py [--beatscript PATH] [--examples DIR] [--only NAME]... [--update] [--json] [--publish]
 
-For each program (the site's examples, from `--examples`, plus tools/listen/fixtures/*.btw) it runs
-`btwd listen --file <program>` and compares the summary with tools/listen/goldens/<name>.json:
+For each program (the site's examples, from `--examples`, plus tools/listen/fixtures/*.beatscript) it runs
+`beatscript listen --file <program>` and compares the summary with tools/listen/goldens/<name>.json:
 
 - a deck or part that was heard and is now silent, or the other way round, or a changed `silent` entry
   (deck, part, section, reason): FAIL
@@ -18,7 +18,7 @@ golden or not, so a regenerated golden cannot hide the regression it exists for.
 
 --update writes the goldens from this run (after the expect lines pass). --publish posts one ListenRun event on the
 event bus and writes data/listen/last.json. Exit 0 when every program passes, 1 on any FAIL or STALE, 2 on usage or
-a btwd that would not run. Stdlib only.
+a beatscript that would not run. Stdlib only.
 """
 from __future__ import annotations
 
@@ -44,14 +44,14 @@ LAST = os.environ.get("LISTEN_LAST", "data/listen/last.json")
 KEEP = ("version", "cid", "window", "master", "detected", "decks", "parts", "silent", "sections", "warnings")
 
 
-def listen(btwd: str, path: str) -> dict:
-    p = subprocess.run([btwd, "listen", "--file", path], capture_output=True, text=True, timeout=TIMEOUT_S)
+def listen(beatscript: str, path: str) -> dict:
+    p = subprocess.run([beatscript, "listen", "--file", path], capture_output=True, text=True, timeout=TIMEOUT_S)
     try:
         v = json.loads(p.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError):
-        raise RuntimeError(f"btwd listen {os.path.basename(path)}: no JSON (exit {p.returncode}): {p.stderr.strip()[-400:]}")
+        raise RuntimeError(f"beatscript listen {os.path.basename(path)}: no JSON (exit {p.returncode}): {p.stderr.strip()[-400:]}")
     if "error" in v:
-        raise RuntimeError(f"btwd listen {os.path.basename(path)}: {v['error'].get('code')}: {v['error'].get('message')}")
+        raise RuntimeError(f"beatscript listen {os.path.basename(path)}: {v['error'].get('code')}: {v['error'].get('message')}")
     return v
 
 
@@ -151,9 +151,9 @@ def programs(examples: str | None, only: list[str]) -> list[tuple[str, str, str]
     """(name, path, kind)."""
     out = []
     if examples:
-        for p in sorted(glob.glob(os.path.join(examples, "*.btw"))):
+        for p in sorted(glob.glob(os.path.join(examples, "*.beatscript"))):
             out.append((os.path.splitext(os.path.basename(p))[0], p, "example"))
-    for p in sorted(glob.glob(os.path.join(FIXTURES, "*.btw"))):
+    for p in sorted(glob.glob(os.path.join(FIXTURES, "*.beatscript"))):
         out.append(("fixture-" + os.path.splitext(os.path.basename(p))[0], p, "fixture"))
     if only:
         out = [x for x in out if x[0] in only]
@@ -163,7 +163,7 @@ def programs(examples: str | None, only: list[str]) -> list[tuple[str, str, str]
 def publish(report: dict) -> None:
     ev = {"_source": "beatscript-listen", "_event": "ListenRun", "ok": report["ok"], "counts": report["counts"],
           "failed": [{"name": r["name"], "status": r["status"], "reasons": r["reasons"][:4]} for r in report["results"] if r["status"] != "pass"][:20],
-          "btwd": report.get("btwd"), "commit": report.get("commit"), "ts": report["ts"]}
+          "beatscript": report.get("beatscript"), "commit": report.get("commit"), "ts": report["ts"]}
     data = json.dumps(ev, separators=(",", ":")).encode()[:8192]
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
@@ -184,8 +184,8 @@ def publish(report: dict) -> None:
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--btwd", default=os.environ.get("BTWD", "btwd"))
-    ap.add_argument("--examples", default=os.environ.get("BTW_EXAMPLES"))
+    ap.add_argument("--beatscript", default=os.environ.get("BEATSCRIPT_CLI", "beatscript"))
+    ap.add_argument("--examples", default=os.environ.get("BEATSCRIPT_EXAMPLES"))
     ap.add_argument("--only", action="append", default=[])
     ap.add_argument("--update", action="store_true")
     ap.add_argument("--json", action="store_true")
@@ -201,9 +201,9 @@ def main(argv: list[str]) -> int:
     for name, path, kind in progs:
         r = {"name": name, "kind": kind, "status": "pass", "reasons": []}
         try:
-            v = listen(a.btwd, path)
+            v = listen(a.beatscript, path)
         except FileNotFoundError:
-            print(f"listen_ci: no btwd at {a.btwd}", file=sys.stderr)
+            print(f"listen_ci: no beatscript at {a.beatscript}", file=sys.stderr)
             return 2
         except (RuntimeError, subprocess.TimeoutExpired) as e:
             r.update(status="fail", reasons=[str(e)])
@@ -233,7 +233,7 @@ def main(argv: list[str]) -> int:
     for r in results:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
     ok = all(r["status"] in ("pass", "updated") for r in results)
-    report = {"ok": ok, "counts": counts, "results": results, "seconds": round(time.time() - t0, 1), "btwd": a.btwd,
+    report = {"ok": ok, "counts": counts, "results": results, "seconds": round(time.time() - t0, 1), "beatscript": a.beatscript,
               "commit": a.commit, "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     if a.publish:
         publish(report)

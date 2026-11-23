@@ -3,13 +3,13 @@ resolver = "2"
 members = [
   "crates/djengine",
   "crates/djlive",
-  "crates/btwapi",
+  "crates/beatscript-api",
   "crates/beatscriptls",
-  "crates/btwseal",
-  "crates/btwserve",
+  "crates/beatscript-seal",
+  "crates/beatscript-serve",
   "crates/djweb",
-  "crates/btwd",
-  "crates/btwround",
+  "crates/beatscript-cli",
+  "crates/beatscript-round",
   "crates/djhost",
 ]
 

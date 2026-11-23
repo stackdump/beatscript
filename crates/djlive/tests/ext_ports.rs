@@ -1,4 +1,4 @@
-//! F11 typed ports on defs, `wire`, imports glued along ports (docs/btw/ext-ports.md): the header and the wire in
+//! F11 typed ports on defs, `wire`, imports glued along ports (docs/beatscript/ext-ports.md): the header and the wire in
 //! canonical form, the checks (types, one wire to an input, no loop, an `emit` of the right type), what a call
 //! expands to, imports that carry their ports, and the laws (wiring is associative, order of wires does not
 //! matter, the identity module is invisible, a def without ports is the macro it was).
@@ -649,7 +649,7 @@ fn an_import_brings_its_wires_and_a_second_wire_to_the_same_input_is_an_error() 
 #[test]
 fn the_import_example_compiles_against_the_snippet_it_describes() {
     let lib = "def harmony_changes() out: chords {\n  emit <dm7 g7 cmaj7 fmaj7>\n}\ndef harmony_key() out: key {\n  emit am\n}\n";
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/ports-import.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/ports-import.beatscript")).unwrap();
     assert!(src.starts_with("#! skip-test:"));
     // the snippet is in the example's own comment, as saved
     for l in lib.lines() {
@@ -1054,7 +1054,7 @@ fn a_header_that_is_wrong_is_said_with_what_to_write() {
 
 #[test]
 fn the_example_of_the_docs_compiles() {
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/ports.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/ports.beatscript")).unwrap();
     let c = ok(&src);
     assert_eq!(c.decks.len(), 2);
     assert!(c.warnings.is_empty(), "{:?}", c.warnings);

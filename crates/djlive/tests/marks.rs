@@ -1,5 +1,5 @@
-//! Seeing it play (docs/BTW.md): spans through expansion, the hits that fire on a fake clock, the marks.
-//! (btw on a fake host and a fake clock: an arranged song lands each section's nets on its bar line,
+//! Seeing it play (docs/BEATSCRIPT.md): spans through expansion, the hits that fire on a fake clock, the marks.
+//! (BeatScript on a fake host and a fake clock: an arranged song lands each section's nets on its bar line,
 //! `for N bars` and moves put things back, per-role sounds are set once a net has landed.
 //! (The hot reload on a fake host and a fake clock: a change lands on the bar and not before, an
 //! error keeps the last good program, what did not change is not touched, `every` and ramps keep

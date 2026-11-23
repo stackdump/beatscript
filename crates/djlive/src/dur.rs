@@ -1,4 +1,4 @@
-//! F1 sub-bar timing (docs/btw/ext-timing.md): durations and positions in exact bars, and the parser's way of
+//! F1 sub-bar timing (docs/beatscript/ext-timing.md): durations and positions in exact bars, and the parser's way of
 //! reading them. Small, public and stable on purpose: the tempo curves, shapes and lfos of the other extensions
 //! (`over dur`, `every dur`, `at pos`) read their time with [`Parser::dur`] and [`Parser::pos`] and keep it as a
 //! [`Dur`] or a [`Pos`].

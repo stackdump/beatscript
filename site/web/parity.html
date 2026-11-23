@@ -16,7 +16,7 @@
 // live page, both on purpose: the composer's compile of a net is waited for before the render goes on (a live page
 // hides it behind the bar of notice the runtime gives; a slow machine would add jitter here that a fast one does not),
 // and there is no output latency. The master is captured exactly (AudioBuffer), then sent as 16-bit PCM to the
-// harness's server (POST /upload/<name>), rounded the way btwd's s16 writer rounds.
+// harness's server (POST /upload/<name>), rounded the way beatscript's s16 writer rounds.
 //
 //   window.parityRender({program, name, seconds, sampleRate}) -> {ok, frames, trace, calls, ignored, warns, errors, perf}
 //
@@ -35,8 +35,8 @@ let gluePromise = null;
 async function glue() {
   if (!gluePromise) {
     gluePromise = (async () => {
-      const g = await import('./wasm/btw.js');
-      await g.default({ module_or_path: new URL('./wasm/btw_bg.wasm', location.href) });
+      const g = await import('./wasm/beatscript.js');
+      await g.default({ module_or_path: new URL('./wasm/beatscript_bg.wasm', location.href) });
       return g;
     })();
   }
@@ -45,7 +45,7 @@ async function glue() {
 
 function s16(x) {
   const c = x < -1 ? -1 : x > 1 ? 1 : x;
-  const v = c < 0 ? Math.round(-c * 32768) * -1 : Math.round(c * 32767); // half away from zero, as btwd
+  const v = c < 0 ? Math.round(-c * 32768) * -1 : Math.round(c * 32767); // half away from zero, as beatscript
   return v;
 }
 
@@ -74,7 +74,7 @@ window.parityRender = async ({ program, name, seconds, sampleRate = 48000, step 
     engine.apply(cmds);
   };
 
-  const run = new g.BtwRun();
+  const run = new g.BeatscriptRun();
   const ev = JSON.parse(run.eval(text));
   if (!ev.ok) { engine.dispose(); return { ok: false, error: `the program does not check: ${JSON.stringify(ev.diagnostics && ev.diagnostics[0])}` }; }
 

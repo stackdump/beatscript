@@ -542,7 +542,7 @@ pub fn lex(src: &str) -> Lexed {
             other => {
                 let n = other.len_utf8();
                 let help = match other {
-                    '@' | ';' | '\\' => "that mark is not in the language (yet): see docs/BTW.md".to_string(),
+                    '@' | ';' | '\\' => "that mark is not in the language (yet): see docs/BEATSCRIPT.md".to_string(),
                     '\u{201c}' | '\u{201d}' | '\u{201e}' | '\u{ab}' | '\u{bb}' => "that is a typographic quote: a string is written between straight quotes, \"like this\" (a word processor or a chat turns them curly)".to_string(),
                     '\u{2018}' | '\u{2019}' => "that is a typographic apostrophe: the octave mark is the straight `'` (`5'`)".to_string(),
                     '\u{a0}' | '\u{2000}'..='\u{200b}' | '\u{202f}' | '\u{3000}' | '\u{feff}' => "that is a space that is not a plain one (a non-breaking space, often from pasting): write an ordinary space".to_string(),

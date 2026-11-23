@@ -1,6 +1,6 @@
-//! `template(name, phrase)`: a phrase compiled to a whole track (docs/BTW.md, "Phrase templates").
+//! `template(name, phrase)`: a phrase compiled to a whole track (docs/BEATSCRIPT.md, "Phrase templates").
 //!
-//! A template is a BeatScript text with slots, kept in this crate (`templates/*.btw`). Applying one to a phrase fills the
+//! A template is a BeatScript text with slots, kept in this crate (`templates/*.beatscript`). Applying one to a phrase fills the
 //! slots and writes the result out as plain BeatScript before the program is lowered, exactly as `seed(...)` does
 //! (seed.rs), so everything downstream (the compiler, the browser, the phone) only ever sees plain BeatScript:
 //!
@@ -26,7 +26,7 @@
 //! worked out ([`Profile::from_text`]: function words are unstressed, the first syllable of any other word is stressed;
 //! straight feel unless the stresses fall three syllables apart).
 //!
-//! **Forms** (docs/btw/forms.md): six of the templates are classical forms (quodlibet, passacaglia, canon, rondo, fugue,
+//! **Forms** (docs/beatscript/forms.md): six of the templates are classical forms (quodlibet, passacaglia, canon, rondo, fugue,
 //! theme and variations) and one is a quodlibet of two sources (cross), each a section shape and a mutation plan ([`Form`])
 //! built from themes of the public-domain theme library (`djengine::themes`, filled into the template as `$THEME_<ID>`
 //! slots). The phrase is sung in the form's `sung` (or `voices`) section; the sections and the arrangement are the form's own,
@@ -56,14 +56,14 @@ pub struct Template {
     pub summary: &'static str,
     /// The reference that shows it.
     pub example: &'static str,
-    /// The example programs that use it (`examples/btw/NAME.btw`, and on beatscript.app `/examples/NAME.btw`).
+    /// The example programs that use it (`examples/beatscript/NAME.beatscript`, and on beatscript.app `/examples/NAME.beatscript`).
     pub examples: &'static [&'static str],
-    /// The classical form it is, for the six form templates (docs/btw/forms.md); None for a groove (deep-house).
+    /// The classical form it is, for the six form templates (docs/beatscript/forms.md); None for a groove (deep-house).
     pub form: Option<Form>,
     text: &'static str,
 }
 
-/// A classical form as a template: its section shape and the mutation plan its arrangement follows (docs/btw/forms.md, one
+/// A classical form as a template: its section shape and the mutation plan its arrangement follows (docs/beatscript/forms.md, one
 /// source with this table: the page, the MCP tools and the ontology read it from here).
 pub struct Form {
     /// What a person calls it (`theme and variations`).
@@ -76,7 +76,7 @@ pub struct Form {
     pub mutations: &'static [&'static str],
     /// The themes of the public-domain theme library it is built from (`djengine::themes`).
     pub themes: &'static [&'static str],
-    /// A whole hand-written track in the form: its `examples/btw` name and its CID.
+    /// A whole hand-written track in the form: its `examples/beatscript` name and its CID.
     pub reference: Option<(&'static str, &'static str)>,
 }
 
@@ -88,7 +88,7 @@ pub const TEMPLATES: [Template; 8] = [
         example: "arrange from template(deep-house, @tempest_such_stuff)",
         examples: &["such-stuff-as-dreams-122", "assyrian-122", "commit-message-122"],
         form: None,
-        text: include_str!("../templates/deep-house.btw"),
+        text: include_str!("../templates/deep-house.beatscript"),
     },
     Template {
         name: "quodlibet",
@@ -103,7 +103,7 @@ pub const TEMPLATES: [Template; 8] = [
             themes: &["pachelbel_ground", "pachelbel_violin", "ode_to_joy", "beethoven_fate"],
             reference: Some(("canon-of-fate", "z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx")),
         }),
-        text: include_str!("../templates/quodlibet.btw"),
+        text: include_str!("../templates/quodlibet.beatscript"),
     },
     Template {
         name: "passacaglia",
@@ -118,7 +118,7 @@ pub const TEMPLATES: [Template; 8] = [
             themes: &["mars_ostinato"],
             reference: Some(("full-fathom-five", "z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1")),
         }),
-        text: include_str!("../templates/passacaglia.btw"),
+        text: include_str!("../templates/passacaglia.beatscript"),
     },
     Template {
         name: "canon",
@@ -133,7 +133,7 @@ pub const TEMPLATES: [Template; 8] = [
             themes: &["pachelbel_ground", "pachelbel_violin"],
             reference: None,
         }),
-        text: include_str!("../templates/canon.btw"),
+        text: include_str!("../templates/canon.beatscript"),
     },
     Template {
         name: "rondo",
@@ -148,7 +148,7 @@ pub const TEMPLATES: [Template; 8] = [
             themes: &["the_entertainer", "bach_prelude_c"],
             reference: Some(("rag-rondo", "z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw")),
         }),
-        text: include_str!("../templates/rondo.btw"),
+        text: include_str!("../templates/rondo.beatscript"),
     },
     Template {
         name: "fugue",
@@ -163,7 +163,7 @@ pub const TEMPLATES: [Template; 8] = [
             themes: &["mountain_king", "badinerie"],
             reference: None,
         }),
-        text: include_str!("../templates/fugue.btw"),
+        text: include_str!("../templates/fugue.beatscript"),
     },
     Template {
         name: "theme-and-variations",
@@ -178,7 +178,7 @@ pub const TEMPLATES: [Template; 8] = [
             themes: &["new_world_largo"],
             reference: None,
         }),
-        text: include_str!("../templates/theme-and-variations.btw"),
+        text: include_str!("../templates/theme-and-variations.beatscript"),
     },
     Template {
         name: "cross",
@@ -193,7 +193,7 @@ pub const TEMPLATES: [Template; 8] = [
             themes: &["ode_to_joy", "pachelbel_ground", "badinerie"],
             reference: None,
         }),
-        text: include_str!("../templates/cross.btw"),
+        text: include_str!("../templates/cross.beatscript"),
     },
 ];
 
@@ -1068,7 +1068,7 @@ pub fn expand(src: &str, env: &Env) -> Option<Result<Expansion, Vec<Diagnostic>>
     Some(Ok(Expansion { text, edits, refs, warnings }))
 }
 
-/// Every reference of the program written out, the templates and then the seeds they leave: what `btwd expand` and the
+/// Every reference of the program written out, the templates and then the seeds they leave: what `beatscript expand` and the
 /// MCP `expand` tool give. Errors are at the program as given.
 pub fn expand_all(src: &str, env: &Env) -> Option<Result<(String, Vec<String>, Vec<Diagnostic>), Vec<Diagnostic>>> {
     let Some(first) = expand(src, env) else {

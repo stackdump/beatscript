@@ -1,5 +1,5 @@
 // The editor's assistant: completion, hover, quick-fixes and refactors (the lightbulb), the outline and go to definition,
-// from the language service in the wasm module (BeatscriptLs: djrust's crates/beatscriptls, the server `btwd lsp` runs for VS Code and
+// from the language service in the wasm module (BeatscriptLs: djrust's crates/beatscriptls, the server `beatscript lsp` runs for VS Code and
 // IntelliJ). The editor keeps its own keys; these are added:
 //
 //   Ctrl+Space          complete at the caret (also opens by itself after = : $ . | and ( )
@@ -8,7 +8,7 @@
 //   Mod+Shift+O         the outline: type to filter, Enter to go
 //   F12                 go to the definition of the name at the caret
 //
-// The squiggles stay the checker's (btw_check): the service adds to the editor, it does not replace what the page had.
+// The squiggles stay the checker's (beatscript_check): the service adds to the editor, it does not replace what the page had.
 
 import { lspPos, offsetOf, offsetOfVcol, expandSnippet, mergeEdits, mdToHtml, flattenSymbols, filterRows, kindLetter, TRIGGERS } from './assist-model.js';
 import { lineStarts, lineOf, visualCol } from './geometry.js';
@@ -60,7 +60,7 @@ export class Assist {
     try {
       r = JSON.parse(this.ls.request(method, JSON.stringify({ textDocument: { uri: URI }, ...params })));
     } catch (e) {
-      console.warn('btw assist:', method, e);
+      console.warn('beatscript assist:', method, e);
       return null;
     }
     if (r && r.error && Object.keys(r).length === 1) return { error: r.error.message, text: t };

@@ -1,4 +1,4 @@
-//! F4 ramp shapes and lfos (docs/btw/ext-shape.md).
+//! F4 ramp shapes and lfos (docs/beatscript/ext-shape.md).
 //!
 //! ```text
 //! shape  = "linear" | "exp" | "log" | "s-curve" | "step" int ;
@@ -833,7 +833,7 @@ mod tests {
         assert!(close(r.progress(1.0), 0.25) && close(r.progress(5.0), 0.25));
     }
 
-    /// What the offline render samples with (`djhost::btw_render`): the places a shape leaps, an lfo's edges, where it stops, and the
+    /// What the offline render samples with (`djhost::beatscript_render`): the places a shape leaps, an lfo's edges, where it stops, and the
     /// calls the runtime's own run would make when looked at in turn.
     #[test]
     fn the_places_a_value_leaps_and_the_samples_of_a_run_are_the_runtimes_own() {

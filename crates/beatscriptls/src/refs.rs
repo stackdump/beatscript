@@ -5,13 +5,13 @@
 //! - **hover** one: which half of the language it is (an engine call or a structural import), its canonical call, the CID it
 //!   resolves to, the generator and version, what it was fitted to (the program's key and tempo), and its expansion, cut short
 //!   for a long one with a line saying how much was left out;
-//! - **show or hide** its expansion inline: `btw/expand` answers the references with their ranges and what each is written out
-//!   as, and a code lens over each says `show expansion` (command `btw.expand.toggle`) and `eject` (`btw.eject`). Which
+//! - **show or hide** its expansion inline: `beatscript/expand` answers the references with their ranges and what each is written out
+//!   as, and a code lens over each says `show expansion` (command `beatscript.expand.toggle`) and `eject` (`beatscript.eject`). Which
 //!   expansions are shown is the **client's** state: the server answers what a reference stands for and keeps nothing;
 //! - **eject** one: write it out in place as local `let` / `section` text under its `# from: <call> -> <cid>` line, exactly as
 //!   `djlive::refs::eject` writes it, offered as a `refactor.inline` code action made and proved on `codeAction/resolve` like
 //!   the other refactors (the ejected program must play the same nets), and as the lens's command;
-//! - **copy** one's expansion (`btw.expand.copy`): the text eject would write, `# from:` line first, with no edit.
+//! - **copy** one's expansion (`beatscript.expand.copy`): the text eject would write, `# from:` line first, with no edit.
 //!
 //! The references are worked out once per text ([`Analysis::refs`]): a generator call is generated and compiled to be written
 //! out, so that is a few ms the first time a hover, a lens or the lightbulb asks, and nothing after.
@@ -27,12 +27,12 @@ use crate::json::{arr, int, obj, pos_json, s, span_range};
 use crate::refactor::Made;
 use crate::text::Encoding;
 
-/// Show or hide a reference's expansion: the server answers the reference (as one of `btw/expand`'s), the client toggles.
-pub const TOGGLE: &str = "btw.expand.toggle";
+/// Show or hide a reference's expansion: the server answers the reference (as one of `beatscript/expand`'s), the client toggles.
+pub const TOGGLE: &str = "beatscript.expand.toggle";
 /// The text a reference's eject would write (its `# from:` line first), for the client to put on the clipboard.
-pub const COPY: &str = "btw.expand.copy";
+pub const COPY: &str = "beatscript.expand.copy";
 /// Eject a reference: the edit, proved (the same nets); over stdio also sent as `workspace/applyEdit`.
-pub const EJECT: &str = "btw.eject";
+pub const EJECT: &str = "beatscript.eject";
 /// The commands `workspace/executeCommand` takes (`executeCommandProvider.commands`).
 pub const COMMANDS: [&str; 3] = [TOGGLE, COPY, EJECT];
 
@@ -159,7 +159,7 @@ pub fn truncated(text: &str, lines: usize, chars: usize) -> (String, usize) {
 /// The hover of a reference: what it is, what it resolves to, its expansion.
 pub fn hover_markdown(a: &Analysis, s: &Site) -> String {
     let half = if s.half == ENGINE { "**engine call**: the text records the call; its result is pinned by the CID it resolves to" } else { "**structural import**: borrowed as source, written out as BeatScript before the program is lowered" };
-    let mut m = format!("```btw\n{}\n```\n\n`{}`: {} · {half}", s.call, s.kind, kind_doc(s.kind));
+    let mut m = format!("```beatscript\n{}\n```\n\n`{}`: {} · {half}", s.call, s.kind, kind_doc(s.kind));
     let mut facts: Vec<String> = Vec::new();
     if let Some(cid) = &s.resolved {
         facts.push(format!("resolves to `{cid}`"));
@@ -179,7 +179,7 @@ pub fn hover_markdown(a: &Analysis, s: &Site) -> String {
     let text = expansion(s);
     let total = text.split('\n').count();
     let (shown, left) = truncated(text, HOVER_LINES, HOVER_CHARS);
-    m.push_str(&format!("\n\n**Expansion** ({total} line{}, what *Eject* writes under `# from:`):\n```btw\n{shown}\n```", if total == 1 { "" } else { "s" }));
+    m.push_str(&format!("\n\n**Expansion** ({total} line{}, what *Eject* writes under `# from:`):\n```beatscript\n{shown}\n```", if total == 1 { "" } else { "s" }));
     if left > 0 {
         m.push_str(&format!("\n\n… {left} more line{} not shown ({total} in all): eject it or show its expansion to see them", if left == 1 { "" } else { "s" }));
     }
@@ -190,10 +190,10 @@ pub fn hover_markdown(a: &Analysis, s: &Site) -> String {
 pub fn from_line_markdown(line: &str) -> Option<String> {
     let (call, cid) = djlive::refs::read_from_line(line)?;
     let to = cid.map_or(String::new(), |c| format!(", which resolved to `{c}`"));
-    Some(format!("```btw\n{call}\n```\n\nwritten out (ejected) from this reference{to}: the text below is the program's own now, and this line keeps where it came from (a comment: not in the CID)"))
+    Some(format!("```beatscript\n{call}\n```\n\nwritten out (ejected) from this reference{to}: the text below is the program's own now, and this line keeps where it came from (a comment: not in the CID)"))
 }
 
-/// One reference as `btw/expand` answers it.
+/// One reference as `beatscript/expand` answers it.
 pub fn site_json(a: &Analysis, site: &Site, enc: Encoding) -> JsonValue {
     let opt = |v: &Option<String>| v.as_ref().map_or(JsonValue::Null, |x| s(x.clone()));
     let text = expansion(site);
@@ -220,7 +220,7 @@ fn clamp(a: &Analysis, sp: Span) -> Span {
     Span::new(sp.start.min(a.text.len()), sp.end.min(a.text.len()))
 }
 
-/// `btw/expand`: every reference of the document, or the one at byte `at`. `{"references": [...]}`, with `"errors"` (LSP
+/// `beatscript/expand`: every reference of the document, or the one at byte `at`. `{"references": [...]}`, with `"errors"` (LSP
 /// diagnostics, at the references) when one of them cannot be worked out (then there are none).
 pub fn expand(a: &Analysis, at: Option<usize>, enc: Encoding) -> JsonValue {
     match sites(a) {

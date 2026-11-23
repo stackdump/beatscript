@@ -79,11 +79,11 @@ rights block rides inside the canonical JSON, **CC0 and public by default**, cha
 CID, a fork credits a CC BY parent, a private line is never shared. Kept as `<cid>.json` in
 `<support>/vocals` (`$DJ_VOCALS_DIR`). The sung audio can be CC0 because nothing in it is recorded or
 cloned: the phonemes come from the BeatScript phoneme set, lexicon and phrasebook (CC0, written for this project,
-docs/btw/phonemes.md) and rules written here, and the voice is synthesised. (The desktop booth alone also consults the
+docs/beatscript/phonemes.md) and rules written here, and the voice is synthesised. (The desktop booth alone also consults the
 CMU Pronouncing Dictionary, BSD-2-Clause, in the private crate `djlexicon-booth`; no public build links it.)
 
 The one data file whose words are not written for this project is the public-domain phrasebook (`crates/djengine/data/phrasebook-pd.txt`,
-docs/btw/phonemes.md, "The public-domain phrasebook"): each line is a text first published before 1929 and quoted from the pre-1929
+docs/beatscript/phonemes.md, "The public-domain phrasebook"): each line is a text first published before 1929 and quoted from the pre-1929
 edition the line names, so it is in the public domain; the file around the texts (the lyrics' phoneme spellings, the meters, the notes) is
 written here, and the file is CC0. No modern edition, translation or transcription is quoted.
 

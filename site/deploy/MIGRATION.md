@@ -7,10 +7,10 @@ under a new name, tell the old name it has moved.
 
 | flag / env | meaning |
 |---|---|
-| `-public-url` / `BTW_PUBLIC_URL` | the origin people use; every link, card, QR code and `og:` tag is built from it |
-| `-alt-origins` / `BTW_ALT_ORIGINS` | other origins this site answers for (the old name). Accepted as the host in `btw-pair/1` signatures and as a browser `Origin` |
-| `-moved-to` / `BTW_MOVED_TO` | set on the OLD server: phones get a `moved` event on their stream, the page shows a banner, `/.well-known/btw-site` carries `moved_to` |
-| `-site-id` / `BTW_SITE_ID` | normally unset; a new box with an empty data dir can be told the id of the box it replaces (a different id than the one on disk is refused) |
+| `-public-url` / `BEATSCRIPT_PUBLIC_URL` | the origin people use; every link, card, QR code and `og:` tag is built from it |
+| `-alt-origins` / `BEATSCRIPT_ALT_ORIGINS` | other origins this site answers for (the old name). Accepted as the host in `btw-pair/1` signatures and as a browser `Origin` |
+| `-moved-to` / `BEATSCRIPT_MOVED_TO` | set on the OLD server: phones get a `moved` event on their stream, the page shows a banner, `/.well-known/btw-site` carries `moved_to` |
+| `-site-id` / `BEATSCRIPT_SITE_ID` | normally unset; a new box with an empty data dir can be told the id of the box it replaces (a different id than the one on disk is refused) |
 
 What is host-free and travels with `data/`: `site.json`, `devices.json` (a phone's public key and owner),
 `tokens.json` (opaque MCP tokens, stored hashed), `session.secret`, the programs store. What is not: the browser
@@ -45,6 +45,6 @@ A phone that never got the new build re-pairs by QR code (one scan; its key is k
 
 ## Checks that fail loudly
 
-- btwserve's tests pin the move behaviour (crates/btwserve; they were the retired Go server's
+- beatscript-serve's tests pin the move behaviour (crates/beatscript-serve; they were the retired Go server's
   `internal/site/server` Portable/Moved/PairV/SiteDoc/AltOrigins tests).
-- No host literal may be added outside tests, docs and the `-public-url` default: `scripts/btw-host-literals.sh`.
+- No host literal may be added outside tests, docs and the `-public-url` default: `scripts/beatscript-host-literals.sh`.

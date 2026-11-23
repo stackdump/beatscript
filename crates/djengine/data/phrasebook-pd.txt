@@ -1,6 +1,6 @@
 # BeatScript public-domain phrasebook v1: lines of verse, scripture, speech and work song, for `sing @tempest_such_stuff on melody`.
 # This file is CC0 1.0 Universal. Every text in it is in the public domain: first published before 1929, and quoted from the pre-1929 edition
-# its line names (no modern edition, translation or transcription). Curated by hand, not scraped. Docs: docs/btw/phonemes.md, "The public-domain phrasebook".
+# its line names (no modern edition, translation or transcription). Curated by hand, not scraped. Docs: docs/beatscript/phonemes.md, "The public-domain phrasebook".
 # id | family | text | lyric | work | author | year | edition | source | meter | feel | stress | syllables | call | note
 #   family     one of: iambic, trochaic, anapestic, dactylic, common-meter, sprung, nursery, parallelism, oratory, call-and-response
 #   text       the words as printed (spelling kept), `/` a line end or a pause

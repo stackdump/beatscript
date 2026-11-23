@@ -1,0 +1,16 @@
+[package]
+name = "beatscript-round"
+description = "Round trip for BeatScript: audio in, a program out that `check same_as` the original. Analysis by synthesis against the deterministic `beatscript-cli render`. See docs/ROUNDTRIP.md."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+beatscript-api = { path = "../beatscript-api" }
+djengine.workspace = true
+
+[[bin]]
+name = "beatscript-round"
+path = "src/main.rs"

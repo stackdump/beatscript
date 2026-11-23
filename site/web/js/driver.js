@@ -1,5 +1,5 @@
-// The driver owns the BtwRun and one source of time. Two kinds of source share one interface:
-//   grid()    what BtwRun.service() wants ({deck, beat, bpm, playing:{A,B}} or null)
+// The driver owns the BeatscriptRun and one source of time. Two kinds of source share one interface:
+//   grid()    what BeatscriptRun.service() wants ({deck, beat, bpm, playing:{A,B}} or null)
 //   handle()  what to do with the commands service()/stop() return
 // - EngineSource: the in-browser engine; its commands are applied (edits land on the next bar).
 // - VirtualSource: a clock the page already has (the streamed render, or record mode's fake clock); the
@@ -61,8 +61,8 @@ export class ManualClock {
 }
 
 export class Driver {
-  constructor(btw) {
-    this.btw = btw;
+  constructor(beatscript) {
+    this.beatscript = beatscript;
     this.run = null;
     this.src = null;
     this.evalText = null; // the text the running program was evaluated from (markers are in its coordinates)
@@ -75,13 +75,13 @@ export class Driver {
   }
 
   /**
-   * Evaluate `text` on `src`. On the same kind of source as the running program the same BtwRun takes it
-   * (a hot reload: it lands on the next bar); otherwise a fresh BtwRun starts. Returns the eval answer;
+   * Evaluate `text` on `src`. On the same kind of source as the running program the same BeatscriptRun takes it
+   * (a hot reload: it lands on the next bar); otherwise a fresh BeatscriptRun starts. Returns the eval answer;
    * `ok: false` means nothing changed and the last good program plays on.
    */
   evaluate(text, src) {
     const same = this.run && this.src && src === this.src;
-    const run = same ? this.run : this.btw.newRun();
+    const run = same ? this.run : this.beatscript.newRun();
     const res = run.eval(text);
     if (!res.ok) {
       if (!same) run.free();

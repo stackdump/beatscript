@@ -1,10 +1,10 @@
 {
   "title": "Extract `x ~ x ~` into `let pat1`",
   "kind": "refactor.extract",
-  "data": {"refactor":"extract-let","uri":"file:///test.btw","start":88,"end":95,"length":155},
+  "data": {"refactor":"extract-let","uri":"file:///test.beatscript","start":88,"end":95,"length":155},
   "edit": {
     "changes": {
-      "file:///test.btw": [
+      "file:///test.beatscript": [
         {
           "range": {"start":{"line":3,"character":0},"end":{"line":3,"character":0}},
           "newText": "let pat1 = x ~ x ~\n"

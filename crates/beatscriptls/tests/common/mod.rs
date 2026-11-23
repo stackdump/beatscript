@@ -6,7 +6,7 @@
 use beatscriptls::Server;
 use djengine::json::JsonValue;
 
-pub const URI: &str = "file:///test.btw";
+pub const URI: &str = "file:///test.beatscript";
 
 pub fn server(text: &str) -> Server {
     let mut s = Server::new();

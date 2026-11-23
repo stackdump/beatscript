@@ -6,7 +6,7 @@ use beatscriptls::symbols::Kind;
 use beatscriptls::Analysis;
 use common::*;
 
-const PROGRAM: &str = include_str!("programs/symbols.btw");
+const PROGRAM: &str = include_str!("programs/symbols.beatscript");
 
 #[test]
 fn the_program_checks() {
@@ -68,7 +68,7 @@ fn a_program_with_errors_still_has_its_symbols() {
 
 #[test]
 fn the_showcase_symbols() {
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/showcase.btw")).unwrap();
+    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/showcase.beatscript")).unwrap();
     let a = Analysis::new(text.as_str());
     let names: Vec<String> = a.symbols.roots().into_iter().map(|i| &a.symbols.symbols[i]).filter(|s| s.kind == Kind::Section).map(|s| s.name.clone()).collect();
     assert_eq!(names[..4], ["intro", "build", "groove", "hook_a"]);

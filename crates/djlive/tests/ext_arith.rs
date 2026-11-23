@@ -1,4 +1,4 @@
-//! F2 arithmetic (docs/btw/ext-arith.md): every place that takes a number takes arithmetic, a `let` of arithmetic
+//! F2 arithmetic (docs/beatscript/ext-arith.md): every place that takes a number takes arithmetic, a `let` of arithmetic
 //! folds to a scalar, a `when` guard keeps or drops a line where it is expanded, and the canonical form keeps
 //! single literals as they were and prints any other expression the same way every time.
 
@@ -537,7 +537,7 @@ fn a_tempo_that_is_an_expression_is_the_reference_value_through_the_whole_langua
 
 #[test]
 fn the_example_does_what_its_comments_say() {
-    let c = ok(include_str!("../../../examples/btw/arith.btw"));
+    let c = ok(include_str!("../../../examples/beatscript/arith.beatscript"));
     assert_eq!((c.tempo, c.swing), (Some(128.0), Some(0.125)));
     // the filter opens on copies 0 and 2 only, the reverb on every copy; `pulse(B, 3)` is dropped by its guard
     assert_eq!(c.controls.len(), 6, "{:?}", c.controls.iter().map(|k| &k.key).collect::<Vec<_>>());

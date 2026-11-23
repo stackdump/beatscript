@@ -9,7 +9,7 @@ service that speaks the routes of DESIGN.md "HTTP API" (and runs the **real wasm
 node site/test/smoke.mjs                            everything, against the mock server
 node site/test/smoke.mjs --only 2,3                 only those steps
 node site/test/smoke.mjs --mock-wasm                page and server on the JS mock of the wasm (?mock=1)
-node site/test/smoke.mjs --server http://127.0.0.1:18199   against a real btwserve (crates/btwserve);
+node site/test/smoke.mjs --server http://127.0.0.1:18199   against a real beatscript-serve (crates/beatscript-serve);
                                                        the compose error cases (FAIL, LIMIT, NOKEY prompts) and the
                                                        pushed-event checks are the mock's, the real server gets the
                                                        MCP JSON-RPC variant of step 7
@@ -18,7 +18,7 @@ node site/test/mobile.mjs [--shots DIR]             the phone layout (412 x 915,
 node site/test/mobile-shots.mjs --prefix before     screenshots of the page as a phone shows it, for before/after
 node site/test/background-browser.mjs [--seconds 30] [--mode frozen] [--without-pump]
                                                        a hidden tab keeps time (see DESIGN.md "A phone, and the page in the background")
-BTW_CHROME_ARGS="--disable-audio-output" ...           extra Chrome flags for every launch: a null audio sink when the sound card is busy
+BEATSCRIPT_CHROME_ARGS="--disable-audio-output" ...           extra Chrome flags for every launch: a null audio sink when the sound card is busy
 node site/test/mock-server.mjs --port 18197         the mock alone, to open the page by hand
 ```
 
@@ -29,7 +29,7 @@ browser. Exit code 1 if any check fails or the page logs a console error.
 ## Steps
 
 1. **Load.** The page loads, the module comes up, the editor shows syntax-coloured code (spans from
-   `btw_highlight`), the example picker is filled from `/api/examples`, the gutter has a number per line.
+   `beatscript_highlight`), the example picker is filled from `/api/examples`, the gutter has a number per line.
    Shot `01-load.png`.
 2. **A broken program.** Type `deck A: kick | snare ~ x` and `foo bar`. A red squiggle under the span, a red mark in
    the gutter, "2 errors" in the problems bar; its row reads `2:14 error: ...`, `expected: ...` and
@@ -89,7 +89,7 @@ browser. Exit code 1 if any check fails or the page logs a console error.
    lines 1, 20 and 50, at 1280 px and again after a load at 700 px and a widen to 1280 px. (editor.js set the measured `--lh`
    on `.ed-code` only, so the gutter kept the stylesheet's; across the 760 px breakpoint the two were 20 and 21 px and the
    gutter, with its run and playing markers, drifted a row low by line ~20.)
-16. **The radio** (`/radio`, station-model.js and station.js). The default station's answer (the module's `btw_station`
+16. **The radio** (`/radio`, station-model.js and station.js). The default station's answer (the module's `beatscript_station`
    when it has one, else `POST /api/station`; the mock server's is wasm-mock.js `mockStation`): its text and CID on the page,
    now playing track 0, up next track 1 and the segue between. Next moves to position 1 and the URL follows; tempo + is one
    notch (128 to 130) and keeps position 1; a locked tempo's notches are off and Scan turns another knob, still at 1; the

@@ -128,7 +128,7 @@ fn the_set_words_are_names_everywhere_but_where_the_set_reads_them() {
     assert!(c.compiled.is_some(), "{:?}", c.diagnostics.iter().map(|d| d.message.clone()).collect::<Vec<_>>());
     assert!(c.compiled.unwrap().text.contains("mix {"));
     // and the whole mix example of the extensions still compiles with a set's word `mix` in the same file's neighbours
-    let mix_example = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/mix.btw")).unwrap();
+    let mix_example = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/mix.beatscript")).unwrap();
     assert!(djlive::check(&mix_example).compiled.is_some());
 
     // a set parses as it did, `play` is the action word it is elsewhere, and a deck line with `play` is untouched
@@ -164,7 +164,7 @@ fn the_set_words_are_names_everywhere_but_where_the_set_reads_them() {
 #[test]
 fn the_extensions_programs_keep_their_canonical_text_and_cid_through_the_merge() {
     // the showcase is every extension at once: its CID is the one the extensions branch had
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/showcase.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/showcase.beatscript")).unwrap();
     let c = djlive::check(&src).compiled.expect("the showcase compiles");
     assert_eq!(c.cid, "z4EBG9j1X64xRSJ82YLsNTSV8Vruf1icVF7tBXxJ2jt9KW6VZuo");
     // and a program with no `set` in it is not touched by the set's path (one compile, same canonical text twice)

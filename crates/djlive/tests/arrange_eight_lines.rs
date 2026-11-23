@@ -1,4 +1,4 @@
-//! `arrange-in-eight-lines`, one of the first programs a newcomer meets (examples/btw/arrange-in-eight-lines.btw, beatscript.app's
+//! `arrange-in-eight-lines`, one of the first programs a newcomer meets (examples/beatscript/arrange-in-eight-lines.beatscript, beatscript.app's
 //! example of the same name): one section played eight times, and an `arrange { }` that rewrites the hats and the arp between the
 //! plays. Pinned here: its CID, that it checks clean, every play's patterns (the generation table `check` reports, which is a
 //! function of the text), and that the formatter the server runs on arrival leaves it exactly as it is, comments and all.
@@ -73,7 +73,7 @@ fn table() -> djlive::mutate::GenTable {
 
 #[test]
 fn it_is_the_example_file_and_checks_clean() {
-    assert_eq!(PROGRAM, include_str!("../../../examples/btw/arrange-in-eight-lines.btw"), "the const is the example file, byte for byte");
+    assert_eq!(PROGRAM, include_str!("../../../examples/beatscript/arrange-in-eight-lines.beatscript"), "the const is the example file, byte for byte");
     let c = check(PROGRAM);
     assert!(c.diagnostics.is_empty(), "{}", djlive::diag::render_all(&c.diagnostics, PROGRAM));
     let c = c.compiled.expect("it compiles");

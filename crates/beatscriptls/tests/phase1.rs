@@ -43,7 +43,7 @@ fn fix_all_applies_every_certain_repair_and_the_program_checks() {
     let got = actions(&mut s, 0, 0, 0, r#","only":["source.fixAll"]"#);
     let all = got.as_array().unwrap();
     assert_eq!(all.len(), 1, "{}", got.js_stringified());
-    assert_eq!(all[0].get("kind").and_then(JsonValue::as_str), Some("source.fixAll.btw"));
+    assert_eq!(all[0].get("kind").and_then(JsonValue::as_str), Some("source.fixAll.beatscript"));
     golden("codeaction-fixall", &got);
 }
 

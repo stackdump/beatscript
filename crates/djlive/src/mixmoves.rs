@@ -1,4 +1,4 @@
-//! F8 mix moves (docs/BTW-EXTENSIONS.md, docs/btw/ext-mix.md): `duck` and `mix { }`.
+//! F8 mix moves (docs/BEATSCRIPT-EXTENSIONS.md, docs/beatscript/ext-mix.md): `duck` and `mix { }`.
 //!
 //! ```text
 //! duck  = "duck" deck "under" deck "." role db { "attack=" time | "release=" time } ;
@@ -162,7 +162,7 @@ impl Parser<'_> {
     /// of a `deck X:` / `master:` written before it: neither takes one.
     pub(crate) fn mixmoves_body(&mut self, target: Option<Span>) -> R<Option<Body>> {
         let word = match self.peek() {
-            // (`duck(` and `mix(` are calls of a def of that name: reserved by position, docs/BTW.md "Decisions")
+            // (`duck(` and `mix(` are calls of a def of that name: reserved by position, docs/BEATSCRIPT.md "Decisions")
             Tok::Word(w) if (w == "duck" || w == "mix") && self.peek_n(1) != &Tok::LParen => w.clone(),
             _ => return Ok(None),
         };

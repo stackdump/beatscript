@@ -1,5 +1,5 @@
-//! Radio: stations (docs/btw/radio.md), with no generator: the walk, the tracks and segues as text and CIDs, retuning and
-//! locks. The checks with the seeded generator are crates/btwapi/tests/station.rs; the listen numbers crates/btwd.
+//! Radio: stations (docs/beatscript/radio.md), with no generator: the walk, the tracks and segues as text and CIDs, retuning and
+//! locks. The checks with the seeded generator are crates/beatscript-api/tests/station.rs; the listen numbers crates/beatscript-cli.
 
 use djlive::ast::SeedStep;
 use djlive::station::{self, Station};

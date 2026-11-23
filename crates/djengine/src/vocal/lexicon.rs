@@ -1,4 +1,4 @@
-//! Words to phones (docs/btw/phonemes.md, docs/VOICE.md "Typed lyrics").
+//! Words to phones (docs/beatscript/phonemes.md, docs/VOICE.md "Typed lyrics").
 //!
 //! - **An escape** (`/w ee - aa r/`) is phonemes already: no lexicon is asked ([`super::phoneme`]).
 //! - **The BeatScript lexicon** (`data/lexicon.txt`, CC0, ours): English words in the BeatScript phoneme set.
@@ -430,7 +430,7 @@ pub fn words(text: &str) -> Vec<Word> {
     out
 }
 
-/// Where a word's pronunciation in a lyric came from, for the lexicon harvest (docs/btw/lexicon-harvest.md).
+/// Where a word's pronunciation in a lyric came from, for the lexicon harvest (docs/beatscript/lexicon-harvest.md).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PairSource {
     /// `word=/phonemes/`: someone wrote the word's pronunciation down (a strong signal).

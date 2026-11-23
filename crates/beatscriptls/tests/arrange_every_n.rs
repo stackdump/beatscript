@@ -72,7 +72,7 @@ fn hover_says_what_the_count_is() {
 
 #[test]
 fn number_at_knows_the_count_is_one_to_256_whole_passes() {
-    let reg = &btwapi::web_env().registry;
+    let reg = &beatscript_api::web_env().registry;
     let a = Analysis::new(COUNTED);
     let k = |needle: &str, skip: usize| beatscriptls::number::number_at(&a, COUNTED.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max, n.limit.integer));
     assert_eq!(k("~3 acid_a", 1), Some(("every", Some(1.0), Some(256.0), true)));

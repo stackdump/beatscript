@@ -1,4 +1,4 @@
-//! grammar.ebnf against the parser, both ways (docs/BTW.md "Grammar"): the grammar is well formed, every example
+//! grammar.ebnf against the parser, both ways (docs/BEATSCRIPT.md "Grammar"): the grammar is well formed, every example
 //! program is a sentence of it, and every sentence it writes is a program the parser reads. A mismatch fails the build.
 
 use djlive::grammar::{self, recognize};
@@ -6,11 +6,11 @@ use djlive::grammar::{self, recognize};
 fn examples() -> Vec<(String, String)> {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut out = Vec::new();
-    for dir in [root.join("../../examples/btw"), root.join("tests/fixtures")] {
+    for dir in [root.join("../../examples/beatscript"), root.join("tests/fixtures")] {
         let Ok(rd) = std::fs::read_dir(&dir) else { continue };
         for e in rd.flatten() {
             let p = e.path();
-            if p.extension().is_some_and(|x| x == "btw") {
+            if p.extension().is_some_and(|x| x == "beatscript") {
                 out.push((p.file_name().unwrap().to_string_lossy().to_string(), std::fs::read_to_string(&p).unwrap()));
             }
         }
@@ -37,7 +37,7 @@ fn every_example_program_is_a_sentence_of_the_grammar() {
     let mut bad = Vec::new();
     for (name, src) in examples() {
         // only a program the parser reads on its own is a question for the grammar (one that needs a host's registry
-        // or snippets says so: `#! skip-test:`, as tests/examples_btw.rs reads it)
+        // or snippets says so: `#! skip-test:`, as tests/examples_beatscript.rs reads it)
         if djlive::linked::header_lines(&src).iter().any(|h| h.key == "skip-test") {
             continue;
         }
@@ -116,7 +116,7 @@ const SEMANTIC: &[&str] = &[
     "expected a section, found a number",
     // `master` is a subject of `assert level`, and the one subject of a rule about notes cannot be (constraint.rs): the mix has no parts
     "`master` has no parts: it is the mix of both decks",
-    // which target takes which action is BTW.md's table, not the grammar's (`deck B: tempo ...`; the grammar's `tempo` action
+    // which target takes which action is BEATSCRIPT.md's table, not the grammar's (`deck B: tempo ...`; the grammar's `tempo` action
     // says "no target" in its note only): a walk that steers clear of the [host] productions reaches it
     "`tempo(...)` takes no target before it",
     // a generator call's tempo is a value in range (gen.rs), as a chance is
@@ -379,40 +379,40 @@ fn a_roman_numeral_is_a_sentence_where_a_chord_symbol_is() {
     }
 }
 
-/// The page as a file, to look at (`BTW_GRAMMAR_PAGE=/path/to/page.html cargo test -p djlive --test grammar write_page`).
+/// The page as a file, to look at (`BEATSCRIPT_GRAMMAR_PAGE=/path/to/page.html cargo test -p djlive --test grammar write_page`).
 #[test]
 fn write_page() {
-    if let Ok(p) = std::env::var("BTW_GRAMMAR_PAGE") {
+    if let Ok(p) = std::env::var("BEATSCRIPT_GRAMMAR_PAGE") {
         std::fs::write(p, grammar::page::grammar_page("")).unwrap();
     }
 }
 
-/// docs/BTW.md's grammar block is grammar.ebnf, generated: a production added to the grammar and not to the docs fails
-/// here (`BTW_BLESS=1 cargo test -p djlive --test grammar` writes it).
+/// docs/BEATSCRIPT.md's grammar block is grammar.ebnf, generated: a production added to the grammar and not to the docs fails
+/// here (`BEATSCRIPT_BLESS=1 cargo test -p djlive --test grammar` writes it).
 #[test]
 fn the_docs_grammar_is_generated_from_grammar_ebnf() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/BTW.md");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/BEATSCRIPT.md");
     let md = std::fs::read_to_string(&path).unwrap();
-    let a = md.find(grammar::DOCS_BEGIN).expect("BTW.md has the grammar.ebnf begin marker") + grammar::DOCS_BEGIN.len();
-    let b = a + md[a..].find(grammar::DOCS_END).expect("BTW.md has the grammar.ebnf end marker");
+    let a = md.find(grammar::DOCS_BEGIN).expect("BEATSCRIPT.md has the grammar.ebnf begin marker") + grammar::DOCS_BEGIN.len();
+    let b = a + md[a..].find(grammar::DOCS_END).expect("BEATSCRIPT.md has the grammar.ebnf end marker");
     let want = grammar::docs_block();
     if md[a..b] != want {
-        if std::env::var("BTW_BLESS").is_ok() {
+        if std::env::var("BEATSCRIPT_BLESS").is_ok() {
             std::fs::write(&path, format!("{}{}{}", &md[..a], want, &md[b..])).unwrap();
             return;
         }
-        panic!("docs/BTW.md's grammar block is not grammar.ebnf: run BTW_BLESS=1 cargo test -p djlive --test grammar");
+        panic!("docs/BEATSCRIPT.md's grammar block is not grammar.ebnf: run BEATSCRIPT_BLESS=1 cargo test -p djlive --test grammar");
     }
 }
 
 /// Golden SVGs: a few productions' diagrams, byte for byte (tests/fixtures/railroad/). A choice (`mark`), optionals and a
 /// repetition (`term`), a sequence with a class (`dur`), a longer sequence (`set_mix`). A change to the layout shows
-/// here; `BTW_BLESS=1` writes the new ones, to be looked at before they are committed.
+/// here; `BEATSCRIPT_BLESS=1` writes the new ones, to be looked at before they are committed.
 #[test]
 fn railroad_diagrams_match_their_goldens() {
     let g = grammar::grammar();
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/railroad");
-    let bless = std::env::var("BTW_BLESS").is_ok();
+    let bless = std::env::var("BEATSCRIPT_BLESS").is_ok();
     std::fs::create_dir_all(&dir).unwrap();
     for name in ["mark", "term", "dur", "set_mix"] {
         let r = g.rule(name).unwrap_or_else(|| panic!("no production `{name}`"));
@@ -422,7 +422,7 @@ fn railroad_diagrams_match_their_goldens() {
             std::fs::write(&path, &got).unwrap();
             continue;
         }
-        let want = std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("no golden {} (BTW_BLESS=1 writes it)", path.display()));
-        assert_eq!(got, want, "the diagram of `{name}` changed (BTW_BLESS=1 rewrites tests/fixtures/railroad/{name}.svg)");
+        let want = std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("no golden {} (BEATSCRIPT_BLESS=1 writes it)", path.display()));
+        assert_eq!(got, want, "the diagram of `{name}` changed (BEATSCRIPT_BLESS=1 rewrites tests/fixtures/railroad/{name}.svg)");
     }
 }

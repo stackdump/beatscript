@@ -1,4 +1,4 @@
-# BeatScript lexicon v1: English words in BeatScript phoneme set v1 (docs/btw/phonemes.md).
+# BeatScript lexicon v1: English words in BeatScript phoneme set v1 (docs/beatscript/phonemes.md).
 # Written by hand for this repository from how the words are said; not copied or derived from any
 # dictionary file. Dedicated to the public domain: CC0 1.0 Universal
 # (https://creativecommons.org/publicdomain/zero/1.0/).

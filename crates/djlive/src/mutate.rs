@@ -1,4 +1,4 @@
-//! `arrange { ... }`: an arrangement that changes the program as it goes (docs/BTW.md "Arrange mutations").
+//! `arrange { ... }`: an arrangement that changes the program as it goes (docs/BEATSCRIPT.md "Arrange mutations").
 //!
 //! ```text
 //! arrange {
@@ -1212,7 +1212,7 @@ fn check_op(op: &MutOp, at: (usize, usize, usize), under_jux: bool, hits: &[Stri
 // ---- the pass
 
 /// What an `arrange { }` came to: each section it plays, with the generation of each pattern it reads, and each
-/// pattern's generations. Read by `check`/`eval` (btwapi) and the editor's Follow.
+/// pattern's generations. Read by `check`/`eval` (beatscript-api) and the editor's Follow.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GenTable {
     /// Every section played, in order.

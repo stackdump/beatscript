@@ -1,5 +1,5 @@
 (* The grammar of BeatScript: the one source of truth. The Grammar page (railroad diagrams), the grammar block of
-   docs/BTW.md and the cheat sheet are generated from this file, and tests/grammar.rs holds it to the parser both
+   docs/BEATSCRIPT.md and the cheat sheet are generated from this file, and tests/grammar.rs holds it to the parser both
    ways: every example program is a sentence of it, and every sentence it writes is a program the parser reads.
 
    Notation (ISO 14977): name = ... ;   "text" a terminal   [ x ] optional   { x } none or more   ( x ) a group
@@ -218,7 +218,7 @@ band        = "low" | "mid" | "high" ;
 db          = DECIMAL "db" ;                                  (* glued: 6db *)
 time        = DECIMAL ( "ms" | "s" ) ;                        (* glued: 5ms *)
 sing        = "sing" ( lyric | PHRASE ) "on" role { "bars=" INT | "key=" KEY | "voice=" NAME } ;   (* a tonal role; PHRASE: a phrasebook id, @hands_up *)
-lyric       = STRING ;   (* its text is lyric_text; docs/btw/phonemes.md *)
+lyric       = STRING ;   (* its text is lyric_text; docs/beatscript/phonemes.md *)
 lyric_text  = { TEXT | "/" SPACE | escape } [ "/" { TEXT } ] ;   (* "/" and a space is a phrase break; "/" and a phoneme opens an escape, to the next "/" (with none, a break too); a word touching "=" before an escape is its label, kept and not sung: jingle=/j ii ng g uh l/ *)
 escape      = "/" PHONES "/" ;   (* PHONES (beatscript-v1): aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, "_" a rest, "-" cuts a word, ":" holds a vowel one more note, "!" accents it *)
 

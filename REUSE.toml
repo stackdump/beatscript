@@ -10,7 +10,7 @@ SPDX-License-Identifier = "MIT"
 
 # Programs: every BeatScript program and live-coding text, wherever it sits.
 [[annotations]]
-path = ["**/*.btw", "**/*.live"]
+path = ["**/*.beatscript", "**/*.live"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Matt York (stackdump)"
 SPDX-License-Identifier = "CC0-1.0"
@@ -31,13 +31,13 @@ path = [
   "crates/*/*.md",
   "crates/djengine/data/**",
   "crates/djhost/data/**",
-  "crates/btwapi/data/**",
+  "crates/beatscript-api/data/**",
   "crates/djlive/grammar.ebnf",
   "crates/djlive/templates/**",
-  "crates/btwserve/ontology/**",
-  "crates/btwserve/testdata/**",
-  "crates/btwserve/src/mcp/testdata/**",
-  "crates/btwround/fixtures/**",
+  "crates/beatscript-serve/ontology/**",
+  "crates/beatscript-serve/testdata/**",
+  "crates/beatscript-serve/src/mcp/testdata/**",
+  "crates/beatscript-round/fixtures/**",
   "crates/*/tests/fixtures/**",
   "crates/*/tests/corpus/**",
   "crates/*/tests/goldens/**",
@@ -50,7 +50,7 @@ SPDX-License-Identifier = "CC0-1.0"
 
 # The Go fonts (Bigelow & Holmes, for the Go project), drawn into share cards.
 [[annotations]]
-path = "crates/btwserve/assets/gofont/**"
+path = "crates/beatscript-serve/assets/gofont/**"
 precedence = "override"
 SPDX-FileCopyrightText = "2016 Bigelow & Holmes Inc."
 SPDX-License-Identifier = "BSD-3-Clause"

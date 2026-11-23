@@ -10,11 +10,11 @@
 //   3. engine-worklet.js evaluated in a scope that has none of TextEncoder, TextDecoder, fetch, performance, URL
 //      (what an AudioWorkletGlobalScope lacks): it boots, installs a prepared track a few KB a quantum, plays it,
 //      reports its grid, and its samples hash like the engine's own offline render of the same envelope
-//   4. engine.js end to end with a fake AudioContext driven by the wall clock: a real BtwRun evaluates a song, its
+//   4. engine.js end to end with a fake AudioContext driven by the wall clock: a real BeatscriptRun evaluates a song, its
 //      commands go through createEngine, both decks start together, each section's nets land on their bar line, and
 //      the runtime counts the same bars the audio plays
-//   5. the module's check of every site/examples/*.btw: the CID the examples index names, and byte for byte what
-//      `btwd check` prints when BTWD_BIN (or site/bin/btwd) is there
+//   5. the module's check of every site/examples/*.beatscript: the CID the examples index names, and byte for byte what
+//      `beatscript check` prints when BEATSCRIPT_BIN (or site/bin/beatscript) is there
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -27,7 +27,7 @@ const site = path.resolve(here, '..');
 const wasmDir = path.join(site, 'web', 'wasm');
 const jsDir = path.join(site, 'web', 'js');
 
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm')) || !fs.existsSync(path.join(wasmDir, 'btw.js'))) {
+if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm')) || !fs.existsSync(path.join(wasmDir, 'beatscript.js'))) {
     console.log(`SKIP wasm-parity: no built module in ${wasmDir} (scripts/build-web-wasm.sh <that directory> builds it)`);
     process.exit(0);
 }
@@ -47,8 +47,8 @@ const sha256 = (b) => crypto.createHash('sha256').update(b).digest('hex');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const SR = 48000;
 
-const wasmBytes = fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm'));
-const glue = await import(pathToFileURL(path.join(wasmDir, 'btw.js')).href);
+const wasmBytes = fs.readFileSync(path.join(wasmDir, 'beatscript_bg.wasm'));
+const glue = await import(pathToFileURL(path.join(wasmDir, 'beatscript.js')).href);
 glue.initSync({ module: wasmBytes });
 
 // ============================================================ 1. the polyfill
@@ -153,9 +153,9 @@ const calls = await import(pathToFileURL(path.join(jsDir, 'engine-calls.js')).hr
 }
 
 // ============================================================ 3. the worklet in a scope with nothing in it
-const PROGRAM = fs.readFileSync(path.join(site, 'examples', 'first-beat.btw'), 'utf8');
+const PROGRAM = fs.readFileSync(path.join(site, 'examples', 'first-beat.beatscript'), 'utf8');
 function firstLoad(text) {
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     run.eval(text);
     const cmds = JSON.parse(run.service('null'));
     run.free();
@@ -192,8 +192,8 @@ const hashBlocks = () => { const h = crypto.createHash('sha256'); const inter = 
 {
     const w = await workletScope();
     ok('the scope really lacks what a worklet lacks', w.lacking.length === 0, `has ${w.lacking}`);
-    const Proc = w.registered['btw-engine'];
-    ok("registerProcessor('btw-engine') ran", typeof Proc === 'function');
+    const Proc = w.registered['beatscript-engine'];
+    ok("registerProcessor('beatscript-engine') ran", typeof Proc === 'function');
     const p = new Proc({ processorOptions: { module: w.module } });
     const port = p.port;
     ok('the worklet says ready, with the engine version', port.out[0] && port.out[0].type === 'ready' && port.out[0].version === glue.engine_version(), JSON.stringify(port.out[0]));
@@ -251,7 +251,7 @@ const hashBlocks = () => { const h = crypto.createHash('sha256'); const inter = 
     ok('dispose ends the processor', quantum() === false);
 }
 
-// ============================================================ 4. createEngine, a fake context, a real BtwRun
+// ============================================================ 4. createEngine, a fake context, a real BeatscriptRun
 const SONG = `#! btw 1
 tempo 200
 key am
@@ -271,7 +271,7 @@ end at bar 8
 async function fakeAudio() {
     const real = { fetch: globalThis.fetch, AudioWorkletNode: globalThis.AudioWorkletNode };
     const w = await workletScope();
-    const Proc = w.registered['btw-engine'];
+    const Proc = w.registered['beatscript-engine'];
     const quantaPerSecond = SR / 128;
     const clock = { start: performance.now(), quanta: 0, procs: [], peak: 0 };
     const L = new Float32Array(128), R = new Float32Array(128);
@@ -329,7 +329,7 @@ async function fakeAudio() {
     const events = [];
     engine.on('installed', (e) => events.push(e));
     engine.on('error', (e) => events.push({ error: e }));
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     const ev = JSON.parse(run.eval(SONG));
     ok('the song checks', ev.ok === true, JSON.stringify(ev.diagnostics));
     // a clock loop like the page's: every ~25 ms
@@ -388,7 +388,7 @@ async function fakeAudio() {
     const fake = await fakeAudio();
     const { createEngine } = await import(pathToFileURL(path.join(jsDir, 'engine.js')).href);
     const engine = await createEngine({ context: fake.context, composer: 'main' });
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     const ev = JSON.parse(run.eval(`#! btw 1
 tempo 200
 section one 1 bars {
@@ -433,7 +433,7 @@ end at bar 4
     ok('with no composer the engine says so', engine.composer === 'inline');
     const errors = [];
     engine.on('error', (e) => errors.push(e));
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     run.eval(PROGRAM);
     engine.apply(JSON.parse(run.service('null')));
     await engine.idle();
@@ -447,28 +447,28 @@ end at bar 4
     fake.stop();
 }
 
-// ============================================================ 5. the examples against the index and btwd
+// ============================================================ 5. the examples against the index and beatscript
 {
     const dir = path.join(site, 'examples');
     const index = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
-    const btwd = process.env.BTWD_BIN || [path.join(site, 'bin', 'btwd')].find((p) => fs.existsSync(p));
+    const beatscript = process.env.BEATSCRIPT_BIN || [path.join(site, 'bin', 'beatscript')].find((p) => fs.existsSync(p));
     let n = 0;
-    for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.btw')).sort()) {
+    for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.beatscript')).sort()) {
         const text = fs.readFileSync(path.join(dir, f), 'utf8');
-        const check = glue.btw_check(text);
+        const check = glue.beatscript_check(text);
         const rep = JSON.parse(check);
         ok(`${f}: checks ok`, rep.ok === true && rep.errors === 0, JSON.stringify(rep.diagnostics && rep.diagnostics[0]));
-        const entry = index.find((e) => e.name === f.replace(/\.btw$/, ''));
+        const entry = index.find((e) => e.name === f.replace(/\.beatscript$/, ''));
         if (entry && entry.cid) ok(`${f}: the CID the index names`, entry.cid === rep.cid, `${entry.cid} vs ${rep.cid}`);
-        if (btwd) {
-            const r = spawnSync(btwd, ['check', '--file', path.join(dir, f)], { maxBuffer: 1 << 28 });
-            ok(`${f}: btw_check == btwd check`, r.status === 0 && r.stdout.toString().trimEnd() === check);
-            const r2 = spawnSync(btwd, ['fmt', '--file', path.join(dir, f)], { maxBuffer: 1 << 28 });
-            ok(`${f}: btw_fmt == btwd fmt`, r2.status === 0 && r2.stdout.toString().trimEnd() === glue.btw_fmt(text));
+        if (beatscript) {
+            const r = spawnSync(beatscript, ['check', '--file', path.join(dir, f)], { maxBuffer: 1 << 28 });
+            ok(`${f}: beatscript_check == beatscript check`, r.status === 0 && r.stdout.toString().trimEnd() === check);
+            const r2 = spawnSync(beatscript, ['fmt', '--file', path.join(dir, f)], { maxBuffer: 1 << 28 });
+            ok(`${f}: beatscript_fmt == beatscript fmt`, r2.status === 0 && r2.stdout.toString().trimEnd() === glue.beatscript_fmt(text));
         }
         n++;
     }
-    console.log(`  ${n} examples${btwd ? ', compared with btwd' : ' (no btwd: set BTWD_BIN to compare byte for byte)'}`);
+    console.log(`  ${n} examples${beatscript ? ', compared with beatscript' : ' (no beatscript: set BEATSCRIPT_BIN to compare byte for byte)'}`);
 }
 
 console.log(`${passed} passed, ${failures.length} failed`);

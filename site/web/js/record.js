@@ -56,13 +56,13 @@ export async function install(app) {
     else if (app.record) await startReal(app);
     api._resolve(true);
   } catch (e) {
-    console.error('btw: record start failed', e);
+    console.error('beatscript: record start failed', e);
     api._reject(e);
   }
 }
 
 async function startManual(app) {
-  if (!app.btw || !app.driver) throw new Error('the module is not loaded');
+  if (!app.beatscript || !app.driver) throw new Error('the module is not loaded');
   const report = app.runCheckNow();
   if (!report || !report.ok) throw new Error(`the program has ${report ? report.errors : '?'} errors`);
   if (app.driver.src) app.driver.stopSound();

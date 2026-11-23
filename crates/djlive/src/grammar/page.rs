@@ -154,7 +154,7 @@ pub fn html(g: &Grammar, origin: &str, classes: &[(&str, &str)]) -> String {
         s.push_str(&format!("<dt id=\"{}\">{}</dt><dd>{}</dd>\n", esc(&class_id(name)), esc(name), note_html(what)));
     }
     s.push_str("</dl>\n</main>\n");
-    // the footer every beatscript.app page ends with (btwserve's `rights::FOOTER`, the same bytes): a relative link, so
+    // the footer every beatscript.app page ends with (beatscript-serve's `rights::FOOTER`, the same bytes): a relative link, so
     // the phone's copy (based at beatscript.app) opens the same page
     s.push_str(FOOTER);
     s.push_str("</body>\n</html>\n");

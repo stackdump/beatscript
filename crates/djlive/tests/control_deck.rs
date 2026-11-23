@@ -1,4 +1,4 @@
-//! The control deck (roadmap 6671, docs/btw/ext-control.md): `control:` is a head in the place a target takes, for the engine
+//! The control deck (roadmap 6671, docs/beatscript/ext-control.md): `control:` is a head in the place a target takes, for the engine
 //! calls that take no target (`move`, `swap pairs`, `load pair`, `queue`, `crossfader`, a timed `tempo`, `duck`, `mix`, `do` and
 //! its sugar). Its canonical text is its own and survives reformatting; it lowers to exactly what the line with no head
 //! lowers to (the runtime controls, the deck nets, the control net's events, the tempo map); a part, a strip's action, a
@@ -70,7 +70,7 @@ const PAIRS: &[(&str, &str)] = &[
     ("deck A: kick x ~ x ~\ncontrol: do vocoder set mix=0 -> 1 over 8 bars\nevery 16 bars: control: freeze phrase bars=2\n", "deck A: kick x ~ x ~\ndo vocoder set mix=0 -> 1 over 8 bars\nevery 16 bars: freeze phrase bars=2\n"),
     ("deck A: kick x ~ x ~\nat bar 8 for 4 bars: control: trick on deck=A kind=stutter\n", "deck A: kick x ~ x ~\nat bar 8 for 4 bars: trick on deck=A kind=stutter\n"),
     ("deck A: kick x ~ x ~\ncontrol: key detect deck=A\n", "deck A: kick x ~ x ~\nkey detect deck=A\n"),
-    // Matt's example (docs/BTW.md "Two halves"): a section sequences the control deck like any deck
+    // Matt's example (docs/BEATSCRIPT.md "Two halves"): a section sequences the control deck like any deck
     (
         "section drop 16 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n  deck B: arp arp(am7, up, 8)\n  master: filter lp 400 -> 8k over 8 bars\n  control: move echo_out on B\n  at bar 12: control: swap pairs with filter_exit\n}\narrange drop\n",
         "section drop 16 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n  deck B: arp arp(am7, up, 8)\n  master: filter lp 400 -> 8k over 8 bars\n  move echo_out on B\n  at bar 12: swap pairs with filter_exit\n}\narrange drop\n",
@@ -233,13 +233,13 @@ fn the_head_is_coloured_as_a_head_and_the_name_as_a_name() {
 
 #[test]
 fn the_programs_written_before_it_keep_their_cids() {
-    // the pins of crates/btwapi/tests/cid-pins.json (written before the control deck), for every example program this crate
-    // compiles on its own (one that needs a host's store, its registry or its voices is btwapi's cid_pins to check)
+    // the pins of crates/beatscript-api/tests/cid-pins.json (written before the control deck), for every example program this crate
+    // compiles on its own (one that needs a host's store, its registry or its voices is beatscript-api's cid_pins to check)
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let pins = JsonValue::parse(&std::fs::read_to_string(root.join("crates/btwapi/tests/cid-pins.json")).unwrap()).unwrap();
+    let pins = JsonValue::parse(&std::fs::read_to_string(root.join("crates/beatscript-api/tests/cid-pins.json")).unwrap()).unwrap();
     let mut seen = 0;
     for (path, pin) in pins.as_object().unwrap().iter() {
-        if !path.starts_with("examples/btw/") || pin.get("ok").and_then(JsonValue::as_bool) != Some(true) {
+        if !path.starts_with("examples/beatscript/") || pin.get("ok").and_then(JsonValue::as_bool) != Some(true) {
             continue;
         }
         let Ok(src) = std::fs::read_to_string(root.join(path)) else { continue };

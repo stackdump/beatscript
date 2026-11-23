@@ -12,7 +12,7 @@ import { spansToHtml, plainSpans } from './highlight.js';
 import { h } from './util.js';
 
 /** The hanging indent of a wrapped line's later rows, in columns (the CSS's --hang must say the same). 0: a
- *  <textarea> cannot render one the way the <pre> does (btw.css). */
+ *  <textarea> cannot render one the way the <pre> does (beatscript.css). */
 export const HANG = 0;
 
 /** The <pre>'s text nodes with the text offset each starts at (its text is the program's, plus maybe a trailing space). */

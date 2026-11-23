@@ -1,21 +1,21 @@
 #!/bin/sh
 # bench-render.sh: the streaming renderer's headline numbers.
 #
-#   scripts/bench-render.sh [-n RUNS] [-b BTWD] [PROGRAM.btw ...]
+#   scripts/bench-render.sh [-n RUNS] [-b BEATSCRIPT_CLI] [PROGRAM.beatscript ...]
 #
-# For each program (default: crates/btwapi/tests/corpus/*.btw and examples/*.btw) it starts a fresh
-# `btwd render` process RUNS times (default 5) and reports
+# For each program (default: crates/beatscript-api/tests/corpus/*.beatscript and examples/*.beatscript) it starts a fresh
+# `beatscript render` process RUNS times (default 5) and reports
 #   ttfb     milliseconds from the moment the process is spawned to its first byte on stdout
 #   total    milliseconds to the last byte
 #   x_rt     real-time factor over the whole song (audio seconds / render seconds)
 #   rss_mb   peak resident set of the process (what the OS says, children of this script)
 # as min / median / max over the runs, one line a program, and a last line with the worst ttfb.
-# Needs python3 (stdlib only). BTWD defaults to target/release/btwd next to this script's repo.
+# Needs python3 (stdlib only). BEATSCRIPT_CLI defaults to target/release/beatscript next to this script's repo.
 # Exit 1 if any program's worst ttfb is 1000 ms or more (the contract: under 1 s, cold).
 set -eu
 here=$(cd "$(dirname "$0")/.." && pwd)
 runs=5
-bin=${BTWD:-"$here/target/release/btwd"}
+bin=${BEATSCRIPT_CLI:-"$here/target/release/beatscript"}
 while [ $# -gt 0 ]; do
   case $1 in
     -n) runs=$2; shift 2 ;;
@@ -24,9 +24,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 if [ $# -eq 0 ]; then
-  set -- "$here"/crates/btwapi/tests/corpus/*.btw "$here"/examples/*.btw
+  set -- "$here"/crates/beatscript-api/tests/corpus/*.beatscript "$here"/examples/*.beatscript
 fi
-[ -x "$bin" ] || { echo "bench-render: $bin is not built (cargo build --release -p btwd)" >&2; exit 2; }
+[ -x "$bin" ] || { echo "bench-render: $bin is not built (cargo build --release -p beatscript-cli)" >&2; exit 2; }
 exec python3 - "$bin" "$runs" "$@" <<'PY'
 import json, os, resource, statistics, subprocess, sys, time
 

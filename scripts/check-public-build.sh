@@ -10,15 +10,15 @@
 #      - djlexicon-booth   the booth's private pronouncing dictionary (CMUdict); it is not in this repo at all
 #      - windwheel         experimental, behind djhost's off-by-default `windwheel` feature
 #      - djrust-wallet     the booth identity, behind djhost's off-by-default `wallet` feature
-#    in its tree. djhost itself may be there (btwserve reads its ontology vocabulary, btwd its render path).
+#    in its tree. djhost itself may be there (beatscript-serve reads its ontology vocabulary, beatscript its render path).
 # 2. The workspace has exactly the allowlisted members: a new crate is a decision, not an accident.
 # 3. No pronouncing-dictionary data: no file named like CMUdict, and no file of dictionary-shaped ARPAbet lines.
 #    The lexicon (crates/djengine/data/lexicon.txt) is written by hand and CC0.
 # 4. No Apple loop audio (.caf/.aif/.aiff): programs reference loops by hash only.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-targets=(djweb btwserve btwapi beatscriptls djlive djengine btwseal btwd btwround)
-members=(btwapi btwd beatscriptls btwround btwseal btwserve djengine djhost djlive djweb)
+targets=(djweb beatscript-serve beatscript-api beatscriptls djlive djengine beatscript-seal beatscript beatscript-round)
+members=(beatscript-api beatscript-cli beatscriptls beatscript-round beatscript-seal beatscript-serve djengine djhost djlive djweb)
 banned='^(djlexicon-booth|windwheel|djrust-wallet) '
 fail=0
 

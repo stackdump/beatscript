@@ -1,4 +1,4 @@
-//! Compile-time expressions (docs/BTW-EXTENSIONS.md, feature 2): integer and rational arithmetic,
+//! Compile-time expressions (docs/BEATSCRIPT-EXTENSIONS.md, feature 2): integer and rational arithmetic,
 //! comparisons and `and` / `or` / `not`, over [`Rat`]s and words. Evaluated while the program is read and
 //! expanded, never while it plays, and always total: a tree walk with no loops and no recursion beyond the
 //! expression's own depth ([`MAX_DEPTH`]); `/` and `%` by zero and an overflow are errors with a span.
@@ -750,7 +750,7 @@ impl Parser<'_> {
         Ok(num_of(r, &e, span))
     }
 
-    /// Arithmetic or a lone literal, as the exact rational it is: where a length or a position is read (docs/btw/ext-timing.md).
+    /// Arithmetic or a lone literal, as the exact rational it is: where a length or a position is read (docs/beatscript/ext-timing.md).
     pub(crate) fn arith_rat(&mut self, what: &str) -> R<(Rat, Span)> {
         if self.starts_arith() {
             let (r, _, span) = self.arith_eval(what)?;

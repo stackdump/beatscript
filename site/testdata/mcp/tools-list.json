@@ -38,7 +38,7 @@
         "readOnlyHint": true,
         "title": "Your paired phones"
       },
-      "description": "List the phones paired with the token's account (djrust on Android scans the QR code that https://btw.bitwrap.io shows under Mobile; btwsite/PAIRING.md): id, name, fingerprint (the code both ends showed at pairing), paired, connected (djrust has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a phone paired by an account is driven over MCP with that account's token and no other.\n\nPass a phone's id as device to eval, load, get or stop to drive that phone alone (eval and load run the same checks as for a tab; a program with errors, samples or \"use restricted\" is not sent). Needs a bearer token. Read-only.",
+      "description": "List the phones paired with the token's account (djrust on Android scans the QR code that https://btw.bitwrap.io shows under Mobile; site/PAIRING.md): id, name, fingerprint (the code both ends showed at pairing), paired, connected (djrust has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a phone paired by an account is driven over MCP with that account's token and no other.\n\nPass a phone's id as device to eval, load, get or stop to drive that phone alone (eval and load run the same checks as for a tab; a program with errors, samples or \"use restricted\" is not sent). Needs a bearer token. Read-only.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -168,7 +168,7 @@
         "readOnlyHint": true,
         "title": "The example programs"
       },
-      "description": "The public example programs of https://btw.bitwrap.io, all CC0-1.0: name, title, description, cid, bpm, bars, license and the url of the raw .btw. Pass name to get that program's full text as well. Read two or three before writing a program of your own: after the cheat-sheet (https://btw.bitwrap.io/docs/cheatsheet.md) they are the best guide to the language, from a four-line beat (first-beat) to whole tracks with sections, defs, ramps and evolve. Read-only, no sign-in.",
+      "description": "The public example programs of https://btw.bitwrap.io, all CC0-1.0: name, title, description, cid, bpm, bars, license and the url of the raw .beatscript. Pass name to get that program's full text as well. Read two or three before writing a program of your own: after the cheat-sheet (https://btw.bitwrap.io/docs/cheatsheet.md) they are the best guide to the language, from a four-line beat (first-beat) to whole tracks with sections, defs, ramps and evolve. Read-only, no sign-in.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -361,7 +361,7 @@
         "readOnlyHint": false,
         "title": "Set up a demo recording"
       },
-      "description": "Set up a demo recording of a program: the page in record mode (full screen code, the firing markers and follow-scroll on) and the steps that turn it into a video. Give exactly one of text, cid or example (as render does: a text or example is checked and stored publicly as CC0-1.0, nothing private). Answers {cid, seconds, record_url, record_url_manual_clock, audio_url, recipe}. record_url opens the page in record mode and plays it for a person to screen-record; record_url_manual_clock opens it on a fake clock that a script steps frame by frame (window.__btw.setTime(seconds); window.__btw.frame()), which is how btwsite/tools/record-demo.mjs in the repo makes a perfectly synced, stutter-free MP4 (H.264, AAC, 1920x1080) plus a silent hero loop (MP4 and WebM) and a poster PNG, taking the audio from audio_url (the offline render of the same program). This tool does not capture video itself: it needs a browser and ffmpeg on your side. The audio is the offline render: notes and sounds, not control lines (filters, reverb). Call check first. Rendering limits apply (about 30 programs an hour per client). No sign-in needed.",
+      "description": "Set up a demo recording of a program: the page in record mode (full screen code, the firing markers and follow-scroll on) and the steps that turn it into a video. Give exactly one of text, cid or example (as render does: a text or example is checked and stored publicly as CC0-1.0, nothing private). Answers {cid, seconds, record_url, record_url_manual_clock, audio_url, recipe}. record_url opens the page in record mode and plays it for a person to screen-record; record_url_manual_clock opens it on a fake clock that a script steps frame by frame (window.__btw.setTime(seconds); window.__btw.frame()), which is how site/tools/record-demo.mjs in the repo makes a perfectly synced, stutter-free MP4 (H.264, AAC, 1920x1080) plus a silent hero loop (MP4 and WebM) and a poster PNG, taking the audio from audio_url (the offline render of the same program). This tool does not capture video itself: it needs a browser and ffmpeg on your side. The audio is the offline render: notes and sounds, not control lines (filters, reverb). Call check first. Rendering limits apply (about 30 programs an hour per client). No sign-in needed.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

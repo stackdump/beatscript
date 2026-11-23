@@ -142,7 +142,7 @@ fn hover_says_what_an_operator_and_a_mark_do() {
 
 #[test]
 fn number_at_knows_a_mutation_argument_and_loop_n() {
-    let reg = &btwapi::web_env().registry;
+    let reg = &beatscript_api::web_env().registry;
     let a = Analysis::new(BLOCK);
     let k = |needle: &str, skip: usize| beatscriptls::number::number_at(&a, BLOCK.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max));
     assert_eq!(k("rot 2", 4), Some(("mut-int", Some(-64.0), Some(64.0))));
@@ -254,7 +254,7 @@ fn jux_is_offered_documented_and_followed_by_the_operators_but_itself() {
     let h = req(&mut s, "textDocument/hover", &at(l, c)).get("contents").and_then(|c| c.get("value")).and_then(JsonValue::as_str).unwrap_or("").to_string();
     assert!(h.contains("jux op") && h.contains("right copy"), "{h}");
     // the number inside it is the inner operator's argument
-    let reg = &btwapi::web_env().registry;
+    let reg = &beatscript_api::web_env().registry;
     let a = Analysis::new(JUX);
     let k = |needle: &str, skip: usize| beatscriptls::number::number_at(&a, JUX.find(needle).unwrap() + skip, reg).map(|n| (n.limit.kind, n.limit.min, n.limit.max));
     assert_eq!(k("rot 3", 4), Some(("mut-int", Some(-64.0), Some(64.0))));

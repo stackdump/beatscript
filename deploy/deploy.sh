@@ -5,16 +5,16 @@
 #
 #   deploy/deploy.sh all          preflight, build, host, ship, services, restart, check, record (the deploy)
 #   deploy/deploy.sh preflight    refuse unless the tree is clean, HEAD is PIN and PIN is on origin/main
-#   deploy/deploy.sh build        the wasm (site/web/wasm + gz/br sidecars), its vocals test, btwd and btwserve for
-#                                 x86_64 Linux (dist/), and site/web/docs (BTW.md, arrange.md, cheatsheet.md)
+#   deploy/deploy.sh build        the wasm (site/web/wasm + gz/br sidecars), its vocals test, beatscript and beatscript-serve for
+#                                 x86_64 Linux (dist/), and site/web/docs (BEATSCRIPT.md, arrange.md, cheatsheet.md)
 #   deploy/deploy.sh host         APP_DIR on the host: a checkout of this repo, detached at PIN
-#   deploy/deploy.sh ship         copy the wasm, the docs and the binary there (site/bin/btwserve-<sha7>)
+#   deploy/deploy.sh ship         copy the wasm, the docs and the binary there (site/bin/beatscript-serve-<sha7>)
 #   deploy/deploy.sh services     rewrite the btw-rust entry of ~/services (backup first; the old entry is kept in
 #                                 STATE_DIR for rollback): dir APP_DIR, CMD "cd APP_DIR && ... -data DATA_DIR ..."
-#   deploy/deploy.sh restart      ~/services restart btw-rust; /healthz must report btwserve-<sha7>
+#   deploy/deploy.sh restart      ~/services restart btw-rust; /healthz must report beatscript-serve-<sha7>
 #   deploy/deploy.sh check        deploy/live-checks.sh against PUBLIC_URL (every live check, the MCP exposure table,
 #                                 verify-beatscript, the live smoke)
-#   deploy/deploy.sh record       append "<utc> <PIN> btwserve-<sha7> ok" to DEPLOY_LOG on the host (only `all` does
+#   deploy/deploy.sh record       append "<utc> <PIN> beatscript-serve-<sha7> ok" to DEPLOY_LOG on the host (only `all` does
 #                                 this, after every check passed)
 #   deploy/deploy.sh rollback     put back the btw-rust entry the last `services` step replaced, restart, /healthz
 #   deploy/deploy.sh status       the host checkout, the btw-rust entry, /healthz, the deploy log's tail
@@ -27,7 +27,7 @@
 # later deploys it puts back the previous CMD and its own binary, but the checkout and the wasm stay at the new pin:
 # for a full return, deploy the previous pin.
 #
-# data/ is never copied, moved or read here: btwserve is pointed at DATA_DIR by absolute path. The env file
+# data/ is never copied, moved or read here: beatscript-serve is pointed at DATA_DIR by absolute path. The env file
 # (~/.env-services/btw-rust -> btw-bitwrap: the Gemini key, the admin token, the session secret) stays on the host and
 # is only ever sourced by ~/services.
 #
@@ -35,13 +35,13 @@
 #   PIN          the commit to deploy (default HEAD; HEAD must equal it)
 #   HOST         the serving host over ssh; `local`: this machine (pflow.dev)
 #   APP_DIR      the checkout there, relative to its $HOME        (Workspace/beatscript)
-#   DATA_DIR     btwserve's data dir there, relative to $HOME     (Workspace/btw-bitwrap-io/data, where it has always been)
+#   DATA_DIR     beatscript-serve's data dir there, relative to $HOME     (Workspace/btw-bitwrap-io/data, where it has always been)
 #   PUBLIC_URL   the public origin                                (https://beatscript.app)
 #   REPO_URL     what the host clones                             (https://github.com/stackdump/beatscript.git)
 #   STATE_DIR    on the host: the rollback record                 (.local/state/beatscript)
 #   DEPLOY_LOG   on the host: one line per clean deploy           ($STATE_DIR/deploys.log)
-#   BUILD_HOST, BUILD_HOSTS, BUILD_HOST_ALIASES, BTWD_SMOKE_HOST   scripts/build-host.sh, scripts/build-btwd-linux.sh
-#   BTWD_BUILD_DIR, BTW_WASM_BUILD_DIR  the build host's scratch dirs (beatscript-web-build, beatscript-wasm-build)
+#   BUILD_HOST, BUILD_HOSTS, BUILD_HOST_ALIASES, BEATSCRIPT_SMOKE_HOST   scripts/build-host.sh, scripts/build-linux.sh
+#   BEATSCRIPT_BUILD_DIR, BEATSCRIPT_WASM_BUILD_DIR  the build host's scratch dirs (beatscript-web-build, beatscript-wasm-build)
 #   CHROME       Chrome for the live smoke                        (/usr/bin/google-chrome)
 #   NO_ROLLBACK  1: `all` leaves a failed deploy up
 set -eEuo pipefail
@@ -62,12 +62,12 @@ DEPLOY_LOG=${DEPLOY_LOG:-$STATE_DIR/deploys.log}
 SERVICE=btw-rust
 PORT=18099
 # the build hosts' scratch dirs, apart from anything else that builds there
-export BTWD_BUILD_DIR=${BTWD_BUILD_DIR:-beatscript-web-build} BTW_WASM_BUILD_DIR=${BTW_WASM_BUILD_DIR:-beatscript-wasm-build}
+export BEATSCRIPT_BUILD_DIR=${BEATSCRIPT_BUILD_DIR:-beatscript-web-build} BEATSCRIPT_WASM_BUILD_DIR=${BEATSCRIPT_WASM_BUILD_DIR:-beatscript-wasm-build}
 PIN=${PIN:-$(git rev-parse HEAD)}
 PIN=$(git rev-parse "$PIN^{commit}")
 SHA7=$(git rev-parse --short=7 "$PIN")
-VERSION=btwserve-$SHA7
-BIN=site/bin/btwserve-$SHA7
+VERSION=beatscript-serve-$SHA7
+BIN=site/bin/beatscript-serve-$SHA7
 
 # HOST=local runs the host side here, from $HOME, as ssh would (deploy/test-host.sh drives `host` that way)
 r() { if [ "$HOST" = local ]; then (cd "$HOME" && bash -c "$*"); else ssh -o BatchMode=yes "$HOST" "$@"; fi; }
@@ -86,15 +86,15 @@ build() {
   say "build"
   scripts/build-web-wasm.sh site/web/wasm
   node site/test/wasm-vocals.mjs
-  # precompressed sidecars (6.75 MB -> ~2 MB): btwserve sends btw_bg.wasm.br / .gz to a browser that accepts it and
+  # precompressed sidecars (6.75 MB -> ~2 MB): beatscript-serve sends beatscript_bg.wasm.br / .gz to a browser that accepts it and
   # ignores a sidecar older than the wasm. The serving host has no brotli, so they are made here.
-  w=site/web/wasm/btw_bg.wasm
+  w=site/web/wasm/beatscript_bg.wasm
   gzip -9 -n -k -f "$w"
   if command -v brotli >/dev/null; then brotli -q 11 -k -f "$w"; else rm -f "$w.br"; echo "no brotli here: gzip sidecar only"; fi
-  scripts/build-btwd-linux.sh                       # btwd: its `cheatsheet` writes site/web/docs/cheatsheet.md
-  BTWD_PKG=btwserve scripts/build-btwd-linux.sh
-  BTWD_BIN=$root/dist/btwd-linux-x86_64 site/scripts/btw-gen-docs.sh
-  ls -l site/web/wasm site/web/docs dist/btwserve-linux-x86_64
+  scripts/build-linux.sh                       # beatscript: its `cheatsheet` writes site/web/docs/cheatsheet.md
+  BEATSCRIPT_PKG=beatscript-serve scripts/build-linux.sh
+  BEATSCRIPT_BIN=$root/dist/beatscript-linux-x86_64 site/scripts/beatscript-gen-docs.sh
+  ls -l site/web/wasm site/web/docs dist/beatscript-serve-linux-x86_64
 }
 
 host() {
@@ -123,7 +123,7 @@ test "$(git rev-parse HEAD)" = "$PIN"
 # the checkout is PIN, whole: no tracked file missing or changed
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then echo "deploy: $APP is not a clean checkout of $PIN after checkout" >&2; git status --short | head -40 >&2; exit 1; fi
 test -f deploy/deploy.sh || { echo "deploy: $APP has no deploy/deploy.sh at $PIN: the work tree is not populated" >&2; exit 1; }
-test ! -e data || { echo "deploy: $APP/data exists; btwserve's data is $DATA (absolute), never inside the checkout" >&2; exit 1; }
+test ! -e data || { echo "deploy: $APP/data exists; beatscript-serve's data is $DATA (absolute), never inside the checkout" >&2; exit 1; }
 mkdir -p site/bin site/web/wasm site/web/docs
 echo "host checkout $(git log -1 --format='%h %s')"
 EOS
@@ -131,11 +131,11 @@ EOS
 
 ship() {
   say "ship"
-  [ -x dist/btwserve-linux-x86_64 ] && [ -f site/web/wasm/btw_bg.wasm ] && [ -f site/web/docs/cheatsheet.md ] || { echo "deploy: build first" >&2; exit 1; }
+  [ -x dist/beatscript-serve-linux-x86_64 ] && [ -f site/web/wasm/beatscript_bg.wasm ] && [ -f site/web/docs/cheatsheet.md ] || { echo "deploy: build first" >&2; exit 1; }
   rsync -az --delete site/web/wasm/ "$HOST:$APP_DIR/site/web/wasm/"
   rsync -az site/web/docs/ "$HOST:$APP_DIR/site/web/docs/"
-  rsync -az dist/btwserve-linux-x86_64 "$HOST:$APP_DIR/$BIN"
-  want=$(sha256sum dist/btwserve-linux-x86_64 | awk '{print $1}')
+  rsync -az dist/beatscript-serve-linux-x86_64 "$HOST:$APP_DIR/$BIN"
+  want=$(sha256sum dist/beatscript-serve-linux-x86_64 | awk '{print $1}')
   r "cd \$HOME/$APP_DIR && chmod 755 $BIN && chmod -R a+rX site/web/docs site/web/wasm && ./$BIN -h >/dev/null 2>&1; test \"\$(sha256sum $BIN | awk '{print \$1}')\" = $want && echo \"$BIN sha256 $want\""
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""listen_ci's judgement, without btwd: `python3 tools/listen/test_listen_ci.py`."""
+"""listen_ci's judgement, without beatscript: `python3 tools/listen/test_listen_ci.py`."""
 import copy
 import os
 import sys
@@ -63,7 +63,7 @@ class Compare(unittest.TestCase):
 
 class Expects(unittest.TestCase):
     def test_expect_lines(self):
-        here = os.path.join(lc.FIXTURES, "silent-crossfader.btw")
+        here = os.path.join(lc.FIXTURES, "silent-crossfader.beatscript")
         exp = lc.expects(here)
         self.assertIn(("silent", {"deck": "B", "reason": "crossfader"}), exp)
         heard = {"decks": {"A": {"silent": False}, "B": {"silent": True}},

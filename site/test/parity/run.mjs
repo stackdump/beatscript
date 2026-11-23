@@ -2,10 +2,10 @@
 // run.mjs: does the page's ENGINE sound like the server's STREAM? (site/test/parity/README.md)
 //
 //   node site/test/parity/run.mjs [--corpus repros,examples,DIR...] [--only REGEX] [--out DIR] [--gate REGEX]
-//                                    [--btwd PATH] [--keep-wav] [--jobs N]
+//                                    [--beatscript PATH] [--keep-wav] [--jobs N]
 //
 // For each program:
-//   stream  `btwd render --sr 48000 --format s16le` (what GET /api/render/<cid> serves: render.go pipes exactly this
+//   stream  `beatscript render --sr 48000 --format s16le` (what GET /api/render/<cid> serves: render.go pipes exactly this
 //           through a WAV header, or ffmpeg for opus)
 //   engine  web/parity.html in headless Chrome: js/engine.js + js/engine-calls.js + the djweb wasm, rendered into an
 //           OfflineAudioContext, the runtime serviced every 1024 frames as the page's 25 ms loop does
@@ -16,13 +16,13 @@
 // and, with --keep-wav, both renders as WAV.
 //
 // Exit 1 when a program matching --gate (default: ^00-base$, the repro with no control lines) has a flagged bar, or a
-// program failed to render. Skips (exit 0) when the wasm is not built or Chrome / btwd are not there.
+// program failed to render. Skips (exit 0) when the wasm is not built or Chrome / beatscript are not there.
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compare, THRESHOLDS } from './analyze.mjs';
-import { findBtwd, int16, missing, site, start, wasmDir, wav } from './harness.mjs';
+import { findBeatscriptCli, int16, missing, site, start, wasmDir, wav } from './harness.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i < 0 ? d : process.argv[i + 1]; };
@@ -33,8 +33,8 @@ const ONLY = arg('only') ? new RegExp(arg('only')) : null;
 const GATE = new RegExp(arg('gate', '^00-base$'));
 const JOBS = Number(arg('jobs', 2));
 const KEEP = flag('keep-wav');
-const BTWD = findBtwd(arg('btwd'));
-{ const why = missing(BTWD); if (why) { console.log(`SKIP parity: ${why}`); process.exit(0); } }
+const BEATSCRIPT_CLI = findBeatscriptCli(arg('beatscript'));
+{ const why = missing(BEATSCRIPT_CLI); if (why) { console.log(`SKIP parity: ${why}`); process.exit(0); } }
 
 // ---------------------------------------------------------------- the corpus
 function corpus() {
@@ -45,10 +45,10 @@ function corpus() {
         for (const f of fs.readdirSync(dir).sort()) {
             const p = path.join(dir, f);
             let text;
-            if (f.endsWith('.btw')) text = fs.readFileSync(p, 'utf8');
+            if (f.endsWith('.beatscript')) text = fs.readFileSync(p, 'utf8');
             else if (f.endsWith('.json') && f !== 'index.json') { try { text = JSON.parse(fs.readFileSync(p, 'utf8')).text; } catch { continue; } }
             if (!text) continue;
-            const name = `${s === 'repros' || s === 'examples' ? '' : `${path.basename(dir)}-`}${f.replace(/\.(btw|json)$/, '')}`.slice(0, 60);
+            const name = `${s === 'repros' || s === 'examples' ? '' : `${path.basename(dir)}-`}${f.replace(/\.(beatscript|json)$/, '')}`.slice(0, 60);
             if (ONLY && !ONLY.test(name)) continue;
             progs.push({ name, text, set: s, file: p });
         }
@@ -56,15 +56,15 @@ function corpus() {
     return progs;
 }
 
-function btwd(args, input) {
-    const r = spawnSync(BTWD, args, { input, maxBuffer: 1 << 30 });
-    if (r.status !== 0 && !args.includes('render')) throw new Error(`btwd ${args[0]}: ${r.stderr}`);
+function beatscript(args, input) {
+    const r = spawnSync(BEATSCRIPT_CLI, args, { input, maxBuffer: 1 << 30 });
+    if (r.status !== 0 && !args.includes('render')) throw new Error(`beatscript ${args[0]}: ${r.stderr}`);
     return r;
 }
 
 function renderStream(text) {
     return new Promise((resolve) => {
-        const p = spawn(BTWD, ['render', '--sr', String(SR), '--format', 's16le', '--max-bars', '512', '-'], { stdio: ['pipe', 'pipe', 'pipe'] });
+        const p = spawn(BEATSCRIPT_CLI, ['render', '--sr', String(SR), '--format', 's16le', '--max-bars', '512', '-'], { stdio: ['pipe', 'pipe', 'pipe'] });
         const out = [], err = [];
         p.stdout.on('data', (d) => out.push(d));
         p.stderr.on('data', (d) => err.push(d));
@@ -110,7 +110,7 @@ function perfReport(perf, cmp, row) {
 }
 
 const progs = corpus();
-console.log(`parity: ${progs.length} programs, btwd ${BTWD}, out ${OUT}`);
+console.log(`parity: ${progs.length} programs, beatscript ${BEATSCRIPT_CLI}, out ${OUT}`);
 
 // the streams first, JOBS at a time
 const streams = new Map();
@@ -119,7 +119,7 @@ const streams = new Map();
     const worker = async () => {
         while (i < progs.length) {
             const p = progs[i++];
-            const check = JSON.parse(btwd(['check', '-'], p.text).stdout.toString());
+            const check = JSON.parse(beatscript(['check', '-'], p.text).stdout.toString());
             const r = await renderStream(p.text);
             const start = r.events.find((e) => e.event === 'start');
             const error = r.events.find((e) => e.event === 'error');
@@ -180,10 +180,10 @@ const perfAll = (() => {
         flagRateSlowBars: slowBars ? +(slowFlagged / slowBars).toFixed(3) : null, flagRateOtherBars: bars - slowBars ? +((flagged - slowFlagged) / (bars - slowBars)).toFixed(3) : null,
         sectionStarts: starts.length, sectionStartsSlow: withSlow.length, lateRateSlow: lateRate(withSlow), lateRateOther: lateRate(without) };
 })();
-fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify({ thresholds: THRESHOLDS, sampleRate: SR, perf: perfAll, btwd: BTWD, wasm: (() => { try { return JSON.parse(fs.readFileSync(path.join(wasmDir(), 'hashes.json'), 'utf8')); } catch { return null; } })(), results }, null, 1));
+fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify({ thresholds: THRESHOLDS, sampleRate: SR, perf: perfAll, beatscript: BEATSCRIPT_CLI, wasm: (() => { try { return JSON.parse(fs.readFileSync(path.join(wasmDir(), 'hashes.json'), 'utf8')); } catch { return null; } })(), results }, null, 1));
 const md = ['# parity results', '', `${results.length} programs. Thresholds per bar: |dLUFS| > ${THRESHOLDS.lufs} LU, log-mel L1 > ${THRESHOLDS.mel} dB, onsets > ${THRESHOLDS.onsetMs} ms, onset corr < ${THRESHOLDS.onsetCorr}.`, '',
     `stats.slow (?perf=1): ${perfAll.slowBlocks} slow blocks (>= 3 ms, max ${perfAll.maxMs} ms) in ${perfAll.slowBars} of ${perfAll.bars} bars; flagged: ${perfAll.flagRateSlowBars} of bars with one, ${perfAll.flagRateOtherBars} of bars without; section starts landing late: ${perfAll.lateRateSlow} with a slow block (${perfAll.sectionStartsSlow}), ${perfAll.lateRateOther} without (${perfAll.sectionStarts - perfAll.sectionStartsSlow}).`, '',
-    'Ranked by mean score: how far the engine strays from the render (btwd, the reference), per bar the largest measure over its threshold, averaged.', '',
+    'Ranked by mean score: how far the engine strays from the render (beatscript, the reference), per bar the largest measure over its threshold, averaged.', '',
     '| program | bars | flagged | mean score | LUFS stream / engine | TP stream / engine | mean mel dB | offset ms | slow blocks (bars, flagged) | engine ignored |', '|---|---|---|---|---|---|---|---|---|---|'];
 for (const r of results) {
     if (!r.summary) { md.push(`| ${r.name} | | | | | | | | | ${r.skipped || r.error} |`); continue; }

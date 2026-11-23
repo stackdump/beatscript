@@ -1,6 +1,6 @@
 //! F10, composition made literal: `stack(a, b)` (parallel, the tensor) and `then(a, b)` (sequential,
-//! composition) over sections and over parts, with `silence` as the unit of both (docs/btw/ext-algebra.md,
-//! docs/BTW-EXTENSIONS.md section 3).
+//! composition) over sections and over parts, with `silence` as the unit of both (docs/beatscript/ext-algebra.md,
+//! docs/BEATSCRIPT-EXTENSIONS.md section 3).
 //!
 //! * **Section expressions** ([`SExpr`]) are read by `arrange` and by `let NAME = sexpr`. They are normalised the
 //!   moment they are read, by the laws of a symmetric monoidal category: both operations are associative (nested ones

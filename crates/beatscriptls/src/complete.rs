@@ -88,9 +88,9 @@ pub struct EnvNames<'a> {
 }
 
 impl EnvNames<'static> {
-    /// The site's environment (btwapi's snapshot), the same one documents are checked against.
+    /// The site's environment (beatscript-api's snapshot), the same one documents are checked against.
     pub fn web() -> EnvNames<'static> {
-        let w = btwapi::web_env();
+        let w = beatscript_api::web_env();
         EnvNames::with_registry(&w.registry)
     }
 }
@@ -98,7 +98,7 @@ impl EnvNames<'static> {
 impl<'a> EnvNames<'a> {
     /// The site's sounds, with another registry (the host's own, whose params carry their docs).
     pub fn with_registry(registry: &'a dyn Registry) -> EnvNames<'a> {
-        let w = btwapi::web_env();
+        let w = beatscript_api::web_env();
         EnvNames {
             registry,
             voices: w.catalog.voices.clone(),

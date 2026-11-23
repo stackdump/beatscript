@@ -1,10 +1,10 @@
-# beatscriptls: the btw language service
+# beatscriptls: the BeatScript language service
 
-`crates/beatscriptls` is the editor assistant for BeatScript (btw): diagnostics, quick-fixes, the outline, navigation, rename,
+`crates/beatscriptls` is the editor assistant for BeatScript: diagnostics, quick-fixes, the outline, navigation, rename,
 completion, hover, signature help, inlay hints and refactors. It is pure (no I/O, no clock), shaped like LSP, and served three
 ways:
 
-- `btwd lsp`: an LSP server on stdio, for VS Code (`editors/vscode`), IntelliJ (LSP4IJ, `editors/intellij`), Neovim, Helix.
+- `beatscript lsp`: an LSP server on stdio, for VS Code (`editors/vscode`), IntelliJ (LSP4IJ, `editors/intellij`), Neovim, Helix.
 - djweb's `BeatscriptLs` (wasm): the same server for the browser editor, positions in UTF-16.
 - `beatscriptls::Server` in-process (the golden tests drive it).
 
@@ -13,7 +13,7 @@ ways:
 | tier | what | when |
 |---|---|---|
 | syntax | lex, parse (`parse_with`), the symbol table | every change; everything but the compile's diagnostics needs only this |
-| check | `check_with` (expand, compile, evolve orbits) | off the keystroke path: `btwd lsp` runs it on a worker thread once the text has rested 150 ms; the page calls `BeatscriptLs.check(uri)` |
+| check | `check_with` (expand, compile, evolve orbits) | off the keystroke path: `beatscript lsp` runs it on a worker thread once the text has rested 150 ms; the page calls `BeatscriptLs.check(uri)` |
 
 Until the check of a version is in, the diagnostics shown are the parser's; a check of a version the document has moved past
 is dropped.
@@ -24,11 +24,11 @@ is dropped.
 
 | program | size | syntax | check |
 |---|---|---|---|
-| showcase.btw | 11.1 KB, 253 lines | 2.4 ms | 9.8 ms |
-| deep-house-60.btw (60 min, 9 evolves) | 6.5 KB, 192 lines | 1.1 ms | **3.1 to 5.1 s** |
-| hand-dubstep-140-v4.btw | 4.3 KB | 0.8 ms | 4.8 ms |
-| matrix-130.btw | 3.6 KB | 0.7 ms | 22.7 ms |
-| trance-138.btw | 3.2 KB | 0.5 ms | 5.5 ms |
+| showcase.beatscript | 11.1 KB, 253 lines | 2.4 ms | 9.8 ms |
+| deep-house-60.beatscript (60 min, 9 evolves) | 6.5 KB, 192 lines | 1.1 ms | **3.1 to 5.1 s** |
+| hand-dubstep-140-v4.beatscript | 4.3 KB | 0.8 ms | 4.8 ms |
+| matrix-130.beatscript | 3.6 KB | 0.7 ms | 22.7 ms |
+| trance-138.beatscript | 3.2 KB | 0.5 ms | 5.5 ms |
 | synthetic: 60 min at 120 BPM, 8 sections arranged (1800 bars) | 2.4 KB | 0.5 ms | 31.7 ms |
 | synthetic: 60 min, 113 distinct 16-bar sections | 25 KB, 569 lines | 4.7 ms | 33.7 ms |
 
@@ -46,22 +46,22 @@ stays off the keystroke path.
 | request | from |
 |---|---|
 | `publishDiagnostics` (parser at once, check after a rest) | djlive |
-| `codeAction` quickfix + `source.fixAll.btw` | `fix.rs`: the fixer's repairs (adapter until feat/btw-fixer lands) |
+| `codeAction` quickfix + `source.fixAll.beatscript` | `fix.rs`: the fixer's repairs (adapter until feat/btw-fixer lands) |
 | `codeAction` `refactor.extract` / `refactor.inline` + `codeAction/resolve` | `refactor.rs`: made and proved (same nets) on resolve |
 | `documentSymbol`, `foldingRange` | `symbols.rs` (a scan of the text's own tokens) |
 | `definition`, `references`, `documentHighlight`, `prepareRename`, `rename` | `nav.rs` |
 | `completion` | `complete.rs` + `djlive::partial` (the statement up to the cursor) |
 | `hover`, `signatureHelp` | `hover.rs`, `timeline.rs` |
 | `inlayHint` | `inlay.rs` |
-| `btw/diagnostics` (not LSP: the diagnostics as a request) | `diagnostics.rs` |
-| `btw/numberAt` (not LSP: what an editor's scrubber needs) | `number.rs` |
+| `beatscript/diagnostics` (not LSP: the diagnostics as a request) | `diagnostics.rs` |
+| `beatscript/numberAt` (not LSP: what an editor's scrubber needs) | `number.rs` |
 | `hover` on a reference (`gen@2 ...`, `seed(...)`, `<cid>.drop.bass`, `template(...)`), and on a `# from:` line | `refs.rs` + `djlive::refs` |
-| `btw/expand` (not LSP: a document's references, their ranges and expansions) | `refs.rs` |
+| `beatscript/expand` (not LSP: a document's references, their ranges and expansions) | `refs.rs` |
 | `codeLens` (`show expansion`, `eject` over each reference), `workspace/executeCommand` | `refs.rs` |
 | `codeAction` `refactor.inline` *Eject* (resolved and proved like the refactors) and *Copy the expansion* | `refs.rs`, `refactor.rs` |
 | `completion` in a `gen@2` call: genres, names, values (`section=`: the generated program's sections) | `complete.rs` |
 
-`btw/numberAt` takes `{textDocument, position}` and answers `null` or the literal there: `range` (its span, a `-` sign
+`beatscript/numberAt` takes `{textDocument, position}` and answers `null` or the literal there: `range` (its span, a `-` sign
 included), `text`, `value`, `kind` (`tempo`, `vel`, `oct`, `len`, `glide`, `decay`, `pitch-drop`, `ratchet`, `times`, `chance`, `hits`, `steps`, `rotation`,
 `cutoff-lp`, `level`, `mix`, `bars`, `bar`, `beat`, `degree`, `note`, `chord`, `param`, `number`, ...), `label`, `min` and
 `max` (`null`: unbounded), `step`, `decimals`, `unit`, `integer`, `scale` (`log` for a cutoff: move it by a ratio),
@@ -69,7 +69,7 @@ included), `text`, `value`, `kind` (`tempo`, `vel`, `oct`, `len`, `glide`, `deca
 range `a..b` (`ordered`: lo <= hi) or a ramp `a -> b` (`op`, `role` start|end, both ends' ranges and values), and for a
 note or a Roman numeral `choices` (the notes of the key in force, every semitone with no key; the numerals of the key's
 scale) with the `index` of the one written. A `do` param takes its type and range from the registry's `ParamSpec`
-(`minimum`/`maximum` of the schema). The servers advertise it as `capabilities.experimental.btw.numberAt`. Every limit
+(`minimum`/`maximum` of the schema). The servers advertise it as `capabilities.experimental.beatscript.numberAt`. Every limit
 row is proved against the checker (`tests/number.rs`: both ends check, one step past each is refused), and a scrub of
 every number of a program one step either way is shown to keep it checkable and canonical.
 
@@ -104,7 +104,7 @@ text with something a reference starts with in its tokens, so a program with non
   track, what it was fitted to (`fitted to the program's key `am` and its tempo 124`), where it stands, and its expansion in a
   `btw` fence, at most 24 lines or 2400 characters, then `… N more lines not shown (M in all)`. On a `# from: <call> ->
   <cid>` line that an eject wrote, where the text came from. Nothing new for a client to do: it is `textDocument/hover`.
-- **`btw/expand`** takes `{textDocument}` (every reference) or `{textDocument, position}` (the one there: whose own text holds
+- **`beatscript/expand`** takes `{textDocument}` (every reference) or `{textDocument, position}` (the one there: whose own text holds
   the position, else whose statement does) and answers
 
   ```jsonc
@@ -126,27 +126,27 @@ text with something a reference starts with in its tokens, so a program with non
   ```
 
   and `{"references": [], "errors": [<LSP diagnostics>]}` when a reference cannot be worked out (the check says the same
-  at the reference). Advertised as `capabilities.experimental.btw.expand`.
-- **Code lenses** (`codeLensProvider`): over each reference `show expansion` (command `btw.expand.toggle`) and `eject`
-  (`btw.eject`), each with one argument `{uri, position, length}` (the reference's start, and the text's length in bytes: an
+  at the reference). Advertised as `capabilities.experimental.beatscript.expand`.
+- **Code lenses** (`codeLensProvider`): over each reference `show expansion` (command `beatscript.expand.toggle`) and `eject`
+  (`beatscript.eject`), each with one argument `{uri, position, length}` (the reference's start, and the text's length in bytes: an
   eject of a text that has changed since is refused).
-- **`workspace/executeCommand`** (`executeCommandProvider.commands`: `btw.expand.toggle`, `btw.expand.copy`, `btw.eject`),
+- **`workspace/executeCommand`** (`executeCommandProvider.commands`: `beatscript.expand.toggle`, `beatscript.expand.copy`, `beatscript.eject`),
   arguments `[{uri, position, length?}]`:
-  - `btw.expand.toggle` answers the reference there, as one of `btw/expand`'s (`null`: none);
-  - `btw.expand.copy` answers `{text, call, resolved}`, `text` being the `from` line and the expansion: what eject would write;
-  - `btw.eject` answers `{label, edit}` (a `WorkspaceEdit`) once the edit is proved, an error with the reason otherwise; when
+  - `beatscript.expand.toggle` answers the reference there, as one of `beatscript/expand`'s (`null`: none);
+  - `beatscript.expand.copy` answers `{text, call, resolved}`, `text` being the `from` line and the expansion: what eject would write;
+  - `beatscript.eject` answers `{label, edit}` (a `WorkspaceEdit`) once the edit is proved, an error with the reason otherwise; when
     the client said `workspace.applyEdit` in `initialize`, the server also sends it the edit as a `workspace/applyEdit`
     request (id `btw/<n>`; its answer is taken quietly).
 
   **The show/hide state lives in the client.** The server answers what a reference stands for and keeps nothing; the VS Code
-  extension and the web page remember which expansions are shown and ask `btw/expand` (they never send `btw.expand.toggle`
-  or `btw.expand.copy` to the server). A client that runs those two on the server over stdio (LSP4IJ) gets a
+  extension and the web page remember which expansions are shown and ask `beatscript/expand` (they never send `beatscript.expand.toggle`
+  or `beatscript.expand.copy` to the server). A client that runs those two on the server over stdio (LSP4IJ) gets a
   `window/showMessage` with the call, its CID and the first lines of the expansion as well.
 - **Eject** is a `refactor.inline` code action on a reference, `Eject `<call>` into local text`, offered unresolved
   (`data.refactor = "eject"`) and made and proved on `codeAction/resolve` like the other refactors: its edit is the one stretch
   between the text and `djlive::refs::eject_site` of the same reference (exactly what `djlive::refs::eject` writes), and
   `refactor::verify` must find the same nets before it is given. Beside it, `Copy the expansion of `<call>``: no edit, a
-  `command` (`btw.expand.copy`).
+  `command` (`beatscript.expand.copy`).
 - **Completion** in a `gen@2` call: after its head the installed generator's genres (`djlive::gen::generator().genres(v)`),
   then its names (`djlive::gen::PARAMS`, `seed=` first, each once; on a part line the line's own params after them), then a
   name's values: `length=` the lengths, `key=` the keys, `part=` the roles, `section=` the sections of the program the call
@@ -162,7 +162,7 @@ What each client gets:
 
 ### The web editor
 
-beats-bitwrap-io `btwsite/web/js/assist.js` needs no change for the hover or for eject (it is a refactor in the Alt+Enter
+beats-bitwrap-io `site/web/js/assist.js` needs no change for the hover or for eject (it is a refactor in the Alt+Enter
 list, resolved by `run` as the others are). Showing an expansion and copying one are three small additions:
 
 ```js
@@ -180,7 +180,7 @@ if (a.command && !a.edit && !(a.data && a.data.refactor)) {
 // a method: the expansion in the popup, under the reference (which one is shown is the page's state: the list)
 toggleExpansion() {
   if (this.list && this.list.kind === 'expansion') { this.close(); return; }
-  const res = this.req('btw/expand', { position: this.caretPos() });
+  const res = this.req('beatscript/expand', { position: this.caretPos() });
   const ref = res && res.references && res.references[0];
   if (!ref) { this.toast(res && res.errors && res.errors.length ? res.errors[0].message : 'No reference here.', 'ok'); return; }
   const doc = `\`${ref.call}\` → \`${ref.resolved || ''}\`\n\n\`\`\`btw\n${ref.from}\n${ref.text}\n\`\`\``;
@@ -193,12 +193,12 @@ toggleExpansion() {
 
 ## Try it
 
-- **VS Code**: `cargo build --release -p btwd`, then `editors/vscode/README.md` (`npm install`, `code
-  --extensionDevelopmentPath=editors/vscode some.btw`, set `btw.server.path`).
-- **IntelliJ**: LSP4IJ pointed at `btwd lsp`, `editors/intellij/README.md`.
-- **Web**: `scripts/build-web-wasm.sh <beats>/btwsite/web/wasm` (the module now has `BeatscriptLs`), then the page's
-  `btwsite/web/js/assist.js`: Ctrl+Space, hover, Alt+Enter, Mod+Shift+O, F12.
-- **Any client**: `btwd lsp` on stdio.
+- **VS Code**: `cargo build --release -p beatscript-cli`, then `editors/vscode/README.md` (`npm install`, `code
+  --extensionDevelopmentPath=editors/vscode some.beatscript`, set `beatscript.server.path`).
+- **IntelliJ**: LSP4IJ pointed at `beatscript lsp`, `editors/intellij/README.md`.
+- **Web**: `scripts/build-web-wasm.sh <beats>/site/web/wasm` (the module now has `BeatscriptLs`), then the page's
+  `site/web/js/assist.js`: Ctrl+Space, hover, Alt+Enter, Mod+Shift+O, F12.
+- **Any client**: `beatscript lsp` on stdio.
 
 ## Merging with feat/btw-fixer
 

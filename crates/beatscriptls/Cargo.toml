@@ -1,6 +1,6 @@
 [package]
 name = "beatscriptls"
-description = "The btw language service: diagnostics, quick-fixes, symbols, navigation, completion, hover, inlay hints and refactors over djlive, shaped like LSP and pure (no I/O, no clock). `btwd lsp` speaks it over stdio; djweb's `BeatscriptLs` hands it to the browser editor."
+description = "The BeatScript language service: diagnostics, quick-fixes, symbols, navigation, completion, hover, inlay hints and refactors over djlive, shaped like LSP and pure (no I/O, no clock). `beatscript-cli lsp` speaks it over stdio; djweb's `BeatscriptLs` hands it to the browser editor."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,6 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-btwapi = { path = "../btwapi" }
+beatscript-api = { path = "../beatscript-api" }
 djengine.workspace = true
 djlive.workspace = true

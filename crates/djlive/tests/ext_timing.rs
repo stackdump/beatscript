@@ -1,4 +1,4 @@
-//! F1 sub-bar timing (docs/btw/ext-timing.md): `over 1/2 bar`, `for 2 beats`, `every 2 beats`, `at bar 16 beat 3`,
+//! F1 sub-bar timing (docs/beatscript/ext-timing.md): `over 1/2 bar`, `for 2 beats`, `every 2 beats`, `at bar 16 beat 3`,
 //! `before drop 2 beats`. The canonical forms (a duration is `N bars` when whole, else `N beats`, else `P/Q bars`; a
 //! position `bar W` or `bar W beat B`), the way they resolve to times, and the runtime on a fake clock: a line with a
 //! time between bar lines fires when the program's position crosses it, once, whatever the pass rate; a ramp over half
@@ -700,12 +700,12 @@ fn random_repeating_lines_fire_on_exactly_their_times() {
 fn existing_programs_keep_their_cids() {
     // computed on the commit before the extensions and on this one: the same
     for (name, src, cid) in [
-        ("hand-dubstep-140", include_str!("fixtures/hand-dubstep-140.btw"), "z4EBG9jD5z7Kk3J1PeAG7PmE1hTNikEv1rNXWTdpYux1EDAEmMR"),
-        ("hand-proghouse-124", include_str!("fixtures/hand-proghouse-124.btw"), "z4EBG9jCfiLnPMeYSVLsEYac76udGyYPwuJ5iy5xgd3GRncvasZ"),
-        ("acid-rave-138", include_str!("fixtures/acid-rave-138.btw"), "z4EBG9jDqdJiCPANzF2EYvMTjnh6k4g66cMwwxtSKAYhaZLMUb2"),
-        ("hand-dubstep-140-v2", include_str!("../../../docs/btw/hand-dubstep-140-v2.btw"), "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi"),
-        ("trance-138", include_str!("../../../examples/trance-138.btw"), "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ"),
-        ("markers-demo", include_str!("../../../examples/markers-demo.btw"), "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE"),
+        ("hand-dubstep-140", include_str!("fixtures/hand-dubstep-140.beatscript"), "z4EBG9jD5z7Kk3J1PeAG7PmE1hTNikEv1rNXWTdpYux1EDAEmMR"),
+        ("hand-proghouse-124", include_str!("fixtures/hand-proghouse-124.beatscript"), "z4EBG9jCfiLnPMeYSVLsEYac76udGyYPwuJ5iy5xgd3GRncvasZ"),
+        ("acid-rave-138", include_str!("fixtures/acid-rave-138.beatscript"), "z4EBG9jDqdJiCPANzF2EYvMTjnh6k4g66cMwwxtSKAYhaZLMUb2"),
+        ("hand-dubstep-140-v2", include_str!("../../../docs/beatscript/hand-dubstep-140-v2.beatscript"), "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi"),
+        ("trance-138", include_str!("../../../examples/trance-138.beatscript"), "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ"),
+        ("markers-demo", include_str!("../../../examples/markers-demo.beatscript"), "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE"),
     ] {
         assert_eq!(ok(src).cid, cid, "{name}");
     }

@@ -1,0 +1,30 @@
+# constraints.beatscript: a track that keeps its own rules (F12). Original, CC0-1.0.
+# `assert never ...` and `assert ... ends on ...` are rules about the notes. `check` asks every step of every bar of the song
+# and refuses the program, saying the bar and the step, when one is broken: it is decided, not sampled. Try moving the bass
+# in the verse onto the singer (give `growl` a hit on step 6 of its bar), or ending the lift on its V7.
+tempo 100
+key am
+
+let kicks = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let backbeat = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let hats = x*8
+let tune = <[a4 c5 e5 c5] ~>
+let growl = <~ [~ ~ ~ ~ ~ ~ ~ ~ e2 ~ ~ ~ a1 ~ ~ ~]>
+
+section verse 8 bars {
+  deck A: kick kicks | snare backbeat | hihat hats vel=50..80 | melody tune vel=80
+  deck A: sing "hold the lan-tern" on melody bars=2 voice=robot
+  deck B: bass growl inst=sub-bass
+}
+
+section lift 8 bars {
+  key cm
+  deck A: kick kicks | snare backbeat | hihat hats vel=60..90
+  deck B: harmony <i bII V7 i i bII V7 i> voice-lead | bass <i bII V7 i i bII V7 i> oct=2
+}
+
+arrange verse lift verse
+
+assert never A.snare beside A.snare      # no two snares on neighbouring steps
+assert never B during sing in verse      # deck B rests while the vocal is sung
+assert bass ends on 1                    # every section lands on its own tonic (a, then c, then a)

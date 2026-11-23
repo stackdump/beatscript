@@ -1,4 +1,4 @@
-//! Scenes and launch (docs/BTW.md, "Scenes and launch"): `launch drop on pad(2) next phrase 16`.
+//! Scenes and launch (docs/BEATSCRIPT.md, "Scenes and launch"): `launch drop on pad(2) next phrase 16`.
 //!
 //! A **scene** is a section (it loops until the next launch) or a named arrangement (it plays as `start NAME` would, with its own `then`,
 //! `loop` and `end`). A **launch** says which pad brings which scene in, and on which bar line: the next phrase line by default (8 bars,

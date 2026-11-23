@@ -419,11 +419,11 @@ fn l15_a_time_beyond_its_sections_end_is_a_warning_with_the_bar_and_the_length()
 fn l15_no_example_and_no_fixture_trips_it() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut seen = 0;
-    for dir in ["examples/btw", "examples", "crates/djlive/tests/fixtures", "docs/btw"] {
+    for dir in ["examples/beatscript", "examples", "crates/djlive/tests/fixtures", "docs/btw"] {
         let Ok(rd) = std::fs::read_dir(root.join(dir)) else { continue };
         for e in rd.flatten() {
             let p = e.path();
-            if p.extension().is_none_or(|x| x != "btw") {
+            if p.extension().is_none_or(|x| x != "beatscript") {
                 continue;
             }
             let src = std::fs::read_to_string(&p).unwrap();

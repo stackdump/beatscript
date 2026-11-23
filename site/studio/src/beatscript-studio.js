@@ -14,7 +14,7 @@
 // Claude artifact's claude.use(), WebAssembly, clipboard), and what it cannot is dropped with a note under the editor.
 //
 // It runs the same engine as <beatscript-track>, from the same package files: the module is compiled once from the
-// inlined base64 (wasm/btw_bg.wasm.b64.js), nothing is fetched from beatscript.app, and sound starts only from a click.
+// inlined base64 (wasm/beatscript_bg.wasm.b64.js), nothing is fetched from beatscript.app, and sound starts only from a click.
 // The deterministic tools (check, fmt, share, open, generate, ...) run in the page; the ones that need the host (compose,
 // store, library, jam) appear only when their capability resolved. element.tools is the MCP-shaped tool surface over
 // all of them (tool-surface.js); with `bridge`, a parent frame can call it over postMessage. With dictation, a mic beside
@@ -46,7 +46,7 @@ const BLOB_PROBE_MS = 4000;
 /** The most tracks the station tool gives at once. */
 const STATION_MAX = 16;
 const CID_ONLY = 'this item is only a CID: it needs its text (the site\'s stored program) to play here';
-const NO_STATION = 'a station needs a module with btw_station (not in this build); open /radio on the site';
+const NO_STATION = 'a station needs a module with beatscript_station (not in this build); open /radio on the site';
 /** The most tts reads in one speak() (tts.d.ts: a text of more than 2,000 characters is refused). */
 const SPEAK_MAX = 2000;
 /** The status line for a dictation or tts call that failed, by its error code; any other code is "... failed". */
@@ -75,7 +75,7 @@ let shared = null;
 function loadModule() {
   if (!shared) {
     shared = (async () => {
-      const [{ WASM_BASE64 }, glue] = await Promise.all([import('./wasm/btw_bg.wasm.b64.js'), import('./wasm/btw.js')]);
+      const [{ WASM_BASE64 }, glue] = await Promise.all([import('./wasm/beatscript_bg.wasm.b64.js'), import('./wasm/beatscript.js')]);
       const bin = atob(WASM_BASE64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -86,7 +86,7 @@ function loadModule() {
         throw new Error(/unsafe-eval|Content Security/i.test(String(e)) ? 'this page does not allow WebAssembly, so the program cannot be checked or played here' : String(e.message || e));
       }
       glue.initSync({ module });
-      return { module, btw: makeFacade(glue) };
+      return { module, beatscript: makeFacade(glue) };
     })();
     shared.catch(() => { shared = null; });
   }
@@ -120,7 +120,7 @@ export class BeatscriptStudio extends HTMLElement {
   constructor() {
     super();
     this.tools = null;
-    this.btw = null;
+    this.beatscript = null;
     this.module = null;
     this.rep = null;
     this.notes = [];
@@ -147,7 +147,7 @@ export class BeatscriptStudio extends HTMLElement {
 
   connectedCallback() {
     // put back on the page: the tools (closed when it was taken off) are made again, and dictation and tts heard again
-    if (this.shadowRoot) { if (this.btw) this.makeTools(); this.listen(); return; }
+    if (this.shadowRoot) { if (this.beatscript) this.makeTools(); this.listen(); return; }
     const root = this.attachShadow({ mode: 'open' });
     const s = studioSheet();
     if (s) root.adoptedStyleSheets = [s];
@@ -170,7 +170,7 @@ export class BeatscriptStudio extends HTMLElement {
       tb('share', 'share', 'Copy the self-sealing link', () => this.share()),
       tb('open', 'open', 'Open a link or CID', () => this.togglePanel('open')),
       tb('generate', 'generate', 'Generate a program from a genre and a seed', () => this.togglePanel('generate')),
-      tb('exportBtw', '.btw', 'Export the program as text', () => this.exportBtw()),
+      tb('exportBeatscript', '.beatscript', 'Export the program as text', () => this.exportBeatscript()),
       tb('exportWav', 'WAV', 'Render and export a WAV', () => this.exportWav()),
       tb('compose', 'compose', 'Ask Claude for a program or a change', () => this.togglePanel('compose')),
       tb('store', 'store', 'Store the program through your BeatScript connector', () => this.store()),
@@ -258,7 +258,7 @@ export class BeatscriptStudio extends HTMLElement {
     if (this.set && this.setAt + 1 < this.set.length && this.pick(this.setAt + 1)) this.start();
   }
 
-  /** A station source: its tracks as a set, through the station tool where this module has btw_station. */
+  /** A station source: its tracks as a set, through the station tool where this module has beatscript_station. */
   async tune(src) {
     const t = this.tools && this.tools.list().find((x) => x.name === 'station');
     if (!t || !t.available) { this.notes.push({ what: 'source', status: 'unsupported', message: NO_STATION }); return; }
@@ -291,10 +291,10 @@ export class BeatscriptStudio extends HTMLElement {
     const host = detectHost(window, { want: asked.includes('db') ? [...asked, 'user'] : asked }).catch(() => null);
     let failed = null;
     try {
-      const { module, btw } = await loadModule();
+      const { module, beatscript } = await loadModule();
       this.module = module;
-      this.btw = btw;
-      if ((this.config.features || []).includes('highlight')) this.editor.setHighlighter((t) => btw.highlight(t));
+      this.beatscript = beatscript;
+      if ((this.config.features || []).includes('highlight')) this.editor.setHighlighter((t) => beatscript.highlight(t));
       this.check();
     } catch (e) {
       failed = String(e.message || e);
@@ -311,7 +311,7 @@ export class BeatscriptStudio extends HTMLElement {
     // resolve says it when the CSP refuses WebAssembly; any other reason the module did not load is said here
     if (failed && !(found && found.wasm === false)) this.notes.push({ what: 'wasm', status: 'unsupported', message: failed });
     // taken off the page while loading: the tools are made when it is put back (connectedCallback)
-    if (this.btw && this.isConnected) this.makeTools();
+    if (this.beatscript && this.isConnected) this.makeTools();
     this.voice();
     const src = this.config.source || {};
     if (src.station !== undefined) await this.tune(src);
@@ -331,7 +331,7 @@ export class BeatscriptStudio extends HTMLElement {
     // one surface at a time, so the bridge never answers twice
     this.dropTools();
     this.tools = createToolSurface({
-      btw: this.btw,
+      beatscript: this.beatscript,
       caps: this.caps,
       site: this.site,
       render: (text) => this.renderText(text),
@@ -466,7 +466,7 @@ export class BeatscriptStudio extends HTMLElement {
       share: f.has('share'),
       open: f.has('editor'),
       generate: f.has('editor'),
-      exportBtw: f.has('download'),
+      exportBeatscript: f.has('download'),
       exportWav: f.has('download'),
       compose,
       store: !!this.caps.mcp,
@@ -475,7 +475,7 @@ export class BeatscriptStudio extends HTMLElement {
       help: true,
       // the mic is in the compose panel; the speaker reads the problems, which need the engine
       dictate: compose && !!this.caps.dictation && !this.voiceOff.has('dictate'),
-      speak: !!this.caps.tts && !!this.btw && !this.voiceOff.has('speak'),
+      speak: !!this.caps.tts && !!this.beatscript && !this.voiceOff.has('speak'),
     };
     for (const [k, b] of Object.entries(this.btns)) b.hidden = !show[k];
     this.editor.ta.readOnly = !f.has('editor');
@@ -541,7 +541,7 @@ export class BeatscriptStudio extends HTMLElement {
     }
     if (what === 'help') {
       let t = '';
-      try { t = this.btw ? String(this.btw.cheatsheet() || '') : ''; } catch { t = ''; }
+      try { t = this.beatscript ? String(this.beatscript.cheatsheet() || '') : ''; } catch { t = ''; }
       return [h('pre', { part: 'cheatsheet' }, t || 'The cheatsheet comes with the engine, which is not loaded here.')];
     }
     return null;
@@ -559,9 +559,9 @@ export class BeatscriptStudio extends HTMLElement {
 
   /** Check the text: the problems list, the squiggles, the CID. */
   check() {
-    if (!this.btw) return null;
+    if (!this.beatscript) return null;
     let rep;
-    try { rep = this.btw.check(this.text); } catch (e) { rep = { ok: false, diagnostics: [{ line: 1, col: 1, severity: 'error', message: String(e.message || e) }] }; }
+    try { rep = this.beatscript.check(this.text); } catch (e) { rep = { ok: false, diagnostics: [{ line: 1, col: 1, severity: 'error', message: String(e.message || e) }] }; }
     this.rep = rep;
     this.sections = rep.sections || this.sections;
     const diags = (rep.diagnostics || []).filter((d) => d.severity === 'error' || d.severity === 'warning');
@@ -581,16 +581,16 @@ export class BeatscriptStudio extends HTMLElement {
   }
 
   fmt() {
-    if (!this.btw) return;
-    const r = this.btw.fmt(this.text);
+    if (!this.beatscript) return;
+    const r = this.beatscript.fmt(this.text);
     if (r && r.ok && typeof r.text === 'string' && r.text !== this.text) this.load(r.text);
     else if (r && !r.ok) this.say('fix the problems first');
   }
 
   /** The self-sealing link (the program is in it): to the clipboard, else in a field selected for the reader to copy. */
   async share() {
-    if (!this.btw) return;
-    const sh = this.btw.share(this.text);
+    if (!this.beatscript) return;
+    const sh = this.beatscript.share(this.text);
     if (!sh || !sh.ok) { this.say('fix the problems first'); return; }
     const url = sh.url.replace(/^https?:\/\/[^/#]+/, this.site);
     this.closePanel();
@@ -614,10 +614,10 @@ export class BeatscriptStudio extends HTMLElement {
   /** A share link opens here (its program is in it, checked against its CID); a bare CID needs the site. */
   open(s) {
     const v = String(s || '').trim();
-    if (!v || !this.btw) return;
+    if (!v || !this.beatscript) return;
     if (v.length > MAX_LINK_CHARS) { this.panelSay('That link is too long to open.', true); return; }
     let r;
-    try { r = this.btw.open(v); } catch (e) { r = { ok: false, error: String(e.message || e) }; }
+    try { r = this.beatscript.open(v); } catch (e) { r = { ok: false, error: String(e.message || e) }; }
     if (!r || !r.ok || r.verified === false) {
       this.panelSay(r && r.cid && !/\./.test(v.split('#').pop()) ? 'A CID alone needs the site: paste the share link, which carries the program.' : `Not opened: ${String((r && r.error) || 'the link does not match its own CID').replace(/^refused:\s*/i, '')}.`, true);
       return;
@@ -627,10 +627,10 @@ export class BeatscriptStudio extends HTMLElement {
   }
 
   generate(genre, seed) {
-    if (!this.btw) return;
-    if (!this.btw.generate) { this.panelSay('This engine has no generator.', true); return; }
+    if (!this.beatscript) return;
+    if (!this.beatscript.generate) { this.panelSay('This engine has no generator.', true); return; }
     let r;
-    try { r = this.btw.generate({ genre, seed: String(seed || '1').trim() || '1' }); } catch (e) { r = { ok: false, error: String(e.message || e) }; }
+    try { r = this.beatscript.generate({ genre, seed: String(seed || '1').trim() || '1' }); } catch (e) { r = { ok: false, error: String(e.message || e) }; }
     if (!r || !r.text) { this.panelSay(`Not generated: ${(r && r.error) || 'the generator refused'}.`, true); return; }
     this.load(r.text);
     this.panelSay(`${genre}, seed ${r.seed != null ? r.seed : seed}.`);
@@ -730,7 +730,7 @@ export class BeatscriptStudio extends HTMLElement {
         this.say(r && !r.isError ? 'saved' : (r && resultText(r)) || 'not saved');
         return r && !r.isError ? 'downloads' : null;
       }
-      if (format === 'btw') return this.offer(`${fileBase(this.text)}.btw`, this.text, 'text/plain');
+      if (format === 'beatscript') return this.offer(`${fileBase(this.text)}.beatscript`, this.text, 'text/plain');
       return this.offer(`${fileBase(this.text)}.wav`, await this.renderWav(), 'audio/wav');
     } catch (e) {
       this.say(String(e.message || e));
@@ -738,8 +738,8 @@ export class BeatscriptStudio extends HTMLElement {
     }
   }
 
-  exportBtw() {
-    return this.exportAs('btw');
+  exportBeatscript() {
+    return this.exportAs('beatscript');
   }
 
   exportWav() {
@@ -847,7 +847,7 @@ export class BeatscriptStudio extends HTMLElement {
         this.engine.on('grid', () => this.tick());
         this.engine.on('installed', (e) => this.installed.add(e.deck));
       }
-      if (!this.run) this.run = this.btw.newRun();
+      if (!this.run) this.run = this.beatscript.newRun();
       const ev = this.run.eval(this.text);
       if (!ev || !ev.ok) throw new Error('it does not play');
       this.sections = rep.sections || [];

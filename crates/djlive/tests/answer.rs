@@ -1,6 +1,6 @@
-//! Call and response between decks (docs/BTW.md "Call and response", djlive/src/answer.rs): `rests(p)` is a hit on every step
+//! Call and response between decks (docs/BEATSCRIPT.md "Call and response", djlive/src/answer.rs): `rests(p)` is a hit on every step
 //! where `p` rests, `rests(p, q)` is `q` kept only on those steps. Every test here fails on a build without `rests`
-//! ("`rests` is not a generator"). That the nets are the longhand's is proved with `same_as` in btwapi/tests/answer.rs; here
+//! ("`rests` is not a generator"). That the nets are the longhand's is proved with `same_as` in beatscript-api/tests/answer.rs; here
 //! the hits themselves are looked at, and what `check` says.
 
 mod common;

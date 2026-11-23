@@ -5,7 +5,7 @@ Goal: take a rendered BeatScript track (audio) and recover a program for which
 original. If the round trip closes on programs we wrote ourselves, we can trust the same machinery
 on audio we did not write.
 
-Status: plan, plus rung 1 **closed**: `crates/btwround` (branch `feat/btw-roundtrip`) recovers first-beat from
+Status: plan, plus rung 1 **closed**: `crates/beatscript-round` (branch `feat/btw-roundtrip`) recovers first-beat from
 its audio alone, sample identical, `same_as` true, and with the original's own program CID (section 7).
 Written 2026-11-21. Everything here is CC0-compatible: public or permissive sources only, no
 Demucs weights bundled, no GPL code (openDJ is GPL-2.0: ideas only).
@@ -15,14 +15,14 @@ Demucs weights bundled, no GPL code (openDJ is GPL-2.0: ideas only).
 Most "audio to score" work has to guess at an unknown instrument and an unknown renderer. We have
 neither problem.
 
-- The **renderer is known and deterministic**: `btwd render` (`djhost::deck::offline`, blocks of 128
+- The **renderer is known and deterministic**: `beatscript render` (`djhost::deck::offline`, blocks of 128
   frames, no threads, no randomness; chance in the language is a hash of text and bar).
-- The **instrument set is known and finite**: `btwd instruments`.
+- The **instrument set is known and finite**: `beatscript instruments`.
 - The **language is total and small**: one line per deck, 16 steps a bar, `let` / `def` / `repeat`,
   sections and an arrange, no recursion.
 - The **forward model is free to call**, locally, as many times as we like. The public `render` MCP
-  tool is rate limited to about 30 an hour, so the local `btwd` is the search engine and the public
-  tool is only the cross-check. Measured 2026-11-21: `btwd render` is **bit-identical** to the server's
+  tool is rate limited to about 30 an hour, so the local `beatscript` is the search engine and the public
+  tool is only the cross-check. Measured 2026-11-21: `beatscript render` is **bit-identical** to the server's
   r2 render, on first-beat (682,839 frames, 0 samples differ) and on acid-line (1,282,909 frames, 0
   differ, control lines included). L0 against a downloaded server render is real.
 
@@ -34,7 +34,7 @@ scoring loop first and the fancy transcription last.
 ```
 audio --> grid (bpm, bar 1) --> per-slot decomposition against rendered templates
       --> program lines --> pattern induction (lets, e(k,n,rot), repeat, sections, arrange)
-      --> candidate program --> btwd render --> compare with the audio --> residual
+      --> candidate program --> beatscript render --> compare with the audio --> residual
       --> (residual says where to look next) ... --> check same_as original
 ```
 
@@ -42,11 +42,11 @@ audio --> grid (bpm, bar 1) --> per-slot decomposition against rendered template
 
 | level | test | meaning |
 |---|---|---|
-| L0 sample | recovered render == input PCM, bit for bit (or within 1 LSB of s16 rounding) | exact; only possible when the input is a `btwd` render |
-| L1 net | `btwd check --same-as original` -> `same: true` | the same song by compiled nets; text, lets, defs, section names may differ |
+| L0 sample | recovered render == input PCM, bit for bit (or within 1 LSB of s16 rounding) | exact; only possible when the input is a `beatscript` render |
+| L1 net | `beatscript check --same-as original` -> `same: true` | the same song by compiled nets; text, lets, defs, section names may differ |
 | L2 music | `same_as.diff.summary` | when L1 is false, what differs in music: "drop bass: 1 note changed (1:7 c3 -> d3)". This is the progress meter and the failure report. |
 
-For audio that is not a `btwd` render (a browser capture, an Opus transcode, a stem), L0 is
+For audio that is not a `beatscript` render (a browser capture, an Opus transcode, a stem), L0 is
 unavailable and the score is a perceptual distance (multi-resolution log-STFT, onset F-measure,
 chroma distance) between input and re-render, plus L1/L2 when the ground-truth program is known.
 Ground truth is always the program text, because we wrote the fixtures.
@@ -60,10 +60,10 @@ because `main` of the engine repo is behind its feature branches.
 
 | piece | where | notes |
 |---|---|---|
-| BeatScript engine (parser, compiler, nets) | the BeatScript repo (private then, stackdump/beatscript now) `crates/btwapi`, `crates/btwd`, `djlive` (`ast`, `compile`); branch `feat/btw-same-as` and its merge worktrees | `btwd check [--same-as]`, `diff`, `nets`, `fmt`, `instruments`, `render`. Not on the main checkout's `main` yet. |
-| Deterministic offline renderer | `btwd render` (`crates/btwd/src/render.rs`), `djhost::deck::offline` | raw PCM on stdout, events on stderr. Renders control lines since 2026-11-19 (see section 6). |
-| Server (btwserve), MCP `check`/`render`/`list_examples` | Rust: `crates/btwserve`; Go front: `beats-bitwrap-io` `internal/btwsite` (worktree `btwserve-ref`) | the public path; rate limited |
-| MIDI and stem export | `origin/feat/midi-stems`: `btwd export` (cc1fabc), `btwserve` `render?format=midi|stems|stems-opus` (cbe7ac8); the beatscript.app Export button is `beats-bitwrap-io` 088e8ed | **ground truth note events**: use it to score a transcriber's notes directly, never as an input to recovery |
+| BeatScript engine (parser, compiler, nets) | the BeatScript repo (private then, stackdump/beatscript now) `crates/beatscript-api`, `crates/beatscript-cli`, `djlive` (`ast`, `compile`); branch `feat/btw-same-as` and its merge worktrees | `beatscript check [--same-as]`, `diff`, `nets`, `fmt`, `instruments`, `render`. Not on the main checkout's `main` yet. |
+| Deterministic offline renderer | `beatscript render` (`crates/beatscript-cli/src/render.rs`), `djhost::deck::offline` | raw PCM on stdout, events on stderr. Renders control lines since 2026-11-19 (see section 6). |
+| Server (beatscript-serve), MCP `check`/`render`/`list_examples` | Rust: `crates/beatscript-serve`; Go front: `beats-bitwrap-io` `internal/btwsite` (worktree `beatscript-serve-ref`) | the public path; rate limited |
+| MIDI and stem export | `origin/feat/midi-stems`: `beatscript export` (cc1fabc), `beatscript-serve` `render?format=midi|stems|stems-opus` (cbe7ac8); the beatscript.app Export button is `beats-bitwrap-io` 088e8ed | **ground truth note events**: use it to score a transcriber's notes directly, never as an input to recovery |
 | listen / state report | `feat/listen-state`, sibling run `bs-listen-ci` | the state of a browser tab, not audio analysis; not needed for this work |
 | Beat, downbeat, tempo | public `djrust` `src/musicality/beat_tracker.rs` (onset flux, autocorrelation tempo, Ellis DP beats, downbeat by low-band phase); `docs/BEAT-DETECTION.md` Beat This! (`beat-this` crate 1.1.0, MIT, model weights MIT, ~11 MB fetched on first use), DSP fallback | licences checked 2026-11-17 in that doc |
 | Key detection | `djrust` `src/musicality/loop_key.rs` (Krumhansl-Kessler chroma correlation, confidence); `djengine::key` (Camelot) | so key detection is **not** missing, it is a 12-bin guess: fine for a hint, not for transcription |
@@ -79,14 +79,14 @@ because `main` of the engine repo is behind its feature branches.
 3. Tonal parts that are not one note a step (`melody`, `arp`, chords other than a triad on the pad; polyphony).
 4. Accents (`!`) and slides (`^`) as per-note flags, `len=`, `swing`, `key`, tempo curves (rung 2).
 5. Control-line inference from audio (the controls *are* in the render, section 6, so this is analysis, not a ceiling).
-6. Audio that is not a `btwd` render: resampling, transcodes, browser captures (rung 6): L0 is lost; the beat tracker and stems (`demucs-rs`) come in here.
+6. Audio that is not a `beatscript` render: resampling, transcodes, browser captures (rung 6): L0 is lost; the beat tracker and stems (`demucs-rs`) come in here.
 7. Deck assignment is unobservable from the sum of the decks (they add exactly, section 3); rung 1 uses the convention drums on A, tonal on B. Wrong guesses show up only through interactions inside a deck.
 
 ## 3. Why synthesis beats transcription here (and what rung 1 taught)
 
 | subproblem | the usual approach | what we do instead |
 |---|---|---|
-| tempo and bar 1 | beat tracker, then hope | a `btwd` render starts at frame 0 and is exactly `bars * 240 / bpm` seconds, to the frame. That fixes `bars / bpm = 1/15.5` for first-beat, but not which: 62 x 4, 93 x 6, 124 x 8 all fit. The onsets pick: the right 16th lattice catches onset mass that the same lattice shifted half a step does not; ties go to the coarsest lattice. |
+| tempo and bar 1 | beat tracker, then hope | a `beatscript` render starts at frame 0 and is exactly `bars * 240 / bpm` seconds, to the frame. That fixes `bars / bpm = 1/15.5` for first-beat, but not which: 62 x 4, 93 x 6, 124 x 8 all fit. The onsets pick: the right 16th lattice catches onset mass that the same lattice shifted half a step does not; ties go to the coarsest lattice. |
 | drum hit classification | trained classifier | each kit piece is rendered once into a template and matched in a band-power feature space (below) |
 | pitch and polyphony | pitch tracker, chord recogniser | render every candidate pitch of every candidate voice; the pursuit picks. Chords are a small dictionary (24 triads), not open polyphony |
 | instrument identity | embedding classifier | try each voice in a short list; keep the one whose templates explain the most |
@@ -112,7 +112,7 @@ separate, later goal scored by program length.
 ## 4. The ladder
 
 Each rung adds one thing to prove. A rung is done when its fixtures reach L1 `same: true` and, for
-`btwd` renders, L0.
+`beatscript` renders, L0.
 
 | rung | fixture | what it adds | expected hard part |
 |---|---|---|---|
@@ -121,7 +121,7 @@ Each rung adds one thing to prove. A rung is done when its fixtures reach L1 `sa
 | 3 | `evolve-demo`, `markers-demo`, `trance-138` | sections, `let`/`def`, `repeat`, `evolve` (a program that changes itself: induction must find the generation rule or settle for longhand) | recognising equal bars and the arrange |
 | 4 | Deep Hours `z4EBG9j7sAyRKuuVhha6DACwUEvCeuLZPRC1fhj9kU73EwNFzTW` (the track that ends) and its loop fork `z4EBG9j288TZehcWFMcZrtyFnKE1TPuRxizk5D2Rfg9TS9vYo2x` | a real multi-section track; the fork is a free **diff test**: the recovered programs of the two must differ exactly where the programs do | scale (bars, decks), markov and seeded chance (`maybe`, `?0.45`) which must be re-derived from the text hash, not fitted |
 | 5 | `matrix-130`, `hand-dubstep-140-v2/v4` | wobble basses, risers, 9 sections | control-heavy |
-| 6 | browser capture and Opus transcodes of the above | the first audio that is not a `btwd` render: L0 is lost, stems may help | separation, perceptual score |
+| 6 | browser capture and Opus transcodes of the above | the first audio that is not a `beatscript` render: L0 is lost, stems may help | separation, perceptual score |
 
 Chance and generators (`markov`, `maybe`, `degrade`, `?p`) are deterministic functions of the part's
 text and the bar, so a recovered program that *contains* `markov(am, 0.7)` reproduces the notes by
@@ -129,25 +129,25 @@ construction, but fitting the notes back to a `markov(...)` call is a hash inver
 generated parts longhand as notes (valid for L1 only if the original's nets are note-level, which
 they are: a generator compiles to its notes), and treat finding the generator as compression.
 
-## 5. Components (Rust, `crates/btwround`, a new crate: no existing crate changed)
+## 5. Components (Rust, `crates/beatscript-round`, a new crate: no existing crate changed)
 
-`btwapi` is used in process (`check`, `nets`, `same_as`); `btwd render` is a subprocess, because `btwd` is a
+`beatscript-api` is used in process (`check`, `nets`, `same_as`); `beatscript render` is a subprocess, because `beatscript` is a
 bin crate and rung 1 must not touch it. (Exposing its render as a library function would remove the process
 spawn per probe; that is a change to an existing crate, so it waits.)
 
 | module | job |
 |---|---|
 | `wav` | read WAV (s16 or f32; a streaming header with a bogus data length is fine), write WAV |
-| `btwd` | `render` (subprocess), `check`, `part_velocities`, `same_as` (in process) |
+| `beatscript` | `render` (subprocess), `check`, `part_velocities`, `same_as` (in process) |
 | `model` | the slice of the language a recovery is written in (drums on A; a bass and a triad pad on B; one bar, repeated): `State` -> program text |
 | `spec` | the phase-blind feature: band powers of a Hann-windowed 4096-point FFT, hop 512 |
 | `vel` | the `vel=lo..hi` hash, pinned to the compiler's nets by a test |
 | `recover` | grid; template bank; orthogonal matching pursuit; render-scored hill climb; velocity fit |
 | `score` | L0 (sample diff) |
-| `bin/btwround` | `btwround recover in.wav [--ref program.btw] [--out out.btw] [--btwd PATH] [--jobs N] [-v]`; `btwround render prog.btw out.wav` |
+| `bin/beatscript-round` | `beatscript-round recover in.wav [--ref program.beatscript] [--out out.beatscript] [--beatscript PATH] [--jobs N] [-v]`; `beatscript-round render prog.beatscript out.wav` |
 
-Tests: unit tests for every pure piece (`cargo test -p btwround`); the acceptance test
-`tests/first_beat.rs` (`#[ignore]`, needs a built `btwd`, minutes) renders first-beat, recovers, and
+Tests: unit tests for every pure piece (`cargo test -p beatscript-round`); the acceptance test
+`tests/first_beat.rs` (`#[ignore]`, needs a built `beatscript`, minutes) renders first-beat, recovers, and
 asserts L0 identical, `same_as` true and an equal program CID. `fixtures/` holds the two CC0 example programs.
 
 ## 6. The fidelity ceiling: control lines (measured, and not where the task statement put it)
@@ -157,11 +157,11 @@ The task statement said the offline render plays notes and sounds but not contro
 
 | comparison | result |
 |---|---|
-| server `render` (r2) vs local `btwd render` of the program | **bit-identical**, 1,282,909 frames, 0 samples differ |
+| server `render` (r2) vs local `beatscript render` of the program | **bit-identical**, 1,282,909 frames, 0 samples differ |
 | server render vs local render with the two `master:` lines deleted | 31,477 max difference; 0.02% of samples equal |
 
 So the public render **does** play at least master filter and resonance ramps (the `render` tool's note
-saying otherwise is out of date for r2). The `btwd render` documentation (`crates/btwd/RENDER.md`) lists what
+saying otherwise is out of date for r2). The `beatscript render` documentation (`crates/beatscript-cli/RENDER.md`) lists what
 is rendered (deck and master level, EQ, mute, crossfader, ducking, ramps and lfos, filter/reverb/delay/crush
 inserts, timed lines) and what is not: a `do` call to another noun, vocals, most moves, tempo curves. The
 start event's `notes` array names what a given program leaves out (empty for both fixtures).
@@ -173,10 +173,10 @@ Consequences:
    frame by frame, and the ratio *is* the filter/reverb trajectory; fit it to the language's vocabulary (a ramp
    `filter lp A -> B over N bars`, an lfo, a step) with a small parametric search, then verify by re-render.
    Start with one control (the master low-pass cutoff of acid-line).
-2. The real ceiling is the list `btwd` itself skips (`do` calls to other nouns, vocals, samples and
+2. The real ceiling is the list `beatscript` itself skips (`do` calls to other nouns, vocals, samples and
    `restricted` programs, which the renderer refuses, tempo curves). Audio made with those is unrecoverable
    *by this method*, and the report must name which part of the program it could not hear.
-3. Audio from the **browser engine** (a capture) can contain more than `btwd` renders; for that the
+3. Audio from the **browser engine** (a capture) can contain more than `beatscript` renders; for that the
    claim drops to a perceptual score (rung 6).
 4. **Never invent.** If a control cannot be fitted below a residual threshold, the recovered program omits
    it and the report lists the residual's band and bars.
@@ -190,7 +190,7 @@ Input: first-beat's audio, downloaded from the public server (`render?format=wav
 program is passed to `--ref` for scoring and is never read by the recovery.
 
 ```
-btwround recover first-beat.wav --ref first-beat.btw --btwd target/release/btwd --jobs 3 -v
+beatscript-round recover first-beat.wav --ref first-beat.beatscript --beatscript target/release/beatscript --jobs 3 -v
 ```
 
 Recovered (3 min 38 s on a shared Linux box at load 30, 3 render processes):
@@ -206,7 +206,7 @@ end at bar 8
 | level | result |
 |---|---|
 | L0 | **sample identical** to the server render: 682,839 frames, max difference 0, 0 samples differ |
-| L1, local `btwd check --same-as` | `same: true` |
+| L1, local `beatscript check --same-as` | `same: true` |
 | L1, public BeatScript MCP `check` with `same_as` = first-beat's CID | `same: true`, `text_same: true`, `sections_same`, `song_nets_same`, no diffs |
 | program CID | the recovered text has the original's own CID, `z4EBG9jFzzkVrdxGXZhj7EUYYSYzLhhZJ4rGkQXpuGm7KeDA7Ya` |
 
@@ -229,8 +229,8 @@ Honest limits of this result, so it is not read as more than it is:
 - It is one fixture. The claim is "rung 1 closes", not "round trips work".
 - First-beat has no control lines; section 6 covers what is known about those.
 
-Reproduce: build `btwd` and `btwround` (`cargo build --release -p btwd -p btwround` in this repo
-on `feat/btw-roundtrip`), then `cargo test --release -p btwround -- --ignored --nocapture`.
+Reproduce: build `beatscript` and `beatscript-round` (`cargo build --release -p beatscript-cli -p beatscript-round` in this repo
+on `feat/btw-roundtrip`), then `cargo test --release -p beatscript-round -- --ignored --nocapture`.
 
 ## 8. Later rung: provenance, "was this track generated by our stack?"
 
@@ -247,7 +247,7 @@ Plan only, not built. It reuses the recovery machinery; it adds a decision and a
 ### Cheap fast path: fingerprint index
 
 Index an audio fingerprint of **every stored render** (landmark or chroma-hash style, built from
-`btwd` renders at store time, content-addressed by program CID). A query first looks up the
+`beatscript` renders at store time, content-addressed by program CID). A query first looks up the
 fingerprint; a hit on a long enough aligned run names the candidate CID, which is then verified by
 re-render (tiers 1/2), so a known track never needs the round trip. The round trip is for audio
 that never hit the server: local and private programs, and post-export edits. The index is derived
@@ -292,10 +292,10 @@ come after.
   the render is in process (no 30-process fan-out). Bank building is cached by CID.
 - **Rate limits.** The public `render` is about 30 an hour: used only to fetch fixtures and one
   parity check, never in the search loop.
-- **Divergence.** Local `btwd` and the server's r2 render were bit-identical on both fixtures tried
+- **Divergence.** Local `beatscript` and the server's r2 render were bit-identical on both fixtures tried
   (first-beat, acid-line). If a future server version differs, L0 against a downloaded server render is
   impossible and the claim drops to L1 plus a spectral bound; the report must say which renderer produced
   each side, and the render version (`v=r2`) belongs in the record.
 - **Branch hygiene.** All work on `feat/btw-roundtrip` (off `feat/btw-same-as`); nothing pushed to
-  `main`. The change is self-contained: a new crate (`crates/btwround`), one line in the workspace
+  `main`. The change is self-contained: a new crate (`crates/beatscript-round`), one line in the workspace
   `members`, its `Cargo.lock` entry, and this document. No existing crate's behaviour changes.

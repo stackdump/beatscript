@@ -25,7 +25,7 @@ src=$s/src; mkdir -p "$src/deploy" "$src/site/test/shots"
 cp "$here/deploy.sh" "$here/live-checks.sh" "$src/deploy/"
 printf 'x\n' > "$src/site/test/shots/keep.png"
 git -C "$src" init -q; git -C "$src" add -A; git -C "$src" commit -q -m pin
-PIN=$(git -C "$src" rev-parse HEAD); V=btwserve-$(git -C "$src" rev-parse --short=7 HEAD)
+PIN=$(git -C "$src" rev-parse HEAD); V=beatscript-serve-$(git -C "$src" rev-parse --short=7 HEAD)
 home=$s/home; mkdir -p "$home"; git clone -q "$src" "$home/app"; git -C "$home/app" checkout -q --detach "$PIN"
 
 # the fake origin: /healthz answers V; every other path is 404, except that MODE makes it close the connection with no
@@ -39,7 +39,7 @@ class H(http.server.BaseHTTPRequestHandler):
         pass
     def answer(self):
         if self.path == "/healthz":
-            body = ('{"name":"btw","ok":true,"version":"%s"}' % version).encode()
+            body = ('{"name":"beatscript","ok":true,"version":"%s"}' % version).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
         seen["n"] += 1

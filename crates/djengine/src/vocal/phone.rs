@@ -2,7 +2,7 @@
 //! ([`djrust::fx::formant::Syllable`]).
 //!
 //! The voice's 39 phones, named as ARPAbet names them; a lyric writes them in the BeatScript phoneme set
-//! ([`super::phoneme`], docs/btw/phonemes.md), which maps onto them one to one. A word's phones are cut into
+//! ([`super::phoneme`], docs/beatscript/phonemes.md), which maps onto them one to one. A word's phones are cut into
 //! syllables by the maximal-onset rule (a consonant run between two vowels gives the second
 //! syllable the longest legal English onset), and each syllable becomes one sung note:
 //!

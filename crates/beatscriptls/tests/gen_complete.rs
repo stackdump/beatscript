@@ -7,7 +7,7 @@ use beatscriptls::Analysis;
 
 /// The labels offered with the cursor where `|` is in `text`.
 fn labels(text: &str) -> Vec<String> {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let at = text.find('|').unwrap();
     let text = text.replacen('|', "", 1);
     candidates(&Analysis::new(&text), at, &EnvNames::web()).0.into_iter().map(|i| i.label).collect()
@@ -36,7 +36,7 @@ fn after_section_the_generated_programs_sections_are_offered() {
     // they are the sections check takes
     for name in &l {
         let src = format!("tempo 128\nkey c\nlet bed = gen@2 techno seed=42 section={name} part=kick\n");
-        let c = djlive::compile::check_with(&src, &btwapi::web_env().env());
+        let c = djlive::compile::check_with(&src, &beatscript_api::web_env().env());
         assert!(!c.diagnostics.iter().any(|d| d.is_error() && d.message.contains("no section")), "{name}: {:?}", c.diagnostics.iter().map(|d| &d.message).collect::<Vec<_>>());
     }
 }

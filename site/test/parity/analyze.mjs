@@ -1,9 +1,9 @@
-// analyze.mjs: compare two renders of one btw program bar by bar (no npm: plain JS DSP).
+// analyze.mjs: compare two renders of one BeatScript program bar by bar (no npm: plain JS DSP).
 //
 //   import { compare } from './analyze.mjs';
 //   const r = compare(streamPcm, enginePcm, { sr: 48000, bpm: 140, bars: 16 });
 //
-// Inputs are interleaved stereo Int16Array (what btwd's s16le render and parity.html's capture both are). The
+// Inputs are interleaved stereo Int16Array (what beatscript's s16le render and parity.html's capture both are). The
 // engine's render is aligned on the stream's first downbeat (cross-correlation of the two onset envelopes over the
 // first bars), then each bar is measured on both:
 //   rms      dBFS of the bar (both channels)

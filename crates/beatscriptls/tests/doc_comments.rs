@@ -46,7 +46,7 @@ fn a_section_hover_shows_its_doc_at_the_definition_and_in_arrange() {
     let mut s = server(HALL);
     let def = hover(&mut s, "section lurk", 0, 9);
     assert!(def.starts_with("kick and the theme, quiet and sneaking\n\n"), "the doc first, its `lurk:` dropped: {def}");
-    assert!(def.contains("```btw\nsection lurk"), "then what the hover said before: {def}");
+    assert!(def.contains("```beatscript\nsection lurk"), "then what the hover said before: {def}");
     // its use in `arrange`
     let used = hover(&mut s, "  lurk storm", 0, 3);
     assert!(used.starts_with("kick and the theme, quiet and sneaking\n\n"), "{used}");
@@ -61,17 +61,17 @@ fn a_section_hover_shows_its_doc_at_the_definition_and_in_arrange() {
 fn a_blank_line_breaks_the_attachment() {
     let mut s = server(HALL);
     let h = hover(&mut s, "section storm", 0, 9);
-    assert!(h.starts_with("```btw\nsection storm"), "no doc: {h}");
+    assert!(h.starts_with("```beatscript\nsection storm"), "no doc: {h}");
     assert!(!h.contains("blank line"), "{h}");
     let u = hover(&mut s, "lurk storm", 0, 6);
-    assert!(u.starts_with("```btw\nsection storm"), "{u}");
+    assert!(u.starts_with("```beatscript\nsection storm"), "{u}");
 }
 
 #[test]
 fn a_let_and_the_arrange_show_theirs() {
     let mut s = server(HALL);
     let l = hover(&mut s, "let theme", 0, 5);
-    assert!(l.starts_with("the theme the hall hums: a minor, low\n\n```btw\nlet theme"), "{l}");
+    assert!(l.starts_with("the theme the hall hums: a minor, low\n\n```beatscript\nlet theme"), "{l}");
     let u = hover(&mut s, "bass theme", 0, 6);
     assert!(u.starts_with("the theme the hall hums"), "{u}");
     let a = hover(&mut s, "arrange {", 0, 2);

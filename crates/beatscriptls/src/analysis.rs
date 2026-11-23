@@ -5,7 +5,7 @@
 //! - **The check** (`djlive::check_with`: expand, compile, evolve orbits): the diagnostics a compile finds. Usually a few ms,
 //!   but seconds on a long evolving song (deep-house-60: ~1.5-3 s, its generations' net CIDs), so it is never on the keystroke path:
 //!   it is computed when first asked for ([`Analysis::check`]), or handed in from a worker ([`Analysis::set_check`],
-//!   what `btwd lsp` does), and until then the diagnostics are the parser's.
+//!   what `beatscript lsp` does), and until then the diagnostics are the parser's.
 
 use std::cell::OnceCell;
 
@@ -37,9 +37,9 @@ pub struct Analysis {
     refs: OnceCell<Result<Vec<djlive::refs::Site>, Vec<Diagnostic>>>,
 }
 
-/// The check of a text against the site's environment (`btwapi::web_env`): what `btwd check` and the page say.
+/// The check of a text against the site's environment (`beatscript_api::web_env`): what `beatscript check` and the page say.
 pub fn full_check(text: &str) -> Check {
-    let env = btwapi::web_env().env();
+    let env = beatscript_api::web_env().env();
     check_with(text, &env)
 }
 
@@ -47,7 +47,7 @@ impl Analysis {
     /// The syntax tier only; the check waits until it is asked for.
     pub fn new(text: impl Into<String>) -> Analysis {
         let text = text.into();
-        let env = btwapi::web_env().env();
+        let env = beatscript_api::web_env().env();
         let parsed = djlive::parse::parse_with(&text, &env);
         let lexed = lex(&text);
         let symbols = Symbols::build(&text, &lexed.tokens, &lexed.comments);
@@ -82,7 +82,7 @@ impl Analysis {
     /// a hover, a lens or a code action first asks). A text with nothing a reference starts with has none at no cost; Err: what
     /// is wrong with one of them (as `check` says it, at the reference).
     pub fn refs(&self) -> Result<&[djlive::refs::Site], &[Diagnostic]> {
-        let r = self.refs.get_or_init(|| if crate::refs::may_have(self) { djlive::refs::sites(&self.text, &btwapi::web_env().env()) } else { Ok(Vec::new()) });
+        let r = self.refs.get_or_init(|| if crate::refs::may_have(self) { djlive::refs::sites(&self.text, &beatscript_api::web_env().env()) } else { Ok(Vec::new()) });
         match r {
             Ok(v) => Ok(v),
             Err(e) => Err(e),

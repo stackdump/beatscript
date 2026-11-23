@@ -1,6 +1,6 @@
 //! Grammar parity between the server and the page (project-datum 6675): the seeded generator's output, for every genre over
-//! many seeds, checked by the server (`btwapi::check_json`, what `/api/check`, the MCP `check` and btwd answer) and by the
-//! entry points the page's wasm module exports, compiled natively: `btw_check` (the page's facade, wasm.js `check`) and
+//! many seeds, checked by the server (`beatscript_api::check_json`, what `/api/check`, the MCP `check` and beatscript answer) and by the
+//! entry points the page's wasm module exports, compiled natively: `beatscript_check` (the page's facade, wasm.js `check`) and
 //! `BeatscriptLs` (the editor's own diagnostics, `open` on every keystroke and `check` once the text rests). They must say the same
 //! thing, error for error, and the generator must only print what every one of them accepts.
 //!
@@ -9,17 +9,17 @@
 //! live check for that is the module's own `hashes.json` (its `git` is the revision it was built from):
 //!
 //! ```text
-//! curl -s https://beatscript.app/wasm/hashes.json | jq -r .git     # must be the revision btwserve was built from
+//! curl -s https://beatscript.app/wasm/hashes.json | jq -r .git     # must be the revision beatscript-serve was built from
 //! ```
 
 use djrust::json::JsonValue;
 
-/// Seeds per genre of the current generator (`BTW_DRIFT_SEEDS=N` for another count), and of the frozen seeded@1.
+/// Seeds per genre of the current generator (`BEATSCRIPT_DRIFT_SEEDS=N` for another count), and of the frozen seeded@1.
 const SEEDS: u32 = 50;
 const SEEDS_V1: u32 = 8;
 
 fn seeds() -> u32 {
-    std::env::var("BTW_DRIFT_SEEDS").ok().and_then(|s| s.parse().ok()).unwrap_or(SEEDS)
+    std::env::var("BEATSCRIPT_DRIFT_SEEDS").ok().and_then(|s| s.parse().ok()).unwrap_or(SEEDS)
 }
 
 /// The check as a list of (severity, start, end, first line of the message): the server's JSON (`check_json`'s answer).
@@ -67,17 +67,17 @@ fn editor(json: &str) -> Vec<(String, i64, i64, String)> {
 /// djweb's exports set a panic hook that reports to the browser console, a wasm import that cannot run natively: put the
 /// default hook back, so a failing assertion here says what failed.
 fn native_hook() {
-    let _ = djweb::btw_check("");
+    let _ = djweb::beatscript_check("");
     let _ = djweb::BeatscriptLs::new();
     let _ = std::panic::take_hook();
 }
 
-/// `facade`: also hold the page's `btw_check` to the server's answer byte for byte (one function: a sample of the programs is
+/// `facade`: also hold the page's `beatscript_check` to the server's answer byte for byte (one function: a sample of the programs is
 /// enough to keep the export wired to it, and each program costs a compile less without it).
 fn same_everywhere(what: &str, text: &str, ls: &mut djweb::BeatscriptLs, facade: bool) {
-    let raw = btwapi::check_json(text);
+    let raw = beatscript_api::check_json(text);
     if facade {
-        assert_eq!(djweb::btw_check(text), raw, "{what}: btw_check (the page) and check_json (the server) differ");
+        assert_eq!(djweb::beatscript_check(text), raw, "{what}: beatscript_check (the page) and check_json (the server) differ");
     }
     let (ok, srv) = server(&raw);
     assert!(ok, "{what}: the generator printed a program the server's check refuses: {srv:?}\n{text}");
@@ -93,26 +93,26 @@ fn generator_output_checks_the_same_on_the_server_and_in_the_page() {
     native_hook();
     let mut ls = djweb::BeatscriptLs::new();
     let mut n = 0;
-    for genre in btwapi::generate::genres() {
+    for genre in beatscript_api::generate::genres() {
         for seed in 1..=seeds() {
-            let req = btwapi::GenRequest { genre: genre.clone(), seed: seed.to_string(), ..Default::default() };
-            let g = btwapi::generate(&req).unwrap_or_else(|e| panic!("seeded@2 {genre} {seed}: {e}"));
+            let req = beatscript_api::GenRequest { genre: genre.clone(), seed: seed.to_string(), ..Default::default() };
+            let g = beatscript_api::generate(&req).unwrap_or_else(|e| panic!("seeded@2 {genre} {seed}: {e}"));
             same_everywhere(&format!("seeded@2 {genre} seed={seed}"), &g.text, &mut ls, seed == 1);
             n += 1;
         }
     }
-    for genre in btwapi::generate_v1::genres() {
+    for genre in beatscript_api::generate_v1::genres() {
         for seed in 1..=SEEDS_V1 {
-            let req = btwapi::generate_v1::GenRequest { genre: genre.clone(), seed: seed.to_string(), ..Default::default() };
-            let g = btwapi::generate_v1::generate(&req).unwrap_or_else(|e| panic!("seeded@1 {genre} {seed}: {e}"));
+            let req = beatscript_api::generate_v1::GenRequest { genre: genre.clone(), seed: seed.to_string(), ..Default::default() };
+            let g = beatscript_api::generate_v1::generate(&req).unwrap_or_else(|e| panic!("seeded@1 {genre} {seed}: {e}"));
             same_everywhere(&format!("seeded@1 {genre} seed={seed}"), &g.text, &mut ls, seed == 1);
             n += 1;
         }
     }
-    assert!(n >= btwapi::generate::genres().len(), "too few programs: {n}");
+    assert!(n >= beatscript_api::generate::genres().len(), "too few programs: {n}");
 }
 
-/// Radio (docs/btw/radio.md): the page's `btw_station` is the server's answer byte for byte (the MCP `station` tool and
+/// Radio (docs/beatscript/radio.md): the page's `beatscript_station` is the server's answer byte for byte (the MCP `station` tool and
 /// `POST /api/station` answer `station_json`), retuned or not, and a station program checks the same in the page and the
 /// editor as on the server.
 #[test]
@@ -126,8 +126,8 @@ fn the_page_tunes_a_station_as_the_server_does() {
         "{\"station\": \"tempo 120\\n\"}".to_string(),
         "not json".to_string(),
     ] {
-        let page = djweb::btw_station(&req);
-        assert_eq!(page, btwapi::station_json(&req), "btw_station (the page) and station_json (the server) differ for {req}");
+        let page = djweb::beatscript_station(&req);
+        assert_eq!(page, beatscript_api::station_json(&req), "beatscript_station (the page) and station_json (the server) differ for {req}");
         assert!(JsonValue::parse(&page).is_ok(), "{page}");
     }
     let mut ls = djweb::BeatscriptLs::new();
@@ -139,8 +139,8 @@ fn the_page_tunes_a_station_as_the_server_does() {
 #[test]
 fn the_reported_trap_program_and_its_numeral_arps_check_everywhere() {
     native_hook();
-    let req = btwapi::GenRequest { genre: "trap".into(), seed: "54877".into(), key: "dm".into(), bpm: Some(140.0), ..Default::default() };
-    let g = btwapi::generate(&req).unwrap();
+    let req = beatscript_api::GenRequest { genre: "trap".into(), seed: "54877".into(), key: "dm".into(), bpm: Some(140.0), ..Default::default() };
+    let g = beatscript_api::generate(&req).unwrap();
     let arps = g.text.lines().find(|l| l.starts_with("let arps = ")).expect("a let of arps");
     assert!(arps.contains("arp(i, ") && arps.contains("arp(VII, "), "{arps}");
     let mut ls = djweb::BeatscriptLs::new();

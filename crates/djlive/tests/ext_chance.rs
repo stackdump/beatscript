@@ -1,4 +1,4 @@
-//! F7, seeded chance (docs/btw/ext-chance.md): `x?0.3`, `choose [a b c] weights 3 1 1 seed=4`, `maybe(p, 0.3, 4)`.
+//! F7, seeded chance (docs/beatscript/ext-chance.md): `x?0.3`, `choose [a b c] weights 3 1 1 seed=4`, `maybe(p, 0.3, 4)`.
 //! Decided by an integer hash of (seed, bar, step, note), so the same text is the same hits, and every bar can differ.
 
 mod common;

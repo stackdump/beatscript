@@ -1,8 +1,8 @@
-//! `gen@N genre seed=S ...`: a call of the seeded generator, the engine's side of the language (docs/BTW.md "Two halves", "Call
-//! the generator"; long note docs/btw/ext-ffi.md).
+//! `gen@N genre seed=S ...`: a call of the seeded generator, the engine's side of the language (docs/BEATSCRIPT.md "Two halves", "Call
+//! the generator"; long note docs/beatscript/ext-ffi.md).
 //!
 //! The generator is the one the MCP `generate` tool, `POST /api/generate` and beatscript.app's compose panel ("seeded, no model")
-//! run: `seeded@N` (btwapi::generate), which prints a whole BeatScript program from a genre, a seed, a tempo, a key and a length.
+//! run: `seeded@N` (beatscript_api::generate), which prints a whole BeatScript program from a genre, a seed, a tempo, a key and a length.
 //! A `gen` call is that program as a value: opaque until it is resolved, then pinned by the CID of the program it resolves to.
 //! The version is in the text (`gen@2`; a bare `gen` is `gen@2` and the canonical text says so), so a call means the same music
 //! for ever: a generator that would print another program for the same inputs is a new version, and the old one stays callable.
@@ -21,10 +21,10 @@
 //! **What it is written out as.** The structural half reads the result: a part line and a section are a stored program's
 //! (stored.rs: the generated program is the source, its section's parts with their params, never its control lines); a `let` is
 //! the notes the part plays there, a let a bar (`let bed_1 = ...`, `let bed = <bed_1 bed_2>`), the way a theme is written
-//! (docs/btw/forms.md), so arrange mutations reach every bar. A host with no generator installed says so at the call (`gen@2 is
+//! (docs/beatscript/forms.md), so arrange mutations reach every bar. A host with no generator installed says so at the call (`gen@2 is
 //! not here`): hosts differ in whether it is there, never in what the music is.
 //!
-//! Pure: the generator is a pure function (no I/O, no clock), installed once by the host ([`install`]; btwapi does).
+//! Pure: the generator is a pure function (no I/O, no clock), installed once by the host ([`install`]; beatscript-api does).
 
 use std::cell::RefCell;
 use std::collections::BTreeSet;
@@ -49,7 +49,7 @@ pub struct GenRequest {
     pub length: String,
 }
 
-/// A generator of programs, by version: the seeded generator (btwapi::generate) is the one hosts install.
+/// A generator of programs, by version: the seeded generator (beatscript_api::generate) is the one hosts install.
 pub trait Generator: Sync {
     /// Its name, as `#! generator:` says it: `seeded`.
     fn name(&self) -> &str;
@@ -390,7 +390,7 @@ impl Resolved {
 /// Resolve `c` in a program that says `host`. Errors are at the call.
 pub fn resolve(c: &GenCall, host: &Host) -> Result<Resolved, Diagnostic> {
     let Some(g) = generator() else {
-        return Err(Diagnostic::error(c.version_span.to(c.genre_span), format!("gen@{} is not here: this host has no generator installed", c.version)).help("check it where the seeded generator is (beatscript.app, btwd, the MCP check): the language never fetches"));
+        return Err(Diagnostic::error(c.version_span.to(c.genre_span), format!("gen@{} is not here: this host has no generator installed", c.version)).help("check it where the seeded generator is (beatscript.app, beatscript, the MCP check): the language never fetches"));
     };
     let versions = g.versions();
     if !versions.contains(&c.version) {

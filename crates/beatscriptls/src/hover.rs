@@ -21,7 +21,7 @@ use crate::text::Encoding;
 use crate::timeline::{mmss, section_bars, timeline};
 
 fn code(t: &str) -> String {
-    format!("```btw\n{t}\n```")
+    format!("```beatscript\n{t}\n```")
 }
 
 /// What to say of symbol `si`: its doc comment (the `#` lines above its definition), then what it is.

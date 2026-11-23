@@ -3,11 +3,11 @@
 # repo root (deploy/deploy.sh check does). Each line either prints what it saw or stops the script (set -e): exit 0
 # means every check passed.
 #
-#   deploy/live-checks.sh <public url> <version>     e.g. deploy/live-checks.sh https://beatscript.app btwserve-abc1234
+#   deploy/live-checks.sh <public url> <version>     e.g. deploy/live-checks.sh https://beatscript.app beatscript-serve-abc1234
 #
 # The checks accumulated wave by wave in the staged deploy scripts (waves 1-3b, doc comments, 6662/6664/6665/6666/
 # 6672/6679/6689/6690); they are copied here verbatim, only the paths changed for this one repo. After them:
-# crates/btwserve/deploy/mcp-exposure.py (the MCP exposure table live, 6679), site/deploy/deploy.sh
+# crates/beatscript-serve/deploy/mcp-exposure.py (the MCP exposure table live, 6679), site/deploy/deploy.sh
 # verify-beatscript, and the live smoke steps 5, 13 and 14 in headless Chrome (CHROME, default /usr/bin/google-chrome).
 #
 # A failing check names itself: the ERR trap prints "LIVE CHECK FAILED: line N (exit C): <command>" on stderr, and the
@@ -43,14 +43,14 @@ curl() {
   return "$rc"
 }
 U=${1:-https://beatscript.app}
-V=${2:?usage: deploy/live-checks.sh <public url> <btwserve version, e.g. btwserve-abc1234>}
+V=${2:?usage: deploy/live-checks.sh <public url> <beatscript-serve version, e.g. beatscript-serve-abc1234>}
 for i in $(seq 1 30); do command curl -s -m 5 $U/healthz | grep -q $V && break; sleep 2; done
 # (shown on stderr without `tee /dev/stderr`, which reopens a redirected stderr file and truncates the log)
 HZ=$(curl -s -m 10 $U/healthz); printf '%s\n' "$HZ" >&2; printf '%s' "$HZ" | grep -q $V
 for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /embed.js /js/embed-player.js /radio /js/station.js /js/station-model.js; do
   c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U$p); echo "$p $c"; test "$c" = 200
 done
-for p in /grammar.css /lineage.css /mcp.css /card/card.css /css/btw.css /docs/assets/docs.css /css/embed.css /css/station.css; do
+for p in /grammar.css /lineage.css /mcp.css /card/card.css /css/beatscript.css /docs/assets/docs.css /css/embed.css /css/station.css; do
   c=$(curl -s -o /dev/null -m 20 -w '%{http_code} %{content_type}' $U$p); echo "$p $c"
   case "$c" in '200 text/css'*) ;; *) echo "$p: want 200 text/css"; exit 1;; esac
 done
@@ -105,7 +105,7 @@ PB=$(curl -s -m 20 $U/phrasebook.jsonld | grep -o '"@id": *"z4EBG9j[^"]*"' | hea
 if [ -n "$PB" ]; then c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U/phrasebook/$PB.jsonld); echo "/phrasebook/$PB.jsonld $c"; test "$c" = 200; else echo 'no corpus CID found in /phrasebook.jsonld (not checked)'; fi
 curl -s -m 20 $U/llms.txt | grep -q "$U/phrasebook"; echo 'llms.txt lists /phrasebook'
 curl -s -m 20 $U/api/examples | python3 -c 'import json,sys; d=json.load(sys.stdin); d=d.get("examples",d) if isinstance(d,dict) else d; assert d[0]["name"]=="arrange-in-eight-lines", d[0]["name"]; assert d[0].get("cid","z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz")=="z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz"'; echo 'api/examples: arrange-in-eight-lines first, CID as pinned'
-curl -s -m 20 $U/examples/arrange-in-eight-lines.btw | grep -q 'One section, played eight times'; echo 'arrange-in-eight-lines.btw keeps its teaching comments'
+curl -s -m 20 $U/examples/arrange-in-eight-lines.beatscript | grep -q 'One section, played eight times'; echo 'arrange-in-eight-lines.beatscript keeps its teaching comments'
 chk() { curl -s -m 30 -H 'Content-Type: application/json' -d "$(python3 -c 'import json,sys; print(json.dumps({"text": sys.argv[1]}))' "$1")" $U/api/check | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["ok"] is True, d["diagnostics"]'; }
 chk 'arrange from template(deep-house, @tempest_such_stuff)'; echo 'live check: template(deep-house, @tempest_such_stuff) ok'
 chk 'tempo 100
@@ -130,7 +130,7 @@ curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/docs/found-phrases</loc>"; echo 
 curl -s -m 20 $U/llms.txt | grep -q "$U/docs/found-phrases.md"; echo 'llms.txt lists found-phrases'
 curl -s -m 20 $U/docs/ | grep -q 'href="/docs/found-phrases"'; echo 'the docs index lists found-phrases'
 curl -s -m 20 $U/docs/cheatsheet.md | grep -q 'found-phrases.md'; echo 'the cheat sheet links found-phrases'
-curl -s -m 20 $U/docs/BTW.md | grep -q 'found-phrases.md'; echo 'BTW.md links found-phrases'
+curl -s -m 20 $U/docs/BEATSCRIPT.md | grep -q 'found-phrases.md'; echo 'BEATSCRIPT.md links found-phrases'
 test "$(curl -s -m 20 $U/docs/cheatsheet.md | wc -c)" -le 30000; echo 'the cheat sheet is within its 30 KB cap'
 I=$(mcp '{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"deploy-check","version":"1"}}}')
 printf '%s' "$I" | grep -q 'consider a phrasebook line chosen for its meter'; echo 'mcp instructions: the authoring loop has the phrasebook step'
@@ -148,7 +148,7 @@ curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/docs/forms</loc>"; curl -s -m 20
 curl -s -m 20 $U/llms.txt | grep -q "$U/docs/forms.md"; curl -s -m 20 $U/llms.txt | grep -q "$U/themes.txt"; echo 'llms.txt lists forms and themes'
 curl -s -m 20 $U/docs/ | grep -q 'href="/docs/forms"'; curl -s -m 20 $U/docs/ | grep -q 'href="/themes"'; echo 'the docs index lists forms and themes'
 curl -s -m 20 $U/docs/cheatsheet.md | grep -q 'docs/forms.md'; echo 'the cheat sheet has the forms line'
-curl -s -m 20 $U/docs/BTW.md | grep -q 'forms.md'; echo 'BTW.md links forms'
+curl -s -m 20 $U/docs/BEATSCRIPT.md | grep -q 'forms.md'; echo 'BEATSCRIPT.md links forms'
 TC=$(curl -s -m 20 $U/themes.jsonld | python3 -c 'import json,sys; print(json.load(sys.stdin)["@id"])')
 test "$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U/themes/$TC.txt)" = 200; echo "/themes/$TC.txt by CID"
 curl -s -m 20 $U/themes.txt | grep -q '^ode_to_joy | melody | d | major'; echo '/themes.txt is the theme library'
@@ -192,7 +192,7 @@ print("live check: sections[0].doc and docs for a commented program; one CID wit
 MC=$(mcp "$(python3 -c 'import json,sys; print(json.dumps({"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"check","arguments":{"text":sys.argv[1]}}}))' "$DOCP")")
 printf '%s' "$MC" | grep -q 'the kick and the bass'; echo 'mcp check says the doc comment'
 curl -s -m 20 $U/schema | grep -q 'id="section"'; echo '/schema defines section'
-curl -s -m 20 $U/docs/BTW.md | grep -q 'Doc comments.'; echo 'BTW.md has the doc-comments paragraph'
+curl -s -m 20 $U/docs/BEATSCRIPT.md | grep -q 'Doc comments.'; echo 'BEATSCRIPT.md has the doc-comments paragraph'
 # --- 6672: genre style for trap (drums-808 kit, every chord of a bar) ---
 TRAPDRUMS='deck A: kick x ~ ~ ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ ~ kit=drums-808 | snare ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ kit=drums-808 | hihat x*16 kit=drums-808'
 gck() { curl -s -m 30 -H 'Content-Type: application/json' -d "$(python3 -c 'import json,sys; print(json.dumps({"text": sys.argv[1], "genre": sys.argv[2]}))' "$1" "$2")" $U/api/check; }
@@ -276,11 +276,11 @@ if printf '%s' "$T" | grep -q '"name":"station"'; then
 else
   echo "radio: this build has no station tool (skipped)"
 fi
-python3 -I crates/btwserve/deploy/mcp-exposure.py $U
+python3 -I crates/beatscript-serve/deploy/mcp-exposure.py $U
 site/deploy/deploy.sh verify-beatscript
 # live smoke: 5 = share (incl. the rights line linking /authorship), 13 = caret on the glyph, 14 = gutter rows
-CHROME=${CHROME:-/usr/bin/google-chrome} BTW_CHROME_ARGS=--disable-audio-output node site/test/smoke.mjs --server $U --only 5,13,14
+CHROME=${CHROME:-/usr/bin/google-chrome} BEATSCRIPT_CHROME_ARGS=--disable-audio-output node site/test/smoke.mjs --server $U --only 5,13,14
 # --- 6689/6690 reference programs ---
-curl -s -m 20 $U/docs/found-phrases.md | grep -q such-stuff-as-dreams-122-reference.btw; echo /docs/found-phrases.md names the such-stuff reference file
-curl -s -m 20 $U/docs/found-phrases.md | grep -q examples/btw/tyger-tyger-128.btw; echo /docs/found-phrases.md names the tyger reference file
+curl -s -m 20 $U/docs/found-phrases.md | grep -q such-stuff-as-dreams-122-reference.beatscript; echo /docs/found-phrases.md names the such-stuff reference file
+curl -s -m 20 $U/docs/found-phrases.md | grep -q examples/beatscript/tyger-tyger-128.beatscript; echo /docs/found-phrases.md names the tyger reference file
 echo "LIVE CHECKS PASSED: $V at $U"

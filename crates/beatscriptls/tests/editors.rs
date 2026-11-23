@@ -5,7 +5,7 @@ use djengine::json::JsonValue;
 
 #[test]
 fn the_grammar_knows_every_word() {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../editors/vscode/syntaxes/btw.tmLanguage.json");
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../editors/vscode/syntaxes/beatscript.tmLanguage.json");
     let g = JsonValue::parse(&std::fs::read_to_string(path).unwrap()).unwrap();
     let pat = |k: &str| g.get("repository").and_then(|r| r.get(k)).and_then(|p| p.get("match")).and_then(JsonValue::as_str).unwrap().to_string();
     let words = |k: &str| -> Vec<String> {

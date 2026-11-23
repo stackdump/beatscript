@@ -1,7 +1,7 @@
 // The studio's styles: one constructed stylesheet for its shadow root (adoptedStyleSheets), so a page whose style-src is
 // 'self' (a Claude artifact) shows them. No <style> element and no style attribute anywhere.
 //
-// The editor's part is site/web/css/btw.css's editor layers (.ed and what editor.js builds inside it), unchanged but for
+// The editor's part is site/web/css/beatscript.css's editor layers (.ed and what editor.js builds inside it), unchanged but for
 // two things: the variables live on :host, not :root, and the squiggles are gradients, not data: SVGs (an artifact's
 // default-src 'self' refuses a data: image, and every error would be a CSP violation).
 
@@ -67,7 +67,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
 audio { display: block; width: 100%; }
 a.dl { color: var(--link); font-size: 12.5px; }
 
-/* ---- the editor (site/web/css/btw.css's editor layers) ---- */
+/* ---- the editor (site/web/css/beatscript.css's editor layers) ---- */
 .ed { position: relative; height: var(--ed-h); min-height: 80px; background: var(--stage); overflow: hidden; }
 .ed-scroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; }
 .ed-body { display: flex; width: 100%; min-height: 100%; position: relative; }
@@ -96,7 +96,7 @@ a.dl { color: var(--link); font-size: 12.5px; }
 .ed-tip em { display: block; font-style: normal; color: var(--amber-2); margin-top: 3px; font-family: var(--mono); font-size: 12px; }
 .ed-edges { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
 
-/* the editor's colours (btw.css), and their light-theme counterparts (the player's) */
+/* the editor's colours (beatscript.css), and their light-theme counterparts (the player's) */
 .c-comment { color: #6c786c; } .c-keyword { color: #c678dd; } .c-role { color: #61afef; } .c-action { color: #e5c07b; }
 .c-deck { color: #e06c75; } .c-number { color: #d19a66; } .c-step, .c-note { color: #98c379; } .c-rest { color: #7a7a86; }
 .c-generator, .c-def { color: #56b6c2; } .c-param { color: #d19a66; } .c-op, .c-punct { color: #abb2bf; } .c-string { color: #98c379; }

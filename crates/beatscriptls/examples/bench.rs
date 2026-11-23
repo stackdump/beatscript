@@ -75,11 +75,11 @@ fn main() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
     let mut files: Vec<String> = std::env::args().skip(1).collect();
     if files.is_empty() {
-        for dir in ["examples/btw", "crates/btwapi/tests/corpus"] {
+        for dir in ["examples/beatscript", "crates/beatscript-api/tests/corpus"] {
             if let Ok(rd) = std::fs::read_dir(format!("{root}/{dir}")) {
                 for e in rd.flatten() {
                     let p = e.path();
-                    if p.extension().is_some_and(|x| x == "btw") {
+                    if p.extension().is_some_and(|x| x == "beatscript") {
                         files.push(p.display().to_string());
                     }
                 }

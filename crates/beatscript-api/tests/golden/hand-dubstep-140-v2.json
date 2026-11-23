@@ -1,0 +1,122 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 1,
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 31,
+        "col": 3,
+        "end_col": 54,
+        "start": 1135,
+        "end": 1186,
+        "start16": 1135,
+        "end16": 1186,
+        "message": "the browser does not play this: the `loop_roll` move (of the moves the browser plays vocoder_handoff only)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the `loop_roll` move (of the moves the browser plays vocoder_handoff only)\n  --> 31:3\n   |\n31 |   before drop 4 bars: move loop_roll on A over 4 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "cid": "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi",
+    "canonical": "tempo 140\nkey fm\nlet kicks = x ~ ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~\nlet snares = ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~\nlet hats = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ x x ~\nlet wob_a = f1 ~ ~ f1 ~ ~ g#1 ~ f1 ~ ~ ~ d#1 ~ c1 ~\nlet wob_b = f1 ~ f1 ~ ~ ~ c#1 ~ ~ ~ c1 ~ d#1 ~ d#1 ~\nlet lead_a = ~ ~ c4 ~ g#3 ~ ~ ~ f3 ~ ~ g3 ~ g#3 ~ ~\nlet lead_b = ~ ~ c4 ~ d#4 ~ ~ ~ c#4 ~ c4 ~ g#3 ~ ~ ~\nlet changes = <chord(fm) chord(fm) chord(c#) chord(c#) chord(g#) chord(g#) chord(d#) chord(d#)>\ndef groove(deck, bars) {\n  deck $deck: kick kicks | snare snares | hihat hats | bass <wob_a wob_b> inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection intro 8 bars {\n  deck A: kick kicks | hihat hats vel=50..80\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 400 -> 6000 over 8 bars\n}\nsection build 8 bars {\n  deck A: kick kicks | snare snares | hihat x*8 vel=50..100\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter hp 100 -> 5000 over 8 bars\n  master: reverb 0.1 -> 0.5 over 8 bars\n  before drop 4 bars: move loop_roll on A over 4 bars\n}\nsection drop 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_a lead_b> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection breakdown 8 bars {\n  deck A: hihat x ~ x ~ vel=40..60\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter lp 6000 -> 1200 over 8 bars\n  master: reverb 0.45\n}\nsection drop2 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_b lead_a> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection outro 8 bars {\n  deck A: kick kicks | hihat hats vel=40..70\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 8000 -> 500 over 8 bars\n}\narrange intro build drop breakdown drop2 outro\nend after outro\n",
+    "nets": {
+      "breakdown@32:A": "z4EBG9j1iWcsVHuwSgjRWZ5yJ9y2ZncrkYtxFzjyJHgzMLAxGYt",
+      "breakdown@32:B": "z4EBG9j6xC7XhPsRu89PCeg1kDJ36o19QZ4Jk6cQNa6CKK5hokY",
+      "build@8:A": "z4EBG9j3ySX7682tM2k8JFFnPgdhDi3SZqyPHC5h9hHB8jYNcyW",
+      "build@8:B": "z4EBG9j6xC7XhPsRu89PCeg1kDJ36o19QZ4Jk6cQNa6CKK5hokY",
+      "drop2@40:A": "z4EBG9j8BDvgUEjm15dXsf4xLcYpZ15bpPh1xk49t59eL5kwm92",
+      "drop2@40:B": "z4EBG9j9oettc4L8yvapBkLSfyZcq1Ub6y6tNd366wj4JFQaEgP",
+      "drop@16:A": "z4EBG9j8BDvgUEjm15dXsf4xLcYpZ15bpPh1xk49t59eL5kwm92",
+      "drop@16:B": "z4EBG9j6xC7XhPsRu89PCeg1kDJ36o19QZ4Jk6cQNa6CKK5hokY",
+      "intro@0:A": "z4EBG9j9nWfgCt6MvwE2XpDrDUoGxkqriA2679hzGvnXE5BxUkR",
+      "intro@0:B": "z4EBG9j12CQfcaPTCnVk8SbyarUkHZZfwGpGzFmhbxiLmk8YDem",
+      "outro@56:A": "z4EBG9j7eabNW7KQmk64NoncMikEQjk8xFdUKgfa9nzB2kdUz9j",
+      "outro@56:B": "z4EBG9j12CQfcaPTCnVk8SbyarUkHZZfwGpGzFmhbxiLmk8YDem"
+    },
+    "song_nets": null,
+    "tempo": 140,
+    "key": "fm",
+    "swing": null,
+    "arranged": true,
+    "song_bars": 64,
+    "ends": true,
+    "end_bar": 64,
+    "loops": false,
+    "sections": [
+      {
+        "name": "intro",
+        "start": 0,
+        "bars": 8
+      },
+      {
+        "name": "build",
+        "start": 8,
+        "bars": 8
+      },
+      {
+        "name": "drop",
+        "start": 16,
+        "bars": 16
+      },
+      {
+        "name": "breakdown",
+        "start": 32,
+        "bars": 8
+      },
+      {
+        "name": "drop2",
+        "start": 40,
+        "bars": 16
+      },
+      {
+        "name": "outro",
+        "start": 56,
+        "bars": 8
+      }
+    ],
+    "decks": ["A","B"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": 109.714,
+    "expanded_cid": "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi"
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 140\nkey fm\nlet kicks = x ~ ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~\nlet snares = ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~\nlet hats = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ x x ~\nlet wob_a = f1 ~ ~ f1 ~ ~ g#1 ~ f1 ~ ~ ~ d#1 ~ c1 ~\nlet wob_b = f1 ~ f1 ~ ~ ~ c#1 ~ ~ ~ c1 ~ d#1 ~ d#1 ~\nlet lead_a = ~ ~ c4 ~ g#3 ~ ~ ~ f3 ~ ~ g3 ~ g#3 ~ ~\nlet lead_b = ~ ~ c4 ~ d#4 ~ ~ ~ c#4 ~ c4 ~ g#3 ~ ~ ~\nlet changes = <chord(fm) chord(fm) chord(c#) chord(c#) chord(g#) chord(g#) chord(d#) chord(d#)>\ndef groove(deck, bars) {\n  deck $deck: kick kicks | snare snares | hihat hats | bass <wob_a wob_b> inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection intro 8 bars {\n  deck A: kick kicks | hihat hats vel=50..80\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 400 -> 6000 over 8 bars\n}\nsection build 8 bars {\n  deck A: kick kicks | snare snares | hihat x*8 vel=50..100\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter hp 100 -> 5000 over 8 bars\n  master: reverb 0.1 -> 0.5 over 8 bars\n  before drop 4 bars: move loop_roll on A over 4 bars\n}\nsection drop 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_a lead_b> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection breakdown 8 bars {\n  deck A: hihat x ~ x ~ vel=40..60\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter lp 6000 -> 1200 over 8 bars\n  master: reverb 0.45\n}\nsection drop2 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_b lead_a> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection outro 8 bars {\n  deck A: kick kicks | hihat hats vel=40..70\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 8000 -> 500 over 8 bars\n}\narrange intro build drop breakdown drop2 outro\nend after outro\n",
+    "cid": "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi",
+    "comments": ["! beatscript 1","! name: hand-dubstep-140-v2","! license: CC0-1.0","! visibility: public"],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 31,
+        "col": 3,
+        "end_col": 54,
+        "start": 1135,
+        "end": 1186,
+        "start16": 1135,
+        "end16": 1186,
+        "message": "the browser does not play this: the `loop_roll` move (of the moves the browser plays vocoder_handoff only)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the `loop_roll` move (of the moves the browser plays vocoder_handoff only)\n  --> 31:3\n   |\n31 |   before drop 4 bars: move loop_roll on A over 4 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "text": "#! btw 1\n#! name: hand-dubstep-140-v2\n#! license: CC0-1.0\n#! visibility: public\ntempo 140\nkey fm\nlet kicks = x ~ ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~\nlet snares = ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~\nlet hats = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ x x ~\nlet wob_a = f1 ~ ~ f1 ~ ~ g#1 ~ f1 ~ ~ ~ d#1 ~ c1 ~\nlet wob_b = f1 ~ f1 ~ ~ ~ c#1 ~ ~ ~ c1 ~ d#1 ~ d#1 ~\nlet lead_a = ~ ~ c4 ~ g#3 ~ ~ ~ f3 ~ ~ g3 ~ g#3 ~ ~\nlet lead_b = ~ ~ c4 ~ d#4 ~ ~ ~ c#4 ~ c4 ~ g#3 ~ ~ ~\nlet changes = <chord(fm) chord(fm) chord(c#) chord(c#) chord(g#) chord(g#) chord(d#) chord(d#)>\ndef groove(deck, bars) {\n  deck $deck: kick kicks | snare snares | hihat hats | bass <wob_a wob_b> inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection intro 8 bars {\n  deck A: kick kicks | hihat hats vel=50..80\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 400 -> 6000 over 8 bars\n}\nsection build 8 bars {\n  deck A: kick kicks | snare snares | hihat x*8 vel=50..100\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter hp 100 -> 5000 over 8 bars\n  master: reverb 0.1 -> 0.5 over 8 bars\n  before drop 4 bars: move loop_roll on A over 4 bars\n}\nsection drop 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_a lead_b> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection breakdown 8 bars {\n  deck A: hihat x ~ x ~ vel=40..60\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter lp 6000 -> 1200 over 8 bars\n  master: reverb 0.45\n}\nsection drop2 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_b lead_a> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection outro 8 bars {\n  deck A: kick kicks | hihat hats vel=40..70\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 8000 -> 500 over 8 bars\n}\narrange intro build drop breakdown drop2 outro\nend after outro\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://beatscript.app/#z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi.tVTbbuIwEH3PV0xFH8qqQTEEFiFAYvshVRw7EOHEkRNuWtpv3_ElFwXUVl1VkRLbOeM5c87Ygweg1QmIN3iAPMr4AnZRznx2oGXFC5-EgX8c658ijXle4v-Xl8Ano0CvHdMypalIq8sCigNFiFfxrJCAYd6eXyDJPMEr2KfxvoQVnOH95umsGWyZR4pr8AfABryLqhp67sHO7n120JOkrxFiE2J-uM92QNrJOzAzjUknhtYxDSgeNCPSxJi3CRI8YiaTQYQmycQFJHawnbSrbQztxrBB2KQLbzYyQTE6tTVSLeOdVOwpyYbQH8WD29H2zoh1R2uP8QS2Ssojf2I83j8DjVQ5hL8egJ7Do34vjLHO3at1rvbvCrsU3bEOXTG8LGFpPTCqriHNy2qFYyq4r-vHrRUvOMY86mTAj1xdgJjMJjFAFmFTqgUkqcAviAImQQD-GsZz_CJZ5fCIfvPevJLHVSpzTFUpCfN2K1PDpse_Q_jIxWoajEbzoAb_0QdDZTK_NLrbAnDRLwz7W3ahZTcLanaWQocZPaSCfcrsrrLnX_OGJwm-TBTjMy4ku8DSdaptPmdIccpqN3r17Aogtp5pv54Wq7RrFIIR0cBgNO3hKE8klsKURHXM4gIyhICQsnhVUghAVTY2KuyrZcLIrFWrR1EmyV0uU1x13bx5xg2GHbG-IobW_EPzO4YqHu2ZPOX3THXGudtJmxeiebOf9w570TQhekLGn5sXTnuij39UderuzO-rLg_fOOBa-9__d8DnQXMiegc8Ukpv4q4ee8xN-7YNYoU11D2eM4gSo6aZ_wM",
+    "social_url": "https://beatscript.app/c/z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi.tVTbbuIwEH3PV0xFH8qqQTEEFiFAYvshVRw7EOHEkRNuWtpv3_ElFwXUVl1VkRLbOeM5c87Ygweg1QmIN3iAPMr4AnZRznx2oGXFC5-EgX8c658ijXle4v-Xl8Ano0CvHdMypalIq8sCigNFiFfxrJCAYd6eXyDJPMEr2KfxvoQVnOH95umsGWyZR4pr8AfABryLqhp67sHO7n120JOkrxFiE2J-uM92QNrJOzAzjUknhtYxDSgeNCPSxJi3CRI8YiaTQYQmycQFJHawnbSrbQztxrBB2KQLbzYyQTE6tTVSLeOdVOwpyYbQH8WD29H2zoh1R2uP8QS2Ssojf2I83j8DjVQ5hL8egJ7Do34vjLHO3at1rvbvCrsU3bEOXTG8LGFpPTCqriHNy2qFYyq4r-vHrRUvOMY86mTAj1xdgJjMJjFAFmFTqgUkqcAviAImQQD-GsZz_CJZ5fCIfvPevJLHVSpzTFUpCfN2K1PDpse_Q_jIxWoajEbzoAb_0QdDZTK_NLrbAnDRLwz7W3ahZTcLanaWQocZPaSCfcrsrrLnX_OGJwm-TBTjMy4ku8DSdaptPmdIccpqN3r17Aogtp5pv54Wq7RrFIIR0cBgNO3hKE8klsKURHXM4gIyhICQsnhVUghAVTY2KuyrZcLIrFWrR1EmyV0uU1x13bx5xg2GHbG-IobW_EPzO4YqHu2ZPOX3THXGudtJmxeiebOf9w570TQhekLGn5sXTnuij39UderuzO-rLg_fOOBa-9__d8DnQXMiegc8Ukpv4q4ee8xN-7YNYoU11D2eM4gSo6aZ_wM",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi.tVTbbuIwEH3PV4xEH8qqoBgCixAgsT9SJbEDEU4cOSkXLe23dzx2LgqorVpVSMnYnPGcOWecSmSFAhb43kFcIMk8KSo4pPGhhDWc4e3m19kjbJmHWhjwB8AGvA-rGnruwc7ueXbQk4qeQ8QmjP5wr92AtYs34LSMWScnqnMaUDxoItbk0JOSpAg5VSJEQEWmLiGxwW7a7rY5UTeHD4KmXHBzECXF-zDfkVSreK80f0yyIfSjeHAb7e5EvBttPC4S2GmljuKRi_jwBFGoyyH89wDMGh7Mc0nGOnev1rnavyvsU3THOnTF9LKElfWAVN1AmpfVGuNIipHpH4_WohCY82CKgTgKfQFGlakwQBaWldBLSFKJb5AFTH0fRhuYLPCNZLXDI_rVe_VKEVepyrFUpRUs2qOoh22Pf4fwUcj1zB-PF34N_rfEf3Sm8kuju20AN0cFsb9lF1h2c79mZyl0mEUvqeSfMrur7PnPouHJ_C8TxfxMSMUvsHKTaofPGVKcstqNXj_7ApjtZ9bvp8Vq41oE_pgZoD-e9XCRSBS2wrVCdWhzCRlCQCpVPGslJaAqW5sV9NWiNDZv1epRVElyl8sMd900b5_wgGFHrK-IYTT_0PyOoVqEB65O-T1TnXHu62TMC9C8-e97h7NIQ4iesMnn5gWznuiTX1U9ct_M76uuXr5xwY32f392wRd-cyN6FzzU2hziPj32mtP4tgNihSXqnsg5hAmpSet3",
+    "cid": "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi",
+    "chars": 891,
+    "canonical": "tempo 140\nkey fm\nlet kicks = x ~ ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~\nlet snares = ~ ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~\nlet hats = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ x x ~\nlet wob_a = f1 ~ ~ f1 ~ ~ g#1 ~ f1 ~ ~ ~ d#1 ~ c1 ~\nlet wob_b = f1 ~ f1 ~ ~ ~ c#1 ~ ~ ~ c1 ~ d#1 ~ d#1 ~\nlet lead_a = ~ ~ c4 ~ g#3 ~ ~ ~ f3 ~ ~ g3 ~ g#3 ~ ~\nlet lead_b = ~ ~ c4 ~ d#4 ~ ~ ~ c#4 ~ c4 ~ g#3 ~ ~ ~\nlet changes = <chord(fm) chord(fm) chord(c#) chord(c#) chord(g#) chord(g#) chord(d#) chord(d#)>\ndef groove(deck, bars) {\n  deck $deck: kick kicks | snare snares | hihat hats | bass <wob_a wob_b> inst=wobble-lead\n  repeat $bars every 1 bars {\n    master: filter lp 300 -> 2800 over 1 bars\n  }\n}\nsection intro 8 bars {\n  deck A: kick kicks | hihat hats vel=50..80\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 400 -> 6000 over 8 bars\n}\nsection build 8 bars {\n  deck A: kick kicks | snare snares | hihat x*8 vel=50..100\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter hp 100 -> 5000 over 8 bars\n  master: reverb 0.1 -> 0.5 over 8 bars\n  before drop 4 bars: move loop_roll on A over 4 bars\n}\nsection drop 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_a lead_b> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection breakdown 8 bars {\n  deck A: hihat x ~ x ~ vel=40..60\n  deck B: harmony changes inst=warm-pad | melody <lead_a lead_b> inst=pwm-lead\n  master: filter lp 6000 -> 1200 over 8 bars\n  master: reverb 0.45\n}\nsection drop2 16 bars {\n  master: filter off\n  master: reverb 0.15\n  groove(A, 16)\n  deck B: melody <lead_b lead_a> inst=pwm-lead | harmony changes inst=warm-pad\n}\nsection outro 8 bars {\n  deck A: kick kicks | hihat hats vel=40..70\n  deck B: harmony changes inst=warm-pad\n  master: filter lp 8000 -> 500 over 8 bars\n}\narrange intro build drop breakdown drop2 outro\nend after outro\n",
+    "warnings": []
+  }
+}

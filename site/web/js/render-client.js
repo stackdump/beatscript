@@ -10,7 +10,7 @@
 
 import { RENDER_LIMITS, wav } from './render-model.js';
 
-/** The render's sample rate (btwd render's default). */
+/** The render's sample rate (beatscript render's default). */
 export const RENDER_RATE = 44100;
 /** How long a blob: WAV may take to load before Web Audio plays it instead. */
 export const BLOB_PROBE_MS = 4000;

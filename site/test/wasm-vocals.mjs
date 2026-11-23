@@ -5,7 +5,7 @@
 //
 // 1. engine-calls.js: the vocoder's set / swap / add / remove and the vocoder_handoff move become live ops; a timed
 //    `vocal` call is ignored (and named)
-// 2. a `sing` line on deck A: BtwRun puts a sung part in deck A's net (no `vocal` call), and the engine renders it: the deck
+// 2. a `sing` line on deck A: BeatscriptRun puts a sung part in deck A's net (no `vocal` call), and the engine renders it: the deck
 //    is not silent with the voice alone, and the voice changes what deck A plays
 // 3. the vocoder: carrier deck A (bass and an arp), modulator deck B (a sung line, its fader down): the output with the vocoder on
 //    (as an insert on A, mix 1) differs from the dry carrier, and a mix ramp's midpoint lies between the two
@@ -17,12 +17,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const wasmDir = path.resolve(process.argv[2] || path.join(here, '..', 'web', 'wasm'));
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) {
+if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm'))) {
     console.log(`SKIP wasm-vocals: no built module in ${wasmDir} (scripts/build-web-wasm.sh <dir>)`);
     process.exit(0);
 }
-const glue = await import(pathToFileURL(path.join(wasmDir, 'btw.js')).href);
-glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm')) });
+const glue = await import(pathToFileURL(path.join(wasmDir, 'beatscript.js')).href);
+glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'beatscript_bg.wasm')) });
 const { mapCall } = await import(pathToFileURL(path.join(here, '..', 'web', 'js', 'engine-calls.js')).href);
 
 let passed = 0;
@@ -50,7 +50,7 @@ const SR = 48000;
 
 // ---- helpers: a program's first loads, and a render of envelopes on a fresh engine
 function firstPass(text) {
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     const ev = JSON.parse(run.eval(text));
     if (!ev.ok) throw new Error(JSON.stringify(ev.diagnostics.map((d) => d.render)));
     const cmds = JSON.parse(run.service('null'));

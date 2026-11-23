@@ -1,6 +1,6 @@
-# BeatScript (btw) for VS Code
+# BeatScript for VS Code
 
-Highlighting from a TextMate grammar; everything else from `btwd lsp`, the btw language server (`crates/beatscriptls` in
+Highlighting from a TextMate grammar; everything else from `beatscript lsp`, the BeatScript language server (`crates/beatscriptls` in
 stackdump/beatscript). The browser editor at beatscript.app runs the same server as wasm, so the two say the same things.
 
 What the server gives: diagnostics (the parser's at once, the compile's after the text has rested 150 ms), quick-fixes and fix
@@ -15,20 +15,20 @@ each: **show expansion** (again: **hide expansion**) puts its first line after i
 and **eject** writes it out in place under a `# from:` line once the server has proved the program plays the same. The same
 eject, and *Copy the expansion*, are in the lightbulb (Ctrl+.). The palette has *Show or hide every reference's expansion* and
 *Open the expansion of the reference here beside* (a read-only BeatScript document). Which expansions are shown is this
-extension's own state; the server only answers `btw/expand`.
+extension's own state; the server only answers `beatscript/expand`.
 
 ## Try it
 
 ```bash
 # 1. the server
-cd beatscript && cargo build --release -p btwd     # target/release/btwd
+cd beatscript && cargo build --release -p beatscript-cli     # target/release/beatscript
 # 2. the extension, from this directory
 npm install
-code --extensionDevelopmentPath="$PWD" ../../examples/btw/showcase.btw
+code --extensionDevelopmentPath="$PWD" ../../examples/beatscript/showcase.beatscript
 ```
 
-Set `btw.server.path` to the btwd binary if it is not on `PATH` (Settings → BeatScript). `BeatScript: Restart the language
-server` picks up a rebuilt btwd. `btw.trace.server: verbose` logs the traffic.
+Set `beatscript.server.path` to the beatscript binary if it is not on `PATH` (Settings → BeatScript). `BeatScript: Restart the language
+server` picks up a rebuilt beatscript. `beatscript.trace.server: verbose` logs the traffic.
 
 To install it for good, package it: `npx @vscode/vsce package --allow-missing-repository --skip-license` makes
 `beatscript-0.1.0.vsix`; then `code --install-extension beatscript-0.1.0.vsix`.

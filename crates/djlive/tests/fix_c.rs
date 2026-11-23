@@ -126,7 +126,7 @@ fn r03_a_move_is_put_back_at_the_songs_phrase_line_not_a_bar_early() {
 /// evaluated in, nothing of it sounds on that bar (its net lands on the next one) and `at bar 1` is the first bar you hear. Every timed
 /// word counts from there, as every program written before the extensions has always done. With nothing playing the music starts on
 /// bar 0 at once and the same words fall on the same bars; only `on next phrase` differs (the first phrase line the program is there
-/// for: bar 8 with a deck playing, bar 0 at once). The offline render starts the music on its bar 0 (docs/BTW.md "Time words").
+/// for: bar 8 with a deck playing, bar 0 at once). The offline render starts the music on its bar 0 (docs/BEATSCRIPT.md "Time words").
 #[test]
 fn r02_a_program_with_no_sections_keeps_counting_from_the_bar_it_was_evaluated_in() {
     let src = "deck A: kick x ~ x ~\nat bar 2: master: level 0.5\nevery 3 bars: master: level 0.25\non next phrase: master: level 0.75\nend at bar 10\n";

@@ -1,4 +1,4 @@
-//! F9 `sing "lyrics" on melody voice=alto` (docs/btw/ext-sing.md): typed lyrics sung on the notes of one of the
+//! F9 `sing "lyrics" on melody voice=alto` (docs/beatscript/ext-sing.md): typed lyrics sung on the notes of one of the
 //! program's own parts, through the `vocal` noun (docs/VOICE.md).
 //!
 //! ```text
@@ -103,8 +103,8 @@ pub fn lyric_diagnostics(src: &str, lyric_span: Span, lyric: &str, issues: &[dje
             let at = if exact { Span::new(lyric_span.start + 1 + i.start, lyric_span.start + 1 + i.end.max(i.start + 1)) } else { lyric_span };
             let mut d = Diagnostic::error(at, i.message.clone()).found(format!("`{}`", i.token));
             d = match i.did_you_mean {
-                Some(m) => d.help(format!("did you mean `{m}`? the symbols are in docs/btw/phonemes.md")),
-                None => d.help("the BeatScript phonemes: aa ae uh aw eh er ii ee uu oo ay ie oy ow oh, p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, and _ (docs/btw/phonemes.md)"),
+                Some(m) => d.help(format!("did you mean `{m}`? the symbols are in docs/beatscript/phonemes.md")),
+                None => d.help("the BeatScript phonemes: aa ae uh aw eh er ii ee uu oo ay ie oy ow oh, p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, and _ (docs/beatscript/phonemes.md)"),
             };
             d
         })
@@ -138,9 +138,9 @@ impl Parser<'_> {
                         let ids = djengine::vocal::phoneme::phrase_ids();
                         let mut d = Diagnostic::error(sp, format!("`{w}` is not a phrase of the phrasebook")).found(format!("`{w}`"));
                         d = match suggest(id, &ids, 3).first() {
-                            Some(n) => d.help(format!("did you mean `@{n}`? (docs/btw/phonemes.md, \"The phrasebook\")")),
+                            Some(n) => d.help(format!("did you mean `@{n}`? (docs/beatscript/phonemes.md, \"The phrasebook\")")),
                             None => d.help(format!(
-                                "phrases: {}, and lines of verse and speech from before 1929: @tempest_such_stuff, @gettysburg_four_score ... (docs/btw/phonemes.md)",
+                                "phrases: {}, and lines of verse and speech from before 1929: @tempest_such_stuff, @gettysburg_four_score ... (docs/beatscript/phonemes.md)",
                                 ids.iter().take(6).map(|i| format!("@{i}")).collect::<Vec<_>>().join(", ")
                             )),
                         };
@@ -389,7 +389,7 @@ pub fn syllables(lyric: &str, voices: Option<&dyn Voices>) -> Vec<LyricWord> {
 
 /// The lyrics a program's text writes, in order, as the lexer reads its strings (escapes read): each `sing "..."` and
 /// each `lyrics="..."` (of `do vocal create`). A phrase (`sing @hands_up`) is not a lyric of the text. For the lexicon
-/// harvest (docs/btw/lexicon-harvest.md): a quick read of the tokens, with no check.
+/// harvest (docs/beatscript/lexicon-harvest.md): a quick read of the tokens, with no check.
 pub fn lyrics(src: &str) -> Vec<String> {
     use crate::lex::Tok;
     let toks = crate::lex::lex(src).tokens;
@@ -830,7 +830,7 @@ impl Compiler<'_> {
             let more = if ruled.len() > 6 { format!(" and {} more", ruled.len() - 6) } else { String::new() };
             self.diags.push(
                 Diagnostic::warning(s.lyric_span, format!("not in the BeatScript lexicon, sounded out by the rules: {}{more}", shown.join(", ")))
-                    .help("if one sounds wrong, respell it or write its phonemes between slashes: sing \"we are /dh uh/ rave\" on melody (docs/btw/phonemes.md); or sing a phrasebook line, whose words come with their escapes and a meter chosen for the groove: sing @tempest_such_stuff on melody (beatscript.app/phrasebook, docs/btw/found-phrases.md)"),
+                    .help("if one sounds wrong, respell it or write its phonemes between slashes: sing \"we are /dh uh/ rave\" on melody (docs/beatscript/phonemes.md); or sing a phrasebook line, whose words come with their escapes and a meter chosen for the groove: sing @tempest_such_stuff on melody (beatscript.app/phrasebook, docs/beatscript/found-phrases.md)"),
             );
         }
         if lay.dropped > 0 {

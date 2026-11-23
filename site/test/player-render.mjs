@@ -1,8 +1,8 @@
 // The player's offline render (site/player/src/beatscript-render.js, <beatscript-track mode="render">) in Node: no
 // browser, no AudioContext, the packaged engine and worklet on the render's own clock.
 //
-//   node site/test/player-render.mjs        (needs site/web/wasm, or BTW_WASM=<dir>; skips without it)
-//   BTW_RENDER_BENCH=1 ...                  also times a two-minute track (and prints the factor over real time)
+//   node site/test/player-render.mjs        (needs site/web/wasm, or BEATSCRIPT_WASM=<dir>; skips without it)
+//   BEATSCRIPT_RENDER_BENCH=1 ...                  also times a two-minute track (and prints the factor over real time)
 //
 // Builds the package, then for each program: it renders; the length is exactly its bars at its tempo (one pass for a
 // looping song; the cap for a long one); it is not silent, and each section is heard (its RMS); a second render is the
@@ -16,17 +16,17 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const wasmDir = process.env.BTW_WASM || path.join(here, '..', 'web', 'wasm');
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) {
-  console.log(`# skip: no ${wasmDir}/btw_bg.wasm (scripts/build-web-wasm.sh ${wasmDir})`);
+const wasmDir = process.env.BEATSCRIPT_WASM || path.join(here, '..', 'web', 'wasm');
+if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm'))) {
+  console.log(`# skip: no ${wasmDir}/beatscript_bg.wasm (scripts/build-web-wasm.sh ${wasmDir})`);
   process.exit(0);
 }
-const dist = process.env.BTW_PLAYER_DIST || fs.mkdtempSync(path.join(os.tmpdir(), 'btw-player-render-'));
-if (!process.env.BTW_PLAYER_DIST) execFileSync(process.execPath, [path.join(here, '..', 'player', 'build.mjs'), '--wasm', wasmDir, '--out', dist], { stdio: 'inherit' });
+const dist = process.env.BEATSCRIPT_PLAYER_DIST || fs.mkdtempSync(path.join(os.tmpdir(), 'btw-player-render-'));
+if (!process.env.BEATSCRIPT_PLAYER_DIST) execFileSync(process.execPath, [path.join(here, '..', 'player', 'build.mjs'), '--wasm', wasmDir, '--out', dist], { stdio: 'inherit' });
 
 const { renderProgram } = await import(pathToFileURL(path.join(dist, 'beatscript-render.js')).href);
 const { framesOf, wav, pcm16, renderPlan } = await import(pathToFileURL(path.join(dist, 'render-model.js')).href);
-const module = await WebAssembly.compile(fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm')));
+const module = await WebAssembly.compile(fs.readFileSync(path.join(wasmDir, 'beatscript_bg.wasm')));
 
 const SR = 44100;
 const failures = [];
@@ -113,13 +113,13 @@ for (const c of CASES) {
   check(plan.bars === 256 && plan.cut === 'bars', `the cap: a 400-bar song at 200 renders 256 bars (${plan.bars}, cut ${plan.cut})`);
   const slow = renderPlan({ ok: true, tempo: 60, arranged: true, song_bars: 200, loops: false });
   check(slow.bars === 150 && slow.cut === 'seconds', `the cap: 200 bars at 60 is 800 s, cut to 600 s, 150 bars (${slow.bars}, cut ${slow.cut})`);
-  if (process.env.BTW_RENDER_LONG) {
+  if (process.env.BEATSCRIPT_RENDER_LONG) {
     const r = await renderProgram({ module, text: long, sampleRate: SR });
     check(r.bars === 256 && r.frames === framesOf(256, 200, SR), `the cap, rendered: ${r.bars} bars, ${r.frames} frames`);
   }
 }
 
-if (process.env.BTW_RENDER_BENCH) {
+if (process.env.BEATSCRIPT_RENDER_BENCH) {
   // a two-minute track: 60 bars at 120, four sections, both decks, a sung line
   const text = `#! name: two minutes
 tempo 120
@@ -148,6 +148,6 @@ arrange intro verse chorus outro
   }
 }
 
-if (!process.env.BTW_PLAYER_DIST) fs.rmSync(dist, { recursive: true, force: true });
+if (!process.env.BEATSCRIPT_PLAYER_DIST) fs.rmSync(dist, { recursive: true, force: true });
 console.log(failures.length ? `# ${failures.length} failed` : '# all passed');
 process.exit(failures.length ? 1 : 0);

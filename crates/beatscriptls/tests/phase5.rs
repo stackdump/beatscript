@@ -5,7 +5,7 @@ mod common;
 use common::*;
 use djengine::json::JsonValue;
 
-const PROGRAM: &str = include_str!("programs/symbols.btw");
+const PROGRAM: &str = include_str!("programs/symbols.beatscript");
 
 fn hover_text(s: &mut beatscriptls::Server, text: &str, needle: &str, nth: usize, skip: u32) -> String {
     let (l, c) = find(text, needle, nth, skip);
@@ -18,7 +18,7 @@ fn a_section_says_its_bars_and_seconds_at_the_tempo() {
     let mut s = server(PROGRAM);
     // intro is `bars8` = 8 bars at 124 BPM, placed first (in `both`, with outro)
     let h = hover_text(&mut s, PROGRAM, "section intro", 0, 9);
-    assert!(h.starts_with("```btw\nsection intro bars8 bars\n```"), "{h}");
+    assert!(h.starts_with("```beatscript\nsection intro bars8 bars\n```"), "{h}");
     let h = hover_text(&mut s, PROGRAM, "section drop", 0, 9);
     // drop: 16 bars after both (8 bars): bars 9-24, 0:31 long from 0:15 at 124 BPM
     assert!(h.contains("16 bars, bars 9–24 · 0:31 long, from 0:15 to 0:46 at 124 BPM"), "{h}");
@@ -46,7 +46,7 @@ fn before_the_check_the_text_says_where_a_plain_arrange_puts_a_section() {
 fn generators_params_roles_and_voices() {
     let mut s = server(PROGRAM);
     let h = hover_text(&mut s, PROGRAM, "e(4,16)", 0, 0);
-    assert!(h.starts_with("```btw\ne(k, n, [rot])\n```") && h.contains("Euclidean"), "{h}");
+    assert!(h.starts_with("```beatscript\ne(k, n, [rot])\n```") && h.contains("Euclidean"), "{h}");
     let h = hover_text(&mut s, PROGRAM, "oct=$oct", 0, 1);
     assert!(h.contains("octave"), "{h}");
     let h = hover_text(&mut s, PROGRAM, "inst=sub-bass", 0, 6);

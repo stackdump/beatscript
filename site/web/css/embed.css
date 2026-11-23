@@ -1,5 +1,5 @@
 /* The embed player (/embed/<CID>): one row in a frame another site sizes (480 x 152, compact 480 x 80). The editor's
-   palette (btw.css) in dark, a paper one in light. No transitions on what marks the song. */
+   palette (beatscript.css) in dark, a paper one in light. No transitions on what marks the song. */
 
 .bsp {
   color-scheme: dark;

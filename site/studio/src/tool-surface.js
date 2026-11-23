@@ -1,7 +1,7 @@
 // tool-surface.js: the studio's tools as an MCP server that lives in the page (the "in-artifact MCP").
 //
 // The local tools run in the wasm module (site/web/js/wasm.js makeFacade): no network, no sign-in. Their names and
-// arguments are those of btwserve's MCP tools (crates/btwserve/src/mcp/tools.rs), less what only the server can do.
+// arguments are those of beatscript-serve's MCP tools (crates/beatscript-serve/src/mcp/tools.rs), less what only the server can do.
 // The capability tools use what the host grants through window.claude.use(): compose and repair ask Claude
 // (sample); store, render and queue call the viewer's BeatScript connector (mcp); the library keeps programs in the
 // viewer's private part of the artifact's store (db and user); export offers a file (downloads); jam_send plays a
@@ -27,7 +27,7 @@ const REPAIRS = 2; // compose and repair send check's diagnostics back to Claude
 const CID_PAT = '^z[1-9A-HJ-NP-Za-km-z]{20,100}$';
 const DOC_ID = /^(?!\.\.?$)[A-Za-z0-9_.~:@+-]{1,200}$/; // a db path segment
 
-// ---- schemas, in btwserve's style --------------------------------------------------------------------------------
+// ---- schemas, in beatscript-serve's style --------------------------------------------------------------------------------
 
 const str = (description, extra = {}) => ({ type: 'string', ...extra, description });
 const text = (description = 'The program text.') => str(description, { maxLength: MAX_TEXT });
@@ -68,17 +68,17 @@ const programName = (t) => /^#!\s*name:\s*(.+?)\s*$/m.exec(t || '')?.[1] || null
 
 /** A filename without its extension: the one given, else the program's `#! name:`, else "beatscript". */
 function baseName(filename, t) {
-  const raw = (filename || programName(t) || 'beatscript').replace(/(\.(btw|txt|wav|zip))+$/i, '');
+  const raw = (filename || programName(t) || 'beatscript').replace(/(\.(beatscript|txt|wav|zip))+$/i, '');
   return raw.replace(/[^\p{L}\p{N}._-]+/gu, '-').replace(/^[-.]+|[-.]+$/g, '').slice(0, 80) || 'beatscript';
 }
 
 /**
- * The program in a fenced block of an answer: the last one marked btw or beatscript, else the last of any kind
+ * The program in a fenced block of an answer: the last one marked BeatScript or beatscript, else the last of any kind
  * (with tools the answer is every round's text, so the program comes last). null when there is no closed fence.
  */
 function fenced(reply) {
   const blocks = [...String(reply).matchAll(/```([^\n`]*)\r?\n([\s\S]*?)```/g)];
-  const marked = blocks.filter((b) => /^\s*(btw|beatscript)\s*$/i.test(b[1]));
+  const marked = blocks.filter((b) => /^\s*(beatscript|beatscript)\s*$/i.test(b[1]));
   return (marked.length ? marked : blocks).at(-1)?.[2] ?? null;
 }
 
@@ -100,8 +100,8 @@ function originOf(site) {
 }
 
 // ---- a WAV in a zip ----------------------------------------------------------------------------------------------
-// downloads.save takes only an allowlist of extensions, with neither .btw nor .wav on it: the program is saved as
-// .btw.txt, and the WAV inside a zip that stores it uncompressed.
+// downloads.save takes only an allowlist of extensions, with neither .beatscript nor .wav on it: the program is saved as
+// .beatscript.txt, and the WAV inside a zip that stores it uncompressed.
 
 const CRC = new Uint32Array(256).map((_, n) => {
   let c = n;
@@ -203,14 +203,14 @@ const needs = (ns) => `needs the ${ns} capability: a Claude artifact that declar
  * encodeWav(left, right, sampleRate) -> Uint8Array: the WAV encoder export's wav format uses (the player's
  * render-model.js wav). Without it, or without render, export saves only the program text.
  */
-export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.app', server = 'Beatscript', render = null, encodeWav = null, onLoad = null, onJam = null } = {}) {
+export function createToolSurface({ beatscript, caps = {}, site = 'https://beatscript.app', server = 'Beatscript', render = null, encodeWav = null, onLoad = null, onJam = null } = {}) {
   caps = caps || {};
   const origin = originOf(site);
-  const has = (fn) => (typeof btw?.[fn] === 'function' ? null : `this build of the wasm module has no ${fn}`);
+  const has = (fn) => (typeof beatscript?.[fn] === 'function' ? null : `this build of the wasm module has no ${fn}`);
   const cap = (ns) => (caps[ns] ? null : needs(ns));
   const noWav = typeof render !== 'function' ? 'A WAV needs the render engine, which this page has not loaded.'
     : typeof encodeWav !== 'function' ? 'A WAV needs the WAV encoder, which this page has not loaded.' : null;
-  const formats = noWav ? ['btw'] : ['btw', 'wav'];
+  const formats = noWav ? ['beatscript'] : ['beatscript', 'wav'];
 
   /** Hand a program to the editor; a failing editor does not fail the tool that found the program. */
   const loaded = (t, meta) => {
@@ -233,17 +233,17 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
   // ---- compose and repair: ask Claude, check the answer here, send the problems back ----
 
   const instruction = (request, current) => {
-    const inst = btw.instruments() || {};
+    const inst = beatscript.instruments() || {};
     // a name that starts with a digit (808-bass) reads as a sum and cannot be written, so it is not offered
     const names = (k) => (Array.isArray(inst[k]) ? inst[k].filter((x) => /^[A-Za-z]/.test(x)).join(', ') : 'see the instruments tool');
     const parts = [
       'You write BeatScript, a small language for whole music tracks as text. Its grammar, in full:',
-      btw.cheatsheet(),
+      beatscript.cheatsheet(),
       `Voices you may name: ${names('voices')}.\nKits you may name: ${names('kits')}.`,
       `The request: ${request}`,
     ];
     if (current) parts.push(`The current program:\n\`\`\`btw\n${current.replace(/\n?$/, '\n')}\`\`\``);
-    parts.push('Answer with one program in a fenced block (```btw ... ```). If you have the check tool, use it: the program must pass.');
+    parts.push('Answer with one program in a fenced block (```beatscript ... ```). If you have the check tool, use it: the program must pass.');
     return parts.join('\n\n');
   };
 
@@ -276,10 +276,10 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
     for (let round = 1; round <= calls; round++) {
       const { text: reply } = await ask(turns);
       let prog = fenced(reply);
-      if (prog == null && typeof reply === 'string' && btw.check(reply).ok) prog = reply; // a bare program, no fence
-      rep = prog == null ? null : btw.check(prog);
+      if (prog == null && typeof reply === 'string' && beatscript.check(reply).ok) prog = reply; // a bare program, no fence
+      rep = prog == null ? null : beatscript.check(prog);
       if (rep?.ok) {
-        const f = btw.fmt(prog);
+        const f = beatscript.fmt(prog);
         const out = f?.ok && typeof f.text === 'string' ? f.text : prog;
         loaded(out, { cid: rep.cid, via });
         return { ok: true, text: out, cid: rep.cid, diagnostics: checkBrief(rep).diagnostics, rounds: round };
@@ -301,7 +301,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
     }
   };
   const checked = (t) => {
-    const rep = btw.check(t);
+    const rep = beatscript.check(t);
     if (!rep.ok) throw new Error(firstError(rep));
     return rep;
   };
@@ -328,13 +328,13 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
       title: 'Check a BeatScript program', via: 'wasm', annotations: READ, needs: () => has('check'),
       description: 'Check a program in the page: ok, the errors and warnings at line:col with help, the CID of its canonical text, tempo, key, sections and seconds.',
       inputSchema: schema({ text: text('The program text. Comments and blank lines are fine.') }, ['text']),
-      run: (a) => btw.check(textArg(a)),
+      run: (a) => beatscript.check(textArg(a)),
     },
     fmt: {
       title: 'Format a BeatScript program', via: 'wasm', annotations: READ, needs: () => has('fmt'),
       description: 'The program formatted as the site stores it, with its #! header lines and comments kept, and its CID. A program with errors gives the diagnostics.',
       inputSchema: schema({ text: text() }, ['text']),
-      run: (a) => btw.fmt(textArg(a)),
+      run: (a) => beatscript.fmt(textArg(a)),
     },
     expand: {
       title: "Write out a program's seeds and templates", via: 'wasm', annotations: READ, needs: () => has('expand'),
@@ -343,7 +343,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
         text: text('The program text, with gen@N calls, seed(...) or template(...) references in it.'),
         lineage: { type: 'boolean', description: 'Open the written-out text with `#! forked-from: <CID of the program as given>` (default false).' },
       }, ['text']),
-      run: (a) => btw.expand(textArg(a), a.lineage === true),
+      run: (a) => beatscript.expand(textArg(a), a.lineage === true),
     },
     generate: {
       title: 'Generate a track from a seed (no model)', via: 'wasm', annotations: READ, needs: () => has('generate'),
@@ -357,7 +357,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
         generator: { type: 'integer', enum: [1, 2], description: 'The version of the seeded generator: 1 (seeded@1, frozen) or 2 (seeded@2).' },
       }),
       run: (a) => {
-        const g = btw.generate(pick(a, ['genre', 'bpm', 'key', 'length', 'seed', 'generator']));
+        const g = beatscript.generate(pick(a, ['genre', 'bpm', 'key', 'length', 'seed', 'generator']));
         if (g?.ok) loaded(g.text, { cid: g.cid, name: g.name, via: 'generate' });
         return g;
       },
@@ -366,20 +366,20 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
       title: 'Highlight a program', via: 'wasm', annotations: READ, needs: () => has('highlight'),
       description: 'The highlighter spans of a program, as [start, end, class] with UTF-16 offsets: keyword, deck, role, step, rest, number, comment and so on.',
       inputSchema: schema({ text: text() }, ['text']),
-      run: (a) => ({ spans: btw.highlight(textArg(a)) }),
+      run: (a) => ({ spans: beatscript.highlight(textArg(a)) }),
     },
     share: {
       title: 'Make share links', via: 'wasm', annotations: READ, needs: () => has('share'),
       description: `Self-sealing share links for a program that checks (the program travels in the link, on ${origin || 'the site'}) and its CID. Nothing is stored: store does that.`,
       inputSchema: schema({ text: text('The program text. It must pass check.') }, ['text']),
-      run: (a) => onSite(btw.share(textArg(a))),
+      run: (a) => onSite(beatscript.share(textArg(a))),
     },
     open: {
       title: 'Open a share link', via: 'wasm', annotations: READ, needs: () => has('open'),
       description: 'Open a self-sealing share link in the page and verify it: the CID, the canonical text and whether the text is that CID. A bare CID has no text. The program goes into the editor.',
       inputSchema: schema({ url: str('A share link (self-sealing #<CID>.<packed>), a #fragment, <CID>.<packed>, or a bare CID.', { maxLength: 32768 }) }, ['url']),
       run: (a) => {
-        const o = btw.open(strArg(a, 'url', { required: true, max: 32768 }));
+        const o = beatscript.open(strArg(a, 'url', { required: true, max: 32768 }));
         if (o?.ok && o.verified) loaded(o.canonical, { cid: o.cid, via: 'open' });
         return o;
       },
@@ -388,7 +388,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
       title: 'Voices, kits and palettes', via: 'wasm', annotations: READ, needs: () => has('instruments'),
       description: 'The voices, families, kits and palettes a program may name.',
       inputSchema: schema(),
-      run: () => btw.instruments(),
+      run: () => beatscript.instruments(),
     },
     cheatsheet: {
       title: 'The language cheat sheet', via: 'wasm', annotations: READ, needs: () => has('cheatsheet'),
@@ -396,7 +396,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
       inputSchema: schema(),
       // Markdown, so the text block is the sheet itself rather than its JSON string
       run: () => {
-        const md = btw.cheatsheet();
+        const md = beatscript.cheatsheet();
         return { content: [{ type: 'text', text: md }], structuredContent: { cheatsheet: md } };
       },
     },
@@ -408,7 +408,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
         n: { type: 'integer', minimum: 0, description: 'The position to start at (default 0).' },
         count: { type: 'integer', minimum: 1, maximum: 16, description: 'How many tracks (default 1).' },
       }, ['station']),
-      run: (a) => btw.station({ station: strArg(a, 'station', { required: true }), ...pick(a, ['n', 'count']) }),
+      run: (a) => beatscript.station({ station: strArg(a, 'station', { required: true }), ...pick(a, ['n', 'count']) }),
     },
 
     compose: {
@@ -426,7 +426,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
       inputSchema: schema({ text: text() }, ['text']),
       run: async (a) => {
         const t = textArg(a);
-        const rep = btw.check(t);
+        const rep = beatscript.check(t);
         if (rep.ok) return { ok: true, text: t, cid: rep.cid, diagnostics: checkBrief(rep).diagnostics, rounds: 0 };
         const turns = [{ role: 'user', content: instruction('Fix this program so that it passes check, and keep its music.', t) }, { role: 'user', content: problems(rep) }];
         return converse(turns, REPAIRS, 'repair');
@@ -492,7 +492,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
       inputSchema: schema({ text: text(), name: str("A name (else its `#! name:` line).", { maxLength: 80 }) }, ['text']),
       run: (a) => {
         const t = textArg(a);
-        const rep = btw.check(t);
+        const rep = beatscript.check(t);
         const doc = { name: strArg(a, 'name', { max: 80 }) || programName(t) || 'untitled', text: t, cid: rep.ok ? rep.cid : null, savedAt: new Date().toISOString() };
         return inLibrary(async (col) => {
           const ref = doc.cid ? col.doc(doc.cid) : col.doc();
@@ -530,19 +530,19 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
     },
     export: {
       title: 'Save a file', via: 'downloads', annotations: hints(false, false, false, false), needs: () => cap('downloads'),
-      description: `Offer the program as a file: btw saves the text (name.btw.txt)${noWav ? '' : ', wav renders it here and saves the WAV in a zip (name.wav.zip)'}. You confirm the save.`,
+      description: `Offer the program as a file: beatscript saves the text (name.beatscript.txt)${noWav ? '' : ', wav renders it here and saves the WAV in a zip (name.wav.zip)'}. You confirm the save.`,
       inputSchema: schema({
-        format: { type: 'string', enum: formats, description: noWav ? 'btw: the program text.' : 'btw: the program text; wav: the audio, rendered in the page.' },
+        format: { type: 'string', enum: formats, description: noWav ? 'beatscript: the program text.' : 'beatscript: the program text; wav: the audio, rendered in the page.' },
         text: text(),
         filename: str("The file's name without extension (else the program's `#! name:`).", { maxLength: 200 }),
       }, ['format', 'text']),
       run: async (a) => {
         if (a.format === 'wav' && noWav) throw new Error(noWav);
-        if (a.format !== 'btw' && a.format !== 'wav') throw new Error(`argument "format" is ${formats.join(' or ')}`);
+        if (a.format !== 'beatscript' && a.format !== 'wav') throw new Error(`argument "format" is ${formats.join(' or ')}`);
         const t = textArg(a);
         const base = baseName(strArg(a, 'filename', { max: 200 }), t);
         let file;
-        if (a.format === 'btw') file = { filename: `${base}.btw.txt`, data: t };
+        if (a.format === 'beatscript') file = { filename: `${base}.beatscript.txt`, data: t };
         else {
           checked(t);
           const r = await render(t);
@@ -583,7 +583,7 @@ export function createToolSurface({ btw, caps = {}, site = 'https://beatscript.a
       const t = msg?.data?.text;
       if (msg?.sameTab || typeof t !== 'string' || !t || t.length > MAX_TEXT) return;
       let rep;
-      try { rep = btw.check(t); } catch { return; }
+      try { rep = beatscript.check(t); } catch { return; }
       if (!rep?.ok) return;
       // a failing handler is the page's to hear about, not the room's
       try { onJam({ topic: 'program', text: t, cid: rep.cid, peer: msg.peer, by: msg.by ?? null, isMe: !!msg.isMe, guest: !!msg.guest }); } catch (e) { globalThis.reportError?.(e); }

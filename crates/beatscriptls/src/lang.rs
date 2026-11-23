@@ -1,5 +1,5 @@
 //! What the service knows of the language beyond the tables djlive exports: the signatures and one-line docs of the
-//! generators and transforms (docs/BTW.md "Generators", "Pattern transforms"), the part parameters, the evolve operators, the
+//! generators and transforms (docs/BEATSCRIPT.md "Generators", "Pattern transforms"), the part parameters, the evolve operators, the
 //! statement keywords and their snippets. Written once here so completion, hover and signature help say the same thing.
 
 /// A callable: `e(k, n [, rot])`.

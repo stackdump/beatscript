@@ -461,12 +461,12 @@ pub struct Line {
     /// `for 4 bars`, `for 2 beats`: undone after that long.
     pub hold: Option<(Dur, Span)>,
     pub target: Option<(Target, Span)>,
-    /// `control:`, the control deck (docs/btw/ext-control.md): the head of a line of engine calls only, in the place a target
+    /// `control:`, the control deck (docs/beatscript/ext-control.md): the head of a line of engine calls only, in the place a target
     /// takes. The line has no target, and it is lowered as the same line without the head (expand.rs drops it), so
     /// `control: move echo_out on B` compiles to what `move echo_out on B` does. The span is the head's, `control` to `:`.
     pub control: Option<Span>,
     pub body: Body,
-    /// `when $i % 4 == 3` after the line: it is kept when the condition holds (docs/btw/ext-arith.md).
+    /// `when $i % 4 == 3` after the line: it is kept when the condition holds (docs/beatscript/ext-arith.md).
     pub guard: Option<Guard>,
 }
 

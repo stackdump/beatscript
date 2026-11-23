@@ -1,4 +1,4 @@
-//! Exact rationals for compile-time arithmetic, sub-bar timing and tempo maths (docs/BTW-EXTENSIONS.md).
+//! Exact rationals for compile-time arithmetic, sub-bar timing and tempo maths (docs/BEATSCRIPT-EXTENSIONS.md).
 //!
 //! A [`Rat`] is `num / den` in lowest terms with `den > 0`. Every operation is checked: an overflow is an
 //! `Err`, never a wrap or a panic, so a program's arithmetic is total. Printing is canonical (`3`, `1/2`,

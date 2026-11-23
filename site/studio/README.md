@@ -46,7 +46,7 @@ needs its text. A `station` source needs a module with the station tool; without
 | share | copy the self-sealing link (the program is in the link); where the clipboard is refused, the link is selected |
 | open | open a share link (its text is checked against its CID) |
 | generate | the seeded generator: a genre and a seed |
-| .btw, WAV | export the program or a render, through the host's `downloads` capability or a download link |
+| .beatscript, WAV | export the program or a render, through the host's `downloads` capability or a download link |
 | compose | with the `sample` capability: ask Claude for a program or a change |
 | store | with the `mcp` capability: store the program through the viewer's BeatScript connector |
 | library | with the `db` capability: your saved programs |

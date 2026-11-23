@@ -1,7 +1,7 @@
 // The editor's "render" source in headless Chrome, under the site's own CSP (mock-server.mjs --csp strict, which is
-// btwserve's policy: media-src 'self' blob:).
+// beatscript-serve's policy: media-src 'self' blob:).
 //
-//   BTW_WASM=<dir> node site/test/render-source.mjs     (needs btw.js + btw_bg.wasm: site/web/wasm by default; skips without)
+//   BEATSCRIPT_WASM=<dir> node site/test/render-source.mjs     (needs beatscript.js + beatscript_bg.wasm: site/web/wasm by default; skips without)
 //
 // The source switch: render beside engine and stream, remembered per browser (localStorage), back to auto. Play renders
 // first (a Worker), showing progress as a percentage and bars, then plays the WAV on an <audio> element (blob:) with a
@@ -19,20 +19,20 @@ import { fileURLToPath } from 'node:url';
 import { launch, sleep } from './cdp.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const wasm = process.env.BTW_WASM || path.join(here, '..', 'web', 'wasm');
-if (!fs.existsSync(path.join(wasm, 'btw_bg.wasm'))) {
-  console.log(`# skip: no ${wasm}/btw_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
+const wasm = process.env.BEATSCRIPT_WASM || path.join(here, '..', 'web', 'wasm');
+if (!fs.existsSync(path.join(wasm, 'beatscript_bg.wasm'))) {
+  console.log(`# skip: no ${wasm}/beatscript_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
   process.exit(0);
 }
 
 const failures = [];
 const check = (ok, what) => { console.log(`${ok ? 'ok' : 'FAIL'} - ${what}`); if (!ok) failures.push(what); };
 
-// the site's files with the module beside them, served by the mock under the strict (btwserve's) CSP
+// the site's files with the module beside them, served by the mock under the strict (beatscript-serve's) CSP
 const web = fs.mkdtempSync(path.join(os.tmpdir(), 'btw-render-source-'));
 fs.cpSync(path.join(here, '..', 'web'), web, { recursive: true });
 fs.mkdirSync(path.join(web, 'wasm'), { recursive: true });
-for (const f of fs.readdirSync(wasm)) if (/^btw(_bg)?\.(js|wasm)$|^hashes\.json$/.test(f)) fs.copyFileSync(path.join(wasm, f), path.join(web, 'wasm', f));
+for (const f of fs.readdirSync(wasm)) if (/^beatscript(_bg)?\.(js|wasm)$|^hashes\.json$/.test(f)) fs.copyFileSync(path.join(wasm, f), path.join(web, 'wasm', f));
 const port = await new Promise((res) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); });
 const server = spawn(process.execPath, [path.join(here, 'mock-server.mjs'), '--port', String(port), '--web', web, '--csp', 'strict'], { stdio: ['ignore', 'ignore', 'inherit'] });
 const base = `http://127.0.0.1:${port}`;

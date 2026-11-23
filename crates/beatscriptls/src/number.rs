@@ -1,4 +1,4 @@
-//! `btw/numberAt`: what the literal at a position is, so an editor can scrub it (drag, wheel, arrow keys) without ever
+//! `beatscript/numberAt`: what the literal at a position is, so an editor can scrub it (drag, wheel, arrow keys) without ever
 //! writing a program the checker refuses. For a number: its span, what it sets (`kind`), the valid range, the step, the unit,
 //! and for one end of a range (`a..b`) or a ramp (`a -> b`) the other end. For a note (`c4`, `f#3`) and a Roman numeral (`VI`)
 //! the ordered `choices` it can be moved through: the notes of the key in force (or every semitone when the program has no
@@ -744,7 +744,7 @@ fn num_or_null(v: Option<f64>) -> JsonValue {
     v.map_or(JsonValue::Null, JsonValue::Number)
 }
 
-/// The `btw/numberAt` answer.
+/// The `beatscript/numberAt` answer.
 pub fn to_json(a: &Analysis, n: &NumberAt, enc: Encoding) -> JsonValue {
     let mut o = JsonObject::new();
     o.set("range", span_range(&a.index, &a.text, n.span, enc));

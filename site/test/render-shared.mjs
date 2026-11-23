@@ -1,7 +1,7 @@
 // The shared render module (site/web/js/render.js, render-client.js, render-model.js) in Node, on the real engine:
 // the editor's render source and the player's mode="render" play the same code, not a fork of it.
 //
-//   BTW_WASM=<dir> node site/test/render-shared.mjs     (needs btw.js + btw_bg.wasm: site/web/wasm by default; skips without)
+//   BEATSCRIPT_WASM=<dir> node site/test/render-shared.mjs     (needs beatscript.js + beatscript_bg.wasm: site/web/wasm by default; skips without)
 //
 // Checks:
 //   shared     the player package (build.mjs) carries the editor's render files byte for byte (js/render.js and its
@@ -20,9 +20,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const web = path.join(here, '..', 'web');
-const wasm = process.env.BTW_WASM || path.join(web, 'wasm');
-if (!fs.existsSync(path.join(wasm, 'btw_bg.wasm'))) {
-  console.log(`# skip: no ${wasm}/btw_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
+const wasm = process.env.BEATSCRIPT_WASM || path.join(web, 'wasm');
+if (!fs.existsSync(path.join(wasm, 'beatscript_bg.wasm'))) {
+  console.log(`# skip: no ${wasm}/beatscript_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
   process.exit(0);
 }
 
@@ -30,11 +30,11 @@ const failures = [];
 const check = (ok, what) => { console.log(`${ok ? 'ok' : 'FAIL'} - ${what}`); if (!ok) failures.push(what); };
 const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 
-// the editor's js/ with the module beside it, as the site serves them (render.js imports ../wasm/btw.js)
+// the editor's js/ with the module beside it, as the site serves them (render.js imports ../wasm/beatscript.js)
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'btw-render-shared-'));
 fs.cpSync(path.join(web, 'js'), path.join(root, 'js'), { recursive: true });
 fs.mkdirSync(path.join(root, 'wasm'));
-for (const f of ['btw.js', 'btw_bg.wasm']) fs.copyFileSync(path.join(wasm, f), path.join(root, 'wasm', f));
+for (const f of ['beatscript.js', 'beatscript_bg.wasm']) fs.copyFileSync(path.join(wasm, f), path.join(root, 'wasm', f));
 const dist = path.join(root, 'player');
 execFileSync(process.execPath, [path.join(here, '..', 'player', 'build.mjs'), '--wasm', wasm, '--out', dist], { stdio: 'inherit' });
 
@@ -62,7 +62,7 @@ section chorus 2 bars {
 }
 arrange { verse chorus } loop
 `;
-const module = await WebAssembly.compile(fs.readFileSync(path.join(wasm, 'btw_bg.wasm')));
+const module = await WebAssembly.compile(fs.readFileSync(path.join(wasm, 'beatscript_bg.wasm')));
 const client = await import(pathToFileURL(path.join(root, 'js', 'render-client.js')).href);
 const model = await import(pathToFileURL(path.join(root, 'js', 'render-model.js')).href);
 const pkg = await import(pathToFileURL(path.join(dist, 'beatscript-render.js')).href);
@@ -94,9 +94,9 @@ check(abortName === 'AbortError', `a stopped render rejects with an AbortError (
 
 // ---- RenderPlayer on the real render (Web Audio transport on a clock set by hand)
 const { RenderPlayer, RenderCache } = await import(pathToFileURL(path.join(root, 'js', 'render-player.js')).href);
-const glue = await import(pathToFileURL(path.join(root, 'wasm', 'btw.js')).href);
+const glue = await import(pathToFileURL(path.join(root, 'wasm', 'beatscript.js')).href);
 glue.initSync({ module });
-const report = JSON.parse(glue.btw_check(TEXT));
+const report = JSON.parse(glue.beatscript_check(TEXT));
 const ctx = {
   currentTime: 0, sampleRate: 44100, destination: {}, resume: async () => {},
   createBuffer(ch, n, sr) { return { length: n, sampleRate: sr, duration: n / sr, copyToChannel() {} }; },

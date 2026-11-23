@@ -8,7 +8,7 @@ capabilities that a client (the Android app, the page, an MCP client) can check 
 allowlist (and the existing limits and spend cap) on every request, whatever grant the client holds. A forged or
 stale grant can only show a button that the server then refuses (`403 capability_required`).
 
-Implementation: `crates/btwserve/src/caps.rs`. Test vectors: `crates/btwserve/src/caps/vectors.json`.
+Implementation: `crates/beatscript-serve/src/caps.rs`. Test vectors: `crates/beatscript-serve/src/caps/vectors.json`.
 
 ## The published keys
 
@@ -83,7 +83,7 @@ the hello whenever it reconnects.
   before, under the existing per-user limits, kill switch and daily spend cap. The grant still reports only the
   allowlist, so a client can already gate its UI on it. When `true`, the server refuses compose to any account whose
   list does not have `compose` (`403 capability_required`).
-- Edit it through the admin endpoint (`Authorization: Bearer $BTW_ADMIN_TOKEN`). A hand edit is picked up on the next
+- Edit it through the admin endpoint (`Authorization: Bearer $BEATSCRIPT_ADMIN_TOKEN`). A hand edit is picked up on the next
   request.
   - `GET /api/admin/caps` returns the file.
   - `POST /api/admin/caps {"identity":"ed25519:…","caps":["compose"]}` sets one identity. An empty list removes it.

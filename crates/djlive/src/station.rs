@@ -1,4 +1,4 @@
-//! Radio: stations (docs/btw/radio.md). A station is a program that names a run of tracks with no end: its first track's
+//! Radio: stations (docs/beatscript/radio.md). A station is a program that names a run of tracks with no end: its first track's
 //! generator call, a step from one track to the next and the forms the tracks take in turn. It is DETERMINISTIC: position N
 //! of a station is always the same track (the same text, so the same CID), worked out from the station's text alone, with
 //! no clock and no store. A listener does not steer a station; they turn its knobs (genre, seed, step, forms, tempo, key,

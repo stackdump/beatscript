@@ -28,7 +28,7 @@
     var u;
     try { u = new URL(link, ORIGIN); } catch (e) { return null; }
     var name = '';
-    var m = /^\/(?:p|c|embed)\/([^/]+?)(?:\.jsonld|\.btw)?\/?$/.exec(u.pathname);
+    var m = /^\/(?:p|c|embed)\/([^/]+?)(?:\.jsonld|\.beatscript)?\/?$/.exec(u.pathname);
     if (m) name = decodeURIComponent(m[1]);
     else if (u.pathname === '/' && u.searchParams.get('cid')) name = u.searchParams.get('cid');
     else if (u.hash.length > 1) name = decodeURIComponent(u.hash.slice(1)).split('~')[0];

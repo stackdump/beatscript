@@ -12,7 +12,7 @@
 // mode (live | render), compact, theme (dark | light), cid (optional: the CID the text must have; a text that is not it
 // is refused), site (where the plain links point, default https://beatscript.app), stored (the program is stored on the
 // site: its CID links to /p/<CID>), highlight (the program's text under the card, coloured as the editor colours it,
-// with a Copy button: comments at once, everything once the engine's btw_highlight is loaded, which fetches the module
+// with a Copy button: comments at once, everything once the engine's beatscript_highlight is loaded, which fetches the module
 // the player uses, once), config (the embed config every BeatScript surface reads, as JSON: embed-config.js; also a child
 // <script type="application/json" class="beatscript-config">; the attributes above win over it).
 //
@@ -81,7 +81,7 @@ a { color: var(--link); }
 .src[hidden] { display: none; }
 .src pre { margin: 0; padding: 10px 12px; overflow: auto; max-height: 360px; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; tab-size: 4; }
 .src button.copy { position: absolute; top: 6px; right: 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--btn); color: var(--ink); font: 11px system-ui, sans-serif; padding: 2px 8px; cursor: pointer; }
-/* the editor's colours (site/web/css/btw.css), and their light-theme counterparts */
+/* the editor's colours (site/web/css/beatscript.css), and their light-theme counterparts */
 .c-comment { color: #6c786c; } .c-keyword { color: #c678dd; } .c-role { color: #61afef; } .c-action { color: #e5c07b; }
 .c-deck { color: #e06c75; } .c-number { color: #d19a66; } .c-step, .c-note { color: #98c379; } .c-rest { color: #7a7a86; }
 .c-generator, .c-def { color: #56b6c2; } .c-param { color: #d19a66; } .c-op, .c-punct { color: #abb2bf; } .c-string { color: #98c379; }
@@ -107,7 +107,7 @@ let shared = null;
 function loadModule() {
   if (!shared) {
     shared = (async () => {
-      const [{ WASM_BASE64 }, glue] = await Promise.all([import('./wasm/btw_bg.wasm.b64.js'), import('./wasm/btw.js')]);
+      const [{ WASM_BASE64 }, glue] = await Promise.all([import('./wasm/beatscript_bg.wasm.b64.js'), import('./wasm/beatscript.js')]);
       const bin = atob(WASM_BASE64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -118,7 +118,7 @@ function loadModule() {
         throw new Error(/unsafe-eval|Content Security/i.test(String(e)) ? 'this page does not allow WebAssembly (its CSP needs \'wasm-unsafe-eval\'), so it cannot play here' : String(e.message || e));
       }
       glue.initSync({ module });
-      return { module, btw: makeFacade(glue) };
+      return { module, beatscript: makeFacade(glue) };
     })();
     shared.catch(() => { shared = null; });
   }
@@ -176,7 +176,7 @@ function nameOf(text) {
 }
 
 /**
- * `code`'s children: `text` with `spans` ([[start16, end16, class], ...], as btw_highlight and plainSpans give them) as
+ * `code`'s children: `text` with `spans` ([[start16, end16, class], ...], as beatscript_highlight and plainSpans give them) as
  * <span class="c-...">, built as nodes (no innerHTML). As highlight.js spansToHtml: sorted, the earlier span wins an
  * overlap, an unknown class is plain text.
  */
@@ -219,7 +219,7 @@ export class BeatscriptTrack extends HTMLElement {
     this.out = null;
     this.engine = null;
     this.run = null;
-    this.btw = null;
+    this.beatscript = null;
     this.sections = [];
     this.timer = 0;
     this.playing = false;
@@ -301,8 +301,8 @@ export class BeatscriptTrack extends HTMLElement {
     this.source.hidden = false;
     paintCode(this.code, this.text, plainSpans(this.text));
     this.highlighted = 'comments';
-    loadModule().then(({ btw }) => {
-      paintCode(this.code, this.text, btw.highlight(this.text));
+    loadModule().then(({ beatscript }) => {
+      paintCode(this.code, this.text, beatscript.highlight(this.text));
       this.highlighted = 'engine';
     }).catch(() => { /* the comments stay coloured; the card says why it cannot play when it is pressed */ });
   }
@@ -398,21 +398,21 @@ export class BeatscriptTrack extends HTMLElement {
     return this.ctx.resume();
   }
 
-  /** The module, the check, the CID and the links: {module, btw, rep}. */
+  /** The module, the check, the CID and the links: {module, BeatScript, rep}. */
   async prepare() {
-    const { module, btw } = await loadModule();
-    this.btw = btw;
-    const rep = btw.check(this.text);
+    const { module, beatscript } = await loadModule();
+    this.beatscript = beatscript;
+    const rep = beatscript.check(this.text);
     if (!rep || !rep.ok) {
       const d = rep && rep.diagnostics && rep.diagnostics.find((x) => x.severity === 'error');
       throw new Error(d ? `line ${d.line}: ${d.message}` : 'the program does not check');
     }
     const want = this.getAttribute('cid');
     if (want && want !== rep.cid) throw new Error(`refused: the text is ${rep.cid}, not ${want}`);
-    const sh = btw.share(this.text);
+    const sh = beatscript.share(this.text);
     this.showLinks(rep.cid, sh && sh.ok ? sh.url.replace(/^https?:\/\/[^/#]+/, this.site) : null);
     this.sections = rep.sections || [];
-    return { module, btw, rep };
+    return { module, beatscript, rep };
   }
 
   async start() {
@@ -432,7 +432,7 @@ export class BeatscriptTrack extends HTMLElement {
         this.engine.on('grid', () => this.tick());
         this.engine.on('installed', (e) => this.installed.add(e.deck));
       }
-      if (!this.run) this.run = this.btw.newRun();
+      if (!this.run) this.run = this.beatscript.newRun();
       const ev = this.run.eval(this.text);
       if (!ev || !ev.ok) throw new Error('it does not play');
       this.playing = true;

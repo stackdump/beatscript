@@ -2,7 +2,7 @@
 //
 //   node site/player/build.mjs [--wasm <dir>] [--out <dir>]
 //
-// --wasm: the browser module (btw.js + btw_bg.wasm, from scripts/build-web-wasm.sh); default
+// --wasm: the browser module (beatscript.js + beatscript_bg.wasm, from scripts/build-web-wasm.sh); default
 //         site/web/wasm. --out: default site/player/dist (git-ignored: the wasm is built from a private repo, as
 //         site/web/wasm is, so the package is assembled, never committed).
 //
@@ -12,7 +12,7 @@
 //   render-model.js            its arithmetic and the WAV writer (both re-export the editor's: js/render*.js)
 //   js/                        the editor's engine and render, unchanged (engine.js, its worklet and composer, the facade;
 //                              render.js, render-client.js, render-worker.js, render-model.js: the editor's render source's)
-//   wasm/btw.js                the wasm-bindgen glue    wasm/btw_bg.wasm.b64.js   the module, base64, as an ES module
+//   wasm/beatscript.js                the wasm-bindgen glue    wasm/beatscript_bg.wasm.b64.js   the module, base64, as an ES module
 //   test/csp.html              a page under an artifact-like CSP that plays a program
 //   beatscript-track.d.ts      its types                LICENSE, LICENSES/         MIT (code), CC0-1.0 (programs, data)
 //   package.json, README.md, hashes.json (sha256 of every file, and the module's own hashes.json)
@@ -38,7 +38,7 @@ const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-
 // the player's own files, at the package's top level
 const OWN = ['beatscript-track.js', 'beatscript-track.umd.js', 'beatscript-track.d.ts', 'beatscript-render.js', 'render-model.js', 'package.json'];
 
-for (const f of ['btw.js', 'btw_bg.wasm']) {
+for (const f of ['beatscript.js', 'beatscript_bg.wasm']) {
   if (!fs.existsSync(path.join(wasmDir, f))) {
     console.error(`build.mjs: ${path.join(wasmDir, f)} is missing: build it with scripts/build-web-wasm.sh ${wasmDir}`);
     process.exit(2);
@@ -51,7 +51,7 @@ fs.mkdirSync(path.join(out, 'wasm'), { recursive: true });
 fs.mkdirSync(path.join(out, 'test'), { recursive: true });
 const cp = (from, to) => fs.copyFileSync(from, path.join(out, to));
 for (const f of OWN) cp(path.join(here, 'src', f), f);
-// the embed config (site/embed/embed-config.js): the one config the player, the studio and btwserve's embed tool read
+// the embed config (site/embed/embed-config.js): the one config the player, the studio and beatscript-serve's embed tool read
 cp(path.join(here, '..', 'embed', 'embed-config.js'), 'embed-config.js');
 cp(path.join(here, 'README.md'), 'README.md');
 cp(path.join(here, 'test', 'csp.html'), 'test/csp.html');
@@ -62,9 +62,9 @@ cp(path.join(repo, 'LICENSE'), 'LICENSE');
 fs.mkdirSync(path.join(out, 'LICENSES'), { recursive: true });
 for (const f of ['MIT.txt', 'CC0-1.0.txt']) cp(path.join(repo, 'LICENSES', f), `LICENSES/${f}`);
 for (const f of ENGINE) cp(path.join(web, 'js', f), `js/${f}`);
-cp(path.join(wasmDir, 'btw.js'), 'wasm/btw.js');
-const wasm = fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm'));
-fs.writeFileSync(path.join(out, 'wasm', 'btw_bg.wasm.b64.js'), `// btw_bg.wasm (${wasm.length} bytes, sha256 ${crypto.createHash('sha256').update(wasm).digest('hex')}), base64: imported, never fetched\nexport const WASM_BASE64 = '${wasm.toString('base64')}';\n`);
+cp(path.join(wasmDir, 'beatscript.js'), 'wasm/beatscript.js');
+const wasm = fs.readFileSync(path.join(wasmDir, 'beatscript_bg.wasm'));
+fs.writeFileSync(path.join(out, 'wasm', 'beatscript_bg.wasm.b64.js'), `// beatscript_bg.wasm (${wasm.length} bytes, sha256 ${crypto.createHash('sha256').update(wasm).digest('hex')}), base64: imported, never fetched\nexport const WASM_BASE64 = '${wasm.toString('base64')}';\n`);
 
 // every import the copied files make must be a copied file: a missing one would be fetched from nowhere
 for (const dir of ['', 'js', 'wasm']) {

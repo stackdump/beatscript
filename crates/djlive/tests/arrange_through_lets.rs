@@ -1,4 +1,4 @@
-//! An `arrange { }` mutation of a let's bars reaches the part that plays the let of them (mutate.rs, docs/btw/forms.md: "a part
+//! An `arrange { }` mutation of a let's bars reaches the part that plays the let of them (mutate.rs, docs/beatscript/forms.md: "a part
 //! plays the alternation; a mutation changes the bars, with a glob"). Before, a section read only the names written in its own
 //! lines, so `~ ode_to_joy_* morph ...` changed nothing a part played when the part played `ode_to_joy`.
 
@@ -40,7 +40,7 @@ fn an_unmutated_let_of_lets_is_the_program_it_was() {
 
 #[test]
 fn the_rondos_refrain_now_changes_pass_on_pass() {
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/template/form-rondo.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/template/form-rondo.beatscript")).unwrap();
     let c = djlive::check(&src).compiled.expect("rondo");
     let refrains: std::collections::BTreeSet<String> = c.segments.iter().filter(|s| s.name.starts_with("refrain")).map(|s| s.decks.values().map(|d| d.envelope(0).js_stringified()).collect::<Vec<_>>().join("|")).collect();
     assert!(refrains.len() > 1, "every refrain plays the same: its plan's mutations of the_entertainer_* reach nothing");

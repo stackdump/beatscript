@@ -5,7 +5,7 @@
 // built, else the page's JS mock), programs (PUT verifies the CID), a render stream (a synthesised click
 // track as a streaming WAV: a kick on every beat, a hat on the off-beat, a bass note a bar), auth (any
 // signature is accepted), compose (canned programs), the radio's station answer (wasm-mock.js mockStation, unless the
-// built wasm has btw_station), sessions (SSE + reports) and two test-only routes
+// built wasm has beatscript_station), sessions (SSE + reports) and two test-only routes
 // (/__push/<id>, /__state/<id>).
 //
 //   node site/test/mock-server.mjs [--port 18197] [--web site/web] [--examples site/examples] [--mock-wasm] [--csp strict|<policy>]
@@ -40,18 +40,18 @@ const CSP = arg('csp', null) === 'strict' ? STRICT_CSP : typeof arg('csp', null)
 let M; // {check, fmt, open, share, instruments}
 let realWasm = false;
 async function loadChecker() {
-  const wasmJs = path.join(WEB, 'wasm', 'btw.js');
+  const wasmJs = path.join(WEB, 'wasm', 'beatscript.js');
   if (!FORCE_MOCK && fs.existsSync(wasmJs)) {
     const m = await import(pathToFileURL(wasmJs).href);
-    m.initSync({ module: fs.readFileSync(path.join(WEB, 'wasm', 'btw_bg.wasm')) });
+    m.initSync({ module: fs.readFileSync(path.join(WEB, 'wasm', 'beatscript_bg.wasm')) });
     realWasm = true;
-    M = { check: (t) => JSON.parse(m.btw_check(t)), fmt: (t) => JSON.parse(m.btw_fmt(t)), open: (s) => JSON.parse(m.btw_open(s)), share: (t) => JSON.parse(m.btw_share(t, null, false, 'https://btw.bitwrap.io')), instruments: () => JSON.parse(m.btw_instruments()) };
-    if (typeof m.btw_station === 'function') M.station = (req) => JSON.parse(m.btw_station(JSON.stringify(req)));
+    M = { check: (t) => JSON.parse(m.beatscript_check(t)), fmt: (t) => JSON.parse(m.beatscript_fmt(t)), open: (s) => JSON.parse(m.beatscript_open(s)), share: (t) => JSON.parse(m.beatscript_share(t, null, false, 'https://btw.bitwrap.io')), instruments: () => JSON.parse(m.beatscript_instruments()) };
+    if (typeof m.beatscript_station === 'function') M.station = (req) => JSON.parse(m.beatscript_station(JSON.stringify(req)));
   } else {
     const w = await import(pathToFileURL(path.join(WEB, 'js', 'wasm-mock.js')).href);
     M = { check: w.mockCheck, fmt: w.mockFmt, open: w.mockOpen, share: (t) => w.mockShare(t), instruments: w.mockInstruments };
   }
-  // the radio's station answer: the module's when it has btw_station, else the JS mock's (fake CIDs, the spec's rules)
+  // the radio's station answer: the module's when it has beatscript_station, else the JS mock's (fake CIDs, the spec's rules)
   if (!M.station) M.station = (await import(pathToFileURL(path.join(WEB, 'js', 'wasm-mock.js')).href)).mockStation;
 }
 
@@ -69,7 +69,7 @@ function loadExamples() {
   let list = [];
   try { list = JSON.parse(fs.readFileSync(path.join(EXAMPLES, 'index.json'), 'utf8')); } catch { /* none */ }
   for (const ex of list) {
-    const f = path.join(EXAMPLES, `${ex.name}.btw`);
+    const f = path.join(EXAMPLES, `${ex.name}.beatscript`);
     if (!fs.existsSync(f)) continue;
     const text = fs.readFileSync(f, 'utf8');
     const c = M.check(text);
@@ -80,7 +80,7 @@ function loadExamples() {
 }
 
 // ---- helpers --------------------------------------------------------------------------------------------------------
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.wasm': 'application/wasm', '.btw': 'text/plain; charset=utf-8', '.png': 'image/png', '.md': 'text/markdown; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.wasm': 'application/wasm', '.beatscript': 'text/plain; charset=utf-8', '.png': 'image/png', '.md': 'text/markdown; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
 
 function send(res, status, body, headers = {}) {
   const isObj = body !== null && typeof body === 'object' && !Buffer.isBuffer(body);
@@ -195,14 +195,14 @@ async function route(req, res) {
   if (p === '/api/info') return send(res, 200, { name: 'btw.bitwrap.io (mock)', version: 'mock', model: 'fake', public_url: 'https://btw.bitwrap.io', compose: { enabled: true, configured: true, limits: { user_per_hour: 10 } }, render: { max_bars: 256 }, auth: ['eth', 'ed25519'], real_wasm: realWasm });
   if (p === '/api/examples') return send(res, 200, examples.map(({ text, ...e }) => e));
   let mm;
-  if ((mm = /^\/examples\/([\w.-]+)\.btw$/.exec(p))) { const e = examples.find((x) => x.name === mm[1]); return e ? send(res, 200, e.text) : err(res, 404, 'not_found', 'no such example'); }
+  if ((mm = /^\/examples\/([\w.-]+)\.beatscript$/.exec(p))) { const e = examples.find((x) => x.name === mm[1]); return e ? send(res, 200, e.text) : err(res, 404, 'not_found', 'no such example'); }
   if (p === '/api/instruments') return send(res, 200, M.instruments());
   if (m === 'POST' && p === '/api/check') return send(res, 200, M.check((await readJson(req)).text || ''));
   if (m === 'POST' && p === '/api/fmt') return send(res, 200, M.fmt((await readJson(req)).text || ''));
   if (m === 'POST' && p === '/api/qr') { const t = (await readJson(req)).text || ''; return send(res, 200, { qr: 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29"><rect width="29" height="29" fill="#fff"/></svg>').toString('base64'), url: t, modules: 21 }); }
   if (m === 'POST' && p === '/api/share') return send(res, 200, M.share((await readJson(req)).text || ''));
   if (m === 'POST' && p === '/api/open') return send(res, 200, M.open((await readJson(req)).url || ''));
-  if ((mm = /^\/api\/programs\/([^/]+?)(\.btw)?$/.exec(p))) {
+  if ((mm = /^\/api\/programs\/([^/]+?)(\.beatscript)?$/.exec(p))) {
     const cid = decodeURIComponent(mm[1]);
     if (m === 'PUT') {
       const text = await readBody(req);

@@ -1,6 +1,6 @@
-//! Pattern sugar: short ways to write patterns the language already has a longhand for (docs/BTW.md "Pattern
+//! Pattern sugar: short ways to write patterns the language already has a longhand for (docs/BEATSCRIPT.md "Pattern
 //! sugar"). Every form here is **rewritten to its longhand before the pattern is evaluated**, so a program with sugar
-//! compiles to the same nets as the same program written out, and `same-as` proves it (crates/btwapi/tests/sugar.rs).
+//! compiles to the same nets as the same program written out, and `same-as` proves it (crates/beatscript-api/tests/sugar.rs).
 //! The canonical text keeps the sugar as typed: formatting never expands it.
 //!
 //! | sugar | longhand |
@@ -21,7 +21,7 @@
 //! chance or `markov` part with sugar is the same notes as its longhand.
 //!
 //! The ideas are borrowed from TidalCycles and Strudel, as concepts only (see the "Pattern sugar" section of
-//! docs/BTW.md for which page each came from); the names, the semantics as rewrites and all of this code are btw's own.
+//! docs/BEATSCRIPT.md for which page each came from); the names, the semantics as rewrites and all of this code are BeatScript's own.
 
 use crate::ast::*;
 use crate::diag::{Diagnostic, Span};

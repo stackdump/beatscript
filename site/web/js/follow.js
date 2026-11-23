@@ -3,7 +3,7 @@
 // way down); a def called from the section comes into view when it fits with it, else its header pulses
 // and an edge arrow names it; a ramp or timed line that fires off-screen gets an arrow at the edge with
 // its line number. A manual scroll pauses all this for PAUSE_SECS or until the next section; nothing
-// scrolls while the text is not the text that was evaluated. (The rules of docs/BTW.md "Seeing it
+// scrolls while the text is not the text that was evaluated. (The rules of docs/BEATSCRIPT.md "Seeing it
 // play", as the desktop's editor keeps them.)
 //
 // Pure: no DOM, no clock of its own. The page gives it the marks, the text, the layout and a `now`

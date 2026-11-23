@@ -30,7 +30,7 @@ network = ["djrust/network", "dep:rtrb"]
 wheel = ["dep:windwheel", "dep:rtrb", "dep:anyhow"]
 windwheel = ["wheel"]
 # Set recordings signed by the booth's identity (setrec: did:pkh, EIP-191) with djrust-wallet. Off by default, so a
-# default build (btwserve, btwd, the wasm) has no wallet in its tree; the booth and the phone app turn it on.
+# default build (beatscript-serve, beatscript-cli, the wasm) has no wallet in its tree; the booth and the phone app turn it on.
 wallet = ["dep:djrust-wallet", "dep:zeroize"]
 
 # Beat and downbeat detection for audio djrust did not make (docs/BEAT-DETECTION.md): Beat This!

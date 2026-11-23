@@ -1,4 +1,4 @@
-//! F4 ramp shapes and lfo (docs/btw/ext-shape.md): `... over 8 bars exp`, `lfo sine 2 bars center=3k depth=1k over 16 bars`.
+//! F4 ramp shapes and lfo (docs/beatscript/ext-shape.md): `... over 8 bars exp`, `lfo sine 2 bars center=3k depth=1k over 16 bars`.
 //! The canonical forms, the exact values of every shape and every wave against hand formulas, the errors (with a place and a
 //! did-you-mean), the same words in a `do` line, and the runtime on a fake clock: the values sent follow the shape, an lfo
 //! stops where its section ends, the editor's progress bar moves for both.

@@ -1,5 +1,5 @@
-//! F7 seeded chance: `x?0.3`, `choose [a b c] weights 3 1 1 seed=4`, `maybe(p, 0.3, 4)` (docs/BTW-EXTENSIONS.md,
-//! docs/btw/ext-chance.md).
+//! F7 seeded chance: `x?0.3`, `choose [a b c] weights 3 1 1 seed=4`, `maybe(p, 0.3, 4)` (docs/BEATSCRIPT-EXTENSIONS.md,
+//! docs/beatscript/ext-chance.md).
 //!
 //! **Chance is a function of the text and the bar, never of a runtime random.** A hit is kept (or an option picked) by an
 //! integer hash of `(seed, bar, cycle, step, note)` against the exact probability: [`hash`] is SplitMix64's finalizer

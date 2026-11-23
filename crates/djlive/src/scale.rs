@@ -1,4 +1,4 @@
-//! F5: scale degrees, Roman numerals, a key per section and voice leading (docs/BTW-EXTENSIONS.md, docs/btw/ext-scale.md).
+//! F5: scale degrees, Roman numerals, a key per section and voice leading (docs/BEATSCRIPT-EXTENSIONS.md, docs/beatscript/ext-scale.md).
 //!
 //! * `deg(1 b3 5' 1,)`: a group of degrees with accidentals and octave marks ([`ScaleDeg`], parsed by
 //!   [`Parser::deg_atom`], one slot like `[..]`).

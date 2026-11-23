@@ -1,4 +1,4 @@
-//! Constraints (docs/btw/ext-assert.md, "Constraints"): the rules of F12's `assert` that are about the notes.
+//! Constraints (docs/beatscript/ext-assert.md, "Constraints"): the rules of F12's `assert` that are about the notes.
 //!
 //! ```text
 //! assert never A.snare beside A.snare      no two snares on neighbouring steps

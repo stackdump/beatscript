@@ -18,11 +18,11 @@
 // downbeat, and is exactly renderPlan's bars long (render-model.js: one pass; a looping song once; capped at 256 bars
 // and 600 s, as the site's /api/render).
 //
-// `module` is the compiled WebAssembly.Module of wasm/btw_bg.wasm. One render at a time in a realm (they share the
+// `module` is the compiled WebAssembly.Module of wasm/beatscript_bg.wasm. One render at a time in a realm (they share the
 // clock globals): a second waits for the first.
 
 import { createEngine } from './engine.js';
-import * as glue from '../wasm/btw.js';
+import * as glue from '../wasm/beatscript.js';
 import { renderPlan, framesOf, RENDER_LIMITS } from './render-model.js';
 
 const QUANTUM = 128;
@@ -96,7 +96,7 @@ function offlineContext(sampleRate, clock, made) {
     createGain() {
       return { gain: { value: 1, setTargetAtTime() {} }, connect() {}, disconnect() {} };
     },
-    createBtwNode(name, options) {
+    createBeatscriptNode(name, options) {
       const Cls = processors.get(name);
       if (!Cls) throw new Error(`render: the worklet did not register ${name}`);
       const [pagePort, procPort] = portPair();
@@ -139,7 +139,7 @@ async function render({ module, text, sampleRate = 44100, limits = RENDER_LIMITS
   if (!module) throw new Error('render: a compiled WebAssembly.Module is needed');
   const t0 = now();
   glue.initSync({ module });
-  const report = JSON.parse(glue.btw_check(text));
+  const report = JSON.parse(glue.beatscript_check(text));
   if (!report.ok) {
     const d = (report.diagnostics || []).find((x) => x.severity === 'error');
     throw new Error(d ? `line ${d.line}: ${d.message}` : 'the program does not check');
@@ -162,7 +162,7 @@ async function render({ module, text, sampleRate = 44100, limits = RENDER_LIMITS
     const proc = made.processor;
     if (!proc || !proc.dj) throw new Error('render: the engine did not start');
 
-    rt = new glue.BtwRun();
+    rt = new glue.BeatscriptRun();
     const ev = JSON.parse(rt.eval(text));
     if (!ev.ok) throw new Error('the program does not play');
 

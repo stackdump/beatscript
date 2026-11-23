@@ -1,5 +1,5 @@
 //! A program's references in the editor (roadmap 6668): hover says what a reference is, what it resolves to and its
-//! expansion; `btw/expand` answers the references with their ranges; a code lens over each says `show expansion` and `eject`;
+//! expansion; `beatscript/expand` answers the references with their ranges; a code lens over each says `show expansion` and `eject`;
 //! the eject code action is offered on a reference and resolves to exactly what `djlive::refs::eject` writes, proved (the same
 //! nets); `workspace/executeCommand` runs the lenses' commands. (Completion in a `gen@2` call: gen_complete.rs.)
 
@@ -11,7 +11,7 @@ use djengine::json::JsonValue;
 use djlive::refs;
 
 fn env() -> djlive::env::Env<'static> {
-    btwapi::web_env().env()
+    beatscript_api::web_env().env()
 }
 
 fn sites(text: &str) -> Vec<refs::Site> {
@@ -29,11 +29,11 @@ const WHOLE: &str = "arrange from gen@2 techno seed=42 bpm=132\n";
 
 /// A stored program the host knows, borrowed from by its CID: a part as a let, and a section's part on a part line.
 fn stored() -> String {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let source = "tempo 120\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~ | bass a1 ~ ~ ~ c2 ~ ~ ~ e2 ~ ~ ~ a1 ~ ~ ~\n}\narrange drop\n";
     let canon = djlive::print::canonical(&djlive::parse::parse(source).program);
     let cid = djlive::compile::program_cid(&canon);
-    btwapi::known::know(&cid, &canon).unwrap();
+    beatscript_api::known::know(&cid, &canon).unwrap();
     format!("tempo 120\nkey am\nlet riff = {cid}.drop.bass\nsection grv 4 bars {{\n  deck A: kick x x x x | bass riff\n  deck B: bass {cid}.drop\n}}\narrange grv\n")
 }
 
@@ -85,7 +85,7 @@ fn hover_text(s: &mut Server, text: &str, at: usize) -> String {
 
 #[test]
 fn hover_on_a_gen_reference_says_its_call_cid_generator_fit_and_expansion() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let site = &sites(LET)[0];
     let mut s = server(LET);
     let md = hover_text(&mut s, LET, LET.find("gen@2").unwrap() + 3);
@@ -93,7 +93,7 @@ fn hover_on_a_gen_reference_says_its_call_cid_generator_fit_and_expansion() {
     assert!(md.contains("gen@2 techno seed=42 section=drop part=bass"), "{md}");
     assert!(md.contains("**engine call**") && md.contains(&format!("resolves to `{cid}`")) && md.contains("generator `seeded@2`"), "{md}");
     assert!(md.contains("fitted to the program's key `c` and its tempo 128"), "{md}");
-    assert!(md.contains("```btw\nlet bed_1 = "), "{md}");
+    assert!(md.contains("```beatscript\nlet bed_1 = "), "{md}");
     assert!(md.contains("the `let bed`"), "{md}");
     golden("hover-gen-reference", &req(&mut s, "textDocument/hover", &at_byte(LET, LET.find("gen@2").unwrap())));
     // the let's name is the let's own hover; the rest of its line is the reference's
@@ -103,7 +103,7 @@ fn hover_on_a_gen_reference_says_its_call_cid_generator_fit_and_expansion() {
 
 #[test]
 fn hover_on_a_part_lines_call_and_a_seed() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let ss = sites(PARTS);
     assert_eq!(ss.iter().map(|s| s.kind).collect::<Vec<_>>(), ["gen", "seed"]);
     let mut s = server(PARTS);
@@ -112,7 +112,7 @@ fn hover_on_a_part_lines_call_and_a_seed() {
     let seed = hover_text(&mut s, PARTS, PARTS.find("seed(").unwrap() + 1);
     assert!(seed.contains(&format!("resolves to `{}`", ss[1].resolved.as_deref().unwrap())), "{seed}");
     assert!(seed.contains("`seed`: a track of the beats generator") && seed.contains("**engine call**") && seed.contains("track *"), "{seed}");
-    assert!(seed.contains(&format!("```btw\n{}", refs_expansion(&ss[1]).lines().next().unwrap())), "{seed}");
+    assert!(seed.contains(&format!("```beatscript\n{}", refs_expansion(&ss[1]).lines().next().unwrap())), "{seed}");
 }
 
 fn refs_expansion(s: &refs::Site) -> String {
@@ -129,12 +129,12 @@ fn hover_on_a_stored_reference_is_a_structural_import() {
     let cid = ss[0].resolved.as_deref().unwrap();
     assert!(text.contains(&format!("{cid}.drop.bass")));
     assert!(md.contains("**structural import**") && md.contains("`stored`") && md.contains(&format!("resolves to `{cid}`")), "{md}");
-    assert!(md.contains("```btw\n"), "{md}");
+    assert!(md.contains("```beatscript\n"), "{md}");
 }
 
 #[test]
 fn a_long_expansion_is_cut_short_and_says_how_much_was_left_out() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let site = &sites(WHOLE)[0];
     let total = beatscriptls::refs::expansion(site).split('\n').count();
     assert!(total > beatscriptls::refs::HOVER_LINES, "{total}");
@@ -147,12 +147,12 @@ fn a_long_expansion_is_cut_short_and_says_how_much_was_left_out() {
 
 #[test]
 fn expand_answers_every_reference_with_its_ranges_in_utf16() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     // a comment of characters that count differently in UTF-8 and UTF-16 before the references
     let text = format!("# é𝄞 — a bed from the generator\n{PARTS}");
     let ss = sites(&text);
     let mut s = server(&text);
-    let got = req(&mut s, "btw/expand", &doc());
+    let got = req(&mut s, "beatscript/expand", &doc());
     let list = got.get("references").and_then(JsonValue::as_array).unwrap();
     assert_eq!(list.len(), ss.len());
     for (r, site) in list.iter().zip(&ss) {
@@ -172,12 +172,12 @@ fn expand_answers_every_reference_with_its_ranges_in_utf16() {
     }
     golden("expand-parts", &got);
     // one: the reference at a position
-    let one = req(&mut s, "btw/expand", &at_byte(&text, text.find("seed(").unwrap()));
+    let one = req(&mut s, "beatscript/expand", &at_byte(&text, text.find("seed(").unwrap()));
     let one = one.get("references").and_then(JsonValue::as_array).unwrap();
     assert_eq!(one.len(), 1);
     assert_eq!(one[0].get("kind").and_then(JsonValue::as_str), Some("seed"));
     // nothing at a plain part
-    let none = req(&mut s, "btw/expand", &at_byte(&text, text.find("kick x").unwrap()));
+    let none = req(&mut s, "beatscript/expand", &at_byte(&text, text.find("kick x").unwrap()));
     assert_eq!(none.get("references").and_then(JsonValue::as_array).map(Vec::len), Some(0));
 }
 
@@ -187,7 +187,7 @@ fn a_reference_with_non_ascii_text_in_it_has_a_utf16_range() {
     let text = "arrange from template(deep-house, \"the café is open\")\n";
     let ss = sites(text);
     let mut s = server(text);
-    let got = req(&mut s, "btw/expand", &doc());
+    let got = req(&mut s, "beatscript/expand", &doc());
     let r = got.get("references").and_then(|l| l.at(0)).unwrap();
     let end = r.get("range").and_then(|g| g.get("end")).and_then(|e| e.get("character")).and_then(JsonValue::as_i64).unwrap();
     let line = text.lines().next().unwrap();
@@ -198,10 +198,10 @@ fn a_reference_with_non_ascii_text_in_it_has_a_utf16_range() {
 
 #[test]
 fn expand_says_what_is_wrong_and_a_program_without_references_has_none() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let bad = "let b = gen@2 tecno seed=1 section=drop part=bass\n";
     let mut s = server(bad);
-    let got = req(&mut s, "btw/expand", &doc());
+    let got = req(&mut s, "beatscript/expand", &doc());
     assert_eq!(got.get("references").and_then(JsonValue::as_array).map(Vec::len), Some(0));
     let errs = got.get("errors").and_then(JsonValue::as_array).unwrap();
     assert!(errs.iter().any(|e| e.get("message").and_then(JsonValue::as_str).is_some_and(|m| m.contains("tecno"))), "{}", got.js_stringified());
@@ -209,7 +209,7 @@ fn expand_says_what_is_wrong_and_a_program_without_references_has_none() {
     let plain = "deck A: kick x ~ x ~ | bass c2 ~ c2 ~\n";
     let mut p = server(plain);
     assert!(!beatscriptls::refs::may_have(&Analysis::new(plain)));
-    assert_eq!(req(&mut p, "btw/expand", &doc()).js_stringified(), r#"{"references":[]}"#);
+    assert_eq!(req(&mut p, "beatscript/expand", &doc()).js_stringified(), r#"{"references":[]}"#);
 }
 
 /// The eject code action of the reference at `at`: offered unresolved, resolved to an edit.
@@ -229,7 +229,7 @@ fn eject_action(s: &mut Server, text: &str, at: usize) -> (JsonValue, JsonValue)
 
 #[test]
 fn eject_is_offered_and_resolves_to_what_refs_eject_writes_proved() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let st = stored();
     for text in [LET, PARTS, SECTIONS, WHOLE, st.as_str()] {
         let ss = sites(text);
@@ -256,7 +256,7 @@ fn eject_is_offered_and_resolves_to_what_refs_eject_writes_proved() {
 
 #[test]
 fn nothing_to_eject_off_a_reference() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let mut s = server(LET);
     let at = LET.find("kick x").unwrap();
     let p = LineIndex::new(LET).position(LET, at, Encoding::Utf16);
@@ -267,7 +267,7 @@ fn nothing_to_eject_off_a_reference() {
 
 #[test]
 fn the_ejected_from_line_hovers_as_provenance() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let site = &sites(LET)[0];
     let out = refs::eject(LET, &env(), site.span.start).unwrap().unwrap();
     let mut s = server(&out);
@@ -277,7 +277,7 @@ fn the_ejected_from_line_hovers_as_provenance() {
 
 #[test]
 fn code_lenses_and_their_commands_round_trip() {
-    btwapi::generate::install();
+    beatscript_api::generate::install();
     let ss = sites(SECTIONS);
     let mut s = server_applying(SECTIONS);
     let lenses = req(&mut s, "textDocument/codeLens", &doc());
@@ -290,9 +290,9 @@ fn code_lenses_and_their_commands_round_trip() {
         let toggle = lenses[2 * k].get("command").unwrap();
         assert_eq!(toggle.get("command").and_then(JsonValue::as_str), Some(beatscriptls::refs::TOGGLE));
         assert_eq!(span_of(SECTIONS, lenses[2 * k].get("range").unwrap(), Encoding::Utf16), (site.span.start, site.span.end));
-        // show: the reference, as btw/expand has it at that place
+        // show: the reference, as beatscript/expand has it at that place
         let shown = req(&mut s, "workspace/executeCommand", &toggle.js_stringified());
-        let at = req(&mut s, "btw/expand", &at_byte(SECTIONS, site.span.start));
+        let at = req(&mut s, "beatscript/expand", &at_byte(SECTIONS, site.span.start));
         assert_eq!(shown.js_stringified(), at.get("references").and_then(|r| r.at(0)).unwrap().js_stringified());
         // copy: what eject writes, its provenance line first
         let copy = format!(r#"{{"command":"{}","arguments":{}}}"#, beatscriptls::refs::COPY, toggle.get("arguments").unwrap().js_stringified());
@@ -329,7 +329,7 @@ fn code_lenses_and_their_commands_round_trip() {
     }
     let Err((_, m)) = s.request("workspace/executeCommand", &stale) else { panic!("ejected into a changed text") };
     assert!(m.contains("changed"), "{m}");
-    let Err(_) = s.request("workspace/executeCommand", &JsonValue::parse(r#"{"command":"btw.nope","arguments":[]}"#).unwrap()) else { panic!("an unknown command") };
+    let Err(_) = s.request("workspace/executeCommand", &JsonValue::parse(r#"{"command":"beatscript.nope","arguments":[]}"#).unwrap()) else { panic!("an unknown command") };
 }
 
 #[test]
@@ -338,5 +338,5 @@ fn the_server_says_it_has_lenses_commands_and_expand() {
     let c = s.capabilities();
     assert_eq!(c.get("codeLensProvider").map(JsonValue::js_stringified).as_deref(), Some(r#"{"resolveProvider":false}"#));
     assert_eq!(c.get("executeCommandProvider").and_then(|e| e.get("commands")).and_then(JsonValue::strings), Some(beatscriptls::refs::COMMANDS.iter().map(|c| c.to_string()).collect()));
-    assert_eq!(c.get("experimental").and_then(|e| e.get("btw")).and_then(|b| b.get("expand")).and_then(JsonValue::as_bool), Some(true));
+    assert_eq!(c.get("experimental").and_then(|e| e.get("beatscript")).and_then(|b| b.get("expand")).and_then(JsonValue::as_bool), Some(true));
 }

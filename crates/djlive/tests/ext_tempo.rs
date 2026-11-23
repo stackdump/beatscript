@@ -1,4 +1,4 @@
-//! F3 tempo curves (docs/btw/ext-tempo.md): `tempo 100 -> 130 over 8 bars exp`, a `tempo` in a section, `at bar 16: tempo 128
+//! F3 tempo curves (docs/beatscript/ext-tempo.md): `tempo 100 -> 130 over 8 bars exp`, a `tempo` in a section, `at bar 16: tempo 128
 //! -> 140 over 4 bars`. The canonical forms, the exact tempo map (closed-form seconds, the inverse, the sum of the bars), the
 //! errors, what `check` says of the length, the nets made at the tempo the curve has where they begin, and the runtime on a fake
 //! clock: the tempo set each pass from the program's position, nothing sent for a tempo that is one number, a host that cannot
@@ -429,7 +429,7 @@ fn beat_at(p: f64) -> f64 {
 }
 
 /// The beat of program position `p` bars of a program with no sections: its bar 0 is the bar it lands on (beat 12), the first you hear,
-/// as a song's own bar 0 is, and where the tempo curve starts (docs/BTW.md "Time words", R-02).
+/// as a song's own bar 0 is, and where the tempo curve starts (docs/BEATSCRIPT.md "Time words", R-02).
 fn landed_at(p: f64) -> f64 {
     beat_at(1.0 + p)
 }

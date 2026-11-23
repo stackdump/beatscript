@@ -4,15 +4,15 @@
 //   scripts/build-web-wasm.sh <dir>                       # build the module first
 //   node scripts/test-web-wasm.mjs [--wasm <dir>] [--seconds 3] [--passes 640] [--native FILE]
 //
-// <dir> defaults to $BTW_WASM_DIR, else btwsite/web/wasm of the beats worktree next to this one.
+// <dir> defaults to $BEATSCRIPT_WASM_DIR, else site/web/wasm of the beats worktree next to this one.
 //
-// For every program (crates/btwapi/tests/{corpus,extra}/*.btw, examples/*.btw, docs/btw/*.btw):
-//   - btw_check / btw_fmt / btw_share / btw_open / btw_highlight equal, byte for byte, what btwapi answers natively
-//     (`cargo run --example native_dump`, which is btwapi itself) and, when a built btwd is found
-//     (target/debug/btwd or $BTWD), what `btwd check` / `btwd fmt` print; the program, net and song_net CIDs are
+// For every program (crates/beatscript-api/tests/{corpus,extra}/*.beatscript, examples/*.beatscript, docs/beatscript/*.beatscript):
+//   - beatscript_check / beatscript_fmt / beatscript_share / beatscript_open / beatscript_highlight equal, byte for byte, what beatscript-api answers natively
+//     (`cargo run --example native_dump`, which is beatscript-api itself) and, when a built beatscript is found
+//     (target/debug/beatscript or $BEATSCRIPT_CLI), what `beatscript check` / `beatscript fmt` print; the program, net and song_net CIDs are
 //     named in the failure when they differ
 //   - open(share(text)) gives the same canonical text and CID back, verified; a forged link is refused
-//   - BtwRun on a fake clock (the quarter-beat clock of crates/btwapi/tests/run.rs) gives the same commands on every
+//   - BeatscriptRun on a fake clock (the quarter-beat clock of crates/beatscript-api/tests/run.rs) gives the same commands on every
 //     pass and the same marks every bar as the native `Run`
 //   - the engine: the first deck-A net of the program, through DjComposer.prepare_share -> Dj.begin_install ->
 //     install_step -> set_playing -> render in 128-frame blocks with tick() every 4th (the path the AudioWorklet
@@ -34,8 +34,8 @@ const PASSES = Number(opt('--passes', 640));
 const SR = 48000;
 const BUDGET = 12 * 1024; // what the worklet takes of an install per quantum (engine-worklet.js DEFAULT_BUDGET)
 
-const wasmDir = path.resolve(opt('--wasm', process.env.BTW_WASM_DIR || path.join(root, '..', '..', 'beats-bitwrap-io', 'btw-site', 'btwsite', 'web', 'wasm')));
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm')) || !fs.existsSync(path.join(wasmDir, 'btw.js'))) {
+const wasmDir = path.resolve(opt('--wasm', process.env.BEATSCRIPT_WASM_DIR || path.join(root, '..', '..', 'beats-bitwrap-io', 'btw-site', 'btwsite', 'web', 'wasm')));
+if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm')) || !fs.existsSync(path.join(wasmDir, 'beatscript.js'))) {
     console.error(`test-web-wasm: no built module in ${wasmDir}: run scripts/build-web-wasm.sh ${wasmDir}`);
     process.exit(2);
 }
@@ -51,12 +51,12 @@ const sha256 = (data) => crypto.createHash('sha256').update(data).digest('hex');
 
 // ---- the programs
 function programs() {
-    const dirs = ['crates/btwapi/tests/corpus', 'crates/btwapi/tests/extra', 'examples', 'docs/btw'];
+    const dirs = ['crates/beatscript-api/tests/corpus', 'crates/beatscript-api/tests/extra', 'examples', 'docs/btw'];
     const out = [];
     for (const d of dirs) {
         const full = path.join(root, d);
         if (!fs.existsSync(full)) continue;
-        for (const f of fs.readdirSync(full).sort()) if (f.endsWith('.btw')) out.push(path.join(full, f));
+        for (const f of fs.readdirSync(full).sort()) if (f.endsWith('.beatscript')) out.push(path.join(full, f));
     }
     return out;
 }
@@ -78,9 +78,9 @@ if (nativeFile) {
 }
 
 // ---- the module
-const glue = await import(pathToFileURL(path.join(wasmDir, 'btw.js')).href);
+const glue = await import(pathToFileURL(path.join(wasmDir, 'beatscript.js')).href);
 const t0 = performance.now();
-const exports = glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm')) });
+const exports = glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'beatscript_bg.wasm')) });
 const initMs = performance.now() - t0;
 const memInit = exports.memory.buffer.byteLength;
 const t1 = performance.now();
@@ -91,18 +91,18 @@ probe.free();
 const probeComposer = new glue.DjComposer(SR);
 const memComposer = exports.memory.buffer.byteLength;
 probeComposer.free();
-const wasmBytes = fs.statSync(path.join(wasmDir, 'btw_bg.wasm')).size;
+const wasmBytes = fs.statSync(path.join(wasmDir, 'beatscript_bg.wasm')).size;
 
-// ---- btwd, when it is built
-const btwd = process.env.BTWD || ['debug', 'release'].map((p) => path.join(root, 'target', p, 'btwd')).find((p) => fs.existsSync(p));
-function btwdRun(args, input) {
-    const r = spawnSync(btwd, args, { input, maxBuffer: 1 << 28 });
+// ---- beatscript, when it is built
+const beatscript = process.env.BEATSCRIPT_CLI || ['debug', 'release'].map((p) => path.join(root, 'target', p, 'beatscript')).find((p) => fs.existsSync(p));
+function beatscriptCliRun(args, input) {
+    const r = spawnSync(beatscript, args, { input, maxBuffer: 1 << 28 });
     return r.status === 0 ? r.stdout.toString() : null;
 }
 
 // ---- the fake clock, the same as native_dump's
 function simulate(text) {
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     const evalAnswer = run.eval(text);
     let beat = 0;
     const playing = { A: false, B: false };
@@ -185,20 +185,20 @@ for (const f of files) {
 
     // check / fmt / share / open / highlight byte for byte
     const tc = performance.now();
-    const check = glue.btw_check(text);
+    const check = glue.beatscript_check(text);
     timing.check.push(performance.now() - tc);
-    const fmt = glue.btw_fmt(text);
-    ok(`${name}: btw_check == native`, check === nat.check, check === nat.check ? '' : cidDiff(check, nat.check));
-    ok(`${name}: btw_fmt == native`, fmt === nat.fmt);
-    ok(`${name}: btw_highlight == native`, glue.btw_highlight(text) === nat.highlight);
-    const share = glue.btw_share(text, null, false, null);
-    ok(`${name}: btw_share == native`, share === nat.share);
+    const fmt = glue.beatscript_fmt(text);
+    ok(`${name}: beatscript_check == native`, check === nat.check, check === nat.check ? '' : cidDiff(check, nat.check));
+    ok(`${name}: beatscript_fmt == native`, fmt === nat.fmt);
+    ok(`${name}: beatscript_highlight == native`, glue.beatscript_highlight(text) === nat.highlight);
+    const share = glue.beatscript_share(text, null, false, null);
+    ok(`${name}: beatscript_share == native`, share === nat.share);
     const rep = JSON.parse(check);
-    if (btwd) {
-        const bc = btwdRun(['check', '--file', f]);
-        ok(`${name}: btw_check == btwd check`, bc !== null && bc.trimEnd() === check, bc === null ? 'btwd failed' : cidDiff(check, bc.trimEnd()));
-        const bf = btwdRun(['fmt', '--file', f]);
-        ok(`${name}: btw_fmt == btwd fmt`, bf !== null && bf.trimEnd() === fmt);
+    if (beatscript) {
+        const bc = beatscriptCliRun(['check', '--file', f]);
+        ok(`${name}: beatscript_check == beatscript check`, bc !== null && bc.trimEnd() === check, bc === null ? 'beatscript failed' : cidDiff(check, bc.trimEnd()));
+        const bf = beatscriptCliRun(['fmt', '--file', f]);
+        ok(`${name}: beatscript_fmt == beatscript fmt`, bf !== null && bf.trimEnd() === fmt);
     }
     checked++;
 
@@ -206,25 +206,25 @@ for (const f of files) {
     const sh = JSON.parse(share);
     if (rep.ok && !rep.restricted) {
         ok(`${name}: share ok`, sh.ok === true && typeof sh.url === 'string', JSON.stringify(sh).slice(0, 200));
-        const op = JSON.parse(glue.btw_open(sh.url));
+        const op = JSON.parse(glue.beatscript_open(sh.url));
         ok(`${name}: open(share) gives the program back`, op.ok && op.verified && op.cid === rep.cid && op.canonical === rep.canonical, JSON.stringify(op).slice(0, 200));
-        ok(`${name}: open == native`, glue.btw_open(sh.url) === nat.open);
+        ok(`${name}: open == native`, glue.beatscript_open(sh.url) === nat.open);
         const at = sh.url.length - 8;
         const forged = sh.url.slice(0, at) + (sh.url[at] === 'A' ? 'B' : 'A') + sh.url.slice(at + 1);
-        const bad = JSON.parse(glue.btw_open(forged));
+        const bad = JSON.parse(glue.beatscript_open(forged));
         ok(`${name}: a forged link is refused`, !bad.ok || !bad.verified, JSON.stringify(bad).slice(0, 200));
     }
 
     // the runtime on the fake clock
     if (nat.run) {
         const s = simulate(text);
-        ok(`${name}: BtwRun eval == native`, s.evalAnswer === nat.run.eval);
+        ok(`${name}: BeatscriptRun eval == native`, s.evalAnswer === nat.run.eval);
         let firstBad = -1;
         for (let i = 0; i < s.commands.length; i++) if (s.commands[i] !== nat.run.commands[i]) { firstBad = i; break; }
-        ok(`${name}: BtwRun commands == native on all ${PASSES} passes`, firstBad < 0 && s.commands.length === nat.run.commands.length, `first difference at pass ${firstBad}`);
+        ok(`${name}: BeatscriptRun commands == native on all ${PASSES} passes`, firstBad < 0 && s.commands.length === nat.run.commands.length, `first difference at pass ${firstBad}`);
         const markBad = s.marks.findIndex((m, i) => m !== nat.run.marks[i]);
-        ok(`${name}: BtwRun marks == native at each bar (${s.marks.length})`, markBad < 0 && s.marks.length === nat.run.marks.length, `first difference at bar ${markBad}`);
-        ok(`${name}: BtwRun status == native`, s.status === nat.run.status);
+        ok(`${name}: BeatscriptRun marks == native at each bar (${s.marks.length})`, markBad < 0 && s.marks.length === nat.run.marks.length, `first difference at bar ${markBad}`);
+        ok(`${name}: BeatscriptRun status == native`, s.status === nat.run.status);
         simulated++;
 
         // the engine
@@ -251,29 +251,29 @@ for (const f of files) {
 }
 
 // ---- things that are not per program
-const instruments = glue.btw_instruments();
-const cheat = glue.btw_cheatsheet();
-ok('btw_instruments is JSON with voices', Array.isArray(JSON.parse(instruments).voices) && JSON.parse(instruments).voices.length > 10);
-ok('btw_cheatsheet is markdown of a sensible size', cheat.length > 4000 && cheat.length < 30000 && cheat.startsWith('#'), `${cheat.length} chars`);
-if (btwd) {
-    ok('btw_instruments == btwd instruments', (btwdRun(['instruments']) || '').trimEnd() === instruments);
-    ok('btw_cheatsheet == btwd cheatsheet', (btwdRun(['cheatsheet']) || '').trimEnd() === cheat.trimEnd());
+const instruments = glue.beatscript_instruments();
+const cheat = glue.beatscript_cheatsheet();
+ok('beatscript_instruments is JSON with voices', Array.isArray(JSON.parse(instruments).voices) && JSON.parse(instruments).voices.length > 10);
+ok('beatscript_cheatsheet is markdown of a sensible size', cheat.length > 4000 && cheat.length < 30000 && cheat.startsWith('#'), `${cheat.length} chars`);
+if (beatscript) {
+    ok('beatscript_instruments == beatscript instruments', (beatscriptCliRun(['instruments']) || '').trimEnd() === instruments);
+    ok('beatscript_cheatsheet == beatscript cheatsheet', (beatscriptCliRun(['cheatsheet']) || '').trimEnd() === cheat.trimEnd());
 }
-const gen = JSON.parse(glue.btw_generation(fs.readFileSync(path.join(root, 'crates/btwapi/tests/corpus/markers-demo.btw'), 'utf8'), null, 2));
-ok('btw_generation(markers-demo, 2) answers a CID', gen.ok === true && /^z/.test(gen.cid), JSON.stringify(gen));
-// radio (docs/btw/radio.md): btw_station answers what the MCP station tool and POST /api/station do (crates/djweb/tests/drift.rs
+const gen = JSON.parse(glue.beatscript_generation(fs.readFileSync(path.join(root, 'crates/beatscript-api/tests/corpus/markers-demo.beatscript'), 'utf8'), null, 2));
+ok('beatscript_generation(markers-demo, 2) answers a CID', gen.ok === true && /^z/.test(gen.cid), JSON.stringify(gen));
+// radio (docs/beatscript/radio.md): beatscript_station answers what the MCP station tool and POST /api/station do (crates/djweb/tests/drift.rs
 // holds the native exports to station_json byte for byte; this is the module itself)
-const station = JSON.parse(glue.btw_station(JSON.stringify({ station: 'tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n', n: 3 })));
-ok('btw_station(n 3) answers track 3 and the segue to 4', station.ok === true && station.tracks[0].n === 3 && /^z/.test(station.tracks[0].cid) && station.segues[0].to === 4 && /^z/.test(station.segues[0].cid), JSON.stringify(station).slice(0, 400));
-ok('engine_version is the engine crate', glue.engine_version() === JSON.parse(glue.btw_build_info()).engine);
-const bad = JSON.parse(glue.btw_check('deck A: kick x ~ y ~\n'));
+const station = JSON.parse(glue.beatscript_station(JSON.stringify({ station: 'tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n', n: 3 })));
+ok('beatscript_station(n 3) answers track 3 and the segue to 4', station.ok === true && station.tracks[0].n === 3 && /^z/.test(station.tracks[0].cid) && station.segues[0].to === 4 && /^z/.test(station.segues[0].cid), JSON.stringify(station).slice(0, 400));
+ok('engine_version is the engine crate', glue.engine_version() === JSON.parse(glue.beatscript_build_info()).engine);
+const bad = JSON.parse(glue.beatscript_check('deck A: kick x ~ y ~\n'));
 ok('an error has line, col, start16 and a render form', bad.ok === false && bad.diagnostics[0].line === 1 && 'start16' in bad.diagnostics[0] && bad.diagnostics[0].render.includes('-->'), JSON.stringify(bad.diagnostics && bad.diagnostics[0]).slice(0, 200));
 
 // ---- report
 const med = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
-console.log(`\nmodule: ${path.join(wasmDir, 'btw_bg.wasm')} ${(wasmBytes / 1048576).toFixed(2)} MB, init ${initMs.toFixed(1)} ms (${(memInit / 1048576).toFixed(1)} MB of memory), new Dj ${djMs.toFixed(0)} ms (memory then ${(memDj / 1048576).toFixed(1)} MB), + DjComposer ${(memComposer / 1048576).toFixed(1)} MB`);
-console.log(`programs: ${files.length} (${checked} checked, ${simulated} on the fake clock, ${rendered} rendered ${SECONDS} s); btwd compared: ${btwd ? 'yes' : 'no (not built)'}`);
-console.log(`btw_check median ${med(timing.check).toFixed(1)} ms; prepare_share median ${med(timing.prepare).toFixed(0)} ms (max ${Math.max(0, ...timing.prepare).toFixed(0)}); prepared track median ${(med(timing.bytes) / 1024).toFixed(0)} KB in ${med(timing.steps)} install steps of ${BUDGET / 1024} KB; slowest install step ${timing.slowestStep.toFixed(2)} ms (a render quantum is 2.67 ms at 48 kHz)`);
+console.log(`\nmodule: ${path.join(wasmDir, 'beatscript_bg.wasm')} ${(wasmBytes / 1048576).toFixed(2)} MB, init ${initMs.toFixed(1)} ms (${(memInit / 1048576).toFixed(1)} MB of memory), new Dj ${djMs.toFixed(0)} ms (memory then ${(memDj / 1048576).toFixed(1)} MB), + DjComposer ${(memComposer / 1048576).toFixed(1)} MB`);
+console.log(`programs: ${files.length} (${checked} checked, ${simulated} on the fake clock, ${rendered} rendered ${SECONDS} s); beatscript compared: ${beatscript ? 'yes' : 'no (not built)'}`);
+console.log(`beatscript_check median ${med(timing.check).toFixed(1)} ms; prepare_share median ${med(timing.prepare).toFixed(0)} ms (max ${Math.max(0, ...timing.prepare).toFixed(0)}); prepared track median ${(med(timing.bytes) / 1024).toFixed(0)} KB in ${med(timing.steps)} install steps of ${BUDGET / 1024} KB; slowest install step ${timing.slowestStep.toFixed(2)} ms (a render quantum is 2.67 ms at 48 kHz)`);
 console.log(`${passed} passed, ${failures.length} failed`);
 process.exit(failures.length ? 1 : 0);
 

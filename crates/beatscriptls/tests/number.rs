@@ -1,4 +1,4 @@
-//! `btw/numberAt`: the number, note or numeral at a position, its limits, step and unit; the limits proved against the
+//! `beatscript/numberAt`: the number, note or numeral at a position, its limits, step and unit; the limits proved against the
 //! checker; a scrub that edits only its literal keeps the program checkable and canonical.
 
 mod common;
@@ -9,7 +9,7 @@ use common::*;
 use djengine::json::JsonValue;
 
 fn reg() -> &'static dyn djlive::env::Registry {
-    &btwapi::web_env().registry
+    &beatscript_api::web_env().registry
 }
 
 /// The number at the `nth` occurrence of `needle` in `text`, `skip` bytes into it.
@@ -87,7 +87,7 @@ fn each_kind_of_number_says_what_it_is() {
 fn the_request_answers_span_limits_step_and_unit() {
     let mut s = server(PROGRAM);
     let (l, c) = find(PROGRAM, "tempo 124", 0, 6);
-    let r = req(&mut s, "btw/numberAt", &at(l, c));
+    let r = req(&mut s, "beatscript/numberAt", &at(l, c));
     assert_eq!(r.get("kind").and_then(JsonValue::as_str), Some("tempo"));
     assert_eq!(r.get("value").and_then(JsonValue::as_f64), Some(124.0));
     assert_eq!(r.get("min").and_then(JsonValue::as_f64), Some(40.0));
@@ -98,7 +98,7 @@ fn the_request_answers_span_limits_step_and_unit() {
         pretty(&JsonValue::parse(r#"{"start":{"line":0,"character":6},"end":{"line":0,"character":9}}"#).unwrap())
     );
     let (l, c) = find(PROGRAM, "lp 2000", 0, 3);
-    let r = req(&mut s, "btw/numberAt", &at(l, c));
+    let r = req(&mut s, "beatscript/numberAt", &at(l, c));
     assert_eq!(r.get("scale").and_then(JsonValue::as_str), Some("log"));
     let span = r.get("span").expect("a ramp's end says the other end");
     assert_eq!(span.get("op").and_then(JsonValue::as_str), Some("->"));
@@ -107,11 +107,11 @@ fn the_request_answers_span_limits_step_and_unit() {
     assert_eq!(span.get("ordered"), Some(&JsonValue::Bool(false)));
     // nothing there: null
     let (l, c) = find(PROGRAM, "deck A", 0, 0);
-    assert_eq!(req(&mut s, "btw/numberAt", &at(l, c)), JsonValue::Null);
+    assert_eq!(req(&mut s, "beatscript/numberAt", &at(l, c)), JsonValue::Null);
     // advertised
     let caps = s.capabilities();
     assert_eq!(
-        caps.get("experimental").and_then(|e| e.get("btw")).and_then(|b| b.get("numberAt")),
+        caps.get("experimental").and_then(|e| e.get("beatscript")).and_then(|b| b.get("numberAt")),
         Some(&JsonValue::Bool(true))
     );
 }
@@ -179,7 +179,7 @@ fn a_numeral_moves_through_the_degrees_of_the_key() {
 #[test]
 fn a_do_param_takes_its_range_from_the_registry() {
     // the registry's schema bounds some params (heos level 0..100); a param with none is free
-    let reg = btwapi::web_env();
+    let reg = beatscript_api::web_env();
     let bounded = djlive::env::Registry::noun_names(&reg.registry)
         .into_iter()
         .filter_map(|n| djlive::env::Registry::noun(&reg.registry, &n))

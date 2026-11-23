@@ -152,7 +152,7 @@ pub struct Env<'a> {
     /// The singing voices, and whether the neural one is installed (None: a `sing` line cannot be checked against them).
     pub voices: Option<&'a dyn Voices>,
     /// The bitwrap ontology the `#! genre:` and `#! tags:` header lines are checked against (None: they are comments,
-    /// and nothing says whether a term is real). docs/btw/ext-linked.md.
+    /// and nothing says whether a term is real). docs/beatscript/ext-linked.md.
     pub ontology: Option<&'a dyn crate::linked::Ontology>,
     /// How many knobs and pads the connected controllers have (F13: `knob(N)` and `pad(N)` are checked against it). None: no
     /// host says, and a program may use `InputBank::DEFAULT`.

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Propose BeatScript lexicon entries from programs' lyrics, for a person to review. It never edits the lexicon.
 
-    tools/lexicon/propose.py [PATH ...]           .btw files or directories of them (default: examples/btw)
+    tools/lexicon/propose.py [PATH ...]           .beatscript files or directories of them (default: examples/beatscript)
     tools/lexicon/propose.py --url URL ...        stored public programs too (a JSON list of {text} or of strings, or a
-                                                  .btw / text body), e.g. a dump of beatscript.app's public programs
+                                                  .beatscript / text body), e.g. a dump of beatscript.app's public programs
 
 Prints, most used first, the lyric words the lexicon (crates/djengine/data/lexicon.txt) lacks, one line each:
 
     harbour<TAB>3<TAB>/h aa r b ow r/   (rules)
 
-the third column the letter-to-sound rules' spelling when BTW_RULES (a btwd binary: `btwd vocal words`) is there, else
+the third column the letter-to-sound rules' spelling when BEATSCRIPT_RULES (a beatscript binary: `beatscript vocal words`) is there, else
 blank. A reviewer corrects the spelling, then adds the line to lexicon.txt by hand (sorted, one entry a word) and runs
 `cargo test -p djengine phoneme` (every entry must be in the phoneme set). Escaped text (/…/) and @phrases are skipped:
 they are phonemes already. Only public, CC0 or otherwise reusable programs should be read.
@@ -55,12 +55,12 @@ def texts(args):
         else:
             paths.append(a)
     if not paths and not urls:
-        paths = [os.path.join(ROOT, "examples", "btw")]
+        paths = [os.path.join(ROOT, "examples", "beatscript")]
     for p in paths:
         if os.path.isdir(p):
             for dp, _, fs in os.walk(p):
                 for f in sorted(fs):
-                    if f.endswith(".btw"):
+                    if f.endswith(".beatscript"):
                         yield open(os.path.join(dp, f), encoding="utf-8").read()
         else:
             yield open(p, encoding="utf-8").read()
@@ -74,7 +74,7 @@ def texts(args):
             yield body
 
 def rules_spelling(word):
-    exe = os.environ.get("BTW_RULES")
+    exe = os.environ.get("BEATSCRIPT_RULES")
     if not exe:
         return ""
     try:

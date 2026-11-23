@@ -1,0 +1,22 @@
+#! btw 1
+#! name: filter-exit-restores
+#! license: CC0-1.0
+#! visibility: public
+# Listening-test fixture: a filter_exit move ends by muting its deck, and a move from a program puts the strip back
+# at the next phrase line (docs/BEATSCRIPT.md "Moves put their strip back"). So deck B is muted from the end of the move to the
+# end of the intro, and heard again in `later`. The djapp bug left it muted for good: that shows as B silent in later.
+# expect: silent deck=B reason=mute section=intro
+# expect: heard deck=B section=later
+# expect: heard deck=A
+tempo 124
+section intro 8 bars {
+  deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | hihat ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+  deck B: bass a2 ~ ~ a2 ~ ~ a2 ~ ~ ~ c3 ~ e2 ~ ~ ~ inst=sub-bass
+  at bar 1: move filter_exit on B over 2 bars
+}
+section later 16 bars {
+  deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | hihat ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+  deck B: bass a2 ~ ~ a2 ~ ~ a2 ~ ~ ~ c3 ~ e2 ~ ~ ~ inst=sub-bass
+}
+arrange intro later
+end after later

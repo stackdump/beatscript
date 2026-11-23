@@ -6,7 +6,7 @@ import { describeError, ApiError } from './errors.js';
 import { qrChoice } from './qr-model.js';
 import { SHARE_RIGHTS } from './rights.js';
 import { signIn, hasWallet, localKeyInfo, resetLocalKey } from './auth.js';
-// the seeded generator's genres (btwapi::generate::genres, beats' catalogue): one list, shared with the radio's genre knob
+// the seeded generator's genres (beatscript-api::generate::genres, beats' catalogue): one list, shared with the radio's genre knob
 import { SEEDED_GENRES } from './station-model.js';
 import { generateBody } from './generate.js';
 
@@ -184,14 +184,14 @@ export class Panels {
       app.ensureAudio();
       go.disabled = true;
       try {
-        let r = app.btw && app.btw.generate ? app.btw.generate(req) : null;
+        let r = app.beatscript && app.beatscript.generate ? app.beatscript.generate(req) : null;
         let storedBy = null;
         if (!r) { r = await app.api.generate(req); storedBy = 'server'; }
         if (!r.ok && !r.text) throw new Error(r.error || 'the generator refused the request');
         app.setProgram(r.text, { name: r.name || `${req.genre} ${req.seed}`, cid: r.cid });
         if (r.ok && !storedBy) {
           // stored like compose's: public, CC0. A failure to store is said, not fatal: the program is in the editor.
-          try { await app.api.putProgram(r.cid, r.text); storedBy = 'put'; } catch (e) { console.warn('btw: generate: not stored', e); }
+          try { await app.api.putProgram(r.cid, r.text); storedBy = 'put'; } catch (e) { console.warn('beatscript: generate: not stored', e); }
         }
         if (storedBy) app.stored.add(r.cid);
         status.replaceChildren(h('div', { class: r.ok ? 'okbox' : 'err' },
@@ -617,7 +617,7 @@ export class Panels {
     }
     const origin = (app.info && app.info.public_url) || location.origin;
     const build = (withNotes) => {
-      const r = app.btw.share(text, null, !!withNotes, origin);
+      const r = app.beatscript.share(text, null, !!withNotes, origin);
       if (!r.ok) throw new ApiError({ code: 'bad_request', message: r.error || 'the program could not be shared' });
       return r;
     };
@@ -704,7 +704,7 @@ export class Panels {
     if (this.lastShare && (app.stored.has(this.lastShare.cid) || app.examples.some((e) => e.cid === this.lastShare.cid))) paintTree(this.lastShare.cid);
     const box = this.pop('Share this program', h('p', { class: 'note' }, 'The link carries the program and its CID; opening it checks that the text hashes to the CID before anything plays. The address bar now holds it too.'),
       rows, qrBox, shortBox, treeBox, h('label', { class: 'check dim' }, notes, 'also carry my comments (as unverified notes; they are not part of the CID)'),
-      // one line on rights, and the page that says the rest (btwserve /authorship): never the whole text here
+      // one line on rights, and the page that says the rest (beatscript-serve /authorship): never the whole text here
       h('p', { class: 'note rights' }, SHARE_RIGHTS.text, ' ', h('a', { href: SHARE_RIGHTS.href, class: 'link', target: '_blank', rel: 'noopener' }, SHARE_RIGHTS.link)),
       h('div', { class: 'btnrow' }, h('button', { type: 'button', class: 'tb primary', onclick: () => this.copy(this.lastShare.url) }, 'Copy link'), h('button', { type: 'button', class: 'tb', onclick: () => this.close() }, 'Close')));
     // copy at once: the click that opened this is the gesture

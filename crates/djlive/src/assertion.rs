@@ -1,4 +1,4 @@
-//! F12 assertions (docs/BTW-EXTENSIONS.md, docs/btw/ext-assert.md): statements a program makes about itself.
+//! F12 assertions (docs/BEATSCRIPT-EXTENSIONS.md, docs/beatscript/ext-assert.md): statements a program makes about itself.
 //!
 //! ```text
 //! assert ends                                 the program ends (an `end`, a timeline with no `loop`, a bounded evolve)
@@ -12,7 +12,7 @@
 //! The first five are **static**: `check` proves them and a false one is an error at the statement that says the actual
 //! value (`assert length == 3m30s ± 5s: the program is 2m58s`), so `eval` refuses the program. A `level` assertion is
 //! **render-based**: `check` records it as pending (a note, not a failure) and `btw test` (the verb, `djctl btw test FILE`,
-//! `djhost::btw_test`) renders the program offline, measures each deck's RMS in the section and judges it here
+//! `djhost::beatscript_test`) renders the program offline, measures each deck's RMS in the section and judges it here
 //! ([`LevelCheck::judge`]), so the measurement is the host's and the reading of it is the language's.
 //!
 //! Pure like the rest of the crate: no clock, no I/O, no render.

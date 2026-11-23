@@ -1,4 +1,4 @@
-//! Scenes and launch (docs/BTW.md, "Scenes and launch"): `launch drop on pad(2) next phrase 16`. The statement (parse, print, canonical
+//! Scenes and launch (docs/BEATSCRIPT.md, "Scenes and launch"): `launch drop on pad(2) next phrase 16`. The statement (parse, print, canonical
 //! form, errors in the language's terms), what `check` says of it, each scene compiled on its own, and the runtime on a fake clock with a
 //! scripted pad: a hit queues the scene, the last hit before the decision wins, it lands on a bar line as a lap that begins at the scene,
 //! the take logs it and the replay brings it in on the same bar line, and a host with no pad plays the song as written.

@@ -6,7 +6,7 @@ use beatscriptls::inlay::hints;
 use beatscriptls::Analysis;
 use common::*;
 
-const PROGRAM: &str = include_str!("programs/symbols.btw");
+const PROGRAM: &str = include_str!("programs/symbols.beatscript");
 
 /// (line, label) of every hint.
 fn labelled(a: &Analysis) -> Vec<(usize, String)> {

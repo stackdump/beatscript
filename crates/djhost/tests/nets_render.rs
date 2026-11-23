@@ -3,7 +3,7 @@
 //! the engine on their frames, and the spectrum of the render moves with it. Before this the same
 //! program rendered with the filter wide open from the first bar to the last.
 
-use djhost::btw_render;
+use djhost::beatscript_render;
 
 const SR: f64 = 22_050.0;
 
@@ -48,12 +48,12 @@ const SONG: &str = "tempo 120\ndeck A: hihat x*16 | bass c2 c2 c2 c2 | kick x ~ 
 #[test]
 fn a_filter_sweep_written_in_btw_is_audible_in_the_offline_render() {
     let swept = compile(&format!("{SONG}master: filter lp 250 -> 12k over 8 bars\n"));
-    let a = btw_render::render(&swept, SR, true).expect("render");
+    let a = beatscript_render::render(&swept, SR, true).expect("render");
     assert!(a.refused.is_empty(), "the engine refused: {:?}", a.refused);
     assert!(a.beside.is_empty(), "{:?}", a.beside);
     assert!(a.applied > 65, "the net's events were applied: {}", a.applied);
     // the same program with the net left out: the filter is never touched
-    let flat = btw_render::render(&swept, SR, false).expect("render");
+    let flat = beatscript_render::render(&swept, SR, false).expect("render");
     assert_eq!(flat.applied, 0);
 
     let bars = [0.0, 2.0, 4.0, 6.0, 7.5];
@@ -81,7 +81,7 @@ fn a_move_cuts_the_strip_and_the_phrase_line_puts_it_back_in_the_render() {
     // bar 2: a filter exit over 2 bars (the strip is cut on bar 4), the put-back on the phrase line, bar 8
     let src = format!("{SONG}at bar 2: move filter_exit on A over 2 bars\n");
     let c = compile(&src);
-    let r = btw_render::render(&c, SR, true).expect("render");
+    let r = beatscript_render::render(&c, SR, true).expect("render");
     assert!(r.refused.is_empty(), "{:?}", r.refused);
     let rms = |bar: f64| {
         let (a, n) = ((bar * 4.0 * 0.5 * SR) as usize, (0.5 * SR) as usize);

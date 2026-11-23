@@ -1,4 +1,4 @@
-//! Sets (docs/BTW.md, "Sets"): programs of programs. CID stability, the timeline and a mix on a fake clock, nesting,
+//! Sets (docs/BEATSCRIPT.md, "Sets"): programs of programs. CID stability, the timeline and a mix on a fake clock, nesting,
 //! `until` cuts, and the key / tempo / length diagnostics.
 
 use djengine::json::JsonValue;

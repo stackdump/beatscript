@@ -1,5 +1,5 @@
 //! `jux`, a mutation operator that keeps the pattern as the left copy and plays a mutated copy as the right one (mutate.rs,
-//! docs/BTW.md "Arrange mutations", "Stereo"). `~ lead jux rev`, `~ lead rot 1 | jux rev | up 2`.
+//! docs/BEATSCRIPT.md "Arrange mutations", "Stereo"). `~ lead jux rev`, `~ lead rot 1 | jux rev | up 2`.
 
 use djlive::compile::{check, Compiled};
 use djlive::diag::{render_all, Diagnostic, Severity};

@@ -1,4 +1,4 @@
-//! F6 Euclidean rhythms and polymeter (docs/BTW-EXTENSIONS.md, docs/btw/ext-meter.md).
+//! F6 Euclidean rhythms and polymeter (docs/BEATSCRIPT-EXTENSIONS.md, docs/beatscript/ext-meter.md).
 //!
 //! * `e(k, n[, rot])` is checked here ([`eval_euclid`]): `0 <= k <= n`, `1 <= n <= 64`, any whole rotation; `check` names
 //!   it when the bitwrap ontology does ([`euclid_name`]).

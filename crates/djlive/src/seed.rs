@@ -1,4 +1,4 @@
-//! `seed(genre, n[, structure])`: a track of the beats generator, as BeatScript (docs/BTW.md, "Start from a seed").
+//! `seed(genre, n[, structure])`: a track of the beats generator, as BeatScript (docs/BEATSCRIPT.md, "Start from a seed").
 //!
 //! A seed reference is a value: the generated track written out as BeatScript, never audio. It is resolved before a
 //! program is lowered, so everything downstream (the compiler, the browser, the phone) only ever sees plain BeatScript:

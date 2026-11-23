@@ -1,4 +1,4 @@
-//! F8, mix moves (docs/btw/ext-mix.md): `duck B under A.kick 6db attack=5ms release=120ms` and
+//! F8, mix moves (docs/beatscript/ext-mix.md): `duck B under A.kick 6db attack=5ms release=120ms` and
 //! `mix { A level 0.7, A eq low -3 }`. Parse and the canonical form (random reformatting keeps the CID, an edit changes
 //! it), the check's report of the registry calls, and the runtime on a fake host with a fake mixer and a fake clock:
 //! a section's snapshot applies on its first bar, is read off the mixer first and goes back on the bar the section
@@ -588,7 +588,7 @@ fn eq_in_db_is_the_mixers_knob() {
 
 #[test]
 fn the_example_says_what_it_does() {
-    let src = include_str!("../../../examples/btw/mix.btw");
+    let src = include_str!("../../../examples/beatscript/mix.beatscript");
     let comp = check(src).compiled.expect("the example compiles");
     let report = comp.mix_report();
     // the first drop (bars 8 to 24), the break (24 to 32), the second drop (32 to 48): each section's lines are its own control

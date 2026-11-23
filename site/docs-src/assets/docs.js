@@ -1,8 +1,8 @@
 // The docs pages' only script. Everything it adds is progressive: the page reads without it.
-//   - highlights every BeatScript code block with the editor's own highlighter (btw_highlight in the wasm,
+//   - highlights every BeatScript code block with the editor's own highlighter (beatscript_highlight in the wasm,
 //     through /js/wasm.js and /js/highlight.js), after a first paint with the plain fallback (comments only)
 //   - shows the Copy buttons
-//   - "Try it": seals the block into a share link (btw_share) and opens the editor at /#<CID>.<packed>:
+//   - "Try it": seals the block into a share link (beatscript_share) and opens the editor at /#<CID>.<packed>:
 //     the program travels in the fragment, which is never sent to a server, never in a query string
 //   - marks the section being read in the table of contents
 // ?mock=1 uses the page's JS stand-in for the wasm, as the editor does.
@@ -12,12 +12,12 @@ const MOCK = new URLSearchParams(location.search).get('mock') === '1' && ['local
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const sourceOf = (code) => code.textContent.replace(/\n$/, '');
 
-let btwP = null;
-const loadWasm = () => btwP || (btwP = import('/js/wasm.js').then((m) => m.loadBtw({ mock: MOCK })));
+let beatscriptP = null;
+const loadWasm = () => beatscriptP || (beatscriptP = import('/js/wasm.js').then((m) => m.loadBeatscript({ mock: MOCK })));
 const highlightMod = () => import('/js/highlight.js');
 
 async function highlightAll() {
-  const blocks = $$('figure.code[data-btw] code');
+  const blocks = $$('figure.code[data-beatscript] code');
   if (!blocks.length) return;
   const { spansToHtml, plainSpans } = await highlightMod();
   for (const code of blocks) {
@@ -25,12 +25,12 @@ async function highlightAll() {
     code.innerHTML = spansToHtml(text, plainSpans(text));
   }
   try {
-    const btw = await loadWasm();
+    const beatscript = await loadWasm();
     for (const code of blocks) {
       const text = sourceOf(code);
-      code.innerHTML = spansToHtml(text, btw.highlight(text));
+      code.innerHTML = spansToHtml(text, beatscript.highlight(text));
     }
-    document.documentElement.dataset.highlight = btw.mock ? 'mock' : 'wasm';
+    document.documentElement.dataset.highlight = beatscript.mock ? 'mock' : 'wasm';
   } catch {
     document.documentElement.dataset.highlight = 'plain'; // the wasm is not there: the plain fallback stays
   }
@@ -69,8 +69,8 @@ function wireButtons() {
       tr.addEventListener('click', async () => {
         tr.disabled = true;
         try {
-          const btw = await loadWasm();
-          const r = btw.share(sourceOf(code), null, null);
+          const beatscript = await loadWasm();
+          const r = beatscript.share(sourceOf(code), null, null);
           const frag = r && r.ok && typeof r.url === 'string' ? r.url.split('#')[1] : '';
           if (!frag) { flash(tr, 'Not a whole program'); return; }
           const url = `/#${frag}`;

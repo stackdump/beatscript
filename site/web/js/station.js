@@ -1,6 +1,6 @@
 // The radio page (/radio, site/web/radio/index.html): a station (a BeatScript program, station-model.js) tuned and played
 // in the browser. The station's answer (its canonical text, CID, the tracks at N and N+1 and the segue between) comes
-// from the page wasm's btw_station when the module has it, else from POST /api/station. Playback is the embed player's:
+// from the page wasm's beatscript_station when the module has it, else from POST /api/station. Playback is the embed player's:
 // the module and the engine (after the first click), a fresh run per track, a 25 ms service loop, and the engine's own
 // grid reports while the tab is hidden. A track plays one pass (queue-model.js passBars/playBars) or to its end; then
 // the segue (when segues are on) and track N+1, and N moves on, only while someone is listening (PresenceTracker). Nothing
@@ -9,7 +9,7 @@
 import { h, shortCid, isLoopbackHost } from './util.js';
 import { describeError, diagLine } from './errors.js';
 import { makeApi } from './api.js';
-import { loadBtw } from './wasm.js';
+import { loadBeatscript } from './wasm.js';
 import { createEngine } from './engine.js';
 import { Driver, EngineSource } from './driver.js';
 import { PresenceTracker, pauseReason, pauseMessage, playBars } from './queue-model.js';
@@ -35,7 +35,7 @@ const HELP = {
 class Radio {
   constructor() {
     this.api = makeApi();
-    this.btw = null;
+    this.beatscript = null;
     this.ctx = null;
     this.engine = null;
     this.src = null;
@@ -56,9 +56,9 @@ class Radio {
     const q = new URLSearchParams(location.search);
     // the JS stand-in for the module is for development on this machine only, as the editor's
     this.mock = q.get('mock') === '1' && isLoopbackHost(location.hostname);
-    this.btwP = loadBtw({ mock: this.mock }).then((b) => { this.btw = b; return b; }).catch((e) => {
-      this.btwError = e;
-      console.warn('btw: the module did not load', e);
+    this.beatscriptP = loadBeatscript({ mock: this.mock }).then((b) => { this.beatscript = b; return b; }).catch((e) => {
+      this.beatscriptError = e;
+      console.warn('beatscript: the module did not load', e);
       return null;
     });
     this.presence.attach(window);
@@ -84,16 +84,16 @@ class Radio {
     this.wire();
     this.render();
     this.syncControls();
-    await this.btwP;
+    await this.beatscriptP;
     const ok = await this.ask();
     if (ok && this.wantCid && this.state.cid !== this.wantCid) this.msg(`Careful: the link names ${shortCid(this.wantCid)}, but its text is the station ${shortCid(this.state.cid)}.`, 'err');
   }
 
   // ---- the station's answer ------------------------------------------------------------------------------------------------
 
-  /** The wasm's btw_station when the module has it, else the server's (the same JSON either way). */
+  /** The wasm's beatscript_station when the module has it, else the server's (the same JSON either way). */
   async call(req) {
-    if (this.btw && this.btw.station) return this.btw.station(req);
+    if (this.beatscript && this.beatscript.station) return this.beatscript.station(req);
     return this.api.station(req);
   }
 
@@ -206,12 +206,12 @@ class Radio {
 
   /** The module and the engine, once: the engine only after a click (the browser's autoplay rule). */
   async ready() {
-    await this.btwP;
-    if (!this.btw) throw new Error('the player did not load here: the station can be read but not played');
+    await this.beatscriptP;
+    if (!this.beatscript) throw new Error('the player did not load here: the station can be read but not played');
     if (!this.engine) {
       const engine = this.mock
         ? await (await import('./wasm-mock.js')).createMockEngine({ context: this.ctx })
-        : await createEngine({ context: this.ctx, wasmUrl: this.btw.wasmUrl });
+        : await createEngine({ context: this.ctx, wasmUrl: this.beatscript.wasmUrl });
       await engine.ready;
       if (engine.on) {
         engine.on('error', (e) => { if (e && e.message) this.say(e.message); });
@@ -220,7 +220,7 @@ class Radio {
       }
       this.engine = engine;
       this.src = new EngineSource(engine);
-      this.driver = new Driver(this.btw);
+      this.driver = new Driver(this.beatscript);
     }
   }
 
@@ -266,7 +266,7 @@ class Radio {
       return false;
     }
     // one pass of a looping program, else until it ends (the program's own check: its song bars, its sections)
-    const report = this.btw.check(item.text);
+    const report = this.beatscript.check(item.text);
     this.item = { ...item, target: playBars(null, report) };
     this.render();
     return true;
@@ -552,6 +552,6 @@ function facts(t, n) {
 const radio = new Radio();
 window.__radio = radio; // for the browser tests
 radio.init().catch((e) => {
-  console.error('btw radio:', e);
+  console.error('beatscript radio:', e);
   radio.say(String((e && e.message) || e));
 });

@@ -3,7 +3,7 @@
 *Design, with a phase-1 proof on `feat/nets-down` (from `feat/btw-language`). Matt's direction: "push everything
 down to the nets; it's maximum inspectability."*
 
-**The claim.** A btw program is a performance. Today only its *notes* are nets. Its control lines (ramps, moves,
+**The claim.** A BeatScript program is a performance. Today only its *notes* are nets. Its control lines (ramps, moves,
 mixer and insert calls, `do` calls, the wheel, sounds, sections, `end`) run as timed calls *beside* the nets, in the
 runtime (`crates/djlive/src/runtime.rs`) and the host's move scheduler (`crates/djhost/src/perform.rs`). The goal is that the
 whole track, every control change included, is a net, so that **the marking is the complete state** and the engine's
@@ -39,7 +39,7 @@ job is only to *fire transitions and apply events*.
 | `ControlAction`: `mute-track`, `unmute-track`, `toggle-track`, `*-note`, `activate-slot`, `stop-transport` are applied by the graph; any other action name is `Other`: **listed in `controls` (net, transition) and nothing else happens** | `net.rs:24-52`, `apply_control` | `Other` is exactly "emit an event"; `controls` is a fixed 1024-int array, no allocation on the audio path |
 | Slot groups: `activate-slot` mutes the group's other nets and unmutes the target | `net.rs` (`ControlAction::Slot`) | sections as slots (§3.7) are already an engine feature |
 | Seek: `fast_forward_jump` steps control nets to each action, skips silent chains and whole cycles, ends on a real `advance` so its events are the replay's | `net.rs:~890` | seek *is* a marking computation, in the engine, today |
-| The marking is published (`marking_mirror`), fires and tick anchors go to overwrite rings the runner writes (`fire_ring`, `anchor_ring`) | `runner.rs` header, `wave/marking_mirror.rs`, `wave/event_ring.rs` | the debugger and the firing markers can read the engine, not the compile (docs/BTW.md says the event ring "would be a change in djrust"; `fire_ring` is in the runner's header: to confirm in phase 3) |
+| The marking is published (`marking_mirror`), fires and tick anchors go to overwrite rings the runner writes (`fire_ring`, `anchor_ring`) | `runner.rs` header, `wave/marking_mirror.rs`, `wave/event_ring.rs` | the debugger and the firing markers can read the engine, not the compile (docs/BEATSCRIPT.md says the event ring "would be a change in djrust"; `fire_ring` is in the runner's header: to confirm in phase 3) |
 | The **model CID** hashes a control binding's `action` and `targetNet` only (`macro`, `macroBars`, `macroParams` are left out) | `pflow.rs:938-945` (`normalized_for_cid`) | beats' canonical form, pinned to the JS and Go engines: do not change it. The event label goes in those two fields |
 | Insert knobs are smoothed per sample by a one-pole (`SMOOTH_SECONDS = 0.02`) | `fx/insert.rs:32` | a step target is already glided to; zipper noise is a tuning question, not a missing mechanism (§6) |
 | The offline renderer plays an arrangement: 75 `DeckAction` ops plus 21 `LIVE_METHODS`; **no insert or mixer-insert op** | `session/arrangement.rs:51-72`, `host/deck/live_ops.rs:87`, `host/deck/offline.rs:403` | why the offline render could not hear a filter, and why the proof drives the engine's own API from the net's events |
@@ -66,7 +66,7 @@ Line numbers are on `feat/btw-language` at `dad7d72`.
 | 13 | **Deck transport** (`play`, `stop`, `mute`, `load`, a section not using a deck) | `Live::sync_nets` `runtime.rs:853-899` (`set_playing`) | host |
 | 14 | **Hit lights / marks** | `Live::watch_fires` `runtime.rs:576`: *recomputed from the compiled hits and the grid beat*, not read from fired transitions | the "firing marker" is a model of the net, not the net |
 | 15 | **Hot reload diff** | `diff` `runtime.rs:189`, `apply` `:796` (control items kept by key) | the same idea, held in runtime structs |
-| 16 | **The offline render** | `btw_render::arrangement`; `djrust::host::deck::offline::render_arrangement` | no op for any of rows 1–7 |
+| 16 | **The offline render** | `beatscript_render::arrangement`; `djrust::host::deck::offline::render_arrangement` | no op for any of rows 1–7 |
 
 ## 3. Net encodings, one per kind
 
@@ -104,7 +104,7 @@ Three encodings, in order of how much of the state is *in the marking*:
 | C | one-hot places over the finite alphabet of values the program ever writes; a write is a move from the known previous value; Σ = 1 is a P-invariant the engine's `p_invariants` can prove | the knob's value, exactly | one transition per write, one place per distinct value | alternative to B where weighted arcs are unwelcome |
 
 The compile can do B and C because **the program is a finite static timeline** (every statement total, every count written out,
-docs/BTW.md "Functions and structure"): the previous value of every parameter at every write is known before anything runs.
+docs/BEATSCRIPT.md "Functions and structure"): the previous value of every parameter at every write is known before anything runs.
 Where it is not (a live edit lands mid-chain) the compiler recompiles from the current tick (§6).
 
 ### 3.3 A ramp: a chain on the step clock, a table keyed by step
@@ -177,7 +177,7 @@ transition of its section. Two ways to switch a deck's nets, both with one engin
 
 * **Slots (preferred when it fits):** every section's net for a deck is in the deck's project as one net of a slot group per role;
   the structure transition fires the engine's own `activate-slot`. Nothing is loaded on a bar line, nothing is swapped from the host,
-  and a seek is `fast_forward`. Cost: every section's rings are resident (about 7 ms and 3 MB a bar, docs/BTW.md), so a budget (say
+  and a seek is `fast_forward`. Cost: every section's rings are resident (about 7 ms and 3 MB a bar, docs/BEATSCRIPT.md), so a budget (say
   256 resident bars a deck) decides which sections are slots.
 * **Load (the rest, and the 64-bar chain):** `Net{deck, section, load}` a bar ahead, then enable on the line: today's
   `sync_nets`, driven by the net instead of by the host's own bar counter.
@@ -216,7 +216,7 @@ net CIDs (the proof's `deck_net_cids_do_not_move…` test shows it), and any cac
 (`djlive::nets::performance_cid`, in the proof). The control net's own CID is `share_cid` of its project; its **engine model CID** is `Project::model_cid`, and both change when a single ramp value changes (tested), because the label is in `action` / `targetNet` (§1).
 
 * **Programs with no control lines:** no control net, no `control` key; every existing CID is untouched. The performance CID is a *new* name over the same deck CIDs.
-* **No migration for shares, forks or imports:** they are of the text. `forkedFrom`, `import` pins, `.btw` headers, share links are not touched.
+* **No migration for shares, forks or imports:** they are of the text. `forkedFrom`, `import` pins, `.beatscript` headers, share links are not touched.
 * **Migration where something is keyed by net CIDs alone:** a render cache or CDN key built from deck net CIDs must add the performance CID (a swept and an unswept program of the same notes collide today). Check the render farm (`beats-builder`) and `djctl btw render`.
 * **Phase 4, one program project:** put decks and the control net in one `Project` (`nets: {A, B, ctl}`) so the *model CID of the program's net* is the performance's. That makes the deck nets' envelope CIDs parts of it, not replaced by it.
 * **Intensional vs extensional (open question 3):** `repeat 16 { master: filter lp 300 -> 2800 over 1 bars }` and `every 1 bars: …` compile to different nets (16 chains vs one tapped 16 times) with the same events. Net CID is intensional. If "two texts, same sound" must give one CID (as `song_nets` does for notes), add a **timeline CID**: the hash of the `(tick, event)` stream. Recommend both.
@@ -248,7 +248,7 @@ net CIDs (the proof's `deck_net_cids_do_not_move…` test shows it), and any cac
 
 | phase | what | tests |
 |---|---|---|
-| **1 (done, this branch)** | ramps and two moves into a net; `djlive::nets`; `djhost::btw_render::render` applies the events to the offline engine; performance CID | §8 |
+| **1 (done, this branch)** | ramps and two moves into a net; `djlive::nets`; `djhost::beatscript_render::render` applies the events to the offline engine; performance CID | §8 |
 | **2** | the rest of `Effect::Calls` (`Call` event: mixer, `do`, wheel, `swap pairs`), `for N bars`, `on phrase / after / before`, `loop_roll`, `bass_swap`, `phrase_sync`, `vocoder_handoff`, sounds; **the runtime drives from the net** behind a switch; `djctl btw render --controls` | **dual-run equivalence**: the old runtime and the net on the same fake clock must produce the same call stream for every program in `tests/` and the three track fixtures (differences listed and explained, not hidden); the mute-forever reproduction; hot reload by key (a ramp goes on through an edit; a removed move is put back) |
 | **3** | the engine applies events: `CompiledNet` gets a `ctl_event` table, `StudioShell`-style dispatch for the native variants (a PR in the public `djrust`); marks read the fire ring; the debugger reads the marking mirror; seek by `fast_forward` | a golden parity test of the net on the engine vs the host applying events; a seek to bar N equals playing to bar N (events and marking); wasm32 build of the control net |
 | **4** | sections as slots / `Net` events, `end`, `loop`, `stop` as nets; evolve generations as slots; the program project with one model CID; the timeline CID | a song's structure net equals today's `sync_nets` landings on a fake clock; `end` puts back everything held; loop laps |
@@ -259,8 +259,8 @@ net CIDs (the proof's `deck_net_cids_do_not_move…` test shows it), and any cac
 **Code** (branch `feat/nets-down`, from `origin/feat/btw-language`):
 
 * `crates/djlive/src/nets.rs`: `Event` (the phase-1 alphabet with its text form), `lower` (a `Control` to events at offsets), `control_net(compiled, bars) → ControlNet` (the project JSON, `lines`, `residual`), `ControlNet::{events, marking_at, runner, cid, model_cid, size}`, `performance_doc`, `performance_cid`. It builds an ordinary net project and runs it on the engine's `WaveGraph`; it adds no executor.
-* `crates/djhost/src/btw_render.rs`: `apply_event` (an `Event` to the `Engine`'s own calls) and `render(compiled, sample_rate, controls)`: the arrangement's moves and the net's events on one timeline, each on the frame of its beat.
-* `crates/djlive/examples/control_net.rs`: size, CIDs, events and what stays beside the net, for a `.btw` file.
+* `crates/djhost/src/beatscript_render.rs`: `apply_event` (an `Event` to the `Engine`'s own calls) and `render(compiled, sample_rate, controls)`: the arrangement's moves and the net's events on one timeline, each on the frame of its beat.
+* `crates/djlive/examples/control_net.rs`: size, CIDs, events and what stays beside the net, for a `.beatscript` file.
 * Left alone: `runtime.rs`, `compile.rs` (a `lib.rs` line and nothing else in `djlive`), the registry, `perform.rs`, `djctl` (`djctl btw render` does not use the net yet: phase 2).
 
 **Results:**
@@ -272,7 +272,7 @@ net CIDs (the proof's `deck_net_cids_do_not_move…` test shows it), and any cac
 | `djlive/tests/nets.rs` (13) | ramp = 65 table steps ending on its bar line, equal to `Ramp::at`; tapped to its bar (first value on the line, not a tick after); overlapping `every`; typed labels round-trip; move cut / put-back on the next phrase line, **strictly after** an end that is itself a phrase line; two moves, one put-back; `free + muted = 1` at every tick; marking is the state (events to tick t are the stream's prefix); residual lines named; CID covers every value; no control lines → no net; deck net CIDs unchanged while the performance CID differs | 13 / 13 |
 | full `cargo test -p djlive` | nothing regressed (161 tests) | pass |
 
-**What is in the net and what is not** on the real track `docs/btw/hand-dubstep-140-v2.btw`: 42 of its 43 control lines; the one
+**What is in the net and what is not** on the real track `docs/beatscript/hand-dubstep-140-v2.beatscript`: 42 of its 43 control lines; the one
 beside the net is `before drop 4 bars: move loop_roll on A over 4 bars` (needs the `Loop` event, phase 2).
 
 **Semantic differences from the host path, on purpose, to decide (open questions 1–2):** a move lands on the bar line it is armed on
@@ -283,11 +283,11 @@ computation 8), and the net's put-back is the phrase pulse whatever the length.
 
 | branch | state | conflict |
 |---|---|---|
-| `feat/btw-extensions` (F1–F14, 10 commits: base, F6 meter, F7 chance) | `Timing`, `Effect`, `Control`, `Ramp` are extended there ("add enum variants at the END") | **F1 sub-bar timing**: `Timing` gets beat and rational positions; `nets::triggers` takes a position × 16 and must say what a position off the sixteenth does (§6). **F3 tempo / F4 shapes+lfo** must hand *tables* to `nets::lower` (one `shape::progress`, one `TempoMap`), not call a host; today `lower` calls `Ramp::at` (linear). **F8 `mix {}`** (put back at a section's end) is the same restore idea with static values: set events on the section-end tap, no pending token; `duck B under A.kick` is events at the hits' ticks. **F12 `assert length`** reads `TempoMap`. **F13/F14** add to `live_store` and the saved object: the performance CID belongs there. *Files:* `lib.rs` (both add `pub mod`: trivial), **`djhost/src/btw_render.rs`** (F3/F12 edit `arrangement`; mine only adds below it and a header: expect a textual conflict, keep both), `compile.rs` (untouched by me). A new `Effect` variant is a wildcard in `lower`: it lands in `residual`, never a silent drop |
-| `feat/btw-web` (`btwapi::run`: `Live` behind a command-queue host `load_net / play / sound / call`) | wasm module `djweb` over `djlive` | phase 2 makes covered lines stop calling `host.call`; their command queue gains one command kind (`Event`). Phase 3 moves application into the engine, which is what they want (no runtime glue). `nets.rs` uses `djengine::wave::WaveGraph` (`no_std` + alloc); **I did not build `djlive` for wasm32**, so that is to be checked |
+| `feat/btw-extensions` (F1–F14, 10 commits: base, F6 meter, F7 chance) | `Timing`, `Effect`, `Control`, `Ramp` are extended there ("add enum variants at the END") | **F1 sub-bar timing**: `Timing` gets beat and rational positions; `nets::triggers` takes a position × 16 and must say what a position off the sixteenth does (§6). **F3 tempo / F4 shapes+lfo** must hand *tables* to `nets::lower` (one `shape::progress`, one `TempoMap`), not call a host; today `lower` calls `Ramp::at` (linear). **F8 `mix {}`** (put back at a section's end) is the same restore idea with static values: set events on the section-end tap, no pending token; `duck B under A.kick` is events at the hits' ticks. **F12 `assert length`** reads `TempoMap`. **F13/F14** add to `live_store` and the saved object: the performance CID belongs there. *Files:* `lib.rs` (both add `pub mod`: trivial), **`djhost/src/beatscript_render.rs`** (F3/F12 edit `arrangement`; mine only adds below it and a header: expect a textual conflict, keep both), `compile.rs` (untouched by me). A new `Effect` variant is a wildcard in `lower`: it lands in `residual`, never a silent drop |
+| `feat/btw-web` (`beatscript-api::run`: `Live` behind a command-queue host `load_net / play / sound / call`) | wasm module `djweb` over `djlive` | phase 2 makes covered lines stop calling `host.call`; their command queue gains one command kind (`Event`). Phase 3 moves application into the engine, which is what they want (no runtime glue). `nets.rs` uses `djengine::wave::WaveGraph` (`no_std` + alloc); **I did not build `djlive` for wasm32**, so that is to be checked |
 | `design/btw-debugger` | **no commits ahead of `feat/btw-language`; its worktree is clean at the base** | I could not read a plan. Designed to the brief: the debugger reads the marking (`marking_at`, the engine's marking mirror) and fired transitions (`controls`). Conflict is likely to be in `runtime::Marks` (`marks()`, `ControlMark`), which phase 3 would feed from fired transitions |
 | `feat/btw-android` | no commits ahead of `feat/btw-language` | benefits from phase 3; no conflict |
-| `docs/BTW.md` | says the offline render has no control lines; "an event ring would be a change in djrust" | update with phase 2/3 (not touched here: others edit it) |
+| `docs/BEATSCRIPT.md` | says the offline render has no control lines; "an event ring would be a change in djrust" | update with phase 2/3 (not touched here: others edit it) |
 
 ## 10. Open questions for Matt
 

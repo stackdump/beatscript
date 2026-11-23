@@ -446,7 +446,7 @@ arrange verse
     let c = ok(src);
     assert_eq!(c.controls.len(), 3);
     stable(src, 0xf5_24);
-    // `swing` is still refused at the head of a section, `tempo` is allowed there since F3 (docs/btw/ext-tempo.md), and
+    // `swing` is still refused at the head of a section, `tempo` is allowed there since F3 (docs/beatscript/ext-tempo.md), and
     // `key` is refused further down it
     let e = errs("key am\nsection verse 4 bars {\n  swing 0.1\n  deck B: bass 1\n}\narrange verse\n");
     assert!(!e.is_empty());

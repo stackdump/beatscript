@@ -1,4 +1,4 @@
-//! F14 ontology links (docs/btw/ext-linked.md): the `#! genre:` and `#! tags:` header lines of a `.btw` file,
+//! F14 ontology links (docs/beatscript/ext-linked.md): the `#! genre:` and `#! tags:` header lines of a `.beatscript` file,
 //! checked against the bitwrap ontology, and the JSON-LD document a program becomes.
 //!
 //! ```text
@@ -560,7 +560,7 @@ pub fn check_headers(src: &str, o: &dyn Ontology, severity: Severity) -> (Links,
 #[derive(Clone, Debug, PartialEq)]
 pub struct Placed {
     pub name: String,
-    /// The bar it starts on (0-based, as bars are everywhere in btw).
+    /// The bar it starts on (0-based, as bars are everywhere in BeatScript).
     pub start: u32,
     pub bars: u32,
     /// The key the section's own first statements set; None: it sets none (it is in the program's, or in a stack the

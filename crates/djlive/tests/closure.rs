@@ -1,5 +1,5 @@
 //! A program that draws on other programs (an `import`, a set's tracks) is checked the same on every host: the closure the
-//! link carries, never a fetch (docs/BTW.md, "Share links"). Whether a program checks depends on the text and the programs
+//! link carries, never a fetch (docs/BEATSCRIPT.md, "Share links"). Whether a program checks depends on the text and the programs
 //! it is given, never on the machine: a host that has none of them says so in words, and a host that has them hears the
 //! same music.
 

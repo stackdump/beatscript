@@ -5,7 +5,7 @@
 //                                    [--sink null|device] [--query latency=interactive] [--max-overruns-per-min N] [--max-underruns N]
 //                                    [--parity out/report.json]
 //
-// --program is an example name, a .btw file, a programs-store .json (its "text"), or a URL path on the server.
+// --program is an example name, a .beatscript file, a programs-store .json (its "text"), or a URL path on the server.
 //
 // --query adds to the page's query string (latency=interactive is the page as it was before the 0.1 s buffer).
 //
@@ -49,7 +49,7 @@ const MAX_UNDERRUNS = arg('max-underruns', null);
 const QUERY = String(arg('query', ''));
 const PARITY = arg('parity', null);
 
-if (!SERVER && !fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP audio-perf: no built module in site/web/wasm'); process.exit(0); }
+if (!SERVER && !fs.existsSync(path.join(site, 'web', 'wasm', 'beatscript_bg.wasm'))) { console.log('SKIP audio-perf: no built module in site/web/wasm'); process.exit(0); }
 if (!fs.existsSync(CHROME)) { console.log(`SKIP audio-perf: no Chrome at ${CHROME}`); process.exit(0); }
 
 let base = SERVER;
@@ -62,11 +62,11 @@ if (!base) {
   for (let i = 0; i < 50; i++) { try { if ((await fetch(`${base}/healthz`)).ok) break; } catch { /* starting */ } await sleep(100); }
 }
 
-// the program: an example name, a path to a .btw file, or a URL path on the server
+// the program: an example name, a path to a .beatscript file, or a URL path on the server
 let text;
 if (fs.existsSync(PROGRAM)) { text = fs.readFileSync(PROGRAM, 'utf8'); if (PROGRAM.endsWith('.json')) text = JSON.parse(text).text; }
 else {
-  const p = PROGRAM.startsWith('/') ? PROGRAM : `/examples/${PROGRAM.replace(/\.btw$/, '')}.btw`;
+  const p = PROGRAM.startsWith('/') ? PROGRAM : `/examples/${PROGRAM.replace(/\.beatscript$/, '')}.beatscript`;
   const r = await fetch(`${base}${p}`);
   if (!r.ok) { console.error(`audio-perf: ${p}: HTTP ${r.status}`); process.exit(2); }
   text = await r.text();
@@ -218,7 +218,7 @@ try {
   if (PARITY) {
     try {
       const rep = JSON.parse(fs.readFileSync(PARITY, 'utf8'));
-      const key = path.basename(PROGRAM).replace(/\.(btw|json)$/, '');
+      const key = path.basename(PROGRAM).replace(/\.(beatscript|json)$/, '');
       const r = rep.results.find((x) => x.name === key || x.name.endsWith(`-${key}`));
       if (r) {
         const det = JSON.parse(fs.readFileSync(path.join(path.dirname(PARITY), `${r.name}.json`), 'utf8'));

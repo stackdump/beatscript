@@ -10,23 +10,23 @@ export const site = path.resolve(here, '..', '..');
 if (!process.env.CHROME) for (const c of ['/usr/bin/google-chrome', '/usr/bin/chromium', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome']) if (fs.existsSync(c)) { process.env.CHROME = c; break; }
 const cdp = await import('../cdp.mjs');
 export const CHROME = cdp.CHROME;
-/** Another build of the module to test (a directory with btw.js, btw_bg.wasm): PARITY_WASM_DIR. */
+/** Another build of the module to test (a directory with beatscript.js, beatscript_bg.wasm): PARITY_WASM_DIR. */
 export const WASM_DIR = process.env.PARITY_WASM_DIR ? path.resolve(process.env.PARITY_WASM_DIR) : null;
 export const wasmDir = () => WASM_DIR || path.join(site, 'web', 'wasm');
 
 /** Why the harness cannot run here, or null. */
-export function missing(btwd) {
-    if (!fs.existsSync(path.join(wasmDir(), 'btw_bg.wasm'))) return 'no built module in site/web/wasm (scripts/build-web-wasm.sh <btwsite>/web/wasm)';
+export function missing(beatscript) {
+    if (!fs.existsSync(path.join(wasmDir(), 'beatscript_bg.wasm'))) return 'no built module in site/web/wasm (scripts/build-web-wasm.sh <btwsite>/web/wasm)';
     if (!fs.existsSync(CHROME)) return `no Chrome at ${CHROME}`;
-    if (btwd !== undefined && (!btwd || !fs.existsSync(btwd))) return 'no btwd (--btwd PATH, BTWD_BIN, or site/bin/btwd)';
+    if (beatscript !== undefined && (!beatscript || !fs.existsSync(beatscript))) return 'no beatscript (--beatscript PATH, BEATSCRIPT_BIN, or site/bin/beatscript)';
     return null;
 }
 
-export function findBtwd(argValue) {
-    return argValue || process.env.BTWD_BIN || [path.join(site, 'bin', 'btwd'), path.resolve(site, '..', 'target', 'release', 'btwd')].find((p) => fs.existsSync(p));
+export function findBeatscriptCli(argValue) {
+    return argValue || process.env.BEATSCRIPT_BIN || [path.join(site, 'bin', 'beatscript'), path.resolve(site, '..', 'target', 'release', 'beatscript')].find((p) => fs.existsSync(p));
 }
 
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json', '.btw': 'text/plain', '.css': 'text/css' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json', '.beatscript': 'text/plain', '.css': 'text/css' };
 
 /** The page's server and Chrome on parity.html: {page, render(opts), close()}. */
 export async function start() {

@@ -1,4 +1,4 @@
-//! Local sounds a program may use without owning the right to give them away (docs/BTW.md, "Restricted
+//! Local sounds a program may use without owning the right to give them away (docs/BEATSCRIPT.md, "Restricted
 //! sounds"): `sample NAME from "SRC" [license TAG] [else VOICE]`, `loop "NAME-OR-HASH" as NAME [else VOICE]` (an
 //! Apple Loop) and `use restricted`.
 //!

@@ -14,15 +14,15 @@ const M = await import(pathToFileURL(path.join(web, 'js', 'generate-model.js')).
 
 let wasm = null;
 {
-  const glue = path.join(web, 'wasm', 'btw.js');
-  if (fs.existsSync(glue) && !process.env.BTW_MOCK_WASM) {
+  const glue = path.join(web, 'wasm', 'beatscript.js');
+  if (fs.existsSync(glue) && !process.env.BEATSCRIPT_MOCK_WASM) {
     const m = await import(pathToFileURL(glue).href);
-    m.initSync({ module: fs.readFileSync(path.join(web, 'wasm', 'btw_bg.wasm')) });
-    if (typeof m.btw_generate === 'function') wasm = m;
+    m.initSync({ module: fs.readFileSync(path.join(web, 'wasm', 'beatscript_bg.wasm')) });
+    if (typeof m.beatscript_generate === 'function') wasm = m;
   }
 }
 
-test('generate: a seed value is the number itself, or the FNV-1a hash of the word (btwapi::generate::seed_value)', () => {
+test('generate: a seed value is the number itself, or the FNV-1a hash of the word (beatscript-api::generate::seed_value)', () => {
   assert.equal(M.seedValue('42'), 42);
   assert.equal(M.seedValue(' 42 '), 42);
   assert.equal(M.seedValue('4294967296'), 0); // the low 32 bits, as the Rust masks a u64
@@ -106,17 +106,17 @@ test('generate: the remembered inputs are checked, a bad one takes the default',
   assert.equal(M.loadGenState(mem('not json'), g).genre, 'techno');
   let saved = null;
   M.saveGenState({ setItem: (k, v) => { saved = [k, JSON.parse(v)]; } }, { genre: 'house', seed: '3', length: 'short', section: 'intro', part: 'kick' });
-  assert.deepEqual(saved, ['btw.gen', { genre: 'house', seed: '3', length: 'short', section: 'intro', part: 'kick' }]);
+  assert.deepEqual(saved, ['beatscript.gen', { genre: 'house', seed: '3', length: 'short', section: 'intro', part: 'kick' }]);
 });
 
 test('generate: against the real generator, every section\'s roles make a gen@2 call that checks', { skip: !wasm }, () => {
   for (const [genre, seed, length] of [['techno', '42', 'standard'], ['house', '7', 'short'], ['dnb', 'sunrise', 'long']]) {
-    const r = JSON.parse(wasm.btw_generate(JSON.stringify(M.genRequest({ genre, seed, length }))));
+    const r = JSON.parse(wasm.beatscript_generate(JSON.stringify(M.genRequest({ genre, seed, length }))));
     assert.ok(r.ok, `${genre} ${seed}: ${r.error || ''}`);
     const { sections } = M.structureOf(r.check);
     assert.ok(sections.length >= 2, `${genre} ${seed} has sections`);
     // the step to the neighbour is a different program
-    const n = JSON.parse(wasm.btw_generate(JSON.stringify(M.genRequest({ genre, seed: M.stepSeed(seed, 1), length }))));
+    const n = JSON.parse(wasm.beatscript_generate(JSON.stringify(M.genRequest({ genre, seed: M.stepSeed(seed, 1), length }))));
     assert.notEqual(n.cid, r.cid);
     let calls = 0;
     for (const name of new Set(sections.map((x) => x.name))) {
@@ -124,7 +124,7 @@ test('generate: against the real generator, every section\'s roles make a gen@2 
       for (const part of roles) {
         const call = M.genCall({ genre, seed, length, section: name, part });
         const prog = `tempo ${r.bpm}\nkey ${r.key}\nlet borrowed = ${call}\ndeck A: kick borrowed\n`;
-        const c = JSON.parse(wasm.btw_check(prog));
+        const c = JSON.parse(wasm.beatscript_check(prog));
         const errs = (c.diagnostics || []).filter((d) => d.severity === 'error');
         assert.equal(errs.length, 0, `${call}: ${errs.map((d) => d.message).join('; ')}`);
         calls++;

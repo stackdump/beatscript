@@ -1,7 +1,7 @@
 # BeatScript public-domain theme library v1: melodies, basses and figures of music first published before 1929, as BeatScript bars.
 # This file is CC0 1.0 Universal. Every melody in it is in the public domain, composed and first published before 1929, and each bar is
 # written from the melody itself (the notes the composer wrote, read as a person hums them), never from a modern arrangement, edition,
-# transcription or recording. Curated by hand, not scraped; small on purpose. The melodic twin of phrasebook-pd.txt. Docs: docs/btw/forms.md.
+# transcription or recording. Curated by hand, not scraped; small on purpose. The melodic twin of phrasebook-pd.txt. Docs: docs/beatscript/forms.md.
 # id | role | key | mode | meter | steps | bars | work | composer | year | pairs | note
 #   id         what a program names: `let` names are the id (`ode_to_joy`, an alternation of its bars) and its bars (`ode_to_joy_1` ...)
 #   role       one of: melody, bass, harmony, arp (the part it is written for)

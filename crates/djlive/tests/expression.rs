@@ -1,4 +1,4 @@
-//! The expression marks (docs/BTW.md, "Expression marks"): a ghost `x.`, a flam `x&`, a ratchet `x:N`, and the tonal
+//! The expression marks (docs/BEATSCRIPT.md, "Expression marks"): a ghost `x.`, a flam `x&`, a ratchet `x:N`, and the tonal
 //! params `glide=`, `decay=`, `pitch-drop=`. How they read and print, what they do to the hits and the net's bindings,
 //! the errors and the warning, and that a program without them compiles to exactly what it did.
 

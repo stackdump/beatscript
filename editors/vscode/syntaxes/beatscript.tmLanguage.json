@@ -1,0 +1,183 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "BeatScript",
+  "scopeName": "source.beatscript",
+  "patterns": [
+    {
+      "include": "#header"
+    },
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#string"
+    },
+    {
+      "include": "#mutation"
+    },
+    {
+      "include": "#section"
+    },
+    {
+      "include": "#definition"
+    },
+    {
+      "include": "#call"
+    },
+    {
+      "include": "#param"
+    },
+    {
+      "include": "#dollar"
+    },
+    {
+      "include": "#deck"
+    },
+    {
+      "include": "#role"
+    },
+    {
+      "include": "#action"
+    },
+    {
+      "include": "#keyword"
+    },
+    {
+      "include": "#number"
+    },
+    {
+      "include": "#step"
+    },
+    {
+      "include": "#operator"
+    }
+  ],
+  "repository": {
+    "header": {
+      "match": "^(#!)\\s*([A-Za-z-]+)(:)?(.*)$",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.comment.beatscript"
+        },
+        "2": {
+          "name": "keyword.other.header.beatscript"
+        },
+        "3": {
+          "name": "punctuation.separator.beatscript"
+        },
+        "4": {
+          "name": "string.unquoted.header.beatscript"
+        }
+      }
+    },
+    "comment": {
+      "match": "(?:^|(?<=\\s))#(?![!]).*$",
+      "name": "comment.line.number-sign.beatscript"
+    },
+    "string": {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.beatscript",
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.beatscript"
+        }
+      ]
+    },
+    "section": {
+      "match": "\\b(section)\\s+([A-Za-z_][A-Za-z0-9_-]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.beatscript"
+        },
+        "2": {
+          "name": "entity.name.section.beatscript"
+        }
+      }
+    },
+    "definition": {
+      "match": "\\b(let|def|sample)\\s+([A-Za-z_][A-Za-z0-9_-]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.beatscript"
+        },
+        "2": {
+          "name": "entity.name.function.beatscript"
+        }
+      }
+    },
+    "call": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_-]*)(?=\\()",
+      "name": "support.function.beatscript"
+    },
+    "param": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_-]*)(=)(?!=)",
+      "captures": {
+        "1": {
+          "name": "variable.parameter.beatscript"
+        },
+        "2": {
+          "name": "keyword.operator.assignment.beatscript"
+        }
+      }
+    },
+    "dollar": {
+      "match": "\\$[A-Za-z_][A-Za-z0-9_]*",
+      "name": "variable.other.beatscript"
+    },
+    "deck": {
+      "match": "(?<![A-Za-z0-9_-])(A|B)(?![A-Za-z0-9_-])",
+      "name": "constant.language.deck.beatscript"
+    },
+    "role": {
+      "match": "(?<![A-Za-z0-9_-])(harmony|melody|hihat|snare|bass|clap|kick|arp)(?![A-Za-z0-9_-])(?:/\\d+)?",
+      "name": "entity.name.tag.role.beatscript"
+    },
+    "action": {
+      "match": "(?<![A-Za-z0-9_-])(crossfader|resonance|filter|reverb|unmute|crush|delay|drive|level|queue|high|load|move|mute|play|stop|swap|sync|low|mid)(?![A-Za-z0-9_-])",
+      "name": "support.function.action.beatscript"
+    },
+    "keyword": {
+      "match": "(?<![A-Za-z0-9_-])(restricted|arrange|control|license|pattern|s\\-curve|section|silence|station|weights|assert|before|choose|chords|evolve|import|launch|linear|master|phrase|repeat|rhythm|sample|square|after|beats|drums|every|forms|group|maybe|pairs|stack|start|swing|tempo|under|until|bars|beat|deck|duck|else|emit|from|gens|loop|next|over|pair|play|sine|sing|step|stop|then|when|wire|with|and|bar|bpm|def|end|exp|for|gen|key|let|lfo|log|mix|not|out|saw|set|tri|use|as|at|do|in|on|or)(?![A-Za-z0-9_-])",
+      "name": "keyword.control.beatscript"
+    },
+    "number": {
+      "match": "(?<![A-Za-z_])-?\\d+(?:\\.\\d+)?(?:db|ms|hz|k|%|s|m|h)?\\b",
+      "name": "constant.numeric.beatscript"
+    },
+    "step": {
+      "match": "(?<![A-Za-z0-9_])(x|~)(?![A-Za-z0-9_])|(?<![A-Za-z0-9_])[a-g](?:#|b)?-?\\d(?![A-Za-z0-9_])",
+      "name": "constant.other.step.beatscript"
+    },
+    "operator": {
+      "match": "->|\\.\\.|(?<=[x~0-9\\])>!^&])\\.(?![.A-Za-z0-9_])|[|:*!^?<>\\[\\]{}()=+±,&]",
+      "name": "keyword.operator.beatscript"
+    },
+    "mutation": {
+      "comment": "a line of an arrange { } block that starts with ~ (from here on) or @ (the next section only): its operators are djlive::mutate's",
+      "begin": "^\\s*([~@])(?=\\s|\\d)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.mutation.beatscript"
+        }
+      },
+      "end": "$",
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_-])(ratchet|shuffle|stutter|accent|double|euclid|invert|mirror|spread|decay|drift|morph|swing|voice|down|fill|grow|half|mask|swap|thin|xfer|jux|oct|rev|rot|vel|up)(?![A-Za-z0-9_-])",
+          "name": "support.function.mutation.beatscript"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#operator"
+        }
+      ]
+    }
+  }
+}

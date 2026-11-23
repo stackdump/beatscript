@@ -20,7 +20,7 @@ export const MAX_LINK_BUNDLE = 4 * 16384;
 export const MAX_LINK_CHARS = 262144;
 /** A CID: base58btc, `z...`. Anything that goes into a URL path as a CID is checked against this first. */
 export const CID_RE = /^z[1-9A-HJ-NP-Za-km-z]{20,120}$/;
-/** An example's name (examples/<name>.btw): no slash, no leading dot, so it cannot name another path. */
+/** An example's name (examples/<name>.beatscript): no slash, no leading dot, so it cannot name another path. */
 export const EXAMPLE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** A session id as the server makes it. */
 export const SESSION_RE = /^[A-Za-z0-9_-]{6,64}$/;

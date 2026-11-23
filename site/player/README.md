@@ -85,7 +85,7 @@ The render is also a module of its own, for a page, a Worker or Node:
 
 ```js
 import { renderProgram } from '@stackdump/beatscript-player/render';
-const module = await WebAssembly.compile(wasmBytes); // wasm/btw_bg.wasm (the package has it base64 in wasm/btw_bg.wasm.b64.js)
+const module = await WebAssembly.compile(wasmBytes); // wasm/beatscript_bg.wasm (the package has it base64 in wasm/beatscript_bg.wasm.b64.js)
 const { left, right, sampleRate, frames, bars } = await renderProgram({ module, text, onProgress: (p) => console.log(p.fraction) });
 ```
 

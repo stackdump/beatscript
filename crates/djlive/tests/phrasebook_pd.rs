@@ -1,4 +1,4 @@
-//! The public-domain phrasebook on a `sing` line (docs/btw/phonemes.md, "The public-domain phrasebook"): every line sings
+//! The public-domain phrasebook on a `sing` line (docs/beatscript/phonemes.md, "The public-domain phrasebook"): every line sings
 //! on a part with no error and no warning, in the browser's reading of a lyric and in the desktop's; `sing @id` sings what
 //! its lyric sings; a wrong id says what it meant among both phrasebooks; the stress is written in BeatScript's own
 //! step notation. The notes the lines sing on are the test's: exactly as many as the line has syllables, on whole sixteenths.

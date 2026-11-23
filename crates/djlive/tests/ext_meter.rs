@@ -1,4 +1,4 @@
-//! F6, Euclidean rhythms and polymeter (docs/btw/ext-meter.md): `e(k, n, rot)` is checked and named by the ontology,
+//! F6, Euclidean rhythms and polymeter (docs/beatscript/ext-meter.md): `e(k, n, rot)` is checked and named by the ontology,
 //! `role/N` gives a part a cycle of its own that drifts against the bar, and the program's period is reported.
 
 mod common;

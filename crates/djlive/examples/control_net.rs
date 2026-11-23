@@ -1,9 +1,9 @@
-//! `cargo run -p djlive --example control_net -- FILE.btw [BARS]`: what a program's control lines come to as a net
+//! `cargo run -p djlive --example control_net -- FILE.beatscript [BARS]`: what a program's control lines come to as a net
 //! (docs/design/NETS-ALL-THE-WAY-DOWN.md): its size, its CID, the events it fires, and what stays beside it.
 
 fn main() {
     let mut a = std::env::args().skip(1);
-    let path = a.next().expect("a .btw file");
+    let path = a.next().expect("a .beatscript file");
     let src = std::fs::read_to_string(&path).expect("readable");
     let c = djlive::check(&src);
     let Some(comp) = c.compiled else {

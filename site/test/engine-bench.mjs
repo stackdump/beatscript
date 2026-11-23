@@ -4,10 +4,10 @@
 //
 //   node site/test/engine-bench.mjs [--program hand-dubstep-140-v4] [--budget 12288] [--seconds 20]
 //
-// A real BtwRun evaluates the program on a fake clock; every load_net it asks for is prepared by a DjComposer and installed in a
+// A real BeatscriptRun evaluates the program on a fake clock; every load_net it asks for is prepared by a DjComposer and installed in a
 // Dj with begin_install / install_step(budget) a quantum at a time, between render() calls, as engine-worklet.js does. Prints,
 // in milliseconds: render() per 128-frame block, tick(), state() + JSON.parse (what the grid report and the bar-line plays do),
-// and every install_step, the last (landing) step apart; and on the page's side, BtwRun.service() (apart when it hands out loads),
+// and every install_step, the last (landing) step apart; and on the page's side, BeatscriptRun.service() (apart when it hands out loads),
 // marks(), status() and the size of each load_net envelope (KB). The budget of a quantum at 48 kHz is 2.67 ms.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,18 +17,18 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const site = path.resolve(here, '..');
 const wasmDir = path.join(site, 'web', 'wasm');
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i < 0 ? d : process.argv[i + 1]; };
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) { console.log('SKIP engine-bench: no built module in site/web/wasm'); process.exit(0); }
+if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm'))) { console.log('SKIP engine-bench: no built module in site/web/wasm'); process.exit(0); }
 const PROGRAM = arg('program', 'hand-dubstep-140-v4');
 const BUDGET = Number(arg('budget', 12 * 1024));
 const SECONDS = Number(arg('seconds', 20));
 const SR = 48000, Q = 128;
 
-const glue = await import(pathToFileURL(path.join(wasmDir, 'btw.js')).href);
-glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm')) });
-const file = fs.existsSync(PROGRAM) ? PROGRAM : path.join(site, 'examples', `${PROGRAM.replace(/\.btw$/, '')}.btw`);
+const glue = await import(pathToFileURL(path.join(wasmDir, 'beatscript.js')).href);
+glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'beatscript_bg.wasm')) });
+const file = fs.existsSync(PROGRAM) ? PROGRAM : path.join(site, 'examples', `${PROGRAM.replace(/\.beatscript$/, '')}.beatscript`);
 const text = fs.readFileSync(file, 'utf8');
 
-const run = new glue.BtwRun();
+const run = new glue.BeatscriptRun();
 const ev = JSON.parse(run.eval(text));
 if (!ev.ok) { console.error('the program does not check', ev.diagnostics && ev.diagnostics[0]); process.exit(2); }
 const dj = new glue.Dj(SR);

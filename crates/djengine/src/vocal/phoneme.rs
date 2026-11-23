@@ -1,4 +1,4 @@
-//! The BeatScript phoneme set v1 (docs/btw/phonemes.md): our own symbols for what the formant voice
+//! The BeatScript phoneme set v1 (docs/beatscript/phonemes.md): our own symbols for what the formant voice
 //! sings, the `/…/` escape in lyrics, the BeatScript lexicon and the phrasebook.
 //!
 //! - **The set** is 15 vowels and 24 consonants in readable lowercase (`ee`, `ay`, `sh`, `dh`), plus `_`, a
@@ -30,7 +30,7 @@ use once_cell::race::OnceBox;
 
 use super::phone::{Ph, Sym};
 
-/// What kind of sound a symbol is, and so which source the voice gives it (docs/btw/phonemes.md, "Sounds").
+/// What kind of sound a symbol is, and so which source the voice gives it (docs/beatscript/phonemes.md, "Sounds").
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Class {
     /// A steady vowel: the voice through one set of formant targets.
@@ -834,11 +834,11 @@ mod tests {
 
     #[test]
     fn the_docs_table_is_the_set() {
-        // docs/btw/phonemes.md leads with the table: one row a symbol, its IPA and ARPAbet as SET has them, and every phrase
-        let doc = include_str!("../../../../docs/btw/phonemes.md");
+        // docs/beatscript/phonemes.md leads with the table: one row a symbol, its IPA and ARPAbet as SET has them, and every phrase
+        let doc = include_str!("../../../../docs/beatscript/phonemes.md");
         for p in SET.iter() {
             let row = alloc::format!("| `{}` | {} | {} | {} |", p.symbol, p.example, p.ipa, p.arpabet);
-            assert!(doc.contains(&row), "docs/btw/phonemes.md lacks the row {row}");
+            assert!(doc.contains(&row), "docs/beatscript/phonemes.md lacks the row {row}");
         }
         assert!(doc.contains("| `_` |"));
         for ph in phrases() {
@@ -984,10 +984,10 @@ mod tests {
 
     #[test]
     fn the_docs_list_every_public_domain_line_as_the_file_has_it() {
-        // docs/btw/phonemes.md, "The public-domain phrasebook": one row a line, the same words, year, meter, stress and syllables
-        let doc = include_str!("../../../../docs/btw/phonemes.md");
+        // docs/beatscript/phonemes.md, "The public-domain phrasebook": one row a line, the same words, year, meter, stress and syllables
+        let doc = include_str!("../../../../docs/beatscript/phonemes.md");
         for p in pd_phrases() {
-            assert!(doc.contains(&pd_doc_row(p)), "docs/btw/phonemes.md lacks the row {}", pd_doc_row(p));
+            assert!(doc.contains(&pd_doc_row(p)), "docs/beatscript/phonemes.md lacks the row {}", pd_doc_row(p));
         }
         for f in PD_FAMILIES {
             assert!(doc.contains(&alloc::format!("| `{}` | {} |", f.id, f.about)), "the docs lack the family {}", f.id);

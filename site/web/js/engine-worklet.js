@@ -1,5 +1,5 @@
 /**
- * engine-worklet.js: AudioWorkletProcessor 'btw-engine'. The djrust engine (`Dj`, from the one btw wasm module) runs
+ * engine-worklet.js: AudioWorkletProcessor 'beatscript-engine'. The djrust engine (`Dj`, from the one BeatScript wasm module) runs
  * here, on the audio thread. engine.js (main thread) drives it; this file is the audio thread's half.
  *
  * Rules of the scope: no TextEncoder / TextDecoder (engine-polyfill.js gives the glue its own, and is imported
@@ -30,7 +30,7 @@
  */
 
 import './engine-polyfill.js';
-import * as glue from '../wasm/btw.js';
+import * as glue from '../wasm/beatscript.js';
 
 const QUANTUM = 128;
 const CROSSFADER_CENTRE = 0.5; // both decks at full level, as on the desktop
@@ -45,7 +45,7 @@ function ticksOf(s) {
     return tick === 0 ? 0 : Math.max(0, (Number(s.position) || tick) - 1);
 }
 
-class BtwEngine extends AudioWorkletProcessor {
+class BeatscriptEngine extends AudioWorkletProcessor {
     constructor(options) {
         super();
         const o = (options && options.processorOptions) || {};
@@ -284,4 +284,4 @@ class BtwEngine extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('btw-engine', BtwEngine);
+registerProcessor('beatscript-engine', BeatscriptEngine);

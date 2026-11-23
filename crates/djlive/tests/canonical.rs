@@ -1,4 +1,4 @@
-//! The canonical form (docs/BTW.md, "Canonical form"): formatting never forks a program. Tonight's
+//! The canonical form (docs/BEATSCRIPT.md, "Canonical form"): formatting never forks a program. Tonight's
 //! three programs, reformatted at random (spacing, tabs, blank lines, comments, indentation, `|`
 //! continuation lines, number and note spelling), keep their CID; one note changed does not. The
 //! lets/defs/sections examples too. And a link opens only if its CID is its text's.
@@ -12,13 +12,13 @@ use djlive::music;
 use djlive::share;
 
 const FIXTURES: [(&str, &str); 3] = [
-    ("hand-dubstep-140", include_str!("fixtures/hand-dubstep-140.btw")),
-    ("hand-proghouse-124", include_str!("fixtures/hand-proghouse-124.btw")),
-    ("acid-rave-138", include_str!("fixtures/acid-rave-138.btw")),
+    ("hand-dubstep-140", include_str!("fixtures/hand-dubstep-140.beatscript")),
+    ("hand-proghouse-124", include_str!("fixtures/hand-proghouse-124.beatscript")),
+    ("acid-rave-138", include_str!("fixtures/acid-rave-138.beatscript")),
 ];
 
 const EXAMPLES: [&str; 6] = [
-    include_str!("../../../docs/btw/hand-dubstep-140-v2.btw"),
+    include_str!("../../../docs/beatscript/hand-dubstep-140-v2.beatscript"),
     "let late = 8\nlet riff = c2 ~ [e2 g2] ~\nat bar late: master: level 0.5\ndeck A: bass riff | kick x ~ x ~\n",
     "def drop(deck, bars) {\n  deck $deck: kick x ~ x ~ | bass transpose([c2 e2 g2 b2], 5) vel=70..100 oct=2\n  at bar 1: master: filter lp 2k -> 8k over $bars bars\n}\ndrop(A, 8)\n",
     "repeat 3 every 2 bars {\n  master: delay 0.5\n}\n",

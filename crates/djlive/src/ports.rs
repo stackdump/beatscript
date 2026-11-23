@@ -1,5 +1,5 @@
-//! F11 typed ports on defs, `wire`, and imports glued along ports (docs/btw/ext-ports.md,
-//! docs/BTW-EXTENSIONS.md section 3, F11).
+//! F11 typed ports on defs, `wire`, and imports glued along ports (docs/beatscript/ext-ports.md,
+//! docs/BEATSCRIPT-EXTENSIONS.md section 3, F11).
 //!
 //! A `def` may declare a boundary: `def walker(oct) in: chords, key out: bass { ... }`. The `in:` ports are values
 //! the def needs and the `out:` ports are values it makes with `emit`. `wire changes.out -> walker.chords` glues

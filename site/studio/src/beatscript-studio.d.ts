@@ -83,7 +83,7 @@ export declare class BeatscriptStudio extends HTMLElement {
   stop(): void;
   renderAndPlay(): Promise<void>;
   /** 'downloads' (the host saved it), 'link' (a download link), or null (not saved). */
-  exportBtw(): Promise<string | null>;
+  exportBeatscript(): Promise<string | null>;
   exportWav(): Promise<string | null>;
   addEventListener(type: 'change', listener: (e: CustomEvent<{ text: string }>) => void): void;
   addEventListener(type: 'check', listener: (e: CustomEvent<{ ok: boolean; cid: string | null; problems: StudioProblem[] }>) => void): void;

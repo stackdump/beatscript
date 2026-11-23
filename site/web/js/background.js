@@ -60,7 +60,7 @@ export class Background {
     this.lastPumpAt = t;
     this.stats.pumps++;
     if (this.doc.hidden) this.stats.hiddenPumps++;
-    try { this.app.serviceOnly(); } catch (e) { console.error('btw: background service', e); }
+    try { this.app.serviceOnly(); } catch (e) { console.error('beatscript: background service', e); }
     return true;
   }
 

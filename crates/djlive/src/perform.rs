@@ -1,4 +1,4 @@
-//! F13 the performed tier (docs/btw/ext-perform.md): `knob(3)`, `pad(5)`, `fader(A)`, `held(key)` and `held(c4)` read the
+//! F13 the performed tier (docs/beatscript/ext-perform.md): `knob(3)`, `pad(5)`, `fader(A)`, `held(key)` and `held(c4)` read the
 //! controllers while a program plays, and every value read is logged into a **performance** that replays the program's
 //! controls exactly.
 //!
@@ -785,7 +785,7 @@ impl LfoLive {
 
 impl Performed {
     /// The effect with every input reading 1/2 (the value the compiler checks a performed line with), or None when its guard is
-    /// false then: what an offline render, which has no controllers, does with a performed line (docs/btw/ext-perform.md).
+    /// false then: what an offline render, which has no controllers, does with a performed line (docs/beatscript/ext-perform.md).
     pub fn at_half(&self) -> Option<Effect> {
         let mut half = |_: &Input| 0.5;
         if !self.guard_holds(&mut half) {

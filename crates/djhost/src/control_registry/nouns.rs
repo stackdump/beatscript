@@ -429,9 +429,9 @@ const A_TRACK: &[Action] = &[
 ];
 
 const A_LIVE: &[Action] = &[
-    Action::new("eval", "parse, check, compile and stage a btw program: it lands on the next bar (an error changes nothing: the last good program plays on)", Effect::Live)
+    Action::new("eval", "parse, check, compile and stage a BeatScript program: it lands on the next bar (an error changes nothing: the last good program plays on)", Effect::Live)
         .with(&[
-            Param::new("text", "string", "the program (docs/BTW.md); none: what the btw window holds"),
+            Param::new("text", "string", "the program (docs/BEATSCRIPT.md); none: what the btw window holds"),
             Param::new("name", "string", "a name for it (kept if it is saved later)"),
         ])
         .probe(r#"{"text":"deck A: kick"}"#),
@@ -439,7 +439,7 @@ const A_LIVE: &[Action] = &[
         .with(&[Param::new("text", "string", "the program; none: the window's text")])
         .probe(r#"{"text":"deck A: kick"}"#),
     Action::new("get", "the running program (canonical text, CID, nets), the section and bar, the staged one, the last errors, warnings (a muted strip), what happened lately", Effect::Read),
-    Action::new("save", "keep the running program (or `text`) as a licensed .btw object under its content ID (CC0 and public unless said)", Effect::Write)
+    Action::new("save", "keep the running program (or `text`) as a licensed .beatscript object under its content ID (CC0 and public unless said)", Effect::Write)
         .with(&[
             Param::new("name", "string", "its name"),
             Param::new("text", "string", "a program to save instead of the running one"),
@@ -450,10 +450,10 @@ const A_LIVE: &[Action] = &[
             Param::new("tags", "string|array", "terms of the ontology, `acid, four on floor, drop` or a list (local name, label, `kind:name` or IRI; [] clears them); the text's `#! tags:` header line says the same"),
         ])
         .probe(r#"{"text":"deck A: kick"}"#),
-    Action::new("load", "a saved program (by CID, part of one, or name) or a .btw file (`path`) into the window, and (eval, default true) staged to play on the next bar", Effect::Live)
+    Action::new("load", "a saved program (by CID, part of one, or name) or a .beatscript file (`path`) into the window, and (eval, default true) staged to play on the next bar", Effect::Live)
         .with(&[
             Param::new("id", "string", "its cid, a part of it, or its name"),
-            Param::new("path", "string", "a .btw file on disk instead (it is kept too)"),
+            Param::new("path", "string", "a .beatscript file on disk instead (it is kept too)"),
             Param::new("eval", "boolean", "stage it too (default true)"),
         ])
         .probe(r#"{"id":"__no_such_snippet__"}"#),
@@ -472,7 +472,7 @@ const A_LIVE: &[Action] = &[
         .probe(r#"{"id":"__no_such_snippet__"}"#),
     Action::new("open", "open a link or a CID: decode, canonicalise, compile, recompute the CID and refuse a link whose CID is not its text's; into the window, staged unless eval is false", Effect::Live)
         .with(&[
-            Param::new("url", "string", "a btw link, its fragment, `CID.text`, or a bare CID (found in storage)").req(),
+            Param::new("url", "string", "a BeatScript link, its fragment, `CID.text`, or a bare CID (found in storage)").req(),
             Param::new("eval", "boolean", "stage it too (default false)"),
         ])
         .probe(r#"{"url":"__not_a_link__"}"#),
@@ -489,12 +489,12 @@ const A_LIVE: &[Action] = &[
     Action::new("visibility", "a saved program's visibility (value: public or private; a private program is never shared); none: read it", Effect::Write)
         .with(&[Param::new("id", "string", "which").req(), Param::new("value", "string", "public or private")])
         .probe(r#"{"id":"__no_such_snippet__"}"#),
-    Action::new("export", "write a saved program as a .btw file (a program with #! header lines for its name and rights) to `path`", Effect::Live)
+    Action::new("export", "write a saved program as a .beatscript file (a program with #! header lines for its name and rights) to `path`", Effect::Live)
         .with(&[Param::new("id", "string", "which").req(), Param::new("path", "string", "a file or a folder").req()])
         .probe(r#"{"id":"__no_such_snippet__","path":"/nonexistent"}"#),
-    Action::new("import", "take a .btw file (`path`) or its text (`text`) in as a saved program, with the rights its header says", Effect::Write)
-        .with(&[Param::new("path", "string", "a .btw file"), Param::new("text", "string", "or the file's text"), Param::new("name", "string", "a name if the file has none")])
-        .probe(r#"{"path":"/nonexistent/none.btw"}"#),
+    Action::new("import", "take a .beatscript file (`path`) or its text (`text`) in as a saved program, with the rights its header says", Effect::Write)
+        .with(&[Param::new("path", "string", "a .beatscript file"), Param::new("text", "string", "or the file's text"), Param::new("name", "string", "a name if the file has none")])
+        .probe(r#"{"path":"/nonexistent/none.beatscript"}"#),
     Action::new("generation", "the CID of generation N of an `evolve`, made from generation 0 and the rule alone (no chain kept: generation 1,000,000 costs the length of the orbit); also the evolve's tail and period", Effect::Read)
         .with(&[
             Param::new("gen", "integer", "the generation (0 is the program as written)").req(),
@@ -506,7 +506,7 @@ const A_LIVE: &[Action] = &[
     Action::new("jsonld", "a program as linked data (JSON-LD): its CID as @id, type djrust:Program, its genre and tags (the `#! genre:` / `#! tags:` header lines: IRIs of the bitwrap ontology), key, tempo, sections, license, forkedFrom and credits, and its Euclidean rhythms linked to the ontology's Euclidean rhythm class; the document a saved program keeps beside it as `<object cid>.jsonld`", Effect::Read)
         .with(&[
             Param::new("id", "string", "a saved program (cid, part of one, name); none: `text`, else the window's text"),
-            Param::new("text", "string", "a program, or a .btw file's text: its `#!` header lines give its genre and tags, and its rights when it has license / visibility / author lines"),
+            Param::new("text", "string", "a program, or a .beatscript file's text: its `#!` header lines give its genre and tags, and its rights when it has license / visibility / author lines"),
         ])
         .probe(r#"{"id":"__no_such_snippet__"}"#),
     Action::new("terms", "the vocabulary the `#! genre:` and `#! tags:` header lines are checked against (a cached copy of the bitwrap ontology, https://ontology.bitwrap.io/ns#): each term's kind, local name, IRI and label, and where the copy is from", Effect::Read)
@@ -689,11 +689,11 @@ const A_WINDOWS: &[Action] = &[
     Action::new("toggle", "flip a window (the button), or set it with on", Effect::Write)
         .with(&[Param::new("window", "string", "as open").req(), Param::new("on", "boolean", "")])
         .probe(r#"{"window":"__no_such_window__"}"#),
-    Action::new("fullscreen", "make a window fill the screen (only `live`, the btw editor, so far; `on` false returns it to its window): large monospace text, the stage theme, the section / bar / phrase header, and the firing markers; Esc returns", Effect::Write)
-        .with(&[Param::new("window", "string", "live (or btw): the btw editor").req(), Param::new("on", "boolean", "default true")])
+    Action::new("fullscreen", "make a window fill the screen (only `live`, the BeatScript editor, so far; `on` false returns it to its window): large monospace text, the stage theme, the section / bar / phrase header, and the firing markers; Esc returns", Effect::Write)
+        .with(&[Param::new("window", "string", "live (or btw): the BeatScript editor").req(), Param::new("on", "boolean", "default true")])
         .probe(r#"{"window":"__no_such_window__"}"#),
-    Action::new("follow", "the btw editor follows the song (`on` true) or stays where it is (false; no `on` flips it): it scrolls to each section as it starts and to the lines firing in a long one, edge arrows mark ramps and timed lines that fire off-screen; a manual scroll pauses it for 8 s or until the next section; key L", Effect::Write)
-        .with(&[Param::new("window", "string", "live (or btw): the btw editor").req(), Param::new("on", "boolean", "default: flip it")])
+    Action::new("follow", "the BeatScript editor follows the song (`on` true) or stays where it is (false; no `on` flips it): it scrolls to each section as it starts and to the lines firing in a long one, edge arrows mark ramps and timed lines that fire off-screen; a manual scroll pauses it for 8 s or until the next section; key L", Effect::Write)
+        .with(&[Param::new("window", "string", "live (or btw): the BeatScript editor").req(), Param::new("on", "boolean", "default: flip it")])
         .probe(r#"{"window":"__no_such_window__"}"#),
     Action::new("closeall", "close every window", Effect::Write),
 ];
@@ -1872,7 +1872,7 @@ pub(super) const NOUNS: &[Noun] = &[
         summary: "btw, the bitwrap language: a text program whose pattern lines are nets on the decks and whose lines script everything djapp does; eval lands on the next bar",
         default_action: "get",
         actions: A_LIVE,
-        doc: "btw (docs/BTW.md; `live` and `livecode` are aliases): the bitwrap language. A program is lines: `deck A: kick e(5,8) | \
+        doc: "btw (docs/BEATSCRIPT.md; `live` and `livecode` are aliases): the bitwrap language. A program is lines: `deck A: kick e(5,8) | \
               snare ~ x ~ x | bass markov(am, 0.7)` (mini-notation: x hit, ~ rest, [..] group, <..> alternation, *n repeat, \
               e(k,n) euclid, notes c3, accents e2! and slides e3^, degrees 1 3 5, generators chord() arp() markov(), \
               transforms transpose() reverse() rotate() every() degrade() slow() fast() octave() humanize()), \
@@ -1889,9 +1889,9 @@ pub(super) const NOUNS: &[Noun] = &[
               found and a caret `text`, and the last good program plays on. check {text}: the same, staging nothing. get (default): \
               the running program (canonical text, `cid`, `nets`), the section and bar, the staged one, the bar / phrase, errors, \
               warnings (a muted strip), the last words. fmt {text}: the canonical form the CID is of (whitespace, comments, number and \
-              note spelling, param order do not change it). save {name, text?, license?, visibility?, author?}: a licensed .btw object \
+              note spelling, param order do not change it). save {name, text?, license?, visibility?, author?}: a licensed .beatscript object \
               (CC0 public unless said); load {id | path, eval?}; list; fork {id}: records forkedFrom and carries credits; license / \
-              visibility {id, value}; export {id, path} and import {path | text}: .btw files; share {id | text, sig?, notes?}: a \
+              visibility {id, value}; export {id, path} and import {path | text}: .beatscript files; share {id | text, sig?, notes?}: a \
               self-sealing link https://beatscript.app/#CID.text (the text formatted: `#!` headers and comments kept, unsealed); open {url}: decodes it, \
               recompiles, recomputes the CID and refuses a mismatch, and puts the formatted text in the editor; instruments: every voice, kit and palette `inst=`, `kit=` and `sound=` accept. stop: end the program (the \
               decks play on; a strip a move muted is put back). `#! genre: techno` and `#! tags: acid, drop` header lines link a program to the \
@@ -2014,7 +2014,7 @@ pub(super) const NOUNS: &[Noun] = &[
         actions: A_VOCAL,
         doc: "Typed lyrics, sung (docs/VOICE.md): lyrics go through the BeatScript lexicon (CC0; \
               letter-to-sound rules written here for unknown words; no espeak-ng), or are written in \
-              BeatScript phonemes between slashes (`/w ee - aa r/`, docs/btw/phonemes.md), \
+              BeatScript phonemes between slashes (`/w ee - aa r/`, docs/beatscript/phonemes.md), \
               into phonemes and syllables, are fitted to a key and a bar grid, and are sung on pitch by \
               the robot / choir formant voice: robotic by design, with the consonants f v z sh zh ch j th \
               dh ng, codas and diphthongs. A line is canonical JSON with a CID, its own license (CC0 by \

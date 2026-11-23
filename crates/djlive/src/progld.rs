@@ -9,7 +9,7 @@
 //! ```
 //!
 //! `text` is the canonical program text, so its CID is `@id`: a reader ([`read_view`]) recomputes it and refuses a
-//! block that does not hash to its own name. One builder for every host: btwserve renders it into its pages, the
+//! block that does not hash to its own name. One builder for every host: beatscript-serve renders it into its pages, the
 //! MCP `get` answers it, and the phone (which links djlive) reads it with the same function. Pure: no I/O, no clock.
 
 use djengine::json::{JsonObject, JsonValue};

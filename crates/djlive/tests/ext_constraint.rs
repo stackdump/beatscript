@@ -1,4 +1,4 @@
-//! F12 constraints: `assert never X beside Y`, `assert never X during Y`, `assert X ends on D` (docs/btw/ext-assert.md,
+//! F12 constraints: `assert never X beside Y`, `assert never X during Y`, `assert X ends on D` (docs/beatscript/ext-assert.md,
 //! "Constraints"). They are decided by `check` over the whole finite timeline by exact enumeration: here each form passing and
 //! failing with its message (line, column, bar and step), the seams (a bar line, a section, a `loop`), the vocal's windows,
 //! chance (judged on what a part may play), `ends on` in each key, every misuse in the language's terms, the words that stay
@@ -125,7 +125,7 @@ fn a_constraint_is_part_of_the_program_so_an_edit_is_another_cid() {
 
 #[test]
 fn reformatting_keeps_the_cid_of_a_program_with_constraints() {
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/constraints.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/constraints.beatscript")).unwrap();
     let cid = ok(&src).cid;
     let mut rng = Rng(0xc0_57a1_0000_0001);
     for round in 0..40 {

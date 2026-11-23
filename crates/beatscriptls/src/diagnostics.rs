@@ -17,10 +17,10 @@ pub fn severity(sev: Severity) -> i64 {
     }
 }
 
-/// The help a diagnostic carries, as the site says it (an `import` on the web gets the site's own help, as `btwapi` does).
+/// The help a diagnostic carries, as the site says it (an `import` on the web gets the site's own help, as `beatscript-api` does).
 pub fn help_of(d: &Diagnostic) -> Option<String> {
-    if d.message == btwapi::snapshot::NO_IMPORT {
-        return Some(btwapi::snapshot::IMPORT_HELP.to_string());
+    if d.message == beatscript_api::snapshot::NO_IMPORT {
+        return Some(beatscript_api::snapshot::IMPORT_HELP.to_string());
     }
     d.help.clone()
 }
@@ -44,7 +44,7 @@ pub fn to_lsp(a: &Analysis, d: &Diagnostic, index: usize, enc: Encoding) -> Json
     obj([
         ("range", span_range(&a.index, &a.text, span, enc)),
         ("severity", JsonValue::int(severity(d.severity))),
-        ("source", s("btw")),
+        ("source", s("beatscript")),
         ("message", s(message_of(d))),
         ("data", obj([("index", int(index)), ("start", int(span.start)), ("end", int(span.end))])),
     ])

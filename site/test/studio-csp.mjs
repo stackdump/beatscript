@@ -1,9 +1,9 @@
 // The studio package (site/studio, @stackdump/beatscript-studio) under a Claude-artifact-like CSP, in headless Chrome.
 //
-//   node site/test/studio-csp.mjs        (needs site/web/wasm, or BTW_WASM=<dir>; skips without it)
+//   node site/test/studio-csp.mjs        (needs site/web/wasm, or BEATSCRIPT_WASM=<dir>; skips without it)
 //
 // On a machine whose sound device is busy or absent the audio clock does not move and nothing installs (player-csp.mjs
-// fails the same way): BTW_CHROME_ARGS=--disable-audio-output gives Chrome a null sink.
+// fails the same way): BEATSCRIPT_CHROME_ARGS=--disable-audio-output gives Chrome a null sink.
 //
 // Builds the package into a temp dir, serves it, and opens test/csp.html (two studios: the defaults, and one with
 // audio=render, every feature and every capability). Checks:
@@ -16,7 +16,7 @@
 //   - with a stub window.claude installed before the module loads, whose use('sample') resolves to a fake namespace,
 //     the compose button appears, and Compose puts the stub's fenced program in the editor
 //   - Render (audio=render) renders one pass and plays it (Web Audio: the CSP refuses blob: media, the one refusal
-//     allowed), the context running; the WAV and .btw exports fall back to an <a download> link to a blob
+//     allowed), the context running; the WAV and .beatscript exports fall back to an <a download> link to a blob
 //   - share gives a link on the configured site, and open(link) puts the same program (CID) back; generate loads a
 //     program that checks; a studio with no program holds STARTER, which checks
 //   - a set: the titles are listed, picking item 2 loads its text, a CID-only item says why, and when item 1 ends
@@ -24,7 +24,7 @@
 //   - taken off the page, it stops, closes its context and the bridge; put back, the bridge answers once and Play plays
 //   - the bridge: a parent page on another origin frames a studio with `bridge` and gets tools/list and tools/call
 //     answered over postMessage (only the bridged studio answers)
-//   - with the stub's downloads, .btw and WAV call downloads.save (a .btw.txt, a .wav.zip), and no link is offered
+//   - with the stub's downloads, .beatscript and WAV call downloads.save (a .beatscript.txt, a .wav.zip), and no link is offered
 //   - a studio that lists dictation and tts: without window.claude it has neither the mic nor the speaker; with the
 //     stub's, the mic is beside the compose prompt (a click calls start, onFinal's text lands in the prompt, a second
 //     click stops) and the speaker on the status line speaks the problems, naming their count
@@ -38,9 +38,9 @@ import { fileURLToPath } from 'node:url';
 import { launch, sleep } from './cdp.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const wasm = process.env.BTW_WASM || path.join(here, '..', 'web', 'wasm');
-if (!fs.existsSync(path.join(wasm, 'btw_bg.wasm'))) {
-  console.log(`# skip: no ${wasm}/btw_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
+const wasm = process.env.BEATSCRIPT_WASM || path.join(here, '..', 'web', 'wasm');
+if (!fs.existsSync(path.join(wasm, 'beatscript_bg.wasm'))) {
+  console.log(`# skip: no ${wasm}/beatscript_bg.wasm (scripts/build-web-wasm.sh ${wasm})`);
   process.exit(0);
 }
 const dist = fs.mkdtempSync(path.join(os.tmpdir(), 'btw-studio-'));
@@ -238,12 +238,12 @@ try {
   const gr = await report(b);
   check(gt.structuredContent && gt.structuredContent.ok && gr.ok && gr.text === gt.structuredContent.text, `tools.call('generate') gives a program that checks, and it goes into the editor (${gr.cid})`);
 
-  // .btw with no downloads capability: an <a download> link to a blob, which saves the program
+  // .beatscript with no downloads capability: an <a download> link to a blob, which saves the program
   await b.eval(`${el('studio')}.load(${JSON.stringify(r.text)})`);
-  await clickIn(b, 'studio', 'button[part="exportBtw"]');
+  await clickIn(b, 'studio', 'button[part="exportBeatscript"]');
   const linkOf = (id) => b.eval(`(() => { const a = ${shadow(id, 'a.dl')}; return { hidden: a.hidden, href: a.href, name: a.download, label: a.textContent }; })()`);
   const dl = await linkOf('studio');
-  check(!dl.hidden && dl.href.startsWith('blob:') && dl.name === 'artifact-test-drums-and-a-melody.btw', `.btw without the downloads capability offers a download link to a blob (${dl.name}, ${dl.href.slice(0, 30)}…)`);
+  check(!dl.hidden && dl.href.startsWith('blob:') && dl.name === 'artifact-test-drums-and-a-melody.beatscript', `.beatscript without the downloads capability offers a download link to a blob (${dl.name}, ${dl.href.slice(0, 30)}…)`);
   const file = await downloaded(dl.name);
   check(file && file.toString('utf8') === r.text, `the link saves the program (${file ? `${file.length} bytes` : 'no file'})`);
 
@@ -274,7 +274,7 @@ try {
   check(e1.length === 0, `render and export: no other console error (${e1.join('; ')})`);
 
   // a studio with no program holds STARTER, which checks; with `bridge` and its own site
-  await addStudio(b, 'starter', { bridge: '', site: 'https://btw.example.org' });
+  await addStudio(b, 'starter', { bridge: '', site: 'https://beatscript.example.org' });
   await ready(b, 'starter');
   const st = await report(b, 'starter');
   check(st.ok && /^#! name: a first beat/.test(st.text) && st.problems.length === 0, `a studio with no program holds the starter, which checks (${st.cid})`);
@@ -282,7 +282,7 @@ try {
   const ss = (await report(b, 'starter')).shared;
   const stt = await b.eval(`${el('starter')}.tools.call('share', { text: ${el('starter')}.text })`, true);
   const tu = (stt.structuredContent && stt.structuredContent.url) || '';
-  check(ss && ss.url.startsWith('https://btw.example.org/') && ss.url.includes(st.cid) && tu.startsWith('https://btw.example.org/'), `with site set, the share link (button and tool) is on that site (${ss && ss.url.slice(0, 50)}…)`);
+  check(ss && ss.url.startsWith('https://beatscript.example.org/') && ss.url.includes(st.cid) && tu.startsWith('https://beatscript.example.org/'), `with site set, the share link (button and tool) is on that site (${ss && ss.url.slice(0, 50)}…)`);
   // taken off the page and put back: it stops, closes its context and the bridge; put back, the bridge answers once
   check((await pings(b, 'p1')) === 1, 'with bridge, the studio answers a ping posted to its page, once');
   await clickIn(b, 'starter', 'button.play');
@@ -376,9 +376,9 @@ try {
   const cr = await report(b);
   const sampled = await b.eval('window.__sampled');
   check(cr.ok && cr.text.includes('#! name: from the stub') && sampled.length === 1, `Compose asks the stub's sample once and puts its program in the editor (${sampled.join(' ')} chars; ok ${cr.ok})`);
-  // downloads: .btw and WAV go through downloads.save, and no link is offered
+  // downloads: .beatscript and WAV go through downloads.save, and no link is offered
   await b.eval(`${el('studio')}.load(${JSON.stringify(r.text)})`);
-  await clickIn(b, 'studio', 'button[part="exportBtw"]');
+  await clickIn(b, 'studio', 'button[part="exportBeatscript"]');
   await b.waitFor('window.__saved.length >= 1', 5000).catch(() => false);
   await clickIn(b, 'studio', 'button[part="exportWav"]');
   await b.waitFor('window.__saved.length >= 2', 30000).catch(() => false);
@@ -386,7 +386,7 @@ try {
   const after = await report(b);
   const linked = await b.eval(`!${shadow('studio', 'a.dl')}.hidden`);
   console.log(`# saved: ${JSON.stringify(saved.map((x) => ({ ...x, text: x.text && `${x.text.length} chars` })))}`);
-  check(saved[0] && saved[0].filename === 'artifact-test-drums-and-a-melody.btw.txt' && saved[0].text === r.text, `.btw calls downloads.save with the program (${saved[0] && saved[0].filename})`);
+  check(saved[0] && saved[0].filename === 'artifact-test-drums-and-a-melody.beatscript.txt' && saved[0].text === r.text, `.beatscript calls downloads.save with the program (${saved[0] && saved[0].filename})`);
   check(saved[1] && saved[1].filename === 'artifact-test-drums-and-a-melody.wav.zip' && saved[1].head === 'PK' && saved[1].bytes > 1000, `WAV renders and calls downloads.save with a zip (${saved[1] && `${saved[1].filename}, ${saved[1].bytes} bytes`})`);
   check(!linked && after.state === 'saved', `with downloads, no link is offered and it says saved (${after.state})`);
   const e4 = b.errors().map((e) => e.text).filter((t) => !/blob:/.test(t));

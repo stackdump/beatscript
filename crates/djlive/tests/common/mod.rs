@@ -1,6 +1,6 @@
 //! Helpers the property tests share: a small deterministic RNG and `reformat`, which writes a program out again
 //! token by token with other whitespace, comments, blank lines, indentation, continuation lines and number and
-//! note spellings. Every feature's property test (docs/BTW-EXTENSIONS.md) uses it, so a construct whose tokens
+//! note spellings. Every feature's property test (docs/BEATSCRIPT-EXTENSIONS.md) uses it, so a construct whose tokens
 //! must stay glued together (`6db`, `x?0.3`, `A.kick`, `==`) is taught here, once, in `glued_pair`.
 #![allow(dead_code)]
 

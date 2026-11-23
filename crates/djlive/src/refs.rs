@@ -1,5 +1,5 @@
-//! A program's references, one by one (docs/btw/ext-ffi.md): what each one calls or borrows, which half of the language it is
-//! (docs/BTW.md "Two halves"), where it stands, what it resolves to, and the BeatScript it is written out as there. `check`
+//! A program's references, one by one (docs/beatscript/ext-ffi.md): what each one calls or borrows, which half of the language it is
+//! (docs/BEATSCRIPT.md "Two halves"), where it stands, what it resolves to, and the BeatScript it is written out as there. `check`
 //! reports them (`refs`), the editor shows or hides each one's expansion, and **eject** writes one out in place, under a line
 //! that says where it came from:
 //!
@@ -25,7 +25,7 @@ use crate::env::Env;
 use crate::parse::ROLES;
 use crate::seed::Expansion;
 
-/// The two halves of the language (docs/BTW.md "Two halves: structure and engine").
+/// The two halves of the language (docs/BEATSCRIPT.md "Two halves: structure and engine").
 pub const ENGINE: &str = "engine";
 pub const STRUCTURE: &str = "structure";
 
@@ -198,7 +198,7 @@ pub fn from_line(s: &Site) -> String {
     }
 }
 
-/// A `# from: <call> -> <cid>` line read back: the call and the CID (docs/btw/ext-ffi.md, provenance).
+/// A `# from: <call> -> <cid>` line read back: the call and the CID (docs/beatscript/ext-ffi.md, provenance).
 pub fn read_from_line(line: &str) -> Option<(String, Option<String>)> {
     let rest = line.trim().strip_prefix('#')?.trim_start().strip_prefix("from:")?.trim();
     if rest.is_empty() {
@@ -258,7 +258,7 @@ pub fn eject_site(src: &str, s: &Site) -> String {
 }
 
 /// The program with every reference written out (templates, seeds, `gen` calls, borrowed sections, in the order `check` writes
-/// them), canonical, and its CID: the **expanded CID** of a recipe (docs/btw/ext-ffi.md). The same recipe always gives the same
+/// them), canonical, and its CID: the **expanded CID** of a recipe (docs/beatscript/ext-ffi.md). The same recipe always gives the same
 /// expanded text and CID, and the expanded text plays as the recipe does. None for a program with no references (its expanded
 /// CID is its own). Errors are the references'.
 pub fn expanded(src: &str, env: &Env) -> Result<Option<(String, String)>, Vec<Diagnostic>> {

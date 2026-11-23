@@ -1,4 +1,4 @@
-//! `~3` / `@4` (mutate.rs, docs/BTW.md "Arrange mutations"): a mutation line that fires only on every Nth pass of its
+//! `~3` / `@4` (mutate.rs, docs/BEATSCRIPT.md "Arrange mutations"): a mutation line that fires only on every Nth pass of its
 //! `arrange { }`, as the occurrences N, 2N, 3N ... It stays total and deterministic, and the generation table says which
 //! plays each firing was read by.
 
@@ -103,14 +103,14 @@ section peak 4 bars {\n  deck B: melody hoov_b | bass acid_a\n}\nsection outro 4
 arrange {\n  intro drop\n  ~ acid_a rot 2, hoov_a up 3\n  drop\n  ~ acid_* drift 0.5\n  peak\n  @ hoov_b rev\n  peak outro\n} loop 2 then outro end\n";
 
 /// Pinned before `~N` existed: the program of `arrange_mutations.rs` has the CID it had, and so do the two example
-/// programs with mutation lines. (Every program in the repo keeps its CIDs: `btwapi`'s `cid_pins`.)
+/// programs with mutation lines. (Every program in the repo keeps its CIDs: `beatscript-api`'s `cid_pins`.)
 #[test]
 fn programs_without_a_count_keep_their_cid() {
     assert_eq!(ok(OLD_SONG).cid, "z4EBG9j48vaqydR4nYH2fQYmfWqa2GXrJ9dbXGzwsJDzSey5Rey");
-    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/");
+    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/");
     let read = |n: &str| std::fs::read_to_string(format!("{dir}{n}")).unwrap();
-    assert_eq!(ok(&read("arrange-mutations.btw")).cid, "z4EBG9jCtKY4ioQ3TEJCQQmTTJZjugJRihCNbBxNJrBaWr1adMi");
-    assert_eq!(ok(&read("named-arrange-mutations.btw")).cid, "z4EBG9jBgVnH5y3CBC2U72LiZ6FVxEuPVMtaGpoa2QcZesBzWFr");
+    assert_eq!(ok(&read("arrange-mutations.beatscript")).cid, "z4EBG9jCtKY4ioQ3TEJCQQmTTJZjugJRihCNbBxNJrBaWr1adMi");
+    assert_eq!(ok(&read("named-arrange-mutations.beatscript")).cid, "z4EBG9jBgVnH5y3CBC2U72LiZ6FVxEuPVMtaGpoa2QcZesBzWFr");
 }
 
 #[test]
@@ -262,7 +262,7 @@ fn a_line_that_can_never_fire_says_so_at_its_count_and_still_checks() {
     // a `loop` with no count lays out one pass
     assert_eq!(at("arrange {\n  intro drop\n  ~3 acid rev\n  drop\n} loop").0, "a `loop` with no count is laid out as one pass, so `~3` never fires");
     // a named arrangement runs its mutations over one pass
-    let named = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/named-arrange-mutations.btw")).unwrap().replace("~ acid rot 2", "~2 acid rot 2");
+    let named = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/named-arrange-mutations.beatscript")).unwrap().replace("~ acid rot 2", "~2 acid rot 2");
     assert!(check(&named).ok());
     assert!(warnings(&named).iter().any(|w| w.starts_with("a named `arrange` runs its mutations over one pass") && w.ends_with("so `~2` never fires")), "{:?}", warnings(&named));
     assert!(!table(&named).patterns.contains_key("acid"));
@@ -289,7 +289,7 @@ fn the_fixer_keeps_the_count() {
 /// shows here.
 #[test]
 fn the_example_comes_to_the_generations_it_teaches() {
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/arrange-every-n.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/arrange-every-n.beatscript")).unwrap();
     let c = ok(&src);
     assert!(c.warnings.is_empty(), "{:?}", c.warnings);
     let t = table(&src);

@@ -1,5 +1,5 @@
 // A stand-in for the wasm module (?mock=1 and the Node tests): the same surface as DESIGN.md's JS API
-// (btw_check, btw_fmt, btw_highlight, btw_open, btw_share, BtwRun ...) written as a few hundred lines of
+// (beatscript_check, beatscript_fmt, beatscript_highlight, beatscript_open, beatscript_share, BeatscriptRun ...) written as a few hundred lines of
 // JavaScript. It knows enough of the language to light a page up (lines, sections, step tokens, ramps,
 // timed lines, an evolve block) and nothing more: the CIDs are fake ("zMock..."), the grammar check is a
 // line-shape check. It is only ever loaded on request; the real page runs on the real module.
@@ -35,11 +35,11 @@ export function mockCid(text) {
   return `zMock${out}`;
 }
 
-// ---- the programs the module was told (btw_know) -----------------------------------------------
+// ---- the programs the module was told (beatscript_know) -----------------------------------------------
 
 const KNOWN = new Map();
 
-/** The real module's `btw_know`: keeps a program by CID. The mock cannot re-hash (its CIDs are fake), so it keeps what it is given. */
+/** The real module's `beatscript_know`: keeps a program by CID. The mock cannot re-hash (its CIDs are fake), so it keeps what it is given. */
 export function mockKnow(cid, text) {
   if (!/^z[1-9A-HJ-NP-Za-km-z]{20,80}$/.test(String(cid))) return { ok: false, error: `${JSON.stringify(cid)} is not a CID` };
   KNOWN.set(cid, text);
@@ -611,7 +611,7 @@ export async function createMockEngine({ context, destination }) {
   };
 }
 
-// ---- stations (BeatScript radio): the answer of btw_station / POST /api/station, with the mock's fake CIDs ----------------
+// ---- stations (BeatScript radio): the answer of beatscript_station / POST /api/station, with the mock's fake CIDs ----------------
 
 /** The from call's own tempo and key, as the mock pretends the generator prints them (the real ones are the genre tables'). */
 const MOCK_GENRE_DEFAULTS = { techno: [128, 'am'], house: [124, 'c'], jazz: [110, 'dm'], ambient: [80, 'c'], dnb: [174, 'am'], edm: [128, 'fm'], speedcore: [220, 'em'], dubstep: [140, 'fm'], country: [110, 'g'], blues: [96, 'e'], synthwave: [100, 'am'], trance: [138, 'am'], lofi: [85, 'dm'], reggae: [80, 'g'], funk: [105, 'em'], bossa: [120, 'dm'], trap: [140, 'cm'], garage: [132, 'fm'], metal: [160, 'em'] };
@@ -720,17 +720,17 @@ export function mockModule() {
   const j = (f) => (...a) => JSON.stringify(f(...a));
   return {
     mock: true,
-    btw_check: j(mockCheck),
-    btw_fmt: j(mockFmt),
-    btw_highlight: j(mockHighlight),
-    btw_open: j(mockOpen),
-    btw_know: j(mockKnow),
-    btw_share: (t, s, n) => JSON.stringify(mockShare(t, s, n)),
-    btw_instruments: j(mockInstruments),
-    btw_generation: () => JSON.stringify({ ok: true, cid: 'zMockGen', scope: 'drop', n: 1 }),
-    btw_cheatsheet: () => '# btw cheat sheet (mock)\n',
-    btw_station: (req) => JSON.stringify(mockStation(req)),
-    BtwRun: class {
+    beatscript_check: j(mockCheck),
+    beatscript_fmt: j(mockFmt),
+    beatscript_highlight: j(mockHighlight),
+    beatscript_open: j(mockOpen),
+    beatscript_know: j(mockKnow),
+    beatscript_share: (t, s, n) => JSON.stringify(mockShare(t, s, n)),
+    beatscript_instruments: j(mockInstruments),
+    beatscript_generation: () => JSON.stringify({ ok: true, cid: 'zMockGen', scope: 'drop', n: 1 }),
+    beatscript_cheatsheet: () => '# beatscript cheat sheet (mock)\n',
+    beatscript_station: (req) => JSON.stringify(mockStation(req)),
+    BeatscriptRun: class {
       constructor() { this.r = new MockRun(); }
       eval(t) { return JSON.stringify(this.r.eval(t)); }
       stop() { return JSON.stringify(this.r.stop()); }

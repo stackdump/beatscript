@@ -1,4 +1,4 @@
-//! `evolve`: a program that applies transforms to itself over time (docs/BTW.md, "Evolving").
+//! `evolve`: a program that applies transforms to itself over time (docs/BEATSCRIPT.md, "Evolving").
 //!
 //! Generation 0 is the parts as written. Generation n+1 is the rule's transforms applied to generation
 //! n's parts (their realized hits: step and note), so generation n is f_n(...f_1(gen 0)), and with a rule

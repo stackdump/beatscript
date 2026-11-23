@@ -116,7 +116,7 @@ export interface BeatscriptRenderResult {
  * element plays (in a page, a Worker or Node). The same text at the same rate is the same PCM every time.
  */
 export function renderProgram(opts: {
-  /** The compiled wasm/btw_bg.wasm. */
+  /** The compiled wasm/beatscript_bg.wasm. */
   module: WebAssembly.Module;
   text: string;
   /** Default 44100. */

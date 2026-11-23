@@ -6,7 +6,7 @@
 // mode's <audio>); no connections, no styles (the player's are a constructed stylesheet, which no policy governs), no
 // images. The engine is in the package (the module inlined as base64), so nothing else is needed. The player is loaded
 // at one exact version, with each module's Subresource Integrity hash in an import map, exactly as the web embed gives
-// them (crates/btwserve/src/mcp/artifact.rs PlayerCdn::tags), and the document's text is the element's text attribute,
+// them (crates/beatscript-serve/src/mcp/artifact.rs PlayerCdn::tags), and the document's text is the element's text attribute,
 // escaped as artifact.rs's esc does: the attribute gives the player the text byte for byte, where a child script's
 // escapes would change it (and so its CID). Sound starts only from the player's Play button. The page is written
 // again when the document's text or the theme has changed (once the typing rests, or at a save), so what plays is
@@ -16,7 +16,7 @@
 const crypto = require('crypto');
 
 // The package and its exact version. integrity maps a file of the package to its SRI hash, exactly as
-// crates/btwserve/src/mcp/player-cdn.lock.json gives them (test/preview.test.js holds it to that file). Empty, the page
+// crates/beatscript-serve/src/mcp/player-cdn.lock.json gives them (test/preview.test.js holds it to that file). Empty, the page
 // carries no integrity at all rather than wrong hashes, which would stop the player.
 const PLAYER = {
   package: '@stackdump/beatscript-player',
@@ -34,12 +34,12 @@ const PLAYER = {
     'js/mixer-model.js': 'sha384-3VluHJuwCDuhaotOqq616HSWXpyfHrtrl20e/aeatY4YXKX70sRonCntsCbhvQpk',
     'js/wasm-mock.js': 'sha384-UYwxLE5icoXMnhWEvylWHq6TfND9y6ImAiv3WpauY39LuvoN+r6ErBhn4VjOpqBC',
     'js/wasm.js': 'sha384-Fnnbr22SvXtJyjAFqGoYJUyFCjWppkQVbtW9eAKk47ZfZbThXvWxZqUQQhN4uIuN',
-    'wasm/btw.js': 'sha384-JIYt9zz7HhfCBkT7z2zJe6sXbY93yhz+44vcMtEvKi288SnpGGqiQGTxv2ddBEWu',
-    'wasm/btw_bg.wasm.b64.js': 'sha384-ETinehDel81+MkpG5jfanpzsCmomTsMkaTqzykvLltghBL9mFbqnYerGzEUqSBVl',
+    'wasm/beatscript.js': 'sha384-JIYt9zz7HhfCBkT7z2zJe6sXbY93yhz+44vcMtEvKi288SnpGGqiQGTxv2ddBEWu',
+    'wasm/beatscript_bg.wasm.b64.js': 'sha384-ETinehDel81+MkpG5jfanpzsCmomTsMkaTqzykvLltghBL9mFbqnYerGzEUqSBVl',
   },
 };
 const CDN = 'https://cdn.jsdelivr.net/npm/';
-const COMMAND = 'btw.preview';
+const COMMAND = 'beatscript.preview';
 const DEBOUNCE_MS = 400;
 
 // HTML text and attribute escaping, the five characters artifact.rs's esc changes, as it changes them
@@ -77,7 +77,7 @@ function previewHtml({ text, nonce, player = PLAYER, theme = 'dark' }) {
   ].filter(Boolean).join('\n');
 }
 
-/** `btw.preview`: open the active BeatScript document's preview beside it, one panel that follows that document. */
+/** `beatscript.preview`: open the active BeatScript document's preview beside it, one panel that follows that document. */
 function registerPreview(context, vscode) {
   let panel = null;
   let doc = null;
@@ -98,8 +98,8 @@ function registerPreview(context, vscode) {
   };
   const open = () => {
     const ed = vscode.window.activeTextEditor;
-    if (!ed || ed.document.languageId !== 'btw') {
-      vscode.window.showInformationMessage('BeatScript: open a .btw file to preview it.');
+    if (!ed || ed.document.languageId !== 'beatscript') {
+      vscode.window.showInformationMessage('BeatScript: open a .beatscript file to preview it.');
       return;
     }
     doc = ed.document;

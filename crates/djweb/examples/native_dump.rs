@@ -3,9 +3,9 @@
 //! (a hash of every service pass and of the marks at every bar), and a hash of the engine's first seconds of
 //! audio for the program's first deck-A net (`render_offline`, the engine's own native render).
 //!
-//!   cargo run -q -p djweb --example native_dump -- [--seconds 3] [--passes 640] FILE.btw ...
+//!   cargo run -q -p djweb --example native_dump -- [--seconds 3] [--passes 640] FILE.beatscript ...
 //!
-//! The fake clock is the one `tests/run.rs` of btwapi uses and the Node test repeats exactly: the transport starts
+//! The fake clock is the one `tests/run.rs` of beatscript-api uses and the Node test repeats exactly: the transport starts
 //! at beat 0 when the first deck plays, then advances a quarter beat a pass.
 
 use std::collections::BTreeMap;
@@ -28,7 +28,7 @@ fn j(s: impl Into<String>) -> JsonValue {
 /// One program on the fake clock: (the eval answer, the hash of each pass's commands, the hash of the marks every 16 passes,
 /// the status at the end, the first load_net envelope of deck A as JSON text).
 fn simulate(text: &str, passes: usize) -> (String, Vec<String>, Vec<String>, String, Option<String>) {
-    let mut run = btwapi::run::Run::new();
+    let mut run = beatscript_api::run::Run::new();
     let eval = run.eval_str(text);
     let mut beat = 0.0f64;
     let mut playing: BTreeMap<&str, bool> = BTreeMap::from([("A", false), ("B", false)]);
@@ -87,14 +87,14 @@ fn main() {
         // keyed by the path as given: the same file name is in more than one directory
         let name = f.clone();
         let mut o = JsonObject::new();
-        o.set("check", j(btwapi::check_json(&text)));
-        o.set("fmt", j(btwapi::fmt_json(&text)));
-        let share = btwapi::share_json(&text, None, false, btwapi::DEFAULT_ORIGIN);
+        o.set("check", j(beatscript_api::check_json(&text)));
+        o.set("fmt", j(beatscript_api::fmt_json(&text)));
+        let share = beatscript_api::share_json(&text, None, false, beatscript_api::DEFAULT_ORIGIN);
         let url = JsonValue::parse(&share).ok().and_then(|v| v.get("url").and_then(JsonValue::as_str).map(str::to_string));
-        o.set("open", url.as_deref().map_or(JsonValue::Null, |u| j(btwapi::open_json(u))));
+        o.set("open", url.as_deref().map_or(JsonValue::Null, |u| j(beatscript_api::open_json(u))));
         o.set("share", j(share));
-        o.set("highlight", j(btwapi::highlight_json_utf16(&text)));
-        let ok = JsonValue::parse(&btwapi::check_json(&text)).ok().and_then(|v| v.get("ok").and_then(JsonValue::as_bool)) == Some(true);
+        o.set("highlight", j(beatscript_api::highlight_json_utf16(&text)));
+        let ok = JsonValue::parse(&beatscript_api::check_json(&text)).ok().and_then(|v| v.get("ok").and_then(JsonValue::as_bool)) == Some(true);
         if ok {
             let (eval, cmds, marks, status, first_a) = simulate(&text, passes);
             let strs = |v: Vec<String>| JsonValue::Array(v.into_iter().map(JsonValue::str).collect());

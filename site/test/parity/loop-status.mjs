@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // loop-status.mjs: the runtime's status (the page header's numbers) through a looping program, on a synthetic clock, in
-// Node (no browser, no sound): BtwRun.service() with a grid that runs at the tempo, `play` echoed as the stream's virtual
+// Node (no browser, no sound): BeatscriptRun.service() with a grid that runs at the tempo, `play` echoed as the stream's virtual
 // clock does. Prints, per bar, what header-model.js would show: "section N/M · name" and "bar song_bar/song_bars".
 //
-//   node site/test/parity/loop-status.mjs [file.btw ...]    (default: the cases below)
+//   node site/test/parity/loop-status.mjs [file.beatscript ...]    (default: the cases below)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -11,9 +11,9 @@ import { headerModel } from '../../web/js/header-model.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const wasmDir = process.env.PARITY_WASM_DIR ? path.resolve(process.env.PARITY_WASM_DIR) : path.resolve(here, '..', '..', 'web', 'wasm');
-if (!fs.existsSync(path.join(wasmDir, 'btw_bg.wasm'))) { console.log('SKIP loop-status: no built module in site/web/wasm'); process.exit(0); }
-const glue = await import(pathToFileURL(path.join(wasmDir, 'btw.js')).href);
-glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'btw_bg.wasm')) });
+if (!fs.existsSync(path.join(wasmDir, 'beatscript_bg.wasm'))) { console.log('SKIP loop-status: no built module in site/web/wasm'); process.exit(0); }
+const glue = await import(pathToFileURL(path.join(wasmDir, 'beatscript.js')).href);
+glue.initSync({ module: fs.readFileSync(path.join(wasmDir, 'beatscript_bg.wasm')) });
 
 const pats = 'let p1 = x ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p2 = x ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p3 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~\n';
 const CASES = process.argv.length > 2 ? process.argv.slice(2).map((f) => ({ name: path.basename(f), text: fs.readFileSync(f, 'utf8') })) : [
@@ -29,11 +29,11 @@ const CASES = process.argv.length > 2 ? process.argv.slice(2).map((f) => ({ name
 
 let bad = 0;
 for (const c of CASES) {
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     const check = JSON.parse(run.check(c.text));
     const ev = JSON.parse(run.eval(c.text));
     if (!ev.ok) { console.log(`${c.name}: does not check: ${JSON.stringify(ev.diagnostics[0])}`); bad++; continue; }
-    const rep = JSON.parse(glue.btw_check(c.text));
+    const rep = JSON.parse(glue.beatscript_check(c.text));
     const sections = rep.sections || [];
     const bpm = rep.tempo || 120;
     const passes = 3, bars = (rep.song_bars || 8) * passes;

@@ -1,7 +1,7 @@
 // The grammar's regexes compile (as JS, close enough to Oniguruma for the constructs used) and colour a sample as expected.
 'use strict';
 const assert = require('node:assert/strict');
-const g = require('../syntaxes/btw.tmLanguage.json');
+const g = require('../syntaxes/beatscript.tmLanguage.json');
 
 const rx = {};
 for (const [k, v] of Object.entries(g.repository)) rx[k] = new RegExp(v.match || v.begin, 'g');

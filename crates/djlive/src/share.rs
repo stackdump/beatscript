@@ -10,7 +10,7 @@
 //! https://beats.bitwrap.io/p#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<notes>]
 //! ```
 //!
-//! The CID is the program's own (docs/BTW.md, "Canonical form"): whoever opens the link decodes the
+//! The CID is the program's own (docs/BEATSCRIPT.md, "Canonical form"): whoever opens the link decodes the
 //! text, canonicalises and compiles it, recomputes the CID, and refuses the link if it is not the one
 //! it carries. So a link cannot say one thing and play another. The site's link packs the *formatted*
 //! text (`format::format`: the canonical text with the `#!` header lines, the comments and the blank

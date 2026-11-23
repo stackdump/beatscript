@@ -1,10 +1,10 @@
-// The embed player (/embed/<CID>, btwserve cards/embed.rs): one stored program, played in the browser by the same wasm
+// The embed player (/embed/<CID>, beatscript-serve cards/embed.rs): one stored program, played in the browser by the same wasm
 // engine the editor uses (wasm.js + engine.js), started only by a click. The page carries the program as the editor's
 // <beatscript-view> block; this reads it, checks that its text is its CID, and plays and stops it. Nothing is written,
 // stored or signed: an embed only listens.
 
 import { readProgramView } from './program-ld.js';
-import { loadBtw } from './wasm.js';
+import { loadBeatscript } from './wasm.js';
 import { createEngine } from './engine.js';
 import { Resolver } from './closure.js';
 import { positionModel, sectionDoc } from './embed-model.js';
@@ -24,7 +24,7 @@ class EmbedPlayer {
     this.docs = [];
     this.program = null;
     this.ctx = null;
-    this.btw = null;
+    this.beatscript = null;
     this.engine = null;
     this.run = null;
     this.sections = [];
@@ -72,8 +72,8 @@ class EmbedPlayer {
 
   /** The module and the engine, once: only after the click (no wasm is fetched for an embed nobody plays). */
   async ready() {
-    if (!this.btw) {
-      this.btw = await loadBtw();
+    if (!this.beatscript) {
+      this.beatscript = await loadBeatscript();
       // a program that imports: what it draws on is fetched by CID from this site, as the editor does (closure.js)
       this.resolver = new Resolver({
         fetchProgram: async (cid) => {
@@ -81,7 +81,7 @@ class EmbedPlayer {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
         },
-        know: this.btw.know,
+        know: this.beatscript.know,
       });
     }
     this.resolver.want(this.program.text);
@@ -103,12 +103,12 @@ class EmbedPlayer {
     try {
       await resumed;
       await this.ready();
-      if (!this.run) this.run = this.btw.newRun();
+      if (!this.run) this.run = this.beatscript.newRun();
       const ev = this.run.eval(this.program.text);
       if (!ev || !ev.ok) throw new Error('it does not play here: open it in BeatScript');
       if (ev.cid && ev.cid !== this.program.cid) throw new Error('refused: the page\'s program is not its CID');
       // the sections, for `name n/m`: the check's (eval does not list them)
-      const rep = this.btw.check(this.program.text);
+      const rep = this.beatscript.check(this.program.text);
       this.sections = (rep && rep.sections) || [];
       this.playing = true;
       this.say('');

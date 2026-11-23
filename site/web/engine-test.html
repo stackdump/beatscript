@@ -15,14 +15,14 @@
 <h1>BeatScript engine test</h1>
 <p>Plays a program through <code>js/engine.js</code> (the AudioWorklet engine) for a few seconds and reports what it heard from itself:
 the grid advancing, the sections going by, and the output level read back from an <code>AnalyserNode</code>.
-<code>?program=/examples/hand-dubstep-140-v2.btw&amp;seconds=10&amp;composer=worker</code>. The result is in <code>window.__btwTest</code>.</p>
+<code>?program=/examples/hand-dubstep-140-v2.beatscript&amp;seconds=10&amp;composer=worker</code>. The result is in <code>window.__btwTest</code>.</p>
 <button id="go" type="button">start</button>
 <pre id="out"></pre>
 <script type="module">
 import { createEngine } from './js/engine.js';
 
 const q = new URLSearchParams(location.search);
-const programUrl = q.get('program') || '/examples/hand-dubstep-140-v2.btw';
+const programUrl = q.get('program') || '/examples/hand-dubstep-140-v2.beatscript';
 const seconds = Number(q.get('seconds') || 10);
 const composer = q.get('composer') || 'worker';
 const out = document.getElementById('out');
@@ -33,9 +33,9 @@ document.getElementById('go').addEventListener('click', async () => {
   document.getElementById('go').disabled = true;
   try {
     T.phase = 'loading';
-    // the page's own copy of the module: the runtime (BtwRun) lives on this thread
-    const glue = await import('./wasm/btw.js');
-    const wasmUrl = new URL('./wasm/btw_bg.wasm', location.href);
+    // the page's own copy of the module: the runtime (BeatscriptRun) lives on this thread
+    const glue = await import('./wasm/beatscript.js');
+    const wasmUrl = new URL('./wasm/beatscript_bg.wasm', location.href);
     await glue.default({ module_or_path: wasmUrl });
     const text = await (await fetch(programUrl)).text();
 
@@ -55,7 +55,7 @@ document.getElementById('go').addEventListener('click', async () => {
     engine.on('ignored', (e) => T.events.push({ ignored: e.what }));
     say(`engine up in ${T.engineMs.toFixed(0)} ms (${engine.composer} composer, engine ${engine.info.version})`);
 
-    const run = new glue.BtwRun();
+    const run = new glue.BeatscriptRun();
     const ev = JSON.parse(run.eval(text));
     if (!ev.ok) throw new Error(`the program does not check: ${JSON.stringify(ev.diagnostics[0])}`);
     say(`evaluated ${ev.cid}`);

@@ -1,0 +1,10 @@
+# euclid.beatscript: Euclidean rhythms and polymeter (CC0). Original.
+# e(k, n) spreads k hits as evenly as it can over n steps; e(k, n, rot) turns it. A part's `/N` gives it a cycle of
+# N sixteenths instead of the bar's 16, so it drifts across the barlines and comes round on its own: here the hihat
+# (12 steps) every 3 bars, the bass (12 steps, five hits) every 3, the melody (10 steps) every 5. `check` says the
+# program's period, and names the rhythms the bitwrap ontology names.
+tempo 122
+key dm
+
+deck A: kick e(4,16) | snare e(2,16,4) | hihat/12 x x ~ x vel=55..85
+deck B: bass/12 e(5,12) oct=2 | melody/10 d4 ~ f4 ~ a4 vel=70..95 | harmony/32 chord(dm) ~ ~ chord(bb) oct=3

@@ -1,4 +1,4 @@
-//! F3 tempo curves and the exact tempo map (docs/btw/ext-tempo.md).
+//! F3 tempo curves and the exact tempo map (docs/beatscript/ext-tempo.md).
 //!
 //! ```text
 //! setting     = "tempo" value [ "->" value "over" dur [ shape ] ] ;     (* the program's first bar *)
@@ -14,7 +14,7 @@
 //! [`TempoMap`] is built once, when the program is compiled (sections and timed lines included), and answers
 //! [`TempoMap::seconds_at`], [`TempoMap::bar_at`], [`TempoMap::total_seconds`] and [`TempoMap::bpm_at`]; it is
 //! [`Compiled::tempo_map`]. `check` reports the song's length through it, the evolve report's seconds use it, the
-//! offline render (`djhost::btw_render`) follows it, and the runtime sets the tempo each service pass from the program's
+//! offline render (`djhost::beatscript_render`) follows it, and the runtime sets the tempo each service pass from the program's
 //! position ([`crate::runtime::LiveHost::set_tempo`]).
 
 use crate::ast::{Action, Body, Line, Num, Setting, Stmt, StmtKind};

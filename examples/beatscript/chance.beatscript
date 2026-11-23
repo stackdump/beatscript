@@ -1,0 +1,14 @@
+# chance.beatscript: seeded chance (CC0). Original.
+# A chance is decided by a hash of (seed, bar, step, note): the same text is the same notes on every run, and every bar can differ.
+#   x*8?0.7                                  each of the eight hits is kept with chance 0.7 (30% says the same)
+#   choose [a b c] weights 3 1 1 seed=4      one of the three a bar, a three times as often as b or c
+#   maybe([x ~ x ~], 0.3, 4)                 the pattern with a chance on every hit, seed 4
+# With no sections a chance pattern is unrolled over 16 bars; in a section, over its length (up to 64). `check` says so.
+tempo 128
+key fm
+
+section groove 16 bars {
+  deck A: kick x ~ x ~ | hihat x*16?0.45 vel=45..85 | clap maybe([~ x ~ x], 0.8, 4)
+  deck B: bass choose [f1 ab1 c2] weights 4 2 1 seed=4 ~ f1 ~ oct=1 | melody [c4 eb4 g4 ab4]?60% ~ c5?0.25 ~ inst=pwm-lead
+}
+arrange groove

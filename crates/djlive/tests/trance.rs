@@ -1,6 +1,6 @@
 //! "Say it out loud": trance-138, 64 bars, written two ways. `fixtures/trance-138.live` is the longhand
 //! (trance-138.py makes it): every part one 64-term `<...>` alternation, a rest bar wherever the part
-//! is out. `examples/trance-138.btw` says the same song with lets, two defs, four sections and an
+//! is out. `examples/trance-138.beatscript` says the same song with lets, two defs, four sections and an
 //! `arrange`. Two very different texts, one process: the song written out longhand
 //! (`Compiled::song_nets`) has the same net CIDs as the longhand program's own nets.
 
@@ -8,7 +8,7 @@ use djlive::ast::Deck;
 use djlive::compile::{check, Compiled};
 
 const LONGHAND: &str = include_str!("fixtures/trance-138.live");
-const SONG: &str = include_str!("../../../examples/trance-138.btw");
+const SONG: &str = include_str!("../../../examples/trance-138.beatscript");
 
 fn compiled(src: &str) -> Compiled {
     let c = check(src);

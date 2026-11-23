@@ -1,4 +1,4 @@
-//! Roles: a form template's parts bound to sources (docs/BTW.md "Phrase templates", long note docs/btw/ext-roles.md).
+//! Roles: a form template's parts bound to sources (docs/BEATSCRIPT.md "Phrase templates", long note docs/beatscript/ext-roles.md).
 //!
 //! ```text
 //! arrange from template(passacaglia, @eccl3_season, ground=gen@1 dubstep seed=54876 section=drop part=bass)

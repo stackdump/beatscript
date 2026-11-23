@@ -262,7 +262,7 @@ pub fn svg(name: &str, n: &Node, names: &dyn Names) -> String {
     out
 }
 
-/// The diagrams' colours, light and dark, from the app's design tokens (btwsite/web/css/btw.css: the stage, the panel
+/// The diagrams' colours, light and dark, from the app's design tokens (site/web/css/beatscript.css: the stage, the panel
 /// and line colours, the accent; the code font).
 pub const CSS: &str = r#".rr{--rr-line:#5d6585;--rr-term-bg:#16213e;--rr-term-ink:#eceef6;--rr-term-edge:#e94560;--rr-rule-bg:#12192f;--rr-rule-ink:#88aaff;--rr-rule-edge:#243055;--rr-class-bg:transparent;--rr-class-ink:#56b6c2;--rr-class-edge:#56b6c2;max-width:100%;height:auto;overflow:visible}
 @media (prefers-color-scheme:light){:root:not([data-theme=dark]) .rr{--rr-line:#8d95b0;--rr-term-bg:#fff4f6;--rr-term-ink:#1a1a2e;--rr-term-edge:#e94560;--rr-rule-bg:#eef2ff;--rr-rule-ink:#2848b8;--rr-rule-edge:#9fb0e0;--rr-class-ink:#21808c;--rr-class-edge:#21808c}}

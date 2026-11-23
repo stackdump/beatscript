@@ -34,10 +34,10 @@ const mockMod = (await J('wasm-mock.js')).mockModule();
 let realWasm = false;
 let facade;
 {
-  const glue = path.join(web, 'wasm', 'btw.js');
-  if (fs.existsSync(glue) && !process.env.BTW_MOCK_WASM) {
+  const glue = path.join(web, 'wasm', 'beatscript.js');
+  if (fs.existsSync(glue) && !process.env.BEATSCRIPT_MOCK_WASM) {
     const m = await import(pathToFileURL(glue).href);
-    m.initSync({ module: fs.readFileSync(path.join(web, 'wasm', 'btw_bg.wasm')) });
+    m.initSync({ module: fs.readFileSync(path.join(web, 'wasm', 'beatscript_bg.wasm')) });
     facade = makeFacade(m);
     realWasm = true;
   } else facade = makeFacade(mockMod);
@@ -151,8 +151,8 @@ test('highlight: the plain fallback colours only comments, and not a sharp insid
   assert.deepEqual(spans.map(([a, b]) => t.slice(a, b)), ['# a comment', '# whole line']);
 });
 
-test('highlight: the real btw_highlight covers the text exactly and speaks only the 14 classes', { skip: !realWasm }, () => {
-  const text = fs.readFileSync(path.join(here, '..', 'examples', 'markers-demo.btw'), 'utf8');
+test('highlight: the real beatscript_highlight covers the text exactly and speaks only the 14 classes', { skip: !realWasm }, () => {
+  const text = fs.readFileSync(path.join(here, '..', 'examples', 'markers-demo.beatscript'), 'utf8');
   const spans = facade.highlight(text);
   assert.ok(spans.length > 50);
   const known = new Set(['comment', 'keyword', 'role', 'action', 'deck', 'number', 'step', 'rest', 'generator', 'param', 'operator', 'word', 'string', 'error']);
@@ -621,7 +621,7 @@ test('stream: chunks are scheduled gaplessly, each starting where the one before
   assert.equal(p.done, true);
   assert.ok(Math.abs(p.received - 3) < 1e-9);
   const t0 = ctx.starts[0].t;
-  assert.equal(p.grid(), null, 'no clock until BtwRun has played a deck: a grid before its play would put bar 0 one bar late');
+  assert.equal(p.grid(), null, 'no clock until BeatscriptRun has played a deck: a grid before its play would put bar 0 one bar late');
   p.echo([{ op: 'play', deck: 'A', on: true }, { op: 'play', deck: 'B', on: false }]);
   assert.equal(p.grid().beat, 0, 'before the clock reaches the first sound the beat is 0');
   ctx.currentTime = t0 + 1;
@@ -958,7 +958,7 @@ test('security: what becomes part of a URL path is checked first (CID, example n
   await api.lineage(cid);
   await api.exampleText('hand-dubstep-140-v4');
   await api.report('PqjBDf8367OflXp4zG-TKQ', {});
-  assert.deepEqual(seen, [`GET /api/programs/${cid}`, `PUT /api/programs/${cid}`, `GET /api/render/${cid}/status`, `GET /api/lineage/${cid}`, 'GET /examples/hand-dubstep-140-v4.btw', 'POST /api/session/PqjBDf8367OflXp4zG-TKQ/report']);
+  assert.deepEqual(seen, [`GET /api/programs/${cid}`, `PUT /api/programs/${cid}`, `GET /api/render/${cid}/status`, `GET /api/lineage/${cid}`, 'GET /examples/hand-dubstep-140-v4.beatscript', 'POST /api/session/PqjBDf8367OflXp4zG-TKQ/report']);
   assert.equal(api.renderUrl(cid), `/api/render/${cid}?format=wav&sr=44100&v=r2`);
   assert.equal(api.renderUrl(cid, 'opus'), `/api/render/${cid}?format=opus&v=r2`);
   assert.equal(api.renderUrl(cid, 'x&y=1', 7), `/api/render/${cid}?format=wav&sr=44100&v=r2`, 'format and rate are from a short list');
@@ -1684,7 +1684,7 @@ test('assist: several edits are one replacement (one undo), in order', () => {
 });
 
 test('assist: hover markdown is escaped HTML with code', () => {
-  const html = am.mdToHtml('```btw\nsection drop 16 bars\n```\n\n16 bars <b>, `x` & co');
+  const html = am.mdToHtml('```beatscript\nsection drop 16 bars\n```\n\n16 bars <b>, `x` & co');
   assert.equal(html, '<pre class="as-code">section drop 16 bars</pre><p>16 bars &lt;b&gt;, <code>x</code> &amp; co</p>');
 });
 
@@ -1842,12 +1842,12 @@ test('scrub: the throttle calls at once, then at most once an interval with the 
   assert.deepEqual(got.at(-1), 'd');
 });
 
-test('scrub: the real module says what each literal is (btw/numberAt), and a scrub of each keeps the program checkable', { skip: !realWasm || !facade.ls ? 'no built module with BeatscriptLs' : false }, () => {
+test('scrub: the real module says what each literal is (beatscript/numberAt), and a scrub of each keeps the program checkable', { skip: !realWasm || !facade.ls ? 'no built module with BeatscriptLs' : false }, () => {
   const ls = facade.ls();
   const text = 'tempo 124\nswing 0.1\nkey am\ndeck A: kick e(5, 8, 2) vel=90..110 | hihat x*8?0.7 len=2\ndeck B: bass 1 ~ 3 5 oct=2 | melody c4 e4 g4 ~ | harmony i VI III VII\nat bar 16: master: filter lp 2000 -> 8000 over 8 bars\nmaster: delay 0.3\n';
   assert.ok(facade.check(text).ok);
   ls.open('main', text);
-  const q = (at) => JSON.parse(ls.request('btw/numberAt', JSON.stringify({ textDocument: { uri: 'main' }, position: am.lspPos(text, at) })));
+  const q = (at) => JSON.parse(ls.request('beatscript/numberAt', JSON.stringify({ textDocument: { uri: 'main' }, position: am.lspPos(text, at) })));
   const tempo = q(text.indexOf('124'));
   assert.equal(tempo.kind, 'tempo');
   assert.deepEqual([tempo.min, tempo.max, tempo.unit, tempo.integer], [40, 300, 'bpm', false]);
@@ -1894,7 +1894,7 @@ test('mixer: the engine\'s Dj.mixer() JSON is reported while the engine plays, n
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// the share dialog's rights line: one line, and the link to /authorship (the one text, btwserve)
+// the share dialog's rights line: one line, and the link to /authorship (the one text, beatscript-serve)
 // ---------------------------------------------------------------------------------------------------------------
 
 test('the share dialog says one line on rights and links /authorship', () => {
@@ -1913,11 +1913,11 @@ test('the share dialog says one line on rights and links /authorship', () => {
 
 // ---------------------------------------------------------------------------------------------------------------
 // the name is BeatScript: no page says "btw" where a person reads it (product imperative BeatScript #11). Code is
-// exempt (`#! btw 1`, `.btw`, `btw_` tokens, data-btw, css/btw.css, btw.bitwrap.io): only prose, titles and meta.
-// btwserve's own pages have the same check (crates/btwserve/src/docs.rs).
+// exempt (`#! btw 1`, `.beatscript`, `btw_` tokens, data-beatscript, css/beatscript.css, btw.bitwrap.io): only prose, titles and meta.
+// beatscript-serve's own pages have the same check (crates/beatscript-serve/src/docs.rs).
 // ---------------------------------------------------------------------------------------------------------------
 
-// a following '.' joins only a host or a file name (btw.bitwrap.io, btw.css), not a sentence's end
+// a following '.' joins only a host or a file name (btw.bitwrap.io, beatscript.css), not a sentence's end
 const STANDALONE_BTW = /(?<![A-Za-z0-9_./:#$`'-])btw(?![A-Za-z0-9_/:`'-]|\.[A-Za-z0-9])/gi;
 
 /** What a person reads on a page: its title, its meta descriptions and its text, without code, scripts or styles. */
@@ -2105,7 +2105,7 @@ test('wasm facade: know() tells the module a program, and an import of a CID it 
   assert.equal(f.check(text).ok, true);
   assert.equal(f.know('not a cid', 'x').ok, false);
   // a module that predates it has no know(): the facade says so, and the page fetches nothing
-  assert.equal(makeFacade({ btw_check: () => '{}' }).know, null);
+  assert.equal(makeFacade({ beatscript_check: () => '{}' }).know, null);
   assert.deepEqual(f.open('zNotALink').bundle ?? {}, {}, 'the mock hands no bundle back');
   wasm.mockForget();
 });
@@ -2132,7 +2132,7 @@ test('real wasm: an import resolves from what it was told, refuses a text that i
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// the embed player's position line (embed-model.js; /embed/<CID>, btwserve cards/embed.rs)
+// the embed player's position line (embed-model.js; /embed/<CID>, beatscript-serve cards/embed.rs)
 // ---------------------------------------------------------------------------------------------------------------
 
 const embedModel = await J('embed-model.js');
@@ -2166,7 +2166,7 @@ test('embed: the doc line is the playing section\'s doc comment, from the progra
 
 const renderModel = await import(pathToFileURL(path.join(here, '..', 'web', 'js', 'render-model.js')).href);
 
-test('player render: one pass is btwd render\'s plan (a song once, `end at bar N`, else 16), capped at 256 bars and 600 s', () => {
+test('player render: one pass is beatscript render\'s plan (a song once, `end at bar N`, else 16), capped at 256 bars and 600 s', () => {
   const plan = renderModel.renderPlan;
   assert.deepEqual([plan({ tempo: 120, arranged: true, song_bars: 32 }).bars, plan({ tempo: 120, arranged: true, song_bars: 32 }).cut], [32, null]);
   assert.equal(plan({ tempo: 120, arranged: true, song_bars: 32, end_bar: 10 }).bars, 10, 'an end cuts the song');
@@ -2184,7 +2184,7 @@ test('player render: one pass is btwd render\'s plan (a song once, `end at bar N
   assert.equal(slow.seconds, 600);
 });
 
-test('player render: frames are btwd\'s frame_of; 16-bit samples round half away from zero and clamp', () => {
+test('player render: frames are beatscript\'s frame_of; 16-bit samples round half away from zero and clamp', () => {
   assert.equal(renderModel.framesOf(4, 120, 44100), 352800);
   assert.equal(renderModel.framesOf(4, 128, 44100), 330750);
   assert.equal(renderModel.framesOf(1, 140, 48000), Math.round((240 / 140) * 48000));
@@ -2216,7 +2216,7 @@ test('player render: the position line at a time in the render, in the runtime\'
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// the editor's render source (render-player.js, source-model.js): the CID cache, the clock it gives BtwRun, the switch
+// the editor's render source (render-player.js, source-model.js): the CID cache, the clock it gives BeatscriptRun, the switch
 // ---------------------------------------------------------------------------------------------------------------
 
 const renderPlayerMod = await import(pathToFileURL(path.join(here, '..', 'web', 'js', 'render-player.js')).href);
@@ -2287,7 +2287,7 @@ test('render source: renders once a CID, then plays from the cache; Stop is sile
   assert.deepEqual([aborted, p3.state, ctx.started.length - n], [true, 'stopped', 0], 'the render is aborted and nothing starts');
 });
 
-test('render source: the clock BtwRun runs on is the audio position; forward seeks count on, back restarts on a fresh run from bar 0', async () => {
+test('render source: the clock BeatscriptRun runs on is the audio position; forward seeks count on, back restarts on a fresh run from bar 0', async () => {
   const ctx = fakeCtx();
   const report = { cid: 'zC', tempo: 120, arranged: true, song_bars: 8, ok: true };
   const p = new renderPlayerMod.RenderPlayer({ context: ctx, destination: {}, module: {}, text: 't', report, render: async () => ({ result: fakeResult(8, 120), via: 'page' }), element: false });
@@ -2439,7 +2439,7 @@ test('source switch: render as a choice, remembered per browser; the stutter hin
 
 // ---------------------------------------------------------------------------------------------------------------
 // the radio: station-model.js (pure) and the mock's station answer (wasm-mock.js mockStation, the stand-in for
-// btw_station and POST /api/station)
+// beatscript_station and POST /api/station)
 // ---------------------------------------------------------------------------------------------------------------
 
 {
@@ -2733,10 +2733,10 @@ test('source switch: render as a choice, remembered per browser; the stutter hin
     assert.equal(sm.parseShare(new URLSearchParams({ s: 'x'.repeat(40000), n: '1' })).text, undefined, 'a text past the bound is not taken');
   });
 
-  test('radio: the facade\'s station is the module\'s btw_station (the mock\'s here), and the mock answers the contract', () => {
+  test('radio: the facade\'s station is the module\'s beatscript_station (the mock\'s here), and the mock answers the contract', () => {
     const f = makeFacade(mockMod);
     assert.equal(typeof f.station, 'function');
-    assert.equal(makeFacade({ ...mockMod, btw_station: undefined }).station, null, 'a module without it: the page asks the server');
+    assert.equal(makeFacade({ ...mockMod, beatscript_station: undefined }).station, null, 'a module without it: the page asks the server');
     const req = { station: sm.DEFAULT_STATION, n: 2, count: 3, segue: true, check: true, neighbours: true };
     const a = f.station(req);
     assert.deepEqual(a, mockStation(req), 'deterministic');

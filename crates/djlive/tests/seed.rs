@@ -1,4 +1,4 @@
-//! `seed(genre, n[, structure])` (seed.rs, docs/BTW.md "Start from a seed"):
+//! `seed(genre, n[, structure])` (seed.rs, docs/BEATSCRIPT.md "Start from a seed"):
 //! - the track a seed names is beats.bitwrap.io's: the generator's model CID is the one beats' own JavaScript wrote;
 //! - its BeatScript plays the notes the generator plays: every onset and pitch, bar by bar, for a sample of genres,
 //!   seeds and structures (velocity and length are a part's, so those are near, not exact; measured below);
@@ -165,15 +165,15 @@ fn a_reference_is_spelt_one_way() {
 fn seeds_v1_are_pinned() {
     let t = seed::track("techno", 42, "standard");
     assert_eq!(t.name, "techno · Rusted Spine");
-    let golden = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/seed/techno-42.btw")).unwrap();
+    let golden = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/seed/techno-42.beatscript")).unwrap();
     let e = match seed::expand("arrange from seed(techno, 42)\n") {
         Some(Ok(e)) => e,
         other => panic!("{other:?}"),
     };
-    if std::env::var("BTW_BLESS").is_ok() {
-        std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/seed/techno-42.btw"), &e.text).unwrap();
+    if std::env::var("BEATSCRIPT_BLESS").is_ok() {
+        std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/seed/techno-42.beatscript"), &e.text).unwrap();
     } else {
-        assert_eq!(e.text, golden, "seed(techno, 42) no longer writes out as it did: that is seeds v2 (BTW_BLESS=1 only if it is meant)");
+        assert_eq!(e.text, golden, "seed(techno, 42) no longer writes out as it did: that is seeds v2 (BEATSCRIPT_BLESS=1 only if it is meant)");
     }
     // the program CID of the one-line reference
     assert_eq!(compiled("arrange from seed(techno, 42)\n").cid, "z4EBG9jEPpNLAqXAf6Rz4KkpfPnEWFKNhK2vxXhx2Hqzcx3CcoE");

@@ -2,28 +2,28 @@
 
 beatscript.app plays a program two ways (`pickSource`, `web/js/app.js`):
 
-- **stream**: `GET /api/render/<cid>`, which pipes `btwd render` (`crates/btwd`) through a WAV header or ffmpeg.
+- **stream**: `GET /api/render/<cid>`, which pipes `beatscript render` (`crates/beatscript-cli`) through a WAV header or ffmpeg.
 - **engine**: `web/js/engine.js` + `web/js/engine-calls.js` driving djrust's wasm facade (`Dj`) in an AudioWorklet.
 
 This directory renders both from the same text, headlessly, and compares them bar by bar. Findings, ranked:
 [`../../PARITY.md`](../../PARITY.md).
 
 ```
-make parity                                   # repros + site examples, then the loop check (BTWD= the btwd binary)
+make parity                                   # repros + site examples, then the loop check (BEATSCRIPT_CLI= the beatscript binary)
 node site/test/parity/run.mjs --corpus repros,examples,<dir>... [--only REGEX] [--keep-wav] [--out DIR]
 node site/test/parity/loop.mjs             # `loop` in the engine vs the same arrangement written out
-node site/test/parity/loop-status.mjs [file.btw]   # the header's numbers through a looping program (Node only)
-PARITY_WASM_DIR=<dir with btw.js, btw_bg.wasm> ...    # test another build of the module (the deployed one, say)
+node site/test/parity/loop-status.mjs [file.beatscript]   # the header's numbers through a looping program (Node only)
+PARITY_WASM_DIR=<dir with beatscript.js, beatscript_bg.wasm> ...    # test another build of the module (the deployed one, say)
 ```
 
 Needs `site/web/wasm/` (`scripts/build-web-wasm.sh site/web/wasm`), Chrome (`CHROME=`, default
-`/usr/bin/google-chrome` or the macOS path) and btwd (`--btwd`, `BTWD_BIN`, or `site/bin/btwd`). Each script prints
+`/usr/bin/google-chrome` or the macOS path) and beatscript (`--beatscript`, `BEATSCRIPT_BIN`, or `site/bin/beatscript`). Each script prints
 SKIP and exits 0 when one is missing. Chrome must be able to open its DevTools port: inside a network sandbox that
 blocks it, the launch fails with "Chrome did not come up".
 
 ## How
 
-- **stream**: `btwd render --sr 48000 --format s16le --max-bars 512`, the same bytes the site serves (without the header).
+- **stream**: `beatscript render --sr 48000 --format s16le --max-bars 512`, the same bytes the site serves (without the header).
 - **engine**: `web/parity.html` runs the real `createEngine` into an `OfflineAudioContext`. The context is suspended every
   1024 frames (~21 ms, the page's 25 ms loop) and the loop body runs then: `engine.apply(run.service(engine.grid()))`.
   The worklet's grid reports are let in first; the composer's compile of a net is waited for (a live page hides it behind
@@ -36,7 +36,7 @@ blocks it, the launch fails with "Chrome did not come up".
   each is placed in a bar of the render (`perf` per program and in `report.json`: slow bars, how many are flagged, section
   starts with a slow block and whether they landed late). Real-time slow blocks and underrun: `test/audio-perf.mjs`.
 - **inventory**: every registry call the runtime hands the engine is recorded with the engine's `ignored` events and
-  the console's `btw engine: ignoring ...` lines.
+  the console's `BeatScript engine: ignoring ...` lines.
 
 `--gate REGEX` (default `^00-base$`, the repro with no control lines) names programs that must not have a flagged bar;
 the run exits 1 otherwise. With no control lines the two renders are sample-identical today, so the gate catches any
@@ -44,7 +44,7 @@ drift in the engine path (a message landing a quantum late, a different start, a
 
 ## The repros
 
-`repros/NN-*.btw`: one 8-bar base groove (kick, hats, clap on A; sub bass and pad on B) plus one feature each, so a
+`repros/NN-*.beatscript`: one 8-bar base groove (kick, hats, clap on A; sub bass and pad on B) plus one feature each, so a
 difference is the feature's. `00-base` has none.
 
 ## Outputs (git-ignored, `out*/`)

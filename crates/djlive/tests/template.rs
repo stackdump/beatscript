@@ -1,4 +1,4 @@
-//! `template(name, phrase)` (template.rs, docs/BTW.md "Phrase templates"):
+//! `template(name, phrase)` (template.rs, docs/BEATSCRIPT.md "Phrase templates"):
 //! - the phrase's stress, syllables and meter make the vocal line: accents, length, subdivision (hand-made profiles);
 //! - a template is deterministic: the same phrase is the same text and CID, another phrase is another;
 //! - the reference plays as the BeatScript it is written out to, and that text is pinned (templates v1);
@@ -407,15 +407,15 @@ fn templates_v1_are_pinned() {
         ("form-rondo-triplet", "arrange from template(rondo, @byron_assyrian_wolf)\n"),
         ("form-cross", "arrange from template(cross, @psalm42_deep_calleth)\n"),
     ] {
-        let path = format!("{}/tests/fixtures/template/{name}.btw", env!("CARGO_MANIFEST_DIR"));
+        let path = format!("{}/tests/fixtures/template/{name}.beatscript", env!("CARGO_MANIFEST_DIR"));
         let got = expanded(src);
-        if std::env::var("BTW_BLESS").is_ok() {
+        if std::env::var("BEATSCRIPT_BLESS").is_ok() {
             std::fs::create_dir_all(std::path::Path::new(&path).parent().unwrap()).unwrap();
             std::fs::write(&path, &got).unwrap();
             continue;
         }
-        let want = std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("no golden {path} (BTW_BLESS=1 writes it)"));
-        assert_eq!(got, want, "templates {} changed {name}: that is templates v2 (BTW_BLESS=1 rewrites the golden)", template::VERSION);
+        let want = std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("no golden {path} (BEATSCRIPT_BLESS=1 writes it)"));
+        assert_eq!(got, want, "templates {} changed {name}: that is templates v2 (BEATSCRIPT_BLESS=1 rewrites the golden)", template::VERSION);
     }
 }
 
@@ -594,14 +594,14 @@ fn every_template_has_a_checking_example() {
     assert!(template::find("deep-house").is_some() && template::find("nope").is_none());
 }
 
-/// Each template's example programs are in `examples/btw/`, use that template, and say what you hear (a comment line).
+/// Each template's example programs are in `examples/beatscript/`, use that template, and say what you hear (a comment line).
 #[test]
 fn a_templates_examples_are_programs_that_use_it() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript");
     for t in template::TEMPLATES.iter().filter(|t| t.form.is_none()) {
         assert!(t.examples.len() >= 3, "{}", t.name);
         for name in t.examples {
-            let src = std::fs::read_to_string(dir.join(format!("{name}.btw"))).unwrap_or_else(|_| panic!("examples/btw/{name}.btw"));
+            let src = std::fs::read_to_string(dir.join(format!("{name}.beatscript"))).unwrap_or_else(|_| panic!("examples/beatscript/{name}.beatscript"));
             assert!(src.contains(&format!("arrange from template({}, ", t.name)), "{name}");
             assert!(src.lines().filter(|l| l.starts_with("# ")).count() >= 3, "{name} says what it is and what you hear");
             let w = warnings(&src);
@@ -609,11 +609,11 @@ fn a_templates_examples_are_programs_that_use_it() {
         }
     }
     // the three of deep-house: an iambic line, an anapestic one (the triplet feel), and any words
-    let feel = |name: &str| expanded(&std::fs::read_to_string(dir.join(format!("{name}.btw"))).unwrap()).contains("melody/12");
+    let feel = |name: &str| expanded(&std::fs::read_to_string(dir.join(format!("{name}.beatscript"))).unwrap()).contains("melody/12");
     assert_eq!((feel("such-stuff-as-dreams-122"), feel("assyrian-122"), feel("commit-message-122")), (false, true, false));
 }
 
-// ---------------------------------------------------------------- the forms (docs/btw/forms.md)
+// ---------------------------------------------------------------- the forms (docs/beatscript/forms.md)
 
 /// The arrange block of a written-out program: the lines between `arrange {` and its `}`.
 fn arrange_lines(text: &str) -> Vec<String> {
@@ -697,14 +697,14 @@ fn a_form_is_what_its_table_says() {
     }
 }
 
-/// A form's reference program is a whole hand-written track in `examples/btw/` whose text is the CID the table names.
+/// A form's reference program is a whole hand-written track in `examples/beatscript/` whose text is the CID the table names.
 #[test]
 fn a_forms_reference_is_the_program_it_names() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript");
     let mut n = 0;
     for (t, f) in template::forms() {
         let Some((name, cid)) = f.reference else { continue };
-        let src = std::fs::read_to_string(dir.join(format!("{name}.btw"))).unwrap_or_else(|_| panic!("{}: examples/btw/{name}.btw", t.name));
+        let src = std::fs::read_to_string(dir.join(format!("{name}.beatscript"))).unwrap_or_else(|_| panic!("{}: examples/beatscript/{name}.beatscript", t.name));
         assert_eq!(compiled(&src).cid, cid, "{}: {name}", t.name);
         // a check-clean holdout: no warning, but for the one the program was written with (its code is never edited, so an
         // escape for the words cannot be added; the day the lexicon has them, this says so)
@@ -713,7 +713,7 @@ fn a_forms_reference_is_the_program_it_names() {
         assert_eq!(w, known, "{name}: its warnings moved (update the holdout and the comment in the file)");
         // and it carries its source: in its comments, and as linked data beside it (isBasedOn the public-domain works)
         assert!(src.lines().filter(|l| l.starts_with("# ")).any(|l| l.contains("public domain") || l.contains("public-domain")), "{name} says where its themes are from");
-        let ld = djengine::json::JsonValue::parse(&std::fs::read_to_string(dir.join(format!("{name}.jsonld"))).unwrap_or_else(|_| panic!("examples/btw/{name}.jsonld"))).unwrap();
+        let ld = djengine::json::JsonValue::parse(&std::fs::read_to_string(dir.join(format!("{name}.jsonld"))).unwrap_or_else(|_| panic!("examples/beatscript/{name}.jsonld"))).unwrap();
         assert_eq!(ld.get("identifier").and_then(|v| v.as_str()), Some(cid), "{name}.jsonld");
         assert_eq!(ld.get("genre").and_then(|v| v.as_str()), Some(format!("https://beatscript.app/ontology/concept/form-{}", t.name).as_str()));
         let based = ld.get("isBasedOn").and_then(|v| v.as_array()).unwrap_or_else(|| panic!("{name}.jsonld has no isBasedOn"));
@@ -727,12 +727,12 @@ fn a_forms_reference_is_the_program_it_names() {
     assert_eq!(n, 3);
 }
 
-/// The two reference programs of docs/btw/found-phrases.md are whole hand-written tracks in `examples/btw/`: each is the text
+/// The two reference programs of docs/beatscript/found-phrases.md are whole hand-written tracks in `examples/beatscript/`: each is the text
 /// whose CID the page names, with its source in a comment and beside it as linked data. Their lexicon warnings are pinned (the
 /// programs are as written, so an escape cannot be added; the day the lexicon has the words, this says so).
 #[test]
 fn the_found_phrases_reference_programs_are_the_programs_the_page_names() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript");
     let found: &[(&str, &str, &[&str])] = &[
         ("such-stuff-as-dreams-122-reference", "z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK", &[
             "not in the BeatScript lexicon, sounded out by the rules: `such` /s uh ch/, `stuff` /s t uh f/, `dreams` /d r ee m s/",
@@ -744,11 +744,11 @@ fn the_found_phrases_reference_programs_are_the_programs_the_page_names() {
         ]),
     ];
     for (name, cid, known) in found {
-        let src = std::fs::read_to_string(dir.join(format!("{name}.btw"))).unwrap_or_else(|_| panic!("examples/btw/{name}.btw"));
+        let src = std::fs::read_to_string(dir.join(format!("{name}.beatscript"))).unwrap_or_else(|_| panic!("examples/beatscript/{name}.beatscript"));
         assert_eq!(compiled(&src).cid, *cid, "{name}");
         assert_eq!(warnings(&src), *known, "{name}: its warnings moved (update the holdout and the comment in the file)");
         assert!(src.lines().filter(|l| l.starts_with("# ")).any(|l| l.to_ascii_lowercase().contains("public domain")), "{name} says where its words are from");
-        let ld = djengine::json::JsonValue::parse(&std::fs::read_to_string(dir.join(format!("{name}.jsonld"))).unwrap_or_else(|_| panic!("examples/btw/{name}.jsonld"))).unwrap();
+        let ld = djengine::json::JsonValue::parse(&std::fs::read_to_string(dir.join(format!("{name}.jsonld"))).unwrap_or_else(|_| panic!("examples/beatscript/{name}.jsonld"))).unwrap();
         assert_eq!(ld.get("identifier").and_then(|v| v.as_str()), Some(*cid), "{name}.jsonld");
         let based = ld.get("isBasedOn").and_then(|v| v.as_array()).unwrap_or_else(|| panic!("{name}.jsonld has no isBasedOn"));
         assert!(!based.is_empty());

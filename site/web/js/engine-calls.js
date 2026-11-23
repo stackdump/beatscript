@@ -1,7 +1,7 @@
 /**
- * engine-calls.js: what a btw program's control lines mean to the browser engine.
+ * engine-calls.js: what a BeatScript program's control lines mean to the browser engine.
  *
- * `BtwRun.service()` hands the page `{"op":"call","noun":"inserts","params":{...}}` for every control line that
+ * `BeatscriptRun.service()` hands the page `{"op":"call","noun":"inserts","params":{...}}` for every control line that
  * fires: the same calls the desktop makes on its control-language registry. The desktop has the whole registry
  * (insert chains, moves, loops, auto-DJ, ...); the browser engine is djrust's public wasm facade (`Dj`), which has
  * a deck strip, a master FX unit and a few live ops. `mapCall` says what each call becomes there, as a list of

@@ -36,10 +36,10 @@ pub const SUGAR: [(&str, &str); 14] = [
     ("automix", "automix"),
     ("record", "record"),
 ];
-/// Words the extensions (docs/BTW-EXTENSIONS.md) give a meaning to. Most are syntax in ONE position only (`pad(` before a
+/// Words the extensions (docs/BEATSCRIPT-EXTENSIONS.md) give a meaning to. Most are syntax in ONE position only (`pad(` before a
 /// parenthesis, `step` after `over 4 bars`, `in:` in a def header), so they are not reserved: they name a let, a def or a
 /// section as they did before the extensions, and the places where the language reads them as syntax are told apart by
-/// position (`reserved`, `prepass`; docs/BTW.md "Decisions"). A feature that adds a word adds it here, and to
+/// position (`reserved`, `prepass`; docs/BEATSCRIPT.md "Decisions"). A feature that adds a word adds it here, and to
 /// [`EXT_RESERVED`] only if it starts a construct that a name could not be told from.
 pub const EXT_WORDS: [&str; 65] = [
     "stack", "then", "silence", "wire", "assert", "sing", "duck", "under", "mix", "choose", "maybe", "weights", "deg", "lfo", "sine", "tri", "square", "saw", "exp", "log", "step", "beat", "beats", "in", "out", "ends", "period",
@@ -55,7 +55,7 @@ pub const STATEMENT_WORDS: [&str; 28] = [
     "control", "station",
 ];
 pub const KEY_VERBS: [&str; 6] = ["status", "detect", "set", "lock", "tempo", "compat"];
-/// What the control deck takes, after `control:` (docs/btw/ext-control.md): the engine calls that take no target.
+/// What the control deck takes, after `control:` (docs/beatscript/ext-control.md): the engine calls that take no target.
 pub const CONTROL_DECK_WORDS: [&str; 10] = ["move", "swap pairs", "load pair", "queue", "crossfader", "tempo", "duck", "mix", "do", "a sugar noun (freeze, vocoder, wheel ...)"];
 
 /// Is a `control` with `next` after it and `prev` before it the control deck's head? Before a colon, where a line's head goes:
@@ -361,7 +361,7 @@ fn line_is_assert_never(out: &[Token]) -> bool {
 
 /// Is `toks[i]`, a word that names a scalar `let`, the let's name here, or a word of the language that is read where it
 /// stands? A few words of the extensions are syntax in one position only; there the word is what the language reads, and
-/// the let is not put in place (docs/BTW.md "Decisions", reserved by position): a function before `(` (`min(`, `pad(`), a
+/// the let is not put in place (docs/BEATSCRIPT.md "Decisions", reserved by position): a function before `(` (`min(`, `pad(`), a
 /// wave after `lfo`, a shape after a duration (`over 4 bars step 4`), a `beat` or `beats` after a number, the first word of
 /// an `assert` (`ends`, `never`), a constraint's `beside`, `during` and `ends on`, `in` in an `assert`, a port in a def header or
 /// after `emit` or a dot (`a.out`), a mix item's `eq` or `pan`, the `weights` of a `choose`, `mix {` and `duck B`, and the words of
@@ -1058,7 +1058,7 @@ impl<'a> Parser<'a> {
         let Tok::Word(w) = self.peek().clone() else {
             return Err(self
                 .expected(&["a setting (tempo, key, swing)", "`deck A:`", "`master:`", "`every N bars:`", "`on phrase:`", "`at bar N:`", "`let`", "`def`", "`section`", "`do`"], &format!("a statement cannot start with {}", self.found()))
-                .help("a line is `deck A: kick x ~ x ~`, `master: filter lp 2k`, `every 16 bars: swap pairs`; see docs/BTW.md"));
+                .help("a line is `deck A: kick x ~ x ~`, `master: filter lp 2k`, `every 16 bars: swap pairs`; see docs/BEATSCRIPT.md"));
         };
         let key_is_setting = || {
             // `key am`, `key d:dorian`: a setting. `key detect deck=A`: the registry's `key`.
@@ -1763,11 +1763,11 @@ impl<'a> Parser<'a> {
         Ok(w)
     }
 
-    /// A line, and the `when` guard after it if there is one (docs/btw/ext-arith.md).
+    /// A line, and the `when` guard after it if there is one (docs/beatscript/ext-arith.md).
     pub(crate) fn line(&mut self) -> R<Line> {
         let mut l = self.line_body()?;
         if self.word_is("when") {
-            // a guard guards the whole line (docs/btw/ext-arith.md); after a line of several parts that reads as if it guarded the
+            // a guard guards the whole line (docs/beatscript/ext-arith.md); after a line of several parts that reads as if it guarded the
             // last, so it is said
             if let Body::Parts(parts) = &l.body {
                 if parts.len() > 1 {
@@ -1822,7 +1822,7 @@ impl<'a> Parser<'a> {
                 return Err(two_heads(self.span(), sp.text(self.src)));
             }
         } else if self.control_head_next() {
-            // `control:`, the control deck: a line of engine calls only (docs/btw/ext-control.md)
+            // `control:`, the control deck: a line of engine calls only (docs/beatscript/ext-control.md)
             let s = self.span();
             self.bump();
             self.bump();
@@ -1930,7 +1930,7 @@ impl<'a> Parser<'a> {
         self.word_is("control") && self.peek_n(1) == &Tok::Colon
     }
 
-    /// What the control deck holds, after `control:` (docs/btw/ext-control.md): an engine call that takes no target, as the
+    /// What the control deck holds, after `control:` (docs/beatscript/ext-control.md): an engine call that takes no target, as the
     /// line with no head holds it: `move`, `swap pairs`, `load pair`, `queue`, `crossfader`, a timed `tempo`, a `duck`, a
     /// `mix`, a `do` and its sugar nouns. A part, a note, a strip's action, a deck's transport, a `sing` or a def's call is an
     /// error that says where it goes.
@@ -1971,7 +1971,7 @@ impl<'a> Parser<'a> {
                 let ex = ex.replace("reverb", &w);
                 Err(Diagnostic::error(at, format!("`{w}` turns a deck's or the master's strip, so it is not a line of the control deck")).help(format!("{deck_line}: {ex}")))
             }
-            "macro" => Err(Diagnostic::error(at, "`macro` is designed and not built yet (docs/btw/ext-control.md)")
+            "macro" => Err(Diagnostic::error(at, "`macro` is designed and not built yet (docs/beatscript/ext-control.md)")
                 .help("an aux macro fires with `control: aux macro=cathedral deck=A bars=2`, a trick with `control: trick on deck=A kind=riser`")),
             _ if ROLES.contains(&w.as_str()) || self.pexpr_next() => Err(Diagnostic::error(at, format!("the control deck holds engine calls, never parts or notes: `{w}` is a part"))
                 .help("a part goes on a note deck: `deck A: kick x ~ x ~`")),
@@ -2604,7 +2604,7 @@ impl<'a> Parser<'a> {
                 } else if w == "set" {
                     d = d.help("a set is `set {` with its brace on the same line, then `play` and `mix` lines: set { play NAME  mix 8 bars with crossfade  play OTHER }");
                 } else if w == "macro" {
-                    d = d.help("`macro` is designed and not built yet (docs/btw/ext-control.md): an aux macro fires with `aux macro=cathedral deck=A bars=2`, a trick with `trick on deck=A kind=riser`");
+                    d = d.help("`macro` is designed and not built yet (docs/beatscript/ext-control.md): an aux macro fires with `aux macro=cathedral deck=A bars=2`, a trick with `trick on deck=A kind=riser`");
                 } else if let Some(n) = near {
                     d = d.help(format!("did you mean `{n}`?"));
                 }

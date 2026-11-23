@@ -1,4 +1,4 @@
-//! Saved btw programs (docs/BTW.md): licensed objects, as `.btw` files.
+//! Saved BeatScript programs (docs/BEATSCRIPT.md): licensed objects, as `.beatscript` files.
 //!
 //! A saved program is a track object (docs/LICENSING.md): the program's canonical text and its
 //! rights, CC0-1.0 and public unless said, with an author, `forkedFrom` (the parent program's CID)
@@ -8,8 +8,8 @@
 //!   and `forkedFrom` name, so formatting and licensing never fork a program;
 //! - the **object CID** (of the text and the rights, like a track's) names the file.
 //!
-//! A file `<object cid>.btw` is a btw program with `#!` header lines, which the language reads as the
-//! comments they are, so any `.btw` runs as it is:
+//! A file `<object cid>.beatscript` is a BeatScript program with `#!` header lines, which the language reads as the
+//! comments they are, so any `.beatscript` runs as it is:
 //!
 //! ```text
 //! #! btw 1
@@ -25,7 +25,7 @@
 //! ...
 //! ```
 //!
-//! `genre` and `tags` (docs/btw/ext-linked.md) link the program to the bitwrap ontology: written as full IRIs, read in
+//! `genre` and `tags` (docs/beatscript/ext-linked.md) link the program to the bitwrap ontology: written as full IRIs, read in
 //! any spelling the vocabulary knows (`techno`, `genre:techno`, `bw:Techno`), checked against the cached vocabulary
 //! (`ontology.rs`) when they are saved or imported (an unknown one is an error with a did-you-mean). They are part of
 //! the object, not of the program: a change of genre or tags is a new object of the same program, as a new license is.
@@ -43,7 +43,7 @@ use djlive::diag::{Diagnostic, Severity};
 use djlive::env::Snippets;
 use djlive::linked::{self, Links};
 
-use crate::btw_env::BtwEnv;
+use crate::beatscript_env::BeatscriptEnv;
 use crate::stores::{env_or_support, pretty_sorted, read_json, write_atomic};
 
 pub struct LiveStore {
@@ -121,7 +121,7 @@ impl Object {
         djengine::cid::share_cid_canonical(&self.to_json().canonical_js())
     }
 
-    /// The `.btw` file's text: the header, then the program.
+    /// The `.beatscript` file's text: the header, then the program.
     pub fn to_file(&self) -> String {
         let mut s = String::from("#! btw 1\n");
         s.push_str(&format!("#! name: {}\n", self.name.replace('\n', " ")));
@@ -141,7 +141,7 @@ impl Object {
         s
     }
 
-    /// Read a `.btw` file (any program text, with or without the header): the header's name and
+    /// Read a `.beatscript` file (any program text, with or without the header): the header's name and
     /// rights, the program as written. Rights not in the header are the defaults. The program is
     /// canonicalised by the caller's check.
     pub fn from_file(file: &str) -> Result<(Object, String), String> {
@@ -226,13 +226,13 @@ impl LiveStore {
     }
 
     fn path(&self, object: &str) -> PathBuf {
-        self.directory.join(format!("{object}.btw"))
+        self.directory.join(format!("{object}.beatscript"))
     }
 
-    /// Where the programs a link carried are kept, text only: `.linked/<program cid>.btw`. A dot-directory is no saved
+    /// Where the programs a link carried are kept, text only: `.linked/<program cid>.beatscript`. A dot-directory is no saved
     /// program, so none of them is listed, renamed or credited; they are only found again by their whole CID, by an `import`.
     fn linked_path(&self, cid: &str) -> PathBuf {
-        self.directory.join(".linked").join(format!("{cid}.btw"))
+        self.directory.join(".linked").join(format!("{cid}.beatscript"))
     }
 
     /// Keep the programs a link carried (CID to canonical text, `djlive::share::Link::tracks`), so that a program that imports
@@ -299,7 +299,7 @@ impl LiveStore {
 
     /// Check a program against the registry, the engine's instruments and this store's snippets.
     pub fn check(&self, text: &str) -> djlive::Check {
-        let be = BtwEnv::new(Some(self));
+        let be = BeatscriptEnv::new(Some(self));
         djlive::compile::check_with(text, &be.env())
     }
 
@@ -409,7 +409,7 @@ impl LiveStore {
 
     /// Every snippet the program imports is credited the way a fork credits its parent.
     fn add_import_credits(&self, text: &str, rights: &mut Rights, warnings: &mut Vec<String>) {
-        let be = BtwEnv::new(Some(self));
+        let be = BeatscriptEnv::new(Some(self));
         let parsed = djlive::parse::parse_with(text, &be.env());
         // the programs a set plays, and the ones a part or a section is borrowed from, are credited the same way
         let cids: Vec<String> = parsed.imports.iter().map(|i| i.cid.clone()).chain(parsed.plays.iter().map(|p| p.cid.clone())).chain(djlive::stored::cids_of(text)).collect();
@@ -453,7 +453,7 @@ impl LiveStore {
             .filter_map(|e| e.ok())
             .filter_map(|e| {
                 let n = e.file_name().to_string_lossy().to_string();
-                n.strip_suffix(".btw").or_else(|| n.strip_suffix(".json")).map(str::to_string)
+                n.strip_suffix(".beatscript").or_else(|| n.strip_suffix(".json")).map(str::to_string)
             })
             .filter(|n| !n.starts_with('.') && !n.ends_with(".perf"))
             .filter_map(|id| {
@@ -513,7 +513,7 @@ impl LiveStore {
 
     pub fn delete(&self, query: &str) -> Result<Entry, String> {
         let e = self.resolve(query)?;
-        // (a snippet saved before there were rights is a `<cid>.json` and has no `.btw`: it is gone when that file is, not an error
+        // (a snippet saved before there were rights is a `<cid>.json` and has no `.beatscript`: it is gone when that file is, not an error
         // because the other is missing: R-18)
         let legacy = self.directory.join(format!("{}.json", e.object));
         let had_legacy = legacy.exists();
@@ -567,7 +567,7 @@ impl LiveStore {
         self.jsonld_object(&o).ok_or_else(|| "btw jsonld: the program does not compile here (an import is missing?): `btw check` says why".to_string())
     }
 
-    /// A program given as text, or as a `.btw` file with `#!` header lines, as linked data (`btw jsonld {text}`). Its
+    /// A program given as text, or as a `.beatscript` file with `#!` header lines, as linked data (`btw jsonld {text}`). Its
     /// genre and tags are its header lines' (an unknown term is an error); it makes a claim about rights only when the
     /// header has some (a license, visibility, author, forked-from or credit line).
     pub fn jsonld_text(&self, text: &str) -> Result<JsonValue, String> {
@@ -595,7 +595,7 @@ impl LiveStore {
         Ok((e, f.warnings))
     }
 
-    /// The `.btw` file for a saved program.
+    /// The `.beatscript` file for a saved program.
     pub fn export(&self, query: &str) -> Result<(Entry, String), String> {
         let e = self.resolve(query)?;
         let o = self.read_object(&e.object).ok_or_else(|| format!("btw {}: unreadable", e.object))?;
@@ -604,12 +604,12 @@ impl LiveStore {
 
     pub fn export_to(&self, query: &str, path: &Path) -> Result<Entry, String> {
         let (e, file) = self.export(query)?;
-        let path = if path.is_dir() { path.join(format!("{}.btw", file_name(&e.name))) } else { path.to_path_buf() };
+        let path = if path.is_dir() { path.join(format!("{}.beatscript", file_name(&e.name))) } else { path.to_path_buf() };
         std::fs::write(&path, file).map_err(|err| format!("btw: {}: {err}", path.display()))?;
         Ok(e)
     }
 
-    /// Take a `.btw` file's text in: checked, made canonical, kept with the rights its header gives.
+    /// Take a `.beatscript` file's text in: checked, made canonical, kept with the rights its header gives.
     pub fn import_text(&self, file: &str, fallback_name: &str) -> Result<(Entry, Vec<String>), String> {
         let (o, _) = Object::from_file(file)?;
         // the file's genre and tags are looked up like a save's: in any spelling, an unknown one is an error
@@ -650,7 +650,7 @@ pub struct PerfEntry {
     pub inputs: Vec<String>,
 }
 
-/// A performance (docs/btw/ext-perform.md): `<cid>.perf.json`, the object `{type: djrust.performance, program, inputs}` named by its
+/// A performance (docs/beatscript/ext-perform.md): `<cid>.perf.json`, the object `{type: djrust.performance, program, inputs}` named by its
 /// own CID, next to the programs it was played on. A file whose name is not its content's CID has been edited, and is not listed.
 impl LiveStore {
     fn perf_path(&self, cid: &str) -> PathBuf {
@@ -798,7 +798,7 @@ mod tests {
         assert!(s.save("bad", "deck A: kick q\n").unwrap_err().contains("1 error"));
         assert!(s.list().is_empty());
         let e = s.save("ok", "deck A: kick x ~ x ~\n").unwrap();
-        let path = dir.join(format!("{}.btw", e.object));
+        let path = dir.join(format!("{}.beatscript", e.object));
         let edited = std::fs::read_to_string(&path).unwrap().replace("kick x ~ x ~", "kick x x x x");
         std::fs::write(&path, edited).unwrap();
         assert!(s.list().is_empty(), "its text is no longer what its name says");
@@ -884,13 +884,13 @@ mod tests {
         let out = dir.join("export");
         std::fs::create_dir_all(&out).unwrap();
         s.export_to("drop", &out).unwrap();
-        let file = std::fs::read_to_string(out.join("drop.btw")).unwrap();
+        let file = std::fs::read_to_string(out.join("drop.beatscript")).unwrap();
         assert!(file.starts_with("#! btw 1\n#! name: drop\n#! license: CC-BY-4.0"), "{file}");
         // it is a program as it stands
         assert!(djlive::check(&file).ok());
         assert_eq!(djlive::check(&file).compiled.unwrap().cid, a.cid);
         let (s2, dir2) = store_named("b");
-        let (e, _) = s2.import_file(&out.join("drop.btw")).unwrap();
+        let (e, _) = s2.import_file(&out.join("drop.beatscript")).unwrap();
         assert_eq!(e.cid, a.cid);
         assert_eq!(e.rights.license, License::CcBy4);
         assert_eq!(e.rights.author.as_deref(), Some("matt"));
@@ -980,8 +980,8 @@ mod tests {
         let snip = s.performance_program(&perf).unwrap();
         assert_eq!(snip.cid, perf.program);
         assert_eq!(snip.links, e.links);
-        let env = BtwEnv::new(Some(&s));
-        let want = crate::btw_render::replay_controls(&snip.text, &env.env(), &perf, 6).unwrap();
+        let env = BeatscriptEnv::new(Some(&s));
+        let want = crate::beatscript_render::replay_controls(&snip.text, &env.env(), &perf, 6).unwrap();
         let sweeps: Vec<_> = want.iter().filter(|c| c.noun == "inserts" && c.params.get("param").and_then(JsonValue::as_str) == Some("filter.sweep")).collect();
         assert!(sweeps.len() >= 3, "{want:?}");
         // the links change (a tag added): a new object of the same program, one program in the list, the performance still found
@@ -994,7 +994,7 @@ mod tests {
         let snip2 = s.performance_program(&perf).unwrap();
         assert_eq!((snip2.cid.as_str(), snip2.links.tags.len()), (perf.program.as_str(), 3));
         // and it replays to the very same calls
-        let again = crate::btw_render::replay_controls(&snip2.text, &env.env(), &perf, 6).unwrap();
+        let again = crate::beatscript_render::replay_controls(&snip2.text, &env.env(), &perf, 6).unwrap();
         assert_eq!(again, want);
         // a program saved without links first, linked after: the performance saved before is still its performance
         let (s2, dir2) = store_named("perf-links-after");
@@ -1080,7 +1080,7 @@ mod tests {
         // a name still needs a saved program, and a partial CID too
         assert!(s.check("import \"riffs\"\ndeck A: bass riff\n").compiled.is_none());
         // a file someone edited is not the program its name says: not found
-        std::fs::write(dir.join(".linked").join(format!("{}.btw", riffs.cid)), "let riff = c2\n").unwrap();
+        std::fs::write(dir.join(".linked").join(format!("{}.beatscript", riffs.cid)), "let riff = c2\n").unwrap();
         assert!(s.linked(&riffs.cid).is_none());
         let _ = std::fs::remove_dir_all(dir);
     }

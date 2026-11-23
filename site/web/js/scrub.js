@@ -8,7 +8,7 @@
 //   Alt + ↑ / ↓                    one step at the caret (Shift: ten); also plain ↑ ↓ while exactly that literal is selected
 //   Alt + PageUp / PageDown        a range or a ramp: both ends together
 //
-// What a literal is, its limits, step and unit come from the language service (`btw/numberAt`, djrust's beatscriptls). A value never
+// What a literal is, its limits, step and unit come from the language service (`beatscript/numberAt`, djrust's beatscriptls). A value never
 // leaves its range and the ends of a range never cross; a candidate the checker refuses is not kept (the last good value
 // stays and the reason flashes beside it). While a drag goes on the editor shows a preview and the textarea is untouched, so
 // the edit made when it ends is one undo step. When something is playing, the program is evaluated as it changes, the way
@@ -58,7 +58,7 @@ export class Scrubber {
     }
     const k = at;
     if (this.cache.has(k)) return this.cache.get(k);
-    const r = this.assist.req('btw/numberAt', { position: lspPos(t, at) });
+    const r = this.assist.req('beatscript/numberAt', { position: lspPos(t, at) });
     const info = r && !r.error && r.range ? r : null;
     this.cache.set(k, info);
     return info;

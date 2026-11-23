@@ -1,4 +1,4 @@
-//! `drive` (docs/BTW.md "Control"): one more word of the control grammar, said after a target and ramped, swung and held like
+//! `drive` (docs/BEATSCRIPT.md "Control"): one more word of the control grammar, said after a target and ramped, swung and held like
 //! `reverb`. It compiles to the control language's own `fx` noun (the FX unit's drive), is a free name everywhere else (the
 //! pinned example `matrix-130` has `section drive`), and a line that is wrong says its range and the nearest value.
 

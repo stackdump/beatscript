@@ -42,7 +42,7 @@ arrange {
 
 This is the example program `arrange-mutations` on beatscript.app. It plays four passes of
 `intro build drop drop drop`, each pass going on from the patterns the last one left, and then the outro.
-The smallest one is [arrange-in-eight-lines](https://beatscript.app/examples/arrange-in-eight-lines.btw): one section,
+The smallest one is [arrange-in-eight-lines](https://beatscript.app/examples/arrange-in-eight-lines.beatscript): one section,
 played eight times, with a `~` or an `@` between the plays and three comments that say what they do.
 
 ## The block
@@ -105,7 +105,7 @@ arrange {
 
 ### A named block
 
-Among named arrangements (BTW.md "Several arrangements"), one of them can be a block: `arrange NAME: { ... }`. It ends
+Among named arrangements (BEATSCRIPT.md "Several arrangements"), one of them can be a block: `arrange NAME: { ... }`. It ends
 the way a named arrangement does: `then NAME`, `loop`, `loop N`, `end`, or nothing. Its mutations run over one pass of
 it. A `loop N` in the flow plays that pass N times; it does not pile up N generations (so a counted line, `~3`, never
 fires in one: there is one pass to count). The other arrangements play
@@ -300,11 +300,11 @@ In the editor the header's generation chip shows the play under the playhead, fo
 ## Asserting what a mutation made
 
 A mutation can make a bar you did not mean: `fill` takes a hit into the rests after it, so a backbeat's snare can come out as two
-snares in a row. A constraint (docs/btw/ext-assert.md) is asked of every bar the song plays, in the generation that plays it, so it
+snares in a row. A constraint (docs/beatscript/ext-assert.md) is asked of every bar the song plays, in the generation that plays it, so it
 is the guard for a mutation: `assert never A.snare beside A.snare` refuses a `~ backbeat fill 0.19` that rolls a pickup beside
 a hit, and the message names the section, the bar and the step (`two snare hits touch on deck A, in lift, bar 4, steps 4 and 5`) and shows the
 bar as written. A section a mutation plays in another generation is still its own name for `in` (`assert bass ends on 1 in drop`
-covers `drop@2` too). `examples/btw/constraints.btw` has the three constraints.
+covers `drop@2` too). `examples/beatscript/constraints.beatscript` has the three constraints.
 
 ## How it runs
 

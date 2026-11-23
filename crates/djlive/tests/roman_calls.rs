@@ -1,4 +1,4 @@
-//! A Roman numeral where `chord()` and `arp()` take a chord symbol (docs/btw/ext-scale.md, "Numerals in calls"): the
+//! A Roman numeral where `chord()` and `arp()` take a chord symbol (docs/beatscript/ext-scale.md, "Numerals in calls"): the
 //! numeral is read in the key in force, so a section's `key` moves it, and it plays exactly the notes the same numeral
 //! plays as a step of a part. Pitches: harmony is octave 3 (C3 = 48), bass 2, melody and arp 4 (C4 = 60).
 

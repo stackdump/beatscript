@@ -1,4 +1,4 @@
-//! `<cid>.drop`: a stored program's music as a reference (docs/BTW.md, "Borrow from a stored program").
+//! `<cid>.drop`: a stored program's music as a reference (docs/BEATSCRIPT.md, "Borrow from a stored program").
 //!
 //! ```text
 //! section hook from z4EBG9j9….drop           a section of it: its parts, its key, never its control lines
@@ -639,7 +639,7 @@ fn part_says(part: &PartIr, name: &str) -> bool {
 }
 
 /// A program with its templates, its seeds and its stored references written out, as text: what `expand` (the MCP tool,
-/// `btwd expand`) answers: the text, the references in the order they were written out in (templates, seeds, then stored
+/// `beatscript expand`) answers: the text, the references in the order they were written out in (templates, seeds, then stored
 /// programs) and the warnings of the templates and seeds. Errors are at the references of `src`.
 pub fn expand_text(src: &str, env: &Env) -> Option<Result<(String, Vec<String>, Vec<Diagnostic>), Vec<Diagnostic>>> {
     // a place in the text of stage `n` as a place in `src`

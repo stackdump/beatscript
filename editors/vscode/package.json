@@ -1,7 +1,7 @@
 {
   "name": "beatscript",
-  "displayName": "BeatScript (btw)",
-  "description": "BeatScript (btw) for VS Code: highlighting, and through `btwd lsp` diagnostics, quick-fixes, the outline, go to definition, rename, completion, hover, signature help, inlay hints, refactors, and a reference's expansion shown, hidden, copied or ejected.",
+  "displayName": "BeatScript",
+  "description": "BeatScript for VS Code: highlighting, and through `beatscript lsp` diagnostics, quick-fixes, the outline, go to definition, rename, completion, hover, signature help, inlay hints, refactors, and a reference's expansion shown, hidden, copied or ejected.",
   "version": "0.1.0",
   "publisher": "stackdump",
   "private": true,
@@ -13,30 +13,30 @@
   "contributes": {
     "languages": [
       {
-        "id": "btw",
-        "aliases": ["BeatScript", "btw"],
-        "extensions": [".btw"],
+        "id": "beatscript",
+        "aliases": ["BeatScript", "beatscript"],
+        "extensions": [".beatscript"],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
-      { "language": "btw", "scopeName": "source.btw", "path": "./syntaxes/btw.tmLanguage.json" }
+      { "language": "beatscript", "scopeName": "source.beatscript", "path": "./syntaxes/beatscript.tmLanguage.json" }
     ],
     "configuration": {
       "title": "BeatScript",
       "properties": {
-        "btw.server.path": {
+        "beatscript.server.path": {
           "type": "string",
-          "default": "btwd",
-          "description": "The btwd binary (it runs `btwd lsp`). Build it with `cargo build --release -p btwd` in stackdump/beatscript."
+          "default": "beatscript",
+          "description": "The beatscript binary (it runs `beatscript lsp`). Build it with `cargo build --release -p beatscript-cli` in stackdump/beatscript."
         },
-        "btw.server.args": {
+        "beatscript.server.args": {
           "type": "array",
           "items": { "type": "string" },
           "default": ["lsp"],
           "description": "The arguments the server is started with."
         },
-        "btw.trace.server": {
+        "beatscript.trace.server": {
           "type": "string",
           "enum": ["off", "messages", "verbose"],
           "default": "off",
@@ -45,25 +45,25 @@
       }
     },
     "commands": [
-      { "command": "btw.restartServer", "title": "BeatScript: Restart the language server" },
-      { "command": "btw.expand.toggle", "title": "BeatScript: Show or hide the expansion of the reference here" },
-      { "command": "btw.expand.all", "title": "BeatScript: Show or hide every reference's expansion" },
-      { "command": "btw.expand.open", "title": "BeatScript: Open the expansion of the reference here beside" },
-      { "command": "btw.expand.copy", "title": "BeatScript: Copy the expansion of the reference here" },
-      { "command": "btw.eject", "title": "BeatScript: Eject the reference here into local text" },
-      { "command": "btw.preview", "title": "BeatScript: Preview with the player", "icon": "$(open-preview)" }
+      { "command": "beatscript.restartServer", "title": "BeatScript: Restart the language server" },
+      { "command": "beatscript.expand.toggle", "title": "BeatScript: Show or hide the expansion of the reference here" },
+      { "command": "beatscript.expand.all", "title": "BeatScript: Show or hide every reference's expansion" },
+      { "command": "beatscript.expand.open", "title": "BeatScript: Open the expansion of the reference here beside" },
+      { "command": "beatscript.expand.copy", "title": "BeatScript: Copy the expansion of the reference here" },
+      { "command": "beatscript.eject", "title": "BeatScript: Eject the reference here into local text" },
+      { "command": "beatscript.preview", "title": "BeatScript: Preview with the player", "icon": "$(open-preview)" }
     ],
     "menus": {
       "editor/title": [
-        { "command": "btw.preview", "when": "editorLangId == btw", "group": "navigation" }
+        { "command": "beatscript.preview", "when": "editorLangId == beatscript", "group": "navigation" }
       ],
       "commandPalette": [
-        { "command": "btw.preview", "when": "editorLangId == btw" },
-        { "command": "btw.expand.toggle", "when": "editorLangId == btw" },
-        { "command": "btw.expand.all", "when": "editorLangId == btw" },
-        { "command": "btw.expand.open", "when": "editorLangId == btw" },
-        { "command": "btw.expand.copy", "when": "editorLangId == btw" },
-        { "command": "btw.eject", "when": "editorLangId == btw" }
+        { "command": "beatscript.preview", "when": "editorLangId == beatscript" },
+        { "command": "beatscript.expand.toggle", "when": "editorLangId == beatscript" },
+        { "command": "beatscript.expand.all", "when": "editorLangId == beatscript" },
+        { "command": "beatscript.expand.open", "when": "editorLangId == beatscript" },
+        { "command": "beatscript.expand.copy", "when": "editorLangId == beatscript" },
+        { "command": "beatscript.eject", "when": "editorLangId == beatscript" }
       ]
     }
   },

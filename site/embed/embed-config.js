@@ -1,7 +1,7 @@
 // The embed config: one description of an embedded BeatScript program that every surface reads (the <beatscript-track>
-// player, the <beatscript-studio> editor, a card, plain audio, the btwserve `embed` tool). The contract is
+// player, the <beatscript-studio> editor, a card, plain audio, the beatscript-serve `embed` tool). The contract is
 // site/web/embed-config.schema.json; SCHEMA below is the same object (a test checks it), validated by hand here so the
-// page needs no library. btwserve mirrors normalize, toAttributes and artifactCapabilities in Rust, held to
+// page needs no library. beatscript-serve mirrors normalize, toAttributes and artifactCapabilities in Rust, held to
 // site/testdata/embed-config/cases.json, so their output is exact: keys in a fixed order, arrays in schema order.
 //
 //   const raw = fromElement(el);                 // the config JSON, then single attributes over it
@@ -13,7 +13,7 @@ export const SCHEMA = deepFreeze({
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: 'https://beatscript.app/embed-config.schema.json',
   title: 'BeatScript embed config',
-  description: 'One config for every way BeatScript is embedded: the <beatscript-track> player, the <beatscript-studio> editor, a static card and plain audio, on a Claude artifact, any web page, an iframe, oEmbed, a README, a notebook, an editor\'s preview or the Android app. Every surface reads it: as JSON (the `config` attribute or a child <script type="application/json" class="beatscript-config">), as single attributes (which override it), or as the btwserve `embed` MCP tool\'s `config` argument. A surface that cannot do something the config asks for says so and does what it can (docs/btw/embed.md).',
+  description: 'One config for every way BeatScript is embedded: the <beatscript-track> player, the <beatscript-studio> editor, a static card and plain audio, on a Claude artifact, any web page, an iframe, oEmbed, a README, a notebook, an editor\'s preview or the Android app. Every surface reads it: as JSON (the `config` attribute or a child <script type="application/json" class="beatscript-config">), as single attributes (which override it), or as the beatscript-serve `embed` MCP tool\'s `config` argument. A surface that cannot do something the config asks for says so and does what it can (docs/beatscript/embed.md).',
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -66,13 +66,13 @@ export const SCHEMA = deepFreeze({
       type: 'array',
       uniqueItems: true,
       items: { enum: ['highlight', 'editor', 'mixer', 'knobs', 'download', 'share', 'compose'] },
-      description: 'What the surface shows. highlight: the program, highlighted, with Copy. editor: the text is editable and re-checked as it is typed (studio). mixer: deck levels and mutes. knobs: the program\'s control-deck knobs as sliders. download: save the .btw text and a WAV. share: the self-sealing link and the CID. compose: ask a model for a program or a change (needs the sample capability). Defaults by kind: player [share], studio [highlight, editor, share, download, compose], card [share], audio [download].',
+      description: 'What the surface shows. highlight: the program, highlighted, with Copy. editor: the text is editable and re-checked as it is typed (studio). mixer: deck levels and mutes. knobs: the program\'s control-deck knobs as sliders. download: save the .beatscript text and a WAV. share: the self-sealing link and the CID. compose: ask a model for a program or a change (needs the sample capability). Defaults by kind: player [share], studio [highlight, editor, share, download, compose], card [share], audio [download].',
     },
     capabilities: {
       type: 'array',
       uniqueItems: true,
       items: { enum: ['sample', 'mcp', 'db', 'downloads', 'room', 'dictation', 'tts'] },
-      description: 'Host capabilities to use when the host allows them (a Claude artifact\'s claude.use()); anything else works without them. sample: compose and repair ask Claude. mcp: store, share, render and queue through the viewer\'s BeatScript connector. db: a library of programs and playlists. downloads: save WAV and .btw. room: a live jam with everyone who has the page open. dictation: speak a compose prompt. tts: read the problems aloud. Defaults by kind: player [downloads], studio [sample, mcp, db, downloads], card and audio [].',
+      description: 'Host capabilities to use when the host allows them (a Claude artifact\'s claude.use()); anything else works without them. sample: compose and repair ask Claude. mcp: store, share, render and queue through the viewer\'s BeatScript connector. db: a library of programs and playlists. downloads: save WAV and .beatscript. room: a live jam with everyone who has the page open. dictation: speak a compose prompt. tts: read the problems aloud. Defaults by kind: player [downloads], studio [sample, mcp, db, downloads], card and audio [].',
     },
     theme: { enum: ['dark', 'light', 'auto'], default: 'dark', description: 'auto follows prefers-color-scheme.' },
     compact: { type: 'boolean', default: false, description: 'The small form: an 80-pixel player, a studio without the side panel.' },
@@ -482,7 +482,7 @@ export const NO_WASM_STUDIO = 'this page does not allow WebAssembly (\'wasm-unsa
 
 /**
  * Without the engine there is no check, no sound, no colour and no share link, and the studio makes no tools (so no
- * capability is used): what is left is the text, shown (the player's highlight, uncoloured), edited and saved as .btw.
+ * capability is used): what is left is the text, shown (the player's highlight, uncoloured), edited and saved as .beatscript.
  */
 const ENGINELESS = { player: ['highlight'], studio: ['highlight', 'editor', 'download'] };
 /** The features only <beatscript-studio> has (the player has no editor, mixer, knobs or compose). */

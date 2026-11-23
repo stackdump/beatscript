@@ -1,0 +1,181 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 2,
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 80,
+        "col": 3,
+        "end_col": 43,
+        "start": 3062,
+        "end": 3102,
+        "start16": 3062,
+        "end16": 3102,
+        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 80:3\n   |\n80 |   at bar 7: move echo_out on A over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 81,
+        "col": 3,
+        "end_col": 43,
+        "start": 3105,
+        "end": 3145,
+        "start16": 3105,
+        "end16": 3145,
+        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 81:3\n   |\n81 |   at bar 7: move echo_out on B over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ",
+    "canonical": "tempo 138\nkey am\nlet rst = ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet cl = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~\nlet r4 = kk\nlet r2 = x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~\nlet r1 = x x x x x x x x x x x x x x x x\nlet ba = ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2\nlet bf = ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2\nlet bc = ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2\nlet bg = ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2\nlet aa = a4 c5 e5 a5 e5 c5 a4 c5 a4 c5 e5 a5 e5 c5 a4 c5\nlet af = f4 a4 c5 f5 c5 a4 f4 a4 f4 a4 c5 f5 c5 a4 f4 a4\nlet ac = c5 e5 g5 c6 g5 e5 c5 e5 c5 e5 g5 c6 g5 e5 c5 e5\nlet ag = g4 b4 d5 g5 d5 b4 g4 b4 g4 b4 d5 g5 d5 b4 g4 b4\nlet m1 = e5 ~ ~ ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m2 = ~ ~ ~ ~ ~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~\nlet m3 = g5 ~ ~ ~ ~ ~ e5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m4 = ~ ~ ~ ~ ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~\nlet m5 = e5 ~ ~ ~ ~ ~ g5 ~ e5 ~ ~ ~ ~ ~ ~ ~\nlet m6 = ~ ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~\nlet m7 = g5 ~ ~ ~ ~ ~ e5 ~ d5 ~ ~ ~ ~ ~ ~ ~\nlet m8 = ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~ a5 ~ ~ ~\nlet pads = <chord(am) chord(am) chord(f) chord(f) chord(c) chord(c) chord(g) chord(g)>\nlet basses = <ba ba bf bf bc bc bg bg>\nlet arps = <aa aa af af ac ac ag ag>\nlet mels = <m1 m2 m3 m4 m5 m6 m7 m8>\nlet clap_in = <rst rst rst rst rst rst rst rst cl cl cl cl cl cl cl cl>\nlet bass_in = <rst rst rst rst rst rst rst rst ba ba bf bf bc bc bg bg>\nlet clap_out = <cl cl cl cl rst rst rst rst>\nlet roll = <rst rst rst rst rst rst rst rst kk kk r2 r2 r1 r1 r1 rst>\ndef deckA(k, h, c, s, b) {\n  deck A: kick $k vel=112 | hihat $h vel=70..95 | clap $c vel=100 | snare $s vel=80..110 | bass $b inst=sub-bass oct=2 len=1\n}\ndef deckB(a, p, m) {\n  deck B: arp $a inst=bright-pluck vel=70..95 len=1 | harmony $p inst=warm-pad len=16 vel=80 | melody $m inst=detuned-saw len=8 vel=105\n}\nsection intro 16 bars {\n  deckA(kk, hh, clap_in, rst, bass_in)\n  deckB(rst, pads, rst)\n  master: filter lp 400 -> 16000 over 16 bars\n}\nsection breakdown 16 bars {\n  deckA(rst, every(16, rst, hh), rst, roll, rst)\n  deckB(every(16, rst, arps), pads, every(16, rst, mels))\n  at bar 8: master: filter lp 16000 -> 1500 over 1 bars\n  at bar 9: master: filter lp 1500 -> 18000 over 7 bars\n}\nsection drop 24 bars {\n  deckA(kk, hh, cl, rst, basses)\n  deckB(arps, pads, mels)\n}\nsection outro 8 bars {\n  deckA(kk, hh, clap_out, rst, basses)\n  deckB(rst, pads, rst)\n  master: filter lp 18000 -> 800 over 8 bars\n  at bar 7: move echo_out on A over 1 bars\n  at bar 7: move echo_out on B over 1 bars\n}\narrange intro breakdown drop outro\n",
+    "nets": {
+      "breakdown@16:A": "z4EBG9jDBLmvpCUBZ5DtMpYq6aPPNWKfbn4JFkBNzJpHPYUPjWE",
+      "breakdown@16:B": "z4EBG9j1hagSpPntMGFZNS8QymztmtjoQXh1X1DZoCmFqPdCXLj",
+      "drop@32:A": "z4EBG9jA8dXjTfdYEkrLgCnUDHzPB21iw7wBeEHHkxqWEuJx6Mf",
+      "drop@32:B": "z4EBG9jCWNCgEQpDY6XJYghhkEhQYxtxjYkyNqYSXVeopFTd6a7",
+      "intro@0:A": "z4EBG9j182kYTK9zSN81mqd4ehoAZw5tVaNxnWZ5tN3Z44sP8Db",
+      "intro@0:B": "z4EBG9jEFenFvGXypiFKgSgbPnQdmFMLGYYhEZY5EJ6gQ6Fpid4",
+      "outro@56:A": "z4EBG9j5oFdbxvQmUkBDsADDy27PG2UeGDA9Z7oSruJHwxYkGdA",
+      "outro@56:B": "z4EBG9jEFenFvGXypiFKgSgbPnQdmFMLGYYhEZY5EJ6gQ6Fpid4"
+    },
+    "song_nets": {
+      "A": "z4EBG9jG8nT2p449McscV7ZSCfmUJDiFxFU26JpZhJ9hfBFgeLD",
+      "B": "z4EBG9j8hbXoGqrw8qMseuz7BhibdkMiee4USmUaSyPRgJjiiLJ"
+    },
+    "tempo": 138,
+    "key": "am",
+    "swing": null,
+    "arranged": true,
+    "song_bars": 64,
+    "ends": true,
+    "end_bar": 64,
+    "loops": false,
+    "sections": [
+      {
+        "name": "intro",
+        "start": 0,
+        "bars": 16
+      },
+      {
+        "name": "breakdown",
+        "start": 16,
+        "bars": 16
+      },
+      {
+        "name": "drop",
+        "start": 32,
+        "bars": 24
+      },
+      {
+        "name": "outro",
+        "start": 56,
+        "bars": 8
+      }
+    ],
+    "decks": ["A","B"],
+    "evolve": [],
+    "lineage": [],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": 111.304,
+    "docs": [
+      {
+        "kind": "let",
+        "name": "rst",
+        "doc": "the bars"
+      },
+      {
+        "kind": "let",
+        "name": "ba",
+        "doc": "eight bars of the anthem, and what plays under it: two bars to a chord, am f c g"
+      },
+      {
+        "kind": "let",
+        "name": "pads",
+        "doc": "the parts, eight bars round"
+      },
+      {
+        "kind": "let",
+        "name": "clap_in",
+        "doc": "the half-and-half bars of the intro (the second eight bars add the clap and the bass), and the snare roll that builds the breakdown: every 4th, every 2nd, every step, then the gap before the drop"
+      },
+      {
+        "kind": "def",
+        "name": "deckA",
+        "doc": "a deck's parts, whatever bars they have in a section"
+      }
+    ],
+    "expanded_cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ"
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 138\nkey am\nlet rst = ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet cl = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~\nlet r4 = kk\nlet r2 = x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~\nlet r1 = x x x x x x x x x x x x x x x x\nlet ba = ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2\nlet bf = ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2\nlet bc = ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2\nlet bg = ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2\nlet aa = a4 c5 e5 a5 e5 c5 a4 c5 a4 c5 e5 a5 e5 c5 a4 c5\nlet af = f4 a4 c5 f5 c5 a4 f4 a4 f4 a4 c5 f5 c5 a4 f4 a4\nlet ac = c5 e5 g5 c6 g5 e5 c5 e5 c5 e5 g5 c6 g5 e5 c5 e5\nlet ag = g4 b4 d5 g5 d5 b4 g4 b4 g4 b4 d5 g5 d5 b4 g4 b4\nlet m1 = e5 ~ ~ ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m2 = ~ ~ ~ ~ ~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~\nlet m3 = g5 ~ ~ ~ ~ ~ e5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m4 = ~ ~ ~ ~ ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~\nlet m5 = e5 ~ ~ ~ ~ ~ g5 ~ e5 ~ ~ ~ ~ ~ ~ ~\nlet m6 = ~ ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~\nlet m7 = g5 ~ ~ ~ ~ ~ e5 ~ d5 ~ ~ ~ ~ ~ ~ ~\nlet m8 = ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~ a5 ~ ~ ~\nlet pads = <chord(am) chord(am) chord(f) chord(f) chord(c) chord(c) chord(g) chord(g)>\nlet basses = <ba ba bf bf bc bc bg bg>\nlet arps = <aa aa af af ac ac ag ag>\nlet mels = <m1 m2 m3 m4 m5 m6 m7 m8>\nlet clap_in = <rst rst rst rst rst rst rst rst cl cl cl cl cl cl cl cl>\nlet bass_in = <rst rst rst rst rst rst rst rst ba ba bf bf bc bc bg bg>\nlet clap_out = <cl cl cl cl rst rst rst rst>\nlet roll = <rst rst rst rst rst rst rst rst kk kk r2 r2 r1 r1 r1 rst>\ndef deckA(k, h, c, s, b) {\n  deck A: kick $k vel=112 | hihat $h vel=70..95 | clap $c vel=100 | snare $s vel=80..110 | bass $b inst=sub-bass oct=2 len=1\n}\ndef deckB(a, p, m) {\n  deck B: arp $a inst=bright-pluck vel=70..95 len=1 | harmony $p inst=warm-pad len=16 vel=80 | melody $m inst=detuned-saw len=8 vel=105\n}\nsection intro 16 bars {\n  deckA(kk, hh, clap_in, rst, bass_in)\n  deckB(rst, pads, rst)\n  master: filter lp 400 -> 16000 over 16 bars\n}\nsection breakdown 16 bars {\n  deckA(rst, every(16, rst, hh), rst, roll, rst)\n  deckB(every(16, rst, arps), pads, every(16, rst, mels))\n  at bar 8: master: filter lp 16000 -> 1500 over 1 bars\n  at bar 9: master: filter lp 1500 -> 18000 over 7 bars\n}\nsection drop 24 bars {\n  deckA(kk, hh, cl, rst, basses)\n  deckB(arps, pads, mels)\n}\nsection outro 8 bars {\n  deckA(kk, hh, clap_out, rst, basses)\n  deckB(rst, pads, rst)\n  master: filter lp 18000 -> 800 over 8 bars\n  at bar 7: move echo_out on A over 1 bars\n  at bar 7: move echo_out on B over 1 bars\n}\narrange intro breakdown drop outro\n",
+    "cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ",
+    "comments": [
+      "! beatscript 1",
+      "! name: trance-138",
+      "! license: CC0-1.0",
+      "! visibility: public",
+      "trance-138: 64 bars, said once each. The longhand (trance-138.live: every part one 64-bar",
+      "alternation with rest bars) and this text are two ways to write the same song.",
+      "the bars",
+      "eight bars of the anthem, and what plays under it: two bars to a chord, am f c g",
+      "the parts, eight bars round",
+      "the half-and-half bars of the intro (the second eight bars add the clap and the bass), and the",
+      "snare roll that builds the breakdown: every 4th, every 2nd, every step, then the gap before the drop",
+      "a deck's parts, whatever bars they have in a section"
+    ],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 80,
+        "col": 3,
+        "end_col": 43,
+        "start": 3062,
+        "end": 3102,
+        "start16": 3062,
+        "end16": 3102,
+        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 80:3\n   |\n80 |   at bar 7: move echo_out on A over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 81,
+        "col": 3,
+        "end_col": 43,
+        "start": 3105,
+        "end": 3145,
+        "start16": 3105,
+        "end16": 3145,
+        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 81:3\n   |\n81 |   at bar 7: move echo_out on B over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "text": "#! btw 1\n#! name: trance-138\n#! license: CC0-1.0\n#! visibility: public\n# trance-138: 64 bars, said once each. The longhand (trance-138.live: every part one 64-bar\n# alternation with rest bars) and this text are two ways to write the same song.\ntempo 138\nkey am\n\n# the bars\nlet rst = ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet cl = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~\nlet r4 = kk\nlet r2 = x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~\nlet r1 = x x x x x x x x x x x x x x x x\n\n# eight bars of the anthem, and what plays under it: two bars to a chord, am f c g\nlet ba = ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2\nlet bf = ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2\nlet bc = ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2\nlet bg = ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2\nlet aa = a4 c5 e5 a5 e5 c5 a4 c5 a4 c5 e5 a5 e5 c5 a4 c5\nlet af = f4 a4 c5 f5 c5 a4 f4 a4 f4 a4 c5 f5 c5 a4 f4 a4\nlet ac = c5 e5 g5 c6 g5 e5 c5 e5 c5 e5 g5 c6 g5 e5 c5 e5\nlet ag = g4 b4 d5 g5 d5 b4 g4 b4 g4 b4 d5 g5 d5 b4 g4 b4\nlet m1 = e5 ~ ~ ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m2 = ~ ~ ~ ~ ~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~\nlet m3 = g5 ~ ~ ~ ~ ~ e5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m4 = ~ ~ ~ ~ ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~\nlet m5 = e5 ~ ~ ~ ~ ~ g5 ~ e5 ~ ~ ~ ~ ~ ~ ~\nlet m6 = ~ ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~\nlet m7 = g5 ~ ~ ~ ~ ~ e5 ~ d5 ~ ~ ~ ~ ~ ~ ~\nlet m8 = ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~ a5 ~ ~ ~\n\n# the parts, eight bars round\nlet pads = <chord(am) chord(am) chord(f) chord(f) chord(c) chord(c) chord(g) chord(g)>\nlet basses = <ba ba bf bf bc bc bg bg>\nlet arps = <aa aa af af ac ac ag ag>\nlet mels = <m1 m2 m3 m4 m5 m6 m7 m8>\n\n# the half-and-half bars of the intro (the second eight bars add the clap and the bass), and the\n# snare roll that builds the breakdown: every 4th, every 2nd, every step, then the gap before the drop\nlet clap_in = <rst rst rst rst rst rst rst rst cl cl cl cl cl cl cl cl>\nlet bass_in = <rst rst rst rst rst rst rst rst ba ba bf bf bc bc bg bg>\nlet clap_out = <cl cl cl cl rst rst rst rst>\nlet roll = <rst rst rst rst rst rst rst rst kk kk r2 r2 r1 r1 r1 rst>\n\n# a deck's parts, whatever bars they have in a section\ndef deckA(k, h, c, s, b) {\n  deck A: kick $k vel=112 | hihat $h vel=70..95 | clap $c vel=100 | snare $s vel=80..110 | bass $b inst=sub-bass oct=2 len=1\n}\ndef deckB(a, p, m) {\n  deck B: arp $a inst=bright-pluck vel=70..95 len=1 | harmony $p inst=warm-pad len=16 vel=80 | melody $m inst=detuned-saw len=8 vel=105\n}\n\nsection intro 16 bars {\n  deckA(kk, hh, clap_in, rst, bass_in)\n  deckB(rst, pads, rst)\n  master: filter lp 400 -> 16000 over 16 bars\n}\n\nsection breakdown 16 bars {\n  deckA(rst, every(16, rst, hh), rst, roll, rst)\n  deckB(every(16, rst, arps), pads, every(16, rst, mels))\n  at bar 8: master: filter lp 16000 -> 1500 over 1 bars\n  at bar 9: master: filter lp 1500 -> 18000 over 7 bars\n}\n\nsection drop 24 bars {\n  deckA(kk, hh, cl, rst, basses)\n  deckB(arps, pads, mels)\n}\n\nsection outro 8 bars {\n  deckA(kk, hh, clap_out, rst, basses)\n  deckB(rst, pads, rst)\n  master: filter lp 18000 -> 800 over 8 bars\n  at bar 7: move echo_out on A over 1 bars\n  at bar 7: move echo_out on B over 1 bars\n}\n\narrange intro breakdown drop outro\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://beatscript.app/#z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ.jVbbbuJIEH3nK2oUpAUJEDCQMGgTKZlf2PdV225fhG9qNyHR7sy3z6nqNjhgSJSKKcqn7l3V3H2jwB5oMbj7RqUq9JasUWWop4vvG5blWajLBuKfP-fTxWzOstesyYIsz-z7lup9AMjgrqO2pfsVBco0E2pUFlEFOWkVpjP6J9WUV2WSqjKi0Ulllmev8KFftXmnWhkLJQ0zU5iBbZVbbUpls6qkQ2ZTMrqx4mJMbMmmWUNWv1lSRpM9VHRQ75Dg02QWErhtkBw18D0bWF3UFXGCO_1Oqhhw-ICwwUGuLRlYf6Tft_8EudsB-OZFVz4FmKbe4g2wAMO84_rtzGnXolkBuNs5funDuPHvgAsB3vzjcugsSV2FqYqlOKrEs5hIvQ-pslTnXON9GWlDmd1K2UUBZVcUppWJgC4oppAScR4oSU0tPX3GOqVYlOKlp89YpxSKUrj09BnrlBJRSpaePmNFSXFOakXhmvSalDzBO8kVuVPkvOKVx8TtWye5IneKnJszm-DtPT-d8ePzQu4UOb8Eo7miSDB4gneSK3JRLPjQwNTpHEb8JVz3DESx7JkcxO-YVsVBv3M8XSP6utlVj9lg1Q3nCF2fRys-dK_Z-x6zxwD0B7MPvdFGvWY3HbMXUfJpcFi_d3jhYVl2Zs5UmCsxVauogbG_ZZ5GqhjTORdfMOEFk5yYJz-KTaPFMIaSKRYKhRKQgylTCwinnCkWCoUSkAMVOhcQjgm6j66iWWgCaouaFZunNs1U5fEU62PKzIfdkpXWVLgPeE3rsMKG6dRCRZGAwlzVfttriX88ab_CQVPy6jdVnkOA7RTssxyVE6zRahdVh7K9YFY2nXh2WUYt21hdT1ihFK0E3gIdV8ZdH5Gpar-fVf1vVnLCfE3c-scq76NTB75o52aLJJ5qb-WQdPycGXFgqc8XPOJaA-FWYVq0xFb4NqZIh7u_mvbc8m3AJfTbP8WdmqpX7iqg6Cdf24NIx6L2PNpNCOUP8eNgQsGY_huQvKDnLe0yfA539Krzx8ViSf9TmnEzh6mIHuaz2Y81pHIUhqHDzeeQuPYPGxFtgFssWMxFpmGAUBr72OyDqQiq0D4uKdfl42Lw6xjZy0hNCCeg6MT0suURoKFyFgLDx3Ja5_tw141ITHG0yhRV-U7D2uEP-D7FBDvAvQ8OQIxMFQFXOFyk7b7U0bRRB4FufGZrhDfwFfRDAitS5jZE1JMLyhV1B3PCfZq0x2vsYS8jkfI2EQDLC4Ujb7YUZ_zzivKaVqjl9Ak-5mAqbql3143jOE49sYgTGafR4t5HkqZjz_HpO3p3UZ1hed-M2zDP3vGaGbOmksVA-J15mYELnXNYH1NwGRz1fvTqrb3a5pj6w0XmvANoubregE7tdXNKkrNqk5IsukYxumjr5mZXgbli-itddTkhuU2b2uasJA8oCV6QxiUhuwRxPfdXrw_68gGK3JTBL_uk3eunAyMFlIQHfwA",
+    "social_url": "https://beatscript.app/c/z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ.jVbbbuJIEH3nK2oUpAUJEDCQMGgTKZlf2PdV225fhG9qNyHR7sy3z6nqNjhgSJSKKcqn7l3V3H2jwB5oMbj7RqUq9JasUWWop4vvG5blWajLBuKfP-fTxWzOstesyYIsz-z7lup9AMjgrqO2pfsVBco0E2pUFlEFOWkVpjP6J9WUV2WSqjKi0Ulllmev8KFftXmnWhkLJQ0zU5iBbZVbbUpls6qkQ2ZTMrqx4mJMbMmmWUNWv1lSRpM9VHRQ75Dg02QWErhtkBw18D0bWF3UFXGCO_1Oqhhw-ICwwUGuLRlYf6Tft_8EudsB-OZFVz4FmKbe4g2wAMO84_rtzGnXolkBuNs5funDuPHvgAsB3vzjcugsSV2FqYqlOKrEs5hIvQ-pslTnXON9GWlDmd1K2UUBZVcUppWJgC4oppAScR4oSU0tPX3GOqVYlOKlp89YpxSKUrj09BnrlBJRSpaePmNFSXFOakXhmvSalDzBO8kVuVPkvOKVx8TtWye5IneKnJszm-DtPT-d8ePzQu4UOb8Eo7miSDB4gneSK3JRLPjQwNTpHEb8JVz3DESx7JkcxO-YVsVBv3M8XSP6utlVj9lg1Q3nCF2fRys-dK_Z-x6zxwD0B7MPvdFGvWY3HbMXUfJpcFi_d3jhYVl2Zs5UmCsxVauogbG_ZZ5GqhjTORdfMOEFk5yYJz-KTaPFMIaSKRYKhRKQgylTCwinnCkWCoUSkAMVOhcQjgm6j66iWWgCaouaFZunNs1U5fEU62PKzIfdkpXWVLgPeE3rsMKG6dRCRZGAwlzVfttriX88ab_CQVPy6jdVnkOA7RTssxyVE6zRahdVh7K9YFY2nXh2WUYt21hdT1ihFK0E3gIdV8ZdH5Gpar-fVf1vVnLCfE3c-scq76NTB75o52aLJJ5qb-WQdPycGXFgqc8XPOJaA-FWYVq0xFb4NqZIh7u_mvbc8m3AJfTbP8WdmqpX7iqg6Cdf24NIx6L2PNpNCOUP8eNgQsGY_huQvKDnLe0yfA539Krzx8ViSf9TmnEzh6mIHuaz2Y81pHIUhqHDzeeQuPYPGxFtgFssWMxFpmGAUBr72OyDqQiq0D4uKdfl42Lw6xjZy0hNCCeg6MT0suURoKFyFgLDx3Ja5_tw141ITHG0yhRV-U7D2uEP-D7FBDvAvQ8OQIxMFQFXOFyk7b7U0bRRB4FufGZrhDfwFfRDAitS5jZE1JMLyhV1B3PCfZq0x2vsYS8jkfI2EQDLC4Ujb7YUZ_zzivKaVqjl9Ak-5mAqbql3143jOE49sYgTGafR4t5HkqZjz_HpO3p3UZ1hed-M2zDP3vGaGbOmksVA-J15mYELnXNYH1NwGRz1fvTqrb3a5pj6w0XmvANoubregE7tdXNKkrNqk5IsukYxumjr5mZXgbli-itddTkhuU2b2uasJA8oCV6QxiUhuwRxPfdXrw_68gGK3JTBL_uk3eunAyMFlIQHfwA",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ.jVXbkqJADH33K_Lgg1bh1MCAMtY6VeOPbDVNAxbXanAutTv77ZukW2QQdcoIMZykz0mHtlNlU4P7FM5y9QminBWqA912sIN_tz-MzHMEftjQlTsDs8xWvAFmoCwGS3-MFh1W1D4C89z4nqVx42uALgNvfhgYCaYhPGv3XJOUcFLiWbvnmiTJSdKzds81SSknpZ61ey4nCdIkfJABqAAEX9E3kStxk0i6Et9iktNTE7kSN4mkzZRN8emarqZ4f72Im0TSl_oQ-RAzBq_om8iVOCeWtMFY6jwzMf2QwcTwlt7ElCN_45xSDPSJ-AyLqOtl_YmykT-k00ODMVteQ02WXU-U7Qmob2U3k2zjybLhoOwFS5qGM7YRcYvoXzKrdbwQ5RLGXnLhyAsnPTsv9l1rW8WF8a0jS9gkW4pmYEI3DMIxJkvYJFuKZkClKhiEc4Dbi9uGu4FdxuZhU8rwxZ4xovl9qAhHR92tLx5HU3Ym_sM6N5Uxn_rYcW8H64yKGLCui-InK-LRjIYnI5l7MqoSqwRiJfPXRe5A5oB0oHUgWsKfGfADeN1CfsD7PIc3Vexc14O_kB0y0cE849Dm8eHhOcAocYe5NLjHR4y0ldAK5i2HQsS5LoWpWTCP4FC13a49RisO1LLbeVCoaufOvnpm-4VwoHGgHHDab2kCYC5MhUgf0qxbNcVR5kNGXIrYCl3W1SfMG4N_x98rHGADWFtyCMSJqWPElQYXq-5YqXjVineGhlZZgPRaJbtDXSGw0_inuUZNuu0ZYjupn9RQM18Otds5TcnSwvYLjtK7xACKl6LtlN5CcijwDkUDPrZy9YJrPKJTv2HQLjegEWkl8rh-ryao8BoK8z4X7toSybKl9WiG-sUNqRGWXrblieXoGb1jS8oUNNcawu2EAMOcJAS9AiOgz3uezAtsWtgr34yFx7puwPOvt3_QedWeNZKokyYWMaiJrx_uaXhzSxFzpfJPttQoQmnhSVg4asgGG4IPQOH5yOcB8nqd7t0UdP8N-jUTWosqVXZcz9PC7WO9s_8",
+    "cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ",
+    "chars": 1559,
+    "canonical": "tempo 138\nkey am\nlet rst = ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet cl = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~\nlet r4 = kk\nlet r2 = x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~\nlet r1 = x x x x x x x x x x x x x x x x\nlet ba = ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2\nlet bf = ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2\nlet bc = ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2\nlet bg = ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2\nlet aa = a4 c5 e5 a5 e5 c5 a4 c5 a4 c5 e5 a5 e5 c5 a4 c5\nlet af = f4 a4 c5 f5 c5 a4 f4 a4 f4 a4 c5 f5 c5 a4 f4 a4\nlet ac = c5 e5 g5 c6 g5 e5 c5 e5 c5 e5 g5 c6 g5 e5 c5 e5\nlet ag = g4 b4 d5 g5 d5 b4 g4 b4 g4 b4 d5 g5 d5 b4 g4 b4\nlet m1 = e5 ~ ~ ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m2 = ~ ~ ~ ~ ~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~\nlet m3 = g5 ~ ~ ~ ~ ~ e5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m4 = ~ ~ ~ ~ ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~\nlet m5 = e5 ~ ~ ~ ~ ~ g5 ~ e5 ~ ~ ~ ~ ~ ~ ~\nlet m6 = ~ ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~\nlet m7 = g5 ~ ~ ~ ~ ~ e5 ~ d5 ~ ~ ~ ~ ~ ~ ~\nlet m8 = ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~ a5 ~ ~ ~\nlet pads = <chord(am) chord(am) chord(f) chord(f) chord(c) chord(c) chord(g) chord(g)>\nlet basses = <ba ba bf bf bc bc bg bg>\nlet arps = <aa aa af af ac ac ag ag>\nlet mels = <m1 m2 m3 m4 m5 m6 m7 m8>\nlet clap_in = <rst rst rst rst rst rst rst rst cl cl cl cl cl cl cl cl>\nlet bass_in = <rst rst rst rst rst rst rst rst ba ba bf bf bc bc bg bg>\nlet clap_out = <cl cl cl cl rst rst rst rst>\nlet roll = <rst rst rst rst rst rst rst rst kk kk r2 r2 r1 r1 r1 rst>\ndef deckA(k, h, c, s, b) {\n  deck A: kick $k vel=112 | hihat $h vel=70..95 | clap $c vel=100 | snare $s vel=80..110 | bass $b inst=sub-bass oct=2 len=1\n}\ndef deckB(a, p, m) {\n  deck B: arp $a inst=bright-pluck vel=70..95 len=1 | harmony $p inst=warm-pad len=16 vel=80 | melody $m inst=detuned-saw len=8 vel=105\n}\nsection intro 16 bars {\n  deckA(kk, hh, clap_in, rst, bass_in)\n  deckB(rst, pads, rst)\n  master: filter lp 400 -> 16000 over 16 bars\n}\nsection breakdown 16 bars {\n  deckA(rst, every(16, rst, hh), rst, roll, rst)\n  deckB(every(16, rst, arps), pads, every(16, rst, mels))\n  at bar 8: master: filter lp 16000 -> 1500 over 1 bars\n  at bar 9: master: filter lp 1500 -> 18000 over 7 bars\n}\nsection drop 24 bars {\n  deckA(kk, hh, cl, rst, basses)\n  deckB(arps, pads, mels)\n}\nsection outro 8 bars {\n  deckA(kk, hh, clap_out, rst, basses)\n  deckB(rst, pads, rst)\n  master: filter lp 18000 -> 800 over 8 bars\n  at bar 7: move echo_out on A over 1 bars\n  at bar 7: move echo_out on B over 1 bars\n}\narrange intro breakdown drop outro\n",
+    "warnings": []
+  }
+}

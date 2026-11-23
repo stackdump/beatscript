@@ -6,13 +6,13 @@ import { LENGTHS } from './station-model.js';
 
 export { LENGTHS };
 
-/** The roles a generated part line can name (btwapi::generate's parts; the MCP generate tool's `part` enum). */
+/** The roles a generated part line can name (beatscript-api::generate's parts; the MCP generate tool's `part` enum). */
 export const ROLES = ['kick', 'snare', 'hihat', 'clap', 'bass', 'melody', 'harmony', 'arp'];
 
 const U32 = 0x1_0000_0000;
 
 /**
- * A seed as given -> the generator's 32-bit seed, as btwapi::generate::seed_value computes it: a whole number is itself
+ * A seed as given -> the generator's 32-bit seed, as beatscript-api::generate::seed_value computes it: a whole number is itself
  * (its low 32 bits), a word its FNV-1a hash (trimmed, lower-cased, over its UTF-8 bytes), so "sunrise" is one track.
  */
 export function seedValue(seed) {
@@ -45,7 +45,7 @@ export function callSeed(seed) {
   return String(seedValue(s));
 }
 
-/** The request btw_generate / POST /api/generate take. */
+/** The request beatscript_generate / POST /api/generate take. */
 export function genRequest({ genre, seed, length }) {
   return { genre: genre || 'techno', seed: String(seed == null ? '' : seed).trim() || '1', length: LENGTHS.includes(length) ? length : 'standard' };
 }
@@ -107,10 +107,10 @@ export function rolesIn(text, section) {
   return ROLES.filter((r) => found.has(r));
 }
 
-/** The panel's remembered inputs (localStorage `btw.gen`), each checked: a bad value takes the default. */
+/** The panel's remembered inputs (localStorage `beatscript.gen`), each checked: a bad value takes the default. */
 export function loadGenState(store, genres) {
   let v = {};
-  try { v = JSON.parse((store && store.getItem('btw.gen')) || '{}') || {}; } catch { v = {}; }
+  try { v = JSON.parse((store && store.getItem('beatscript.gen')) || '{}') || {}; } catch { v = {}; }
   return {
     genre: genres.includes(v.genre) ? v.genre : 'techno',
     seed: typeof v.seed === 'string' && v.seed.trim() && v.seed.length <= 64 ? v.seed.trim() : randomSeed(),
@@ -121,5 +121,5 @@ export function loadGenState(store, genres) {
 }
 
 export function saveGenState(store, st) {
-  try { if (store) store.setItem('btw.gen', JSON.stringify({ genre: st.genre, seed: st.seed, length: st.length, section: st.section, part: st.part })); } catch { /* private mode */ }
+  try { if (store) store.setItem('beatscript.gen', JSON.stringify({ genre: st.genre, seed: st.seed, length: st.length, section: st.section, part: st.part })); } catch { /* private mode */ }
 }

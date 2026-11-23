@@ -1,6 +1,6 @@
-//! F12: assertions (`assert ends | period | length | key | level`), docs/btw/ext-assert.md. The static ones are proved by
+//! F12: assertions (`assert ends | period | length | key | level`), docs/beatscript/ext-assert.md. The static ones are proved by
 //! `check` (a false one refuses the program and says the actual value), the level ones are pending until `btw test`
-//! (djhost::btw_test measures them; its tests and djctl's are there). Here: canonical forms, each statement passing and
+//! (djhost::beatscript_test measures them; its tests and djctl's are there). Here: canonical forms, each statement passing and
 //! failing with the right message, errors with their place and a did-you-mean, the laws (canonical fixed point,
 //! reformatting keeps the CID, an edit changes it, a length is what the tempo and the bars make it) and the judging of a
 //! level assertion from measured numbers.

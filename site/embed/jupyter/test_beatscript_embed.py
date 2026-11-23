@@ -17,7 +17,7 @@ from html.parser import HTMLParser
 from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOCKS = os.path.join(HERE, '..', '..', '..', 'crates', 'btwserve', 'src', 'mcp')
+LOCKS = os.path.join(HERE, '..', '..', '..', 'crates', 'beatscript-serve', 'src', 'mcp')
 sys.path.insert(0, HERE)  # -I leaves the script's own directory off sys.path
 
 import beatscript_embed as be  # noqa: E402

@@ -1,4 +1,4 @@
-# build-host.sh: which machine runs a heavy build. Sourced (POSIX sh) by build-btwd-linux.sh and
+# build-host.sh: which machine runs a heavy build. Sourced (POSIX sh) by build-linux.sh and
 # build-web-wasm.sh; not run on its own.
 #
 #   BUILD_HOST unset    this machine, in place (`local`), when it can do the build; else each host named in

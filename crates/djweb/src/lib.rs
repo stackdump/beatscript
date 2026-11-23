@@ -1,10 +1,10 @@
-//! djweb: the one `.wasm` the page loads (btwsite/DESIGN.md, "crates/djweb").
+//! djweb: the one `.wasm` the page loads (site/DESIGN.md, "crates/djweb").
 //!
 //! It is two things in one module, so the language and the sound can never be from different builds:
 //!
-//! - **the language**: thin `wasm-bindgen` wrappers over `btwapi` (`btw_check`, `btw_fmt`, `btw_open`, ... and the
-//!   [`BtwRun`] class, the Live runtime behind a command queue). Strings in, JSON strings out. All the logic is
-//!   in `btwapi`, which the `btwd` binary shares, so the browser and the server answer the same bytes.
+//! - **the language**: thin `wasm-bindgen` wrappers over `beatscript-api` (`beatscript_check`, `beatscript_fmt`, `beatscript_open`, ... and the
+//!   [`BeatscriptRun`] class, the Live runtime behind a command queue). Strings in, JSON strings out. All the logic is
+//!   in `beatscript-api`, which the `beatscript` binary shares, so the browser and the server answer the same bytes.
 //! - **the engine**: djrust's public browser facade, re-exported (`Dj`, `DjComposer`, `render_offline`, ...), which
 //!   runs in an AudioWorklet (`Dj`) and a Worker (`DjComposer`).
 //!
@@ -34,65 +34,65 @@ fn init() {
 
 // ---- the language ----
 
-/// `check(text)` -> CheckReport JSON (docs: btwsite/DESIGN.md "JSON shapes").
+/// `check(text)` -> CheckReport JSON (docs: site/DESIGN.md "JSON shapes").
 #[wasm_bindgen]
-pub fn btw_check(text: &str) -> String {
+pub fn beatscript_check(text: &str) -> String {
     init();
-    btwapi::check_json(text)
+    beatscript_api::check_json(text)
 }
 
 /// `fmt(text)` -> `{"ok","canonical","cid","comments","diagnostics"}`.
 #[wasm_bindgen]
-pub fn btw_fmt(text: &str) -> String {
+pub fn beatscript_fmt(text: &str) -> String {
     init();
-    btwapi::fmt_json(text)
+    beatscript_api::fmt_json(text)
 }
 
-/// `expand(text, lineage)`: the program with its `seed(...)` references written out as plain BeatScript (btwapi).
+/// `expand(text, lineage)`: the program with its `seed(...)` references written out as plain BeatScript (beatscript-api).
 #[wasm_bindgen]
-pub fn btw_expand(text: &str, lineage: bool) -> String {
+pub fn beatscript_expand(text: &str, lineage: bool) -> String {
     init();
-    btwapi::expand_json(text, lineage)
+    beatscript_api::expand_json(text, lineage)
 }
 
 /// `generate(json)`: the seeded generator, no model. `{"genre","bpm","key","length","seed"}` (all optional) ->
 /// `{"ok","text","cid","name","generator","seed",...,"check"}` or `{"ok":false,"error"}`. Same inputs, same text and CID.
 #[wasm_bindgen]
-pub fn btw_generate(request_json: &str) -> String {
+pub fn beatscript_generate(request_json: &str) -> String {
     init();
-    btwapi::generate_json(request_json)
+    beatscript_api::generate_json(request_json)
 }
 
-/// `station(json)`: radio (docs/btw/radio.md). A station request, `{"station": "<program>", "n", "count", "segue", "check",
+/// `station(json)`: radio (docs/beatscript/radio.md). A station request, `{"station": "<program>", "n", "count", "segue", "check",
 /// "retune", "locks", "neighbours"}` -> `{"ok","version","station","n","tracks","segues",...}` or `{"ok":false,"error",
-/// "diagnostics"}`: the answer the MCP `station` tool and `POST /api/station` give (btwapi::station_json).
+/// "diagnostics"}`: the answer the MCP `station` tool and `POST /api/station` give (beatscript_api::station_json).
 #[wasm_bindgen]
-pub fn btw_station(request_json: &str) -> String {
+pub fn beatscript_station(request_json: &str) -> String {
     init();
-    btwapi::station_json(request_json)
+    beatscript_api::station_json(request_json)
 }
 
 /// Tell the module a program by CID and canonical text (what `/api/programs/<cid>` answers, or a link carried): an `import`
 /// of that CID then checks, plays and shares as it does where the program is saved. The text is re-hashed; one that is not
 /// the program its CID names is refused (`{"ok":false,"error"}`).
 #[wasm_bindgen]
-pub fn btw_know(cid: &str, text: &str) -> String {
+pub fn beatscript_know(cid: &str, text: &str) -> String {
     init();
-    btwapi::known::know_json(cid, text)
+    beatscript_api::known::know_json(cid, text)
 }
 
 /// The voices, families, kits and palettes a part may name.
 #[wasm_bindgen]
-pub fn btw_instruments() -> String {
+pub fn beatscript_instruments() -> String {
     init();
-    btwapi::instruments_json()
+    beatscript_api::instruments_json()
 }
 
 /// A link, fragment (`#<CID>.<packed>`) or bare CID decoded and verified -> OpenReport JSON.
 #[wasm_bindgen]
-pub fn btw_open(url_or_cid_or_fragment: &str) -> String {
+pub fn beatscript_open(url_or_cid_or_fragment: &str) -> String {
     init();
-    btwapi::open_json(url_or_cid_or_fragment)
+    beatscript_api::open_json(url_or_cid_or_fragment)
 }
 
 /// The self-sealing link for a program. `sig`: the author's signature over the CID, carried as given.
@@ -100,35 +100,35 @@ pub fn btw_open(url_or_cid_or_fragment: &str) -> String {
 /// unsealed: the CID is the canonical text's). `notes`: carry the comments in beats' link too (`~notes`). `origin`: the site's
 /// origin (default `https://beatscript.app`).
 #[wasm_bindgen]
-pub fn btw_share(text: &str, sig: Option<String>, notes: bool, origin: Option<String>) -> String {
+pub fn beatscript_share(text: &str, sig: Option<String>, notes: bool, origin: Option<String>) -> String {
     init();
-    btwapi::share_json(text, sig.as_deref().filter(|s| !s.is_empty()), notes, origin.as_deref().filter(|s| !s.is_empty()).unwrap_or(btwapi::DEFAULT_ORIGIN))
+    beatscript_api::share_json(text, sig.as_deref().filter(|s| !s.is_empty()), notes, origin.as_deref().filter(|s| !s.is_empty()).unwrap_or(beatscript_api::DEFAULT_ORIGIN))
 }
 
 /// The CID of generation `n` of an `evolve` (`scope` empty: the first one's) -> JSON.
 #[wasm_bindgen]
-pub fn btw_generation(text: &str, scope: Option<String>, n: u32) -> String {
+pub fn beatscript_generation(text: &str, scope: Option<String>, n: u32) -> String {
     init();
-    btwapi::generation_json(text, scope.as_deref().filter(|s| !s.is_empty()), n)
+    beatscript_api::generation_json(text, scope.as_deref().filter(|s| !s.is_empty()), n)
 }
 
 /// Highlight spans as JSON `[[start16,end16,"class"],...]`, UTF-16 offsets so `text.slice(a, b)` works.
 #[wasm_bindgen]
-pub fn btw_highlight(text: &str) -> String {
+pub fn beatscript_highlight(text: &str) -> String {
     init();
-    btwapi::highlight_json_utf16(text)
+    beatscript_api::highlight_json_utf16(text)
 }
 
-/// The compact grammar, generated from docs/BTW.md (markdown).
+/// The compact grammar, generated from docs/BEATSCRIPT.md (markdown).
 #[wasm_bindgen]
-pub fn btw_cheatsheet() -> String {
+pub fn beatscript_cheatsheet() -> String {
     init();
-    btwapi::cheatsheet()
+    beatscript_api::cheatsheet()
 }
 
 /// Versions of what is in this module: `{"djweb","engine"}`.
 #[wasm_bindgen]
-pub fn btw_build_info() -> String {
+pub fn beatscript_build_info() -> String {
     format!("{{\"djweb\":\"{}\",\"engine\":\"{}\"}}", env!("CARGO_PKG_VERSION"), djrust::wasm::engine_version())
 }
 
@@ -139,24 +139,24 @@ pub fn btw_build_info() -> String {
 /// The page calls `eval` when the person evaluates, then `service(grid)` about every 25 ms with where the
 /// sound's clock is (`engine.grid()`), applies the commands it returns (`engine.apply`), and reads `marks()`
 /// to light the text. `stop()` returns the commands that put back what lines held. See
-/// `btwapi::run` for the shapes.
+/// `beatscript_api::run` for the shapes.
 #[wasm_bindgen]
-pub struct BtwRun {
-    inner: btwapi::run::Run,
+pub struct BeatscriptRun {
+    inner: beatscript_api::run::Run,
 }
 
-impl Default for BtwRun {
+impl Default for BeatscriptRun {
     fn default() -> Self {
-        BtwRun::new()
+        BeatscriptRun::new()
     }
 }
 
 #[wasm_bindgen]
-impl BtwRun {
+impl BeatscriptRun {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> BtwRun {
+    pub fn new() -> BeatscriptRun {
         init();
-        BtwRun { inner: btwapi::run::Run::new() }
+        BeatscriptRun { inner: beatscript_api::run::Run::new() }
     }
 
     /// Evaluate: the app's eval answer as JSON (`ok`, `diagnostics`, `cid`, `nets`, `changes`, `lands`, `lineage`, `kept`...).
@@ -201,7 +201,7 @@ impl BtwRun {
 
 // ---- the language service ----
 
-/// The language service for the editor (crates/beatscriptls): the same server `btwd lsp` runs, with positions in UTF-16 (JS string
+/// The language service for the editor (crates/beatscriptls): the same server `beatscript lsp` runs, with positions in UTF-16 (JS string
 /// offsets) and no `initialize` needed. Documents are named by any string (`"main"`).
 ///
 /// - `open(uri, text)` / `change(uri, text)` -> the parser's diagnostics (JSON array), at once: every keystroke.
@@ -264,10 +264,10 @@ impl BeatscriptLs {
 #[cfg(test)]
 mod tests {
     // The wasm-bindgen exports cannot be called off wasm32 (JsError, console); what they wrap is tested in
-    // btwapi, and the built module by scripts/test-web-wasm.mjs. This only keeps the pieces that need no JS host honest.
+    // beatscript-api, and the built module by scripts/test-web-wasm.mjs. This only keeps the pieces that need no JS host honest.
     #[test]
     fn the_runtime_wrapper_is_the_btwapi_one() {
-        let mut r = btwapi::run::Run::new();
+        let mut r = beatscript_api::run::Run::new();
         let ev = r.eval_str("deck A: kick x ~ x ~\n");
         assert!(ev.contains("\"ok\":true"), "{ev}");
         // nothing plays, so the program starts at once: its nets, then the deck
@@ -291,27 +291,27 @@ mod tests {
         assert_eq!(out, r#"[{"jsonrpc":"2.0","id":7,"result":null}]"#);
     }
 
-    /// What the page asks of a reference (docs/beatscriptls.md "The web editor"): `btw/expand` and the copy command, in UTF-16.
+    /// What the page asks of a reference (docs/beatscriptls.md "The web editor"): `beatscript/expand` and the copy command, in UTF-16.
     #[test]
     fn the_language_service_answers_a_references_expansion() {
         let mut ls = beatscriptls::Server::with_encoding(beatscriptls::Encoding::Utf16);
         ls.deferred = true;
         let text = "# é\ntempo 128\nkey c\nlet bed = gen@2 techno seed=42 section=drop part=bass\nsection groove 4 bars {\n  deck A: bass bed\n}\narrange groove\n";
         beatscriptls::wasm::open(&mut ls, "main", text);
-        let all = beatscriptls::wasm::request(&mut ls, "btw/expand", r#"{"textDocument":{"uri":"main"}}"#);
+        let all = beatscriptls::wasm::request(&mut ls, "beatscript/expand", r#"{"textDocument":{"uri":"main"}}"#);
         assert!(all.contains(r#""kind":"gen""#) && all.contains(r#""range":{"start":{"line":3,"character":10}"#) && all.contains("let bed_1 = "), "{all}");
-        let copy = beatscriptls::wasm::request(&mut ls, "workspace/executeCommand", r#"{"command":"btw.expand.copy","arguments":[{"uri":"main","position":{"line":3,"character":12}}]}"#);
+        let copy = beatscriptls::wasm::request(&mut ls, "workspace/executeCommand", r#"{"command":"beatscript.expand.copy","arguments":[{"uri":"main","position":{"line":3,"character":12}}]}"#);
         assert!(copy.contains(r##""text":"# from: gen@2 techno seed=42 section=drop part=bass -> z"##), "{copy}");
     }
 
     #[test]
     fn share_default_origin_is_the_site() {
-        assert_eq!(btwapi::DEFAULT_ORIGIN, "https://beatscript.app");
-        // what btw_share does with no origin given; the link opens to the text as written, comment and all
-        let j = btwapi::share_json("# a comment\ndeck A: kick x ~ x ~\n", None, false, btwapi::DEFAULT_ORIGIN);
+        assert_eq!(beatscript_api::DEFAULT_ORIGIN, "https://beatscript.app");
+        // what beatscript_share does with no origin given; the link opens to the text as written, comment and all
+        let j = beatscript_api::share_json("# a comment\ndeck A: kick x ~ x ~\n", None, false, beatscript_api::DEFAULT_ORIGIN);
         assert!(j.contains("\"url\":\"https://beatscript.app/#z") && !j.contains("btw.bitwrap.io"), "{j}");
         let url = j.split("\"url\":\"").nth(1).and_then(|r| r.split('"').next()).unwrap();
-        let o = btwapi::open_json(url);
+        let o = beatscript_api::open_json(url);
         assert!(o.contains("\"text\":\"# a comment\\ndeck A: kick x ~ x ~\\n\""), "{o}");
     }
 }

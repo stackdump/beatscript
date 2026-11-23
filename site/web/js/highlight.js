@@ -1,4 +1,4 @@
-// Syntax highlighting: btw_highlight's spans -> HTML for the <pre> under the textarea.
+// Syntax highlighting: beatscript_highlight's spans -> HTML for the <pre> under the textarea.
 // Pure. The class names the wasm gives are mapped to a fixed set of CSS classes (c-<name>).
 
 import { esc } from './util.js';

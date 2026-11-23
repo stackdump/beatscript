@@ -1,6 +1,6 @@
 // Opening a link: what to do with the bytes of a stranger's link before the module sees them. Pure (no DOM), so Node tests it.
 //
-// A btw link is `#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<base64url(deflate(notes))>][*<base64url(deflate(programs))>]`:
+// A BeatScript link is `#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<base64url(deflate(notes))>][*<base64url(deflate(programs))>]`:
 // after the `*`, the programs the text draws on (an `import`), each by its CID, which the module hashes before it uses one, and which
 // the page keeps (`open` answers them as `bundle`). The module inflates
 // it (to at most 1 MiB) and then parses, compiles and checks what came out, all in the page's one thread. A link of a few
@@ -11,7 +11,7 @@ import { MAX_LOAD_TEXT, MAX_LINK_CHARS, MAX_LINK_BUNDLE } from './util.js';
 
 /**
  * The fragment of a `location.hash`, percent-decoded when it can be. A malformed escape (`#%`, `#%E0%A4%A`) is a link
- * somebody mangled, not a reason to stop: it is left as written and the module says it is not a btw link.
+ * somebody mangled, not a reason to stop: it is left as written and the module says it is not a BeatScript link.
  */
 export function fragmentOf(hash) {
   const raw = String(hash || '').replace(/^#/, '');

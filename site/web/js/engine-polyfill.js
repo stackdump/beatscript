@@ -1,7 +1,7 @@
 /**
  * engine-polyfill.js: TextEncoder / TextDecoder for an AudioWorkletGlobalScope.
  *
- * The worklet scope has neither (nor fetch), and the wasm-bindgen glue (../wasm/btw.js) makes both at the
+ * The worklet scope has neither (nor fetch), and the wasm-bindgen glue (../wasm/beatscript.js) makes both at the
  * top level of its module. engine-worklet.js imports this file first; ES module evaluation runs imports in
  * order, so these exist before the glue is evaluated. A scope that already has them (a Worker, the main
  * thread, Node) is left alone.

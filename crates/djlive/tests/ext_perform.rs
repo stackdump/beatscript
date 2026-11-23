@@ -1,4 +1,4 @@
-//! F13, the performed tier (docs/btw/ext-perform.md): `knob(3)`, `pad(5)`, `fader(A)`, `held(key)` and `held(c4)` in control
+//! F13, the performed tier (docs/beatscript/ext-perform.md): `knob(3)`, `pad(5)`, `fader(A)`, `held(key)` and `held(c4)` in control
 //! values and control guards, read at bar boundaries from the host, logged, and replayed from a performance. The heart is a
 //! live run on a fake clock with scripted inputs against the replay of its log: the same calls, in the same order, with the
 //! same numbers.
@@ -951,8 +951,8 @@ fn a_program_with_inputs_and_an_evolve_keeps_the_generations_it_had() {
 fn a_note_is_spelled_once_in_an_input_and_the_example_plays() {
     assert_eq!(compiled("every 1 bars: master: level 0.5 when held(C#4)\n").text, "every 1 bars: master: level 0.5 when held(c#4)\n");
     assert_eq!(compiled("every 1 bars: master: level 0.5 when held(Db4)\n").text, "every 1 bars: master: level 0.5 when held(c#4)\n");
-    // examples/btw/perform.btw, played: the gate opens the delay while a key is down, pad 5 takes deck A's low end for its bar
-    let src = include_str!("../../../examples/btw/perform.btw");
+    // examples/beatscript/perform.beatscript, played: the gate opens the delay while a key is down, pad 5 takes deck A's low end for its bar
+    let src = include_str!("../../../examples/beatscript/perform.beatscript");
     let (mut h, mut live) = started(src);
     h.set("knob(3)", 0.5);
     h.set("fader(A)", 0.25);

@@ -1,4 +1,4 @@
-//! Parser goldens (the examples of docs/BTW.md, canonical text and its fixed point, error
+//! Parser goldens (the examples of docs/BEATSCRIPT.md, canonical text and its fixed point, error
 //! cases with their exact line, column and message), mini-notation, and the compile: pattern text
 //! to the net's exact shape, the same text the same CIDs.
 
@@ -384,7 +384,7 @@ fn the_envelope_is_a_raw_nets_share_the_engine_loads() {
 
 #[test]
 fn net_cids_are_pinned() {
-    // a change here is a change in what the same text means: say so in docs/BTW.md
+    // a change here is a change in what the same text means: say so in docs/BEATSCRIPT.md
     let c = check("deck A: kick x ~ x ~ | snare ~ x ~ x\n").compiled.unwrap();
     assert_eq!(c.cid, "z4EBG9jF93KbegNhFj6qpGcRyuQPbWGEkXpmj4uLcc6Vgsbni6W");
     assert_eq!(c.decks[&Deck::A].net_cid(), "z4EBG9j14KzNPceJaWT1ErVLVDLRNpqngCQtSUHP9yDu7McaLjf");

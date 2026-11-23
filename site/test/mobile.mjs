@@ -153,7 +153,7 @@ try {
     await page.cdp('Emulation.setSafeAreaInsetsOverride', { insets: { top: 0, bottom: 0, left: 0, right: 0 } }).catch(() => {});
   } else {
     console.log('  note: this Chrome has no Emulation.setSafeAreaInsetsOverride: the safe-area check reads the stylesheet instead');
-    const css = fs.readFileSync(path.join(here, '..', 'web', 'css', 'btw.css'), 'utf8');
+    const css = fs.readFileSync(path.join(here, '..', 'web', 'css', 'beatscript.css'), 'utf8');
     check('the stylesheet pads the bar by env(safe-area-inset-bottom)', /\.transport \{[^}]*safe-area-inset-bottom/.test(css));
   }
 

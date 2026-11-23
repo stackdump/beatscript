@@ -1,4 +1,4 @@
-//! The live-coding language (docs/BTW.md): a small text language of our own. Pattern lines
+//! The live-coding language (docs/BEATSCRIPT.md): a small text language of our own. Pattern lines
 //! compile to djrust Petri nets (raw-nets envelopes, `djengine::roll`) and control lines to calls
 //! on the control-language registry; [`runtime::Live`] applies a program on the next bar and keeps
 //! the last good one when an evaluation has errors.

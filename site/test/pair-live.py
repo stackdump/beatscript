@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives import serialization
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "https://btw.bitwrap.io").rstrip("/")
 HOST = urlparse(BASE).netloc
-UA = {"User-Agent": "Mozilla/5.0 (btw pair-live test)"}
+UA = {"User-Agent": "Mozilla/5.0 (beatscript pair-live test)"}
 
 jar = CookieJar()
 web = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
@@ -65,7 +65,7 @@ page = {"Origin": BASE}
 # a program the real checker accepts: one of the site's own examples
 _, exs = call(raw, "GET", "/api/examples")
 ex = (exs.get("examples") if isinstance(exs, dict) else exs)[0]
-with raw.open(urllib.request.Request(BASE + f"/examples/{ex['name']}.btw", headers=UA), timeout=20) as r:
+with raw.open(urllib.request.Request(BASE + f"/examples/{ex['name']}.beatscript", headers=UA), timeout=20) as r:
     PROG = r.read().decode()
 
 # 2. the page shows a code

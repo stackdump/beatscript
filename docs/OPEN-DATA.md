@@ -31,7 +31,7 @@ A program's name is its CID: the hash of its canonical text.
 | URL | what |
 |---|---|
 | `/p/<CID>` | its page: a link preview, and the program as a `<beatscript-view>` block |
-| `/p/<CID>.btw` | its **canonical text**, `text/plain`. This is exactly what the CID hashes |
+| `/p/<CID>.beatscript` | its **canonical text**, `text/plain`. This is exactly what the CID hashes |
 | `/p/<CID>.jsonld` | its linked data (`application/ld+json`) |
 | `/api/render/<CID>?format=opus` | its audio, the offline render (`format=wav` for WAV) |
 
@@ -39,7 +39,7 @@ A program's name is its CID: the hash of its canonical text.
 
 | `Accept` | answer |
 |---|---|
-| `text/plain` or `text/x-beatscript` | the `.btw` |
+| `text/plain` or `text/x-beatscript` | the `.beatscript` |
 | `application/ld+json` or `application/json` | the `.jsonld` |
 | `audio/*` | `303 See Other` to the render |
 | anything else (a browser) | the page |
@@ -86,7 +86,7 @@ Each feed item is a program:
 - **id / guid**: its page URL;
 - **date**: when it was shared;
 - **text**: its canonical text;
-- **enclosures / attachments**: its `.btw`, `.jsonld` and render.
+- **enclosures / attachments**: its `.beatscript`, `.jsonld` and render.
 
 The JSON Feed's `_beatscript` member carries the CID and licence of each item, and at the top it links the dump, the
 sitemap, the Atom feed and the schema. The item shape follows beats.bitwrap.io's `/feed.rss`.
@@ -98,7 +98,7 @@ sitemap, the Atom feed and the schema. The item shape follows beats.bitwrap.io's
 An archive is a `.tar.gz` named by its own hash: `beatscript-cc0-<first 16 hex of its sha256>.tar.gz`. It holds:
 
 - `manifest.jsonld`: `@type` `["ProgramDump", "Dataset"]`, the `count`, and the sorted list of `cids`;
-- `programs/<CID>.btw`: each program's canonical text;
+- `programs/<CID>.beatscript`: each program's canonical text;
 - `programs/<CID>.jsonld`: each program's JSON-LD (the `<beatscript-view>` block's document).
 
 The bytes are deterministic. Files are sorted by CID, every tar header is the same except name and size (mtime 0,
@@ -108,7 +108,7 @@ programs give the same archive and the same name, and a dump with nothing new ch
 
 To check an archive:
 1. its sha256 must match its name;
-2. each `programs/<CID>.btw` must hash to its CID (`{"format":1,"text":<the file>,"type":"djrust.live"}`, sha2-256,
+2. each `programs/<CID>.beatscript` must hash to its CID (`{"format":1,"text":<the file>,"type":"djrust.live"}`, sha2-256,
    CIDv1 dag-json, base58btc);
 3. each `.jsonld`'s `@id` must be that CID.
 
@@ -116,11 +116,11 @@ The manifest follows beats.bitwrap.io's snapshot manifest (`version`, `count`, `
 
 ### Making a dump
 
-`btw-dump`, a binary of the btwserve crate, reads the programs store (it never writes there) and writes the archive and
+`beatscript-dump`, a binary of the beatscript-serve crate, reads the programs store (it never writes there) and writes the archive and
 `latest.json`:
 
 ```text
-btw-dump -programs <data>/programs -out <data>/dumps -public-url https://beatscript.app
+beatscript-dump -programs <data>/programs -out <data>/dumps -public-url https://beatscript.app
 ```
 
 The server serves what it finds in `-dump-dir` (default `<data>/dumps`). `tools/open-data/` in the engine repo has the
@@ -130,7 +130,7 @@ job definition, which nothing schedules yet.
 
 Besides programs, the site publishes one curated corpus: lines of verse, scripture, speech and work song, each first published before
 1929, to sing by id (`sing @tempest_such_stuff on melody`). The file is CC0, and every text in it is in the public domain. Each line
-has its source, its meter as a step pattern and the lyric BeatScript sings it as; `docs/btw/phonemes.md` ("The public-domain
+has its source, its meter as a step pattern and the lyric BeatScript sings it as; `docs/beatscript/phonemes.md` ("The public-domain
 phrasebook") says what every field is.
 
 ```text

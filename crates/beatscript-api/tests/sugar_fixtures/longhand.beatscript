@@ -1,0 +1,13 @@
+# the longhand of examples/beatscript/sugar.beatscript, written out by hand: tests/sugar.rs proves they are one song
+tempo 126
+key am
+
+section groove 8 bars {
+  deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | hihat [~*2 x*2 ~*2 x*2?0.5] vel=50..80 | clap <[~ ~ x ~ ~ x ~ ~] [x ~ ~ x ~ ~ x ~] [~ x ~ ~ x ~ ~ x]> vel=70
+  deck B: bass a1 ~ a1 ~ c2 ~ ~ e2 g1 ~ ~ ~ ~ ~ ~ ~ | melody [a4 ~ c5 ~ e5 ~ ~ ~, transpose(rotate([a4 ~ c5 ~ e5 ~ ~ ~], 1), 12)] inst=pluck
+}
+section turn 8 bars {
+  deck A: kick x x x x | hihat <[x x ~ x ~ x x ~] [x ~ x x ~ x ~ x] [x ~ x ~ x x ~ x] [~ x x ~ x ~ x x] [~ x ~ x x ~ x ~]> vel=45..75 | snare ~ x ~ x
+  deck B: bass <[a1 c2 e2 g2] [g2 e2 c2 a1]> | melody <[a4 c5 e5 g5 e5 c5 ~ ~] [e5 g5 e5 c5 ~ ~ a4 c5] [e5 c5 ~ ~ a4 c5 e5 g5] [~ ~ a4 c5 e5 g5 e5 c5]> inst=pluck
+}
+arrange groove turn groove

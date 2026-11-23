@@ -37,7 +37,7 @@ A **source** runs through five **formant resonators**:
   held note has no context to tell the schwa from `a`. F4 and F5 and the
   bandwidths are Klatt's (1980) defaults. A fractional position morphs between neighbours
   (log frequency). A diphthong that glides to `oo` (`oh`, `ow`) ends with the lips rounded (F1 x 0.95,
-  F2 x 0.78), so a held `oh` is not a held `oo` (docs/btw/ext-sing.md, "The sung voice's own sound").
+  F2 x 0.78), so a held `oh` is not a held `oo` (docs/beatscript/ext-sing.md, "The sung voice's own sound").
 - **The note.** In a net a note is held for its length (about 2 dB of droop, never under 90 ms), closes on its
   syllable's last consonant, and releases in about 30 ms; the part's `decay=` is the length of that release.
   A track with a voice in it is leveled by a loudness probe at 24 kHz (8 kHz for everything else), and the presets
@@ -245,7 +245,7 @@ lyrics ──► words ──► phones ───────► syllables ─�
            spelled)  letter-to-sound  rule          and a bar grid   coda, cluster events
 ```
 
-**Phonemes.** `djengine::vocal::lexicon` and `djengine::vocal::phoneme` (docs/btw/phonemes.md, the headline):
+**Phonemes.** `djengine::vocal::lexicon` and `djengine::vocal::phoneme` (docs/beatscript/phonemes.md, the headline):
 
 - **The escape.** Text between slashes is BeatScript phonemes (`/w ee - aa r/`), set `beatscript-v1`, CC0, our own: sung as
   written, no dictionary asked, so it sounds the same on every engine and build.

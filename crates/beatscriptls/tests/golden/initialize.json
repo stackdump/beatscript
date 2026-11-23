@@ -15,13 +15,13 @@
       "referencesProvider": true,
       "documentHighlightProvider": true,
       "renameProvider": {"prepareProvider":true},
-      "experimental": {"btw":{"numberAt":true,"diagnostics":true,"expand":true}},
+      "experimental": {"beatscript":{"numberAt":true,"diagnostics":true,"expand":true}},
       "codeActionProvider": {
-        "codeActionKinds": ["quickfix","source.fixAll.btw","refactor.extract","refactor.inline","refactor.rewrite"],
+        "codeActionKinds": ["quickfix","source.fixAll.beatscript","refactor.extract","refactor.inline","refactor.rewrite"],
         "resolveProvider": true
       },
       "codeLensProvider": {"resolveProvider":false},
-      "executeCommandProvider": {"commands":["btw.expand.toggle","btw.expand.copy","btw.eject"]}
+      "executeCommandProvider": {"commands":["beatscript.expand.toggle","beatscript.expand.copy","beatscript.eject"]}
     },
     "serverInfo": {"name":"beatscriptls","version":"0.1.0"}
   }

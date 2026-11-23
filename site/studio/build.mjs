@@ -2,7 +2,7 @@
 //
 //   node site/studio/build.mjs [--wasm <dir>] [--out <dir>]
 //
-// --wasm: the browser module (btw.js + btw_bg.wasm), default site/web/wasm. --out: default site/studio/dist
+// --wasm: the browser module (beatscript.js + beatscript_bg.wasm), default site/web/wasm. --out: default site/studio/dist
 // (git-ignored, as the player's dist is: the wasm is built from a private repo, so the package is assembled, never
 // committed).
 //

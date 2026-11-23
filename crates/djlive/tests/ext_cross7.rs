@@ -146,7 +146,7 @@ impl LiveHost for Fake {
 /// The deck beat a program with no sections has its bar 0 on (deck A plays from beat 8): the bar it was evaluated in, which its `at bar` lines
 /// count from (the music lands on the next bar line).
 const FLAT: f64 = 8.0;
-/// The deck beat its tempo curve has its bar 0 on: the bar the music lands on, the first you hear (R-02, docs/BTW.md "Time words").
+/// The deck beat its tempo curve has its bar 0 on: the bar the music lands on, the first you hear (R-02, docs/BEATSCRIPT.md "Time words").
 const LANDED: f64 = 12.0;
 
 impl Fake {

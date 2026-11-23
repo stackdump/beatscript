@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 // Deterministic demo recorder for btw.bitwrap.io: no screen capture, no system audio, no wall clock.
 //
-//   node site/tools/record-demo.mjs --server http://127.0.0.1:18097 --btwd target/release/btwd \
+//   node site/tools/record-demo.mjs --server http://127.0.0.1:18097 --beatscript target/release/beatscript \
 //        --cid z4EBG9jB3vwMeCJNSp8WJLWDRM7ADEWxi23HyNSij5cHBL94r7v --out ./promo
 //
 // How: headless Chrome loads the page in ?record=1&clock=manual (window.__btw, DESIGN.md / W1): the page has
 // no audio and no timers, its grid comes from a fake clock this script steps. Per frame: __btw.setTime(t),
 // __btw.frame() (one service()+marks()+DOM pass), Page.captureScreenshot -> ffmpeg image2pipe. The audio is the
-// Rust render of the same program (btwd render, offline: same engine as `djctl btw render`), trimmed to the
+// Rust render of the same program (beatscript render, offline: same engine as `djctl btw render`), trimmed to the
 // same window, so picture and sound share one clock by construction: perfectly synced and stutter-free.
 //
-// Outputs (in --out): btw-demo.mp4 (H.264 CRF 20 veryfast, AAC 192k, 1920x1080, faststart),
+// Outputs (in --out): beatscript-demo.mp4 (H.264 CRF 20 veryfast, AAC 192k, 1920x1080, faststart),
 // btw-hero-loop.mp4 + btw-hero-loop.webm (silent, the drop with markers), btw-poster.png.
 // What the render does not have: control lines (filter sweeps, reverb) - the offline renderer has no op
-// for registry calls yet (docs/BTW.md "Evaluating"), so the audio is the notes and sounds without the risers.
+// for registry calls yet (docs/BEATSCRIPT.md "Evaluating"), so the audio is the notes and sounds without the risers.
 //
 // No npm: Node >= 22 (global fetch and WebSocket), ffmpeg on PATH, Google Chrome.
 
@@ -29,12 +29,12 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, x, i, all) => {
 const W = 1920, H = 1080
 const fps = +(args.fps || 30)
 const server = (args.server || 'http://127.0.0.1:18097').replace(/\/$/, '')
-const btwd = resolve((args.btwd || 'target/release/btwd').replace(/^~/, homedir()))
+const beatscript = resolve((args.beatscript || 'target/release/beatscript').replace(/^~/, homedir()))
 const outDir = resolve(String(args.out || './promo').replace(/^~/, homedir()))
 const which = String(args.only || 'demo,hero,poster').split(',')
 const chrome = args.chrome || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const source = args.cid ? `cid=${encodeURIComponent(args.cid)}` : `example=${encodeURIComponent(args.example || 'hand-dubstep-140-v4')}`
-const prefix = args.prefix || 'btw'
+const prefix = args.prefix || 'beatscript'
 mkdirSync(outDir, { recursive: true })
 
 const log = (...a) => console.error('[record]', ...a)
@@ -101,7 +101,7 @@ async function frameAt(t) {
 // ---- audio: the Rust render of the same program ----
 async function programText() {
   if (info.canonical || info.text) return info.canonical || info.text
-  for (const u of [`${server}/api/programs/${info.cid}`, args.example ? `${server}/examples/${args.example}.btw` : null]) {
+  for (const u of [`${server}/api/programs/${info.cid}`, args.example ? `${server}/examples/${args.example}.beatscript` : null]) {
     if (!u) continue
     const r = await fetch(u); if (!r.ok) continue
     const ct = r.headers.get('content-type') || ''
@@ -111,11 +111,11 @@ async function programText() {
 }
 async function renderAudio(wavPath) {
   if (existsSync(wavPath)) return
-  log('render audio with', btwd)
+  log('render audio with', beatscript)
   const text = await programText()
-  const f = join(profile, 'program.btw'); writeFileSync(f, text)
+  const f = join(profile, 'program.beatscript'); writeFileSync(f, text)
   // 48 kHz s16le straight into ffmpeg -> wav
-  const r = spawnSync('bash', ['-c', `"${btwd}" render --file "${f}" --sr 48000 --format s16le 2>"${wavPath}.log" | ffmpeg -y -loglevel error -f s16le -ar 48000 -ac 2 -i - "${wavPath}"`], { stdio: 'inherit' })
+  const r = spawnSync('bash', ['-c', `"${beatscript}" render --file "${f}" --sr 48000 --format s16le 2>"${wavPath}.log" | ffmpeg -y -loglevel error -f s16le -ar 48000 -ac 2 -i - "${wavPath}"`], { stdio: 'inherit' })
   if (r.status !== 0) throw new Error('audio render failed, see ' + wavPath + '.log')
 }
 

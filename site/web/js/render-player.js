@@ -3,7 +3,7 @@
 // (render-client.js: a blob: WAV on an <audio> element where the CSP allows it, else Web Audio on the same samples).
 // No realtime engine runs while it plays, so a busy machine cannot make it underrun.
 //
-// Like the stream (stream-player.js) it is a clock for BtwRun in virtual mode: grid() is the audio's own position
+// Like the stream (stream-player.js) it is a clock for BeatscriptRun in virtual mode: grid() is the audio's own position
 // (currentTime) and the program's tempo, so the follow view, the header and the markers light up the code as the
 // engine's do. The page re-evaluates on a fresh run when the position goes backwards (a seek back, or the loop wrapping
 // a program that does not loop itself): `epoch` changes, and the fresh run's first grid is bar 0, the next one the
@@ -149,7 +149,7 @@ export class RenderPlayer {
     return this.pb ? this.pb.transport : null;
   }
 
-  /** Echo BtwRun's commands into the playing flags (virtual mode: the commands themselves are discarded). */
+  /** Echo BeatscriptRun's commands into the playing flags (virtual mode: the commands themselves are discarded). */
   echo(cmds) {
     for (const c of cmds || []) if (c && c.op === 'play') this.playing[c.deck] = !!c.on;
   }
@@ -164,7 +164,7 @@ export class RenderPlayer {
     return this.rendered ? this.rendered.seconds : this.plan.seconds;
   }
 
-  /** The clock BtwRun runs on: beat = (loops gone round + the audio's position) x tempo / 60; null until it sounds. */
+  /** The clock BeatscriptRun runs on: beat = (loops gone round + the audio's position) x tempo / 60; null until it sounds. */
   grid() {
     const tr = this.transport;
     if (!tr || this.stopped || !(this.playing.A || this.playing.B)) return null;

@@ -2,14 +2,14 @@
 """Refresh crates/djhost/data/bitwrap-ontology.json from the published bitwrap ontology.
 
 The snapshot is of the bitwrap ontology itself, not of the BeatScript ontology served at beatscript.app/ontology/ (a
-fork of bitwrap 0.2.0, crates/btwserve/ontology/README.md): programs link to bitwrap's IRIs, which are upstream and stay
+fork of bitwrap 0.2.0, crates/beatscript-serve/ontology/README.md): programs link to bitwrap's IRIs, which are upstream and stay
 valid. Offline, the bitwrap release the fork was derived from is vendored at
-crates/btwserve/ontology/upstream/bitwrap-0.2.0/ns.nt (pass it with --from).
+crates/beatscript-serve/ontology/upstream/bitwrap-0.2.0/ns.nt (pass it with --from).
 
     python3 tools/ontology/refresh.py                       # fetch https://ontology.bitwrap.io/ns.nt (needs network)
     python3 tools/ontology/refresh.py --from ns.nt --fetched 2026-11-18   # offline, from a saved copy of ns.nt
 
-The snapshot is what `btw`'s `#! genre:` / `#! tags:` header lines are validated against (docs/btw/ext-linked.md).
+The snapshot is what `btw`'s `#! genre:` / `#! tags:` header lines are validated against (docs/beatscript/ext-linked.md).
 It is small and deterministic: the terms an author may name (genres, genre families, scales, grooves, instruments,
 instrument roles, song sections, song structures, Euclidean rhythms, chord progressions, engine concepts), sorted by
 IRI, one per line, with their local name, label and kind; a Euclidean rhythm also has its pulses, steps and rotation

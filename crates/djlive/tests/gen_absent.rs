@@ -1,5 +1,5 @@
 //! A host with no generator installed (djlive alone): a `gen` call is an error at the call that says so, the same words on every
-//! such host, and the program still has its canonical text (gen.rs; btwapi installs the seeded generator, `crates/btwapi/tests/gen.rs`).
+//! such host, and the program still has its canonical text (gen.rs; beatscript-api installs the seeded generator, `crates/beatscript-api/tests/gen.rs`).
 
 #[test]
 fn a_host_without_the_generator_says_so_at_the_call() {

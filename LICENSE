@@ -24,8 +24,8 @@ SOFTWARE.
 ---
 
 BeatScript programs and all content in this repository are dedicated to the
-public domain under CC0-1.0 (LICENSES/CC0-1.0.txt): every .btw program, the
+public domain under CC0-1.0 (LICENSES/CC0-1.0.txt): every .beatscript program, the
 examples, the lexicon, phrasebooks and themes, the ontology, test fixtures that
 are renders of our own programs, and the docs. REUSE.toml says which path is
-which. The Go fonts in crates/btwserve/assets/gofont are BSD-3-Clause, with
+which. The Go fonts in crates/beatscript-serve/assets/gofont are BSD-3-Clause, with
 their own LICENSE beside them.

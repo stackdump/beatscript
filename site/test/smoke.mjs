@@ -88,7 +88,7 @@ try {
     await ready();
     await sleep(400);
     check('the page loads and the module is up', (await page.eval('__app.wasmOk')) === true);
-    check('the editor shows highlighted code (syntax spans from btw_highlight)', (await count('.ly-hl .c-keyword')) > 0 && (await count('.ly-hl [class^="c-"]')) > 10);
+    check('the editor shows highlighted code (syntax spans from beatscript_highlight)', (await count('.ly-hl .c-keyword')) > 0 && (await count('.ly-hl [class^="c-"]')) > 10);
     check('examples are in the picker', (await count('#examples option')) > 2, `${await count('#examples option')} options`);
     check('a gutter with a number per line', (await count('.ed-gutter .gl')) === (await page.eval('__app.editor.text.split("\\n").length')));
     await shot(1, 'load');
@@ -646,15 +646,15 @@ try {
     // ?mock=1 is for this machine only
     {
       const port = new URL(base).port;
-      const other = await launch({ width: 800, height: 600, args: ['--host-resolver-rules=MAP btw.example.test 127.0.0.1'] });
+      const other = await launch({ width: 800, height: 600, args: ['--host-resolver-rules=MAP beatscript.example.test 127.0.0.1'] });
       try {
-        await other.goto(`http://btw.example.test:${port}/?mock=1`);
+        await other.goto(`http://beatscript.example.test:${port}/?mock=1`);
         await other.eval('(async()=>{ for (let i=0;i<300 && !(window.__btw);i++) await new Promise(r=>setTimeout(r,50)); await window.__btw.ready; return true })()', true);
-        check('?mock=1 does nothing on a host that is not this machine: the real module loads', (await other.eval('__app.mock')) === false && (await other.eval('__app.btw ? __app.btw.mock : null')) === false, `${await other.eval('__app.mock')}`);
+        check('?mock=1 does nothing on a host that is not this machine: the real module loads', (await other.eval('__app.mock')) === false && (await other.eval('__app.beatscript ? __app.beatscript.mock : null')) === false, `${await other.eval('__app.mock')}`);
       } finally { await other.close(); }
       await page.goto(`${T('')}?mock=1`);
       await ready();
-      check('and on this machine it still switches the stand-in on (development)', (await page.eval('__app.mock')) === true && (await page.eval('__app.btw.mock')) === true);
+      check('and on this machine it still switches the stand-in on (development)', (await page.eval('__app.mock')) === true && (await page.eval('__app.beatscript.mock')) === true);
     }
 
     // the policy the server sends, and what the page needs of it
@@ -691,7 +691,7 @@ try {
     }
   }
 
-  // ---- 12. number and range scrubbing (scrub.js over the module's btw/numberAt) -----------------------------------------------------------------------
+  // ---- 12. number and range scrubbing (scrub.js over the module's beatscript/numberAt) -----------------------------------------------------------------------
   step = 12;
   if (want() && !MOCKWASM) {
     await fresh(url());
@@ -703,7 +703,7 @@ try {
       const PROG = 'tempo 124\nkey am\ndeck A: kick x ~ x ~ vel=90..110 | hihat x*8\ndeck B: melody c4 ~ e4 ~\nmaster: level 0.8\n';
       await setText(PROG);
       await sleep(400);
-      const checks = () => page.eval('__app.btw.check(__app.editor.text).ok');
+      const checks = () => page.eval('__app.beatscript.check(__app.editor.text).ok');
       const caretAt = (needle, k = 0) => page.eval(`(()=>{const ta=document.querySelector(".ed-ta"); const i=__app.editor.text.indexOf(${JSON.stringify(needle)})+${k}; ta.focus(); ta.setSelectionRange(i,i); return i})()`);
       const altKey = async (key, shift = false) => {
         const vk = { ArrowUp: 38, ArrowDown: 40, PageUp: 33, PageDown: 34 }[key];
@@ -770,7 +770,7 @@ try {
 
   // ---- 13. the caret is where the text is drawn: the textarea and the highlight layer overlap on every row --------------
   // A click on a glyph as the highlight <pre> draws it must put the textarea's caret just before that glyph: on a short
-  // line, and on the first and a later row of a line that soft-wraps. (btw.css once gave both layers `text-indent:
+  // line, and on the first and a later row of a line that soft-wraps. (beatscript.css once gave both layers `text-indent:
   // <hang> hanging each-line`; Chrome's <textarea> indented every row, the <pre> only the later ones, so the caret drew
   // 4ch right of the text.)
   step = 13;

@@ -1,7 +1,7 @@
 /**
  * engine-composer.js: a module Worker that prepares tracks for the audio engine.
  *
- * Compiling a btw program's nets into something playable (the net, its lanes, the measurements) takes tens of
+ * Compiling a BeatScript program's nets into something playable (the net, its lanes, the measurements) takes tens of
  * milliseconds to a second or more. The audio thread must not stop for that, so a second instance of the engine
  * (`DjComposer`, from the same wasm module) does it here, encodes the result as bytes, and the worklet takes the
  * bytes in a few KB per render quantum (engine-worklet.js, `install`).
@@ -13,7 +13,7 @@
  *                    {type:'prepare-failed', id, deck, error}
  */
 
-import * as glue from '../wasm/btw.js';
+import * as glue from '../wasm/beatscript.js';
 
 let composer = null;
 

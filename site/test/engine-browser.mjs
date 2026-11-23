@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // engine-browser.mjs: headless Chrome plays hand-dubstep-140-v2 through js/engine.js for about 10 s.
 //
-//   node site/test/engine-browser.mjs [--seconds 10] [--program /examples/hand-dubstep-140-v2.btw] [--composer worker]
+//   node site/test/engine-browser.mjs [--seconds 10] [--program /examples/hand-dubstep-140-v2.beatscript] [--composer worker]
 //
 // Serves site/ with `python3 -m http.server` on a free port, opens web/engine-test.html in headless Chrome
 // (site/test/cdp.mjs), clicks the button (a click starts the AudioContext) and reads window.__btwTest back:
@@ -19,10 +19,10 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const site = path.resolve(here, '..');
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i < 0 ? d : process.argv[i + 1]; };
 const SECONDS = Number(arg('seconds', 10));
-const PROGRAM = arg('program', '/examples/hand-dubstep-140-v2.btw');
+const PROGRAM = arg('program', '/examples/hand-dubstep-140-v2.beatscript');
 const COMPOSER = arg('composer', 'worker');
 
-if (!fs.existsSync(path.join(site, 'web', 'wasm', 'btw_bg.wasm'))) { console.log('SKIP engine-browser: no built module in site/web/wasm'); process.exit(0); }
+if (!fs.existsSync(path.join(site, 'web', 'wasm', 'beatscript_bg.wasm'))) { console.log('SKIP engine-browser: no built module in site/web/wasm'); process.exit(0); }
 if (!fs.existsSync(CHROME)) { console.log(`SKIP engine-browser: no Chrome at ${CHROME}`); process.exit(0); }
 
 const port = await new Promise((res) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); });

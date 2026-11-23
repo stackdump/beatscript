@@ -1,4 +1,4 @@
-//! F13 meets the other thirteen (docs/btw/ext-perform.md "Meeting the others"): the performed tier against F4's lfo and
+//! F13 meets the other thirteen (docs/beatscript/ext-perform.md "Meeting the others"): the performed tier against F4's lfo and
 //! shaped ramps, F8's mix and duck, F9's sing, F10's stacks, F11's ports, F1's sub-bar times, F3's tempo, F12's assertions
 //! and F14's links. Each test is a live run on a fake clock with scripted controllers, or a program that must be refused
 //! with a reason.

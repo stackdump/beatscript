@@ -12,7 +12,7 @@ const seg = (re, what) => (v) => {
 };
 const cidSeg = seg(CID_RE, 'a CID');
 const nameSeg = seg(EXAMPLE_RE, 'an example name');
-// what the server's renderer is (btwserve service::RENDER_VERSION, crates/btwserve; it was Go internal/site/api RenderVersion): part of every render URL, so a renderer change is a new URL
+// what the server's renderer is (beatscript-serve service::RENDER_VERSION, crates/beatscript-serve; it was Go internal/site/api RenderVersion): part of every render URL, so a renderer change is a new URL
 export const RENDER_VERSION = 'r2';
 export const EXPORT_VERSION = 'x1';
 export const EXPORT_FORMATS = ['midi', 'stems', 'stems-opus'];
@@ -53,7 +53,7 @@ export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
     base,
     info: () => req('GET', '/api/info'),
     examples: () => req('GET', '/api/examples'),
-    exampleText: rejecting((name) => req('GET', `/examples/${nameSeg(name)}.btw`)),
+    exampleText: rejecting((name) => req('GET', `/examples/${nameSeg(name)}.beatscript`)),
     instruments: () => req('GET', '/api/instruments'),
     check: (text) => req('POST', '/api/check', { json: { text } }),
     fmt: (text) => req('POST', '/api/fmt', { json: { text } }),
@@ -73,9 +73,9 @@ export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
     // for a DAW (docs/EXPORT.md in this repo): midi, stems (a zip of WAVs), stems-opus; a stems URL answers 202 while it is made
     exportUrl: (cid, format = 'midi') => `${base}/api/render/${cidSeg(cid)}?format=${EXPORT_FORMATS.includes(format) ? format : 'midi'}&v=${RENDER_VERSION}.${EXPORT_VERSION}`,
     compose: (body, signal) => req('POST', '/api/compose', { json: body, signal }),
-    // the seeded generator on the server (no sign-in, no model): the fallback when the wasm has no btw_generate
+    // the seeded generator on the server (no sign-in, no model): the fallback when the wasm has no beatscript_generate
     generate: (body) => req('POST', '/api/generate', { json: body }),
-    // a radio station's answer (station-model.js; the same JSON as the wasm's btw_station): the fallback when the wasm has none
+    // a radio station's answer (station-model.js; the same JSON as the wasm's beatscript_station): the fallback when the wasm has none
     station: (body) => req('POST', '/api/station', { json: body, answer: true }),
     challenge: () => req('GET', '/api/auth/challenge'),
     login: (body) => req('POST', '/api/auth/login', { json: body }),
@@ -83,7 +83,7 @@ export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
     me: () => req('GET', '/api/auth/me'),
     createToken: () => req('POST', '/api/auth/token', { json: {} }),
     revokeTokens: () => req('DELETE', '/api/auth/token'),
-    // the MCP panel: OAuth connections (btwserve oauth.rs) and the pasted tokens' dates
+    // the MCP panel: OAuth connections (beatscript-serve oauth.rs) and the pasted tokens' dates
     connections: () => req('GET', '/api/auth/clients'),
     disconnect: (id) => req('DELETE', `/api/auth/clients/${encodeURIComponent(String(id))}`),
     createSession: () => req('POST', '/api/session', { json: {} }),

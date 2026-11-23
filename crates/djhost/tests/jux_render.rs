@@ -1,8 +1,8 @@
 //! `jux` is heard: the part plays on the left and its right copy on the right, in the offline render, and the live
-//! runtime hands the engine the same envelope the render loads (docs/BTW.md "Stereo").
+//! runtime hands the engine the same envelope the render loads (docs/BEATSCRIPT.md "Stereo").
 
 use djengine::json::JsonValue;
-use djhost::btw_render;
+use djhost::beatscript_render;
 use djlive::runtime::{Grid, Live, LiveHost};
 
 const SR: f64 = 22_050.0;
@@ -40,7 +40,7 @@ fn correlation(l: &[f32], r: &[f32]) -> f64 {
 /// (left, right) of the render of `src`.
 fn render(src: &str) -> (Vec<f32>, Vec<f32>) {
     let c = compile(src);
-    let a = btw_render::render(&c, SR, false).expect("render");
+    let a = beatscript_render::render(&c, SR, false).expect("render");
     assert!(a.refused.is_empty(), "the engine refused: {:?}", a.refused);
     (a.audio.left, a.audio.right)
 }
@@ -133,8 +133,8 @@ fn live_and_the_offline_render_load_the_same_envelope() {
         h.beat += 0.25;
         live.service(&mut h);
     }
-    // the render loads `btw_tempo::envelope(ir, tempo)` of each section's net; the live runtime loads `ir.envelope(phase)`
-    let offline: Vec<String> = c.segments.iter().map(|s| djhost::btw_tempo::envelope(&s.decks[&djlive::ast::Deck::A], None).canonical_js()).collect();
+    // the render loads `beatscript_tempo::envelope(ir, tempo)` of each section's net; the live runtime loads `ir.envelope(phase)`
+    let offline: Vec<String> = c.segments.iter().map(|s| djhost::beatscript_tempo::envelope(&s.decks[&djlive::ast::Deck::A], None).canonical_js()).collect();
     let live_loaded: Vec<String> = h.loads.iter().map(|(_, e)| e.canonical_js()).collect();
     assert!(live_loaded.len() >= 2, "{} loads", live_loaded.len());
     // the plain section's net, then the pair's: each is among what the render loads, byte for byte

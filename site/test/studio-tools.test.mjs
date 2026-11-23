@@ -18,11 +18,11 @@ const { makeFacade } = await imp('web/js/wasm.js');
 const { mockModule } = await imp('web/js/wasm-mock.js');
 const { wav } = await imp('web/js/render-model.js');
 
-const wasmFile = path.join(site, 'web', 'wasm', 'btw_bg.wasm');
-const noWasm = fs.existsSync(wasmFile) ? false : 'site/web/wasm/btw_bg.wasm is not built';
+const wasmFile = path.join(site, 'web', 'wasm', 'beatscript_bg.wasm');
+const noWasm = fs.existsSync(wasmFile) ? false : 'site/web/wasm/beatscript_bg.wasm is not built';
 let real = null;
 if (!noWasm) {
-  const m = await imp('web/wasm/btw.js');
+  const m = await imp('web/wasm/beatscript.js');
   m.initSync({ module: new WebAssembly.Module(fs.readFileSync(wasmFile)) });
   real = makeFacade(m);
 }
@@ -111,7 +111,7 @@ function fakes({ answers = [], tools = true, uid = 'u_viewer1', mcpFail = null, 
 // ---- the real wasm ----
 
 test('real wasm: check, fmt and expand', { skip: noWasm }, async () => {
-  const s = createToolSurface({ btw: real });
+  const s = createToolSurface({ beatscript: real });
   const c = ok(await s.call('check', { text: GOOD }));
   assert.equal(c.ok, true);
   assert.match(c.cid, /^z[1-9A-HJ-NP-Za-km-z]{20,}$/);
@@ -131,7 +131,7 @@ test('real wasm: check, fmt and expand', { skip: noWasm }, async () => {
 
 test('real wasm: share then open is a round trip on the configured site', { skip: noWasm }, async () => {
   const loads = [];
-  const s = createToolSurface({ btw: real, onLoad: (t, meta) => loads.push({ t, meta }) });
+  const s = createToolSurface({ beatscript: real, onLoad: (t, meta) => loads.push({ t, meta }) });
   const cid = real.check(GOOD).cid;
   const sh = ok(await s.call('share', { text: GOOD }));
   assert.equal(sh.cid, cid);
@@ -154,7 +154,7 @@ test('real wasm: share then open is a round trip on the configured site', { skip
 });
 
 test('real wasm: generate is deterministic and its text checks', { skip: noWasm }, async () => {
-  const s = createToolSurface({ btw: real });
+  const s = createToolSurface({ beatscript: real });
   const g = ok(await s.call('generate', { genre: 'techno', seed: 3 }));
   assert.equal(g.ok, true);
   assert.equal(real.check(g.text).ok, true);
@@ -164,7 +164,7 @@ test('real wasm: generate is deterministic and its text checks', { skip: noWasm 
 });
 
 test('real wasm: highlight, instruments, cheatsheet and station', { skip: noWasm }, async () => {
-  const s = createToolSurface({ btw: real });
+  const s = createToolSurface({ beatscript: real });
   const h = ok(await s.call('highlight', { text: GOOD }));
   assert.deepEqual(h.spans[0], [0, 5, 'keyword']);
   assert.ok(h.spans.some(([, , cls]) => cls === 'deck'));
@@ -180,7 +180,7 @@ test('real wasm: highlight, instruments, cheatsheet and station', { skip: noWasm
     assert.equal(r.ok, true);
     assert.deepEqual(r.tracks.map((t) => t.n), [2, 3]);
   } else {
-    // this build of the module has no btw_station: the tool says so
+    // this build of the module has no beatscript_station: the tool says so
     assert.equal(st.available, false);
     assert.match(st.why, /no station/);
     refused(await s.call('station', { station: STATION }), /no station/);
@@ -190,7 +190,7 @@ test('real wasm: highlight, instruments, cheatsheet and station', { skip: noWasm
 // ---- the JS mock: the surface itself, for CI without the wasm ----
 
 test('list: every tool once, in order, in the MCP shape', () => {
-  const s = createToolSurface({ btw: mock });
+  const s = createToolSurface({ beatscript: mock });
   const list = s.list();
   assert.deepEqual(list.map((t) => t.name), [...LOCAL_TOOLS, ...CAP_TOOLS]);
   for (const t of list) {
@@ -208,7 +208,7 @@ test('list: every tool once, in order, in the MCP shape', () => {
 });
 
 test('mock: check, fmt, share, open, highlight, station', async () => {
-  const s = createToolSurface({ btw: mock, site: 'https://example.test/' });
+  const s = createToolSurface({ beatscript: mock, site: 'https://example.test/' });
   const c = ok(await s.call('check', { text: GOOD }));
   assert.equal(c.ok, true);
   assert.equal(ok(await s.call('check', { text: BAD })).ok, false);
@@ -227,7 +227,7 @@ test('mock: check, fmt, share, open, highlight, station', async () => {
 test('share: only a share link\'s origin moves to the site; path, fragment and anything else stay', async () => {
   const frag = 'zAbc123.cGFja2Vk~bm90ZXM';
   const answer = (over = {}) => ({ ok: true, url: `https://btw.bitwrap.io/#${frag}`, social_url: 'https://btw.bitwrap.io/c/zAbc123.cGFja2Vk', beats_url: `https://beats.bitwrap.io/p#${frag}`, cid: 'zAbc123', chars: 0, ...over });
-  const shareWith = async (site, over) => ok(await createToolSurface({ btw: { ...mock, share: () => answer(over) }, site }).call('share', { text: GOOD }));
+  const shareWith = async (site, over) => ok(await createToolSurface({ beatscript: { ...mock, share: () => answer(over) }, site }).call('share', { text: GOOD }));
   const sh = await shareWith('https://example.test/studio/?x=1#top');
   assert.equal(sh.url, `https://example.test/#${frag}`);
   assert.equal(sh.social_url, 'https://example.test/c/zAbc123.cGFja2Vk');
@@ -242,13 +242,13 @@ test('share: only a share link\'s origin moves to the site; path, fragment and a
   assert.equal((await shareWith('beatscript.app')).url, `https://btw.bitwrap.io/#${frag}`);
   assert.equal((await shareWith('javascript:alert(1)')).url, `https://btw.bitwrap.io/#${frag}`);
   // a failed share is passed through
-  const no = ok(await createToolSurface({ btw: { ...mock, share: () => ({ ok: false, error: 'the program has errors', url: null }) } }).call('share', { text: BAD }));
+  const no = ok(await createToolSurface({ beatscript: { ...mock, share: () => ({ ok: false, error: 'the program has errors', url: null }) } }).call('share', { text: BAD }));
   assert.deepEqual(no, { ok: false, error: 'the program has errors', url: null });
 });
 const pickLinks = (o) => ({ url: o.url, social_url: o.social_url });
 
 test('call: bad arguments and unknown tools are errors, never rejections', async () => {
-  const s = createToolSurface({ btw: mock });
+  const s = createToolSurface({ beatscript: mock });
   refused(await s.call('check', {}), /"text" is required/);
   refused(await s.call('check', { text: 5 }), /"text" is a string/);
   refused(await s.call('check', { text: GOOD, extra: 1 }), /no argument "extra"/);
@@ -261,8 +261,8 @@ test('call: bad arguments and unknown tools are errors, never rejections', async
   refused(await s.call('check', new Proxy({}, { ownKeys() { throw new Error('a hostile object'); } })), /hostile/);
   refused(await s.call('check', { get text() { throw new Error('a throwing getter'); } }), /throwing getter/);
   // a module that throws, and a caps of null
-  refused(await createToolSurface({ btw: { ...mock, check: () => { throw new Error('wasm trap'); } } }).call('check', { text: GOOD }), /^wasm trap$/);
-  const bare = createToolSurface({ btw: mock, caps: null });
+  refused(await createToolSurface({ beatscript: { ...mock, check: () => { throw new Error('wasm trap'); } } }).call('check', { text: GOOD }), /^wasm trap$/);
+  const bare = createToolSurface({ beatscript: mock, caps: null });
   assert.equal(bare.list().find((t) => t.name === 'compose').available, false);
   refused(await bare.call('compose', { prompt: 'x' }), /needs the sample capability/);
   refused(await createToolSurface({}).call('check', { text: GOOD }), /no check$/);
@@ -273,7 +273,7 @@ test('call: bad arguments and unknown tools are errors, never rejections', async
 test('compose: a broken answer goes back with its problems, the fixed one comes out checked', async () => {
   const f = fakes({ answers: [fence(BAD), fence(GOOD)] });
   const loads = [];
-  const s = createToolSurface({ btw: mock, caps: f.caps, onLoad: (t, meta) => loads.push({ t, meta }) });
+  const s = createToolSurface({ beatscript: mock, caps: f.caps, onLoad: (t, meta) => loads.push({ t, meta }) });
   const r = ok(await s.call('compose', { prompt: 'a techno loop', text: 'tempo 120\n' }));
   assert.equal(r.ok, true);
   assert.equal(r.rounds, 2);
@@ -286,7 +286,7 @@ test('compose: a broken answer goes back with its problems, the fixed one comes 
   assert.ok(first.input.includes(mock.cheatsheet()));
   assert.match(first.input, /Voices you may name: wobble-lead, /);
   assert.match(first.input, /The request: a techno loop/);
-  assert.match(first.input, /```btw\ntempo 120\n```/);
+  assert.match(first.input, /```beatscript\ntempo 120\n```/);
   assert.match(first.input, /one program in a fenced block/);
   // the page's check, fmt and instruments go along as tools
   assert.deepEqual(first.opts.tools.map((t) => t.name), ['check', 'fmt', 'instruments']);
@@ -301,7 +301,7 @@ test('compose: a broken answer goes back with its problems, the fixed one comes 
 
 test('compose: at most two repair rounds, no fence asks again, no tools where the view has none', async () => {
   const f = fakes({ answers: [fence(BAD), fence(BAD), fence(BAD), fence(GOOD)] });
-  const r = ok(await createToolSurface({ btw: mock, caps: f.caps }).call('compose', { prompt: 'x' }));
+  const r = ok(await createToolSurface({ beatscript: mock, caps: f.caps }).call('compose', { prompt: 'x' }));
   assert.equal(r.ok, false);
   assert.equal(r.rounds, 3);
   assert.equal(r.text, BAD);
@@ -309,17 +309,17 @@ test('compose: at most two repair rounds, no fence asks again, no tools where th
   assert.equal(f.log.sample.length, 3);
 
   const g = fakes({ answers: ['I would rather talk about it.', fence(GOOD)], tools: false });
-  const r2 = ok(await createToolSurface({ btw: mock, caps: g.caps }).call('compose', { prompt: 'x' }));
+  const r2 = ok(await createToolSurface({ beatscript: mock, caps: g.caps }).call('compose', { prompt: 'x' }));
   assert.equal(r2.ok, true);
   assert.equal(r2.rounds, 2);
   assert.match(g.log.sample[1].input[2].content, /no fenced program/);
   assert.equal(g.log.sample[0].opts.tools, undefined);
 
   const h = fakes({ answers: [{ code: 'not_granted', message: 'declined' }] });
-  refused(await createToolSurface({ btw: mock, caps: h.caps }).call('compose', { prompt: 'x' }), /^Claude is not allowed on this page\.$/);
+  refused(await createToolSurface({ beatscript: mock, caps: h.caps }).call('compose', { prompt: 'x' }), /^Claude is not allowed on this page\.$/);
 });
 
-test('compose: the program is found in ```btw, ```beatscript, a bare fence, or a reply that is only the program', async () => {
+test('compose: the program is found in ```beatscript, ```beatscript, a bare fence, or a reply that is only the program', async () => {
   const OTHER = 'tempo 128\nkey am\ndeck A: kick x ~ x ~\n';
   const replies = [
     `Plan:\n\`\`\`text\nfour on the floor\n\`\`\`\n\n\`\`\`btw\n${GOOD}\`\`\`\n`,
@@ -335,7 +335,7 @@ test('compose: the program is found in ```btw, ```beatscript, a bare fence, or a
   for (const [i, reply] of replies.entries()) {
     const f = fakes({ answers: [reply] });
     const loads = [];
-    const r = ok(await createToolSurface({ btw: mock, caps: f.caps, onLoad: (t) => loads.push(t) }).call('compose', { prompt: 'x' }));
+    const r = ok(await createToolSurface({ beatscript: mock, caps: f.caps, onLoad: (t) => loads.push(t) }).call('compose', { prompt: 'x' }));
     assert.equal(r.ok, true, `reply ${i}`);
     assert.equal(r.cid, mock.check(want[i]).cid, `reply ${i}`);
     assert.equal(r.rounds, 1);
@@ -344,31 +344,31 @@ test('compose: the program is found in ```btw, ```beatscript, a bare fence, or a
   // an unclosed fence (a cut-off answer) is no program: it is asked for again, and nothing reaches the editor
   const g = fakes({ answers: [`\`\`\`btw\n${GOOD}`, 'still talking', 'and talking'] });
   const loads = [];
-  const r = ok(await createToolSurface({ btw: mock, caps: g.caps, onLoad: (t) => loads.push(t) }).call('compose', { prompt: 'x' }));
+  const r = ok(await createToolSurface({ beatscript: mock, caps: g.caps, onLoad: (t) => loads.push(t) }).call('compose', { prompt: 'x' }));
   assert.deepEqual([r.ok, r.text, r.rounds, loads], [false, null, 3, []]);
   assert.equal(g.log.sample.length, 3);
 });
 
 test('compose: never cached, and the page tools go only where limits() says this view runs them', async () => {
   const f = fakes({ answers: [fence(GOOD)] });
-  await createToolSurface({ btw: mock, caps: f.caps }).call('compose', { prompt: 'x' });
+  await createToolSurface({ beatscript: mock, caps: f.caps }).call('compose', { prompt: 'x' });
   assert.equal(f.log.sample[0].opts.cache, false);
   assert.equal(f.log.sample[0].opts.tools.length, 3);
   for (const limits of [async () => { throw { code: 'capability_removed' }; }, undefined, async () => ({ maxPromptBytes: 262144 })]) {
     const g = fakes({ answers: [fence(GOOD)] });
     g.caps.sample.limits = limits;
-    ok(await createToolSurface({ btw: mock, caps: g.caps }).call('compose', { prompt: 'x' }));
+    ok(await createToolSurface({ beatscript: mock, caps: g.caps }).call('compose', { prompt: 'x' }));
     assert.deepEqual(g.log.sample[0].opts, { cache: false });
   }
   const h = fakes({ answers: [fence(GOOD)] });
   h.caps.sample.limits = async () => ({ maxPromptBytes: 262144, tools: { maxCount: 1 } });
-  await createToolSurface({ btw: mock, caps: h.caps }).call('compose', { prompt: 'x' });
+  await createToolSurface({ beatscript: mock, caps: h.caps }).call('compose', { prompt: 'x' });
   assert.deepEqual(h.log.sample[0].opts.tools.map((t) => t.name), ['check']);
 });
 
 test('sample tools: small plain results; fmt without its second copy; an oversize answer is a thrown error', async () => {
   const f = fakes({ answers: [fence(GOOD)] });
-  const s = createToolSurface({ btw: mock, caps: f.caps });
+  const s = createToolSurface({ beatscript: mock, caps: f.caps });
   const [, fmtTool] = s.asSampleTools(['check', 'fmt']);
   const out = await fmtTool.execute({ text: GOOD });
   assert.deepEqual(Object.keys(out).sort(), ['cid', 'diagnostics', 'ok', 'text']);
@@ -378,11 +378,11 @@ test('sample tools: small plain results; fmt without its second copy; an oversiz
 
 test('repair: starts from the text and its problems; a program that checks takes no rounds', async () => {
   const f = fakes({ answers: [fence(GOOD)] });
-  const s = createToolSurface({ btw: mock, caps: f.caps });
+  const s = createToolSurface({ beatscript: mock, caps: f.caps });
   const r = ok(await s.call('repair', { text: BAD }));
   assert.equal(r.ok, true);
   assert.equal(r.rounds, 1);
-  assert.match(f.log.sample[0].input[0].content, /```btw\ntempo fast\n/);
+  assert.match(f.log.sample[0].input[0].content, /```beatscript\ntempo fast\n/);
   assert.match(f.log.sample[0].input[1].content, /check found these problems/);
   const same = ok(await s.call('repair', { text: GOOD }));
   assert.deepEqual([same.ok, same.rounds, same.text], [true, 0, GOOD]);
@@ -391,7 +391,7 @@ test('repair: starts from the text and its problems; a program that checks takes
 
 test('store, render and queue call the Beatscript connector with the right tool and input', async () => {
   const f = fakes();
-  const s = createToolSurface({ btw: mock, caps: f.caps });
+  const s = createToolSurface({ beatscript: mock, caps: f.caps });
   const st = ok(await s.call('store', { text: GOOD, name: 'night drive', license: 'CC-BY-4.0' }));
   assert.deepEqual(st, { tool: 'share', cid: 'zStoredByTheConnector' });
   const cid = 'z4EBG9j4MRUjAVJCAX55SZtBM3NMZJAg3q5CLT19srYMf2yYGkG';
@@ -410,16 +410,16 @@ test('store, render and queue call the Beatscript connector with the right tool 
   assert.equal(f.log.mcp.length, 4);
   // the connector's codes each say what to do
   const g = fakes({ mcpFail: { code: 'server_not_connected', message: 'no' } });
-  refused(await createToolSurface({ btw: mock, caps: g.caps, server: 'My BTW' }).call('store', { text: GOOD }), /^Add the My BTW connector/);
-  assert.equal(g.log.mcp[0].server, 'My BTW');
+  refused(await createToolSurface({ beatscript: mock, caps: g.caps, server: 'My BeatScript' }).call('store', { text: GOOD }), /^Add the My BeatScript connector/);
+  assert.equal(g.log.mcp[0].server, 'My BeatScript');
   const h = fakes({ mcpFail: { code: 'tool_error', message: 'sign in first' } });
-  refused(await createToolSurface({ btw: mock, caps: h.caps }).call('store', { text: GOOD }), /^Beatscript share: sign in first$/);
+  refused(await createToolSurface({ beatscript: mock, caps: h.caps }).call('store', { text: GOOD }), /^Beatscript share: sign in first$/);
 });
 
 test('library: save, list, get and delete in the viewer\'s private subtree', async () => {
   const f = fakes();
   const loads = [];
-  const s = createToolSurface({ btw: mock, caps: f.caps, onLoad: (t, meta) => loads.push({ t, meta }) });
+  const s = createToolSurface({ beatscript: mock, caps: f.caps, onLoad: (t, meta) => loads.push({ t, meta }) });
   const saved = ok(await s.call('library_save', { text: `#! name: Night Drive\n${GOOD}` }));
   assert.equal(saved.name, 'Night Drive');
   assert.equal(saved.cid, mock.check(`#! name: Night Drive\n${GOOD}`).cid);
@@ -442,10 +442,10 @@ test('library: save, list, get and delete in the viewer\'s private subtree', asy
   refused(await s.call('library_get', { id: '../other' }), /no program with that id/);
   // no viewer id: no private library
   const g = fakes({ uid: null });
-  refused(await createToolSurface({ btw: mock, caps: g.caps }).call('library_list', {}), /signed in/);
+  refused(await createToolSurface({ beatscript: mock, caps: g.caps }).call('library_list', {}), /signed in/);
 });
 
-test('export: the .btw text, and the WAV in a zip, through downloads.save', async () => {
+test('export: the .beatscript text, and the WAV in a zip, through downloads.save', async () => {
   const f = fakes();
   const left = Float32Array.from([0, 0.5, -0.5, 1]);
   const right = Float32Array.from([0, -0.25, 0.25, -1]);
@@ -453,12 +453,12 @@ test('export: the .btw text, and the WAV in a zip, through downloads.save', asyn
     assert.equal(t, GOOD);
     return { left, right, sampleRate: 8000 };
   };
-  const s = createToolSurface({ btw: mock, caps: f.caps, render, encodeWav: wav });
-  assert.deepEqual(s.list().find((t) => t.name === 'export').inputSchema.properties.format.enum, ['btw', 'wav']);
+  const s = createToolSurface({ beatscript: mock, caps: f.caps, render, encodeWav: wav });
+  assert.deepEqual(s.list().find((t) => t.name === 'export').inputSchema.properties.format.enum, ['beatscript', 'wav']);
   const named = `#! name: Night Drive\n${GOOD}`;
-  assert.deepEqual(ok(await s.call('export', { format: 'btw', text: named })), { saved: 'Night-Drive.btw.txt', bytes: named.length });
-  ok(await s.call('export', { format: 'btw', text: GOOD, filename: 'my mix.btw' }));
-  assert.deepEqual(f.log.saves.slice(0, 2), [{ filename: 'Night-Drive.btw.txt', data: named }, { filename: 'my-mix.btw.txt', data: GOOD }]);
+  assert.deepEqual(ok(await s.call('export', { format: 'beatscript', text: named })), { saved: 'Night-Drive.beatscript.txt', bytes: named.length });
+  ok(await s.call('export', { format: 'beatscript', text: GOOD, filename: 'my mix.beatscript' }));
+  assert.deepEqual(f.log.saves.slice(0, 2), [{ filename: 'Night-Drive.beatscript.txt', data: named }, { filename: 'my-mix.beatscript.txt', data: GOOD }]);
 
   const w = ok(await s.call('export', { format: 'wav', text: GOOD, filename: 'loop' }));
   assert.equal(w.saved, 'loop.wav.zip');
@@ -478,22 +478,22 @@ test('export: the .btw text, and the WAV in a zip, through downloads.save', asyn
 
   refused(await s.call('export', { format: 'mp3', text: GOOD }), /btw or wav/);
   const g = fakes({ saveFail: { code: 'declined', message: 'no' } });
-  refused(await createToolSurface({ btw: mock, caps: g.caps }).call('export', { format: 'btw', text: GOOD }), /^You declined the download\.$/);
+  refused(await createToolSurface({ beatscript: mock, caps: g.caps }).call('export', { format: 'beatscript', text: GOOD }), /^You declined the download\.$/);
 });
 
-test('export: without render or encodeWav, wav is not offered and says why; btw still saves', async () => {
+test('export: without render or encodeWav, wav is not offered and says why; beatscript still saves', async () => {
   const render = async () => ({ left: new Float32Array(1), right: new Float32Array(1), sampleRate: 8000 });
   for (const [opts, why] of [[{}, /^A WAV needs the render engine/], [{ render }, /^A WAV needs the WAV encoder/], [{ encodeWav: wav }, /^A WAV needs the render engine/]]) {
     const f = fakes();
-    const s = createToolSurface({ btw: mock, caps: f.caps, ...opts });
+    const s = createToolSurface({ beatscript: mock, caps: f.caps, ...opts });
     const ex = s.list().find((t) => t.name === 'export');
     assert.equal(ex.available, true);
-    assert.deepEqual(ex.inputSchema.properties.format.enum, ['btw']);
+    assert.deepEqual(ex.inputSchema.properties.format.enum, ['beatscript']);
     assert.doesNotMatch(ex.description, /wav/);
     refused(await s.call('export', { format: 'wav', text: GOOD }), why);
-    refused(await s.call('export', { format: 'mp3', text: GOOD }), /"format" is btw$/);
-    ok(await s.call('export', { format: 'btw', text: GOOD }));
-    assert.deepEqual(f.log.saves.map((x) => x.filename), ['beatscript.btw.txt']);
+    refused(await s.call('export', { format: 'mp3', text: GOOD }), /"format" is beatscript$/);
+    ok(await s.call('export', { format: 'beatscript', text: GOOD }));
+    assert.deepEqual(f.log.saves.map((x) => x.filename), ['beatscript.beatscript.txt']);
   }
 });
 
@@ -505,7 +505,7 @@ test('tool-surface.js imports nothing, so it runs where it is copied', () => {
 test('jam: send emits a checked program; a received one reaches onJam only if it checks', async () => {
   const f = fakes();
   const jams = [];
-  const s = createToolSurface({ btw: mock, caps: f.caps, onJam: (m) => jams.push(m) });
+  const s = createToolSurface({ beatscript: mock, caps: f.caps, onJam: (m) => jams.push(m) });
   const cid = mock.check(GOOD).cid;
   assert.deepEqual(ok(await s.call('jam_send', { text: GOOD })), { sent: true, cid });
   assert.deepEqual(f.log.emits, [{ topic: 'program', data: { text: GOOD, cid } }]);
@@ -526,7 +526,7 @@ test('jam: send emits a checked program; a received one reaches onJam only if it
   assert.equal(f.listeners.size, 0);
   // no onJam: nothing subscribes
   const g = fakes();
-  createToolSurface({ btw: mock, caps: g.caps });
+  createToolSurface({ beatscript: mock, caps: g.caps });
   assert.equal(g.listeners.size, 0);
   // a received program is only handed on, never sent again, and a throwing onJam does not reach the room
   const h = fakes();
@@ -534,7 +534,7 @@ test('jam: send emits a checked program; a received one reaches onJam only if it
   const reported = [];
   globalThis.reportError = (e) => reported.push(e);
   try {
-    createToolSurface({ btw: mock, caps: h.caps, onJam: () => { throw new Error('editor busy'); } });
+    createToolSurface({ beatscript: mock, caps: h.caps, onJam: () => { throw new Error('editor busy'); } });
     assert.doesNotThrow(() => h.hear({ data: { text: GOOD } }));
     h.hear({ data: { text: `${GOOD}${'#'.repeat(65537)}` } });
   } finally {
@@ -545,24 +545,24 @@ test('jam: send emits a checked program; a received one reaches onJam only if it
 });
 
 test('an absent capability: listed with available false and a why, and call() is an error', async () => {
-  const s = createToolSurface({ btw: mock });
+  const s = createToolSurface({ beatscript: mock });
   const list = s.list();
   const why = { compose: 'sample', repair: 'sample', store: 'mcp', render: 'mcp', queue: 'mcp', library_list: 'db', export: 'downloads', jam_send: 'room' };
   for (const [name, ns] of Object.entries(why)) {
     const t = list.find((x) => x.name === name);
     assert.equal(t.available, false, name);
     assert.equal(t.why, `needs the ${ns} capability: a Claude artifact that declares it`);
-    refused(await s.call(name, { text: GOOD, prompt: 'x', action: 'list', format: 'btw' }), new RegExp(`^needs the ${ns} capability`));
+    refused(await s.call(name, { text: GOOD, prompt: 'x', action: 'list', format: 'beatscript' }), new RegExp(`^needs the ${ns} capability`));
   }
   // the library needs user as well as db
-  const lib = createToolSurface({ btw: mock, caps: { db: fakeDb() } }).list().find((t) => t.name === 'library_save');
+  const lib = createToolSurface({ beatscript: mock, caps: { db: fakeDb() } }).list().find((t) => t.name === 'library_save');
   assert.equal(lib.why, 'needs the user capability: a Claude artifact that declares it');
 });
 
 // ---- JSON-RPC ----
 
 test('handle: initialize, ping, tools/list, tools/call, errors and notifications', async () => {
-  const s = createToolSurface({ btw: mock });
+  const s = createToolSurface({ beatscript: mock });
   const init = await s.handle({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: 't', version: '0' } } });
   assert.deepEqual(init, { jsonrpc: '2.0', id: 1, result: { protocolVersion: '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'beatscript-studio', version: '0.1.0' } } });
   assert.deepEqual(await s.handle({ jsonrpc: '2.0', id: 'p', method: 'ping' }), { jsonrpc: '2.0', id: 'p', result: {} });
@@ -599,7 +599,7 @@ test('handle: initialize, ping, tools/list, tools/call, errors and notifications
 });
 
 test('serve: answers JSON-RPC over postMessage to the sender, at its origin', async () => {
-  const s = createToolSurface({ btw: mock });
+  const s = createToolSurface({ beatscript: mock });
   const win = { listeners: new Set(), addEventListener(t, f) { if (t === 'message') this.listeners.add(f); }, removeEventListener(t, f) { this.listeners.delete(f); } };
   const post = (data, origin) => {
     const sent = [];
@@ -644,8 +644,8 @@ test('serve: answers JSON-RPC over postMessage to the sender, at its origin', as
 });
 
 test('serve: two surfaces bridged to each other do not echo: a reply is never answered', async () => {
-  const a = createToolSurface({ btw: mock });
-  const b = createToolSurface({ btw: mock });
+  const a = createToolSurface({ beatscript: mock });
+  const b = createToolSurface({ beatscript: mock });
   const mk = () => ({ listeners: new Set(), addEventListener(t, f) { this.listeners.add(f); }, removeEventListener(t, f) { this.listeners.delete(f); } });
   const wa = mk();
   const wb = mk();

@@ -1,4 +1,4 @@
-//! F14 ontology links (docs/btw/ext-linked.md): `#! genre:` and `#! tags:` header lines validated against a
+//! F14 ontology links (docs/beatscript/ext-linked.md): `#! genre:` and `#! tags:` header lines validated against a
 //! vocabulary through the `Ontology` trait (a fake one here, and the real cached snapshot of `djhost` read off disk:
 //! nothing in this file touches the network), their did-you-mean with line and column, and the JSON-LD document.
 
@@ -512,7 +512,7 @@ fn every_genre_of_the_snapshot_is_found_by_every_spelling() {
 #[test]
 fn the_example_validates_against_the_real_vocabulary_and_typos_get_the_real_suggestions() {
     let o = real();
-    let src = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw/linked.btw")).unwrap();
+    let src = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript/linked.beatscript")).unwrap();
     let c = check_with(&src, &with(&o));
     assert!(c.ok());
     assert!(about_the_header(&c, &src).is_empty(), "{}", djlive::diag::render_all(&c.diagnostics, &src));
@@ -622,13 +622,13 @@ fn the_mixed_song_is_one_document_whatever_its_formatting() {
 }
 
 fn example(name: &str) -> String {
-    std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw").join(name)).unwrap()
+    std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript").join(name)).unwrap()
 }
 
 #[test]
 fn the_examples_of_the_other_extensions_have_documents_that_match_their_arrangements() {
     // F10: intro, the verse (groove and wash stacked) with the riff twice over it, the coda
-    let doc = doc_of(&example("algebra.btw"));
+    let doc = doc_of(&example("algebra.beatscript"));
     assert_eq!(
         listed(&doc),
         [("intro".to_string(), 0, 4, None), ("riff".to_string(), 4, 4, None), ("groove".to_string(), 4, 8, None), ("wash".to_string(), 4, 8, None), ("riff".to_string(), 8, 4, None), ("coda".to_string(), 12, 4, None)],
@@ -637,22 +637,22 @@ fn the_examples_of_the_other_extensions_have_documents_that_match_their_arrangem
     assert_eq!(doc.get("key").and_then(JsonValue::as_str), Some("am"));
     assert_eq!(doc.get("tempo").and_then(JsonValue::as_f64), Some(118.0));
     // F5: the second section sets its own key; a key `cm` is in the section, not the program
-    let doc = doc_of(&example("scale.btw"));
+    let doc = doc_of(&example("scale.beatscript"));
     assert_eq!(listed(&doc), [("verse".to_string(), 0, 8, None), ("lift".to_string(), 8, 8, Some("cm".to_string())), ("verse".to_string(), 16, 8, None)]);
     assert_eq!(doc.get("key").and_then(JsonValue::as_str), Some("am"));
     // F2: arithmetic: `tempo 120 + 4 * 2` is 128, a section of `total` bars is 16, `e(2 + 2, 16)` is E(4,16)
-    let doc = doc_of(&example("arith.btw"));
+    let doc = doc_of(&example("arith.beatscript"));
     assert_eq!(doc.get("tempo").and_then(JsonValue::as_f64), Some(128.0));
     assert_eq!(listed(&doc), [("groove".to_string(), 0, 16, None)]);
     let eu = doc.get("euclid").and_then(JsonValue::as_array).unwrap();
     assert_eq!(eu.len(), 1);
     assert_eq!((eu[0].get("bw:pulses").and_then(JsonValue::as_f64), eu[0].get("bw:steps").and_then(JsonValue::as_f64)), (Some(4.0), Some(16.0)));
     // F1: timed lines inside the sections change nothing about the sections
-    let doc = doc_of(&example("timing.btw"));
+    let doc = doc_of(&example("timing.beatscript"));
     assert_eq!(listed(&doc), [("intro".to_string(), 0, 4, None), ("drop".to_string(), 4, 8, None)]);
     assert_eq!(doc.get("tempo").and_then(JsonValue::as_f64), Some(128.0));
     // F6: parts with a cycle of their own: the three rhythms, E(5,12) on the bass among them
-    let doc = doc_of(&example("euclid.btw"));
+    let doc = doc_of(&example("euclid.beatscript"));
     let eu = doc.get("euclid").and_then(JsonValue::as_array).unwrap();
     let shapes: Vec<(f64, f64, f64)> = eu.iter().map(|e| (e.get("bw:pulses").and_then(JsonValue::as_f64).unwrap(), e.get("bw:steps").and_then(JsonValue::as_f64).unwrap(), e.get("bw:rotation").and_then(JsonValue::as_f64).unwrap())).collect();
     assert_eq!(shapes, [(5.0, 12.0, 0.0), (2.0, 16.0, 4.0), (4.0, 16.0, 0.0)]);
@@ -661,11 +661,11 @@ fn the_examples_of_the_other_extensions_have_documents_that_match_their_arrangem
 
 #[test]
 fn every_example_has_a_document_that_reads_back_and_never_names_a_stretch() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript");
     let mut seen = 0;
     for e in std::fs::read_dir(dir).unwrap().flatten() {
         let path = e.path();
-        if path.extension().is_none_or(|x| x != "btw") {
+        if path.extension().is_none_or(|x| x != "beatscript") {
             continue;
         }
         let src = std::fs::read_to_string(&path).unwrap();

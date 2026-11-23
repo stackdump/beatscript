@@ -1,4 +1,4 @@
-//! F9 `sing "lyrics" on melody voice=alto` (docs/btw/ext-sing.md): the syllables and their notes, the part's own timing, the
+//! F9 `sing "lyrics" on melody voice=alto` (docs/beatscript/ext-sing.md): the syllables and their notes, the part's own timing, the
 //! errors (line, column, did-you-mean), the canonical form and its CID under random reformatting, the neural voice's
 //! fallback at check and when the line fires, and the control line's marks. Lyrics here are original lines of our own.
 

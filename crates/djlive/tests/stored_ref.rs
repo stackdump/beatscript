@@ -1,4 +1,4 @@
-//! `<cid>.drop`: a stored program's music as a reference (stored.rs, docs/BTW.md "Borrow from a stored program"):
+//! `<cid>.drop`: a stored program's music as a reference (stored.rs, docs/BEATSCRIPT.md "Borrow from a stored program"):
 //! - a borrowed section / part plays as its literal, so a borrowed drop has the source's own net CIDs;
 //! - the program's CID is of the text as written (the reference holds the CID), whether or not the source can be found;
 //! - the link carries the source, and opens where nothing is saved;
@@ -9,7 +9,7 @@ use djlive::env::{Catalog, Env, StaticSnippets};
 use djlive::share;
 
 /// hand-dubstep-140 v2: a whole track (CC0, pinned: tests/cid-pins.json).
-const V2: &str = include_str!("../../../docs/btw/hand-dubstep-140-v2.btw");
+const V2: &str = include_str!("../../../docs/beatscript/hand-dubstep-140-v2.beatscript");
 const V2_CID: &str = "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi";
 /// The net CIDs of its `drop` (cid-pins.json: `drop@16:A`, `drop@16:B`).
 const V2_DROP_A: &str = "z4EBG9j8BDvgUEjm15dXsf4xLcYpZ15bpPh1xk49t59eL5kwm92";
@@ -377,8 +377,8 @@ fn a_cid_is_a_word_of_the_language_and_the_cids_a_program_borrows_from_are_liste
 
 #[test]
 fn the_example_program_checks_with_its_source_and_keeps_its_cid_through_reformatting() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw");
-    let text = std::fs::read_to_string(dir.join("borrow-a-drop.btw")).expect("the example");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript");
+    let text = std::fs::read_to_string(dir.join("borrow-a-drop.beatscript")).expect("the example");
     assert!(text.contains(V2_CID), "it borrows from the pinned program");
     let s = v2();
     let c = ok(&text, &s);

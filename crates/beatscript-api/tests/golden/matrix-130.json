@@ -1,0 +1,265 @@
+{
+  "check": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 4,
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 69,
+        "col": 3,
+        "end_col": 13,
+        "start": 2449,
+        "end": 2459,
+        "start16": 2449,
+        "end16": 2459,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 69:3\n   |\n69 |   wheel play\n   |   ^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 70,
+        "col": 3,
+        "end_col": 20,
+        "start": 2462,
+        "end": 2479,
+        "start16": 2462,
+        "end16": 2479,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 70:3\n   |\n70 |   wheel level db=-6\n   |   ^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 71,
+        "col": 3,
+        "end_col": 28,
+        "start": 2482,
+        "end": 2507,
+        "start16": 2482,
+        "end16": 2507,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 71:3\n   |\n71 |   wheel sync deck=A ratio=2\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 92,
+        "col": 3,
+        "end_col": 14,
+        "start": 3412,
+        "end": 3423,
+        "start16": 3412,
+        "end16": 3423,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 92:3\n   |\n92 |   wheel pause\n   |   ^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "cid": "z4EBG9jBo1qTzSQpkxCe6kbjYQp9X8MX8xE1jxoboQwgnaxjNak",
+    "canonical": "tempo 130\nkey d:phrygian\nlet k_a = x ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet k_b = x ~ ~ ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ x\nlet snares = ~ ~ ~ ~ x! ~ ~ x ~ x ~ ~ x! ~ ~ x\nlet hats = x*16\nlet riff_a = d2 ~ d2 ~ d2 ~ d#2 ~ d2 ~ d2 ~ f2 ~ d#2 d2\nlet riff_b = d2 ~ ~ d2 ~ ~ d#2 ~ a2 ~ ~ g2 ~ d#2 d2 ~\nlet p_a = a4 ~ ~ ~ ~ ~ ~ ~ a#4 ~ ~ ~ a4 ~ ~ ~\nlet p_b = ~ ~ ~ ~ g4 ~ ~ ~ f4 ~ ~ ~ ~ ~ ~ ~\nlet p_c = d5 ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ a#4 ~ ~ ~\nlet p_d = a4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p_up = transpose([<p_a p_b p_c p_d>], 1)\nlet toms = d3 ~ d3 d3 ~ a2 ~ d3 ~ d3 a2 ~ d3 ~ a2 a2\nlet q2 = x ~ x ~\nlet q4 = x x x x\nlet eighths = x*8\nlet s16 = x*16\ndef breaks(bars) {\n  deck A: kick <k_a k_a k_a k_b> kit=drums-breakbeat | snare snares vel=50..72 | hihat humanize([hats], 3, 14) vel=38..100\n  master: filter lp 3000 -> 14000 over $bars bars\n}\ndef stabs(chord, alt) {\n  deck B: harmony chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ ~ chord($alt, 3) ~ ~ ~ ~ ~ inst=strings len=1 vel=88..112\n}\ndef rain(seed) {\n  deck B: arp degrade([<arp(dm7, updown, 16) arp(dm7, updown, 16) arp(d#maj7, updown, 16) arp(dm7, up, 16)>], 0.3, $seed) inst=bright-pluck oct=5 vel=36..78\n}\nsection intro 8 bars {\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n  master: filter lp 500 -> 9000 over 8 bars\n  master: reverb 0.3\n}\nsection breakin 8 bars {\n  breaks(8)\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n}\nsection drive 16 bars {\n  master: filter off\n  master: reverb 0.15\n  breaks(16)\n  deck A: bass <riff_a riff_a riff_a riff_b> inst=distorted-lead vel=96..115\n  stabs(dm, d#)\n  rain(11)\n}\nsection breakdown 8 bars {\n  master: filter lp 9000 -> 2500 over 8 bars\n  master: reverb 0.5\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=70..92 | harmony <chord(dm, 3) chord(d#, 3) chord(a#, 3) chord(a, 3)> inst=dark-pad len=16 | arp degrade([arp(dm7, updown, 16)], 0.6, 5) inst=bright-pluck oct=5 vel=30..50\n  deck A: hihat x ~ ~ ~ vel=30..45\n}\nsection riser 8 bars {\n  master: filter hp 100 -> 4500 over 8 bars\n  master: reverb 0.2 -> 0.6 over 8 bars\n  deck A: snare <q2 q2 q4 q4 eighths eighths s16 s16> vel=60..100\n  deck A: level 0.85 -> 1 over 8 bars\n  deck B: harmony <chord(dm, 3) chord(dm, 3) chord(d#, 3) chord(d#, 3)>*2 inst=strings len=16 vel=55..90\n  rain(3)\n}\nsection climax 16 bars {\n  master: filter off\n  master: reverb 0.15\n  wheel play\n  wheel level db=-6\n  wheel sync deck=A ratio=2\n  breaks(2)\n  deck A: bass <riff_a riff_a riff_b riff_b> inst=distorted-lead vel=100..120 | melody toms inst=subdrop oct=3 vel=85..120 | clap e(5, 16) vel=60..90\n  stabs(dm, d#)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=6 vel=80..100\n  rain(19)\n  evolve every 4 bars {\n    arp: rotate <0 2 5 3> | transpose <0 0 3 -2>\n    hihat: thin 0.1 seed=3\n    stop when gen == 3\n  }\n}\nsection lift 8 bars {\n  master: filter off\n  breaks(1)\n  deck A: bass transpose([<riff_a riff_a riff_a riff_b>], 1) inst=distorted-lead vel=104..124 | melody transpose([toms], 1) inst=subdrop oct=3 vel=90..124 | clap e(7, 16) vel=65..100\n  stabs(d#m, e)\n  deck B: melody p_up inst=piano len=6 vel=85..105 | arp degrade([<arp(d#m7, updown, 16) arp(d#m7, updown, 16) arp(emaj7, updown, 16) arp(d#m7, up, 16)>], 0.25, 23) inst=bright-pluck oct=5 vel=40..85\n  master: reverb 0.15 -> 0.4 over 8 bars\n}\nsection outro 8 bars {\n  wheel pause\n  master: filter lp 8000 -> 1500 over 8 bars\n  master: reverb 0.45\n  deck B: melody <p_a p_b p_c p_d ~ ~ ~ ~> inst=piano len=8 vel=55..75\n}\narrange intro breakin drive breakdown riser climax lift outro\nend after outro\n",
+    "nets": {
+      "breakdown@32:A": "z4EBG9j4d7FQHpNRMUcSncU25j4ucmLLcQF373AZD1jzscf5xH5",
+      "breakdown@32:B": "z4EBG9j7nzgGUzKoWDSfz644yWWiKJgfu5ULpSzt88WVgVB17wL",
+      "breakin@8:A": "z4EBG9jCGzkc2UeQn6qynGsAZ2EXhf5jDVfjparSNz8JrwuygV6",
+      "breakin@8:B": "z4EBG9j95HQo22RuCrf4yiboTk5W7azpWDvmwUrJbS4Jv3QxnSD",
+      "climax@48:A": "z4EBG9j95qghahP76UkZ1U2tYyNn2eNKrS9kLqL4rKBaJqFnhkP",
+      "climax@48:B": "z4EBG9j1nZwV44FZ1taV7EJLBb1xxy7ZcwqTdGFCRnD78yapXHE",
+      "climax@52:A": "z4EBG9j2W5j7FekrvTASeoZnZsLduT3e5yX3oD5nd8F1i2ixPNs",
+      "climax@52:B": "z4EBG9j1nZwV44FZ1taV7EJLBb1xxy7ZcwqTdGFCRnD78yapXHE",
+      "climax@56:A": "z4EBG9j1VFvbLREqYnmg6XsQyVMjXrYQ2ryHg8cJP5x89SMqhx3",
+      "climax@56:B": "z4EBG9jCQ9TEJ7F3fEFpPJ732Lv8rS42nyxs5NcdMmdDaCeoDYg",
+      "climax@60:A": "z4EBG9j9mbUJ6sXBGZ3nQA4HWP5735qCttagdWWVctQzPi7QgrC",
+      "climax@60:B": "z4EBG9izVoMWTPvaFrPoXJ5yDdB5B4TWkPDAPCN54G1eBZjnzj1",
+      "drive@16:A": "z4EBG9izgbQtbNGUfsMTZjNrXobS8Mx9HzyextokbJvu8UniKML",
+      "drive@16:B": "z4EBG9jGJu5GRzNtdgzA3pWUEG24ijBefvZm7a4xPmbkM88yw7W",
+      "intro@0:B": "z4EBG9j95HQo22RuCrf4yiboTk5W7azpWDvmwUrJbS4Jv3QxnSD",
+      "lift@64:A": "z4EBG9j1XFrXdMVyKk3NV3atjdgLzqS7wAPgJFiiCAU99BfJuaF",
+      "lift@64:B": "z4EBG9jA742AuNTbXbR6WQgyTmvyb6EMifTc4xY4zy9tdcUbE6H",
+      "outro@72:B": "z4EBG9j5Rkw2UuGhmsVs1y4rkeuhmGicZQX6CcTWTFohk2C2WJp",
+      "riser@40:A": "z4EBG9jDP6Tc7RsyjBYZVtvDymnxY7pSRcq9GRDUn3j4EBNCmKn",
+      "riser@40:B": "z4EBG9j78C12JJvtKZegmqsg6S4JYxowknywVB48N6v2HXomQCX"
+    },
+    "song_nets": null,
+    "tempo": 130,
+    "key": "d:phrygian",
+    "swing": null,
+    "arranged": true,
+    "song_bars": 80,
+    "ends": true,
+    "end_bar": 80,
+    "loops": false,
+    "sections": [
+      {
+        "name": "intro",
+        "start": 0,
+        "bars": 8
+      },
+      {
+        "name": "breakin",
+        "start": 8,
+        "bars": 8
+      },
+      {
+        "name": "drive",
+        "start": 16,
+        "bars": 16
+      },
+      {
+        "name": "breakdown",
+        "start": 32,
+        "bars": 8
+      },
+      {
+        "name": "riser",
+        "start": 40,
+        "bars": 8
+      },
+      {
+        "name": "climax",
+        "start": 48,
+        "bars": 16
+      },
+      {
+        "name": "lift",
+        "start": 64,
+        "bars": 8
+      },
+      {
+        "name": "outro",
+        "start": 72,
+        "bars": 8
+      }
+    ],
+    "decks": ["A","B"],
+    "evolve": [
+      "evolve in climax: tail 203 generations (812 bars), then it cycles: period 32 generations = period 128 bars ≈ 3m56s at 130"
+    ],
+    "lineage": [
+      {
+        "scope": "climax",
+        "gen": 0,
+        "cid": "z4EBG9j8EQSUmQfwYHaxKm1zXfb3JgyAfX56GTPV7mjwBbb3Y5t",
+        "forkedFrom": null,
+        "start_bar": 48,
+        "bars": 4
+      },
+      {
+        "scope": "climax",
+        "gen": 1,
+        "cid": "z4EBG9j26bA2LeyDHGUhtdQAt3TqukegyNPZfqHZsy3mF8HSyCq",
+        "forkedFrom": "z4EBG9j8EQSUmQfwYHaxKm1zXfb3JgyAfX56GTPV7mjwBbb3Y5t",
+        "start_bar": 52,
+        "bars": 4
+      },
+      {
+        "scope": "climax",
+        "gen": 2,
+        "cid": "z4EBG9j2p4MgtDEnF9BvTBinJBvYZtz3prYLZJkye4kj5u5HLpL",
+        "forkedFrom": "z4EBG9j26bA2LeyDHGUhtdQAt3TqukegyNPZfqHZsy3mF8HSyCq",
+        "start_bar": 56,
+        "bars": 4
+      },
+      {
+        "scope": "climax",
+        "gen": 3,
+        "cid": "z4EBG9jCztXHSV4Rfo998EXmaX1jBNSBzxk25nraK6XPqmxCQex",
+        "forkedFrom": "z4EBG9j2p4MgtDEnF9BvTBinJBvYZtz3prYLZJkye4kj5u5HLpL",
+        "start_bar": 60,
+        "bars": 4
+      }
+    ],
+    "uses_assets": false,
+    "restricted": false,
+    "seconds": 147.692,
+    "expanded_cid": "z4EBG9jBo1qTzSQpkxCe6kbjYQp9X8MX8xE1jxoboQwgnaxjNak"
+  },
+  "fmt": {
+    "ok": true,
+    "canonical": "tempo 130\nkey d:phrygian\nlet k_a = x ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet k_b = x ~ ~ ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ x\nlet snares = ~ ~ ~ ~ x! ~ ~ x ~ x ~ ~ x! ~ ~ x\nlet hats = x*16\nlet riff_a = d2 ~ d2 ~ d2 ~ d#2 ~ d2 ~ d2 ~ f2 ~ d#2 d2\nlet riff_b = d2 ~ ~ d2 ~ ~ d#2 ~ a2 ~ ~ g2 ~ d#2 d2 ~\nlet p_a = a4 ~ ~ ~ ~ ~ ~ ~ a#4 ~ ~ ~ a4 ~ ~ ~\nlet p_b = ~ ~ ~ ~ g4 ~ ~ ~ f4 ~ ~ ~ ~ ~ ~ ~\nlet p_c = d5 ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ a#4 ~ ~ ~\nlet p_d = a4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p_up = transpose([<p_a p_b p_c p_d>], 1)\nlet toms = d3 ~ d3 d3 ~ a2 ~ d3 ~ d3 a2 ~ d3 ~ a2 a2\nlet q2 = x ~ x ~\nlet q4 = x x x x\nlet eighths = x*8\nlet s16 = x*16\ndef breaks(bars) {\n  deck A: kick <k_a k_a k_a k_b> kit=drums-breakbeat | snare snares vel=50..72 | hihat humanize([hats], 3, 14) vel=38..100\n  master: filter lp 3000 -> 14000 over $bars bars\n}\ndef stabs(chord, alt) {\n  deck B: harmony chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ ~ chord($alt, 3) ~ ~ ~ ~ ~ inst=strings len=1 vel=88..112\n}\ndef rain(seed) {\n  deck B: arp degrade([<arp(dm7, updown, 16) arp(dm7, updown, 16) arp(d#maj7, updown, 16) arp(dm7, up, 16)>], 0.3, $seed) inst=bright-pluck oct=5 vel=36..78\n}\nsection intro 8 bars {\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n  master: filter lp 500 -> 9000 over 8 bars\n  master: reverb 0.3\n}\nsection breakin 8 bars {\n  breaks(8)\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n}\nsection drive 16 bars {\n  master: filter off\n  master: reverb 0.15\n  breaks(16)\n  deck A: bass <riff_a riff_a riff_a riff_b> inst=distorted-lead vel=96..115\n  stabs(dm, d#)\n  rain(11)\n}\nsection breakdown 8 bars {\n  master: filter lp 9000 -> 2500 over 8 bars\n  master: reverb 0.5\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=70..92 | harmony <chord(dm, 3) chord(d#, 3) chord(a#, 3) chord(a, 3)> inst=dark-pad len=16 | arp degrade([arp(dm7, updown, 16)], 0.6, 5) inst=bright-pluck oct=5 vel=30..50\n  deck A: hihat x ~ ~ ~ vel=30..45\n}\nsection riser 8 bars {\n  master: filter hp 100 -> 4500 over 8 bars\n  master: reverb 0.2 -> 0.6 over 8 bars\n  deck A: snare <q2 q2 q4 q4 eighths eighths s16 s16> vel=60..100\n  deck A: level 0.85 -> 1 over 8 bars\n  deck B: harmony <chord(dm, 3) chord(dm, 3) chord(d#, 3) chord(d#, 3)>*2 inst=strings len=16 vel=55..90\n  rain(3)\n}\nsection climax 16 bars {\n  master: filter off\n  master: reverb 0.15\n  wheel play\n  wheel level db=-6\n  wheel sync deck=A ratio=2\n  breaks(2)\n  deck A: bass <riff_a riff_a riff_b riff_b> inst=distorted-lead vel=100..120 | melody toms inst=subdrop oct=3 vel=85..120 | clap e(5, 16) vel=60..90\n  stabs(dm, d#)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=6 vel=80..100\n  rain(19)\n  evolve every 4 bars {\n    arp: rotate <0 2 5 3> | transpose <0 0 3 -2>\n    hihat: thin 0.1 seed=3\n    stop when gen == 3\n  }\n}\nsection lift 8 bars {\n  master: filter off\n  breaks(1)\n  deck A: bass transpose([<riff_a riff_a riff_a riff_b>], 1) inst=distorted-lead vel=104..124 | melody transpose([toms], 1) inst=subdrop oct=3 vel=90..124 | clap e(7, 16) vel=65..100\n  stabs(d#m, e)\n  deck B: melody p_up inst=piano len=6 vel=85..105 | arp degrade([<arp(d#m7, updown, 16) arp(d#m7, updown, 16) arp(emaj7, updown, 16) arp(d#m7, up, 16)>], 0.25, 23) inst=bright-pluck oct=5 vel=40..85\n  master: reverb 0.15 -> 0.4 over 8 bars\n}\nsection outro 8 bars {\n  wheel pause\n  master: filter lp 8000 -> 1500 over 8 bars\n  master: reverb 0.45\n  deck B: melody <p_a p_b p_c p_d ~ ~ ~ ~> inst=piano len=8 vel=55..75\n}\narrange intro breakin drive breakdown riser climax lift outro\nend after outro\n",
+    "cid": "z4EBG9jBo1qTzSQpkxCe6kbjYQp9X8MX8xE1jxoboQwgnaxjNak",
+    "comments": ["! beatscript 1","! name: matrix-130","! license: CC0-1.0","! visibility: public"],
+    "diagnostics": [
+      {
+        "severity": "warning",
+        "line": 69,
+        "col": 3,
+        "end_col": 13,
+        "start": 2449,
+        "end": 2459,
+        "start16": 2449,
+        "end16": 2459,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 69:3\n   |\n69 |   wheel play\n   |   ^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 70,
+        "col": 3,
+        "end_col": 20,
+        "start": 2462,
+        "end": 2479,
+        "start16": 2462,
+        "end16": 2479,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 70:3\n   |\n70 |   wheel level db=-6\n   |   ^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 71,
+        "col": 3,
+        "end_col": 28,
+        "start": 2482,
+        "end": 2507,
+        "start16": 2482,
+        "end16": 2507,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 71:3\n   |\n71 |   wheel sync deck=A ratio=2\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      },
+      {
+        "severity": "warning",
+        "line": 92,
+        "col": 3,
+        "end_col": 14,
+        "start": 3412,
+        "end": 3423,
+        "start16": 3412,
+        "end16": 3423,
+        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
+        "expected": [],
+        "found": "",
+        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
+        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 92:3\n   |\n92 |   wheel pause\n   |   ^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
+      }
+    ],
+    "text": "#! btw 1\n#! name: matrix-130\n#! license: CC0-1.0\n#! visibility: public\ntempo 130\nkey d:phrygian\nlet k_a = x ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet k_b = x ~ ~ ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ x\nlet snares = ~ ~ ~ ~ x! ~ ~ x ~ x ~ ~ x! ~ ~ x\nlet hats = x*16\nlet riff_a = d2 ~ d2 ~ d2 ~ d#2 ~ d2 ~ d2 ~ f2 ~ d#2 d2\nlet riff_b = d2 ~ ~ d2 ~ ~ d#2 ~ a2 ~ ~ g2 ~ d#2 d2 ~\nlet p_a = a4 ~ ~ ~ ~ ~ ~ ~ a#4 ~ ~ ~ a4 ~ ~ ~\nlet p_b = ~ ~ ~ ~ g4 ~ ~ ~ f4 ~ ~ ~ ~ ~ ~ ~\nlet p_c = d5 ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ a#4 ~ ~ ~\nlet p_d = a4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p_up = transpose([<p_a p_b p_c p_d>], 1)\nlet toms = d3 ~ d3 d3 ~ a2 ~ d3 ~ d3 a2 ~ d3 ~ a2 a2\nlet q2 = x ~ x ~\nlet q4 = x x x x\nlet eighths = x*8\nlet s16 = x*16\ndef breaks(bars) {\n  deck A: kick <k_a k_a k_a k_b> kit=drums-breakbeat | snare snares vel=50..72 | hihat humanize([hats], 3, 14) vel=38..100\n  master: filter lp 3000 -> 14000 over $bars bars\n}\ndef stabs(chord, alt) {\n  deck B: harmony chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ ~ chord($alt, 3) ~ ~ ~ ~ ~ inst=strings len=1 vel=88..112\n}\ndef rain(seed) {\n  deck B: arp degrade([<arp(dm7, updown, 16) arp(dm7, updown, 16) arp(d#maj7, updown, 16) arp(dm7, up, 16)>], 0.3, $seed) inst=bright-pluck oct=5 vel=36..78\n}\nsection intro 8 bars {\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n  master: filter lp 500 -> 9000 over 8 bars\n  master: reverb 0.3\n}\nsection breakin 8 bars {\n  breaks(8)\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n}\nsection drive 16 bars {\n  master: filter off\n  master: reverb 0.15\n  breaks(16)\n  deck A: bass <riff_a riff_a riff_a riff_b> inst=distorted-lead vel=96..115\n  stabs(dm, d#)\n  rain(11)\n}\nsection breakdown 8 bars {\n  master: filter lp 9000 -> 2500 over 8 bars\n  master: reverb 0.5\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=70..92 | harmony <chord(dm, 3) chord(d#, 3) chord(a#, 3) chord(a, 3)> inst=dark-pad len=16 | arp degrade([arp(dm7, updown, 16)], 0.6, 5) inst=bright-pluck oct=5 vel=30..50\n  deck A: hihat x ~ ~ ~ vel=30..45\n}\nsection riser 8 bars {\n  master: filter hp 100 -> 4500 over 8 bars\n  master: reverb 0.2 -> 0.6 over 8 bars\n  deck A: snare <q2 q2 q4 q4 eighths eighths s16 s16> vel=60..100\n  deck A: level 0.85 -> 1 over 8 bars\n  deck B: harmony <chord(dm, 3) chord(dm, 3) chord(d#, 3) chord(d#, 3)>*2 inst=strings len=16 vel=55..90\n  rain(3)\n}\nsection climax 16 bars {\n  master: filter off\n  master: reverb 0.15\n  wheel play\n  wheel level db=-6\n  wheel sync deck=A ratio=2\n  breaks(2)\n  deck A: bass <riff_a riff_a riff_b riff_b> inst=distorted-lead vel=100..120 | melody toms inst=subdrop oct=3 vel=85..120 | clap e(5, 16) vel=60..90\n  stabs(dm, d#)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=6 vel=80..100\n  rain(19)\n  evolve every 4 bars {\n    arp: rotate <0 2 5 3> | transpose <0 0 3 -2>\n    hihat: thin 0.1 seed=3\n    stop when gen == 3\n  }\n}\nsection lift 8 bars {\n  master: filter off\n  breaks(1)\n  deck A: bass transpose([<riff_a riff_a riff_a riff_b>], 1) inst=distorted-lead vel=104..124 | melody transpose([toms], 1) inst=subdrop oct=3 vel=90..124 | clap e(7, 16) vel=65..100\n  stabs(d#m, e)\n  deck B: melody p_up inst=piano len=6 vel=85..105 | arp degrade([<arp(d#m7, updown, 16) arp(d#m7, updown, 16) arp(emaj7, updown, 16) arp(d#m7, up, 16)>], 0.25, 23) inst=bright-pluck oct=5 vel=40..85\n  master: reverb 0.15 -> 0.4 over 8 bars\n}\nsection outro 8 bars {\n  wheel pause\n  master: filter lp 8000 -> 1500 over 8 bars\n  master: reverb 0.45\n  deck B: melody <p_a p_b p_c p_d ~ ~ ~ ~> inst=piano len=8 vel=55..75\n}\narrange intro breakin drive breakdown riser climax lift outro\nend after outro\n"
+  },
+  "share": {
+    "ok": true,
+    "url": "https://beatscript.app/#z4EBG9jBo1qTzSQpkxCe6kbjYQp9X8MX8xE1jxoboQwgnaxjNak.rVbbjuI4EH3nK6pFP8CoQblyE0Ganc9YrUYOMeAlt7FNN-zu9Ldv-ZYEOnT3jlYhJK6UXVXnVJU9fIBUvoA_GD5ASQq6goJIzs4TP_SULGdbWgoUf_vmTfyplj0zwVKWM3lZQX1KUWUgaVFXoOYc6QWyVX3glz0j5SCnEo7fCSRwhtfm6r7by2qmdzRb2VlripJwKlC5ET80eucrgVY_EKmUz1_8mR5ztttpr7IAdTp_w-vxzgmzoJ2XunmvzUNPI2awb-fYsGptikQ3MZOhk7hPVjvtxLV3OruoB7D6-1Y5E9-svI1vTVjtrM-P196FTzXqSk5KUVeCjn5fqyiUb8omrrT54wn8sVaWVaHQzUIVeGieGgwnaQf4RgyUPwJL9dma_BFpgb60gLL9QR4MbwvDuj9zLGZ0Bymn5ChGKeFiDH8PADK6PcLXFRwZPtcq79o73aBYJhk_FWKiZ6aUSPjHpJJLqGeaJ7E3nc4D_HJgmDdwOBWkZH8hBCqLMOoQA4_GWjVcTKe-56HpgghJ-Qp2LMcn5DWEnufBZIO66qV6RumjchXU3-CnjkBIkorR9lDx7AlILjth_LbCrOVFVV5Afx89WrVwbDj-tLARo4GOUF2sFDIRWPDlXkBOy8TXYS1UWH5gneSElSNBaXbtHeE1vu85yVR24GiUFfMnONVZ9VIiRLMx3BcOC_LnfWUtUAnmTRHsR2Nb-5pylRSTOj-hE9VWJrHhYYaULdBfQbeSVSUqS17BQmOtvdZBzMcd_wuaV9kF3uS1MVRj96o0JAttYYZJsegnOjY8LxuajdmOLqcoTlU0HRd1DrKy66RN6MX4_3O4tZdx9kwR2NbcTSjVbtfnsx-3niEtnTJLiRCwtr2055Fa1zImZMUlzSY5JZn2bjlTGaZWNiWQFU_YM5u4fewsN0ipROli9ZaHpS24IP6YiPiXcZ0jrkvdHWx1rk11qQiwtuxg2BmQq4F6d7gQfpzUiIiuvBmueVVTfdWja2L2BPEH9YBOxl6HKtPK3C7qVKK4gzJnooGsD-FDDb4BOPoEwIFSRFdv9Jw_pumucRNQv0j9XLt3T9Xs8d402WwarVshR0s5WljEusn22em00F6S7jJmBpsvQU-DnJk9IsYs8Fy6ht1s3easIOdfLbSXA8Ww6pxcmoGJNEuTyayRiUu51UEmX9EFtJsEbZUGnyrS9MMiRcAR9cDDxLQ1ond6g8kpzXhV65wLzaYRO-VtTmqgo9j0dUefhuu22v9rDRr0F002mG6xVEvR5yrHBqfQvEDUgg-qqhDmShKJKedBADGEG_SzOd0oqQchTIKNnqCrZQXygO0ZeQG1ASWh_oQg1YqDEvZ4Jwko8c8O_TnbyXeqyHDv2ukboroHrvcaqz58vUNcpLiIOsS16yoOO9PfErn03GRL5LxDZOyQt0wOkUraw6Q-QPaTp5eIb7vd2p4L-k8LPVJ65wgxfHOGCDATg_D9jhmp7TLuL0vTyqKrFtMSXp1ujhq2hMlJ0N59auEOhp9oo9EnNip3mruzYalWNVeNnnBMgj21ZyN3_DDHgnaLNduAbWI6mXWAA1pmQHY6hfX4Xw",
+    "social_url": "https://beatscript.app/c/z4EBG9jBo1qTzSQpkxCe6kbjYQp9X8MX8xE1jxoboQwgnaxjNak.rVbbjuI4EH3nK6pFP8CoQblyE0Ganc9YrUYOMeAlt7FNN-zu9Ldv-ZYEOnT3jlYhJK6UXVXnVJU9fIBUvoA_GD5ASQq6goJIzs4TP_SULGdbWgoUf_vmTfyplj0zwVKWM3lZQX1KUWUgaVFXoOYc6QWyVX3glz0j5SCnEo7fCSRwhtfm6r7by2qmdzRb2VlripJwKlC5ET80eucrgVY_EKmUz1_8mR5ztttpr7IAdTp_w-vxzgmzoJ2XunmvzUNPI2awb-fYsGptikQ3MZOhk7hPVjvtxLV3OruoB7D6-1Y5E9-svI1vTVjtrM-P196FTzXqSk5KUVeCjn5fqyiUb8omrrT54wn8sVaWVaHQzUIVeGieGgwnaQf4RgyUPwJL9dma_BFpgb60gLL9QR4MbwvDuj9zLGZ0Bymn5ChGKeFiDH8PADK6PcLXFRwZPtcq79o73aBYJhk_FWKiZ6aUSPjHpJJLqGeaJ7E3nc4D_HJgmDdwOBWkZH8hBCqLMOoQA4_GWjVcTKe-56HpgghJ-Qp2LMcn5DWEnufBZIO66qV6RumjchXU3-CnjkBIkorR9lDx7AlILjth_LbCrOVFVV5Afx89WrVwbDj-tLARo4GOUF2sFDIRWPDlXkBOy8TXYS1UWH5gneSElSNBaXbtHeE1vu85yVR24GiUFfMnONVZ9VIiRLMx3BcOC_LnfWUtUAnmTRHsR2Nb-5pylRSTOj-hE9VWJrHhYYaULdBfQbeSVSUqS17BQmOtvdZBzMcd_wuaV9kF3uS1MVRj96o0JAttYYZJsegnOjY8LxuajdmOLqcoTlU0HRd1DrKy66RN6MX4_3O4tZdx9kwR2NbcTSjVbtfnsx-3niEtnTJLiRCwtr2055Fa1zImZMUlzSY5JZn2bjlTGaZWNiWQFU_YM5u4fewsN0ipROli9ZaHpS24IP6YiPiXcZ0jrkvdHWx1rk11qQiwtuxg2BmQq4F6d7gQfpzUiIiuvBmueVVTfdWja2L2BPEH9YBOxl6HKtPK3C7qVKK4gzJnooGsD-FDDb4BOPoEwIFSRFdv9Jw_pumucRNQv0j9XLt3T9Xs8d402WwarVshR0s5WljEusn22em00F6S7jJmBpsvQU-DnJk9IsYs8Fy6ht1s3easIOdfLbSXA8Ww6pxcmoGJNEuTyayRiUu51UEmX9EFtJsEbZUGnyrS9MMiRcAR9cDDxLQ1ond6g8kpzXhV65wLzaYRO-VtTmqgo9j0dUefhuu22v9rDRr0F002mG6xVEvR5yrHBqfQvEDUgg-qqhDmShKJKedBADGEG_SzOd0oqQchTIKNnqCrZQXygO0ZeQG1ASWh_oQg1YqDEvZ4Jwko8c8O_TnbyXeqyHDv2ukboroHrvcaqz58vUNcpLiIOsS16yoOO9PfErn03GRL5LxDZOyQt0wOkUraw6Q-QPaTp5eIb7vd2p4L-k8LPVJ65wgxfHOGCDATg_D9jhmp7TLuL0vTyqKrFtMSXp1ujhq2hMlJ0N59auEOhp9oo9EnNip3mruzYalWNVeNnnBMgj21ZyN3_DDHgnaLNduAbWI6mXWAA1pmQHY6hfX4Xw",
+    "beats_url": "https://beats.bitwrap.io/p#z4EBG9jBo1qTzSQpkxCe6kbjYQp9X8MX8xE1jxoboQwgnaxjNak.rVZtc-I4DP7eX6Eb-gF2SifkBUKHMLP3N25udhxsIEfe1jFduLvtb19ZtpNAQ9vd2QkhsSJb0vNIspUo6gpmgXd3EGfgT_VenncZK-9yoeDwhUECJ3hpr_67vaxmekOzk51IsymZFA0qt-I_Wr3ThYDU90xp5dOn2ZzGMttuySvuo07vb3Q53joh97t5qZv30j5oGjODXTfHhlWTKRZexcxGTuI-We20F9fO6WzDAcDqLxvtTHS18ia6NmG1-ZAfL4MLH2vUVZKVTV01YvzXSkehfdM2caX13w8wm5CyqgqNLg904IF5EhhO0g3wjRkov_qW6pM1-TUkAV0kENlur_aGt9iwPps7FrnYQioFOzTjlMlmAv_dAXCxOcDnJzhk-FzpvOvudI1ilXB5LJopzUwFU_C_SSWXUM8iTyLv8XHh45d9hnkD-2PByuxfhEBnEUYdYODhhFSD-PFx5nloumCNEvIJtlmOT8hrCDzPg-kadfVL9YzSe-0q6L-77xRBo1jajDf7SvIHYLnqhfHnE2atLKryDPR9fG_Vgonh-MPCVowGekJ9ZWWjkkbJrNw1kIsymVFYsQ5r5lsnJcvKcSMEv_SOyRrfd5JxnR04GvNi8QDHmlffSoRoPoHbwlHB_rmtTAKdYN4jgn1vbJOvqdRJMa3zIzpRbVQSGR7mSFmM_jZio7KqRGUlK4gJa_KaglhMev4XIq_4GV7ltTFUY_eqCJKYLMwxKeJhoiPD87Kl2Zjt6UqB4lRH03ORcjAr-07ahI4nv8_hzh6X2bNAYDtzV6FU2-2Qz7Oo8wxp6ZVZypoGVraXDjxS6xrPGlVJJfg0F4yTd8u5zjC9sikBXjxgz2zjnmFnuUJKJ0ofq9c8LG3B-dH7RES_jOsCcV1Sd7DVuTLVpSPA2rKDUW_ALgb63eHC5GFaIyJUeXNc86KmhqqHamL-ANE79YBORl6PKtPK3C7qVMKoh7LMmhayIYT3NcwMwOEHAPa1Irp6pef8MU13hZuA_oX659q9e-pmj_e6zWbTaN0KOVrK0UIcUZMdstNroYMk3WTMDNaf_IEGOTd7RIRZ4Ll0DfrZusmzgp1-tdC-7QWGVefs3A5MpDxNpvNW1pzLDQWZfEYX0G7id1Xqf6hI03eLFAFH1H0PE9PWCO30BpNjymVVU84FZtOInPImZzWIcWT6uqOP4Lqu9p-tQYN-3GaD6RZLvZR4rnJscBrNM4Qd-KCrCmGuFFOYch74EEGwRj_b042WehDA1F_TBKqWJ1B7bM_IC-gNKAnoE4JUaw5K2OGdJKDF33v059lWvVFFhnvXTl8R1T9wvdVY6fD1BnGh5iLsEdetqznsTX9N5NJzky2Rix6RkUPeMjlCKsUAk3SAHCaPloiuu93KnguGTwsDUnHjCDF6dYbwMRP94O2OGertMhouS9PKwosW0xFeHa-OGraE2bERg_tU7A6GH2ij4Qc2Kneau7Fh6Va10I2eSUyCnbBnI3f8MMeCbos124BtYpTMFOCdKDmwLaUwjX8A",
+    "cid": "z4EBG9jBo1qTzSQpkxCe6kbjYQp9X8MX8xE1jxoboQwgnaxjNak",
+    "chars": 1666,
+    "canonical": "tempo 130\nkey d:phrygian\nlet k_a = x ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet k_b = x ~ ~ ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ x\nlet snares = ~ ~ ~ ~ x! ~ ~ x ~ x ~ ~ x! ~ ~ x\nlet hats = x*16\nlet riff_a = d2 ~ d2 ~ d2 ~ d#2 ~ d2 ~ d2 ~ f2 ~ d#2 d2\nlet riff_b = d2 ~ ~ d2 ~ ~ d#2 ~ a2 ~ ~ g2 ~ d#2 d2 ~\nlet p_a = a4 ~ ~ ~ ~ ~ ~ ~ a#4 ~ ~ ~ a4 ~ ~ ~\nlet p_b = ~ ~ ~ ~ g4 ~ ~ ~ f4 ~ ~ ~ ~ ~ ~ ~\nlet p_c = d5 ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ a#4 ~ ~ ~\nlet p_d = a4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p_up = transpose([<p_a p_b p_c p_d>], 1)\nlet toms = d3 ~ d3 d3 ~ a2 ~ d3 ~ d3 a2 ~ d3 ~ a2 a2\nlet q2 = x ~ x ~\nlet q4 = x x x x\nlet eighths = x*8\nlet s16 = x*16\ndef breaks(bars) {\n  deck A: kick <k_a k_a k_a k_b> kit=drums-breakbeat | snare snares vel=50..72 | hihat humanize([hats], 3, 14) vel=38..100\n  master: filter lp 3000 -> 14000 over $bars bars\n}\ndef stabs(chord, alt) {\n  deck B: harmony chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ chord($chord, 3) ~ ~ ~ chord($alt, 3) ~ ~ ~ ~ ~ inst=strings len=1 vel=88..112\n}\ndef rain(seed) {\n  deck B: arp degrade([<arp(dm7, updown, 16) arp(dm7, updown, 16) arp(d#maj7, updown, 16) arp(dm7, up, 16)>], 0.3, $seed) inst=bright-pluck oct=5 vel=36..78\n}\nsection intro 8 bars {\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n  master: filter lp 500 -> 9000 over 8 bars\n  master: reverb 0.3\n}\nsection breakin 8 bars {\n  breaks(8)\n  rain(7)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=60..80\n}\nsection drive 16 bars {\n  master: filter off\n  master: reverb 0.15\n  breaks(16)\n  deck A: bass <riff_a riff_a riff_a riff_b> inst=distorted-lead vel=96..115\n  stabs(dm, d#)\n  rain(11)\n}\nsection breakdown 8 bars {\n  master: filter lp 9000 -> 2500 over 8 bars\n  master: reverb 0.5\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=8 vel=70..92 | harmony <chord(dm, 3) chord(d#, 3) chord(a#, 3) chord(a, 3)> inst=dark-pad len=16 | arp degrade([arp(dm7, updown, 16)], 0.6, 5) inst=bright-pluck oct=5 vel=30..50\n  deck A: hihat x ~ ~ ~ vel=30..45\n}\nsection riser 8 bars {\n  master: filter hp 100 -> 4500 over 8 bars\n  master: reverb 0.2 -> 0.6 over 8 bars\n  deck A: snare <q2 q2 q4 q4 eighths eighths s16 s16> vel=60..100\n  deck A: level 0.85 -> 1 over 8 bars\n  deck B: harmony <chord(dm, 3) chord(dm, 3) chord(d#, 3) chord(d#, 3)>*2 inst=strings len=16 vel=55..90\n  rain(3)\n}\nsection climax 16 bars {\n  master: filter off\n  master: reverb 0.15\n  wheel play\n  wheel level db=-6\n  wheel sync deck=A ratio=2\n  breaks(2)\n  deck A: bass <riff_a riff_a riff_b riff_b> inst=distorted-lead vel=100..120 | melody toms inst=subdrop oct=3 vel=85..120 | clap e(5, 16) vel=60..90\n  stabs(dm, d#)\n  deck B: melody <p_a p_b p_c p_d> inst=piano len=6 vel=80..100\n  rain(19)\n  evolve every 4 bars {\n    arp: rotate <0 2 5 3> | transpose <0 0 3 -2>\n    hihat: thin 0.1 seed=3\n    stop when gen == 3\n  }\n}\nsection lift 8 bars {\n  master: filter off\n  breaks(1)\n  deck A: bass transpose([<riff_a riff_a riff_a riff_b>], 1) inst=distorted-lead vel=104..124 | melody transpose([toms], 1) inst=subdrop oct=3 vel=90..124 | clap e(7, 16) vel=65..100\n  stabs(d#m, e)\n  deck B: melody p_up inst=piano len=6 vel=85..105 | arp degrade([<arp(d#m7, updown, 16) arp(d#m7, updown, 16) arp(emaj7, updown, 16) arp(d#m7, up, 16)>], 0.25, 23) inst=bright-pluck oct=5 vel=40..85\n  master: reverb 0.15 -> 0.4 over 8 bars\n}\nsection outro 8 bars {\n  wheel pause\n  master: filter lp 8000 -> 1500 over 8 bars\n  master: reverb 0.45\n  deck B: melody <p_a p_b p_c p_d ~ ~ ~ ~> inst=piano len=8 vel=55..75\n}\narrange intro breakin drive breakdown riser climax lift outro\nend after outro\n",
+    "warnings": []
+  }
+}

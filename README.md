@@ -15,17 +15,17 @@ audio host), a git dependency pinned in `Cargo.toml`.
 |---|---|
 | `crates/djlive` | the language: parse, compile to djrust nets, mutate, evolve, perform; `grammar.ebnf`, the form templates |
 | `crates/djengine` | engine modules on top of djrust: vocals and the lexicon, themes, rights, key, SMF, import (plus booth modules) |
-| `crates/btwapi` | check / fmt / open / share / highlight / marks as JSON, pure; shared by the CLI, the server and the wasm |
+| `crates/beatscript-api` | check / fmt / open / share / highlight / marks as JSON, pure; shared by the CLI, the server and the wasm |
 | `crates/beatscriptls` | the language service (diagnostics, completion, hover, refactors), LSP-shaped and pure |
-| `crates/djweb` | the browser module: btwapi + beatscriptls + the djrust engine behind wasm-bindgen |
-| `crates/btwserve` | the beatscript.app server: site, docs, render (Ogg Opus), check, sign-in, cards, pairing, MCP, ontology |
-| `crates/btwseal` | sealed private pushes to a paired phone |
-| `crates/btwd` | the CLI: check, fmt, render, cheatsheet, lsp, export |
-| `crates/btwround` | the round trip: audio in, a program out that `check same_as` the original |
+| `crates/djweb` | the browser module: beatscript-api + beatscriptls + the djrust engine behind wasm-bindgen |
+| `crates/beatscript-serve` | the beatscript.app server: site, docs, render (Ogg Opus), check, sign-in, cards, pairing, MCP, ontology |
+| `crates/beatscript-seal` | sealed private pushes to a paired phone |
+| `crates/beatscript-cli` | the CLI: check, fmt, render, cheatsheet, lsp, export |
+| `crates/beatscript-round` | the round trip: audio in, a program out that `check same_as` the original |
 | `crates/djhost` | host modules (render path, ontology vocabulary, and the booth's devices behind features) |
-| `docs/` | the language reference (`BTW.md`), arrange, schema, open data, authorship, `docs/btw/` long notes |
+| `docs/` | the language reference (`BEATSCRIPT.md`), arrange, schema, open data, authorship, `docs/beatscript/` long notes |
 | `examples/` | example and reference programs |
-| `editors/` | VS Code and IntelliJ support (`btwd lsp`) |
+| `editors/` | VS Code and IntelliJ support (`beatscript lsp`) |
 | `site/` | the web editor, embed and npm player, site examples, API docs source, tests (with its history from beats-bitwrap-io) |
 | `deploy/` | `deploy.sh` (build and deploy from one commit), `live-checks.sh` (every live check) and `test-host.sh` (the host checkout step against scratch dirs, in CI) |
 | `scripts/` | the wasm and Linux builds, the build-host picker, the public-build guard |
@@ -34,7 +34,7 @@ audio host), a git dependency pinned in `Cargo.toml`.
 ## Build and test
 
 ```sh
-cargo test --locked -p djlive -p djengine -p btwapi -p beatscriptls -p btwseal -p btwserve -p djweb -p btwd -p btwround
+cargo test --locked -p djlive -p djengine -p beatscript-api -p beatscriptls -p beatscript-seal -p beatscript-serve -p djweb -p beatscript-cli -p beatscript-round
 scripts/check-public-build.sh            # what a default build may contain (below)
 node --test site/test/unit.mjs           # the page's pure-JS tests
 scripts/build-web-wasm.sh site/web/wasm  # the browser module (needs the wasm-bindgen CLI the lockfile pins)
@@ -47,14 +47,14 @@ either in its tree, or the booth's pronouncing dictionary, which is not in this 
 
 ## Deploy
 
-`deploy/deploy.sh all` builds the wasm, btwserve and the docs from one commit on `main`, checks that commit out on
+`deploy/deploy.sh all` builds the wasm, beatscript-serve and the docs from one commit on `main`, checks that commit out on
 the serving host, installs the artifacts, points the service at it, restarts it and runs `deploy/live-checks.sh`. It
 rolls back by itself when the restart or a check fails. Build hosts come from the environment
 (`scripts/build-host.sh`). The server's data and secrets live on the host only and never in this repository.
 
 ## Licence
 
-Code is MIT (`LICENSE`). BeatScript programs and all content are CC0-1.0: every `.btw` program, the examples, the
+Code is MIT (`LICENSE`). BeatScript programs and all content are CC0-1.0: every `.beatscript` program, the examples, the
 lexicon, phrasebooks and themes, the ontology, the test fixtures, and the docs. `REUSE.toml` says which path is
-which; `LICENSES/` holds the texts. The Go fonts under `crates/btwserve/assets/gofont` are BSD-3-Clause, with their
+which; `LICENSES/` holds the texts. The Go fonts under `crates/beatscript-serve/assets/gofont` are BSD-3-Clause, with their
 licence beside them. Programs stored on beatscript.app are CC0 by default.

@@ -2,13 +2,13 @@
   "jsonrpc": "2.0",
   "method": "textDocument/publishDiagnostics",
   "params": {
-    "uri": "file:///a.btw",
+    "uri": "file:///a.beatscript",
     "version": 1,
     "diagnostics": [
       {
         "range": {"start":{"line":1,"character":8},"end":{"line":1,"character":12}},
         "severity": 1,
-        "source": "btw",
+        "source": "beatscript",
         "message": "`kcik` is not something to do\nexpected: swap, move, load, queue, play, stop, sync, mute, unmute, filter, delay, reverb, crush, resonance, level, low, mid, high, crossfader, duck, mix, sing, assert or wire\nhelp: did you mean `kick`?",
         "data": {"index":0,"start":18,"end":22}
       }

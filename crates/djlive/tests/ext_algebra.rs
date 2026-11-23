@@ -1,4 +1,4 @@
-//! F10, composition made literal (docs/btw/ext-algebra.md): `stack(a, b)` and `then(a, b)` over sections and over
+//! F10, composition made literal (docs/beatscript/ext-algebra.md): `stack(a, b)` and `then(a, b)` over sections and over
 //! parts, `silence` as their unit, `arrange a b c` as `then(a, b, c)`, `let NAME = sexpr`. The canonical form is the
 //! normal form by the laws of a symmetric monoidal category (so programs equal by the laws have one CID), the timeline
 //! lays stacked sections of unequal length out as consecutive segments, and the property tests at the end are the

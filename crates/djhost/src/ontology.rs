@@ -1,4 +1,4 @@
-//! The bitwrap ontology as btw's `#! genre:` and `#! tags:` header lines see it (docs/btw/ext-linked.md): a cached,
+//! The bitwrap ontology as BeatScript's `#! genre:` and `#! tags:` header lines see it (docs/beatscript/ext-linked.md): a cached,
 //! deterministic snapshot of the published vocabulary (https://ontology.bitwrap.io/ns#), compiled in.
 //!
 //! `data/bitwrap-ontology.json` is the source of truth for tests and for a machine that is offline: the terms an

@@ -1,7 +1,7 @@
 # site/embed: the embed clients
 
 The code every BeatScript embed shares, and the clients for hosts that are not a web page. What each host gets, and how
-to use it, is [docs/btw/embed.md](../../docs/btw/embed.md) (served at https://beatscript.app/docs/embed).
+to use it, is [docs/beatscript/embed.md](../../docs/beatscript/embed.md) (served at https://beatscript.app/docs/embed).
 
 | file | what it is |
 |---|---|
@@ -10,7 +10,7 @@ to use it, is [docs/btw/embed.md](../../docs/btw/embed.md) (served at https://be
 | `jupyter/test_beatscript_embed.py` | its test: `python3 -I site/embed/jupyter/test_beatscript_embed.py` |
 
 These files may name `https://beatscript.app`: the site's own scripts (`site/web/js/`) may not
-(`site/scripts/btw-host-literals.sh`).
+(`site/scripts/beatscript-host-literals.sh`).
 
-`node --test site/test/embed-config.test.mjs` tests `embed-config.js`. btwserve mirrors `normalize`, `toAttributes` and
+`node --test site/test/embed-config.test.mjs` tests `embed-config.js`. beatscript-serve mirrors `normalize`, `toAttributes` and
 `artifactCapabilities` in Rust, held to the same fixtures.

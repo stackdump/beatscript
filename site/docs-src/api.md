@@ -1,7 +1,7 @@
 # BeatScript API
 
 `https://beatscript.app` is a code-centric web view of **BeatScript**, AI-assisted algorithmic composition: a small language for writing whole music tracks as text
-(reference: [BTW.md](https://beatscript.app/docs/BTW.md), compact grammar: [cheatsheet.md](https://beatscript.app/docs/cheatsheet.md),
+(reference: [BEATSCRIPT.md](https://beatscript.app/docs/BEATSCRIPT.md), compact grammar: [cheatsheet.md](https://beatscript.app/docs/cheatsheet.md),
 index for models: [llms.txt](https://beatscript.app/llms.txt)). This page documents everything the service answers: the HTTP routes,
 sign-in, composing with a model, streaming renders, driving a browser tab, and the MCP server.
 
@@ -22,10 +22,10 @@ version is `/privacy`. `GET /.well-known/btw-site` names the site (`site_id`, it
 |---|---|---|
 | `GET /` and `/js/*`, `/css/*`, `/wasm/*` | | the page |
 | `GET /healthz`, `GET /api/info` | | liveness; name, version, model, compose `{enabled, configured, limits}`, render limits, auth kinds |
-| `GET /api/examples`, `GET /examples/<name>.btw` | | the public example programs: list as JSON, text as written |
+| `GET /api/examples`, `GET /examples/<name>.beatscript` | | the public example programs: list as JSON, text as written |
 | `GET /api/instruments` | | the voices, families, drum kits and palettes a program may name |
 | `POST /api/check`, `/api/fmt`, `/api/share`, `/api/open` | | the language tools, below; limited per IP |
-| `PUT /api/programs/<cid>`, `GET /api/programs/<cid>[.btw]` | | store and read programs |
+| `PUT /api/programs/<cid>`, `GET /api/programs/<cid>[.beatscript]` | | store and read programs |
 | `PUT /api/shares/<cid>` | cookie, bearer or paired phone | store a public program with its rights for a CID-only share link, [Share links](#share-links) |
 | `GET /api/render/<cid>?format=opus\|wav` | | stream the offline render, [Render](#render) |
 | `POST /api/session`, `GET /api/session/<id>/events`, `POST /api/session/<id>/report`, `POST /api/session/<id>/reply` | cookie optional | the browser to MCP bridge, [Sessions](#sessions) |
@@ -33,7 +33,7 @@ version is `/privacy`. `GET /.well-known/btw-site` names the site (`site_id`, it
 | `POST /api/compose` | cookie or bearer | [Compose](#compose) |
 | `POST /mcp` (and a landing page on `GET`) | write tools need a bearer token | [MCP](#mcp) |
 | `GET /c/<cid>`, `GET /c/<cid>.<packed>`, `GET /p/<cid>`, `GET /card/<cid>.png` | | share pages with link previews, and their card images; `/p/<cid>` is the CID-only short link |
-| `GET /llms.txt`, `/llms-full.txt`, `/docs/BTW.md`, `/docs/cheatsheet.md`, `/docs/api.md` | | the docs |
+| `GET /llms.txt`, `/llms-full.txt`, `/docs/BEATSCRIPT.md`, `/docs/cheatsheet.md`, `/docs/api.md` | | the docs |
 
 ## Errors and limits
 
@@ -104,7 +104,7 @@ curl -s https://beatscript.app/api/check -H 'content-type: application/json' \
 - `PUT /api/programs/<cid>`: the body is the program text. Accepted iff its canonical CID is `<cid>`, it checks ok, it is not restricted
   or asset-using and it is at most 16384 bytes (stored as CC0-1.0: [What we store](#what-we-store)); stored content-addressed (idempotent), limited per IP. Answers the stored program.
 - `GET /api/programs/<cid>`: `{"cid", "text", "meta": {"license": "CC0-1.0", "visibility", "name", "composed_by", "forked_from", ...}}`.
-- `GET /api/programs/<cid>.btw`: the program as a `.btw` file with its `#!` header (name, license, composed-by, forked-from).
+- `GET /api/programs/<cid>.beatscript`: the program as a `.beatscript` file with its `#!` header (name, license, composed-by, forked-from).
 
 ## What we store
 
@@ -129,7 +129,7 @@ beatscript.app only stores Creative Commons programs. Users can do whatever they
 
 ## Examples and instruments
 
-`GET /api/examples` lists `[{"name", "title", "description", "cid", "bpm", "bars", "license"}]`; `GET /examples/<name>.btw` is the text as written.
+`GET /api/examples` lists `[{"name", "title", "description", "cid", "bpm", "bars", "license"}]`; `GET /examples/<name>.beatscript` is the text as written.
 All examples are CC0-1.0, the work of the site's author, and a good second read after the cheat-sheet: `first-beat` is four lines,
 `acid-line` shows an accent, a slide and a filter ramp, `evolve-demo` a program that changes itself, and `hand-dubstep-140-v4`, `matrix-130`
 and `trance-138` are whole tracks.
@@ -167,7 +167,7 @@ What happens: the request is validated and limited (kill switch, per user per ho
 model gets the cheat-sheet, the instruments and two or three public CC0 examples; its program is checked, and while it has errors the
 diagnostics go back to the model, at most 3 repair rounds. A program that never checks is **422 `unrepairable`** with the last diagnostics
 and every attempt in `details`. The result is stored as a public CC0-1.0 program with `composedBy` and `forkedFrom`; the `#!` header lines live in the
-stored object and the `.btw` download, never in the canonical text. A call takes about 5 to 60 seconds. Errors: `auth_required`,
+stored object and the `.beatscript` download, never in the canonical text. A call takes about 5 to 60 seconds. Errors: `auth_required`,
 `rate_limited` (with `retry_after`), `spend_cap`, `disabled`, `not_configured`, `bad_request`, `prompt_too_long`, `model_error`, `unrepairable`.
 Never put anything private in a prompt: it goes to Google's model, and what comes back is published as CC0.
 

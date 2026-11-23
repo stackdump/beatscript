@@ -1,5 +1,5 @@
 {
-  "note": "SHA-256 of each example's card PNG. Keys: <checker>/<GOARCH>. Regenerate: BTW_BLESS=1 [BTWD_BIN=<btwd>] go test ./internal/btwsite/card -run TestGolden",
+  "note": "SHA-256 of each example's card PNG. Keys: <checker>/<GOARCH>. Regenerate: BEATSCRIPT_BLESS=1 [BEATSCRIPT_BIN=<beatscript>] go test ./internal/btwsite/card -run TestGolden",
   "go": "go1.26.0",
   "sets": {
     "fake/arm64": {

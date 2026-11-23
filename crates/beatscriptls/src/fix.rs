@@ -1,7 +1,7 @@
 //! Quick-fixes: the repairs of the text a diagnostic offers, as LSP code actions, and "fix all" (every certain repair at once).
 //!
 //! The repairs are the fixer's (run e8d44b49, branch `feat/btw-fixer`: `djlive::diag::Fix` on `Diagnostic::fixes`, and
-//! `btwd check --fix`). Until that lands on main, [`fixes_of`] is an adapter that reads the same repairs out of what a
+//! `beatscript check --fix`). Until that lands on main, [`fixes_of`] is an adapter that reads the same repairs out of what a
 //! diagnostic already says: a `did you mean `x`?` help is the fixer's `respell` (certain when it names one word, likely
 //! when it names several). [`QuickFix`] has the fixer's shape (span, replacement, confidence, note), so the merge is one
 //! function: `fixes_of` maps `d.fixes` and keeps the adapter only for a diagnostic with none.
@@ -173,12 +173,12 @@ pub fn code_actions(a: &Analysis, uri: &str, range: Span, only: &[String], enc: 
         }
     }
     let all = fix_all(a);
-    let explicit = only.iter().any(|o| o == "source.fixAll" || o == "source.fixAll.btw" || o == "source");
+    let explicit = only.iter().any(|o| o == "source.fixAll" || o == "source.fixAll.beatscript" || o == "source");
     if (all.len() > 1 && wants("quickfix")) || (explicit && !all.is_empty()) {
         let edits: Vec<(Span, String)> = all.iter().map(|(_, f)| (f.span, f.replacement.clone())).collect();
         out.push(obj([
             ("title", s(format!("Fix all certain problems ({})", all.len()))),
-            ("kind", s(if explicit { "source.fixAll.btw" } else { "quickfix" })),
+            ("kind", s(if explicit { "source.fixAll.beatscript" } else { "quickfix" })),
             ("diagnostics", arr(all.iter().map(|(i, _)| crate::diagnostics::to_lsp(a, &a.diagnostics()[*i], *i, enc)).collect())),
             ("edit", workspace_edit(a, uri, &edits, enc)),
         ]));
@@ -186,7 +186,7 @@ pub fn code_actions(a: &Analysis, uri: &str, range: Span, only: &[String], enc: 
     out
 }
 
-/// The text with every fix-all repair applied (what `btwd check --fix` would write, from the certain repairs alone).
+/// The text with every fix-all repair applied (what `beatscript check --fix` would write, from the certain repairs alone).
 pub fn apply_all(a: &Analysis) -> String {
     let mut t = a.text.clone();
     for (_, f) in fix_all(a).into_iter().rev() {

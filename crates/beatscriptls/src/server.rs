@@ -1,5 +1,5 @@
 //! The LSP server as a pure state machine: a JSON-RPC message in, the messages to send back out (responses and
-//! notifications such as `textDocument/publishDiagnostics`). `btwd lsp` adds the stdio framing; djweb's `BeatscriptLs` calls
+//! notifications such as `textDocument/publishDiagnostics`). `beatscript lsp` adds the stdio framing; djweb's `BeatscriptLs` calls
 //! [`Server::request`] and [`Server::open`] directly.
 
 use std::collections::BTreeMap;
@@ -37,7 +37,7 @@ pub struct Server {
     /// answered (tests, and hosts with no worker).
     pub deferred: bool,
     /// The registry completion and hover read the `do` nouns, verbs and params from (None: the site's snapshot, which has
-    /// no param docs; `btwd lsp` hands in the host's own, which has them). Checks always use the site's environment.
+    /// no param docs; `beatscript lsp` hands in the host's own, which has them). Checks always use the site's environment.
     pub registry: Option<&'static dyn djlive::env::Registry>,
     /// The client said `workspace.applyEdit` in `initialize`: an eject run as a command is also sent to it as a
     /// `workspace/applyEdit` request ([`Server::handle`]).
@@ -139,7 +139,7 @@ impl Server {
 
     /// What a command run over the wire also sends the client: an eject's edit as `workspace/applyEdit` (when the client
     /// takes it), and for a show or a copy a `window/showMessage` with the expansion, for a client that has no show/hide of its
-    /// own (LSP4IJ; the VS Code extension and the web page keep that state themselves and ask `btw/expand` instead).
+    /// own (LSP4IJ; the VS Code extension and the web page keep that state themselves and ask `beatscript/expand` instead).
     fn after_command(&mut self, params: &JsonValue, answer: &JsonValue) -> Vec<JsonValue> {
         let command = params.get("command").and_then(JsonValue::as_str).unwrap_or("");
         match command {
@@ -210,13 +210,13 @@ impl Server {
                 Ok(JsonValue::Null)
             }
             // not LSP: the diagnostics of an open document as a request, for a host that does not take notifications
-            "btw/diagnostics" => {
+            "beatscript/diagnostics" => {
                 let a = self.doc_of(params)?;
                 Ok(crate::diagnostics::all(a, self.encoding))
             }
             // not LSP: the number, note or numeral at a position, its range, step and unit, for an editor's scrubber
             // (number.rs). `null` where there is none.
-            "btw/numberAt" => {
+            "beatscript/numberAt" => {
                 let a = self.doc_of(params)?;
                 let at = self.offset_of(a, params)?;
                 let names = self.env_names();
@@ -228,7 +228,7 @@ impl Server {
             // not LSP: the program's references (a generator call, a seed, a stored program's part or section, a template)
             // with their ranges, what each resolves to and what it is written out as (refs.rs); the one at `position` if
             // given. What is shown is the client's to keep.
-            "btw/expand" => {
+            "beatscript/expand" => {
                 let a = self.doc_of(params)?;
                 let at = match params.get("position") {
                     Some(_) => Some(self.offset_of(a, params)?),
@@ -363,7 +363,7 @@ impl Server {
         c.set("documentHighlightProvider", JsonValue::Bool(true));
         c.set("renameProvider", obj([("prepareProvider", JsonValue::Bool(true))]));
         // the requests beyond LSP this server answers
-        c.set("experimental", obj([("btw", obj([("numberAt", JsonValue::Bool(true)), ("diagnostics", JsonValue::Bool(true)), ("expand", JsonValue::Bool(true))]))]));
+        c.set("experimental", obj([("beatscript", obj([("numberAt", JsonValue::Bool(true)), ("diagnostics", JsonValue::Bool(true)), ("expand", JsonValue::Bool(true))]))]));
         c.set("codeActionProvider", obj([("codeActionKinds", arr(Self::ACTION_KINDS.iter().map(|k| s(*k)).collect())), ("resolveProvider", JsonValue::Bool(true))]));
         // over each reference: `show expansion` and `eject` (refs.rs)
         c.set("codeLensProvider", obj([("resolveProvider", JsonValue::Bool(false))]));
@@ -380,7 +380,7 @@ impl Server {
     }
 
     /// The kinds of code action this server offers.
-    pub const ACTION_KINDS: &'static [&'static str] = &["quickfix", "source.fixAll.btw", "refactor.extract", "refactor.inline", "refactor.rewrite"];
+    pub const ACTION_KINDS: &'static [&'static str] = &["quickfix", "source.fixAll.beatscript", "refactor.extract", "refactor.inline", "refactor.rewrite"];
 
     /// The refactors offered for a range: unresolved; `codeAction/resolve` makes and proves them.
     fn refactors(&self, a: &Analysis, uri: &str, range: djlive::Span, only: &[String]) -> Vec<JsonValue> {

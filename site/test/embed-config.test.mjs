@@ -1,6 +1,6 @@
 // Tests for site/embed/embed-config.js (no npm: node:test and node:assert).
 //   node --test site/test/embed-config.test.mjs
-// The cases in site/testdata/embed-config/cases.json are the contract btwserve's Rust mirror is held to too, so they are
+// The cases in site/testdata/embed-config/cases.json are the contract beatscript-serve's Rust mirror is held to too, so they are
 // compared as JSON text: the key order is part of the output.
 
 import test from 'node:test';

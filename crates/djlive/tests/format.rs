@@ -1,6 +1,6 @@
 //! `fmt` keeps what the canonical form leaves out (djlive::format): the `#!` header lines, every comment and the blank lines
 //! between blocks. It makes the same program (the CID of the formatted text is the program's), and a formatted program formats
-//! to itself. The corpus is every `.btw` of the repo, and each of them again written out with other whitespace, comments, blank
+//! to itself. The corpus is every `.beatscript` of the repo, and each of them again written out with other whitespace, comments, blank
 //! lines and continuation lines (`common::reformat`), so a comment lands in every place a person might have put one.
 
 mod common;
@@ -21,7 +21,7 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
         let p = e.path();
         if p.is_dir() {
             walk(&p, out);
-        } else if p.extension().is_some_and(|x| x == "btw") {
+        } else if p.extension().is_some_and(|x| x == "beatscript") {
             out.push(p);
         }
     }
@@ -30,7 +30,7 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Every program of the repo's examples, docs and test fixtures.
 fn corpus() -> Vec<(String, String)> {
     let mut paths = Vec::new();
-    for dir in ["examples", "docs", "crates/btwapi/tests", "crates/djlive/tests", "crates/beatscriptls/tests", "crates/btwround/fixtures", "tools/listen/fixtures"] {
+    for dir in ["examples", "docs", "crates/beatscript-api/tests", "crates/djlive/tests", "crates/beatscriptls/tests", "crates/beatscript-round/fixtures", "tools/listen/fixtures"] {
         walk(&root().join(dir), &mut paths);
     }
     paths.sort();
@@ -245,8 +245,8 @@ fn every_program_of_the_repo_formats_to_itself_with_its_cid_and_every_comment() 
 
 #[test]
 fn reformatted_programs_keep_their_comments_and_cid_through_fmt() {
-    // (BTW_FMT_ROUNDS=300 for a longer hunt)
-    let rounds: u64 = std::env::var("BTW_FMT_ROUNDS").ok().and_then(|r| r.parse().ok()).unwrap_or(12);
+    // (BEATSCRIPT_FMT_ROUNDS=300 for a longer hunt)
+    let rounds: u64 = std::env::var("BEATSCRIPT_FMT_ROUNDS").ok().and_then(|r| r.parse().ok()).unwrap_or(12);
     for (name, src) in corpus() {
         if check(&src).compiled.is_none() {
             continue;

@@ -3,7 +3,7 @@
 //
 //   node site/test/parity/loop.mjs [--passes 3] [--out DIR]
 //
-// For each case the engine plays the looping program for `passes` passes of its arrangement, and btwd renders the
+// For each case the engine plays the looping program for `passes` passes of its arrangement, and beatscript renders the
 // same program with the arrangement written out that many times and no `loop` (`arrange a b` + loop -> `arrange a b a b
 // a b`): what a loop means. A pattern whose alternation does not divide the section (`<p1 p2 p3>` in a 2-bar section) tells
 // a restart (the section's nets load again: bars 3 and 4 are p1, p2) from a net that just runs on (p3, p1): each p has
@@ -14,15 +14,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compare } from './analyze.mjs';
-import { findBtwd, int16, missing, start, wav } from './harness.mjs';
+import { findBeatscriptCli, int16, missing, start, wav } from './harness.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i < 0 ? d : process.argv[i + 1]; };
 const PASSES = Number(arg('passes', 3));
 const OUT = path.resolve(arg('out', path.join(here, 'out')));
 const SR = 48000;
-const BTWD = findBtwd(arg('btwd'));
-{ const why = missing(BTWD); if (why) { console.log(`SKIP loop: ${why}`); process.exit(0); } }
+const BEATSCRIPT_CLI = findBeatscriptCli(arg('beatscript'));
+{ const why = missing(BEATSCRIPT_CLI); if (why) { console.log(`SKIP loop: ${why}`); process.exit(0); } }
 
 // bar k of a pattern is told by how many kicks it has: p1 one, p2 two, p3 three; section two has four
 const pats = 'let p1 = x ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p2 = x ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet p3 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~\n';
@@ -62,13 +62,13 @@ function classify(fps, refs) {
 }
 
 fs.mkdirSync(OUT, { recursive: true });
-// the reference bars: p1, p2, p3 and four kicks, each as btwd renders it
+// the reference bars: p1, p2, p3 and four kicks, each as beatscript renders it
 const REFS = {};
 {
-    const one = spawnSync(BTWD, ['render', '--sr', String(SR), '--format', 's16le', '-'], { input: `tempo 128\n${pats}deck A: kick <p1 p2 p3>\nend at bar 3\n`, maxBuffer: 1 << 30 });
+    const one = spawnSync(BEATSCRIPT_CLI, ['render', '--sr', String(SR), '--format', 's16le', '-'], { input: `tempo 128\n${pats}deck A: kick <p1 p2 p3>\nend at bar 3\n`, maxBuffer: 1 << 30 });
     const fp = fingerprints(one.stdout, 128, 3);
     REFS.p1 = fp[0]; REFS.p2 = fp[1]; REFS.p3 = fp[2];
-    const four = spawnSync(BTWD, ['render', '--sr', String(SR), '--format', 's16le', '-'], { input: 'tempo 128\ndeck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nend at bar 1\n', maxBuffer: 1 << 30 });
+    const four = spawnSync(BEATSCRIPT_CLI, ['render', '--sr', String(SR), '--format', 's16le', '-'], { input: 'tempo 128\ndeck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nend at bar 1\n', maxBuffer: 1 << 30 });
     REFS.four = fingerprints(four.stdout, 128, 1)[0];
 }
 const h = await start();
@@ -76,13 +76,13 @@ const results = [];
 let failed = 0;
 for (const c of CASES) {
     const unrolled = c.sections ? c.text.replace(/arrange [^\n]*\nloop\n/, `arrange ${Array(PASSES).fill(c.sections.join(' ')).join(' ')}\n`) : c.text;
-    const check = JSON.parse(spawnSync(BTWD, ['check', '-'], { input: c.text }).stdout.toString());
+    const check = JSON.parse(spawnSync(BEATSCRIPT_CLI, ['check', '-'], { input: c.text }).stdout.toString());
     const passBars = check.song_bars || check.end_bar || 16;
     const bars = c.sections ? passBars * PASSES : passBars;
     // what the stream serves for the looping program itself: one pass
-    const own = spawnSync(BTWD, ['render', '--sr', String(SR), '--format', 's16le', '-'], { input: c.text, maxBuffer: 1 << 30 });
+    const own = spawnSync(BEATSCRIPT_CLI, ['render', '--sr', String(SR), '--format', 's16le', '-'], { input: c.text, maxBuffer: 1 << 30 });
     const ownStart = own.stderr.toString().split('\n').filter(Boolean).map((l) => JSON.parse(l)).find((e) => e.event === 'start');
-    const ref = spawnSync(BTWD, ['render', '--sr', String(SR), '--format', 's16le', '--max-bars', '512', '-'], { input: unrolled, maxBuffer: 1 << 30 });
+    const ref = spawnSync(BEATSCRIPT_CLI, ['render', '--sr', String(SR), '--format', 's16le', '--max-bars', '512', '-'], { input: unrolled, maxBuffer: 1 << 30 });
     const bpm = check.tempo || 120;
     const seconds = (bars * 4 * 60) / bpm + 2;
     const barS = (4 * 60) / bpm;

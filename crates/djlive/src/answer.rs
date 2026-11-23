@@ -1,4 +1,4 @@
-//! Call and response between decks: `rests(p)` and `rests(p, q)` (docs/BTW.md "Call and response").
+//! Call and response between decks: `rests(p)` and `rests(p, q)` (docs/BEATSCRIPT.md "Call and response").
 //!
 //! One part is the call, another is the answer, and the answer is what the call leaves: `rests(p)` is a hit on every
 //! step where `p` rests, and `rests(p, q)` is `q`, kept only on the steps where `p` rests. Write the call once, as a `let`,
@@ -6,8 +6,8 @@
 //!
 //! It is a pattern call like `reverse`, read when the pattern is, with no state between decks: each part's net stays one
 //! ring with its own token, and the answer is exactly the events of a hand-written complement, so its nets and CIDs are
-//! the longhand's (`btwd check --same-as` proves it). A token handed from one deck to another at run time would make one
-//! net depend on another, which the language refuses (a pattern is compiled once, docs/btw/ext-perform.md).
+//! the longhand's (`beatscript check --same-as` proves it). A token handed from one deck to another at run time would make one
+//! net depend on another, which the language refuses (a pattern is compiled once, docs/beatscript/ext-perform.md).
 //!
 //! **The steps are `p`'s own**, not the sixteenths: `x ~ x ~` is four steps, and its answer is two hits, not fourteen.
 //! A pattern of several terms has that many steps; a pattern that is one term is looked through ([`steps`]). A step

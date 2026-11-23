@@ -1,0 +1,79 @@
+#! btw 1
+#! name: such-stuff-as-dreams-122
+#! license: CC0-1.0
+# such-stuff-as-dreams-122 (the reference program of docs/beatscript/found-phrases.md): deep house at 122 in D minor whose vocal is
+# a found phrase. CC0-1.0. The words are Shakespeare's, The Tempest 4.1 (Prospero; first printed in the First Folio, 1623, in
+# the public domain): "we are such stuff as dreams are made on" and "and our little life is rounded with a sleep". The voice
+# is buried in `night` (a full mix, the line as texture) and comes forward in `spot` (the mix thins out around it), with the
+# one-shot `@ vox xfer drm_shk` and `@ vox xfer drm_hat` crossing it onto the shaker's and the hats' rhythms; the kick stays
+# outside the `drm_*` glob so it holds steady. Linked data: such-stuff-as-dreams-122-reference.jsonld (isBasedOn The Tempest).
+# Known: `check` warns that `such`, `stuff`, `dreams`, `little` and `rounded` are not in the lexicon (sounded out by the rules). The
+# program is pinned as it is, warnings included: an escape would change its code and so its CID.
+# Not the template-based such-stuff-as-dreams-122.beatscript (that one is `template(deep-house, @tempest_such_stuff)`); this is the
+# hand-written program, its canonical text unchanged, CID z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK (comment lines are not part of it).
+tempo 122
+key dm
+swing 0.15
+
+let kick4 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let drm_shk = x x ~ x x x ~ x x x ~ x x x ~ x
+let drm_clap = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let drm_rim = ~ ~ ~ x ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~
+let chords = [d3, f3, a3, c4, e4] ~ ~ ~ ~ ~ [d3, f3, a3, c4, e4] ~ [g3, a#3, d4, f4, a4] ~ ~ ~ ~ ~ ~ ~
+let syn_arp = a4 ~ c5 ~ e5 ~ c5 a4 ~ f4 ~ a4 d5 ~ a4 ~
+let syn_bass = d2 ~ ~ d2 ~ ~ a1 ~ ~ ~ g1 ~ ~ g1 a1 ~
+let syn_lead = ~ ~ a5 ~ ~ ~ g5 ~ f5 ~ ~ ~ e5 ~ ~ ~
+let vox = a3 ~ a3 c4 ~ c4 d4 ~ c4 ~ a3 c4 ~ d4 f4 ~
+
+section late 8 bars {
+  deck A: kick kick4 kit=drums-v8 vel=95..110 | hihat drm_hat kit=drums-v8 vel=60..90 | snare drm_rim kit=drums-cr78 vel=45..65
+  deck B: bass syn_bass inst=sub-bass decay=260 | harmony chords inst=glass-pad vel=45..60
+}
+section groove 8 bars {
+  deck A: kick kick4 kit=drums-v8 vel=95..110 | hihat drm_hat kit=drums-v8 vel=65..95 | clap drm_clap kit=drums-v8 vel=70..90 | snare drm_shk kit=drums-cr78 vel=30..55
+  deck B: bass syn_bass inst=sub-bass decay=260 | harmony chords inst=rave-organ vel=50..70 | arp syn_arp inst=bright-pluck vel=50..75
+}
+section night 8 bars {
+  master: reverb 0.12
+  deck A: kick kick4 kit=drums-v8 vel=95..110 | hihat drm_hat kit=drums-v8 vel=65..95 | clap drm_clap kit=drums-v8 vel=70..90 | snare drm_shk kit=drums-cr78 vel=30..55
+  deck B: bass syn_bass inst=sub-bass decay=260 | harmony chords inst=rave-organ vel=45..60 | arp syn_arp inst=bright-pluck vel=40..65 | melody vox
+  deck B: sing "we are such stuff as dreams are made on" on melody
+}
+section spot 8 bars {
+  master: reverb 0.08
+  deck A: kick kick4 kit=drums-v8 vel=90..105 | hihat drm_hat kit=drums-v8 vel=45..70
+  deck B: bass syn_bass inst=sub-bass decay=200 | harmony chords inst=glass-pad vel=30..42 | melody vox
+  deck B: sing "and our little life is rounded with a sleep" on melody
+}
+section haze 4 bars {
+  master: reverb 0.3
+  master: filter lp 8000 -> 1800 over 4 bars
+  deck B: harmony chords inst=glass-pad vel=45..60 | arp syn_arp inst=music-box vel=50..70 | melody syn_lead inst=music-box vel=50..70
+}
+arrange {
+  late groove
+  ~ syn_arp rot 2
+  ~ drm_shk thin 0.2 | accent 0.25
+  night
+  ~ syn_lead morph syn_arp 0.3
+  groove
+  spot
+  ~ syn_arp rot 2 | drift 0.1
+  ~ drm_hat euclid 5
+  @ syn_bass oct 1
+  haze
+  ~ drm_* grow
+  groove
+  @ chords half
+  @ vox xfer drm_shk
+  night
+  ~ syn_lead xfer drm_rim
+  ~ syn_arp rot 2
+  ~ drm_hat swing 0.3
+  @ vox xfer drm_hat
+  spot
+  haze
+  groove
+  ~ drm_* decay
+} loop

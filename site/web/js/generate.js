@@ -44,9 +44,9 @@ export function generateBody(panels) {
     st.genre = genre.value; st.seed = seed.value.trim() || '1'; st.length = len.value;
     save();
     preview = null;
-    try { preview = app.btw && app.btw.generate ? app.btw.generate(req()) : null; } catch (e) { console.warn('btw: generate preview', e); }
+    try { preview = app.beatscript && app.beatscript.generate ? app.beatscript.generate(req()) : null; } catch (e) { console.warn('beatscript: generate preview', e); }
     if (!preview) {
-      structure.textContent = app.btw ? 'The structure shows once generated (this module generates on the server).' : 'Loading the language module...';
+      structure.textContent = app.beatscript ? 'The structure shows once generated (this module generates on the server).' : 'Loading the language module...';
     } else if (!preview.ok && !preview.text) {
       structure.textContent = preview.error || 'the generator refused these inputs';
     } else {
@@ -78,7 +78,7 @@ export function generateBody(panels) {
     app.ensureAudio();
     go.disabled = true;
     try {
-      let r = preview && preview.text ? preview : app.btw && app.btw.generate ? app.btw.generate(r0) : null;
+      let r = preview && preview.text ? preview : app.beatscript && app.beatscript.generate ? app.beatscript.generate(r0) : null;
       if (!r) r = await app.api.generate(r0);
       if (!r.ok && !r.text) throw new Error(r.error || 'the generator refused the request');
       app.setProgram(r.text, { name: r.name || `${r0.genre} ${r0.seed}`, cid: r.cid });

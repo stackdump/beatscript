@@ -1,4 +1,4 @@
-//! `evolve` (docs/BTW.md, "Evolving"): a program that applies transforms to itself over time. Generation n is
+//! `evolve` (docs/BEATSCRIPT.md, "Evolving"): a program that applies transforms to itself over time. Generation n is
 //! the rule applied n times to generation 0; every generation has a CID of its nets and records the one it
 //! came from; the bound is in the text; the same text is the same generations every time.
 

@@ -1,4 +1,4 @@
-//! `arrange { }` with mutations (mutate.rs, docs/BTW.md "Arrange mutations").
+//! `arrange { }` with mutations (mutate.rs, docs/BEATSCRIPT.md "Arrange mutations").
 
 use djlive::compile::{check, Compiled};
 use djlive::diag::{render_all, Diagnostic, Severity};
@@ -261,7 +261,7 @@ fn parse_errors() {
 /// its mutations run over one pass of it, and the sections the other arrangements play are as written.
 #[test]
 fn a_named_arrangement_with_mutations() {
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/named-arrange-mutations.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/named-arrange-mutations.beatscript")).unwrap();
     let c = ok(&src);
     // the flow: open, set twice (`loop 2`), close; a finite song
     let f = c.flow.as_ref().expect("a flow");
@@ -296,7 +296,7 @@ fn a_named_arrangement_with_mutations() {
 
 #[test]
 fn an_unnamed_arrange_block_among_named_arrangements_is_refused() {
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/btw/named-arrange-mutations.btw")).unwrap();
+    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/named-arrange-mutations.beatscript")).unwrap();
     let e = check(&src.replace("arrange set: {", "arrange {"));
     assert!(e.diagnostics.iter().any(|d| d.is_error() && d.message.starts_with("an `arrange { }` among named arrangements needs a name")), "{:?}", e.diagnostics.iter().map(|d| d.message.clone()).collect::<Vec<_>>());
 }

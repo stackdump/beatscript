@@ -2,7 +2,7 @@
 //! it on the next bar. Pure behind [`LiveHost`]: djapp provides the real decks and registry, the
 //! tests a fake host on a fake clock.
 //!
-//! The rules (docs/BTW.md, "Evaluating and hot reload"):
+//! The rules (docs/BEATSCRIPT.md, "Evaluating and hot reload"):
 //!
 //! - an evaluation with an error changes nothing: the last good program plays on, the errors are kept;
 //! - a good program is staged, and applied in the first three quarters of a bar (so the engine has
@@ -28,7 +28,7 @@ pub const BEATS_PER_BAR: f64 = 4.0;
 pub const PHRASE: u32 = 8;
 /// Apply an evaluation only in the first three quarters of a bar.
 pub const APPLY_BY: f64 = 0.75;
-/// A ramp sends a new value only when it moved this far (the offline render, `djhost::btw_render`, thins its samples by the same).
+/// A ramp sends a new value only when it moved this far (the offline render, `djhost::beatscript_render`, thins its samples by the same).
 pub const RAMP_EPS: f64 = 0.002;
 /// Positions closer than this (in bars) are the same place: a time is reached when the position is within it.
 const EPS: f64 = 1e-9;
@@ -427,7 +427,7 @@ impl Running {
     /// The program bar the program's own bar 0 is on: what `at bar N`, `every N bars`, `on phrase` and `end at bar N` count from. A song
     /// counts from its `origin` (the bar its first section plays on, each lap of a loop again); a program with no sections (or one
     /// chained from nets) from bar 0 of the clock, the bar it was evaluated in, as it always has: when a deck played at that time the
-    /// music lands on bar 1 (the net lands on the bar line after), and `at bar 1` is the first bar you hear. docs/BTW.md, "Time words".
+    /// music lands on bar 1 (the net lands on the bar line after), and `at bar 1` is the first bar you hear. docs/BEATSCRIPT.md, "Time words".
     fn clock0(&self) -> i64 {
         if self.compiled.arranged && !self.compiled.flat_clock {
             self.origin
@@ -1767,7 +1767,7 @@ impl Live {
         self.running.as_ref().is_some_and(|r| r.loaded.keys().any(|d| d.name() == deck))
     }
 
-    /// What to light in the text right now (docs/BTW.md, "Seeing it play"): the lines that are playing, the
+    /// What to light in the text right now (docs/BEATSCRIPT.md, "Seeing it play"): the lines that are playing, the
     /// playhead on the section header, the tokens that just sounded, the control lines that just fired or are
     /// moving, and the generation. Spans are offsets into `source`, the text the program was evaluated from.
     pub fn marks(&self) -> Marks {

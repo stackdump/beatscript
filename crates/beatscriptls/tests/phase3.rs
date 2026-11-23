@@ -6,7 +6,7 @@ use beatscriptls::Analysis;
 use common::*;
 use djengine::json::JsonValue;
 
-const PROGRAM: &str = include_str!("programs/symbols.btw");
+const PROGRAM: &str = include_str!("programs/symbols.beatscript");
 
 fn rename_params(line: u32, ch: u32, new: &str) -> String {
     format!(r#"{{"textDocument":{{"uri":"{URI}"}},"position":{{"line":{line},"character":{ch}}},"newName":"{new}"}}"#)

@@ -1,4 +1,4 @@
-//! F14 ontology links on the host (docs/btw/ext-linked.md): `#! genre:` and `#! tags:` header lines kept by the
+//! F14 ontology links on the host (docs/beatscript/ext-linked.md): `#! genre:` and `#! tags:` header lines kept by the
 //! snippet store through save, load, export, import and fork; validated against the cached vocabulary (an unknown
 //! term is an error in save and import, a warning in check); a `<object cid>.jsonld` beside each object; and the
 //! `btw jsonld` document. Everything runs on the compiled-in snapshot: nothing here touches the network.
@@ -76,7 +76,7 @@ fn a_btw_file_round_trips_its_links_through_export_and_import() {
     let out = dir.join("out");
     std::fs::create_dir_all(&out).unwrap();
     s.export_to("night bus", &out).unwrap();
-    let file = std::fs::read_to_string(out.join("night-bus.btw")).unwrap();
+    let file = std::fs::read_to_string(out.join("night-bus.beatscript")).unwrap();
     // the header: rights, then the links, as full IRIs, then the program
     let head: Vec<&str> = file.lines().take_while(|l| l.starts_with("#!")).collect();
     assert_eq!(head, ["#! btw 1", "#! name: night bus", "#! license: CC-BY-4.0", "#! visibility: public", "#! author: matt", &format!("#! genre: {TECHNO}") as &str, &format!("#! tags: {ACID}, {DROP}")], "{file}");
@@ -84,7 +84,7 @@ fn a_btw_file_round_trips_its_links_through_export_and_import() {
     assert_eq!(djlive::check(&file).compiled.unwrap().cid, a.cid);
     // and the same object on the other side
     let (s2, dir2) = store("import");
-    let (b, _) = s2.import_file(&out.join("night-bus.btw")).unwrap();
+    let (b, _) = s2.import_file(&out.join("night-bus.beatscript")).unwrap();
     assert_eq!(b.links, a.links);
     assert_eq!(b.object, a.object);
     assert_eq!(s2.load_object("night bus").unwrap().links, a.links);
@@ -132,7 +132,7 @@ fn a_change_of_genre_or_tags_is_a_new_object_of_the_same_program() {
     assert_eq!(b.links, Links { genre: Some(TECHNO.into()), tags: vec![ACID.into(), DROP.into()] });
     assert_eq!(s.list().len(), 1, "the old one went");
     assert_eq!(files(&dir).len(), 2, "with its JSON-LD: {:?}", files(&dir));
-    assert!(!dir.join(format!("{}.btw", a.object)).exists() && !dir.join(format!("{}.jsonld", a.object)).exists());
+    assert!(!dir.join(format!("{}.beatscript", a.object)).exists() && !dir.join(format!("{}.jsonld", a.object)).exists());
     // genre only, then clear the tags
     let c = s.set_links("night bus", &LinkEdit::new(Some("dnb"), None)).unwrap();
     assert_eq!(c.links.genre.as_deref(), Some("https://ontology.bitwrap.io/genre/dnb"));
@@ -193,7 +193,7 @@ fn check_says_it_as_a_warning_the_program_still_runs_and_its_cid_is_the_same() {
 fn a_jsonld_is_written_beside_each_object_and_follows_it() {
     let (s, dir) = store("sidecar");
     let a = s.save_with("night bus", &headed("#! genre: techno\n#! tags: acid\n"), Some(Rights { author: Some("did:key:z6MkTest".into()), ..Rights::default() })).unwrap().0;
-    assert_eq!(files(&dir), [format!("{}.btw", a.object), format!("{}.jsonld", a.object)]);
+    assert_eq!(files(&dir), [format!("{}.beatscript", a.object), format!("{}.jsonld", a.object)]);
     let on_disk = std::fs::read_to_string(dir.join(format!("{}.jsonld", a.object))).unwrap();
     assert!(on_disk.ends_with("}\n"));
     let doc = s.jsonld("night bus").unwrap();
@@ -216,7 +216,7 @@ fn a_jsonld_is_written_beside_each_object_and_follows_it() {
     assert!(kick.get("sameShapeAs").unwrap().strings().unwrap().contains(&"https://ontology.bitwrap.io/rhythm/techno-kick".to_string()));
     // a new license: a new object, and its JSON-LD with it; the old pair goes
     let b = s.set_rights("night bus", Some(License::CcBy4), None).unwrap();
-    assert_eq!(files(&dir), [format!("{}.btw", b.object), format!("{}.jsonld", b.object)]);
+    assert_eq!(files(&dir), [format!("{}.beatscript", b.object), format!("{}.jsonld", b.object)]);
     assert!(std::fs::read_to_string(dir.join(format!("{}.jsonld", b.object))).unwrap().contains("\"licenseId\": \"CC-BY-4.0\""));
     // a fork has its own, naming its parent
     let (f, _) = s.fork("night bus", Some("fork"), Some("did:key:z6MkFork")).unwrap();
@@ -241,7 +241,7 @@ fn jsonld_of_a_text_takes_its_links_and_its_rights_from_its_header_only() {
     let doc = s.jsonld_text(PROGRAM).unwrap();
     assert!(doc.get("genre").is_none() && doc.get("licenseId").is_none() && doc.get("name").is_none());
     assert_eq!(text_of(&doc, "@id"), Some(format!("https://beats.bitwrap.io/p#{}", djlive::check(PROGRAM).compiled.unwrap().cid).as_str()));
-    // a .btw file: its name, links and rights
+    // a .beatscript file: its name, links and rights
     let file = headed("#! btw 1\n#! name: night bus\n#! license: CC-BY-4.0\n#! author: matt\n#! genre: genre:techno\n#! tags: acid, four on floor\n");
     let doc = s.jsonld_text(&file).unwrap();
     assert_eq!((text_of(&doc, "name"), text_of(&doc, "genre"), text_of(&doc, "licenseId"), text_of(&doc, "author")), (Some("night bus"), Some(TECHNO), Some("CC-BY-4.0"), Some("matt")));
@@ -258,7 +258,7 @@ fn jsonld_of_a_text_takes_its_links_and_its_rights_from_its_header_only() {
 
 #[test]
 fn a_skip_test_line_among_the_header_lines_confuses_neither_the_rights_nor_the_links() {
-    // examples/btw files that need a host say `#! skip-test: <why>` in their header; so can a file with rights and links. The
+    // examples/beatscript files that need a host say `#! skip-test: <why>` in their header; so can a file with rights and links. The
     // reason may itself say `genre:` or a comma; the line is not kept by anything, and no line number moves for it
     let skip = "#! skip-test: imports the saved snippet \"harmony\", genre: not this one, tags: nor these\n";
     let file = format!("{skip}#! btw 1\n#! name: night bus\n#! license: CC-BY-4.0\n#! visibility: public\n#! author: matt\n#! genre: techno\n#! tags: acid, drop\n{PROGRAM}");
@@ -305,7 +305,7 @@ fn a_skip_test_line_among_the_header_lines_confuses_neither_the_rights_nor_the_l
 fn a_file_edited_by_hand_is_not_listed_and_one_with_a_withdrawn_term_is_still_read_as_it_is() {
     let (s, dir) = store("edited");
     let a = s.save_with("night bus", &headed("#! genre: techno\n"), None).unwrap().0;
-    let path = dir.join(format!("{}.btw", a.object));
+    let path = dir.join(format!("{}.beatscript", a.object));
     // changing the genre by hand makes the object something else: its name is no longer its content's CID
     let edited = std::fs::read_to_string(&path).unwrap().replace("genre/techno", "genre/house");
     std::fs::write(&path, edited).unwrap();
@@ -315,7 +315,7 @@ fn a_file_edited_by_hand_is_not_listed_and_one_with_a_withdrawn_term_is_still_re
     let comp = djlive::check(PROGRAM).compiled.unwrap();
     let o = Object { name: "old".into(), text: comp.text.clone(), rights: Rights::default(), links: Links::new(Some("https://ontology.bitwrap.io/genre/withdrawn".into()), vec![]) };
     std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join(format!("{}.btw", o.cid())), o.to_file()).unwrap();
+    std::fs::write(dir.join(format!("{}.beatscript", o.cid())), o.to_file()).unwrap();
     let l = s.list();
     assert_eq!(l.len(), 1);
     assert_eq!(l[0].links.genre.as_deref(), Some("https://ontology.bitwrap.io/genre/withdrawn"));
@@ -328,8 +328,8 @@ fn a_file_edited_by_hand_is_not_listed_and_one_with_a_withdrawn_term_is_still_re
 fn the_vocabulary_is_in_the_binary_and_says_where_it_is_from() {
     let d = djhost::ontology::describe();
     assert!(d.starts_with("bitwrap ontology 0.1.0, 253 terms, fetched 20"), "{d}");
-    // btw's own environment has it, so any check through the host does
-    let be = djhost::btw_env::BtwEnv::new(None);
+    // BeatScript's own environment has it, so any check through the host does
+    let be = djhost::beatscript_env::BeatscriptEnv::new(None);
     assert!(be.env().ontology.is_some());
     let src = headed("#! tags: nope\n");
     let c = djlive::compile::check_with(&src, &be.env());
@@ -407,7 +407,7 @@ fn random_spellings_and_orders_of_the_same_links_are_the_same_object_file_and_do
         // a different spelling of the same resolved links is the same object, the same file, the same document
         if ea.links == eb.links {
             assert_eq!(ea.object, eb.object, "round {round}");
-            assert_eq!(std::fs::read(da.join(format!("{}.btw", ea.object))).unwrap(), std::fs::read(db.join(format!("{}.btw", eb.object))).unwrap());
+            assert_eq!(std::fs::read(da.join(format!("{}.beatscript", ea.object))).unwrap(), std::fs::read(db.join(format!("{}.beatscript", eb.object))).unwrap());
             assert_eq!(std::fs::read(da.join(format!("{}.jsonld", ea.object))).unwrap(), std::fs::read(db.join(format!("{}.jsonld", eb.object))).unwrap());
             checked += 1;
         }
@@ -416,7 +416,7 @@ fn random_spellings_and_orders_of_the_same_links_are_the_same_object_file_and_do
         std::fs::create_dir_all(&out).unwrap();
         a.export_to("p", &out).unwrap();
         let (c, dc) = store(&format!("law-c{round}"));
-        let (ec, _) = c.import_file(&out.join("p.btw")).unwrap();
+        let (ec, _) = c.import_file(&out.join("p.beatscript")).unwrap();
         assert_eq!(ec.object, ea.object, "round {round}");
         assert_eq!(ec.links, ea.links);
         for d in [da, db, dc] {
@@ -445,7 +445,7 @@ fn the_registry_has_the_verbs_and_a_program_can_call_them_through_do() {
     // the whole of it is documented where the tools are described
     assert!(n.doc.contains("jsonld {id | text}") && n.doc.contains("terms {kind}"));
     // and a program can call them: checked against the registry like any other line
-    let be = djhost::btw_env::BtwEnv::new(None);
+    let be = djhost::beatscript_env::BeatscriptEnv::new(None);
     for line in ["do btw jsonld id=\"night bus\"\n", "do btw terms kind=genre\n", "do btw save name=\"x\" genre=techno tags=\"acid, drop\"\n"] {
         let c = djlive::compile::check_with(line, &be.env());
         assert!(c.ok(), "{line}{}", djlive::diag::render_all(&c.diagnostics, line));

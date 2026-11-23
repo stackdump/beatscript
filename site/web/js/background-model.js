@@ -2,7 +2,7 @@
 //
 // What goes wrong in a hidden tab: the browser stops requestAnimationFrame and slows timers to once a second (and, after
 // five minutes, to once a minute). The sound itself is made on the audio thread (the AudioWorklet in engine-worklet.js), which
-// does not care. What the page owns is the program runtime, BtwRun: sections, bar counts and the `on phrase:` automations only
+// does not care. What the page owns is the program runtime, BeatscriptRun: sections, bar counts and the `on phrase:` automations only
 // advance when the page calls service() with the clock's beat, and that call used to be made from the animation frame. So a
 // hidden tab went on playing the net it had, and sections, loads and ramps waited for the tab to come back.
 //

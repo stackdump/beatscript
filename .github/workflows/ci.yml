@@ -28,7 +28,7 @@ jobs:
           cargo tree -q -p djhost --features windwheel,wallet -e normal --prefix none | grep -q '^windwheel '
           cargo tree -q -p djhost --features windwheel,wallet -e normal --prefix none | grep -q '^djrust-wallet '
       - name: no production host literal in the page, no legacy host in the API reference
-        run: bash site/scripts/btw-host-literals.sh
+        run: bash site/scripts/beatscript-host-literals.sh
 
   test:
     name: cargo test (BeatScript crates)
@@ -38,7 +38,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: cargo test
-        run: cargo test --locked -p djlive -p djengine -p btwapi -p beatscriptls -p btwseal -p btwserve -p djweb -p btwd -p btwround
+        run: cargo test --locked -p djlive -p djengine -p beatscript-api -p beatscriptls -p beatscript-seal -p beatscript-serve -p djweb -p beatscript-cli -p beatscript-round
       - name: djhost builds with its optional features
         run: cargo check --locked -p djhost --features windwheel,wallet
       - name: disk left on the runner

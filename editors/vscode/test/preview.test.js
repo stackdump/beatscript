@@ -37,7 +37,7 @@ const textOf = (html) => unescape(html.match(/<beatscript-track theme="[^"]*" te
 // ---- the player: the pinned version, its SRI as the lock gives it, the import map as artifact.rs writes it -------------
 
 {
-  const lockPath = path.join(__dirname, '..', '..', '..', 'crates', 'btwserve', 'src', 'mcp', 'player-cdn.lock.json');
+  const lockPath = path.join(__dirname, '..', '..', '..', 'crates', 'beatscript-serve', 'src', 'mcp', 'player-cdn.lock.json');
   const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
   // the pin is the server's: package, version and entry as the lock has them, and every hash exactly its own
   assert.deepEqual([PLAYER.package, PLAYER.version, PLAYER.entry], [lock.package, lock.version, lock.entry]);
@@ -84,7 +84,7 @@ const textOf = (html) => unescape(html.match(/<beatscript-track theme="[^"]*" te
   assert.ok(page({ nonce: `"><x'&` }).includes('nonce="&quot;&gt;&lt;x&#39;&amp;"'));
 }
 
-// ---- registerPreview: btw.preview opens one panel beside, writes the page again on a change (once it rests) and a save ---
+// ---- registerPreview: beatscript.preview opens one panel beside, writes the page again on a change (once it rests) and a save ---
 
 (async () => {
   const handlers = {};
@@ -95,7 +95,7 @@ const textOf = (html) => unescape(html.match(/<beatscript-track theme="[^"]*" te
     handlers[name] = fn;
     return { dispose() {} };
   };
-  const doc = { languageId: 'btw', uri: { path: '/w/two-bars.btw' }, text: TEXT, getText() { return this.text; } };
+  const doc = { languageId: 'beatscript', uri: { path: '/w/two-bars.beatscript' }, text: TEXT, getText() { return this.text; } };
   const vscode = {
     ViewColumn: { Beside: -2 },
     ColorThemeKind: { Light: 1, Dark: 2, HighContrast: 3, HighContrastLight: 4 },
@@ -115,19 +115,19 @@ const textOf = (html) => unescape(html.match(/<beatscript-track theme="[^"]*" te
   };
   const context = { subscriptions: [] };
   registerPreview(context, vscode);
-  assert.equal(typeof commands['btw.preview'], 'function', 'btw.preview is registered');
+  assert.equal(typeof commands['beatscript.preview'], 'function', 'beatscript.preview is registered');
   assert.ok(context.subscriptions.length >= 4, 'its listeners are disposed with the extension');
 
   // no BeatScript editor: a message, no panel
-  commands['btw.preview']();
+  commands['beatscript.preview']();
   assert.equal(panels.length, 0);
   assert.equal(messages.length, 1);
 
   vscode.window.activeTextEditor = { document: doc };
-  commands['btw.preview']();
+  commands['beatscript.preview']();
   assert.equal(panels.length, 1);
   const [p] = panels;
-  assert.equal(p.viewType, 'btw.preview');
+  assert.equal(p.viewType, 'beatscript.preview');
   assert.deepEqual(p.show, { viewColumn: -2, preserveFocus: true });
   assert.deepEqual(p.options, { enableScripts: true, localResourceRoots: [], retainContextWhenHidden: false });
   assert.equal(textOf(p.webview.html), TEXT);
@@ -136,7 +136,7 @@ const textOf = (html) => unescape(html.match(/<beatscript-track theme="[^"]*" te
   assert.ok(nonce.length >= 16 && p.webview.html.includes(`<script type="module" nonce="${nonce}"`));
 
   // a second run reveals the same panel
-  commands['btw.preview']();
+  commands['beatscript.preview']();
   assert.equal(panels.length, 1);
   assert.equal(p.reveals, 1);
 
@@ -176,7 +176,7 @@ const textOf = (html) => unescape(html.match(/<beatscript-track theme="[^"]*" te
   assert.ok(!p.webview.html.includes('tempo 110'));
 
   // opened again: a new panel, written at once even though the text is what the old one last showed
-  commands['btw.preview']();
+  commands['beatscript.preview']();
   assert.equal(panels.length, 2);
   assert.equal(textOf(panels[1].webview.html), 'tempo 110\n');
   for (const s of context.subscriptions) s.dispose();

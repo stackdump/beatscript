@@ -22,15 +22,15 @@ const SHOTS = path.join(here, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i < 0 ? d : process.argv[i + 1]; };
 
-if (!fs.existsSync(path.join(web, 'wasm', 'btw_bg.wasm'))) { console.log('SKIP generate-browser: no built module in site/web/wasm'); process.exit(0); }
+if (!fs.existsSync(path.join(web, 'wasm', 'beatscript_bg.wasm'))) { console.log('SKIP generate-browser: no built module in site/web/wasm'); process.exit(0); }
 if (!fs.existsSync(CHROME)) { console.log(`SKIP generate-browser: no Chrome at ${CHROME}`); process.exit(0); }
 
 // The pins: what seeded@2 prints for these inputs never changes (a generator that would print another program is a new
 // version), so these CIDs are the generator's, and the node-side module must agree with them too.
 const PINS = { 'techno 42': null, 'techno 43': null };
-const m = await import(pathToFileURL(path.join(web, 'wasm', 'btw.js')).href);
-m.initSync({ module: fs.readFileSync(path.join(web, 'wasm', 'btw_bg.wasm')) });
-const gen = (genre, seed) => JSON.parse(m.btw_generate(JSON.stringify({ genre, seed, length: 'standard' })));
+const m = await import(pathToFileURL(path.join(web, 'wasm', 'beatscript.js')).href);
+m.initSync({ module: fs.readFileSync(path.join(web, 'wasm', 'beatscript_bg.wasm')) });
+const gen = (genre, seed) => JSON.parse(m.beatscript_generate(JSON.stringify({ genre, seed, length: 'standard' })));
 const EXPECT = {
   'techno 42': 'z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf',
   'techno 43': 'z4EBG9j8eoPMaSiPo6vfKXkWLj84e6GjWvZUDr5DHvsSXKkt2kh',
@@ -115,7 +115,7 @@ try {
   await sleep(400);
   const tail = await page.eval('__app.editor.text.trimEnd().split("\\n").pop()');
   check('insert as reference puts the gen@2 call at the caret', tail === 'let bed = gen@2 techno seed=42 section=drop part=bass', tail);
-  const ins = await page.eval('(()=>{const r=__app.btw.check(__app.editor.text); return {ok: r.ok, refs: (r.refs||[]).map(x=>x.call)}})()');
+  const ins = await page.eval('(()=>{const r=__app.beatscript.check(__app.editor.text); return {ok: r.ok, refs: (r.refs||[]).map(x=>x.call)}})()');
   check('and the program with it checks clean, the call one of its references', ins.ok === true && ins.refs.includes('gen@2 techno seed=42 section=drop part=bass'), JSON.stringify(ins));
   await shot('reference');
 

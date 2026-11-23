@@ -1,17 +1,17 @@
 /**
- * engine.js: the in-browser sound for btw programs (site/DESIGN.md, "Engine in the browser").
+ * engine.js: the in-browser sound for BeatScript programs (site/DESIGN.md, "Engine in the browser").
  *
  *   import { createEngine } from './js/engine.js';
  *   const engine = await createEngine({ context, destination });      // after a user gesture started `context`
- *   const run = new BtwRun();                                         // the page owns the runtime and the clock loop
+ *   const run = new BeatscriptRun();                                         // the page owns the runtime and the clock loop
  *   run.eval(text);
  *   setInterval(() => {
  *     engine.apply(JSON.parse(run.service(JSON.stringify(engine.grid()))));   // grid() is null while nothing plays
  *     light(run.marks());
  *   }, 25);
  *
- * The page owns the `BtwRun`, the loop and the markers; the engine owns the sound. `apply` takes the commands
- * `BtwRun.service()` / `stop()` return (parsed):
+ * The page owns the `BeatscriptRun`, the loop and the markers; the engine owns the sound. `apply` takes the commands
+ * `BeatscriptRun.service()` / `stop()` return (parsed):
  *
  *   {op:'load_net', deck, envelope}   a raw-nets share envelope. Prepared in a Worker (a second instance of the engine, so
  *                                     the audio thread never compiles), installed in the worklet a few KB per render
@@ -33,9 +33,9 @@
  * output latency, so markers light when the sound is heard. It never runs past the next bar line on its own: the
  * runtime counts bars by what it is told, and a bar line is only told when the worklet has seen it.
  *
- * `wasmUrl` replaces where btw_bg.wasm is fetched from (default ../wasm/btw_bg.wasm beside this file); `module` is an
+ * `wasmUrl` replaces where beatscript_bg.wasm is fetched from (default ../wasm/beatscript_bg.wasm beside this file); `module` is an
  * already compiled WebAssembly.Module of it, which skips the fetch and the compile. The glue the worklet and the Worker
- * import is always ../wasm/btw.js.
+ * import is always ../wasm/beatscript.js.
  */
 
 import { mapCall, mapSound } from './engine-calls.js';
@@ -54,7 +54,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
     if (!context) throw new Error('createEngine: a context is needed');
     if (!context.audioWorklet) throw new Error('createEngine: this browser has no AudioWorklet');
     const base = new URL('../wasm/', import.meta.url);
-    const href = wasmUrl ? new URL(wasmUrl, globalThis.location ? globalThis.location.href : base) : new URL('btw_bg.wasm', base);
+    const href = wasmUrl ? new URL(wasmUrl, globalThis.location ? globalThis.location.href : base) : new URL('beatscript_bg.wasm', base);
 
     // 1. the module: fetched and compiled once, shared with the worklet and the Worker
     let bytes = null;
@@ -63,7 +63,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
         if (!res.ok) throw new Error(`createEngine: ${href}: HTTP ${res.status}`);
         return res.arrayBuffer();
     };
-    let module = compiled; // a WebAssembly.Module the page already has (the page's own BtwRun module) saves a fetch and a compile
+    let module = compiled; // a WebAssembly.Module the page already has (the page's own BeatscriptRun module) saves a fetch and a compile
     if (!module) {
         bytes = await fetchBytes();
         module = await WebAssembly.compile(bytes);
@@ -74,7 +74,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
     const options = { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { installBudget, perf: !!perf } };
     // a context may make the node itself (the player's offline render, beatscript-render.js: the processor in this realm, on
     // its own clock); every real AudioContext gets an AudioWorkletNode
-    const makeNode = (opts) => (typeof context.createBtwNode === 'function' ? context.createBtwNode('btw-engine', opts) : new AudioWorkletNode(context, 'btw-engine', opts));
+    const makeNode = (opts) => (typeof context.createBeatscriptNode === 'function' ? context.createBeatscriptNode('beatscript-engine', opts) : new AudioWorkletNode(context, 'beatscript-engine', opts));
     let node;
     let viaMessage = false;
     try {
@@ -327,7 +327,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
         for (const op of r.ops) post(op, true);
         if (r.ignored && !noted.has(r.ignored)) {
             noted.add(r.ignored);
-            console.info(`btw engine: ignoring ${r.ignored} (the in-browser engine does not have it; see js/engine-calls.js)`);
+            console.info(`BeatScript engine: ignoring ${r.ignored} (the in-browser engine does not have it; see js/engine-calls.js)`);
             emit('ignored', { what: r.ignored });
         }
     }
@@ -340,7 +340,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
         stats,
         composer: comp.kind,
 
-        /** The commands `BtwRun.service()` / `stop()` return, parsed. */
+        /** The commands `BeatscriptRun.service()` / `stop()` return, parsed. */
         apply(commands) {
             if (disposed || !Array.isArray(commands) || !commands.length) return;
             const batch = { loads: [], stops: new Set(), startedNow: false };
@@ -493,13 +493,13 @@ async function makeComposer(kind, module, sampleRate, onMessage) {
                 dispose: () => w.terminate(),
             };
         } catch (err) {
-            console.warn('btw engine: no composer worker, compiling on the page thread:', err && err.message);
+            console.warn('BeatScript engine: no composer worker, compiling on the page thread:', err && err.message);
         }
     }
     if (kind !== 'inline') {
         try {
             // the page thread: blocks it for the length of a compile, but never the audio
-            const glue = await import('../wasm/btw.js');
+            const glue = await import('../wasm/beatscript.js');
             glue.initSync({ module });
             const c = new glue.DjComposer(sampleRate);
             return {
@@ -518,7 +518,7 @@ async function makeComposer(kind, module, sampleRate, onMessage) {
                 dispose: () => { try { c.free(); } catch { /* gone */ } },
             };
         } catch (err) {
-            console.warn('btw engine: no composer on the page thread either; compiling on the audio thread:', err && err.message);
+            console.warn('BeatScript engine: no composer on the page thread either; compiling on the audio thread:', err && err.message);
         }
     }
     return { kind: 'inline', prepare() { throw new Error('inline'); }, dispose() {} };

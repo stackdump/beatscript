@@ -3,7 +3,7 @@ use std::time::Instant;
 fn main() {
     let f = std::env::args().nth(1).expect("a file");
     let text = std::fs::read_to_string(&f).unwrap();
-    let env = btwapi::web_env().env();
+    let env = beatscript_api::web_env().env();
     let t = Instant::now();
     let _ = djlive::lex::lex(&text);
     println!("lex    {:>9.2} ms", t.elapsed().as_secs_f64() * 1e3);

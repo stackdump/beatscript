@@ -1,13 +1,13 @@
 """BeatScript in a notebook: a program and its player, or the whole studio, as a cell's output.
 
     from beatscript_embed import Track, Studio, show
-    Track(text=open('song.btw').read())              # a cell's last expression shows the player
+    Track(text=open('song.beatscript').read())              # a cell's last expression shows the player
     Studio(text=text, theme='light')                 # the editor, its checker and the player
     show(text, kind='studio')                        # display it from anywhere in a cell
 
 One file and the standard library: copy it beside the notebook, nothing to install. Nothing is fetched when it is
 imported or when it makes its HTML; the browser fetches the package when it shows the output. The HTML is the tags the
-web embed uses (crates/btwserve/src/mcp/artifact.rs): an import map giving every module of the package its Subresource
+web embed uses (crates/beatscript-serve/src/mcp/artifact.rs): an import map giving every module of the package its Subresource
 Integrity hash, the entry as a module script from jsDelivr at an exact version, then the element with the program in its
 text attribute, escaped as artifact.rs's esc does. The attribute gives the element the text byte for byte, where a
 child <script>'s escapes would change it (and so its CID).
@@ -22,7 +22,7 @@ import re
 from urllib.parse import urlsplit
 
 # The packages, each pinned to one exact version. integrity maps a file of the package to its SRI hash, exactly as the
-# lock files give them (crates/btwserve/src/mcp/player-cdn.lock.json and studio-cdn.lock.json; test_beatscript_embed.py
+# lock files give them (crates/beatscript-serve/src/mcp/player-cdn.lock.json and studio-cdn.lock.json; test_beatscript_embed.py
 # holds them to those files). Empty, the HTML carries no integrity at all rather than wrong hashes, which would stop the
 # package from running.
 PLAYER = {'package': '@stackdump/beatscript-player', 'version': '0.1.0', 'entry': 'beatscript-track.js', 'integrity': {
@@ -37,8 +37,8 @@ PLAYER = {'package': '@stackdump/beatscript-player', 'version': '0.1.0', 'entry'
     'js/mixer-model.js': 'sha384-3VluHJuwCDuhaotOqq616HSWXpyfHrtrl20e/aeatY4YXKX70sRonCntsCbhvQpk',
     'js/wasm-mock.js': 'sha384-UYwxLE5icoXMnhWEvylWHq6TfND9y6ImAiv3WpauY39LuvoN+r6ErBhn4VjOpqBC',
     'js/wasm.js': 'sha384-Fnnbr22SvXtJyjAFqGoYJUyFCjWppkQVbtW9eAKk47ZfZbThXvWxZqUQQhN4uIuN',
-    'wasm/btw.js': 'sha384-JIYt9zz7HhfCBkT7z2zJe6sXbY93yhz+44vcMtEvKi288SnpGGqiQGTxv2ddBEWu',
-    'wasm/btw_bg.wasm.b64.js': 'sha384-ETinehDel81+MkpG5jfanpzsCmomTsMkaTqzykvLltghBL9mFbqnYerGzEUqSBVl',
+    'wasm/beatscript.js': 'sha384-JIYt9zz7HhfCBkT7z2zJe6sXbY93yhz+44vcMtEvKi288SnpGGqiQGTxv2ddBEWu',
+    'wasm/beatscript_bg.wasm.b64.js': 'sha384-ETinehDel81+MkpG5jfanpzsCmomTsMkaTqzykvLltghBL9mFbqnYerGzEUqSBVl',
 }}
 STUDIO = {'package': '@stackdump/beatscript-studio', 'version': '0.1.0', 'entry': 'beatscript-studio.js', 'integrity': {
     'beatscript-render.js': 'sha384-DFT911SEgTa1XDEgYZy2U5KMFwbQNSLfCKxCeutt+QSroocDeqaRLf15v1NlJ0vs',
@@ -68,8 +68,8 @@ STUDIO = {'package': '@stackdump/beatscript-studio', 'version': '0.1.0', 'entry'
     'render-model.js': 'sha384-39uzNQWa1ST290s+IWHBpwXM0PzPHzpynEm7O896zDanAc7awDzBAY2gnhqu6sNz',
     'studio-css.js': 'sha384-Ro1XQxH5PHCFUkwz0ZB4cW3g1kxa11sZ1PBU82UHYRTNsuR/xAPhzjuCpEZkaoWT',
     'tool-surface.js': 'sha384-JrvpgwdbeyqfsljYWcId124QO0BQRiRXxnEP27jCifEraaKQ/lKI3se4NQDErUTQ',
-    'wasm/btw.js': 'sha384-JIYt9zz7HhfCBkT7z2zJe6sXbY93yhz+44vcMtEvKi288SnpGGqiQGTxv2ddBEWu',
-    'wasm/btw_bg.wasm.b64.js': 'sha384-3WNzDfwvNBY4H+YOIZzQpGlD3gyD96UOLA4off4f6VkuYj2FLKw24P3yofxtKRDp',
+    'wasm/beatscript.js': 'sha384-JIYt9zz7HhfCBkT7z2zJe6sXbY93yhz+44vcMtEvKi288SnpGGqiQGTxv2ddBEWu',
+    'wasm/beatscript_bg.wasm.b64.js': 'sha384-3WNzDfwvNBY4H+YOIZzQpGlD3gyD96UOLA4off4f6VkuYj2FLKw24P3yofxtKRDp',
 }}
 
 CDN = 'https://cdn.jsdelivr.net/npm/'

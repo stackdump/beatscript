@@ -1,0 +1,82 @@
+#! name: Canon of Fate
+#! license: CC0-1.0
+# canon-of-fate: the reference program of the QUODLIBET form (docs/beatscript/forms.md; `template(quodlibet, ...)` is its skeleton).
+# CC0-1.0. Its themes are after public-domain works: Johann Pachelbel, Canon in D (composed about 1680-1706, first printed 1919),
+# the ground bass (bass1, bass2, the strings) and the first violin's line (syn_canon); Ludwig van Beethoven, Symphony No. 9 (1824),
+# the Ode to Joy theme (syn_ode); and his Symphony No. 5 (1808), the fate motif (syn_fate, in D major's relative minor). Linked
+# data: canon-of-fate.jsonld (isBasedOn the three works). The themes take turns by section and cross-morph toward each other and
+# away: `~ syn_ode morph syn_canon` paired later with `~ syn_canon morph syn_ode`, pulled toward a third line (syn_arp2, syn_fate),
+# one-shot `@` borrowings (the canon on the shaker's rhythm, the fate motif mirrored); `~` persists and compounds every loop.
+# Hand-written 2026-11-22; the program below is its canonical text unchanged, CID
+# z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx (these comment lines are not part of it).
+tempo 96
+key d
+let timp = x ~ ~ ~ ~ ~ ~ ~ x ~ ~ x ~ ~ ~ ~
+let drm_snr = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let drm_shk = x ~ x x x ~ x x x ~ x x x ~ x x
+let bass1 = d2 ~ ~ ~ ~ ~ ~ ~ a1 ~ ~ ~ ~ ~ ~ ~
+let bass2 = b1 ~ ~ ~ ~ ~ ~ ~ f#1 ~ ~ ~ ~ ~ ~ ~
+let str1 = [d3, f#3, a3] ~ ~ ~ ~ ~ ~ ~ [a2, c#3, e3] ~ ~ ~ ~ ~ ~ ~
+let str2 = [b2, d3, f#3] ~ ~ ~ ~ ~ ~ ~ [f#2, a2, c#3] ~ ~ ~ ~ ~ ~ ~
+let pads = [g2, b2, d3, f#3] ~ ~ ~ ~ ~ ~ ~ [a2, c#3, e3, g3] ~ ~ ~ ~ ~ ~ ~
+let syn_arp = d4 f#4 a4 f#4 d4 f#4 a4 f#4 a3 c#4 e4 c#4 a3 c#4 e4 c#4
+let syn_arp2 = b3 d4 f#4 d4 b3 d4 f#4 d4 f#3 a3 c#4 a3 f#3 a3 c#4 a3
+let syn_canon = f#5 ~ e5 ~ d5 ~ c#5 ~ b4 ~ a4 ~ b4 ~ c#5 ~
+let syn_ode = f#4 ~ f#4 ~ g4 ~ a4 ~ a4 ~ g4 ~ f#4 ~ e4 ~
+let syn_fate = ~ f#4 f#4 f#4 d4 ~ ~ ~ ~ e4 e4 e4 c#4 ~ ~ ~
+let vox = d4 ~ ~ ~ f#4 ~ a4 ~ g4 ~ ~ ~ e4 ~ ~ ~
+section prelude 8 bars {
+  master: reverb 0.3
+  deck B: bass bass1 decay=300 inst=bass | harmony str1 inst=strings vel=45..60 len=8 | arp syn_arp inst=harpsichord vel=45..65
+}
+section canon 8 bars {
+  master: reverb 0.2
+  deck A: kick timp kit=drums vel=85..100 | hihat drm_hat kit=drums vel=40..60 | snare drm_shk kit=drums-lofi vel=20..40
+  deck B: bass bass1 decay=300 inst=bass | harmony str1 inst=strings vel=50..65 len=8 | arp syn_arp inst=harpsichord vel=45..65 | melody syn_canon inst=flute vel=60..80
+}
+section ode 8 bars {
+  master: reverb 0.2
+  deck A: kick timp kit=drums vel=90..105 | clap drm_snr kit=drums vel=65..85 | hihat drm_hat kit=drums vel=50..70 | snare drm_shk kit=drums-lofi vel=25..45
+  deck B: bass bass1 decay=260 inst=sub-bass | harmony str1 inst=strings vel=55..70 len=8 | arp syn_arp inst=harpsichord vel=40..60 | melody syn_ode inst=brass vel=65..90
+}
+section fate 8 bars {
+  master: reverb 0.2
+  deck A: kick timp kit=drums vel=95..110 | clap drm_snr kit=drums vel=70..90 | hihat drm_hat kit=drums vel=50..75 | snare drm_shk kit=drums-lofi vel=25..45
+  deck B: bass bass2 decay=260 inst=sub-bass | harmony str2 inst=strings vel=55..75 len=8 | arp syn_arp2 inst=harpsichord vel=45..65 | melody syn_fate inst=trumpet vel=70..95
+}
+section choir 8 bars {
+  master: reverb 0.35
+  deck A: kick timp kit=drums vel=80..95 | hihat drm_hat kit=drums vel=30..50
+  deck B: bass bass2 decay=300 inst=bass | harmony pads inst=strings vel=40..55 len=8 | melody vox inst=voice-choir-aah vel=55..75
+}
+section coda 4 bars {
+  master: reverb 0.4
+  master: filter lp 9000 -> 2500 over 4 bars
+  deck B: harmony str1 inst=strings vel=45..60 len=8 | arp syn_arp inst=music-box vel=45..65
+}
+arrange {
+  prelude canon
+  ~ syn_arp rot 2 | accent 0.25
+  ~ drm_shk thin 0.15
+  ~ syn_ode morph syn_canon 0.25
+  ode
+  ~ syn_canon morph syn_ode 0.3
+  fate choir
+  ~ drm_* grow
+  ~ syn_canon morph syn_arp2 0.25
+  ~ syn_ode morph syn_fate 0.25
+  coda
+  ~ syn_arp rev | drift 0.1
+  @ syn_canon xfer drm_shk
+  canon
+  ~ syn_ode morph syn_canon 0.3
+  ~ syn_* up 1
+  ode
+  @ syn_fate mirror | vel 2
+  fate
+  ~ syn_* down 1
+  @ vox morph syn_canon 0.4
+  choir coda
+  ~ drm_* decay
+} loop

@@ -1,4 +1,4 @@
-//! Named arrangements (src/flow.rs, docs/BTW.md "Several arrangements"): parse, canonical text, errors, the flow and the
+//! Named arrangements (src/flow.rs, docs/BEATSCRIPT.md "Several arrangements"): parse, canonical text, errors, the flow and the
 //! length of the song, the CID of old programs, and the order a Live plays them in.
 
 use djlive::compile::check;
@@ -108,11 +108,11 @@ fn a_plain_arrange_and_its_loop_are_what_they_were() {
 
 #[test]
 fn every_example_program_keeps_its_canonical_text_and_cid_through_a_round_trip() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript");
     let mut n = 0;
     for e in std::fs::read_dir(dir).unwrap().flatten() {
         let p = e.path();
-        if p.extension().is_some_and(|x| x == "btw") {
+        if p.extension().is_some_and(|x| x == "beatscript") {
             let src = std::fs::read_to_string(&p).unwrap();
             if let Some(c) = check(&src).compiled {
                 let again = check(&c.text).compiled.expect("canonical text compiles");

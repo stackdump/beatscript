@@ -6,10 +6,10 @@ CID) gives the same bytes.
 
 | Where | How |
 |---|---|
-| shell | `btwd export --format midi\|stems [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F]` (bytes on stdout) |
+| shell | `beatscript export --format midi\|stems [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F]` (bytes on stdout) |
 | site | `GET /api/render/<CID>?format=midi\|stems\|stems-opus` (the MCP `render` tool's `format`) |
 | web editor | the Export buttons: MIDI, Stems |
-| code | `crates/btwd/src/export.rs` (the passes, the WAVs, the manifest, the zip), `djengine::smf` (the MIDI file, General MIDI) |
+| code | `crates/beatscript-cli/src/export.rs` (the passes, the WAVs, the manifest, the zip), `djengine::smf` (the MIDI file, General MIDI) |
 
 ## The MIDI file
 
@@ -105,7 +105,7 @@ The license, author, credits and forked_from are the stored rights (`share` stor
 
 Nothing in the files has a clock: the zip's entries are dated 1980-01-01, stored in a fixed order (manifest, MIDI,
 master, decks, parts), the manifest's keys in a fixed order, the MIDI's events sorted by tick with note-offs first.
-`crates/btwd/tests/export.rs` exports twice and compares the bytes.
+`crates/beatscript-cli/tests/export.rs` exports twice and compares the bytes.
 
 ## Not in it
 

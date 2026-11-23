@@ -3,7 +3,7 @@
 
 use djengine::json::JsonValue;
 use djengine::session::arrangement::Arrangement;
-use djhost::btw_render::{arrangement, runtime_controls};
+use djhost::beatscript_render::{arrangement, runtime_controls};
 use djlive::env::Env;
 
 /// The render's events of one kind of op, as (beat, tempo the event carries, the op's JSON).
@@ -18,7 +18,7 @@ fn render_events(src: &str, op: &str) -> Vec<(f64, f64, String)> {
 /// R-02 (what was kept and what is new): a program with no sections evaluated while a deck plays has its bar 0 on the bar it was
 /// evaluated in and its music on bar 1, as every program written before the extensions has always run live, and the offline render
 /// starts the music on its bar 0 (nothing was playing): a timed line of such a program lands one bar later, counted from the first bar
-/// you hear, in the render than it did live (a song counts from its first section in both). That is documented (docs/BTW.md "Time
+/// you hear, in the render than it did live (a song counts from its first section in both). That is documented (docs/BEATSCRIPT.md "Time
 /// words") and pinned here. What is new, a tempo curve, starts on the first bar you hear in both, so the tempo at a music position is
 /// the same live and in the render. The runtime of `runtime_controls` is the real one on a fake clock (deck A plays from beat 0, the
 /// program is evaluated on bar 0 and its music lands on the clock's bar 1, beat 4).
@@ -58,7 +58,7 @@ fn r02_a_flat_programs_tempo_curve_is_the_same_live_and_in_the_render_and_its_ti
     let song_at = |noun: &str| -> Vec<f64> { as_song.iter().filter(|c| c.noun == noun).map(|c| c.beat - 4.0).collect() };
     assert_eq!(song_at("mixer"), render_events(&song, "master").iter().map(|e| e.0).collect::<Vec<_>>());
     assert_eq!(song_at("trick"), render_events(&song, "trick").iter().map(|e| e.0).collect::<Vec<_>>());
-    let song_tempos = |v: &[djhost::btw_render::ReplayedCall]| -> Vec<(f64, f64)> { v.iter().filter(|c| c.noun == "deck").filter_map(|c| c.params.get("bpm").and_then(JsonValue::as_f64).map(|b| (c.beat, b))).collect() };
+    let song_tempos = |v: &[djhost::beatscript_render::ReplayedCall]| -> Vec<(f64, f64)> { v.iter().filter(|c| c.noun == "deck").filter_map(|c| c.params.get("bpm").and_then(JsonValue::as_f64).map(|b| (c.beat, b))).collect() };
     assert_eq!(song_tempos(&as_song), song_tempos(&live), "a song's curve and a program's with no sections start on the same bar");
 }
 
@@ -68,7 +68,7 @@ fn r02_a_flat_programs_tempo_curve_is_the_same_live_and_in_the_render_and_its_ti
 /// the bank is a run-time matter.
 #[test]
 fn r06_the_same_program_checks_the_same_whatever_controllers_are_connected() {
-    use djhost::btw_env::BtwEnv;
+    use djhost::beatscript_env::BeatscriptEnv;
     use djhost::live_store::LiveStore;
     use djlive::perform::InputBank;
     let src = "tempo 120\ndeck A: kick x ~ x ~\nmaster: level knob(12)\nevery 2 bars: master: level 0.5 when pad(40) > 0\n";
@@ -78,8 +78,8 @@ fn r06_the_same_program_checks_the_same_whatever_controllers_are_connected() {
     let mut cids = Vec::new();
     for bank in [None, Some(InputBank { knobs: 8, pads: 16 }), Some(InputBank { knobs: 9, pads: 64 }), Some(InputBank::DEFAULT)] {
         let be = match bank {
-            Some(b) => BtwEnv::new(Some(&store)).with_bank(b),
-            None => BtwEnv::new(Some(&store)),
+            Some(b) => BeatscriptEnv::new(Some(&store)).with_bank(b),
+            None => BeatscriptEnv::new(Some(&store)),
         };
         let c = djlive::compile::check_with(src, &be.env());
         assert!(c.compiled.is_some(), "{bank:?}: {}", djlive::diag::render_all(&c.diagnostics, src));
@@ -97,7 +97,7 @@ fn r06_the_same_program_checks_the_same_whatever_controllers_are_connected() {
 
 /// R-17: a saved name with a newline in it was in the CID but written as a space by the file, so the object no longer matched its own
 /// name, was unlisted, and a second save of the program made another. The name is one line before the CID is made.
-/// R-18: deleting a snippet saved before there were rights (`<cid>.json`, no `.btw`) removed it and then answered an error.
+/// R-18: deleting a snippet saved before there were rights (`<cid>.json`, no `.beatscript`) removed it and then answered an error.
 #[test]
 fn r17_r18_a_name_is_one_line_and_a_legacy_snippet_deletes_cleanly() {
     use djengine::json::{JsonObject, JsonValue};
@@ -140,7 +140,7 @@ fn r17_r18_a_name_is_one_line_and_a_legacy_snippet_deletes_cleanly() {
 #[test]
 fn l13_the_render_note_names_the_tempo_the_curve_goes_to() {
     let down = "tempo 300 -> 40 over 1 bar exp\ndeck A: kick x ~ x ~\nat bar 2: tempo 40 -> 300 over 1 beat step 1024\n";
-    let notes = djhost::btw_tempo::notes(&djlive::check(down).compiled.unwrap());
+    let notes = djhost::beatscript_tempo::notes(&djlive::check(down).compiled.unwrap());
     assert_eq!(notes.len(), 1, "{notes:?}");
     let goes_to = |n: &str| -> f64 { n.split("the tempo goes to ").nth(1).unwrap().split(' ').next().unwrap().parse().unwrap() };
     let t = goes_to(&notes[0]);
@@ -148,7 +148,7 @@ fn l13_the_render_note_names_the_tempo_the_curve_goes_to() {
     assert!(notes[0].contains("from the net's own 300"), "{}", notes[0]);
     // and up: the curve's top
     let up = "tempo 100 -> 250 over 2 bars\ndeck A: kick x ~ x ~\n";
-    let notes = djhost::btw_tempo::notes(&djlive::check(up).compiled.unwrap());
+    let notes = djhost::beatscript_tempo::notes(&djlive::check(up).compiled.unwrap());
     assert_eq!(notes.len(), 1, "{notes:?}");
     let t = goes_to(&notes[0]);
     assert!(t > 240.0 && t <= 250.0, "{}", notes[0]);

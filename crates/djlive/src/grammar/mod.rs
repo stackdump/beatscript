@@ -22,13 +22,13 @@ pub fn grammar() -> ebnf::Grammar {
 }
 
 
-/// The grammar block of docs/BTW.md: grammar.ebnf from its first section on (its header is what BTW.md says around
-/// it), as an `ebnf` code block. tests/grammar.rs keeps BTW.md's copy equal to it.
+/// The grammar block of docs/BEATSCRIPT.md: grammar.ebnf from its first section on (its header is what BEATSCRIPT.md says around
+/// it), as an `ebnf` code block. tests/grammar.rs keeps BEATSCRIPT.md's copy equal to it.
 pub fn docs_block() -> String {
     let from = SOURCE.find("(* ==").unwrap_or(0);
     format!("```ebnf\n{}```\n", SOURCE[from..].trim_end().to_string() + "\n")
 }
 
-/// The markers BTW.md puts the generated block between.
-pub const DOCS_BEGIN: &str = "<!-- grammar.ebnf: generated from crates/djlive/grammar.ebnf; BTW_BLESS=1 cargo test -p djlive --test grammar rewrites it -->\n";
+/// The markers BEATSCRIPT.md puts the generated block between.
+pub const DOCS_BEGIN: &str = "<!-- grammar.ebnf: generated from crates/djlive/grammar.ebnf; BEATSCRIPT_BLESS=1 cargo test -p djlive --test grammar rewrites it -->\n";
 pub const DOCS_END: &str = "<!-- /grammar.ebnf -->";
