@@ -9,6 +9,7 @@
 # built by deploy/deploy.sh from this tree, copied to the host, never committed
 /site/web/wasm/
 /site/player/dist/
+/site/studio/dist/
 /site/web/docs/BTW.md
 /site/web/docs/cheatsheet.md
 /site/web/docs/arrange.md

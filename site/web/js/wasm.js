@@ -34,6 +34,8 @@ export function makeFacade(mod, wasmUrl = null) {
     instruments: () => j(mod.btw_instruments()),
     generation: (text, scope, n) => j(mod.btw_generation(text, scope || null, n)),
     cheatsheet: () => mod.btw_cheatsheet(),
+    /** The program with its seed(...), template(...) and gen@N references written out as plain BeatScript; lineage opens it with `#! forked-from:`. null when the module predates it (and in the mock). */
+    expand: typeof mod.btw_expand === 'function' ? (text, lineage = false) => j(mod.btw_expand(text, !!lineage)) : null,
     /** The seeded generator ({genre,bpm,key,length,seed} -> {ok,text,cid,check,...}); null when the module predates it. */
     generate: mod.btw_generate ? (req) => j(mod.btw_generate(JSON.stringify(req || {}))) : null,
     /** A radio station's answer (station-model.js: {station, n, count, segue, ...} -> {ok, station, tracks, segues, ...}); null when the module predates it (the page asks POST /api/station). */
