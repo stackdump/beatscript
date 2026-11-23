@@ -11,7 +11,7 @@ version 1
 #! name: ambient starter
 #! genre: ambient
 #! license: CC0-1.0
-# A starting point for ambient, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for ambient, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 72
 key c:pent
@@ -57,7 +57,7 @@ arrange intro verse bridge verse outro
 #! name: blues starter
 #! genre: blues
 #! license: CC0-1.0
-# A starting point for blues, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for blues, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 95
 swing 0.5
@@ -128,7 +128,7 @@ arrange intro verse chorus verse chorus outro
 #! name: bossa starter
 #! genre: bossa
 #! license: CC0-1.0
-# A starting point for bossa, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for bossa, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 88
 swing 0.4
@@ -176,7 +176,7 @@ arrange intro verse solo verse outro
 #! name: country starter
 #! genre: country
 #! license: CC0-1.0
-# A starting point for country, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for country, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 110
 swing 0.15
@@ -223,7 +223,7 @@ arrange intro verse chorus verse chorus outro
 #! name: dnb starter
 #! genre: dnb
 #! license: CC0-1.0
-# A starting point for dnb, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for dnb, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 174
 swing 0.1
@@ -275,7 +275,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: dubstep starter
 #! genre: dubstep
 #! license: CC0-1.0
-# A starting point for dubstep, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for dubstep, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 140
 swing 0.15
@@ -327,7 +327,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: edm starter
 #! genre: edm
 #! license: CC0-1.0
-# A starting point for edm, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for edm, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 138
 key am
@@ -378,7 +378,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: funk starter
 #! genre: funk
 #! license: CC0-1.0
-# A starting point for funk, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for funk, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 108
 swing 0.3
@@ -425,7 +425,7 @@ arrange intro verse chorus verse chorus outro
 #! name: garage starter
 #! genre: garage
 #! license: CC0-1.0
-# A starting point for garage, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for garage, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 130
 swing 0.3
@@ -477,7 +477,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: house starter
 #! genre: house
 #! license: CC0-1.0
-# A starting point for house, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for house, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 124
 swing 0.2
@@ -529,7 +529,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: jazz starter
 #! genre: jazz
 #! license: CC0-1.0
-# A starting point for jazz, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for jazz, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 110
 swing 0.6
@@ -577,7 +577,7 @@ arrange intro verse solo verse outro
 #! name: lofi starter
 #! genre: lofi
 #! license: CC0-1.0
-# A starting point for lofi, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for lofi, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 82
 swing 0.35
@@ -624,7 +624,7 @@ arrange intro verse bridge verse outro
 #! name: metal starter
 #! genre: metal
 #! license: CC0-1.0
-# A starting point for metal, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for metal, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 180
 key e:phrygian
@@ -670,7 +670,7 @@ arrange intro verse chorus verse chorus outro
 #! name: reggae starter
 #! genre: reggae
 #! license: CC0-1.0
-# A starting point for reggae, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for reggae, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 75
 swing 0.25
@@ -717,7 +717,7 @@ arrange intro verse chorus verse chorus outro
 #! name: speedcore starter
 #! genre: speedcore
 #! license: CC0-1.0
-# A starting point for speedcore, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for speedcore, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 220
 key em
@@ -762,7 +762,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: synthwave starter
 #! genre: synthwave
 #! license: CC0-1.0
-# A starting point for synthwave, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for synthwave, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 108
 key cm
@@ -808,7 +808,7 @@ arrange intro verse chorus verse chorus outro
 #! name: techno starter
 #! genre: techno
 #! license: CC0-1.0
-# A starting point for techno, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for techno, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 128
 key c
@@ -859,7 +859,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: trance starter
 #! genre: trance
 #! license: CC0-1.0
-# A starting point for trance, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for trance, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 140
 key am
@@ -910,7 +910,7 @@ arrange intro buildup drop breakdown buildup drop outro
 #! name: trap starter
 #! genre: trap
 #! license: CC0-1.0
-# A starting point for trap, from the bitwrap ontology: its tempo, key, kit and voices, its family's
+# A starting point for trap, from the BeatScript ontology: its tempo, key, kit and voices, its family's
 # standard song structure and its first chord progression. Change anything.
 tempo 140
 swing 0.1
