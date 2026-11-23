@@ -337,6 +337,11 @@ pub fn recognize_text(g: &Grammar, start: &str, text: &str) -> Result<(), usize>
 /// Is `src` a program the grammar describes? Its tokens are the parser's (after the prepass), the end of the text is a
 /// line's end.
 pub fn recognize(g: &Grammar, src: &str) -> Result<(), Miss> {
+    // a text the lexer refuses (a mark that is not in the language: `@` before a capital) is no sentence, whatever the rest is
+    if let Some(e) = crate::lex::lex(src).errors.first() {
+        let (line, col) = line_col(src, e.span.start);
+        return Err(Miss { at: 0, line, col, found: e.message.clone(), expected: vec!["a token of the language".into()] });
+    }
     let mut toks: Vec<Token> = crate::parse::grammar_tokens(src).into_iter().filter(|t| !matches!(t.tok, Tok::Eof)).collect();
     if toks.last().is_some_and(|t| !matches!(t.tok, Tok::Newline)) {
         let end = toks.last().unwrap().span.end;

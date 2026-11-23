@@ -193,7 +193,8 @@ pub(crate) fn runs(toks: &[Token]) -> Vec<Run> {
             Tok::RBrace => depth -= 1,
             _ => {}
         }
-        let head = i == 0 || toks[i - 1].tok == Tok::Newline;
+        // (a line's first word, or a block's on its opening line: `section s 4 bars { use ... }`)
+        let head = i == 0 || matches!(toks[i - 1].tok, Tok::Newline | Tok::LBrace);
         if !head || !matches!(&toks[i].tok, Tok::Word(w) if w == "use") {
             continue;
         }
@@ -210,7 +211,7 @@ pub(crate) fn runs(toks: &[Token]) -> Vec<Run> {
 
 /// Read the `use` line at `toks[i]`: where its line ends, and the declaration or what is wrong with it.
 fn read(toks: &[Token], i: usize) -> (usize, Result<Decl, Option<Diagnostic>>) {
-    let end = (i..toks.len()).find(|k| matches!(toks[*k].tok, Tok::Newline | Tok::Eof)).unwrap_or(toks.len());
+    let end = (i..toks.len()).find(|k| matches!(toks[*k].tok, Tok::Newline | Tok::Eof | Tok::RBrace)).unwrap_or(toks.len());
     let at = |k: usize| if k < end { toks.get(k).map(|t| &t.tok) } else { None };
     let sp = |k: usize| toks.get(k.min(end.saturating_sub(1)).max(i)).map_or(Span::default(), |t| t.span);
     let err = |d: Diagnostic| (end, Err(Some(d)));

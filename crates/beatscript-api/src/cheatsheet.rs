@@ -57,7 +57,7 @@ const PLAN: &[(&str, &[Keep])] = &[
     ("### Pattern transforms", &[Keep::Table, Keep::Para("Marks touch")]),
     ("### Arrange mutations", &[Keep::FirstCode, Keep::Table, Keep::Para("Try [arrange-in-eight-lines]")]),
     ("### Start from a seed", &[Keep::FirstCode]),
-    // (`use SOURCE as NAME` is in the grammar above, `use` and `use_source`; its section in BEATSCRIPT.md would take the sheet past 30 KB)
+    // (no "Name a source: `use`": the sheet is at its 30 KB cap, and a `use` only names what a program can write in place)
     ("### Sung lyrics", &[Keep::Para("**Found phrases:**")]),
     // (the four trims above made room for this and for the grammar's `station` productions under the 30 KB cap)
     ("## Radio: stations", &[Keep::Para("**Radio:**")]),
@@ -336,8 +336,9 @@ fn merged_grammar(secs: &[Section], missing: &mut Vec<String>) -> String {
     let mut out = String::from("```ebnf\n");
     for (name, mut lines) in all {
         match name.as_str() {
-            // (`sample` and `use` are of a program that is never public: the page checks them, it cannot play them)
-            "MOVE" | "SPEC" | "import" | "sample" | "license" | "use" => continue,
+            // (`sample` and `use restricted` are of a program that is never public: the page checks them, it cannot play them;
+            // `use SOURCE as NAME` only names what a program can write in place, and BEATSCRIPT.md teaches it: the sheet is at its cap)
+            "MOVE" | "SPEC" | "import" | "sample" | "license" | "use" | "use_source" => continue,
             // (`engine` is what the control deck takes: the booth's lines, and a timed `tempo`)
             "action" | "engine" => {
                 lines.retain(|(c, _)| !booth_alt(c));

@@ -274,6 +274,9 @@ credited as any borrow is (`stored::cids_of`), a `gen` call as any call.
   own (what it writes depends on the role it fills).
 - **No new MCP tool.** What can be named is listed by `list_examples` (`imports`: the kinds, the templates and their sections,
   the genre templates and theirs) and `genre_template` (its answer's `use`: each of the genre's sections as a `use` line).
+- **The cheat sheet leaves `use` out** (as it leaves out `use restricted`): it was at its 30 KB cap before `use` (29.8 KB), and a
+  `use` only names what a program can write in place, so a program written from the sheet loses nothing. BEATSCRIPT.md, this page and
+  the MCP `check` description teach it. Raising the cap, or trimming the sheet's plan for it, is Matt's call.
 - **One more kind is one more arm** of `uses::Source` (and a word for it in `read_source`): a bar slice of a stored program, a
   render, a set's track would each be one.
 
