@@ -243,7 +243,7 @@ fn the_programs_written_before_it_keep_their_cids() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let pins = JsonValue::parse(&std::fs::read_to_string(root.join("crates/beatscript-api/tests/cid-pins.json")).unwrap()).unwrap();
     // (the example programs written after it, which use it: pinned when they were added)
-    const AFTER: &[&str] = &["examples/beatscript/macros.beatscript"];
+    const AFTER: &[&str] = &["examples/beatscript/macros.beatscript", "examples/beatscript/control-per-pass.beatscript"];
     let mut seen = 0;
     for (path, pin) in pins.as_object().unwrap().iter() {
         if !path.starts_with("examples/beatscript/") || pin.get("ok").and_then(JsonValue::as_bool) != Some(true) || AFTER.iter().any(|a| *a == &path[..]) {
