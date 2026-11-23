@@ -128,7 +128,7 @@ export class App {
   }
 
   dom() {
-    const ids = ['top', 'hdr', 'h-sec', 'h-sec-txt', 'h-bar', 'h-phrase', 'h-gen', 'h-state', 'h-prog-fill', 'btn-follow', 'banner', 'problems', 'pr-sum', 'pr-sum-txt', 'pr-first', 'pr-dot', 'pr-list', 'decks', 'transport', 'btn-play', 'btn-decks', 't-source', 'st-long', 'st-short', 't-prob', 't-prob-dot', 't-prob-n', 'src-engine', 'src-stream', 'src-render', 'rd-ctl', 'rd-pause', 'rd-seek', 'rd-loop', 't-status', 't-bpm', 't-time', 'level', 'meter', 'examples', 'h-name', 'toasts', 'btn-fmt', 'btn-share', 'btn-open', 'btn-export', 'btn-compose', 'btn-mcp', 'btn-phone', 'btn-beta', 'btn-user', 'user-lbl', 'drawer', 'drawer-title', 'drawer-body', 'drawer-close', 't-hint', 'btn-menu', 'tools'];
+    const ids = ['top', 'hdr', 'h-sec', 'h-sec-txt', 'h-bar', 'h-phrase', 'h-gen', 'h-state', 'h-prog-fill', 'btn-follow', 'banner', 'problems', 'pr-sum', 'pr-sum-txt', 'pr-first', 'pr-dot', 'pr-list', 'decks', 'transport', 'btn-play', 'btn-decks', 't-source', 'st-long', 'st-short', 't-prob', 't-prob-dot', 't-prob-n', 'src-engine', 'src-stream', 'src-render', 'rd-ctl', 'rd-pause', 'rd-seek', 'rd-loop', 't-status', 't-bpm', 't-time', 'level', 'meter', 'examples', 'h-name', 'toasts', 'btn-fmt', 'btn-share', 'btn-open', 'btn-export', 'btn-generate', 'btn-compose', 'btn-mcp', 'btn-phone', 'btn-beta', 'btn-user', 'user-lbl', 'drawer', 'drawer-title', 'drawer-body', 'drawer-close', 't-hint', 'btn-menu', 'tools'];
     this.el = {};
     for (const id of ids) this.el[id] = $(id);
     this.lights = [...this.el['h-phrase'].children];
@@ -147,6 +147,7 @@ export class App {
     el['btn-share'].addEventListener('click', () => this.panel('share'));
     el['btn-export'].addEventListener('click', () => this.panel('export'));
     el['btn-open'].addEventListener('click', () => this.panel('open'));
+    el['btn-generate'].addEventListener('click', () => this.panel('generate'));
     el['btn-compose'].addEventListener('click', () => this.panel('compose'));
     el['btn-mcp'].addEventListener('click', () => this.panel('mcp'));
     el['btn-phone'].addEventListener('click', () => this.panel('phone'));
@@ -241,6 +242,9 @@ export class App {
       this.stop();
     } else if (!typing && !mod && !e.altKey && (e.key === 'l' || e.key === 'L')) {
       this.setFollow(!this.follow.on);
+    } else if (!typing && !mod && !e.altKey && (e.key === 'g' || e.key === 'G')) {
+      e.preventDefault();
+      this.panel('generate'); // the seeded generator (generate.js): G opens and closes it
     }
   }
 

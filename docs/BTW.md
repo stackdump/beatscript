@@ -1141,9 +1141,9 @@ deck A: kick z4EBG9jF...                        a bare CID is a program with no 
 ### Call the generator: `gen@v`
 
 `gen@2 techno seed=42` is the program the seeded generator prints for those inputs: the generator of the MCP `generate` tool,
-`POST /api/generate` and beatscript.app's compose panel ("seeded, no model"). It is an engine call ("Two halves"): opaque until
-it is resolved, then pinned by the CID of the program it resolves to. Its params are the generator's own, so a call reads like a
-function's signature:
+`POST /api/generate` and beatscript.app's ✦generate button (no model, no sign-in; the G key opens it). It is an engine call
+("Two halves"): opaque until it is resolved, then pinned by the CID of the program it resolves to. Its params are the
+generator's own, so a call reads like a function's signature:
 
 ```text
 let bed = gen@2 techno seed=42 section=drop part=bass      the bass of its drop, a let a bar: bed_1 ... let bed = <bed_1 ...>

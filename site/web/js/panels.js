@@ -8,6 +8,7 @@ import { SHARE_RIGHTS } from './rights.js';
 import { signIn, hasWallet, localKeyInfo, resetLocalKey } from './auth.js';
 // the seeded generator's genres (btwapi::generate::genres, beats' catalogue): one list, shared with the radio's genre knob
 import { SEEDED_GENRES } from './station-model.js';
+import { generateBody } from './generate.js';
 
 const GENRES = ['ambient', 'dnb', 'dubstep', 'house', 'techno', 'trance', 'lofi', 'jazz', 'bossa', 'funk', 'hardcore', 'breakbeat', 'synthwave', 'garage'];
 
@@ -28,7 +29,7 @@ export class Panels {
   }
 
   show(which) {
-    const tb = { compose: 'btn-compose', mcp: 'btn-mcp', phone: 'btn-phone', beta: 'btn-beta', user: 'btn-user', share: 'btn-share', open: 'btn-open', export: 'btn-export' }[which];
+    const tb = { generate: 'btn-generate', compose: 'btn-compose', mcp: 'btn-mcp', phone: 'btn-phone', beta: 'btn-beta', user: 'btn-user', share: 'btn-share', open: 'btn-open', export: 'btn-export' }[which];
     if (this.current === which) return this.close();
     this.close();
     this.current = which;
@@ -46,7 +47,7 @@ export class Panels {
     const inPanel = !ae || ae === document.body || this.el.drawer.contains(ae) || !!(this.app.pop && this.app.pop.contains(ae));
     this.el.drawer.hidden = true;
     this.popClose();
-    for (const b of ['btn-compose', 'btn-mcp', 'btn-phone', 'btn-beta', 'btn-user', 'btn-share', 'btn-open', 'btn-export']) this.el[b].setAttribute('aria-expanded', 'false');
+    for (const b of ['btn-generate', 'btn-compose', 'btn-mcp', 'btn-phone', 'btn-beta', 'btn-user', 'btn-share', 'btn-open', 'btn-export']) this.el[b].setAttribute('aria-expanded', 'false');
     const was = this.trigger;
     this.current = null;
     this.trigger = null;
@@ -71,9 +72,9 @@ export class Panels {
     if (w === 'export') return this.exportPanel();
     if (w === 'open') return this.open();
     const body = this.el['drawer-body'];
-    const title = { compose: 'Compose', mcp: 'MCP', phone: 'Mobile', beta: 'Android beta', user: this.app.user ? 'Account' : 'Sign in' }[w];
+    const title = { generate: 'Generate', compose: 'Compose', mcp: 'MCP', phone: 'Mobile', beta: 'Android beta', user: this.app.user ? 'Account' : 'Sign in' }[w];
     this.el['drawer-title'].textContent = title;
-    body.replaceChildren(...(w === 'compose' ? this.composeBody() : w === 'mcp' ? this.mcpBody() : w === 'phone' ? this.phoneBody() : w === 'beta' ? this.betaBody() : this.userBody()));
+    body.replaceChildren(...(w === 'generate' ? generateBody(this) : w === 'compose' ? this.composeBody() : w === 'mcp' ? this.mcpBody() : w === 'phone' ? this.phoneBody() : w === 'beta' ? this.betaBody() : this.userBody()));
     this.el.drawer.hidden = false;
     this.popClose();
     const first = body.querySelector('textarea:not(:disabled), input:not(:disabled), select:not(:disabled), button:not(:disabled)'); // a disabled control cannot take the focus

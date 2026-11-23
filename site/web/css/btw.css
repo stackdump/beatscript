@@ -417,3 +417,9 @@ html.record .as-pop, html.record .as-bulb { display: none !important; }
 html.record .sc-handle, html.record .sc-flash, html.record .sc-pop { display: none !important; }
 /* the footer btwserve's own pages end with (the pairing page links this sheet): one link to /authorship */
 footer.rights{margin:2rem auto 1.5rem;padding:0 1rem;max-width:72rem;font-size:.85rem;opacity:.8}
+
+/* ✦generate (js/generate.js): the seed and its -1/+1 and random buttons on one line, the buttons their own width */
+.drawer .gen-seed { align-items: flex-end; }
+.drawer .gen-seed > .tb { flex: 0 0 auto; min-width: 44px; justify-content: center; }
+.drawer .gen h3 { margin: 20px 0 6px; font-size: 13px; color: var(--ink); }
+.drawer #gen-call { overflow-wrap: anywhere; }
