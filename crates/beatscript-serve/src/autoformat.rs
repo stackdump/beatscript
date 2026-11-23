@@ -30,9 +30,12 @@ mod tests {
         assert_eq!(f, FORMATTED);
         let cid = |t: &str| serde_json::from_str::<serde_json::Value>(&beatscript_api::check_json(t)).unwrap()["cid"].clone();
         assert_eq!(cid(&f), cid(UNFORMATTED));
-        // the same text the fmt tool answers in `text`
+        // the fmt tool (asked for by a person or an agent) answers the same text in BeatScript 2, a new CID; the hook never
+        // upgrades, so what it sends has the CID it was given
         let v: serde_json::Value = serde_json::from_str(&beatscript_api::fmt_json(UNFORMATTED)).unwrap();
-        assert_eq!(v["text"], f);
+        assert_eq!(v["text"], f.replacen("#! btw 1", "#! beatscript 2", 1));
+        assert_eq!(v["from_cid"], cid(UNFORMATTED));
+        assert_eq!(beatscript_api::format_text(UNFORMATTED).as_deref(), Some(f.as_str()));
         assert_eq!(autoformat(&f, 16384), f, "formatting twice is formatting once");
     }
 

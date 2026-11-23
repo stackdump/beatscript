@@ -557,11 +557,15 @@ const LOOSE_CANONICAL: &str = "tempo 124\ndeck A: kick e(4, 16) | snare ~ x ~ x\
 
 #[test]
 fn the_fixture_is_what_fmt_prints() {
-    let v: Value = serde_json::from_str(&beatscript_api::fmt_json(LOOSE)).unwrap();
-    assert_eq!((v["text"].as_str(), v["canonical"].as_str()), (Some(LOOSE_FORMATTED), Some(LOOSE_CANONICAL)));
+    // what the hook sends (the formatter that keeps the version: nothing upgrades silently)
+    assert_eq!(beatscript_api::format_text(LOOSE).as_deref(), Some(LOOSE_FORMATTED));
     assert_eq!(cid_of(LOOSE), cid_of(LOOSE_FORMATTED));
     assert_eq!(cid_of(LOOSE), cid_of(LOOSE_CANONICAL));
-    assert_eq!(v["cid"], cid_of(LOOSE));
+    // and the fmt tool's answer: the same program in BeatScript 2, naming the CID it came from
+    let v: Value = serde_json::from_str(&beatscript_api::fmt_json(LOOSE)).unwrap();
+    assert_eq!(v["text"].as_str(), Some(LOOSE_FORMATTED.replacen("#! btw 1", "#! beatscript 2", 1).as_str()));
+    assert_eq!(v["canonical"].as_str().map(str::to_string), Some(djlive::version::upgrade_canonical(LOOSE_CANONICAL)));
+    assert_eq!(v["from_cid"], cid_of(LOOSE));
 }
 
 #[test]

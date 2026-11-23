@@ -1,5 +1,5 @@
 {
-  "about": "btw-cap+jws test vectors (btwserve src/caps.rs). The seed is a test key only; never use it.",
+  "about": "btw-cap+jws test vectors (beatscript-serve src/caps.rs). The seed is a test key only; never use it.",
   "seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
   "issuer": "https://beatscript.app",
   "jwks": {
