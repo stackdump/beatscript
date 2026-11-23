@@ -242,7 +242,7 @@ export function createToolSurface({ beatscript, caps = {}, site = 'https://beats
       `Voices you may name: ${names('voices')}.\nKits you may name: ${names('kits')}.`,
       `The request: ${request}`,
     ];
-    if (current) parts.push(`The current program:\n\`\`\`btw\n${current.replace(/\n?$/, '\n')}\`\`\``);
+    if (current) parts.push(`The current program:\n\`\`\`beatscript\n${current.replace(/\n?$/, '\n')}\`\`\``);
     parts.push('Answer with one program in a fenced block (```beatscript ... ```). If you have the check tool, use it: the program must pass.');
     return parts.join('\n\n');
   };
