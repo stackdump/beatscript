@@ -112,8 +112,15 @@ fn the_same_call_is_the_same_cid_and_resolves_to_the_same_pin() {
     let s = &s1[0];
     assert_eq!((s.kind, s.half, s.place, s.name.as_deref(), s.generator.as_deref()), ("gen", refs::ENGINE, "let", Some("bed"), Some("seeded@2")));
     let pin = s.resolved.clone().unwrap();
-    let report = beatscript_api::generate::generated_json(&beatscript_api::GenRequest { genre: "techno".into(), seed: "42".into(), bpm: Some(128.0), key: "c".into(), ..Default::default() });
+    // gen@2's program, as seeded@2 prints it (the current generator is 3, which prints it in BeatScript 2)
+    let req = beatscript_api::GenRequest { genre: "techno".into(), seed: "42".into(), bpm: Some(128.0), key: "c".into(), ..Default::default() };
+    let g2 = beatscript_api::generate::generate_version(2, &req).unwrap();
+    let report = beatscript_api::check_report(&g2.text);
     assert_eq!(report.get("cid").and_then(djengine::json::JsonValue::as_str), Some(pin.as_str()));
+    // and gen@3's is the same program in BeatScript 2: the BeatScript 2 CID of gen@2's
+    let g3 = beatscript_api::generate::generate_version(3, &req).unwrap();
+    let r3 = beatscript_api::check_report(&g3.text);
+    assert_eq!(r3.get("cid").and_then(djengine::json::JsonValue::as_str), report.get("renamed_cid").and_then(djengine::json::JsonValue::as_str));
 }
 
 /// Every version stays callable, and a version always resolves as it did: a generator that prints another program for the
@@ -121,7 +128,7 @@ fn the_same_call_is_the_same_cid_and_resolves_to_the_same_pin() {
 #[test]
 fn every_version_is_callable_and_pinned() {
     beatscript_api::generate::install();
-    let calls = ["gen@1 techno seed=42", "gen@2 techno seed=42", "gen@1 dubstep seed=54876", "gen@2 trap seed=54877", "gen@2 house seed=sunrise bpm=124 key=am", "gen@2 dnb seed=7 length=short", "gen@1 lofi seed=3 key=f#m length=long"];
+    let calls = ["gen@1 techno seed=42", "gen@2 techno seed=42", "gen@1 dubstep seed=54876", "gen@2 trap seed=54877", "gen@2 house seed=sunrise bpm=124 key=am", "gen@2 dnb seed=7 length=short", "gen@1 lofi seed=3 key=f#m length=long", "gen@3 techno seed=42", "gen@3 house seed=sunrise bpm=124 key=am"];
     let host = djlive::gen::Host::default();
     let got: String = calls.iter().map(|c| format!("{c} -> {}\n", djlive::gen::resolve_word(c, &host).unwrap_or_else(|d| panic!("{c}: {}", d.message)).cid)).collect();
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/gen-pins.txt");
@@ -134,8 +141,10 @@ fn every_version_is_callable_and_pinned() {
     let v1 = djlive::gen::resolve_word("gen@1 techno seed=42", &host).unwrap();
     assert!(v1.text.contains("#! generator: seeded@1"), "{}", v1.text);
     assert!(djlive::gen::resolve_word("gen@2 techno seed=42", &host).unwrap().text.contains("#! generator: seeded@2"));
-    let e = errors("let b = gen@3 techno seed=1 section=drop part=bass\n");
-    assert!(e.iter().any(|(at, m)| at == "gen@3" && m.contains("gen@1, gen@2")), "{e:?}");
+    let v3 = djlive::gen::resolve_word("gen@3 techno seed=42", &host).unwrap();
+    assert!(v3.text.starts_with("#! beatscript 2\n") && v3.text.contains("#! generator: seeded@3"), "{}", v3.text);
+    let e = errors("let bed = gen@4 techno seed=1 section=drop part=bass\n");
+    assert!(e.iter().any(|(at, m)| at == "gen@4" && m.contains("gen@1, gen@2, gen@3")), "{e:?}");
 }
 
 /// A call takes the program's key and tempo unless it says its own: two seeds in different keys cross without a clash, and

@@ -5,3 +5,5 @@ gen@2 trap seed=54877 -> z4EBG9jAdboLqgkepUrCh9Q928jS3vgubQUZ3LyFz6f5fzSsgNj
 gen@2 house seed=sunrise bpm=124 key=am -> z4EBG9j4FW9HS2yzwwJSiWZ3Nr2gjhi5B3uxPj761iRgBschG62
 gen@2 dnb seed=7 length=short -> z4EBG9jH3ezJR68JDjHXjPQmTdWYcx6RttejM9KbVWF9TfR4h4d
 gen@1 lofi seed=3 key=f#m length=long -> z4EBG9izLmPaWyZN4gZckQR3AdsUexydyiCo5st9Xuep9h8uWPe
+gen@3 techno seed=42 -> z4EBG9j2P8pMmCRuNhNzycboNL8gGNAKgR5wkwUrkaVc8RLCuxA
+gen@3 house seed=sunrise bpm=124 key=am -> z4EBG9j3bwdB4e5qMJUnUJCUBgFWmtBN1UrdmbTGkBxx9HtRq7U

@@ -6,6 +6,8 @@
     "diagnostics": [],
     "cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
     "canonical": "tempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9jFx5cLy5x5qCvtFmpYo7LWFDdKhXaGLuSx3qHQ9Rc5TGQ",
     "nets": {
       "evolve@0:A": "z4EBG9j4hxR9jp2mXyvftG23Kf7FNhb5jUz5qK8uik42B9uZ7DL",
       "evolve@0:B": "z4EBG9jA3EuYwrSgJQBx9iKQMyeDzKUztuKG7hS1VMTdqcjyJyE",
@@ -114,11 +116,13 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "tempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",
-    "cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
+    "canonical": "#! beatscript 2\ntempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",
+    "cid": "z4EBG9jFx5cLy5x5qCvtFmpYo7LWFDdKhXaGLuSx3qHQ9Rc5TGQ",
+    "version": 2,
     "comments": ["an evolve in a program with no sections: it plays its own orbit and ends."],
     "diagnostics": [],
-    "text": "# an evolve in a program with no sections: it plays its own orbit and ends.\ntempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n"
+    "from_cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
+    "text": "#! beatscript 2\n# an evolve in a program with no sections: it plays its own orbit and ends.\ntempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n"
   },
   "share": {
     "ok": true,

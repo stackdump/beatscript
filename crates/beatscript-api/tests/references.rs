@@ -130,7 +130,10 @@ fn generate_s_call_is_its_program_and_a_part_s_call_writes_its_let() {
     let req = beatscript_api::GenRequest { genre: "techno".into(), seed: "9".into(), bpm: Some(128.0), key: "f#m".into(), length: "short".into() };
     let g = beatscript_api::generate::generate(&req).unwrap();
     let cid = s(&report(&g.text, false), "cid").to_string();
-    assert_eq!(beatscript_api::generate::gen_call(2, &req, &g, &cid).as_deref(), Some("gen@2 techno seed=9 bpm=128 key=f#m length=short"));
+    assert_eq!(beatscript_api::generate::gen_call(3, &req, &g, &cid).as_deref(), Some("gen@3 techno seed=9 bpm=128 key=f#m length=short"));
+    let g2 = beatscript_api::generate::generate_version(2, &req).unwrap();
+    let cid2 = s(&report(&g2.text, false), "cid").to_string();
+    assert_eq!(beatscript_api::generate::gen_call(2, &req, &g2, &cid2).as_deref(), Some("gen@2 techno seed=9 bpm=128 key=f#m length=short"));
     // a seed that is not one word cannot be a call
     let odd = beatscript_api::GenRequest { genre: "techno".into(), seed: "two words".into(), ..Default::default() };
     let g = beatscript_api::generate::generate(&odd).unwrap();

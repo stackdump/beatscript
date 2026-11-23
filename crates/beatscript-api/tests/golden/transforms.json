@@ -6,6 +6,8 @@
     "diagnostics": [],
     "cid": "z4EBG9j5mrAskkUGWU2w1kWhFSaKKQY23BEi3JNF4rjfymEDYLT",
     "canonical": "tempo 132\nkey d:dorian\nlet riff = d2! ~ d2 f2^ ~ a2 ~ c3\nlet stab = x ~ x ~ x ~ ~ x\ndeck A: kick x ~ x ~ | snare ~ x ~ x | hihat humanize([x*8], 3, 12) vel=40..90\ndeck A: bass every(4, rotate(riff, 2), [<riff reverse(riff)>]) inst=sub-bass\ndeck B: melody transpose([<riff octave(riff, 1)>], 7) oct=4 | arp degrade(slow([a4 c5 e5 g5], 2), 0.25, 7) inst=pluck\ndeck B: harmony fast(stab, 2) inst=warm-pad\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9jAUaKEyGit6xwvdgZ24KQLqPBcM91apt6ZbFFHYrYwHcR",
     "nets": {
       "A": "z4EBG9j4qYJmaKqkGD5DLGrgvtXpKfvFmP2cQ2AJXMmDy7UHBuC",
       "B": "z4EBG9j1thPAN4UjE7y9MX1BygCzYZ5P5ZiZSswTvTCcof1dB2k"
@@ -33,11 +35,13 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "tempo 132\nkey d:dorian\nlet riff = d2! ~ d2 f2^ ~ a2 ~ c3\nlet stab = x ~ x ~ x ~ ~ x\ndeck A: kick x ~ x ~ | snare ~ x ~ x | hihat humanize([x*8], 3, 12) vel=40..90\ndeck A: bass every(4, rotate(riff, 2), [<riff reverse(riff)>]) inst=sub-bass\ndeck B: melody transpose([<riff octave(riff, 1)>], 7) oct=4 | arp degrade(slow([a4 c5 e5 g5], 2), 0.25, 7) inst=pluck\ndeck B: harmony fast(stab, 2) inst=warm-pad\n",
-    "cid": "z4EBG9j5mrAskkUGWU2w1kWhFSaKKQY23BEi3JNF4rjfymEDYLT",
+    "canonical": "#! beatscript 2\ntempo 132\nkey d:dorian\nlet riff = d2! ~ d2 f2^ ~ a2 ~ c3\nlet stab = x ~ x ~ x ~ ~ x\ndeck A: kick x ~ x ~ | snare ~ x ~ x | hihat humanize([x*8], 3, 12) vel=40..90\ndeck A: bass every(4, rotate(riff, 2), [<riff reverse(riff)>]) inst=sub-bass\ndeck B: melody transpose([<riff octave(riff, 1)>], 7) oct=4 | arp degrade(slow([a4 c5 e5 g5], 2), 0.25, 7) inst=pluck\ndeck B: harmony fast(stab, 2) inst=warm-pad\n",
+    "cid": "z4EBG9jAUaKEyGit6xwvdgZ24KQLqPBcM91apt6ZbFFHYrYwHcR",
+    "version": 2,
     "comments": ["pattern transforms, accents, slides, humanize: every call of the grammar's second table."],
     "diagnostics": [],
-    "text": "# pattern transforms, accents, slides, humanize: every call of the grammar's second table.\ntempo 132\nkey d:dorian\nlet riff = d2! ~ d2 f2^ ~ a2 ~ c3\nlet stab = x ~ x ~ x ~ ~ x\ndeck A: kick x ~ x ~ | snare ~ x ~ x | hihat humanize([x*8], 3, 12) vel=40..90\ndeck A: bass every(4, rotate(riff, 2), [<riff reverse(riff)>]) inst=sub-bass\ndeck B: melody transpose([<riff octave(riff, 1)>], 7) oct=4 | arp degrade(slow([a4 c5 e5 g5], 2), 0.25, 7) inst=pluck\ndeck B: harmony fast(stab, 2) inst=warm-pad\n"
+    "from_cid": "z4EBG9j5mrAskkUGWU2w1kWhFSaKKQY23BEi3JNF4rjfymEDYLT",
+    "text": "#! beatscript 2\n# pattern transforms, accents, slides, humanize: every call of the grammar's second table.\ntempo 132\nkey d:dorian\nlet riff = d2! ~ d2 f2^ ~ a2 ~ c3\nlet stab = x ~ x ~ x ~ ~ x\ndeck A: kick x ~ x ~ | snare ~ x ~ x | hihat humanize([x*8], 3, 12) vel=40..90\ndeck A: bass every(4, rotate(riff, 2), [<riff reverse(riff)>]) inst=sub-bass\ndeck B: melody transpose([<riff octave(riff, 1)>], 7) oct=4 | arp degrade(slow([a4 c5 e5 g5], 2), 0.25, 7) inst=pluck\ndeck B: harmony fast(stab, 2) inst=warm-pad\n"
   },
   "share": {
     "ok": true,

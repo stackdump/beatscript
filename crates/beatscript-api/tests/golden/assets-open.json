@@ -37,6 +37,8 @@
     ],
     "cid": "z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece",
     "canonical": "tempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9j6trNP6KF2ZnioAJjabP8DoMFg1PuTPoobT9DmhP9QUz8",
     "nets": {
       "A": "z4EBG9jBFvuoqBSZy9BEo4cUDGwHGbqBcqqrDKFFh9TEWdZuy8Y",
       "B": "z4EBG9j7nR5NNFtRkspWMGH6kYDUE9ChkoQ4CUumGqaW359Fhhd"
@@ -64,8 +66,9 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "tempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
-    "cid": "z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece",
+    "canonical": "#! beatscript 2\ntempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "cid": "z4EBG9j6trNP6KF2ZnioAJjabP8DoMFg1PuTPoobT9DmhP9QUz8",
+    "version": 2,
     "comments": [
       "names two samples with open licenses and an Apple loop; no file is looked up, nothing is private."
     ],
@@ -101,7 +104,8 @@
         "render": "warning: `harp` is a sample the engine cannot play yet: this part plays `bright-pluck`\n --> 7:35\n  |\n7 | deck B: melody <c4 e4 g4 e4> inst=harp\n  |                                   ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
       }
     ],
-    "text": "# names two samples with open licenses and an Apple loop; no file is looked up, nothing is private.\ntempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n"
+    "from_cid": "z4EBG9j2hQz9nQVz3eecPWTkvd5qSGVs9EzMrugDNhmQaMpVece",
+    "text": "#! beatscript 2\n# names two samples with open licenses and an Apple loop; no file is looked up, nothing is private.\ntempo 110\nsample harp from \"sha256:9f2c0000000000000000000000000000000000000000000000000000000000aa\" license cc0 else bright-pluck\nsample thud from \"sha256:1111000000000000000000000000000000000000000000000000000000000bb1\" license cc-by else sub-bass\nloop \"Dub Cycle 04\" as cycle else pluck\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~ inst=thud\ndeck B: melody <c4 e4 g4 e4> inst=harp\n"
   },
   "share": {
     "ok": true,

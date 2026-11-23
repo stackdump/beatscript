@@ -6,6 +6,8 @@
     "diagnostics": [],
     "cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
     "canonical": "tempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9jFaQc3BsDa61Vr4MRSVcYyqyhosdcwLz1tZFtcJNuZZLL",
     "nets": {
       "A": "z4EBG9izY25BmNLxiYaiUzrKGaYwumgCMmMKM62WHXDMGFGAr9T",
       "B": "z4EBG9j9r4qm81y5LHg3KcHhomfiTuwMdaFEQMDZiK3yaSfSr7D"
@@ -33,13 +35,15 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "tempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",
-    "cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
+    "canonical": "#! beatscript 2\ntempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n",
+    "cid": "z4EBG9jFaQc3BsDa61Vr4MRSVcYyqyhosdcwLz1tZFtcJNuZZLL",
+    "version": 2,
     "comments": [
       "settings and plain parts: swing, a minor-pentatonic key, markov, degrees; unicode in a comment: héllo ✓ 音楽"
     ],
     "diagnostics": [],
-    "text": "# settings and plain parts: swing, a minor-pentatonic key, markov, degrees; unicode in a comment: héllo ✓ 音楽\ntempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n"
+    "from_cid": "z4EBG9j3rYeuqWNna3BcYdohsoF8BbTeKBwLURDEGjqMyPi23xV",
+    "text": "#! beatscript 2\n# settings and plain parts: swing, a minor-pentatonic key, markov, degrees; unicode in a comment: héllo ✓ 音楽\ntempo 87.5\nswing 0.15\nkey d:minpent\ndeck A: kick e(3, 8, 2) | snare ~ x ~ x | hihat x*16 seed=3 vel=30..70\ndeck B: melody markov(0.6, 11) len=3 oct=5 | bass 1 ~ 3 5 inst=detuned-saw | harmony chord(dm7, 3) ~ ~ ~\n"
   },
   "share": {
     "ok": true,

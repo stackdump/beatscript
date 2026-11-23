@@ -1869,7 +1869,7 @@ pub(super) const NOUNS: &[Noun] = &[
     Noun {
         name: "btw",
         tool: Some("djapp_btw"),
-        summary: "btw, the bitwrap language: a text program whose pattern lines are nets on the decks and whose lines script everything djapp does; eval lands on the next bar",
+        summary: "BeatScript, the bitwrap language: a text program whose pattern lines are nets on the decks and whose lines script everything djapp does; eval lands on the next bar",
         default_action: "get",
         actions: A_LIVE,
         doc: "btw (docs/BEATSCRIPT.md; `live` and `livecode` are aliases): the bitwrap language. A program is lines: `deck A: kick e(5,8) | \

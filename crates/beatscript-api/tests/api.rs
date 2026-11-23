@@ -244,13 +244,27 @@ fn fmt_is_the_canonical_text_its_cid_and_the_comments() {
             assert!(matches!(get(&f, "canonical"), JsonValue::Null));
             continue;
         }
-        assert_eq!(s(&f, "canonical"), s(&c, "canonical"), "{name}");
-        assert_eq!(s(&f, "cid"), s(&c, "cid"), "{name}");
+        // fmt is the program in BeatScript 2 (djlive::version): its canonical text is check's with the version line first, its
+        // CID the BeatScript 2 one, and `from_cid` the CID of the text as given when that is BeatScript 1
+        assert_eq!(s(&f, "canonical"), djlive::version::upgrade_canonical(s(&c, "canonical")), "{name}");
+        assert_eq!(s(&f, "cid"), djlive::compile::program_cid(s(&f, "canonical")), "{name}");
+        assert_eq!(get(&f, "version").as_i64(), Some(2), "{name}");
+        if s(&c, "canonical").starts_with(djlive::version::CANONICAL_HEAD) {
+            assert_eq!(s(&f, "cid"), s(&c, "cid"), "{name}: a BeatScript 2 text formats to its own CID");
+            assert!(matches!(get(&f, "from_cid"), JsonValue::Null), "{name}");
+        } else {
+            assert_eq!(s(&f, "from_cid"), s(&c, "cid"), "{name}");
+            assert_eq!(s(&c, "renamed_cid"), s(&f, "cid"), "{name}: check names the CID fmt upgrades to");
+        }
+        // the formatted text checks as the program fmt says it is
+        if let JsonValue::String(t) = get(&f, "text") {
+            assert_eq!(s(&check(t), "cid"), s(&f, "cid"), "{name}");
+        }
         // a fixed point: formatting the canonical text changes nothing
         let again = parse(&beatscript_api::fmt_json(s(&f, "canonical")));
         assert_eq!(s(&again, "canonical"), s(&f, "canonical"), "{name}");
         assert_eq!(s(&again, "cid"), s(&f, "cid"), "{name}");
-        assert_eq!(get(&again, "comments").as_array().unwrap().len(), 0, "{name}: the canonical text has no comments");
+        assert_eq!(get(&again, "comments").as_array().unwrap().len(), 0, "{name}: the canonical text has no comments (the version line is not one)");
     }
     let f = parse(&beatscript_api::fmt_json("# one\ntempo 120   # two\n#! license: CC0-1.0\n"));
     assert_eq!(get(&f, "comments").js_stringified(), r#"["one","two","! license: CC0-1.0"]"#);

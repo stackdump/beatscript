@@ -22,6 +22,8 @@
     ],
     "cid": null,
     "canonical": null,
+    "version": 1,
+    "renamed_cid": null,
     "nets": {},
     "song_nets": null,
     "tempo": null,

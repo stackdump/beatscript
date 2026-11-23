@@ -22,6 +22,8 @@
     ],
     "cid": "z4EBG9jAJ4g1ik7iwdC51L8btSGTRmVkmKUTZECAR8pbL5c3y6k",
     "canonical": "use restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" license restricted-private else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9j5XXAsujbNFrJEVYqPipRw51FFJPcNGoqsPHdw95tycia",
     "nets": {
       "B": "z4EBG9j7nR5NNFtRkspWMGH6kYDUE9ChkoQ4CUumGqaW359Fhhd"
     },
@@ -47,8 +49,9 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "use restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" license restricted-private else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
-    "cid": "z4EBG9jAJ4g1ik7iwdC51L8btSGTRmVkmKUTZECAR8pbL5c3y6k",
+    "canonical": "#! beatscript 2\nuse restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" license restricted-private else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n",
+    "cid": "z4EBG9j5XXAsujbNFrJEVYqPipRw51FFJPcNGoqsPHdw95tycia",
+    "version": 2,
     "comments": [
       "a private program: it says so and uses a restricted sample (the default license of a local file)."
     ],
@@ -69,7 +72,8 @@
         "render": "warning: `harp` is a sample the engine cannot play yet: this part plays `bright-pluck`\n --> 5:35\n  |\n5 | deck B: melody <c4 e4 g4 e4> inst=harp\n  |                                   ^^^^\n  = help: `else VOICE` on the sample line names the stand-in"
       }
     ],
-    "text": "# a private program: it says so and uses a restricted sample (the default license of a local file).\nuse restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n"
+    "from_cid": "z4EBG9jAJ4g1ik7iwdC51L8btSGTRmVkmKUTZECAR8pbL5c3y6k",
+    "text": "#! beatscript 2\n# a private program: it says so and uses a restricted sample (the default license of a local file).\nuse restricted\ntempo 110\nsample harp from \"~/samples/harp.wav\" else bright-pluck\ndeck B: melody <c4 e4 g4 e4> inst=harp\n"
   },
   "share": {
     "ok": false,

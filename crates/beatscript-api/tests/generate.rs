@@ -24,7 +24,8 @@ fn same_seed_same_text_and_cid() {
         assert!(!cid(&a.text).is_empty());
         assert_eq!(cid(&a.text), cid(&b.text));
         assert!(a.text.contains(&format!("#! seed: {seed}\n")));
-        assert!(a.text.contains("#! generator: seeded@2\n"));
+        assert!(a.text.contains(&format!("#! generator: seeded@{}\n", beatscript_api::generate::GENERATOR_VERSION)));
+        assert!(a.text.starts_with("#! beatscript 2\n"), "the current generator writes BeatScript 2");
     }
 }
 
@@ -38,10 +39,10 @@ fn every_genre_length_and_many_seeds_check_and_are_canonical() {
                 let rep = check(&out.text);
                 assert_eq!(rep.get("ok").and_then(JsonValue::as_bool), Some(true), "{g} {len} {seed}:\n{}\n{}", out.text, rep.js_stringified());
                 assert_eq!(rep.get("errors").and_then(JsonValue::as_i64), Some(0));
-                // fmt does not change the body: the generator prints canonical BeatScript
+                // fmt does not change the body: the generator prints canonical BeatScript (2: the version line first)
                 let f = JsonValue::parse(&beatscript_api::fmt_json(&out.text)).unwrap();
                 let canon = f.get("canonical").and_then(JsonValue::as_str).unwrap().to_string();
-                assert_eq!(canon, out.body, "{g} {len} {seed}: not canonical");
+                assert_eq!(canon, format!("{}{}", djlive::version::CANONICAL_HEAD, out.body), "{g} {len} {seed}: not canonical");
                 assert_eq!(f.get("cid").and_then(JsonValue::as_str).unwrap(), cid(&out.text));
             }
         }

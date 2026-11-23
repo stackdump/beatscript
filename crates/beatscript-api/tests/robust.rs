@@ -35,7 +35,8 @@ fn exercise(text: &str) {
         assert_eq!(s(&again, "cid"), s(&r, "cid"), "the canonical text has another CID:\n{text}\n--\n{c}");
         assert_eq!(s(&again, "canonical"), c);
         assert_eq!(get(&again, "nets").js_stringified(), get(&r, "nets").js_stringified());
-        assert_eq!(s(&f, "canonical"), c);
+        // fmt's program is the same program in BeatScript 2 (djlive::version)
+        assert_eq!(s(&f, "canonical"), djlive::version::upgrade_canonical(c));
         // a public program's link opens to it
         let sh = parse(&beatscript_api::share_json(text, None, true, ""));
         if b(&r, "restricted") {

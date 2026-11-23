@@ -6,6 +6,8 @@
     "diagnostics": [],
     "cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
     "canonical": "tempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9j1wBXy4zUfSxgrw5RDCC4ahq9fucXoBeWgpm6qizi9GQe",
     "nets": {
       "one@0:A": "z4EBG9jFAVRoGQ85P8EpnVv852aMpiwLoUNa4EpoBNbdnp3QV5m",
       "two@4:A": "z4EBG9izM2keAFyf7tZCx41JKeThCBgnCKzxmcT7mjmuDT8ihGs"
@@ -43,11 +45,13 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "tempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",
-    "cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
+    "canonical": "#! beatscript 2\ntempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",
+    "cid": "z4EBG9j1wBXy4zUfSxgrw5RDCC4ahq9fucXoBeWgpm6qizi9GQe",
+    "version": 2,
     "comments": ["a song that loops, with a before-line."],
     "diagnostics": [],
-    "text": "# a song that loops, with a before-line.\ntempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n"
+    "from_cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
+    "text": "#! beatscript 2\n# a song that loops, with a before-line.\ntempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n"
   },
   "share": {
     "ok": true,

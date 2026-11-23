@@ -1,3 +1,4 @@
+// rename-to-beatscript: keep (reads the legacy .btw extension too)
 //! Every BeatScript program in the repo keeps its CIDs: the program's, each net's and each song net's, and a CID of
 //! every envelope `nets` hands the player. `tests/cid-pins.json` was written before the expression marks
 //! (ghost `.`, flam `&`, ratchet `:N`, `glide=`, `decay=`, `pitch-drop=`) existed, so a program that does not use
@@ -30,7 +31,7 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
         let p = e.path();
         if p.is_dir() {
             walk(&p, out);
-        } else if matches!(p.extension().and_then(|x| x.to_str()), Some("btw" | "live")) {
+        } else if matches!(p.extension().and_then(|x| x.to_str()), Some("beatscript" | "btw" | "live")) {
             out.push(p);
         }
     }

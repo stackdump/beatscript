@@ -37,6 +37,8 @@
     ],
     "cid": "z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn",
     "canonical": "tempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9j8U9uhYTAqUfUjQzvUz8HY9JvDahzfwUnnHmiraEDudK2",
     "nets": {
       "A": "z4EBG9jH6N1N6c1Hozd5vDYdfm48Q9FavXiLRWUi3tSosdp76Zf"
     },
@@ -62,8 +64,9 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "tempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n",
-    "cid": "z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn",
+    "canonical": "#! beatscript 2\ntempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n",
+    "cid": "z4EBG9j8U9uhYTAqUfUjQzvUz8HY9JvDahzfwUnnHmiraEDudK2",
+    "version": 2,
     "comments": ["ramps on inserts and mixer levels, a timed line with an undo."],
     "diagnostics": [
       {
@@ -97,7 +100,8 @@
         "render": "warning: the browser does not play this: the delay insert\n --> 9:1\n  |\n9 | every 8 bars: master: delay 0.3 -> 0 over 2 bars\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
       }
     ],
-    "text": "# ramps on inserts and mixer levels, a timed line with an undo.\ntempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n"
+    "from_cid": "z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn",
+    "text": "#! beatscript 2\n# ramps on inserts and mixer levels, a timed line with an undo.\ntempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n"
   },
   "share": {
     "ok": true,

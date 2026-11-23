@@ -22,6 +22,8 @@
     ],
     "cid": "z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo",
     "canonical": "tempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n",
+    "version": 1,
+    "renamed_cid": "z4EBG9jEfr5F6PFzptLtWk14pWTeTU6Q33yEtbKJdfrCpeDTCGL",
     "nets": {
       "main@0:A": "z4EBG9jGmmLArFuvoZFHtKummqspjEPJ7ca8XQqJnrpxTr5qitB",
       "main@64:A": "z4EBG9jEAoWUGD7F4GiX6Kg7NtE5YfyCJ64YvoXHkLu4d8fjUKE"
@@ -46,8 +48,9 @@
   },
   "fmt": {
     "ok": true,
-    "canonical": "tempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n",
-    "cid": "z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo",
+    "canonical": "#! beatscript 2\ntempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n",
+    "cid": "z4EBG9jEfr5F6PFzptLtWk14pWTeTU6Q33yEtbKJdfrCpeDTCGL",
+    "version": 2,
     "comments": [
       "a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning."
     ],
@@ -68,7 +71,8 @@
         "render": "warning: this program takes 85 bars to come round: it plays as nets of 64 bars chained, and loops\n --> 1:1\n  |\n1 | # a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning.\n  | ^\n  = help: `end at bar N` stops it; `section` and `arrange` say its structure"
       }
     ],
-    "text": "# a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning.\ntempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n"
+    "from_cid": "z4EBG9jFCKzffK8Z4syJqPLnewaHHFdBhZHy2r1gpDT7CFsggQo",
+    "text": "#! beatscript 2\n# a flat program whose alternation takes more than 64 bars to come round: chained nets, a warning.\ntempo 140\ndeck A: kick x ~ x ~ | bass <c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2 d2 e2 f2 g2 a2 b2 c3 d3 e3 f3 g3 a3 b3 c4 d4 e4 f4 g4 a4 b4 c5 d5 e5 f5 g5 a5 b5 c6 d6 e6 f6 g6 a6 b6 c7 d7 e7 f7 g7 a7 b7 c2>\n"
   },
   "share": {
     "ok": true,
