@@ -1,3 +1,4 @@
+#! beatscript 2
 #! name: vendored beds
 #! license: CC0-1.0
 # vendored-beds.beatscript: two generated beds written out (ejected) as notes, each under the line that says where it came from (CC0).

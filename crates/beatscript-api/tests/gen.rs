@@ -317,7 +317,7 @@ fn provenance_is_carried_in_the_json_ld() {
 /// The recipe `examples/beatscript/vendored-beds.beatscript` was ejected from: two beds of one generated drop, called by their parameters.
 /// BeatScript 1, as the example is; where the examples are BeatScript 2, put `#! beatscript 2` first here and in the example
 /// (fmt), and the test says whether the eject's pins and the example still agree.
-const VENDORED_RECIPE: &str = "tempo 124\nkey am\nlet drop_kick = gen@2 techno seed=42 section=drop part=kick\nlet drop_bass = gen@2 techno seed=42 section=drop part=bass\nsection intro 4 bars {\n  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x\n}\nsection drop 8 bars {\n  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x\n  deck B: bass drop_bass inst=drop-bass\n}\narrange intro drop\n";
+const VENDORED_RECIPE: &str = "#! beatscript 2\ntempo 124\nkey am\nlet drop_kick = gen@2 techno seed=42 section=drop part=kick\nlet drop_bass = gen@2 techno seed=42 section=drop part=bass\nsection intro 4 bars {\n  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x\n}\nsection drop 8 bars {\n  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x\n  deck B: bass drop_bass inst=drop-bass\n}\narrange intro drop\n";
 
 /// `examples/beatscript/vendored-beds.beatscript` is what eject writes for that recipe, both lets written out: its notes (one CID with the
 /// eject's text), and its `# from:` lines the calls and the CIDs they resolve to. It plays as the recipe does, and a save of
