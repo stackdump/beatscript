@@ -26,7 +26,8 @@
 //!
 //! A move that cannot act offline is not armed and is named with the reason ([`ProgramMoves::unplayed`]): `vocoder_handoff`
 //! (the render has no vocoder) and `phrase_sync` with `do=seed` (a program's deck plays its own nets, not a seed).
-//! `phrase_sync` with `do=cut` (the crossfader) acts, and `loop_roll` on a net deck is the stutter's beat repeat, as live.
+//! `phrase_sync` with `do=cut` (the crossfader) acts, and `loop_roll` on a net deck loops the net itself (4 → 2 → 1 → ½ beat,
+//! the engine's net loop), as live.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -177,6 +178,16 @@ pub struct ProgramMoves {
     pub unplayed: Vec<Unplayed>,
     /// What the lines did, in order: the render frame and the words (`armed move filter_exit on A: sweep from bar 5`).
     pub log: Vec<(i64, String)>,
+    /// A net deck's loop buttons a move pressed on this frame, pressed on the deck on the next one ([`OnRender`]).
+    presses: Vec<(String, Press)>,
+}
+
+/// A net deck's loop button, as a move presses it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Press {
+    Beats(f64),
+    Halve,
+    Exit,
 }
 
 impl ProgramMoves {
@@ -243,7 +254,7 @@ impl ProgramMoves {
         }
         unplayed.sort_by_key(|u| (u.line, u.col));
         due.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)).then(a.2.cmp(&b.2)));
-        ProgramMoves { lines, due, next: 0, moves: Moves::new(), back: BTreeMap::new(), clock, played, unplayed, log: Vec::new() }
+        ProgramMoves { lines, due, next: 0, moves: Moves::new(), back: BTreeMap::new(), clock, played, unplayed, log: Vec::new(), presses: Vec::new() }
     }
 
     /// No line acts: the render has nothing to do here (a program with no move renders as it did).
@@ -269,6 +280,14 @@ impl ProgramMoves {
         if self.lines.is_empty() {
             return;
         }
+        // a net deck's loop buttons pressed on the frame before, in order: its clock is past the line now
+        for (deck, press) in std::mem::take(&mut self.presses) {
+            match press {
+                Press::Beats(b) => MoveHost::loop_beats(&mut *e, &deck, b),
+                Press::Halve => MoveHost::loop_halve(&mut *e, &deck),
+                Press::Exit => MoveHost::exit_loop(&mut *e, &deck),
+            }
+        }
         // a bar line's put-backs, then its lines (the runtime's order)
         let backs: Vec<usize> = self.back.iter().filter(|(_, b)| matches!(b, Back::At(p) if frame_of(*p) <= frame)).map(|(i, _)| *i).collect();
         for i in backs {
@@ -287,7 +306,7 @@ impl ProgramMoves {
             }
         }
         let now = frame as f64 / self.clock.sr;
-        self.moves.service(&mut OnRender::new(e, &self.clock, frame), now);
+        self.moves.service(&mut OnRender::new(e, &self.clock, frame, &mut self.presses), now);
         // a move that is over: its strip back on the first phrase line after
         let ended: Vec<usize> = self.back.iter().filter(|(_, b)| matches!(b, Back::Moving(id) if !self.moves.in_flight(*id))).map(|(i, _)| *i).collect();
         for i in ended {
@@ -307,6 +326,9 @@ impl ProgramMoves {
                 best = Some(best.map_or(f, |b: i64| b.min(f)));
             }
         };
+        if !self.presses.is_empty() {
+            take(frame + 1);
+        }
         if let Some(&(b, _, _)) = self.due.get(self.next) {
             take(frame_of(b));
         }
@@ -326,7 +348,8 @@ impl ProgramMoves {
 
     fn fire(&mut self, e: &mut Engine, i: usize, frame: i64, frame_of: &dyn Fn(f64) -> i64) {
         let clock = self.clock.clone();
-        let mut host = OnRender::new(e, &clock, frame);
+        let mut presses = std::mem::take(&mut self.presses);
+        let mut host = OnRender::new(e, &clock, frame, &mut presses);
         let op = self.lines[i].op.clone();
         let words = match &op {
             Op::Arm(s) => self.arm(&mut host, i, s.clone(), frame, frame_of),
@@ -346,6 +369,8 @@ impl ProgramMoves {
                 "cancelled every move".to_string()
             }
         };
+        drop(host);
+        self.presses.append(&mut presses);
         let key = self.lines[i].key.clone();
         self.log.push((frame, format!("{key}: {words}")));
     }
@@ -380,7 +405,7 @@ impl ProgramMoves {
                     if let Some(k) = p.get("kind").and_then(JsonValue::as_str).and_then(MoveKind::parse) {
                         let d = p.get("deck").and_then(JsonValue::as_str).unwrap_or("A").to_ascii_uppercase();
                         let clock = self.clock.clone();
-                        self.moves.cancel_kind(&mut OnRender::new(&mut *e, &clock, frame), k, &d);
+                        self.moves.cancel_kind(&mut OnRender::new(&mut *e, &clock, frame, &mut self.presses), k, &d);
                     }
                 }
                 _ => {
@@ -414,19 +439,35 @@ fn song_grid(e: &Engine, deck: &str, beat: f64, bpm: f64) -> Option<Grid> {
 /// frame lands on (to the nearest frame, as every event of the render is placed) counts as crossed: live, the runtime fires a
 /// line on the pass after its bar line and the move lands on the next line after that; this is the same reading on a grid of
 /// frames, and it does not hang on which side of the line a rounding put the frame.
+///
+/// A net deck's loop buttons (a roll's loop, its halves and its release) are pressed on the deck one frame later, in order.
+/// The deck's render thread works a loop out from its own clock, and on the line's own frame that clock has not reached the
+/// line yet: the loop would start on the beat before it (the beat at or before the playhead), and a release would land before
+/// the line's wrap and leave the deck playing on from the window's end, out of phase with the bar. Live, the service pass is
+/// always a little after the line. A sample deck's loop is worked out on this side, from the line, and is pressed at once.
 struct OnRender<'a> {
     e: &'a mut Engine,
     beat: f64,
     bpm: f64,
+    presses: &'a mut Vec<(String, Press)>,
 }
 
 impl<'a> OnRender<'a> {
-    fn new(e: &'a mut Engine, clock: &Clock, frame: i64) -> OnRender<'a> {
-        OnRender { e, beat: OnRender::beat_seen(clock, frame), bpm: clock.bpm_at(frame) }
+    fn new(e: &'a mut Engine, clock: &Clock, frame: i64, presses: &'a mut Vec<(String, Press)>) -> OnRender<'a> {
+        OnRender { e, beat: OnRender::beat_seen(clock, frame), bpm: clock.bpm_at(frame), presses }
     }
 
     fn beat_seen(clock: &Clock, frame: i64) -> f64 {
         clock.beat_at(frame) + 0.5 * clock.bpm_at(frame) / 60.0 / clock.sr
+    }
+
+    /// A net deck's loop button, kept for the next frame (see the type); false off a net deck.
+    fn net_press(&mut self, deck: &str, press: Press) -> bool {
+        let net = self.e.deck(deck).is_some_and(|d| d.is_net());
+        if net {
+            self.presses.push((deck.to_string(), press));
+        }
+        net
     }
 }
 
@@ -453,13 +494,19 @@ impl MoveHost for OnRender<'_> {
         MoveHost::can_loop(&*self.e, deck)
     }
     fn loop_beats(&mut self, deck: &str, beats: f64) {
-        MoveHost::loop_beats(&mut *self.e, deck, beats)
+        if !self.net_press(deck, Press::Beats(beats)) {
+            MoveHost::loop_beats(&mut *self.e, deck, beats)
+        }
     }
     fn loop_halve(&mut self, deck: &str) {
-        MoveHost::loop_halve(&mut *self.e, deck)
+        if !self.net_press(deck, Press::Halve) {
+            MoveHost::loop_halve(&mut *self.e, deck)
+        }
     }
     fn exit_loop(&mut self, deck: &str) {
-        MoveHost::exit_loop(&mut *self.e, deck)
+        if !self.net_press(deck, Press::Exit) {
+            MoveHost::exit_loop(&mut *self.e, deck)
+        }
     }
     fn step_seed(&mut self, deck: &str) -> bool {
         MoveHost::step_seed(&mut *self.e, deck)

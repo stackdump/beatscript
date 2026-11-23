@@ -104,11 +104,27 @@ fn pin_a_filter_exit_the_net_plays_renders_as_it_did() {
 
 // ---- the moves the scheduler plays
 
-/// Deck A plays a different note on each beat, so a beat repeat shows: a 1-beat roll makes the bar's four beats the same.
+/// Deck A plays a different note on each beat (c4 e4 g4 c5, a bar), so a loop shows in which notes each beat plays.
 const ROLL: &str = "tempo 120\nsection main 6 bars {\n  deck A: melody c4 e4 g4 c5 len=4\n  control: move loop_roll on A over 1 bars\n}\narrange main\n";
 
+/// The note of the bar's melody (0 c4, 1 e4, 2 g4, 3 c5) whose fundamental is loudest in `x[a..b]`.
+fn note_in(x: &[f64], a: usize, b: usize) -> usize {
+    let hz = [261.63, 329.63, 392.0, 523.25];
+    (0..4).max_by(|&i, &j| tone(x, a, b, hz[i]).total_cmp(&tone(x, a, b, hz[j]))).unwrap()
+}
+
+/// The notes of bar `bar`'s beats (or of its half beats), clear of the onsets.
+fn notes_of(x: &[f64], bar: usize, per_beat: usize) -> Vec<usize> {
+    let len = at(1.0, 120.0) / per_beat;
+    (0..4 * per_beat).map(|k| at(bar as f64 * 4.0, 120.0) + k * len).map(|s| note_in(x, s + len / 8, s + len - len / 8)).collect()
+}
+
+/// Deck A is a net deck: the roll is its own loop (the engine's net loop), 4 → 2 → 1 → ½ beat from the bar after the line
+/// that armed it, a bar a stage, so bar 1 plays as written, bar 2 its first two beats twice, bar 3 its first beat four times,
+/// bar 4 the first half of that beat eight times, and the drop (bar 5) lets go. (Before the engine had a net loop this was
+/// the stutter's beat repeat, 1 → ½ → ¼ → ⅛ beat, which made bar 1 its first beat four times.)
 #[test]
-fn a_loop_roll_repeats_the_beat_and_lets_go_on_the_drop() {
+fn a_loop_roll_on_a_net_deck_loops_four_two_one_half_and_lets_go_on_the_drop() {
     let plain_text = ROLL.replace("  control: move loop_roll on A over 1 bars\n", "");
     let (a, b, plain) = (render(ROLL), render(ROLL), render(&plain_text));
     assert!(a.pcm == b.pcm, "two renders of one program differ");
@@ -118,21 +134,19 @@ fn a_loop_roll_repeats_the_beat_and_lets_go_on_the_drop() {
     // nothing moves before the roll lands (armed on bar 0, it lands on bar 1)
     let bar1 = at(4.0, 120.0);
     assert!(x[..bar1 - 64] == y[..bar1 - 64], "bar 0 is the program's own");
-    // bar 1 is the 1-beat stage: its beats 2 and 3 are its first beat again; in the plain render they are other notes
-    let beat = at(1.0, 120.0);
-    let seg = |v: &[f64], k: usize| v[bar1 + k * beat + 200..bar1 + k * beat + beat - 200].to_vec();
-    let diff = |v: &[f64], k: usize| {
-        let (p, q) = (seg(v, 0), seg(v, k));
-        rms(&p.iter().zip(&q).map(|(a, b)| a - b).collect::<Vec<_>>()) / rms(&p).max(1e-9)
-    };
-    eprintln!("roll: beat 1 vs 0 {:.3}, beat 2 vs 0 {:.3}; plain {:.3} {:.3}", diff(&x, 1), diff(&x, 2), diff(&y, 1), diff(&y, 2));
-    assert!(diff(&y, 1) > 0.5 && diff(&y, 2) > 0.5, "the plain beats differ");
-    assert!(diff(&x, 1) < 0.25 && diff(&x, 2) < 0.25, "the roll repeats the first beat");
-    // the render differs while the roll runs (bars 1 to 4) and the program plays on after the drop (bar 5)
-    for bar in 1..5 {
-        let (s, e) = (at(bar as f64 * 4.0, 120.0), at(bar as f64 * 4.0 + 4.0, 120.0));
-        assert!(x[s..e] != y[s..e], "bar {bar} rolls");
+    let roll: Vec<Vec<usize>> = (0..6).map(|bar| notes_of(&x, bar, 1)).collect();
+    let as_written: Vec<Vec<usize>> = (0..6).map(|bar| notes_of(&y, bar, 1)).collect();
+    eprintln!("roll notes by bar {roll:?}\n  plain           {as_written:?}\n  bar 4 by half beat {:?}", notes_of(&x, 4, 2));
+    for bar in &as_written {
+        assert_eq!(bar, &[0, 1, 2, 3], "the plain bars play c4 e4 g4 c5");
     }
+    assert_eq!(roll[1], [0, 1, 2, 3], "the 4-beat stage's first pass is the bar as written");
+    assert_eq!(roll[2], [0, 1, 0, 1], "2 beats, twice: the loop starts on the bar line");
+    assert_eq!(roll[3], [0, 0, 0, 0], "1 beat, four times");
+    assert_eq!(notes_of(&x, 4, 2), [0; 8], "half a beat, eight times");
+    // (the windows themselves, 16, 8, 4 and 2 steps, are djhost's tests/perform_roll.rs; a net's notes are played again on
+    // each pass, not its audio, so the passes match note for note rather than sample for sample)
+    assert_eq!(roll[5], [0, 1, 2, 3], "released on the drop: the deck plays on from the bar line, in phase");
     assert!(bar_rms(&x, 120.0, 5.0) > 0.5 * bar_rms(&y, 120.0, 5.0), "released on the drop");
 }
 
@@ -227,7 +241,9 @@ fn curve(v: &JsonValue) -> Vec<Option<f64>> {
 }
 
 /// `examples/beatscript/render-controls.beatscript` (no move): listen's answer (less its timings), pinned before the change.
-const PIN_LISTEN_NO_MOVE: &str = "2e42b7cdcd8cf5ea4a35c9ccef307279a5bbbf295f8e7780119b8cd3675ff74f";
+/// Re-pinned after the rename for the program's CID alone: with the old CID put back, the answer is the old pin's
+/// (2e42b7cdcd8cf5ea4a35c9ccef307279a5bbbf295f8e7780119b8cd3675ff74f).
+const PIN_LISTEN_NO_MOVE: &str = "bb45e0083745e3d0c3446c4331ba4b80672b47c47321e69625a420c35601a73f";
 
 #[test]
 fn pin_listen_of_a_program_with_no_move_is_as_it_was() {

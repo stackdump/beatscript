@@ -11,7 +11,7 @@
 //! | `phrase_sync` | | a seed step (one bar early, so it lands on the line, as auto-next does) or a crossfader cut | |
 //! | `filter_exit` | | the `filter` trick rides a high-pass over `bars` from the bar | the deck muted on the downbeat, the filter back open behind it |
 //! | `echo_out` | | the `wash` trick on the one: the dry gone in a 16th, the room ringing | the deck muted `bars` later, the wash off behind it |
-//! | `loop_roll` | | a 4-beat loop (sample deck) from the bar | halved every `bars` (4 → 2 → 1 → ½ beat), released on the next line after the last (the drop) |
+//! | `loop_roll` | | a 4-beat loop from the bar (a sample deck with a grid, or a net deck) | halved every `bars` (4 → 2 → 1 → ½ beat), released on the next line after the last (the drop) |
 //! | `vocoder_handoff` | | carrier and modulator swapped (`Engine::vocoder_swap`) on the phrase line | |
 //!
 //! `harmonic` is read-only: whether the two decks' keys mix (same, a fifth, relative).
@@ -39,7 +39,8 @@ pub const PHRASES: [u32; 3] = [8, 16, 32];
 /// The lengths offered for a move that runs over bars (a sweep, a tail, a roll's step).
 pub const RUNS: [u32; 4] = [1, 2, 4, 8];
 
-/// The loop roll's stages on a sample deck, in beats.
+/// The loop roll's stages on a deck that loops (a sample deck with a grid, or a net deck), in
+/// beats.
 pub const ROLL_BEATS: [f64; 4] = [4.0, 2.0, 1.0, 0.5];
 
 /// How far into the high-pass the filter exit rides (the one-knob filter: right of centre is a
@@ -284,7 +285,8 @@ pub trait MoveHost {
     fn set_mute(&mut self, deck: &str, on: bool) -> bool;
     /// An insert trick on or off, at once (the move has done the timing).
     fn fire_trick(&mut self, deck: &str, kind: TrickKind, on: bool, args: Option<TrickArgs>) -> Result<(), String>;
-    /// The deck can loop on its grid (a sample deck with a beat grid).
+    /// The deck can loop on its beat: a sample deck with a beat grid, or a net deck
+    /// (`Engine::can_loop`).
     fn can_loop(&self, deck: &str) -> bool;
     fn loop_beats(&mut self, deck: &str, beats: f64);
     fn loop_halve(&mut self, deck: &str);
@@ -323,7 +325,8 @@ struct Active {
     last_now: Option<f64>,
     /// A bass swap: the incoming deck's low EQ before the cut.
     saved_low: f64,
-    /// A roll on a deck that cannot loop is a beat repeat (the `stutter` trick).
+    /// A roll on a deck that cannot loop (a sample with no grid) is a beat repeat (the
+    /// `stutter` trick).
     stutter: bool,
 }
 
@@ -751,8 +754,9 @@ pub fn harmonic_hint(host: &dyn MoveHost) -> Hint {
     Hint { a, b, compat }
 }
 
-/// A roll's stages, in beats: a loop's 4 → 2 → 1 → ½; a beat repeat's (no loop on the deck)
-/// 1 → ½ → ¼ → ⅛, the shortest the stutter has.
+/// A roll's stages, in beats: a loop's 4 → 2 → 1 → ½ (a sample deck with a grid, or a net
+/// deck); a beat repeat's (a deck that cannot loop) 1 → ½ → ¼ → ⅛, the shortest the stutter
+/// has.
 pub fn roll_stages(stutter: bool) -> [f64; 4] {
     if stutter {
         [1.0, 0.5, 0.25, 0.125]
@@ -824,10 +828,22 @@ mod engine_host {
     use super::*;
     use crate::deck::engine::Engine;
     use crate::deck::tricks::TrickQuant;
+    use crate::deck::PerformCtx;
     use djengine::fx::StripKnob;
+    use djengine::session::action::DeckAction;
 
     fn minor_scale(name: &str) -> bool {
         matches!(name, "Minor" | "Dorian" | "Phrygian" | "HarmonicMin" | "MinPentatonic" | "Blues")
+    }
+
+    fn is_net(e: &Engine, deck: &str) -> bool {
+        e.deck(deck).is_some_and(|d| d.is_net())
+    }
+
+    /// A net deck's loop button as the deck action it is (`loop` with `op`), through
+    /// `Engine::perform`, so the action log carries a roll on a net deck.
+    fn net_loop_action(e: &mut Engine, deck: &str, op: &str) {
+        e.perform(&DeckAction::Loop { deck: deck.to_string(), op: op.to_string() }, PerformCtx::default());
     }
 
     impl MoveHost for Engine {
@@ -852,16 +868,26 @@ mod engine_host {
             self.trick(deck, kind, on, args, TrickQuant::Now)
         }
         fn can_loop(&self, deck: &str) -> bool {
-            self.deck(deck).and_then(|d| d.sample.as_ref()).is_some_and(|s| s.grid.is_some())
+            // a sample deck with a beat grid, or a net deck (the engine's own loop on its steps)
+            Engine::can_loop(self, deck)
         }
         fn loop_beats(&mut self, deck: &str, beats: f64) {
+            // no deck action loops N beats: the engine notes it as a live op (`loop_beats`)
             Engine::loop_beats(self, deck, beats)
         }
         fn loop_halve(&mut self, deck: &str) {
-            Engine::loop_halve(self, deck)
+            if is_net(self, deck) {
+                net_loop_action(self, deck, "halve");
+            } else {
+                Engine::loop_halve(self, deck)
+            }
         }
         fn exit_loop(&mut self, deck: &str) {
-            Engine::exit_loop(self, deck)
+            if is_net(self, deck) {
+                net_loop_action(self, deck, "exit");
+            } else {
+                Engine::exit_loop(self, deck)
+            }
         }
         fn step_seed(&mut self, deck: &str) -> bool {
             Engine::step_seed(self, deck, 1).is_some()
@@ -900,7 +926,8 @@ mod tests {
         playing: [bool; 2],
         low: [f64; 2],
         mute: [bool; 2],
-        sample: [bool; 2],
+        /// The deck loops on its beat (a sample deck with a grid, or a net deck).
+        loops: [bool; 2],
         keys: [Option<Key>; 2],
         log: Vec<String>,
         vocoder_ok: bool,
@@ -955,7 +982,7 @@ mod tests {
             Ok(())
         }
         fn can_loop(&self, d: &str) -> bool {
-            self.sample[ix(d)]
+            self.loops[ix(d)]
         }
         fn loop_beats(&mut self, d: &str, b: f64) {
             self.log.push(format!("{d} loop {b}"));
@@ -1129,7 +1156,7 @@ mod tests {
     #[test]
     fn loop_roll_halves_each_step_and_releases_on_the_drop() {
         let (mut m, mut h, mut now) = (Moves::new(), Fake::new(), 0.0);
-        h.sample[0] = true;
+        h.loops[0] = true;
         h.beat = [2.0, 0.0];
         m.arm(&mut h, MoveSpec::new(MoveKind::LoopRoll, "A")).unwrap(); // a bar a step
         run(&mut m, &mut h, &mut now, 2.1);
@@ -1146,8 +1173,9 @@ mod tests {
         assert!(m.is_idle());
     }
 
+    /// A deck that cannot loop (a sample with no beat grid) rolls the stutter's beat repeat.
     #[test]
-    fn loop_roll_on_a_net_deck_is_a_beat_repeat() {
+    fn loop_roll_on_a_deck_that_cannot_loop_is_a_beat_repeat() {
         let (mut m, mut h, mut now) = (Moves::new(), Fake::new(), 0.0);
         m.arm(&mut h, MoveSpec::new(MoveKind::LoopRoll, "B")).unwrap();
         run(&mut m, &mut h, &mut now, 20.1);
@@ -1159,7 +1187,7 @@ mod tests {
     #[test]
     fn a_cancelled_roll_lets_go_at_once() {
         let (mut m, mut h, mut now) = (Moves::new(), Fake::new(), 0.0);
-        h.sample[0] = true;
+        h.loops[0] = true;
         let id = m.arm(&mut h, MoveSpec::new(MoveKind::LoopRoll, "A")).unwrap();
         run(&mut m, &mut h, &mut now, 6.0);
         m.cancel(&mut h, id);

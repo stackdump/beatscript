@@ -40,7 +40,7 @@ arrange build drop
 | sources | `sample`, `loop "..." as`, `use restricted` (existing); the engine renders a CC0 program by CID into a clip with an exact grid, sliced, and its four exact stems (tonight) | a slice on `use <cid>`; `stem(SOURCE, STEM)` for outside audio |
 | scheduling | time words, scenes and `launch`, named arrangements as follow actions (existing) | nothing |
 | sync | `deck B: sync`, `key detect` / `lock` / `status` (existing); every detection result names its analyzer, `beatgrid@1`, `beatgrid@2`, `key@1` (tonight) | a grid pin and overrides on a sample line |
-| cues | `do deck hot_cue`, `do deck loop` (existing, sample decks); a beat jump on both deck kinds and loops on a net deck, in the engine (tonight) | `cue SOURCE.NAME at bar N`; `deck A: jump`, `deck A: loop` |
+| cues | `do deck hot_cue`, `do deck loop` (existing, sample decks); a beat jump on both deck kinds and loops on a net deck, in the engine, `deck jump` in the registry, the roll on a net deck a real loop (tonight) | `cue SOURCE.NAME at bar N`; `deck A: jump`, `deck A: loop` |
 | stems | the four exact stems of a render (tonight); `mashup` stems, the `stemMute` deck action, `do deck role` (existing) | `deck A: mute vocals`, `unmute`, `solo` |
 | moves | all six on the control deck; the render plays `filter_exit` and `echo_out` (existing); the other four in the offline render and `listen` where they can act offline (tonight) | `bass_swap` as a set transition |
 | macros | `control: macro riser on A over 8 bars`, `macro@1`, lowering to `effects fire` (existing, run 16aa6899) | nothing |
@@ -200,12 +200,15 @@ records it), and loops written in text are slip loops (`for` puts the track back
 ## Cues: cue points, hot cues, loop rolls, beat jumps
 
 **Existing.** The deck's own verbs: `do deck hot_cue deck=A slot=3`, `clear_cue`, `cue`, `loop op=in|out|halve|double|exit|beats`,
-`seek seconds=...`, `section index=...`; hot cues and loops work on sample decks. `move loop_roll on A over 1 bar` is the
-roll build (a sample deck: a 4-beat loop halved every `bars` to half a beat, released on the line; a net deck: the
-stutter's repeats), and `trick on kind=stutter` a beat repeat.
+`seek seconds=...`, `section index=...`; hot cues work on both deck kinds, loops now on both. `move loop_roll on A over 1 bar`
+is the roll build (a 4-beat loop halved every `bars` to half a beat, released on the line: a sample deck's loop, or now a
+net deck's), and `trick on kind=stutter` a beat repeat.
 
-**Built tonight (engine).** A beat jump on both deck kinds, keeping the phase, recorded in the action log; and loops on a
-net deck, so a generated track can be held and rolled like a sample (the limits are in the engine's notes).
+**Built tonight (engine, and the booth host uses it).** A beat jump on both deck kinds, keeping the phase, recorded in the
+action log; and loops on a net deck, so a generated track can be held and rolled like a sample (the limits are in the
+engine's notes). The engine pin moved to that build. The registry has `do deck jump deck=A beats=-8`, `deck loop` says it
+works on a net deck, and the loop roll on a net deck is now the net's own loop, live and in the offline render, its halves
+and its release in the action log (docs/PERFORM.md). The booth's socket handler for `jump` is the booth's.
 
 **Proposed (taste calls 6 and 7).** A cue point is a named position in a source. A program's cue points are its sections,
 so `hook.drop` needs no declaration. A sample declares them:
@@ -232,7 +235,7 @@ All of them exist, on the control deck and off it:
 | phrase-synced transition | `control: move phrase_sync on B over 8 bars` | `moves arm` | the seed steps a bar early so the new track lands on the line (`do moves arm kind=phrase_sync deck=B bars=8 do=cut` cuts the crossfader to the deck on the line instead) |
 | filter-sweep exit | `control: move filter_exit on A over 4 bars` | `moves arm` | a high-pass rides out over the bars, then the deck is muted on the downbeat |
 | echo out | `control: move echo_out on A over 2 bars` | `moves arm` | the wash on the one: the dry goes, the room rings, the deck is muted after the tail |
-| loop-roll build | `control: move loop_roll on B over 1 bar` | `moves arm` | a sample deck: 4, 2, 1, half a beat, released on the drop; a net deck: the stutter's repeats |
+| loop-roll build | `control: move loop_roll on B over 1 bar` | `moves arm` | the deck's loop, 4, 2, 1, half a beat, released on the drop (a sample deck or a net deck; a sample with no grid: the stutter's repeats) |
 | vocoder handoff | `control: move vocoder_handoff on B over 8 bars` | `moves arm` | the vocoder's modulator and carrier swap on the line |
 | harmonic-mix hint | `key status` (a read; `check` says it for sources) | `key` | the pair's compat and the transpose that would fix it |
 | swap the pair | `on next phrase: control: swap pairs with filter_exit` | `autodj set` + `autodj next` | the loop-set pair steps on, with a move across the handover |
@@ -242,8 +245,8 @@ moves now play there too where they can act offline, so `render`, `listen`, the 
 A move that cannot act without the booth (a vocoder handoff needs a live vocoder; a phrase sync's seed step needs a seed
 deck) is named in the render's notes, never faked.
 
-**Engine follow-ups, not syntax:** an echo out through a real delay (the strip's mute comes after the inserts today), and the
-roll on a net deck using the new net-deck loop instead of the stutter.
+**Engine follow-up, not syntax:** an echo out through a real delay (the strip's mute comes after the inserts today). The roll
+on a net deck now uses the net-deck loop instead of the stutter.
 
 ## Macros
 

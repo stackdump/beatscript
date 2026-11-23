@@ -46,7 +46,9 @@ fn pin_a_filter_exit_the_net_plays_renders_as_it_did() {
 }
 
 /// The roll plays on the scheduler (the net leaves it beside): the render is the same twice, differs from the program without
-/// it only from the bar it lands on, and nothing says it is not heard.
+/// it only from the bar it lands on, and nothing says it is not heard. Deck A is a net deck, so the roll is its own loop: the
+/// first stage, 4 beats from the bar line, plays that bar as written, and the 2-beat stage the bar after is where it is heard.
+/// (It was the stutter's beat repeat before the engine had a net loop, heard from the first bar.)
 #[test]
 fn a_loop_roll_is_heard_from_the_bar_after_its_line() {
     let src = "tempo 120\ndeck A: melody c4 e4 g4 c5 len=4\nat bar 2: move loop_roll on A over 1 bars\nend at bar 8\n";
@@ -59,7 +61,8 @@ fn a_loop_roll_is_heard_from_the_bar_after_its_line() {
     let bar = |k: f64| (k * 2.0 * SR).round() as usize;
     // armed on bar 2, it lands on bar 3
     assert!(a.audio.left[..bar(3.0) - 64] == plain.audio.left[..bar(3.0) - 64], "nothing moves before the bar it lands on");
-    assert!(a.audio.left[bar(3.0)..bar(4.0)] != plain.audio.left[bar(3.0)..bar(4.0)], "the roll's first bar");
+    assert!(a.audio.left[bar(4.0)..bar(5.0)] != plain.audio.left[bar(4.0)..bar(5.0)], "the roll's 2-beat stage");
+    assert!(a.audio.left[bar(5.0)..bar(6.0)] != plain.audio.left[bar(5.0)..bar(6.0)], "the roll's 1-beat stage");
     // without the control lines, no move either
     let off = beatscript_render::render(&c, SR, false).unwrap();
     assert_eq!(hash(&off.audio), hash(&beatscript_render::render(&compile(&src.replace("at bar 2: move loop_roll on A over 1 bars\n", "")), SR, false).unwrap().audio));
