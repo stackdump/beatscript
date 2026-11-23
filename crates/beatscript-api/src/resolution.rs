@@ -44,6 +44,9 @@ pub struct References {
     pub expanded: Option<String>,
     /// The CID of [`References::expanded`] (canonical), or the program's own CID when it has no reference.
     pub expanded_cid: String,
+    /// The same expansion's CID in the other version of the language (`djlive::compile::renamed_cid`: a template's written-out
+    /// program is pinned by its BeatScript 1 CID, a BeatScript 2 recipe's expansion has its BeatScript 2 one); empty with none.
+    pub expanded_twin: String,
     /// Every reference written out, in the order the stages wrote them (templates, seeds, gen calls, stored programs): the
     /// program's own and those inside another's expansion.
     pub written: Vec<String>,
@@ -71,14 +74,13 @@ pub fn of_with(text: &str, cid: &str, env: &Env) -> References {
         Some(Ok((body, refs, _))) => (Some(body), refs),
         _ => (None, Vec::new()),
     };
-    let expanded_cid = match &expanded {
-        Some(body) => djlive::compile::program_cid(&djlive::print::canonical(&djlive::parse::parse_with(body, env).program)),
-        None => cid.to_string(),
-    };
+    let canonical = expanded.as_ref().map(|body| djlive::print::canonical(&djlive::parse::parse_with(body, env).program));
+    let expanded_cid = canonical.as_deref().map_or_else(|| cid.to_string(), djlive::compile::program_cid);
+    let expanded_twin = canonical.as_deref().map(djlive::compile::renamed_cid).unwrap_or_default();
     let sites = if expanded.is_some() { djlive::refs::sites(text, env).unwrap_or_default() } else { Vec::new() };
     let imports = if expanded.is_some() { djlive::uses::imports(text, env).unwrap_or_default() } else { Vec::new() };
     let parts = if sites.iter().any(|s| s.kind == "template") { djlive::nested::parts(text, env) } else { Vec::new() };
-    References { sites, expanded, expanded_cid, written, imports, parts }
+    References { sites, expanded, expanded_cid, expanded_twin, written, imports, parts }
 }
 
 /// `imports`: each `use` line of `text`, its name and its source (see [`IMPORTS_DOC`]).
@@ -270,9 +272,11 @@ pub fn resolution_json_with(r: &References, text: &str, with_text: bool) -> Json
 /// off: a program is never based on itself.
 pub fn sources(r: &References, text: &str) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
-    let own = r.expanded_cid.clone();
+    // the expansion itself, in either version (a BeatScript 2 recipe's template is pinned by the BeatScript 1 CID of what it
+    // writes, which is this expansion's twin): never a source of itself
+    let own = [r.expanded_cid.clone(), r.expanded_twin.clone()];
     let mut add = |call: &str, cid: Option<&str>| {
-        let cid = cid.filter(|c| *c != own);
+        let cid = cid.filter(|c| !own.iter().any(|o| o == c));
         let line = match cid {
             Some(c) => format!("{call} -> {c}"),
             None => call.to_string(),
