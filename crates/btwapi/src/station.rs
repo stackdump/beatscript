@@ -47,7 +47,7 @@ impl StationAsk {
             match o.get(k) {
                 None | Some(JsonValue::Null) => Ok(d),
                 Some(JsonValue::Number(x)) if *x >= 0.0 && x.fract() == 0.0 && *x <= 9.0e15 => Ok(*x as u64),
-                Some(JsonValue::String(s)) => s.trim().parse::<u64>().map_err(|_| format!("`{k}` is a whole number of 0 or more")),
+                Some(JsonValue::String(s)) => s.trim().parse::<u64>().ok().filter(|x| *x as f64 <= 9.0e15).ok_or_else(|| format!("`{k}` is a whole number of 0 or more")),
                 _ => Err(format!("`{k}` is a whole number of 0 or more")),
             }
         };
@@ -134,6 +134,15 @@ pub fn station_of(text: &str) -> Result<(Station, Station), (String, Vec<JsonVal
         let ix = crate::utf16::Utf16Index::new(text);
         (first, ds.iter().map(|d| crate::report::diagnostic_json(d, text, &ix)).collect())
     })?;
+    // (the call is the generator's, whatever the station says of its tempo and key)
+    let g = djlive::gen::generator().expect("installed");
+    if !g.versions().contains(&s.version) {
+        return Err((format!("gen@{} is not here: this host has {}", s.version, g.versions().iter().map(|v| format!("gen@{v}")).collect::<Vec<_>>().join(" ")), Vec::new()));
+    }
+    let genres = g.genres(s.version);
+    if !genres.contains(&s.genre) {
+        return Err((format!("`{}` is no genre of gen@{}: {}", s.genre, s.version, genres.join(" ")), Vec::new()));
+    }
     let filled = s.with_defaults().map_err(|d| (d.message.clone(), vec![crate::report::diagnostic_json(&d, text, &crate::utf16::Utf16Index::new(text))]))?;
     Ok((s, filled))
 }

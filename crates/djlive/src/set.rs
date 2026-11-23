@@ -375,6 +375,10 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, rights: RightsReport, diags:
                     mixes.push(pending_mix.take());
                 }
                 let what = if crate::gen::is_call_word(&p.what.text) { TrackWhat::Gen(p.what.text.clone()) } else { TrackWhat::Stored };
+                // (a set plays whole tracks: a piece of a generated program is borrowed in a track of its own)
+                if matches!(what, TrackWhat::Gen(_)) && (p.what.text.contains(" section=") || p.what.text.contains(" part=")) {
+                    diags.push(Diagnostic::error(p.what.span, "a set plays a whole track: `section=` and `part=` pick a piece of one").help("play gen@2 techno seed=42"));
+                }
                 plays.push(TrackItem { span: p.span, until: &p.until, what });
             }
             SetItem::Next(n) => {

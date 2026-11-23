@@ -34,6 +34,14 @@ fn a_station_reads_its_lines_and_prints_itself_canonically() {
     assert!(p.diagnostics.iter().all(|d| !d.is_error()), "{:?}", p.diagnostics);
     assert_eq!(djlive::print::canonical(&p.program), RADIO);
     assert_eq!(station::read(messy).unwrap(), s);
+    // a station read from a program has that program's CID, however its lines are ordered or say the defaults
+    let late = "station {\n  from gen@2 techno seed=42\n  next seed=+1\n  forms seeded\n}\ntempo 128\n";
+    let st = station::read(late).unwrap();
+    let p2 = djlive::parse::parse(late);
+    assert_eq!(st.cid(), djlive::compile::program_cid(&djlive::print::canonical(&p2.program)));
+    assert!(st.track(0).unwrap().text.starts_with(&format!("#! station: {} track 0", st.cid())));
+    // a tempo or key the generator cannot be fitted to is an error, not ignored
+    assert!(station::read("tempo 400\nstation {\n  from gen@2 techno seed=42\n}\n").is_err());
     // the defaults are left out of the text
     let plain = station::read("station {\n  from gen@2 house seed=7\n}\n").unwrap();
     assert_eq!(plain.step, SeedStep::By(1));
@@ -148,6 +156,18 @@ fn retuning_a_knob_keeps_position_n_and_a_small_turn_keeps_the_walk() {
     // a genre is named, never notched (its neighbourhoods are phase 2)
     assert_eq!(s.retune("genre", "house").unwrap().genre, "house");
     assert!(s.retune("genre", "+1").is_err());
+    // a seed or genre the language would not read back as one word is refused
+    for bad in ["1-2", "-5", "a-", "1 2"] {
+        assert!(s.retune("seed", bad).is_err(), "seed {bad:?}");
+    }
+    // a tempo notch and its way back are the same tempo, not a float's ulp away
+    let odd = station::read("tempo 63.1\nstation {\n  from gen@2 techno seed=42\n}\n").unwrap();
+    assert_eq!(odd.retune("tempo", "+1").unwrap().retune("tempo", "-1").unwrap().tempo, Some(63.1));
+    // the key notch reads a key however its mode is spelt
+    for (k, up) in [("amin", "em"), ("cmaj", "g"), ("c:dorian", "g:dorian"), ("f#m", "c#m"), ("bb", "f")] {
+        let t = station::read(&format!("key {k}\nstation {{\n  from gen@2 techno seed=42\n}}\n")).unwrap();
+        assert_eq!(t.retune("key", "+1").unwrap().key.as_deref(), Some(up), "{k}");
+    }
     // a genre is a word: nothing else can write itself into the tracks' calls
     for bad in ["techno section=drop", "techno\narrange from z", "", "Techno!", "9am"] {
         assert!(s.retune("genre", bad).is_err(), "{bad:?}");

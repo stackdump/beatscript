@@ -62,7 +62,7 @@ pub const PHRASES: [&str; 46] = [
 const FIFTHS: [&str; 12] = ["c", "g", "d", "a", "e", "b", "f#", "c#", "g#", "d#", "a#", "f"];
 
 /// A station, read from its program.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Station {
     /// The generator's version: `gen@2`.
     pub version: u32,
@@ -80,6 +80,16 @@ pub struct Station {
     /// play at them, and the station's text (and CID) stays as written.
     pub own_tempo: Option<f64>,
     pub own_key: Option<String>,
+    /// The canonical text of the program it was read from (its CID is that program's): none once a knob is turned.
+    pub written: Option<String>,
+}
+
+/// Two stations are one when their knobs are: the from call's own tempo and key, and the spelling it was read from, are not
+/// knobs.
+impl PartialEq for Station {
+    fn eq(&self, o: &Station) -> bool {
+        self.version == o.version && self.genre == o.genre && self.seed == o.seed && self.length == o.length && self.step == o.step && self.forms == o.forms && self.tempo == o.tempo && self.key == o.key
+    }
 }
 
 /// A walk as a run of tracks reads it: worked out once ([`Station::walk_to`]) and shared by the tracks, the segues and the
@@ -203,6 +213,14 @@ impl Station {
 
     /// The program's text, canonical: `tempo`, `key`, the block with the lines that are not the defaults.
     pub fn text(&self) -> String {
+        if let Some(w) = &self.written {
+            return w.clone();
+        }
+        self.knob_text()
+    }
+
+    /// The program the knobs say, canonical: `tempo`, `key`, the block with the lines that are not the defaults.
+    fn knob_text(&self) -> String {
         let mut s = String::new();
         if let Some(t) = self.tempo {
             s.push_str(&format!("tempo {}\n", num(t)));
@@ -419,7 +437,18 @@ impl Station {
 
     /// The station with one knob set: `value` is the knob's new value, or `+1` / `-1` for one notch up or down.
     pub fn retune(&self, knob: &str, value: &str) -> Result<Station, String> {
+        let s = self.turned(knob, value)?;
+        // (whatever a knob is turned to, the station must read back as itself: a value the language would read as more
+        // than one word, or not at all, is refused here rather than written into every track)
+        match read(&s.knob_text()) {
+            Ok(back) if back == s => Ok(s),
+            _ => Err(format!("`{}` is no value of {knob} a station can say", value.trim())),
+        }
+    }
+
+    fn turned(&self, knob: &str, value: &str) -> Result<Station, String> {
         let mut s = self.clone();
+        s.written = None;
         let notch = match value.trim() {
             "+1" | "+" | "up" => Some(1i64),
             "-1" | "-" | "down" => Some(-1i64),
@@ -492,7 +521,8 @@ impl Station {
             },
             "tempo" => {
                 let t = match notch {
-                    Some(d) => self.tempo_heard().ok_or("the station's tempo is its from call's own, which is not known here: say one, then turn it")? + 2.0 * d as f64,
+                    // (rounded: a notch and its way back are the same tempo, not one a float's ulp away)
+                    Some(d) => ((self.tempo_heard().ok_or("the station's tempo is its from call's own, which is not known here: say one, then turn it")? + 2.0 * d as f64) * 1e6).round() / 1e6,
                     None => value.trim().parse::<f64>().map_err(|_| format!("`{value}` is no tempo"))?,
                 };
                 if !(40.0..=300.0).contains(&t) {
@@ -533,7 +563,7 @@ impl Station {
             _ => return Err(format!("`{knob}` is no knob of a station: {}", KNOBS.join(" "))),
         }
         // (another call has its own tempo and key: [`Station::with_defaults`] works them out again)
-        if matches!(knob, "genre" | "seed" | "length") {
+        if matches!(knob, "genre" | "seed" | "length") && !s.same_walk(self) {
             s.own_tempo = None;
             s.own_key = None;
         }
@@ -580,7 +610,7 @@ impl Station {
         o.set("cid", JsonValue::str(self.cid()));
         o.set("genre", JsonValue::str(self.genre.clone()));
         o.set("generator", JsonValue::str(format!("gen@{}", self.version)));
-        o.set("seed", self.seed.parse::<u64>().map_or_else(|_| JsonValue::str(self.seed.clone()), |n| JsonValue::int(n as i64)));
+        o.set("seed", self.seed.parse::<u64>().ok().filter(|n| *n < 1 << 53).map_or_else(|| JsonValue::str(self.seed.clone()), |n| JsonValue::int(n as i64)));
         o.set("step", JsonValue::str(match self.step {
             SeedStep::By(n) => format!("+{n}"),
             SeedStep::Hash => "~".to_string(),
@@ -629,10 +659,14 @@ impl Segue {
 /// A key one fifth round the circle (`+1` up, `-1` down), in its own mode: am -> em, c -> g.
 fn fifth(key: &str, d: i64) -> Result<String, String> {
     let k = key.trim().to_lowercase();
-    let (root, mode) = match k.split_once(':') {
-        Some((r, m)) => (r.to_string(), format!(":{m}")),
-        None if k.ends_with('m') && k.len() > 1 => (k[..k.len() - 1].to_string(), "m".to_string()),
-        None => (k.clone(), String::new()),
+    // the root (a letter and its accidental), then the mode as written: m, min, minor, maj, major, or `:mode`
+    let at = k.char_indices().nth(1).map_or(k.len(), |(i, c)| if c == '#' || c == 'b' { i + c.len_utf8() } else { i });
+    let (root, rest) = (k[..at].to_string(), &k[at..]);
+    let mode = match rest {
+        "" | "maj" | "major" => String::new(),
+        "m" | "min" | "minor" => "m".to_string(),
+        r if r.starts_with(':') => r.to_string(),
+        _ => return Err(format!("`{key}` is no key a notch turns")),
     };
     let flats = [("db", "c#"), ("eb", "d#"), ("gb", "f#"), ("ab", "g#"), ("bb", "a#")];
     let sharp = flats.iter().find(|(f, _)| *f == root).map_or(root.as_str(), |(_, s)| *s);
@@ -755,8 +789,16 @@ fn from_parsed(parsed: &Parsed, src: &str, diags: &mut Vec<Diagnostic>) -> Optio
         }
     }
     let host = crate::gen::host_of(&lex(src).tokens);
+    // a `tempo` or `key` line the generator could not be fitted to is said, not ignored
+    for st in &parsed.program.stmts {
+        match &st.kind {
+            StmtKind::Setting(Setting::Tempo(_)) if host.tempo.is_none() => diags.push(Diagnostic::error(st.span, "a station's tempo is one number, 40 to 300").help("tempo 128")),
+            StmtKind::Setting(Setting::Key(_)) if host.key.is_none() => diags.push(Diagnostic::error(st.span, "a station's key is a key the generator plays in").help("key am")),
+            _ => {}
+        }
+    }
     let (forms, forms_span) = forms.unwrap_or((vec!["seeded".to_string()], from_span));
-    let s = Station { version: call.version, genre: call.genre.clone(), seed: call.seed.clone(), length: call.length.clone().filter(|l| l != "standard"), step: step.unwrap_or(SeedStep::By(1)), forms, tempo: host.tempo, key: host.key, own_tempo: None, own_key: None };
+    let s = Station { version: call.version, genre: call.genre.clone(), seed: call.seed.clone(), length: call.length.clone().filter(|l| l != "standard"), step: step.unwrap_or(SeedStep::By(1)), forms, tempo: host.tempo, key: host.key, own_tempo: None, own_key: None, written: Some(crate::print::canonical(&parsed.program)) };
     Some((s, [span, from_span, forms_span]))
 }
 
