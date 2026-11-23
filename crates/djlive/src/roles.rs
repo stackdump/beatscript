@@ -1818,12 +1818,14 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
                 if !said.is_empty() {
                     cx.notes.push(Diagnostic::info(b.source_span, format!("{}: {}", spec.name, said.join("; "))));
                 }
+                record(cx, b, mine.iter().flat_map(|(_, o)| o.lets.iter().cloned()).collect());
                 outs.extend(mine.into_iter().map(|(k, o)| (k, o, src.clone(), false)));
             }
             for s in subs.iter().copied() {
                 let k = part_of(s);
                 let (part, _, let_name) = spec.parts[k];
                 let out = cx.line(s, &format!("{prefix}{let_name}"), part, false, key, depth)?;
+                record(cx, s, out.lets.clone());
                 cx.notes.push(Diagnostic::info(s.source_span, format!("{}: {} (`{prefix}{let_name}_*`)", s.role, out.note)));
                 outs.push((k, out, s.source.text(), true));
             }
@@ -1857,8 +1859,8 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
             let mut said: Option<String> = None;
             let mut set_cid: Option<String> = None;
             let run = match &b.source {
-                Source::Form(f) if f.section.is_some() => cx.form_section(b, f, &format!("{prefix}{section}"), key, depth)?,
-                Source::Form(f) => inner_form(cx, f, &p, depth + 1)?,
+                Source::Form(f) if f.section.is_some() => within(&b.role, || cx.form_section(b, f, &format!("{prefix}{section}"), key, depth))?,
+                Source::Form(f) => within(&b.role, || inner_form(cx, f, &p, depth + 1))?,
                 Source::Gen(c) => {
                     let c = cx.keyed(c, key);
                     let g = cx.generated(&c, b.source_span)?;
@@ -1925,6 +1927,7 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
                 cx.err(Diagnostic::error(b.source_span, format!("the {} template has no section `{section}` (this is a bug in the template)", tpl.name)));
                 return None;
             };
+            record(cx, b, run.text.clone());
             let mut with = vec![format!("# {}, bound: {src}", spec.name)];
             with.extend(run.text);
             doc.splice(d..e + 1, with);
@@ -1942,6 +1945,7 @@ pub(crate) fn bind_form(cx: &mut Ctx, tpl: &'static Template, text: &str, roles:
             cx.err(Diagnostic::error(b.source_span, format!("the {} template has no `{}` to bind (this is a bug in the template)", tpl.name, spec.id)));
             return None;
         }
+        record(cx, b, out.lets.clone());
         // the lets only the default was made of go with it
         for id in spec.drops {
             if let Some(r) = doc.block(&format!("{prefix}{id}")) {
@@ -2212,4 +2216,57 @@ fn inner_form(cx: &mut Ctx, f: &FormRef, prefix: &str, depth: usize) -> Option<R
         body.pop();
     }
     Some(Run { text: body, plays, bars: total })
+}
+
+// ---------------------------------------------------------------- what each binding wrote (nested.rs)
+
+/// One role a binding filled, as it was written out: where it stands in the reference (`episodes/ground` is the `ground` of the
+/// form bound to `episodes`), what it was bound to, the lines it wrote, and the key and tempo at the top of the program it was
+/// written into. nested.rs makes each one a part of the expansion with a CID of its own.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Bound {
+    pub path: String,
+    pub role: String,
+    pub source: Source,
+    pub lines: Vec<String>,
+    pub host: Host,
+}
+
+thread_local! {
+    /// The bindings written out on this thread while [`recording`] runs (None: no one is recording them).
+    static BOUND: std::cell::RefCell<Option<Vec<Bound>>> = const { std::cell::RefCell::new(None) };
+    /// The roles whose inner forms are being written out, outermost first.
+    static PATH: std::cell::RefCell<Vec<String>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// Run `f` (a template's expansion) and give back what it returns with every binding it wrote out, in the order they were
+/// written: the roles of an inner form before the role that holds it, siblings in the order the form names them.
+pub fn recording<T>(f: impl FnOnce() -> T) -> (T, Vec<Bound>) {
+    let outer = BOUND.with(|b| b.borrow_mut().replace(Vec::new()));
+    let path = PATH.with(|p| std::mem::take(&mut *p.borrow_mut()));
+    let out = f();
+    let got = BOUND.with(|b| std::mem::replace(&mut *b.borrow_mut(), outer)).unwrap_or_default();
+    PATH.with(|p| *p.borrow_mut() = path);
+    (out, got)
+}
+
+/// Keep what binding `b` wrote, when someone is recording.
+fn record(cx: &Ctx<'_, '_>, b: &Binding, lines: Vec<String>) {
+    BOUND.with(|bd| {
+        if let Some(v) = bd.borrow_mut().as_mut() {
+            let mut path: Vec<String> = PATH.with(|p| p.borrow().clone());
+            path.push(b.role.clone());
+            v.push(Bound { path: path.join("/"), role: b.role.clone(), source: b.source.clone(), lines, host: cx.host.clone() });
+        }
+    });
+}
+
+/// `f` (an inner form written out) with its bindings recorded under `role`.
+fn within<T>(role: &str, f: impl FnOnce() -> T) -> T {
+    PATH.with(|p| p.borrow_mut().push(role.to_string()));
+    let out = f();
+    PATH.with(|p| {
+        p.borrow_mut().pop();
+    });
+    out
 }

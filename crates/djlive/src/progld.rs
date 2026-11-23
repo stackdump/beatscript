@@ -53,8 +53,14 @@ pub struct Facts<'a> {
     /// The doc comments of the text as written (djlive::doc; the canonical text has none): each documented section is in
     /// `section` with its doc as `description`. Empty: no `section` key.
     pub docs: &'a [crate::doc::DocComment],
-    /// The `# from:` lines the text had when it was saved (a stored program's `meta.based_on`, each `<call> -> <cid>`; the
-    /// canonical text has none): each is in `isBasedOn` as `vendored`, as the text's own `# from:` lines are.
+    /// The host's environment, to write the references out as its `check` does (its voices count a template's syllables, its
+    /// programs are what a borrow reads): `expandsTo` and `hasPart` are then the CIDs `check` gives. None: a plain environment.
+    pub env: Option<&'a crate::env::Env<'a>>,
+    /// On a stored expansion (roadmap 6680), the CID of the recipe it was written out from: `expandedFrom`.
+    pub expanded_from: Option<&'a str>,
+    /// What the store keeps beside the text of what it is based on (`meta.based_on`, `"<call> -> <cid>"` lines; the canonical text
+    /// has none): for an expansion, every reference the recipe wrote out into it (`derivation: expanded`); else the `# from:`
+    /// lines the text had when it was saved, each in `isBasedOn` as `vendored`, as the text's own `# from:` lines are.
     pub based_on: &'a [String],
 }
 
@@ -142,9 +148,22 @@ pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
     }
     d.set("text", JsonValue::str(c.text.clone()));
     // what it is based on (refs.rs `based_on`): the engine calls and borrows its text makes, each with the CID it resolves to,
-    // and what an eject vendored into it (its `# from:` lines, or the ones its save kept); outside the CID, like the doc comments
-    let notes: Vec<String> = c.notes.iter().cloned().chain(f.based_on.iter().map(|l| format!("from: {l}"))).collect();
-    let basis = crate::refs::based_on(&c.text, &notes);
+    // and what an eject vendored into it (its `# from:` lines, or the ones its save kept); outside the CID, like the doc comments.
+    // A stored expansion's text makes none: what its recipe wrote out into it comes from the store (`based_on`), each `expanded`
+    let basis = if f.expanded_from.is_some() {
+        let mut basis = crate::refs::based_on(&c.text, &c.notes);
+        for l in f.based_on {
+            if let Some((call, cid)) = crate::refs::read_from_line(&format!("# from: {l}")) {
+                if !basis.iter().any(|b| b.call == call && b.cid == cid) {
+                    basis.push(crate::refs::Basis { call, cid, how: "expanded" });
+                }
+            }
+        }
+        basis
+    } else {
+        let notes: Vec<String> = c.notes.iter().cloned().chain(f.based_on.iter().map(|l| format!("from: {l}"))).collect();
+        crate::refs::based_on(&c.text, &notes)
+    };
     if !basis.is_empty() {
         let generator = crate::gen::generator().map(|g| g.name().to_string());
         let items: Vec<JsonValue> = basis
@@ -163,12 +182,23 @@ pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
             .collect();
         d.set("isBasedOn", JsonValue::Array(items));
     }
-    // a recipe (a program with references) and the program it writes out to: the expanded CID (refs.rs `expanded`); a borrow
-    // needs the host's programs, so only what resolves without one is said here
-    if let Ok(Some((_, x))) = crate::refs::expanded(&c.text, &crate::env::Env::none()) {
+    // the nested parts of its expansion (nested.rs): each role its template binds, at any depth, by the CID of what it is written
+    // out as, named by its path and based on its source
+    let none = crate::env::Env::none();
+    let env = f.env.unwrap_or(&none);
+    let parts = crate::nested::parts(&c.text, env);
+    if !parts.is_empty() {
+        d.set("hasPart", JsonValue::Array(parts.iter().map(part_ld).collect()));
+    }
+    // a recipe (a program with references) and the program it writes out to: the expanded CID (refs.rs `expanded`), written out in
+    // the host's environment (with none, a borrow cannot be read, and only what resolves without one is said)
+    if let Ok(Some((_, x))) = crate::refs::expanded(&c.text, env) {
         if x != c.cid {
             d.set("expandsTo", JsonValue::str(x));
         }
+    }
+    if let Some(r) = f.expanded_from.filter(|r| !r.is_empty() && *r != c.cid) {
+        d.set("expandedFrom", JsonValue::str(r));
     }
     if let Some(a) = f.author.filter(|a| !a.is_empty()) {
         d.set("author", JsonValue::str(a));
@@ -180,6 +210,26 @@ pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
         d.set("signature", JsonValue::str(s));
     }
     JsonValue::Object(d)
+}
+
+/// One nested part of an expansion as linked data: a CreativeWork whose `@id` is the CID of what it is written out as (as the
+/// block's own `@id` is the program's), named by its path, based on its source (`resolves` its pin, `pinnedGenerator` a gen call's
+/// version, `derivation` `called` for an engine call and `borrowed` for structure), with its own parts.
+fn part_ld(p: &crate::nested::Part) -> JsonValue {
+    let mut src = JsonObject::from_pairs([("@type", JsonValue::str("CreativeWork")), ("name", JsonValue::str(p.call.clone()))]);
+    if let Some(r) = &p.resolves {
+        src.set("resolves", JsonValue::str(r.clone()));
+    }
+    if let Some(g) = &p.generator {
+        src.set("pinnedGenerator", JsonValue::str(g.clone()));
+    }
+    src.set("derivation", JsonValue::str(if p.kind == "gen" { "called" } else { "borrowed" }));
+    let mut o = JsonObject::from_pairs([("@type", JsonValue::str("CreativeWork")), ("@id", JsonValue::str(p.cid.clone())), ("name", JsonValue::str(p.path.clone()))]);
+    o.set("isBasedOn", JsonValue::Array(vec![JsonValue::Object(src)]));
+    if !p.parts.is_empty() {
+        o.set("hasPart", JsonValue::Array(p.parts.iter().map(part_ld).collect()));
+    }
+    JsonValue::Object(o)
 }
 
 /// The document as text safe inside a `<script>` element: JSON, with `<`, `>` and `&` written as `<` `>`
@@ -307,6 +357,9 @@ pub fn schema_context() -> JsonValue {
     c.set("derivation", JsonValue::str("bs:derivation"));
     c.set("expandsTo", term("bs:expandsTo", false));
     c.set("expandedFrom", term("bs:expandedFrom", false));
+    // the nested parts of a recipe's expansion (schema.org's `hasPart`), each a CreativeWork by the CID of what it is written out
+    // as, with its own
+    c.set("hasPart", JsonValue::Object(JsonObject::from_pairs([("@id", JsonValue::str("schema:hasPart")), ("@container", JsonValue::str("@set"))])));
     // a documented section: `name` and `description` are schema.org's
     c.set("section", JsonValue::Object(JsonObject::from_pairs([("@id", JsonValue::str("bs:section")), ("@container", JsonValue::str("@list"))])));
     JsonValue::Object(JsonObject::from_pairs([("@context", JsonValue::Object(c))]))

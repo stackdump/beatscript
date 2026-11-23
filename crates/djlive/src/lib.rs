@@ -36,6 +36,7 @@ pub mod meter;
 pub mod mixmoves;
 pub mod music;
 pub mod mutate;
+pub mod nested;
 pub mod nets;
 pub mod parse;
 pub mod partial;
