@@ -1,3 +1,4 @@
+#! beatscript 2
 #! skip-test: names a saved program, hand-dubstep-140 v2 (z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi), and a seed of the generator, which tests/examples_beatscript.rs checks without; tested in crates/beatscript-api/tests/uses.rs with that program as a snippet
 #! name: borrowed by name
 # borrowed-by-name.beatscript: the drop of a saved track and the bass of a seed, each named once with `use` and used by name (CC0). Original.

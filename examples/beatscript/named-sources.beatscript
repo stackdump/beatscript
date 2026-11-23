@@ -1,3 +1,4 @@
+#! beatscript 2
 #! name: named sources
 # named-sources.beatscript: a track put together from sources named with `use` (CC0). Original.
 # Four sources from the repo, each named on a line of its own and then used as the program's own: the passacaglia template's
