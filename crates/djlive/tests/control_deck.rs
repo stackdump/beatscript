@@ -245,9 +245,7 @@ fn the_programs_written_before_it_keep_their_cids() {
         let Ok(src) = std::fs::read_to_string(root.join(path)) else { continue };
         assert!(!src.lines().any(|l| l.trim_start().starts_with("control:")), "{path} has a control deck: it is not a program from before it");
         let Some(c) = check(&src).compiled else { continue };
-        // the examples are BeatScript 2 now (a new CID by design: djlive::version); their BeatScript 1 CID is the pin
-        let legacy = djlive::compile::program_cid(djlive::version::legacy_canonical(&c.text));
-        assert_eq!(Some(legacy.as_str()), pin.get("legacy_cid").or(pin.get("cid")).and_then(JsonValue::as_str), "{path} changed its CID");
+        assert_eq!(Some(c.cid.as_str()), pin.get("cid").and_then(JsonValue::as_str), "{path} changed its CID");
         seen += 1;
     }
     assert!(seen >= 20, "compared only {seen} programs");

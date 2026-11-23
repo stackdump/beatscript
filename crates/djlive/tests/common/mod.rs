@@ -24,7 +24,11 @@ impl Rng {
 /// continuation lines, number spellings and note spellings.
 pub fn reformat(src: &str, rng: &mut Rng) -> String {
     let lexed = lex(src);
-    let mut out = String::new();
+    // the comments are dropped and re-invented, but a BeatScript 2 version line is part of the program (djlive::version): kept
+    let mut out = match djlive::version::find(src) {
+        Ok(Some(l)) => format!("{}\n", &src[l.span.start..l.span.end]),
+        _ => String::new(),
+    };
     let mut prev_text = String::new();
     let mut line_start = true;
     let toks: Vec<_> = lexed.tokens.iter().collect();

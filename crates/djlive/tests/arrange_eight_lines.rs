@@ -82,8 +82,9 @@ fn it_is_the_example_file_and_checks_clean() {
     assert_eq!(c.song_bars(), Some(32));
     let names: Vec<&str> = c.segments.iter().map(|s| s.name.as_str()).collect();
     assert_eq!(names, ["groove", "groove@2", "groove@3", "groove@4", "groove@5", "groove@6", "groove@7", "groove@8"]);
-    // the comments and header lines are not in the canonical text, and the canonical text is the same program
-    assert!(!c.text.contains('#'), "{}", c.text);
+    // the comments and header lines are not in the canonical text (but BeatScript 2's version line, first), and the canonical
+    // text is the same program
+    assert!(c.text.starts_with(djlive::version::CANONICAL_HEAD) && !djlive::version::legacy_canonical(&c.text).contains('#'), "{}", c.text);
     assert_eq!(check(&c.text).compiled.unwrap().cid, CID);
 }
 

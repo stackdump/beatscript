@@ -2069,7 +2069,7 @@ pub fn generations(src: &str, env: &crate::env::Env) -> Option<GenTable> {
     if parsed.diagnostics.iter().any(Diagnostic::is_error) {
         return None;
     }
-    let cid = crate::compile::program_cid(&crate::print::canonical(&parsed.program));
+    let cid = crate::compile::sound_cid(&crate::print::canonical(&parsed.program));
     let mut diags = Vec::new();
     let t = apply(&mut parsed, src, &cid, &mut diags)?;
     (!diags.iter().any(Diagnostic::is_error)).then_some(t)

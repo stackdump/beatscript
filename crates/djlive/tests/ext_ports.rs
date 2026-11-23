@@ -661,7 +661,7 @@ fn the_import_example_compiles_against_the_snippet_it_describes() {
     assert!(c.ok(), "{}", djlive::diag::render_all(&c.diagnostics, &src));
     let comp = c.compiled.unwrap();
     assert!(comp.warnings.is_empty(), "{:?}", comp.warnings);
-    assert!(comp.text.starts_with(&format!("import {}\n", check(lib).compiled.unwrap().cid)));
+    assert!(djlive::version::legacy_canonical(&comp.text).starts_with(&format!("import {}\n", check(lib).compiled.unwrap().cid)));
     // reformatted, the same program
     let mut rng = Rng(0x1117);
     for _ in 0..20 {
