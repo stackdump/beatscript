@@ -303,6 +303,8 @@ pub struct Options {
     pub max_program_bytes: usize,
     /// rounds after the first attempt; negative: none
     pub max_repair: i64,
+    /// rounds that send a passing program's warnings back to the model; zero or negative: none
+    pub max_refine: i64,
     pub max_output_tokens: i64,
     pub thinking: String,
 }
@@ -334,7 +336,17 @@ struct Trace {
 }
 
 fn attempt(n: usize, ok: bool, errors: i64, diags: &[Value], tin: i64, tout: i64) -> Value {
-    let mut m = obj([("n", json!(n)), ("ok", json!(ok)), ("errors", json!(errors))]);
+    attempt_as(n, ok, false, errors, diags, tin, tout)
+}
+
+/// An attempt; `refine: true` (Go's `omitempty`: absent otherwise) marks a round that asked the model to clear the
+/// warnings of a program that already passed.
+fn attempt_as(n: usize, ok: bool, refine: bool, errors: i64, diags: &[Value], tin: i64, tout: i64) -> Value {
+    let mut m = if refine {
+        obj([("n", json!(n)), ("ok", json!(ok)), ("refine", json!(true)), ("errors", json!(errors))])
+    } else {
+        obj([("n", json!(n)), ("ok", json!(ok)), ("errors", json!(errors))])
+    };
     if !diags.is_empty() {
         m["diagnostics"] = Value::Array(diags.to_vec());
     }
@@ -765,6 +777,8 @@ impl Composer {
                 if let Some(rep) = report.filter(|r| Rep(r).ok()) {
                     let warn = Rep(&rep).diagnostics();
                     tr.attempts.push(attempt(n, true, 0, &warn, use_.tin, use_.tout));
+                    msgs.push(Message { role: "model", text: model_tx });
+                    let (prog, rep) = self.refine(ip, &system, msgs, prog, rep, tr);
                     return self.finish(ip, &req, &prog, rep, tr);
                 }
             }
@@ -785,6 +799,63 @@ impl Composer {
             "last_text": last_text,
         }));
         Err(e)
+    }
+
+    /// Send the warnings of a program that already passed back to the model, up to `max_refine` rounds. It never
+    /// makes the result worse: a reply is kept only when it passes everything the first program passed (checker OK,
+    /// no restricted sounds or assets, no `#!` header claim, within the size cap) and has fewer warnings. Anything
+    /// else (a model error, a refused reservation, the kill switch, a worse reply) ends the refining and the best
+    /// program so far is the result. Every call is reserved, paid for and recorded as an attempt with `refine: true`.
+    fn refine(&self, ip: &str, system: &str, mut msgs: Vec<Message>, mut prog: String, mut rep: Value, tr: &mut Trace) -> (String, Value) {
+        let Some(model) = &self.model else { return (prog, rep) };
+        for _ in 0..self.opt.max_refine.max(0) {
+            if Rep(&rep).warnings() <= 0 || self.lim.kill().disabled {
+                break;
+            }
+            let mut ask = msgs.clone();
+            ask.push(Message { role: "user", text: prompt::refine_message(&Rep(&rep).diagnostics()) });
+            let Ok(rsv) = self.lim.reserve(self.worst_case(system, &ask)) else { break };
+            let (text, mut use_, me) = model.generate(system, &ask);
+            if me.as_ref().is_some_and(|m| m.kind == model::KIND_TRANSPORT) && use_.tin == 0 && use_.tout == 0 {
+                use_.tin = prompt::estimate_tokens(system, &ask);
+                if me.as_ref().unwrap().aborted {
+                    use_.tout = self.opt.max_output_tokens;
+                }
+            }
+            let cost = self.lim.cost(use_.tin, use_.tout);
+            rsv.settle(cost, use_.tin, use_.tout);
+            tr.tokens_in += use_.tin;
+            tr.tokens_out += use_.tout;
+            tr.cost += cost;
+            let n = tr.attempts.len() + 1;
+            if let Some(m) = &me {
+                tr.attempts.push(attempt_as(n, false, true, 1, &[], use_.tin, use_.tout));
+                self.logf(&format!("compose: refine round ended by the model: {}", self.red.redact(&m.to_string())));
+                break;
+            }
+            let cand = prompt::extract_program(&text);
+            if cand.is_empty() || cand.len() > self.opt.max_program_bytes {
+                tr.attempts.push(attempt_as(n, false, true, 1, &[], use_.tin, use_.tout));
+                break;
+            }
+            let Ok(r2) = self.eng.check(ip, &cand) else {
+                tr.attempts.push(attempt_as(n, false, true, 1, &[], use_.tin, use_.tout));
+                break;
+            };
+            let r = Rep(&r2);
+            let diags = r.diagnostics();
+            let errs = diags.iter().filter(|d| matches!(d["severity"].as_str().unwrap_or(""), "" | "error")).count() as i64;
+            let better = r.ok() && !r.restricted() && !r.uses_assets() && prompt::header_claim(&cand).is_empty() && r.warnings() < Rep(&rep).warnings();
+            tr.attempts.push(attempt_as(n, better, true, errs, &diags, use_.tin, use_.tout));
+            if !better {
+                break;
+            }
+            msgs = ask;
+            msgs.push(Message { role: "model", text: cand.clone() });
+            prog = cand;
+            rep = r2;
+        }
+        (prog, rep)
     }
 
     fn finish(&self, ip: &str, req: &CReq, prog: &str, rep: Value, tr: &mut Trace) -> Result<Composed, Fail> {
@@ -857,6 +928,7 @@ impl Composer {
         m.insert("thinking".into(), json!(self.think));
         m.insert("max_output_tokens".into(), json!(self.opt.max_output_tokens));
         m.insert("max_repair".into(), json!(self.opt.max_repair.max(0)));
+        m.insert("max_refine".into(), json!(self.opt.max_refine.max(0)));
         m.insert("prompt_examples".into(), if names.is_empty() { Value::Null } else { json!(names) });
         gojson::sorted(Value::Object(m))
     }
@@ -1217,10 +1289,11 @@ fn parse_bool01(v: &str) -> Option<bool> {
 
 /// The options from Go's flags (`server/config.go`): `-model`, `-thinking`, `-compose-user-hour`, `-compose-user-day`,
 /// `-compose-ip-day`, `-daily-spend-usd`, `-price-in-per-m`, `-price-out-per-m`, `-max-prompt-chars`,
-/// `-max-program-bytes`, `-max-repair`, `-compose-enabled`; `GEMINI_API_KEY` and `BTW_ADMIN_TOKEN` from the env only.
+/// `-max-program-bytes`, `-max-repair`, `-max-refine`, `-compose-enabled`; `GEMINI_API_KEY` and `BTW_ADMIN_TOKEN` from the env only.
 fn options(app: &AppState) -> Options {
     let c = &app.cfg;
     let repair = c.flag_num("max-repair", 3);
+    let refine = c.flag_num("max-refine", 1);
     Options {
         public_url: c.public_url.trim_end_matches('/').to_string(),
         model: c.flag("model", gemini::DEFAULT_MODEL),
@@ -1239,6 +1312,7 @@ fn options(app: &AppState) -> Options {
         max_program_bytes: c.max_program_bytes,
         // server.repairRounds: zero or less means none
         max_repair: if repair <= 0 { -1 } else { repair },
+        max_refine: refine.max(0),
         max_output_tokens: gemini::DEFAULT_MAX_OUTPUT_TOKENS,
         thinking: c.flag("thinking", ""),
     }

@@ -363,6 +363,44 @@ fn is_error(d: &Value) -> bool {
 }
 
 /// `repairMessage`.
+/// The next user turn after a program that passed with warnings: the warnings, in the caret form the checker renders,
+/// and the ask to clear them while keeping the music.
+pub fn refine_message(diags: &[Value]) -> String {
+    let ws: Vec<&Value> = diags.iter().filter(|d| d["severity"].as_str() == Some("warning")).collect();
+    let n = ws.len();
+    let mut b = if n == 1 { "Your program passes, but the checker has 1 warning. ".to_string() } else { format!("Your program passes, but the checker has {n} warnings. ") };
+    b.push_str(
+        "Fix every warning while keeping the music the same: the same tempo, key, sections, length and parts. \
+         A pattern must divide the bar into sixteenths (16, 8, 4 or 2 steps per bar). \
+         Reply with the complete corrected program only: no prose, no code fences, no \"#!\" lines.\n",
+    );
+    for (i, d) in ws.iter().enumerate() {
+        if i == 10 {
+            b.push_str(&format!("\n({} more warnings not shown)\n", n - 10));
+            break;
+        }
+        b.push('\n');
+        let line = d["line"].as_i64().unwrap_or(0);
+        if line > 0 {
+            b.push_str(&format!("[{}] line {}, col {}:\n", i + 1, line, d["col"].as_i64().unwrap_or(0)));
+        } else {
+            b.push_str(&format!("[{}]\n", i + 1));
+        }
+        let render = d["render"].as_str().unwrap_or("");
+        if !render.is_empty() {
+            b.push_str(render.trim_end_matches('\n'));
+            b.push('\n');
+        } else {
+            b.push_str(&format!("warning: {}\n", d["message"].as_str().unwrap_or("")));
+        }
+        let help = d["help"].as_str().unwrap_or("");
+        if !help.is_empty() && !render.contains(help) {
+            b.push_str(&format!("help: {help}\n"));
+        }
+    }
+    b
+}
+
 pub fn repair_message(diags: &[Value]) -> String {
     let mut errs: Vec<&Value> = diags.iter().filter(|d| is_error(d)).collect();
     if errs.is_empty() {

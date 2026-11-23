@@ -174,6 +174,8 @@ const FIXTURES: &[&str] = &[
     include_str!("fixtures/max_tokens.json"),
     include_str!("fixtures/model_error.json"),
     include_str!("fixtures/oversize.json"),
+    include_str!("fixtures/refine.json"),
+    include_str!("fixtures/refine_worse.json"),
     include_str!("fixtures/repair.json"),
     include_str!("fixtures/unrepairable.json"),
 ];

@@ -1,0 +1,25 @@
+{
+ "name": "refine",
+ "description": "The first answer passes with a warning (a 6-step hi-hat line does not divide the bar into sixteenths); the refine round's answer is the same music with 16 steps and no warning. Select it with fake-refine-clears in the prompt.",
+ "match": [
+  "fake-refine-clears"
+ ],
+ "steps": [
+  {
+   "text": "# refine fixture (a recorded-style answer of the fake model)\ntempo 128\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ x ~ x ~ x\nsection main 16 bars {\n  deck A: kick kk vel=100 | hihat hh vel=60..85\n  deck B: harmony chord(am) inst=warm-pad len=16 vel=80\n}\narrange main\n",
+   "usage": {
+    "in": 2300,
+    "out": 300,
+    "thoughts": 100
+   }
+  },
+  {
+   "text": "# refine fixture (a recorded-style answer of the fake model)\ntempo 128\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nsection main 16 bars {\n  deck A: kick kk vel=100 | hihat hh vel=60..85\n  deck B: harmony chord(am) inst=warm-pad len=16 vel=80\n}\narrange main\n",
+   "usage": {
+    "in": 2700,
+    "out": 310,
+    "thoughts": 90
+   }
+  }
+ ]
+}

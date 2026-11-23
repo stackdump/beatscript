@@ -1,0 +1,25 @@
+{
+ "name": "refine_worse",
+ "description": "The first answer passes with a warning; the refine round's answer has more warnings, so the first is kept. Select it with fake-refine-worse in the prompt.",
+ "match": [
+  "fake-refine-worse"
+ ],
+ "steps": [
+  {
+   "text": "# refine fixture (a recorded-style answer of the fake model)\ntempo 128\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ x ~ x ~ x\nsection main 16 bars {\n  deck A: kick kk vel=100 | hihat hh vel=60..85\n  deck B: harmony chord(am) inst=warm-pad len=16 vel=80\n}\narrange main\n",
+   "usage": {
+    "in": 2300,
+    "out": 300,
+    "thoughts": 100
+   }
+  },
+  {
+   "text": "# refine fixture (a recorded-style answer of the fake model)\ntempo 128\nkey am\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ x ~ x ~ x\nsection main 16 bars {\n  deck A: kick kk vel=100 | hihat hh vel=60..85 | snare ~ ~ x ~ x\n  deck B: harmony chord(am) inst=warm-pad len=16 vel=80\n}\narrange main\n",
+   "usage": {
+    "in": 2700,
+    "out": 330,
+    "thoughts": 90
+   }
+  }
+ ]
+}
