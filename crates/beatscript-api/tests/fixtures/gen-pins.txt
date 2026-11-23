@@ -7,3 +7,6 @@ gen@2 dnb seed=7 length=short -> z4EBG9jH3ezJR68JDjHXjPQmTdWYcx6RttejM9KbVWF9TfR
 gen@1 lofi seed=3 key=f#m length=long -> z4EBG9izLmPaWyZN4gZckQR3AdsUexydyiCo5st9Xuep9h8uWPe
 gen@3 techno seed=42 -> z4EBG9j2P8pMmCRuNhNzycboNL8gGNAKgR5wkwUrkaVc8RLCuxA
 gen@3 house seed=sunrise bpm=124 key=am -> z4EBG9j3bwdB4e5qMJUnUJCUBgFWmtBN1UrdmbTGkBxx9HtRq7U
+gen@3 acid seed=42 -> z4EBG9jE6KSMCm5voiyf167CU1LcaXedt1ekesmVMjFHXEsgv32
+gen@4 techno seed=42 -> z4EBG9j2P8pMmCRuNhNzycboNL8gGNAKgR5wkwUrkaVc8RLCuxA
+gen@4 acid seed=42 -> z4EBG9j9qQKJ8J9EqP3bmQH9iTCBxusxxnjjHf6zNZfV9ZMxuki
