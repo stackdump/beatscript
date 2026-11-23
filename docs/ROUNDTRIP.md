@@ -116,8 +116,8 @@ Each rung adds one thing to prove. A rung is done when its fixtures reach L1 `sa
 
 | rung | fixture | what it adds | expected hard part |
 |---|---|---|---|
-| 1 | `first-beat` (CID `z4EBG9jCXhR8sXzrqXeyyqFsnSwiLFrxQ54eKDSRYLUcomN1pVB`): 8 bars, tempo 124, 3 drum voices on deck A, bass and a pad chord on deck B | grid, template bank, drums by NNLS, bass pitch, one chord, `vel=60..90` (velocity from a hash of place) | the hihat velocity range: the net records a range and a hash, not 8 numbers; and the pad's tail overlapping the next bar |
-| 2 | `acid-line` (`z4EBG9j5LXjJxN143goCkza24Du9EPE6RvgjzRPPvM8dmEdaRAD`): FM bass with accent `!` and slide `^`, kick, hats, filter cutoff and resonance ramps over 16 bars | accents and slides as per-note flags, monophonic legato, **first control lines** | ramps are control nets: needs the fidelity policy of section 6 |
+| 1 | `first-beat` (CID `z4EBG9jFzzkVrdxGXZhj7EUYYSYzLhhZJ4rGkQXpuGm7KeDA7Ya`): 8 bars, tempo 124, 3 drum voices on deck A, bass and a pad chord on deck B | grid, template bank, drums by NNLS, bass pitch, one chord, `vel=60..90` (velocity from a hash of place) | the hihat velocity range: the net records a range and a hash, not 8 numbers; and the pad's tail overlapping the next bar |
+| 2 | `acid-line` (`z4EBG9j3EdRodQCNYE84djfsVgKs4XeSvKQDyXhLBzRuLJuXmtq`): FM bass with accent `!` and slide `^`, kick, hats, filter cutoff and resonance ramps over 16 bars | accents and slides as per-note flags, monophonic legato, **first control lines** | ramps are control nets: needs the fidelity policy of section 6 |
 | 3 | `evolve-demo`, `markers-demo`, `trance-138` | sections, `let`/`def`, `repeat`, `evolve` (a program that changes itself: induction must find the generation rule or settle for longhand) | recognising equal bars and the arrange |
 | 4 | Deep Hours `z4EBG9j7sAyRKuuVhha6DACwUEvCeuLZPRC1fhj9kU73EwNFzTW` (the track that ends) and its loop fork `z4EBG9j288TZehcWFMcZrtyFnKE1TPuRxizk5D2Rfg9TS9vYo2x` | a real multi-section track; the fork is a free **diff test**: the recovered programs of the two must differ exactly where the programs do | scale (bars, decks), markov and seeded chance (`maybe`, `?0.45`) which must be re-derived from the text hash, not fitted |
 | 5 | `matrix-130`, `hand-dubstep-140-v2/v4` | wobble basses, risers, 9 sections | control-heavy |
@@ -186,7 +186,7 @@ Consequences:
 ## 7. Rung 1: first-beat, closed
 
 Input: first-beat's audio, downloaded from the public server (`render?format=wav`, r2, CID
-`z4EBG9jCXhR8sXzrqXeyyqFsnSwiLFrxQ54eKDSRYLUcomN1pVB`). The recovery sees only the samples. The original
+`z4EBG9jFzzkVrdxGXZhj7EUYYSYzLhhZJ4rGkQXpuGm7KeDA7Ya`). The recovery sees only the samples. The original
 program is passed to `--ref` for scoring and is never read by the recovery.
 
 ```
@@ -208,7 +208,7 @@ end at bar 8
 | L0 | **sample identical** to the server render: 682,839 frames, max difference 0, 0 samples differ |
 | L1, local `beatscript check --same-as` | `same: true` |
 | L1, public BeatScript MCP `check` with `same_as` = first-beat's CID | `same: true`, `text_same: true`, `sections_same`, `song_nets_same`, no diffs |
-| program CID | the recovered text has the original's own CID, `z4EBG9jCXhR8sXzrqXeyyqFsnSwiLFrxQ54eKDSRYLUcomN1pVB` |
+| program CID | the recovered text has the original's own CID, `z4EBG9jFzzkVrdxGXZhj7EUYYSYzLhhZJ4rGkQXpuGm7KeDA7Ya` |
 
 What the pipeline did, in order (from the `-v` log): the length fixes bars/bpm, the onsets pick 124 x 8
 over 62 x 4, 93 x 6 and the rest of the family; 187 templates (4 drums, 3 bass voices x 37 pitches, 3 pad voices
