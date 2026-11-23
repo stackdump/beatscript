@@ -289,6 +289,17 @@
         {"tool": "fmt", "args": {"text": "tempo 118\nkey am\ndeck A: kick x ~ x ~ | bass a1 ~ c2 ~\n"}, "save": {"old": "/from_cid", "new": "/cid"}, "expect": [["/from_cid", "has"], ["/version", "=", 2]]},
         {"tool": "check", "args": {"text": "tempo 118\nkey am\ndeck A: kick x ~ x ~ | bass a1 ~ c2 ~\n"}, "expect": [["/cid", "=", "${old}"], ["/renamed_cid", "=", "${new}"]]}
       ]
+    },
+    {
+      "id": "form-extensions",
+      "docs": [],
+      "say": [["genre_template", "template(cross).both.arp"], ["genre_template", "a stored set by CID (its tracks in order) or one of its tracks (<cid>.track2)"], ["genre_template", "one part of either alone as a.bass"], ["genre_template", "quodlibet a, b, ground and third"], ["genre_template", "the numbers delay"], ["genre_template", "its roles with their parts, and its numbers"]],
+      "calls": [
+        {"tool": "genre_template", "args": {"genre": "techno", "form": "canon", "roles": {"subject": "template(cross).both.arp", "delay": "2", "interval": "7"}},
+         "expect": [["/form/params/0/name", "=", "delay"], ["/form/params/1/name", "=", "interval"], ["/canonical", "~", "subject=template(cross).both.arp, delay=2, interval=7"], ["/expanded", "~", "let follow = rotate(subject, 8)"], ["/expanded", "~", "arp transpose(follow, 7)"]]},
+        {"tool": "genre_template", "args": {"genre": "house", "form": "quodlibet", "roles": {"third": "ode_to_joy"}}, "expect": [["/form/roles/3/name", "=", "third"], ["/expanded", "~", "let third_1 = "]]},
+        {"tool": "genre_template", "args": {"genre": "techno", "form": "cross", "roles": {"a.bass": "[d2 ~ a1 ~]"}}, "expect": [["/form/roles/0/parts/1/bind", "=", "a.bass"], ["/expanded", "~", "# a.bass, bound: [d2 ~ a1 ~]"]]}
+      ]
     }
   ]
 }

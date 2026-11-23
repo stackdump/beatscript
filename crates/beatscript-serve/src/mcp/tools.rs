@@ -615,7 +615,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 vec![
                     ("genre", sprop("A genre of the BeatScript ontology: its name (techno, house, jazz, dnb, ...), genre:<name>, or its https://beatscript.app/ontology/genre/ IRI.", &[("maxLength", json!(200))])),
                     ("phrase", sprop("Optional, for vocals (found phrases, see docs/beatscript/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.", &[("maxLength", json!(400))])),
-                    ("form", sprop("Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.", &[("maxLength", json!(64))])),
+                    ("form", sprop("Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form's template at the genre's tempo, arrange from template(<form>, <phrase>), and the answer gains form (shape, mutation plan, themes, reference track, its roles with their parts, and its numbers) and expanded (the program written out as plain BeatScript). Not with theme.", &[("maxLength", json!(64))])),
                     ("roles", json!({"type": "object", "additionalProperties": {"type": "string", "maxLength": 400}, "description": text::GENRE_TEMPLATE_ROLES})),
                     ("theme", sprop("Optional (docs/beatscript/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre's key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.", &[("maxLength", json!(64))])),
                 ],
@@ -925,7 +925,9 @@ impl Tools {
                     }
                     for (k, v) in o {
                         let Some(src) = v.as_str().filter(|s| s.len() <= 400 && !s.contains('\n')) else { return Err(bad(format!("roles.{k} must be a source on one line, at most 400 characters"))) };
-                        if k.is_empty() || !k.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
+                        // a role, one part of a seed role (`a.bass`), or a form's number (`delay`)
+                        let name_ok = |n: &str| !n.is_empty() && n.chars().all(|c| c.is_ascii_lowercase() || c == '_');
+                        if !k.split_once('.').map_or(name_ok(k), |(r, p)| name_ok(r) && name_ok(p)) {
                             return Err(bad(format!("{k:?} is no role name")));
                         }
                         roles.push((k.clone(), src.to_string()));
