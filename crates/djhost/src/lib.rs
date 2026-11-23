@@ -20,6 +20,7 @@ pub mod beatscript_render;
 pub mod beatscript_tempo;
 pub mod beatscript_test;
 pub mod automix_measure;
+pub mod clip_source;
 pub mod control_registry;
 pub mod control_socket;
 pub mod gear;

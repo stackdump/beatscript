@@ -16,7 +16,7 @@ const A_DECK: &[Action] = &[
     Action::new("toggle", "play / pause", Effect::Write),
     Action::new("stop", "stop", Effect::Write),
     Action::new("cue", "cue", Effect::Write),
-    Action::new("load", "load a generated track (genre, seed, structure | spec)", Effect::Write),
+    Action::new("load", "load a generated track (genre, seed, structure | spec), or a render of a public CC0 program onto the sample deck (spec render:<cid> or render:<cid>[a..b], bars a to b from 1)", Effect::Write),
     Action::new("demo", "the demo loop", Effect::Write),
     Action::new("file", "an audio file", Effect::Write),
     Action::new("next", "next track", Effect::Write),
@@ -1217,7 +1217,10 @@ pub(super) const NOUNS: &[Noun] = &[
         actions: &A_DECK,
         doc:
         "One deck (A or B; default the focused one). Actions: state, play (on?), pause, toggle, \
-         stop, cue, load (genre, seed?, structure? | spec 'genre:seed:structure'), demo, file \
+         stop, cue, load (genre, seed?, structure? | spec 'genre:seed:structure'; spec \
+         'render:<cid>' or 'render:<cid>[a..b]': the offline render of a public CC0 program, or \
+         its bars a to b counted from 1, on the sample deck with the grid the program says, no \
+         beat detection; a program that is not CC0 and public, or uses samples, is refused), demo, file \
          (path: an audio file), next, seed_step (delta), tempo (bpm), pitch (value), \
          pitch_range (value), nudge (ratio), sync (align beat|bar), section (index), hot_cue / \
          clear_cue (slot), loop (op in|out|halve|double|exit|beats, beats; a net deck loops its \
