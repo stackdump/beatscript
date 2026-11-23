@@ -15,7 +15,7 @@ import { Driver, EngineSource } from './driver.js';
 import { PresenceTracker, pauseReason, pauseMessage, playBars } from './queue-model.js';
 import {
   DEFAULT_STATION, KNOBS, FORMS, LENGTHS, SEEDED_GENRES, TEMPO_MIN, TEMPO_MAX,
-  initialState, stationRequest, retuneRequest, applyAnswer, stepTo, advance, notch, toggleLock,
+  initialState, stationRequest, retuneRequest, applyAnswer, stepTo, advance, notch, toggleLock, stepRetuneValue,
   scanRequest, shareUrl, parseShare, fmtValue, maxN,
 } from './station-model.js';
 
@@ -119,6 +119,12 @@ class Radio {
     this.busy(false);
     if (error) {
       this.msg(error.message, 'err', error.diagnostics);
+      // a request made while the station plays (up next, a retune, a new position) that fails stops it, and says why
+      if (this.playing || this.pending) {
+        this.halt();
+        this.pending = null;
+        this.say(`Stopped: ${error.message}`);
+      }
     } else {
       this.updateUrl();
       this.syncControls();
@@ -166,7 +172,8 @@ class Radio {
       if (v == null) continue;
       const cur = k[knob];
       const differs = knob === 'forms' ? JSON.stringify(v) !== JSON.stringify(uniq(cur)) : String(v) !== String(cur);
-      if (differs) changes[knob] = v;
+      // an explicit step is `seed=+N` or `~`: a bare "+1" would be a notch (on a +3 station it toggles to ~)
+      if (differs) changes[knob] = knob === 'step' ? stepRetuneValue(v) : v;
     }
     if (!Object.keys(changes).length) return this.msg('Nothing to tune: every knob is where the station has it.');
     return this.tune(changes, 'Tuned');

@@ -615,7 +615,7 @@ export async function createMockEngine({ context, destination }) {
 
 /** The from call's own tempo and key, as the mock pretends the generator prints them (the real ones are the genre tables'). */
 const MOCK_GENRE_DEFAULTS = { techno: [128, 'am'], house: [124, 'c'], jazz: [110, 'dm'], ambient: [80, 'c'], dnb: [174, 'am'], edm: [128, 'fm'], speedcore: [220, 'em'], dubstep: [140, 'fm'], country: [110, 'g'], blues: [96, 'e'], synthwave: [100, 'am'], trance: [138, 'am'], lofi: [85, 'dm'], reggae: [80, 'g'], funk: [105, 'em'], bossa: [120, 'dm'], trap: [140, 'cm'], garage: [132, 'fm'], metal: [160, 'em'] };
-/** A stand-in phrase id for phrasebook line k (stations v1 pins 47 real ids; the mock does not know them). */
+/** A stand-in phrase id for phrasebook line k (stations v1 pins 46 real ids; the mock does not know them). */
 export const mockPhrase = (k) => `@pd_${String(k).padStart(2, '0')}`;
 const mockCidOf = (text) => mockCheck(text).cid;
 const numOrWord = (s) => (/^\d+$/.test(String(s)) ? Number(s) : String(s));
@@ -683,7 +683,8 @@ export function mockStation(input) {
   const segues = [];
   for (let i = n; i < n + count; i++) {
     tracks.push(b.track(i));
-    if (req.segue) {
+    // a segue into a position past the station's reach has no track to go to
+    if (req.segue && i + 1 <= station.maxN(said.step)) {
       const s = station.segueOf(said, i, b.env);
       s.cid = mockCidOf(s.text);
       if (req.check) s.check = mockTrackCheck(s.text);

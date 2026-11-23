@@ -2368,7 +2368,14 @@ test('player render: the position line at a time in the render, in the runtime\'
     assert.equal(sm.notch('step', '~', -1), '+1');
     assert.deepEqual(sm.notch('forms', ['seeded', 'rondo', 'fugue'], 1), ['rondo', 'fugue', 'seeded']);
     assert.deepEqual(sm.notch('forms', ['seeded', 'rondo', 'fugue'], -1), ['fugue', 'seeded', 'rondo']);
-    assert.equal(sm.notch('forms', ['seeded'], 1), null, 'one form does not turn');
+    assert.deepEqual(sm.notch('forms', ['seeded'], 1), ['passacaglia'], 'one form steps through the seven, in their order');
+    assert.deepEqual(sm.notch('forms', ['seeded'], -1), ['cross'], 'and back, round');
+    assert.deepEqual(sm.notch('forms', ['cross'], 1), ['seeded']);
+    assert.deepEqual(sm.notch('forms', ['rondo'], -1), ['canon']);
+    let f = ['seeded'];
+    for (let i = 0; i < sm.FORMS.length; i++) f = sm.notch('forms', f, 1);
+    assert.deepEqual(f, ['seeded'], 'seven notches are the way round');
+    assert.deepEqual(sm.FORMS, ['seeded', 'passacaglia', 'canon', 'rondo', 'fugue', 'theme-and-variations', 'cross']);
     assert.equal(sm.notch('length', 'standard', 1), 'long');
     assert.equal(sm.notch('length', 'standard', -1), 'short');
     assert.equal(sm.notch('length', 'long', 1), null);
@@ -2376,6 +2383,8 @@ test('player render: the position line at a time in the render, in the runtime\'
     const knobs = sm.parseStation(sm.DEFAULT_STATION).knobs;
     const opts = sm.neighbourOptions(knobs);
     assert.deepEqual(opts.map((o) => `${o.knob}${o.dir}`), ['seed+1', 'seed-1', 'step+1', 'forms+1', 'forms-1', 'tempo+1', 'tempo-1', 'key+1', 'key-1', 'length+1', 'length-1']);
+    const one = sm.neighbourOptions({ ...knobs, forms: ['seeded'] }).filter((o) => o.knob === 'forms');
+    assert.deepEqual(one.map((o) => o.value), [['passacaglia'], ['cross']], 'a station without a forms line has forms neighbours too (nudges, Scan)');
     const two = sm.neighbourOptions({ ...knobs, forms: ['seeded', 'cross'], length: 'long' });
     assert.equal(two.filter((o) => o.knob === 'forms').length, 1, 'two forms rotate the same way either way: one neighbour');
     assert.deepEqual(two.filter((o) => o.knob === 'length').map((o) => o.value), ['standard'], 'long has one neighbour');
@@ -2390,6 +2399,19 @@ test('player render: the position line at a time in the render, in the runtime\'
     assert.deepEqual(sm.retune(knobs, { tempo: '+1' }, ['key']).knobs.tempo, 130, 'another knob\'s lock does not hold it');
     assert.equal(sm.retune(knobs, { genre: '+1' }).ok, false, 'genre by a notch is refused');
     assert.equal(sm.retune(knobs, { genre: 'house' }).knobs.genre, 'house', 'genre by a value is a retune');
+    assert.equal(sm.retune(knobs, { genre: 'polka' }).ok, false, 'a genre is one of the generator\'s');
+    // an explicit step is `seed=+N` or `~`; "+1" is a notch, which on a +3 station toggles to ~
+    const plus3 = { ...knobs, step: '+3' };
+    assert.equal(sm.retune(plus3, { step: '+1' }).knobs.step, '~');
+    assert.equal(sm.retune(plus3, { step: 'seed=+1' }).knobs.step, '+1');
+    assert.equal(sm.retune(knobs, { step: 'seed=+3' }).knobs.step, '+3');
+    assert.equal(sm.retune(plus3, { step: '~' }).knobs.step, '~');
+    assert.equal(sm.retune(plus3, { step: 'seed=~' }).knobs.step, '~');
+    assert.equal(sm.retune(knobs, { step: '+3' }).ok, false, 'a bare +3 is neither a notch nor a value');
+    assert.equal(sm.retune(knobs, { step: 'seed=+0' }).ok, false);
+    assert.equal(sm.stepRetuneValue('+3'), 'seed=+3');
+    assert.equal(sm.stepRetuneValue('+1'), 'seed=+1');
+    assert.equal(sm.stepRetuneValue('~'), '~');
     assert.equal(sm.retune(knobs, { tempo: 301 }).ok, false);
     assert.equal(sm.retune(knobs, { forms: ['seeded', 'gen'] }).ok, false, '`gen` is not a form name (seeded is)');
     assert.equal(sm.retune(knobs, { wobble: 1 }).ok, false);
@@ -2414,6 +2436,15 @@ test('player render: the position line at a time in the render, in the runtime\'
   test('radio: the request JSON, and applying an answer: now playing is track N, up next N+1, the segue between', () => {
     const s0 = sm.initialState({ n: 7 });
     assert.deepEqual(sm.stationRequest(s0), { station: sm.DEFAULT_STATION, n: 7, count: 2, segue: true, check: false });
+    // a `~` station reaches position 10000: the count never asks past it; a +N station has any position
+    assert.equal(sm.MAX_N_WALK, 10000);
+    assert.equal(sm.stationRequest({ ...s0, n: 9999 }).count, 2);
+    assert.equal(sm.stationRequest({ ...s0, n: 10000 }).count, 1);
+    assert.equal(sm.stationRequest({ ...s0, knobs: { ...s0.knobs, step: '+1' }, n: 10000 }).count, 2);
+    assert.equal(sm.retuneRequest({ ...s0, knobs: { ...s0.knobs, step: '+1' }, n: 10000 }, { step: '~' }).request.count, 1, 'the step a retune makes counts');
+    assert.equal(mockStation({ station: sm.DEFAULT_STATION, n: 10000, count: 2 }).ok, false, 'past 10000 is refused');
+    const last = answered({ station: sm.DEFAULT_STATION, n: 10000, count: 1, segue: true });
+    assert.deepEqual([last.tracks.length, last.segues.length], [1, 0], 'the last position has no segue out of it');
     assert.deepEqual(sm.stationRequest({ ...s0, segues: false, locks: ['key'] }, { retune: { tempo: 130 }, neighbours: true, check: true, count: 1 }),
       { station: sm.DEFAULT_STATION, n: 7, count: 1, segue: false, check: true, retune: { tempo: 130 }, locks: ['key'], neighbours: true });
     const ans = answered(sm.stationRequest(s0));
@@ -2450,6 +2481,11 @@ test('player render: the position line at a time in the render, in the runtime\'
     const adv = sm.advance(state);
     assert.equal(adv.n, 8);
     assert.equal(adv.now, state.next, 'what was up next is now playing');
+    // the locks are the page's: a lock toggled while a request was out is not undone by its answer
+    const asked = sm.stationRequest(state);
+    const toggled = { ...state, locks: sm.toggleLock(state.locks, 'key') };
+    assert.deepEqual(sm.applyAnswer(toggled, answered(asked)).state.locks, ['key']);
+    assert.deepEqual(sm.applyAnswer({ ...state, locks: [] }, answered({ ...asked, locks: ['tempo'] })).state.locks, []);
   });
 
   test('radio: a retune keeps N: the new station\'s track N plays, and its text and CID are the new station\'s', () => {
@@ -2498,6 +2534,13 @@ test('player render: the position line at a time in the render, in the runtime\'
     assert.match(st.now.text, /template\(rondo, @\w+, refrain=gen@2 jazz seed=8, episodes=gen@2 jazz seed=9 part=melody\)/);
     assert.match(st.next.text, /template\(cross, @\w+, a=gen@2 jazz seed=8 part=melody, b=gen@2 jazz seed=10 part=melody\)/);
     assert.match(st.now.text, /^#! station: z\w+ track 4\n#! from: next\(z\w+\) seed=\+1\n/, 'the provenance header');
+    // canon writes its roles subject first; the phrase is line s_N mod 46
+    const env = { generator: 'gen@2', genre: 'techno', length: 'standard' };
+    assert.equal(sm.formCall('canon', env, '1', '2', '@p'), 'template(canon, @p, subject=gen@2 techno seed=2, ground=gen@2 techno seed=1)');
+    assert.equal(sm.formCall('passacaglia', env, '1', '2', '@p'), 'template(passacaglia, @p, ground=gen@2 techno seed=1, upper=gen@2 techno seed=2)');
+    assert.equal(sm.PHRASES, 46);
+    assert.equal(sm.phraseIndex('46'), 0);
+    assert.equal(sm.phraseIndex('47'), 1);
     // what the mock answers plays in the mock: one section, so a track ends
     for (const t of [st.now, st.next, st.segue]) {
       const c = mockCheck(t.text);

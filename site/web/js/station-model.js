@@ -26,12 +26,12 @@ export const LENGTHS = ['short', 'standard', 'long'];
 export const TEMPO_MIN = 40;
 export const TEMPO_MAX = 300;
 export const TEMPO_NOTCH = 2;
-/** `next seed=~` is O(N): the server walks at most this far. */
-export const MAX_N_WALK = 100000;
+/** `next seed=~` is O(N): the server walks at most this far (a position past it is refused). */
+export const MAX_N_WALK = 10000;
 /** `next seed=+n` is O(1): any 32-bit position. */
 export const MAX_N = 0xffffffff;
-/** The phrasebook lines stations v1 pins (a track's phrase is line s_N mod this). */
-export const PHRASES = 47;
+/** The phrasebook lines stations v1 pins (a track's phrase is line s_N mod this; the server's list has 46). */
+export const PHRASES = 46;
 /** The genres that play no arp or harmony on the bar's grid: their rondo and cross bindings say part=melody. */
 export const SPARSE_GENRES = ['ambient', 'bossa', 'jazz', 'lofi'];
 /** How many tracks the page asks for at once: now playing and up next. */
@@ -98,7 +98,8 @@ function keyText({ pc, mode }) {
  * One notch of a knob from `value` in direction `dir` (+1 or -1): the neighbour's value, or null when there is none
  * (genre: never a notch in phase 1; a tempo past 40..300; a length past short or long; forms of one name).
  *   seed +-1 (mod 2^32; a word seed counts from its hash), tempo +-2, key one step round the circle of fifths in its mode
- *   (am -> em / dm), step +1 <-> ~ (either direction), forms rotated by one, length one step (short standard long).
+ *   (am -> em / dm), step +1 <-> ~ (either direction), forms rotated by one (left for +1, right for -1; a station of one
+ *   form steps through the seven in FORMS order, round), length one step (short standard long).
  */
 export function notch(knob, value, dir) {
   const d = dir < 0 ? -1 : 1;
@@ -117,7 +118,11 @@ export function notch(knob, value, dir) {
     case 'step': return String(value) === '~' ? '+1' : '~';
     case 'forms': {
       const f = Array.isArray(value) ? value : [];
-      if (f.length < 2) return null;
+      if (!f.length) return null;
+      if (f.length === 1) {
+        const i = FORMS.indexOf(f[0]);
+        return i < 0 ? null : [FORMS[(i + d + FORMS.length) % FORMS.length]];
+      }
       return d > 0 ? [...f.slice(1), f[0]] : [f[f.length - 1], ...f.slice(0, -1)];
     }
     case 'length': {
@@ -290,7 +295,7 @@ export function genCall(generator, genre, seed, length, extra = '') {
 /** Whether `v` is a value knob `knob` may be retuned to (an explicit value, not a notch). */
 export function validValue(knob, v) {
   switch (knob) {
-    case 'genre': return typeof v === 'string' && GENRE_RE.test(v);
+    case 'genre': return typeof v === 'string' && SEEDED_GENRES.includes(v); // the generator's genres (the server refuses any other)
     case 'seed': return SEED_RE.test(String(v));
     case 'step': return STEP_RE.test(String(v));
     case 'forms': return Array.isArray(v) && v.length > 0 && v.length <= 32 && v.every((f) => FORMS.includes(f));
@@ -302,6 +307,12 @@ export function validValue(knob, v) {
 }
 
 const isNotch = (v) => v === '+1' || v === '-1';
+
+/**
+ * How an explicit step is asked for in a retune: `seed=+N` or `~` (a bare "+1" / "-1" is a notch: on a `+3` station "+1"
+ * toggles to `~`, it does not set +1).
+ */
+export const stepRetuneValue = (step) => (String(step) === '~' ? '~' : `seed=${step}`);
 
 /**
  * Set knobs: `changes` is {knob: value | "+1" | "-1"}. `knobs` are the station's values (tempo/key as the answer resolved them
@@ -317,7 +328,7 @@ export function retune(knobs, changes, locks = []) {
     if (!KNOBS.includes(knob)) return { ok: false, knob, error: `\`${knob}\` is not a knob: ${KNOBS.join(', ')}` };
     if (held.has(knob)) return { ok: false, knob, error: `${knob} is locked: unlock it to retune it` };
     let v = raw;
-    // "+1" / "-1" is a notch on every knob (for step too: `next seed=+1` as a value is asked for as a notch from `~`)
+    // "+1" / "-1" is a notch on every knob (for step too: a value is `seed=+N` or `~`, stepRetuneValue)
     if (isNotch(v)) {
       if (knob === 'genre') return { ok: false, knob, error: 'genre retunes only by a value (its neighbourhoods are phase 2)' };
       const n = notch(knob, knobs[knob], Number(v));
@@ -328,6 +339,11 @@ export function retune(knobs, changes, locks = []) {
       if (knob === 'tempo' && typeof v === 'string' && v.trim() !== '') v = Number(v);
       if (knob === 'seed' && typeof v === 'number') v = String(v);
       if (knob === 'key' && typeof v === 'string') v = v.trim().toLowerCase();
+      if (knob === 'step') {
+        const m = /^seed=(.*)$/.exec(String(v));
+        if (m) v = m[1];
+        else if (v !== '~') return { ok: false, knob, error: `step is set as \`seed=+N\` or \`~\` ("+1" and "-1" turn it a notch): not ${JSON.stringify(raw)}` };
+      }
       if (!validValue(knob, v)) return { ok: false, knob, error: `${knob} cannot be ${JSON.stringify(raw)}` };
     }
     out[knob] = v;
@@ -394,7 +410,7 @@ export function formCall(form, { generator, genre, length }, t, s, phrase) {
   switch (form) {
     case 'seeded': return g(s);
     case 'passacaglia': return `template(passacaglia, ${phrase}, ground=${g(t)}, upper=${g(s)})`;
-    case 'canon': return `template(canon, ${phrase}, ground=${g(t)}, subject=${g(s)})`;
+    case 'canon': return `template(canon, ${phrase}, subject=${g(s)}, ground=${g(t)})`;
     case 'rondo': return `template(rondo, ${phrase}, refrain=${g(t)}, episodes=${g(s, sparse(genre) ? 'part=melody' : 'part=arp')})`;
     case 'fugue': return `template(fugue, ${phrase}, subject=${g(t)}, counter=${g(s)})`;
     case 'theme-and-variations': return `template(theme-and-variations, ${phrase}, theme=${g(t)})`;
@@ -450,10 +466,11 @@ function clampN(n, step) {
 
 /**
  * The request JSON for the station answer: {station, n, count, segue, check, retune?, locks?, neighbours?}. A retune sends
- * the same n: the new station's track N is what plays next.
+ * the same n: the new station's track N is what plays next. `count` never asks past the station's reach (a `~` station's
+ * last position is MAX_N_WALK); `step` is the station's step after the retune, when it changes it.
  */
-export function stationRequest(state, { retune: changes = null, n = state.n, count = WINDOW, check = false, neighbours = false } = {}) {
-  const req = { station: state.text, n, count, segue: !!state.segues, check: !!check };
+export function stationRequest(state, { retune: changes = null, n = state.n, count = WINDOW, check = false, neighbours = false, step = state.knobs && state.knobs.step } = {}) {
+  const req = { station: state.text, n, count: Math.max(1, Math.min(count, maxN(step) - n + 1)), segue: !!state.segues, check: !!check };
   if (changes && Object.keys(changes).length) req.retune = { ...changes };
   if (state.locks && state.locks.length) req.locks = [...state.locks];
   if (neighbours) req.neighbours = true;
@@ -468,7 +485,7 @@ export function retuneRequest(state, changes, opts = {}) {
   if (!state.knobs) return { ok: false, error: 'the station has not been answered yet' };
   const r = retune(state.knobs, changes, state.locks);
   if (!r.ok) return r;
-  return { ok: true, request: stationRequest(state, { ...opts, retune: changes }), knobs: r.knobs };
+  return { ok: true, request: stationRequest(state, { ...opts, retune: changes, step: r.knobs.step }), knobs: r.knobs };
 }
 
 /** The knobs of an answer's station object (seed as a string, as written). */
@@ -479,7 +496,8 @@ export function knobsOf(st) {
 /**
  * Apply an answer: {state, error}. An error answer ({ok: false, error, diagnostics}) leaves the state as it was, with
  * `error` = {message, diagnostics}. Otherwise the station is the answer's (its text, CID and knobs), N is the answer's n
- * (a retune's is the n it was asked at), now playing is track n, up next track n+1, and the segue the one from n.
+ * (a retune's is the n it was asked at), now playing is track n, up next track n+1, and the segue the one from n. The
+ * locks stay the page's own: the answer echoes the ones it was asked with, and a lock toggled since then must hold.
  */
 export function applyAnswer(state, ans) {
   if (!ans || typeof ans !== 'object' || ans.ok !== true || !ans.station) {
@@ -497,7 +515,7 @@ export function applyAnswer(state, ans) {
     station: ans.station,
     knobs: knobsOf(ans.station),
     n,
-    locks: Array.isArray(ans.locks) ? KNOBS.filter((k) => ans.locks.includes(k)) : state.locks,
+    locks: state.locks,
     now: tracks.find((t) => t.n === n) || null,
     next: tracks.find((t) => t.n === n + 1) || null,
     segue: segues.find((s) => s.from === n) || null,
