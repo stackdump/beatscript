@@ -107,7 +107,7 @@ text with something a reference starts with in its tokens, so a program with non
 
 - **Hover** on a reference: its canonical call, which half it is, the CID it resolves to, the generator and version, the
   track, what it was fitted to (`fitted to the program's key `am` and its tempo 124`), where it stands, and its expansion in a
-  `btw` fence, at most 24 lines or 2400 characters, then `… N more lines not shown (M in all)`. On a `# from: <call> ->
+  `beatscript` fence, at most 24 lines or 2400 characters, then `… N more lines not shown (M in all)`. On a `# from: <call> ->
   <cid>` line that an eject wrote, where the text came from. Nothing new for a client to do: it is `textDocument/hover`.
 - **`beatscript/expand`** takes `{textDocument}` (every reference) or `{textDocument, position}` (the one there: whose own text holds
   the position, else whose statement does) and answers
@@ -141,7 +141,7 @@ text with something a reference starts with in its tokens, so a program with non
   - `beatscript.expand.copy` answers `{text, call, resolved}`, `text` being the `from` line and the expansion: what eject would write;
   - `beatscript.eject` answers `{label, edit}` (a `WorkspaceEdit`) once the edit is proved, an error with the reason otherwise; when
     the client said `workspace.applyEdit` in `initialize`, the server also sends it the edit as a `workspace/applyEdit`
-    request (id `btw/<n>`; its answer is taken quietly).
+    request (id `beatscript/<n>`; its answer is taken quietly).
 
   **The show/hide state lives in the client.** The server answers what a reference stands for and keeps nothing; the VS Code
   extension and the web page remember which expansions are shown and ask `beatscript/expand` (they never send `beatscript.expand.toggle`
