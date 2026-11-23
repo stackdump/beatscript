@@ -120,12 +120,17 @@ def main(argv):
             except Exception as e:  # noqa: BLE001 (any failure is the check's answer)
                 fails.append("%s: %s: %s" % (fid, tool, e))
                 continue
-            text = "".join(x.get("text", "") for x in r.get("content", []) if x.get("type") == "text")
+            blocks = [x.get("text", "") for x in r.get("content", []) if x.get("type") == "text"]
+            text = "".join(blocks)
             if r.get("isError"):
                 fails.append("%s: %s: tool error: %s" % (fid, tool, text[:300]))
                 continue
             try:
-                ans = json.loads(text)
+                # a page (artifact) is two blocks, its JSON summary and the page: read as the summary with the page as
+                # `html`, as the Rust runner does
+                ans = json.loads(blocks[0] if len(blocks) > 1 else text)
+                if len(blocks) > 1 and isinstance(ans, dict):
+                    ans["html"] = blocks[1]
             except ValueError:
                 fails.append("%s: %s: the answer is not JSON: %s" % (fid, tool, text[:200]))
                 continue

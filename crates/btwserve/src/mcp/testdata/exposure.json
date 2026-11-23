@@ -23,6 +23,20 @@
   },
   "features": [
     {
+      "id": "artifact", "docs": [],
+      "say": [["artifact", "publish the returned html as a page (an Artifact) exactly as it is"], ["artifact", "@stackdump/beatscript-player@0.1.0"], ["artifact", "Subresource Integrity"], ["artifact", "/p/<CID>"], ["artifact", "data: URI"], ["artifact", "audio"], ["artifact", "self-sealing share link"], ["artifact", "store"]],
+      "calls": [
+        {"tool": "artifact", "args": {"text": "#! name: exposure check\ntempo 120\ndeck A: kick x ~ x ~ | hihat x*8\n"}, "save": {"cid": "/cid"},
+         "expect": [["/cid", "has"], ["/title", "=", "exposure check"], ["/audio", "=", "engine"], ["/link", "~", "/#${cid}."], ["/short_url", "!~", "/p/"], ["/player/version", "=", "0.1.0"],
+                    ["/html", "~", "<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.1.0/beatscript-track.js\" integrity=\"sha384-"],
+                    ["/html", "~", "crossorigin=\"anonymous\""], ["/html", "~", "<script type=\"importmap\">"], ["/html", "~", "cid=\"${cid}\""], ["/html", "!~", "/p/${cid}"], ["/html", "~", "CC0-1.0"], ["/html", "!~", "autoplay"]]},
+        {"tool": "render", "stores": true, "args": {"text": "#! name: exposure artifact\ntempo 120\nsection groove 2 bars {\n  deck A: kick x ~ x ~ | hihat x*8\n}\narrange groove\n"}, "save": {"stored": "/cid"}, "expect": [["/cid", "has"]]},
+        {"tool": "artifact", "stores": true, "args": {"cid": "${stored}"},
+         "expect": [["/cid", "=", "${stored}"], ["/audio", "=", "inline"], ["/render/format", "=", "opus"], ["/html", "~", "<audio controls preload=\"metadata\" src=\"data:audio/ogg;base64,T2dnU"], ["/html", "!~", "<script"], ["/html", "~", "/p/${stored}"], ["/short_url", "~", "/p/${stored}"]]},
+        {"tool": "artifact", "stores": true, "args": {"cid": "${stored}", "audio": "engine"}, "expect": [["/audio", "=", "engine"], ["/html", "~", "<beatscript-track cid=\"${stored}\""]]}
+      ]
+    },
+    {
       "id": "doc-comments",
       "datum": 6662,
       "docs": [],

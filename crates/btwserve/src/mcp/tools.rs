@@ -28,7 +28,11 @@ use crate::AppState;
 #[path = "listen.rs"]
 mod listen;
 
-pub const TOOL_NAMES: [&str; 20] = ["check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private"];
+// artifact: a program as a page to publish (artifact.rs, player-cdn.lock.json), a child for the same reasons
+#[path = "artifact.rs"]
+mod artifact;
+
+pub const TOOL_NAMES: [&str; 21] = ["artifact", "check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private"];
 
 /// The tools that need a signed-in caller.
 /// The account a `/mcp` bearer token acts as: an OAuth access token bound to `/mcp` (oauth.rs), or a pasted `btw_`
@@ -631,6 +635,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
             ),
         ];
         v.push(listen::tool_def(max_prog, render_per_hour));
+        v.push(artifact::tool_def(p, max_prog));
         // the lexicon harvest, said once (text::LEXICON_DESC, also docs/btw/lexicon-harvest.md's)
         for t in v.iter_mut() {
             if HARVEST_TOOLS.contains(&t["name"].as_str().unwrap_or("")) {
@@ -797,6 +802,7 @@ impl Tools {
     fn dispatch(&self, name: &str, c: &Caller, a: Args) -> Result<Text, Fail> {
         match name {
             "check" => self.check(c, a).map(Text::Json),
+            "artifact" => self.artifact_tool(c, a),
             "fmt" => self.fmt_tool(c, a).map(Text::Json),
             "expand" => self.expand_tool(c, a).map(Text::Json),
             "generate" => self.generate_tool(c, a).map(Text::Json),
@@ -1813,12 +1819,16 @@ impl Tools {
 enum Text {
     Json(Value),
     Raw(String),
+    /// A summary and a page (artifact): two text blocks, the JSON summary first, then the page as it is.
+    Page(Value, String),
 }
 
 fn ok_result(t: Text) -> Value {
     let s = match t {
         Text::Json(v) => gojson::to_string(&v),
         Text::Raw(s) => s,
+        // no structuredContent: a client that prefers it would drop the page (pflow_artifact's reason too)
+        Text::Page(v, html) => return json!({"content": [{"type": "text", "text": gojson::to_string(&v)}, {"type": "text", "text": html}]}),
     };
     json!({"content": [{"type": "text", "text": s}]})
 }
@@ -1980,6 +1990,10 @@ mod tests {
         match t.dispatch(name, &c, Args(m)) {
             Ok(Text::Json(v)) => v,
             Ok(Text::Raw(s)) => serde_json::from_str(&s).unwrap(),
+            Ok(Text::Page(mut v, html)) => {
+                v["html"] = json!(html);
+                v
+            }
             Err(e) => panic!("{name}: {}", e.err.message),
         }
     }

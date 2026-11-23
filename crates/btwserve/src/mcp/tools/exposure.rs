@@ -53,6 +53,11 @@ fn call(t: &Tools, name: &str, args: Value) -> Result<Value, String> {
     match t.dispatch(name, &c, Args(m)) {
         Ok(Text::Json(v)) => Ok(v),
         Ok(Text::Raw(s)) => serde_json::from_str(&s).map_err(|e| format!("{name}: not JSON: {e}")),
+        // a page (artifact): its summary, with the page as `html` (deploy/mcp-exposure.py reads the two blocks so too)
+        Ok(Text::Page(mut v, html)) => {
+            v["html"] = json!(html);
+            Ok(v)
+        }
         Err(e) => Err(format!("{name}: {}", e.err.message)),
     }
 }

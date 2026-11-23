@@ -1261,6 +1261,11 @@ mod tests {
                 if p.extension().and_then(|x| x.to_str()) != Some("rs") || p.file_name().and_then(|n| n.to_str()) == Some("tests.rs") {
                     continue;
                 }
+                // the MCP artifact page is published on another host (a claude.ai Artifact, whose CSP allows an inline
+                // <style>, as pflow.xyz's pflow_artifact pages have), never served under this site's CSP
+                if p.ends_with("mcp/artifact.rs") {
+                    continue;
+                }
                 let s = std::fs::read_to_string(&p).unwrap();
                 let code = &s[..s.find("#[cfg(test)]").unwrap_or(s.len())];
                 for (n, line) in code.lines().enumerate() {
