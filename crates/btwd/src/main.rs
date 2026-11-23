@@ -4,6 +4,8 @@
 
 mod export;
 mod listen;
+#[cfg(test)]
+mod radio_listen;
 mod lsp;
 mod render;
 mod selftest;
