@@ -2004,12 +2004,11 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-seed">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The seed production of BeatScript&apos;s grammar (a track of the beats generator: genre, seed; a part, bars from 1).</skos:definition>
+		<skos:definition xml:lang="en">The seed production of BeatScript&apos;s grammar (a track of the beats generator: genre, seed; a part, bars from 1; SEED is seed (seeds v1) or seed@2 (v2: with its genre&apos;s swing)).</skos:definition>
 		<skos:prefLabel xml:lang="en">seed</skos:prefLabel>
-		<ns:ebnf>&quot;seed&quot; &quot;(&quot; NAME &quot;,&quot; INT [ &quot;,&quot; structure ] &quot;)&quot; [ &quot;.&quot; role ] [ &quot;[&quot; INT [ &quot;..&quot; INT ] &quot;]&quot; ]</ns:ebnf>
+		<ns:ebnf>SEED &quot;(&quot; NAME &quot;,&quot; INT [ &quot;,&quot; structure ] &quot;)&quot; [ &quot;.&quot; role ] [ &quot;[&quot; INT [ &quot;..&quot; INT ] &quot;]&quot; ]</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Start from a seed</ns:grammarSection>
 		<ns:status>stable</ns:status>
-		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-seed"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-close-bracket"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-close-paren"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-comma"/>
@@ -2021,6 +2020,7 @@
 		<ns:usesProduction rdf:resource="https://beatscript.app/ontology/concept/grammar-structure"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-int"/>
 		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-name"/>
+		<ns:usesToken rdf:resource="https://beatscript.app/ontology/concept/token-seed"/>
 		<ns:writtenAs>seed</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-set-mix">
@@ -3634,7 +3634,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-seed">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
-		<skos:definition xml:lang="en">The keyword seed of BeatScript, written in: gen, pname, seed, step.</skos:definition>
+		<skos:definition xml:lang="en">The keyword seed of BeatScript, written in: gen, pname, step.</skos:definition>
 		<skos:prefLabel xml:lang="en">seed</skos:prefLabel>
 		<ns:keywordText>seed</ns:keywordText>
 		<ns:status>stable</ns:status>
@@ -6668,6 +6668,13 @@
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>SDEG</ns:writtenAs>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-seed">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
+		<skos:definition xml:lang="en">The lexer&apos;s SEED token, used in: seed.</skos:definition>
+		<skos:prefLabel xml:lang="en">SEED</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>SEED</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/token-space">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#TokenClass"/>
 		<skos:definition xml:lang="en">The lexer&apos;s SPACE token, used in: lyric_text.</skos:definition>
@@ -6812,7 +6819,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Play a program in a browser tab</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-expand">
-		<skos:definition xml:lang="en">Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part&apos;s bars as a pattern. template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line&apos;s length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template&apos;s own. A gen@N call (gen@2 techno seed=42 section=drop part=bass: the seeded generator, the program generate prints, pinned by its CID) is written out by where it stands: `arrange from gen@2 ...` as the whole program (under a `# from: gen@2 ... -&gt; &lt;cid&gt;` line), a part line or `section X from gen@2 ... section=drop` as that section&apos;s parts, `let bed = gen@2 ... section=drop part=bass` as a let a bar (bed_1, bed_2, ..., bed = &lt;bed_1 bed_2 ...&gt;). check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program&apos;s, from_cid the one you gave; with lineage true the text opens with `#! forked-from: &lt;from_cid&gt;`. With eject &quot;line:col&quot; it writes out only the reference there, in place, under its `# from: &lt;call&gt; -&gt; &lt;cid&gt;` line (a comment: the ejected text has the CID of the same notes typed by hand), and answers {ok, text, cid, ejected: {call, kind, half, place, name, resolved, from}}. Read-only, no sign-in.</skos:definition>
+		<skos:definition xml:lang="en">Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part&apos;s bars as a pattern; seed@2(genre, n) is seeds v2, the same track with its genre&apos;s swing written (`arrange from seed@2(jazz, 7)` says swing 0.6; a bare seed(...) is seeds v1, written straight). template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line&apos;s length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template&apos;s own. A gen@N call (gen@2 techno seed=42 section=drop part=bass: the seeded generator, the program generate prints, pinned by its CID) is written out by where it stands: `arrange from gen@2 ...` as the whole program (under a `# from: gen@2 ... -&gt; &lt;cid&gt;` line), a part line or `section X from gen@2 ... section=drop` as that section&apos;s parts, `let bed = gen@2 ... section=drop part=bass` as a let a bar (bed_1, bed_2, ..., bed = &lt;bed_1 bed_2 ...&gt;). check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program&apos;s, from_cid the one you gave; with lineage true the text opens with `#! forked-from: &lt;from_cid&gt;`. With eject &quot;line:col&quot; it writes out only the reference there, in place, under its `# from: &lt;call&gt; -&gt; &lt;cid&gt;` line (a comment: the ejected text has the CID of the same notes typed by hand), and answers {ok, text, cid, ejected: {call, kind, half, place, name, resolved, from}}. Read-only, no sign-in.</skos:definition>
 		<skos:prefLabel xml:lang="en">expand</skos:prefLabel>
 		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;eject&quot;:{&quot;description&quot;:&quot;Optional: \&quot;line:col\&quot; (1-based) of one reference (a gen@N call, a seed(...), a &lt;cid&gt;.drop, a template(...)): eject it, writing just that one out in place under its `# from: &lt;call&gt; -&gt; &lt;cid&gt;` line, the rest left as they are.&quot;,&quot;maxLength&quot;:16,&quot;pattern&quot;:&quot;^[0-9]+:[0-9]+$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;lineage&quot;:{&quot;description&quot;:&quot;Open the written-out text with `#! forked-from: &lt;CID of the program as given&gt;` (default false), so that once it is shared it says what it came from.&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, with gen@N calls, seed(...) or template(...) references in it.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;text&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>

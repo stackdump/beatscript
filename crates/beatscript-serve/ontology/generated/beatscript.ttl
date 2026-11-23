@@ -1500,13 +1500,14 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/grammar-seed> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "seed"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The seed production of BeatScript's grammar (a track of the beats generator: genre, seed; a part, bars from 1)."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The seed production of BeatScript's grammar (a track of the beats generator: genre, seed; a part, bars from 1; SEED is seed (seeds v1) or seed@2 (v2: with its genre's swing))."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "\"seed\" \"(\" NAME \",\" INT [ \",\" structure ] \")\" [ \".\" role ] [ \"[\" INT [ \"..\" INT ] \"]\" ]" ;
+    <https://beatscript.app/ontology/ns#ebnf> "SEED \"(\" NAME \",\" INT [ \",\" structure ] \")\" [ \".\" role ] [ \"[\" INT [ \"..\" INT ] \"]\" ]" ;
     <https://beatscript.app/ontology/ns#writtenAs> "seed" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Start from a seed"@en ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-int> ;
     <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-name> ;
+    <https://beatscript.app/ontology/ns#usesToken> <https://beatscript.app/ontology/concept/token-seed> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-role> ;
     <https://beatscript.app/ontology/ns#usesProduction> <https://beatscript.app/ontology/concept/grammar-structure> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-open-paren> ;
@@ -1515,8 +1516,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-dot> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-range> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-open-bracket> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-close-bracket> ;
-    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-seed> .
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-symbol-close-bracket> .
 
 <https://beatscript.app/ontology/concept/grammar-stored> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "stored"@en ;
@@ -3275,7 +3275,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-seed> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "seed"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword seed of BeatScript, written in: gen, pname, seed, step."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword seed of BeatScript, written in: gen, pname, step."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "seed" .
 
@@ -3650,6 +3650,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The lexer's SDEG token, used in: dleaf."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "SDEG" .
+
+<https://beatscript.app/ontology/concept/token-seed> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "SEED"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The lexer's SEED token, used in: seed."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "SEED" .
 
 <https://beatscript.app/ontology/concept/token-space> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#TokenClass> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "SPACE"@en ;
@@ -8562,7 +8568,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/tool-beatscript-expand> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "expand"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part's bars as a pattern. template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line's length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template's own. A gen@N call (gen@2 techno seed=42 section=drop part=bass: the seeded generator, the program generate prints, pinned by its CID) is written out by where it stands: `arrange from gen@2 ...` as the whole program (under a `# from: gen@2 ... -> <cid>` line), a part line or `section X from gen@2 ... section=drop` as that section's parts, `let bed = gen@2 ... section=drop part=bass` as a let a bar (bed_1, bed_2, ..., bed = <bed_1 bed_2 ...>). check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program's, from_cid the one you gave; with lineage true the text opens with `#! forked-from: <from_cid>`. With eject \"line:col\" it writes out only the reference there, in place, under its `# from: <call> -> <cid>` line (a comment: the ejected text has the CID of the same notes typed by hand), and answers {ok, text, cid, ejected: {call, kind, half, place, name, resolved, from}}. Read-only, no sign-in."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "Write out every seed(...) and template(...) of a BeatScript program as the plain BeatScript it stands for, to start from a generated track and edit it. seed(genre, n[, structure]) is a track of the beats generator (genres: ambient blues bossa country dnb dubstep edm funk garage house jazz lofi metal reggae speedcore synthwave techno trance trap; structures: standard, loop, minimal, extended), and it is a value, never audio: `arrange from seed(techno, 42)` is the whole track, `section intro from seed(techno, 42)[1..8]` its first eight bars as a section, and `bass seed(techno, 42).bass[17..24]` (or `let riff = seed(techno, 42).bass[17..24]`) one part's bars as a pattern; seed@2(genre, n) is seeds v2, the same track with its genre's swing written (`arrange from seed@2(jazz, 7)` says swing 0.6; a bare seed(...) is seeds v1, written straight). template(name, phrase) compiles a phrase, a phrasebook id (@tempest_such_stuff) or any words in quotes, to a whole track, `arrange from template(deep-house, @tempest_such_stuff)` (templates: deep-house): the phrase is the vocal line, its syllables the line's length, its stress the accents and the beats, its meter the subdivision, and the arrangement is the template's own. A gen@N call (gen@2 techno seed=42 section=drop part=bass: the seeded generator, the program generate prints, pinned by its CID) is written out by where it stands: `arrange from gen@2 ...` as the whole program (under a `# from: gen@2 ... -> <cid>` line), a part line or `section X from gen@2 ... section=drop` as that section's parts, `let bed = gen@2 ... section=drop part=bass` as a let a bar (bed_1, bed_2, ..., bed = <bed_1 bed_2 ...>). check, eval and share take the references as they are and play the same music (the CID is of the short text); expand gives the long text, with a `# from seed(...)` or `# from template(...)` line over each place it wrote, to edit from there. Answers {ok, text, canonical, cid, from_cid, refs, diagnostics}: cid is the written-out program's, from_cid the one you gave; with lineage true the text opens with `#! forked-from: <from_cid>`. With eject \"line:col\" it writes out only the reference there, in place, under its `# from: <call> -> <cid>` line (a comment: the ejected text has the CID of the same notes typed by hand), and answers {ok, text, cid, ejected: {call, kind, half, place, name, resolved, from}}. Read-only, no sign-in."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "expand" ;
