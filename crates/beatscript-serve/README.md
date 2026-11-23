@@ -28,7 +28,7 @@ site for every path no Go route takes. The rest goes to `-fallback`, or is a JSO
   `<data>/render/<cid>.<sr>.r2.wav` + `.meta`, Go's names, so either server serves the other's WAV. Opus is
   `<cid>.<sr>.r2rs.opus`: another encoder, so another render version (RUST-SERVER.md §5). Parts are `*.rs.part`.
 - **CID check**: the store re-hashes the text (`djlive::compile::program_cid`, what Go's `btw.ProgramCID` mirrors);
-  `<cid>.<packed>` is opened with `beatscript-api::open_json` (what `beatscript open` prints), refused on a mismatch (422
+  `<cid>.<packed>` is opened with `beatscript_api::open_json` (what `beatscript open` prints), refused on a mismatch (422
   `cid_mismatch`), and stored like an anonymous `PUT /api/programs/<cid>`, with the per-address limit.
 - **Responses**: status codes, error JSON (`{"error":{...}}` + newline, Go's `<>&` escaping), and every header
   (security, CSP, license `Link`s, CORS for `Origin`, `X-Btw-*`, `ETag`, `Range`/`If-None-Match`, 416 as Go 1.23+

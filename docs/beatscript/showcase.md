@@ -221,7 +221,7 @@ Nothing here stopped the piece. Each has the exact text and what the tools said;
    djctl: deck A hihat: `vel` differs between sections
    ```
 
-   (`beatscript_cmd.rs`: `comp.song_net_cids()?` comes before the `--sections` loop; the showcase says the same about its hi-hat.) The error is a documented limit of the longhand form; the listing
+   (`btw_cmd.rs`: `comp.song_net_cids()?` comes before the `--sections` loop; the showcase says the same about its hi-hat.) The error is a documented limit of the longhand form; the listing
    it blocks is not.
 4. **Reserved words that are natural names** (an annoyance, the messages are right): `pad` (a def, it is the performed input), `drums` (a def, a port type), `beat` (a section),
    `low` (a section, an EQ band), `a1`-style names (notes). Each error is "`X` is a word of the language" or "reads as a note, chord or key", at the name.

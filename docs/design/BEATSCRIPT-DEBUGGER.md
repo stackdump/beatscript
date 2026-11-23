@@ -40,9 +40,9 @@ as a fork). No engine change, no grammar change. Web and Android follow in v1.1 
 | `docs/BEATSCRIPT.md` on `origin/feat/btw-language` (grammar, canonical form, evolve, marks) | read in full |
 | `crates/djlive/src/runtime.rs` (`Live`, `service`, `watch_fires`, `marks`, `status`), `compile.rs` (`Compiled`, `Control`, `Timing`, `Generation`), `expand.rs` (call time words), `diag.rs` (`Span`) | read; claims below about them are verified |
 | `crates/djhost/src/beatscript_render.rs`, `docs/HEADLESS.md` (offline render) | read; the "control lines are not rendered offline" limit is BEATSCRIPT.md's own and is the biggest dependency (§10, R1) |
-| The compose route: `site/DESIGN.md`, `internal/btwsite/compose/{service,handler}.go` in the **unpushed** worktree `beats-bitwrap-io/btw-site` (`origin/feat/btw-site` is not on the remote; only `feat/btw-link` is) | read; the route may still move |
-| Firing markers / follow: `crates/djapp/src/beatscript_follow.rs`, BEATSCRIPT.md "Seeing it play" | read |
-| djandroid `feat/btw` (`rust/src/btw/`, `ComposeClient.kt`, `BeatscriptSheets.kt`) | skimmed: stubs and signatures only |
+| The compose route: `btwsite/DESIGN.md`, `internal/btwsite/compose/{service,handler}.go` in the **unpushed** worktree `beats-bitwrap-io/btw-site` (`origin/feat/btw-site` is not on the remote; only `feat/btw-link` is) | read; the route may still move |
+| Firing markers / follow: `crates/djapp/src/btw_follow.rs`, BEATSCRIPT.md "Seeing it play" | read |
+| djandroid `feat/btw` (`rust/src/btw/`, `ComposeClient.kt`, `BtwSheets.kt`) | skimmed: stubs and signatures only |
 | The engine's marking mirror (`readMarking`, `markingLayout` in `djrust/src/host/deck/views.rs`) | **seen, not exercised**: I have not checked what it reports for a one-bar slice net. Spike S1 in §10 |
 | Engine behaviour for `load_prepared` phase, pause-with-tails, scheduled sub-bar stops | **assumed**; spikes S2, S3 in §10 |
 
@@ -815,7 +815,7 @@ The rule that decides placement: **anything that is a function of (text, bar) go
   an orphan is dimmed with a tooltip. The **section timeline** under the header gets break ticks and is
   draggable to seek (a scrub that is a locate to a bar line).
 - **Follow** keeps working: while held, the follow target is the *hold window's* lines, so the editor
-  scrolls to the section you stopped in and stays (`beatscript_follow.rs`'s `Frame` input gets the held position).
+  scrolls to the section you stopped in and stays (`btw_follow.rs`'s `Frame` input gets the held position).
 - **Full screen** (`Cmd+Shift+F`): the stage stays dark and large. The transport strip stays on top with
   the header; the inspector collapses to the strip of net rings; **`Cmd+K` opens a one-line Ask overlay**
   (selection chip, instruction, `⏎`); the diff replaces the editor's selected region inline (green/red);
@@ -848,7 +848,7 @@ methods, and the page is `driver.js` + `editor.js` + a new `debug.js`:
 ### 9.3 Android (djandroid)
 
 `djandroid/rust/src/btw/` already wraps `djlive` for the phone (`Player::btw_*`, spans as UTF-16,
-`ComposeClient`, `BeatscriptSheets.kt`). The debugger adds `rust/src/btw/debug.rs` (uniffi) over the same core and
+`ComposeClient`, `BtwSheets.kt`). The debugger adds `rust/src/btw/debug.rs` (uniffi) over the same core and
 a **Debug sheet** in the BeatScript UI:
 
 - Tap a **line number** to toggle a breakpoint; tap a **token** to select it (selection = what the Ask
@@ -929,13 +929,13 @@ which is useful on a headless host and in CI.
 | Phase | Delivers | Crates and files |
 |---|---|---|
 | **P1 time travel, headless** | `Frame`, `frame_at`, `digest`, `Fidelity`; `djctl btw frame`; `debug inspect`/`seek` in *dry* mode. **Useful on its own** to Claude and CI. | `djlive/src/frame.rs`, `timeline.rs`; `djctl` (`btw frame`); `tests/frame.rs` |
-| **P2 transport** | `shift` clock, `Window`, `slice`/`rotated`, `install(frame)`, hold/pause/resume/step/seek on the desktop; `transport` in `status()`/`marks()`; follow stays on the held window. | `djlive/src/runtime.rs`, `compile.rs` (`DeckIr::slice/rotated`), `debug.rs`; `djapp/src/{live_panel.rs, beatscript_follow.rs, control/debug.rs}`; `djhost` registry noun `debug` |
+| **P2 transport** | `shift` clock, `Window`, `slice`/`rotated`, `install(frame)`, hold/pause/resume/step/seek on the desktop; `transport` in `status()`/`marks()`; follow stays on the held window. | `djlive/src/runtime.rs`, `compile.rs` (`DeckIr::slice/rotated`), `debug.rs`; `djapp/src/{live_panel.rs, btw_follow.rs, control/debug.rs}`; `djhost` registry noun `debug` |
 | **P3 breakpoints** | Kinds, anchors, `Cond` parser and typing, `next_stop`, `rebind`/orphans, session store, gutter and timeline UI, `debug break*` verbs. | `djlive/src/debug.rs`; `djhost/src/debug_store.rs`; `djapp/src/live_panel.rs` |
 | **P4 inspector** | `Inspection`, marking from IR + mirror cross-check, `Provenance` (transform and evolve-rule steps recorded in compile), `why` and `why silent`, the Debug block in the window. | `djlive/src/compile.rs` (Provenance), `frame.rs`; `djapp/src/live_panel.rs`; `crates/djhost` marking adaptor |
 | **P5 edit loop (MCP-driven)** | `edit.rs` (ops, apply, rebase, footprint), `context.rs`, `propose`/`preview` (hold-loop)/`audition`/`accept`/`reject`/`undo`, lineage in `live_store`, provenance headers; `djapp_debug` verbs complete. | `djlive/src/{edit.rs, context.rs}`; `djhost/src/live_store.rs`; `djapp/src/control/debug.rs`; `djctl` (`btw propose`) |
 | **P6 std/transitions** | The library, golden CID, `check` harness for each def, index in the bundle, cheat-sheet and system-prompt text, `import` resolution in `beatscript_env`. | `djhost/std/transitions.beatscript`; `djhost/src/beatscript_env.rs`; `beatscript-api` cheatsheet |
-| **P7 web** | `BeatscriptRun` debug exports, `debug.js`, gutter and Ask in the page, `/api/compose` edit mode, `debug_*` MCP tools, session-bridge events, deep-link position. | `crates/beatscript-api`, `crates/djweb` (on `feat/btw-web`); beats `internal/btwsite/{compose,mcpsrv,limits,api}`, `site/web/js/{debug.js,editor.js,driver.js}` |
-| **P8 Android** | `rust/src/btw/debug.rs`, Debug sheet, edit-mode compose client. | djandroid `rust/src/btw/`, `BeatscriptSheets.kt`, `ComposeClient.kt` |
+| **P7 web** | `BeatscriptRun` debug exports, `debug.js`, gutter and Ask in the page, `/api/compose` edit mode, `debug_*` MCP tools, session-bridge events, deep-link position. | `crates/beatscript-api`, `crates/djweb` (on `feat/btw-web`); beats `internal/btwsite/{compose,mcpsrv,limits,api}`, `btwsite/web/js/{debug.js,editor.js,driver.js}` |
+| **P8 Android** | `rust/src/btw/debug.rs`, Debug sheet, edit-mode compose client. | djandroid `rust/src/btw/`, `BtwSheets.kt`, `ComposeClient.kt` |
 | **P9 later** | Offline preview (needs P0a) and level-matching; soft-stop; sub-bar stops; `overlay`; typed def params; DAP adapter. | engine and grammar changes, each its own design |
 
 ### 10.3 Spikes to run first (they decide risk, and take hours)

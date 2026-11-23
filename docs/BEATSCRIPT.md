@@ -7,8 +7,11 @@ anything djapp does a program can do. You evaluate the text (Cmd+Enter, `btw eva
 on **the next bar**: no restart, no gap, no glitch. A program with an error is refused whole, and the last
 good one keeps playing.
 
-The language is called BeatScript; `btw` is its identifier wherever a name is syntax. Files and snippets are `.beatscript`. The registry noun is `btw` (`live` and `livecode` still work), the MCP tool
-`djapp_btw`, the window `btw`, the shell `djctl btw`.
+The language is called BeatScript, and `beatscript` is its name wherever a name is syntax: the command line `beatscript`,
+files and snippets `.beatscript`, the MIME type `text/beatscript`, the editors' language id. It was called `btw` until
+BeatScript 2 ("Versions"). The desktop booth (djrust) still spells its command noun `btw`, and those are real commands: the
+registry noun `btw` (`live` and `livecode` still work), `do btw`, `btw test`, the MCP tool `djapp_btw`, the window `btw`,
+the shell `djctl btw`.
 
 This page is the whole reference. The language grew in two steps: the base (mini-notation, control lines, `let` `def`
 `repeat` `section` `arrange`, `evolve`, saved and shared programs, and sets: programs of programs), and fourteen extensions written in one run
@@ -28,6 +31,7 @@ JSON-LD and performances), `djhost::beatscript_render` (a song as an arrangement
 `djapp/src/control/live.rs` (the `btw` verbs).
 
 ```text
+#! beatscript 2
 tempo 126
 key am
 
@@ -47,6 +51,8 @@ kilohertz to eight kilohertz over eight bars."
 
 - A program is **lines**. A line is blank, a `# comment`, or one statement. A line that starts with
   `|` continues the statement above it.
+- A program starts with its **version line**, `#! beatscript 2`. A text with no version line (or with `#! btw 1`) is
+  BeatScript 1, the old spelling: it plays the same, and keeps its old CID ("Versions").
 - Words are lower case. Deck names are `A` and `B`. Numbers are plain: `5`, `0.7`, `2k` (= 2000),
   `50%` (= 0.5), and **wherever the language takes a number it takes arithmetic**: `tempo 120 + 6`,
   `at bar $i * 2 + 1`, `kick e($i % 4 + 1, 8)`.
@@ -60,6 +66,48 @@ kilohertz to eight kilohertz over eight bars."
   **total** (no recursion, every count written out) and **deterministic** (chance is a hash of the text and the bar;
   nothing reads a clock, a random source or the machine).
 - A mistake is an error with a line, a column, what was expected and the nearest name; the program is refused whole.
+
+## Versions
+
+A program starts with its version line:
+
+```text
+#! beatscript 2
+tempo 126
+deck A: kick x ~ x ~ | hihat x*8
+```
+
+**BeatScript 2** is the language that was called `btw`, renamed. Its meaning is the same line for line: every statement
+of a BeatScript 2 program means what it meant before, and plays the same.
+
+- **BeatScript 1 is the old spelling.** A text whose header block (the `#!` lines it starts with) says `#! btw 1`, or has
+  no version line at all, is BeatScript 1. It reads, checks and plays as it always did, and keeps its old CID: every
+  program, link and CID made before the rename means what it meant. `#! beatscript 3`, `#! btw 2`, `#! beatscript 1`, a
+  bare `#! beatscript`, or two version lines are errors at the line.
+- **The version line is part of the program.** The canonical text of a BeatScript 2 program keeps its version line first
+  (`#! beatscript 2`, a newline, then the statements), and its CID is of `{"format":2,"text":<canonical text>,"type":"beatscript"}`.
+  A BeatScript 1 program's CID is of `{"format":1,"text":<canonical text>,"type":"djrust.live"}`, its canonical text
+  having no `#!` line ("Canonical form"). So the same music has a new CID in BeatScript 2. `check` says which version a
+  text is in (`version`, 1 or 2) and the program's CID in the other one (`renamed_cid`).
+- **It plays exactly as before.** The dice of chance and mutation and the control net are seeded from the program's
+  BeatScript 1 CID, so a program and its upgrade play the same notes, generation for generation.
+- **`fmt` upgrades.** The editor's fmt, the MCP `fmt` tool and `beatscript fmt` write the version line first and so turn a
+  BeatScript 1 text into BeatScript 2 (the answer's `from_cid` is the CID of the text it was given);
+  `beatscript fmt --keep-version` formats and keeps the version. Nothing else upgrades a text: what `eval`, `load`,
+  `share`, `queue` and `push_private` format on the way in keeps its version, and its CID.
+- **The store keeps both CIDs.** A stored BeatScript 1 program's BeatScript 2 twin is stored beside it, recorded as
+  `isBasedOn` the old one with the derivation `renamed`. `/p/<old-cid>` redirects to `/p/<new-cid>`, and
+  `/api/programs/<old-cid>` still answers its own text. Old share links still open: a BeatScript 1 link's text has no
+  version line, so it verifies against its old CID.
+- **Files and types.** `.beatscript` is the file extension, and a `.btw` file is still read (opened and imported). The MIME
+  type is `text/beatscript` (`text/x-beatscript` is still read). The JSON-LD context is `beatscript-context-v1.jsonld`,
+  served at `https://beatscript.app/context/beatscript-v1.jsonld`; the old context stays served, unchanged, at
+  `/context/v1.jsonld`.
+- **The generators.** `gen@1` and `gen@2` print what they always printed, byte for byte (BeatScript 1, so their pins hold);
+  `gen@3` is `gen@2`'s program written in BeatScript 2, its version line first.
+
+The desktop booth's command noun is still spelled `btw` (`djctl btw eval`, `btw test`, `do btw`): it is the name of a
+registry noun, not of the language.
 
 ## Two halves: structure and engine
 
@@ -411,9 +459,11 @@ whitespace is free.
 `%` is the percent mark when it follows a digit with no space (`50%`) and the modulo operator otherwise: write
 `$i % 4` with spaces.
 
-The header lines of a `.beatscript` file are comments to the language and have a grammar of their own (F14):
+The header lines of a `.beatscript` file are comments to the language, all but the version line, and have a grammar of
+their own (F14):
 
 ```text
+#! beatscript 2                               the version line ("Versions"): BeatScript 2; none, or #! btw 1, is BeatScript 1
 #! genre: techno                              one genre of the bitwrap ontology: a name, genre:techno, bw:Techno or an IRI
 #! tags: acid, four on floor, drop            terms of it, by local name, label or IRI
 ```
@@ -1161,10 +1211,12 @@ arrange from gen@2 techno seed=42 bpm=128 key=am            the whole program
 - **Params**: the genre, then `seed=` (a whole number or a word; a call always says its seed), `bpm=` (40 to 300), `key=`,
   `length=` (short, standard or long), and which piece: `section=` (one of the program's sections) and `part=` (a role).
   `seed=42` and `seed = 42` are one call.
-- **The version is in the text**: `gen@1` is `seeded@1`, `gen@2` is `seeded@2` (a generated program's `#! generator:` line). A
-  bare `gen` is `gen@2`, and the canonical text writes the version, so it is in the CID (a `#! seeds:` line is a comment, and is
-  not). Every version stays callable: a generator that would print another program for the same inputs is a new version, and the
-  old one is kept as it was. The tests pin what a sample of calls resolves to.
+- **The version is in the text**: `gen@1` is `seeded@1`, `gen@2` is `seeded@2` and `gen@3` is `seeded@3` (a generated
+  program's `#! generator:` line). A bare `gen` is `gen@2`, and the canonical text writes the version, so it is in the CID (a
+  `#! seeds:` line is a comment, and is not). Every version stays callable: a generator that would print another program for the
+  same inputs is a new version, and the old one is kept as it was. `gen@3` is `gen@2`'s program in BeatScript 2 (its version
+  line first, "Versions"); `gen@1` and `gen@2` still print BeatScript 1, byte for byte. The tests pin what a sample of calls
+  resolves to.
 - **It fits the program**: unless the call says its own `bpm=` or `key=`, it is generated at the program's `tempo` and in its
   `key`, so two seeds crossed with `morph` or `xfer` never clash. `check` says so at the call, with the CID: `gen@2 techno seed=42
   section=drop part=bass -> z4EB... (seeded@2): generated in the program's key am and at its tempo 124`. The fitting is part of
@@ -1176,7 +1228,7 @@ arrange from gen@2 techno seed=42 bpm=128 key=am            the whole program
 - **Eject**: `beatscript expand`, the MCP `expand` and the editor write one reference out in place, under a `# from: <call> -> <cid>`
   line. The line is a comment: the ejected program has the CID of the same notes typed by hand, and the line keeps where they
   came from.
-- **No fetch**: the generator is compiled into the host (beatscript, beatscript.app, the page's wasm, the editor). A host without it
+- **No fetch**: the generator is compiled into the host (`beatscript`, beatscript.app, the page's wasm, the editor). A host without it
   says `gen@2 is not here` at the call. `seed(techno, 42)` is another generator (beats.bitwrap.io's, seeds v1) and stays as it was.
 - `check`: an unknown genre or section is an error with the nearest names; a `let` names one section and one part; a `bpm=`,
   `key=` or `length=` it does not take is an error at the param. Long note: `docs/beatscript/ext-ffi.md`.
@@ -2385,7 +2437,7 @@ deck A: bass riff inst=harp
 
 ## Sounds
 
-`btw instruments` (and `describe BeatScript`) lists every **voice** the engine voices by itself (`wobble-lead`,
+`btw instruments` (and `describe btw`) lists every **voice** the engine voices by itself (`wobble-lead`,
 `hoover`, `detuned-saw`, `pwm-lead`, the `voice-*` singers, the stingers), the **family words** (`bass`, `reese`,
 `acid`, `sub`, `pad` ...: a name that contains one plays that family's generic voice), the drum **kits**
 and the sound **palettes**. In a part:
@@ -2519,7 +2571,7 @@ against the longhand with that one name changed (and asserts that name is the on
 The desktop app's `btw` window lights what is playing, in the style of Strudel and Sonic Pi, and fills the screen when asked.
 
 - **Full screen:** the **Full** button, **Cmd+Shift+F** in the window, or `windows fullscreen window=live` (also
-  `do windows fullscreen window=live`, `window=BeatScript` works, `on=false` returns it). The editor gets the screen on a dark stage
+  `do windows fullscreen window=live`, `window=btw` works, `on=false` returns it). The editor gets the screen on a dark stage
   with large monospace text, and the header (section, bar, phrase, generation, the phrase's eight lights) stays on top.
   **Esc** returns. No other window goes full screen yet.
 - **Token lamps:** each step token (`x`, `a2`, `e5`, `chord(am)`) lights up the moment its hit sounds and fades over a beat. A
@@ -2563,7 +2615,7 @@ The windowed panel folds the change plan under one line, `plan: N changes` (coll
 `header` (the section header's span and the playhead's progress), `fires` (role, deck, `age_beats`, the token's `spans` and its
 `call_sites`), `controls` (the line, its span and `via`, `age_beats`, `progress` of a ramp, `held`), `generation`,
 `generation_flash_beats`, `evolve_spans`. Every span is `{start, end, line, col, len}` in the evaluated text.
-Screenshots: `docs/layout-audit/btw/` (`cargo test -p djapp beatscript_markers_shots -- --ignored`, which plays
+Screenshots: `docs/layout-audit/btw/` (`cargo test -p djapp btw_markers_shots -- --ignored`, which plays
 `examples/markers-demo.beatscript` on a fake clock).
 
 ## Evaluating and hot reload
@@ -2601,9 +2653,15 @@ moves with the section: lengthen a section that has a running `mix` or `duck` (h
 
 ## Canonical form
 
-The **program CID** is the share CID (`z...`, sha-256, CIDv1, base58) of
-`{"format":1,"text":<canonical text>,"type":"djrust.live"}`. The canonical text is the parse, printed again, so
-formatting never forks a program. A text's **line ends** do not matter: `\n`, `\r\n` and a lone `\r` (an old Mac file) are the same
+The **program CID** is the share CID (`z...`, sha-256, CIDv1, base58) of a document that names the version ("Versions"):
+
+- BeatScript 2: `{"format":2,"text":<canonical text>,"type":"beatscript"}`, whose canonical text starts with the version
+  line (`#! beatscript 2`, a newline, then the statements);
+- BeatScript 1 (`#! btw 1`, or no version line): `{"format":1,"text":<canonical text>,"type":"djrust.live"}`, whose
+  canonical text has no `#!` line at all, exactly as before the rename.
+
+A canonical text says its version by its first line alone (`djlive::version::of_canonical`), so whatever holds one hashes it
+right with nothing beside it. The canonical text is the parse, printed again, so formatting never forks a program. A text's **line ends** do not matter: `\n`, `\r\n` and a lone `\r` (an old Mac file) are the same
 newline, and a UTF-8 **byte-order mark** at the start is white space; an error's line and column are the same whichever way
 the lines end. These do not change the CID:
 
@@ -2614,7 +2672,7 @@ the lines end. These do not change the CID:
 | number spelling | shortest form: `18k` = `18000`, `0.50` = `0.5`, `50%` = `0.5`, `2.0` = `2` |
 | note, key and chord spelling | lower case, flats as sharps: `Bb4` = `a#4`, `Bbm` = `a#m`, `BBMAJ7` = `a#maj7`, `D:Dorian` = `d:dorian` |
 | order of params | sorted by name, in a part (`oct=2 vel=100`) and in a `do` line |
-| comments | dropped: not in the CID, and not in the canonical text (the `#!` header lines are comments too: a name, the rights, `genre`, `tags`) |
+| comments | dropped: not in the CID, and not in the canonical text (the `#!` header lines are comments too: a name, the rights, `genre`, `tags`; the version line alone is kept, first, in BeatScript 2) |
 | a scalar `let` | its value is put where it is used |
 | an `import` | its snippet's CID replaces the name |
 | a borrowed section or part | kept as written: `<cid>.drop` has the source's full CID in it |
@@ -2649,9 +2707,12 @@ steps (`x ~ x` is not `x x ~`), the tokens of a `def` or `repeat` body (a macro:
 (`tempo 60 + 6` and `tempo 66` are one program), but `e(3, 8, 10)` and `e(3, 8, 2)`, `emit c2`, `emit bass c2` and `emit out c2` play the
 same and are different programs. Names are opaque to the laws of `stack` and `then` (`let both = stack(a, b)` is not the text
 `stack(a, b)`).
-`btw fmt` prints exactly this text and its CID; `share` encodes exactly this text. The editor's fmt and the MCP `fmt` (`text`) print it
-with the `#!` header lines, comments and blank lines between blocks kept (`djlive::format`; same CID, and formatting twice is
-formatting once); programs sent by `eval`, `load`, `queue`, `share`, `push_private` arrive so. The tests (`canonical.rs`,
+`btw fmt` prints exactly this text and its CID; `share` encodes exactly this text. The editor's fmt, the MCP `fmt` (`text`) and
+`beatscript fmt` print it with the `#!` header lines, comments and blank lines between blocks kept, and **upgrade**: a BeatScript 1
+text comes back in BeatScript 2, its version line first, with the BeatScript 2 CID (`djlive::format::format_upgrading`; `from_cid`
+is the CID of the text given, and formatting twice is formatting once). `beatscript fmt --keep-version` formats and keeps the
+version. Programs sent by `eval`, `load`, `queue`, `share`, `push_private` arrive formatted with their version kept
+(`djlive::format::format`: the same CID), so a text is never upgraded without being asked. The tests (`canonical.rs`,
 `format.rs`) reformat the repo's programs at random (spacing, tabs, comments, `\|` line breaks, number and note spellings) and demand
 the same CID, a changed note another. Every extension has such tests (reformatting keeps the CID, an edit changes it, the
 canonical text is a fixed point), `examples_beatscript.rs` for `examples/beatscript/`.
@@ -2667,10 +2728,10 @@ credited to it, down the fork chain. Two CIDs: the **program CID** (of the text)
 the same program.
 
 A `.beatscript` file in `<support>/live` (`$DJ_LIVE_DIR`) is the program with `#!` header lines (comments to the
-language), so any `.beatscript` runs as it stands:
+language, all but the version line), so any `.beatscript` runs as it stands (and a `.btw` file is still read):
 
 ```text
-#! btw 1
+#! beatscript 2
 #! name: night bus
 #! license: CC-BY-4.0
 #! visibility: public
@@ -2806,7 +2867,7 @@ refused). `djctl btw render FILE OUT.wav [--sr N] [--beats N]` plays a song's se
 and `replay`, and a word that is no number is an error); `--bars` is 1 to 16384.
 
 The window's title is `btw`: the editor, **▸ section n/m** beside the bar and phrase, errors with carets, what
-will change, the CID and a name field, the saved programs. A deck that plays a program shows **BeatScript: <name>**
+will change, the CID and a name field, the saved programs. A deck that plays a program shows `btw: <name>`
 and its section, bar and phrase where a track shows its genre and seed.
 
 ### The offline render
@@ -2851,8 +2912,8 @@ performed program renders with every input at 1/2.
 the engine's own, the voices), `live_store` (rights, forks, import credits, `.beatscript` round trip, legacy files, links,
 the JSON-LD pair, performances), `beatscript_render`, `beatscript_test`, `beatscript_inputs`, `ontology`, `vocals`, and the integration
 tests `tests/ext_linked.rs` (14), `beatscript_tempo.rs` (9: a kick on every beat lands within 12 ms of the second the map
-gives its beat; a duck heard under a curve) and `beatscript_test_tempo.rs` (5). `crates/djctl`: `tests/beatscript_test_cmd.rs` (7),
-`beatscript_replay.rs` (4), `ext_linked.rs` (4). `crates/djapp` `app_tests`: the registry round trip over every `btw` verb,
+gives its beat; a duck heard under a curve) and `beatscript_test_tempo.rs` (5). `crates/djctl`: `tests/btw_test_cmd.rs` (7),
+`btw_replay.rs` (4), `ext_linked.rs` (4). `crates/djapp` `app_tests`: the registry round trip over every `btw` verb,
 the window's buttons, and the verbs on the real engine (fmt, instruments, share, open refusing a forgery, fork,
 export, the deck panel's line, `track save` of a program deck; a duck on the real pump; a `for` mix reading the real
 mixer; `btw test` measuring levels; performed inputs through the bindings; a performance kept and replayed).

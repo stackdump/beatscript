@@ -468,7 +468,7 @@ built (not installed).
   every event, and the measure is the same as a reading of the stems over those seconds. `btw`'s verbs are now 20 (`generation instruments jsonld terms test` after the
   fifteen): the live action list and the registry agree.
 * F13 meets F4, F8, F9, F11, F2, F1, F3, F10, F12 and F14 (`tests/ext_perform_cross.rs`, `djhost` `beatscript_test` / `beatscript_render` / `live_store`,
-  `djctl/tests/beatscript_test_cmd.rs`; docs/beatscript/ext-perform.md "Meeting the others"): a shaped ramp's ends and an lfo's `center=` / `depth=` are control values
+  `djctl/tests/btw_test_cmd.rs`; docs/beatscript/ext-perform.md "Meeting the others"): a shaped ramp's ends and an lfo's `center=` / `depth=` are control values
   (an lfo re-reads them at each bar line and goes on from the new middle; `phase=` stays literal); a `when` after a mix, a duck or a sing line is
   decided while the program plays (those lines are compiled apart from `Compiler::control`, so the guard used to be dropped silently), while a mix
   item takes no input and the error names the control line to write; a port carries a number fixed when the program is read, an assertion cannot

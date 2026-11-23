@@ -7,7 +7,7 @@ performance), small hooks in `parse.rs`, `expr.rs`, `expand.rs`, `compile.rs`, `
 side in `djhost::beatscript_inputs`, the store in `djhost::live_store`, the verbs in `djhost::control_registry` and `djapp`'s
 `control/live.rs`, the offline replay in `djhost::beatscript_render` and `djctl btw replay`. Example `examples/beatscript/perform.beatscript`. Tests:
 `crates/djlive/tests/ext_perform.rs` (and the unit tests in `perform.rs`), `djhost` (`beatscript_inputs`, `live_store`, `beatscript_render`),
-`djctl/tests/beatscript_replay.rs`, `djapp` (`app_tests.rs`: `performed_inputs_read_what_the_bindings_see`,
+`djctl/tests/btw_replay.rs`, `djapp` (`app_tests.rs`: `performed_inputs_read_what_the_bindings_see`,
 `a_performance_is_kept_and_replayed_through_the_btw_verbs`).
 
 ## Grammar
@@ -189,7 +189,7 @@ means is a rule over the devices attached, in port order:
 
 A device that is attached and untouched reads 0 for a pad and a key, and **1/2 for a knob** that never moved (R4: a knob is at home in the
 middle); a name no attached device has a control for is `None` (the program reads the input's home, 1/2 for a knob, and says so). `Board::bank()` is how many knobs and pads the attached devices have (a kind none has stays the
-default), and `App::beatscript_bank` hands it to every `check` and `eval` (`Env::bank`) and to `btw perform`; `check` does not consult it
+default), and `App::btw_bank` hands it to every `check` and `eval` (`Env::bank`) and to `btw perform`; `check` does not consult it
 (R-06: it used to, so `knob(9)` was an error with an MPK attached and fine without, and a program saved on one machine could fail to
 load on another), so `knob(9)` on an MPK checks and reads 1/2. A device drawn in the Map window and clicked is attached through its software port and answers the same.
 
@@ -305,7 +305,7 @@ time) and its performances are objects of their own.
 ## Meeting the others
 
 Found when the performed tier met the other features (`crates/djlive/tests/ext_perform_cross.rs`, `djhost` `beatscript_test` / `beatscript_render` /
-`live_store`, `djctl/tests/beatscript_test_cmd.rs`).
+`live_store`, `djctl/tests/btw_test_cmd.rs`).
 
 * **F4 shapes and lfo.** `master: level 0 -> knob(1) over 4 bars exp` is a performed ramp like the plain one (the shape stays; its
   ends were frozen at the 1/2 the compiler checks with before). An lfo's **`center=` and `depth=`** are control values:

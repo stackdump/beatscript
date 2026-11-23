@@ -4,8 +4,8 @@ The BeatScript Android app (beatscript-app, formerly djandroid; `app.beatscript`
 code. Once paired, the site (and an assistant over its MCP) can send BeatScript programs to the phone and
 play them there, and the site sees what the phone plays. Server: beatscript-serve `crates/beatscript-serve/src/hub/pair.rs` in this repo (ported from the retired Go `internal/site/server/pair.go`).
 Phone: djandroid `rust/src/btwpair.rs` (the protocol core, `network` feature only) and
-`app/src/network/java/.../btw/BeatscriptPairingImpl.kt` (the transport). The phone's side is in djandroid
-`docs/BeatScript-PAIR.md`.
+`app/src/network/java/.../btw/BtwPairingImpl.kt` (the transport). The phone's side is in djandroid
+`docs/BTW-PAIR.md`.
 
 ## The flow
 
@@ -68,7 +68,7 @@ byte for byte, so the two sides cannot drift.
 `site/testdata/pair/qr-golden.json` pins one whole pairing QR payload as the site makes it
 (`PairLink`, `https://beatscript.app/pair#<22>.<22>`, with `-` and `_` in the token) and the v1 claim a
 phone signs for it. `pair_qr_golden_test.go` makes it and checks that a live offer's link is `PairLink`'s;
-beatscript-app copies it to `rust/tests/beatscript_pair_qr_golden.json`, and its `btwpair.rs` test parses the payload
+beatscript-app copies it to `rust/tests/btw_pair_qr_golden.json`, and its `btwpair.rs` test parses the payload
 with the app's own parser and reproduces the claim byte for byte. `TestPairQRScanSingleUseExpiry` scans as the
 phone does on a beatscript.app site: the claim is accepted once, the same claim again is `410 pair_used`, and a
 code past two minutes is `410 pair_expired`, each telling the person to show a new code.

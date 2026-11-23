@@ -5,8 +5,8 @@
 `crates/djlive/src/constraint.rs`, with the vocal's windows recorded in `sing.rs` (`Compiled::sing`) and a part's chance grid in
 `compile.rs` (`PartIr::may`) and `chance.rs` (`ChanceCtx::all`); the measuring is
 `crates/djhost/src/beatscript_test.rs`; the verb is `btw test` (registry: `djhost/src/control_registry/nouns.rs`, handler:
-`djapp/src/control/live.rs`) and `djctl btw test FILE` (`djctl/src/beatscript_cmd.rs`). Tests: `crates/djlive/tests/ext_assert.rs`, the
-module tests of `beatscript_test.rs`, `crates/djctl/tests/beatscript_test_cmd.rs` and `the_btw_test_verb_judges_assertions_and_measures_levels` in
+`djapp/src/control/live.rs`) and `djctl btw test FILE` (`djctl/src/btw_cmd.rs`). Tests: `crates/djlive/tests/ext_assert.rs`, the
+module tests of `beatscript_test.rs`, `crates/djctl/tests/btw_test_cmd.rs` and `the_btw_test_verb_judges_assertions_and_measures_levels` in
 djapp's `app_tests.rs`; the constraints': `crates/djlive/tests/ext_constraint.rs`. Examples: `examples/beatscript/assert.beatscript`,
 `examples/beatscript/constraints.beatscript`.*
 

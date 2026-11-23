@@ -7,10 +7,10 @@ silent in it, so a showcase render, a level assertion over a faded-in deck and a
 whose effect the arrangement format (`djrust.arrangement/1`) has an op for is in the render, at the beat the program says and with the
 value the live runtime sends at that beat; and the lines it still has no op for are counted and named, never dropped quietly.
 
-Code: `crates/djhost/src/beatscript_render.rs` (the render), `beatscript_test.rs` (the report), `crates/djctl/src/beatscript_cmd.rs`; small additions to
+Code: `crates/djhost/src/beatscript_render.rs` (the render), `beatscript_test.rs` (the report), `crates/djctl/src/btw_cmd.rs`; small additions to
 `crates/djlive/src/shape.rs` (a sampler for an lfo and the places a value leaps) and `runtime.rs` (`RAMP_EPS` public). Example
 `examples/beatscript/render-controls.beatscript`. Tests: `crates/djhost/tests/beatscript_render_controls.rs` (35), `beatscript_render` and `beatscript_test` unit tests,
-`crates/djctl/tests/beatscript_render_cmd.rs`. The engine's arrangement (`../djrust`) is not touched: nothing here needs a new op.
+`crates/djctl/tests/btw_render_cmd.rs`. The engine's arrangement (`../djrust`) is not touched: nothing here needs a new op.
 
 ## What changes: no grammar, no canonical form
 
@@ -142,7 +142,7 @@ to `tempo_map().seconds_at` of its beat, and the render as long as the integral;
 restarting ramp, two lines on one knob, **stacked and sequenced sections** (F10)), to the runtime's threshold; **what it sounds like**: a faded deck's stem against a constant one's has the ratio of the line
 (1/8, 1/2, 7/8 of the way, and 15 to 1 between the first and last second), an lfo tremolo is as deep as it says, a crossfader move takes deck A out of the mix;
 **determinism**; the **report** of the lines with no op (counts, kinds, lines, the note, the JSON; a program the render carries whole says nothing; a line a def copies is one;
-a performed line at 1/2; a false guard is not "left out"); a ramp, a mute and a filter from an **imported** def; the example; and a bound: a 64-bar song with four lfos and two ramps is 17 thousand events and renders in about a second and a half. `crates/djctl/tests/beatscript_render_cmd.rs` (3): the stderr note and the example. `shape.rs` unit test for
+a performed line at 1/2; a false guard is not "left out"); a ramp, a mute and a filter from an **imported** def; the example; and a bound: a 64-bar song with four lfos and two ramps is 17 thousand events and renders in about a second and a half. `crates/djctl/tests/btw_render_cmd.rs` (3): the stderr note and the example. `shape.rs` unit test for
 `breaks`, `leaps`, `stops_at` and `sample`. Existing `beatscript_render`, `beatscript_test`, `beatscript_tempo`, `beatscript_test_tempo` and `beatscript_replay` tests stay green.
 
 ## Decisions

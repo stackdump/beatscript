@@ -19,7 +19,7 @@ line a control call; a generator's result feeds the parts (a pattern, a section)
 gen@2 GENRE seed=N [bpm=B] [key=K] [length=short|standard|long] [section=NAME] [part=ROLE]
 ```
 
-**Which generator.** The seeded generator, `beatscript-api::generate`: the one beatscript.app's compose panel runs as "seeded, no
+**Which generator.** The seeded generator, `beatscript_api::generate`: the one beatscript.app's compose panel runs as "seeded, no
 model", the MCP `generate` tool, `POST /api/generate`. It already shipped versioned (`#! generator: seeded@1`, then
 `seeded@2` on 2026-11-22, which wrote chords as Roman numerals). `gen@N` is `seeded@N`, and its params are seeded's own
 (`seed`, `bpm`, `key`, `length`), so nothing is invented. `seed(...)` is a different generator (beats.bitwrap.io's `compose`,

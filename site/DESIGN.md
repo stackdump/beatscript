@@ -168,7 +168,7 @@ only for usage/IO/panic):
   `open` takes the link as an argument or on stdin, `--file F`/`-`/stdin for the text, `selftest`, `--version`. Usage and I/O errors exit 2
   with `beatscript: …` on stderr and nothing on stdout; everything else exits 0.
 - **Highlight classes** (14): comment keyword role action deck number step rest generator param operator word string error.
-- **Cheat sheet** (`beatscript cheatsheet`, `beatscript-api::cheatsheet()`): about 15.6 KB, not the 7-12 KB aimed at: the sections the brief names are
+- **Cheat sheet** (`beatscript cheatsheet`, `beatscript_api::cheatsheet()`): about 15.6 KB, not the 7-12 KB aimed at: the sections the brief names are
   that long with the prose gone. The two EBNF blocks are merged into one grammar (later definitions replace earlier ones), the desktop
   booth's lines (`swap pairs`, `move`, `load`, `queue`, `crossfader`, `play`/`stop`/`sync`/`mute`) and `import` are left out, a short
   "On btw.bitwrap.io" note closes it. A test fails when BEATSCRIPT.md renames a heading or rewrites a paragraph the sheet takes.
