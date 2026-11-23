@@ -134,8 +134,9 @@ CID.
 <a id="isBasedOn"></a>**isBasedOn**: what the program is based on, schema.org's term: one CreativeWork for each engine call and
 borrow its text makes (`gen@2 techno seed=42 section=drop part=bass`, a seed, a stored program's section by CID), for the BeatScript 1
 program a BeatScript 2 one was renamed from, and for each
-part an eject wrote out into it (its `# from: <call> -> <cid>` line), each named by its call (`name`), with `resolves`,
-`pinnedGenerator` and `derivation`. Like the doc comments, it is outside the CID.
+part an eject wrote out into it (its `# from: <call> -> <cid>` line; for a stored program, whose text is canonical, the lines its
+save kept as `meta.based_on`), each named by its call (`name`), with `resolves`, `pinnedGenerator` and `derivation`. Like the doc
+comments, it is outside the CID.
 
 <a id="resolves"></a>**resolves**: the CID a reference resolves to: for a generator call, the CID of the program the generator
 prints for it (its pin); for a borrow, the stored program's CID.

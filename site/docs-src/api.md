@@ -106,8 +106,11 @@ curl -s https://beatscript.app/api/check -H 'content-type: application/json' \
 
 - `PUT /api/programs/<cid>`: the body is the program text. Accepted iff its canonical CID is `<cid>`, it checks ok, it is not restricted
   or asset-using and it is at most 16384 bytes (stored as CC0-1.0: [What we store](#what-we-store)); stored content-addressed (idempotent), limited per IP. Answers the stored program.
-- `GET /api/programs/<cid>`: `{"cid", "text", "meta": {"license": "CC0-1.0", "visibility", "name", "composed_by", "forked_from", ...}}`.
-- `GET /api/programs/<cid>.beatscript`: the program as a `.beatscript` file with its `#!` header (name, license, composed-by, forked-from).
+- `GET /api/programs/<cid>`: `{"cid", "text", "meta": {"license": "CC0-1.0", "visibility", "name", "composed_by", "forked_from", ..., "based_on"}}`.
+  `text` is the canonical text (no comments); `based_on` is what the text as saved said it vendored, its `# from: <call> -> <cid>`
+  lines as `["<call> -> <cid>"]` (every write path keeps them; absent when there were none).
+- `GET /api/programs/<cid>.beatscript`: the program as a `.beatscript` file with its `#!` header (name, license, composed-by, forked-from), then its
+  kept `# from:` lines.
 
 ## What we store
 

@@ -103,7 +103,9 @@ An archive is a `.tar.gz` named by its own hash: `beatscript-cc0-<first 16 hex o
 
 - `manifest.jsonld`: `@type` `["ProgramDump", "Dataset"]`, the `count`, and the sorted list of `cids`;
 - `programs/<CID>.beatscript`: each program's canonical text;
-- `programs/<CID>.jsonld`: each program's JSON-LD (the `<beatscript-view>` block's document).
+- `programs/<CID>.jsonld`: each program's JSON-LD (the `<beatscript-view>` block's document). Its `isBasedOn` names what the
+  program calls, borrows and vendored, the last from the `# from:` lines its save kept beside the canonical text (`meta.based_on`;
+  [the schema](/schema#isBasedOn)).
 
 The bytes are deterministic. Files are sorted by CID, every tar header is the same except name and size (mtime 0,
 uid 0), the gzip header has no name or time, and the manifest says nothing about when it was made. So the same

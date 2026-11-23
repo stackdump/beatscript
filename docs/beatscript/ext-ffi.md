@@ -100,9 +100,50 @@ its fully written-out program (`refs::expanded`: the same recipe, the same expan
 /schema (docs/SCHEMA.md).
 
 **Curation (6670 item 4).** beatscript-serve's lineage index counts, per CID and per call, the public programs that call or borrow it
-(`referencedBy`) and that vendored it (`vendoredFrom`), on each node's JSON-LD and through `Lineage::curation`. The store keeps a
-program's canonical text, which has no comments, so a vendored count needs the save to keep the `# from:` lines in
-`meta.based_on` (`["<call> -> <cid>"]`); the page's share/save does not send them yet (follow-up).
+(`referencedBy`) and that vendored it (`vendoredFrom`), on each node's JSON-LD (the MCP `lineage` tool, `/api/lineage/<cid>`,
+`/p/<cid>/tree.jsonld`) and through `Lineage::curation`. A call or a borrow is in the canonical text; what was vendored is only in
+the `# from:` lines, and the store keeps the canonical text, which has no comments. So the save keeps the lines beside it.
+
+## Saved: the `# from:` lines are kept (`meta.based_on`)
+
+A program saved on the site (MCP `share` signed in, `PUT /api/shares/<cid>` from the page or a phone, `PUT /api/programs/<cid>`,
+MCP `artifact` with store) is stored as its canonical text, and what its text as sent says it vendored is kept beside it:
+
+```text
+# from: gen@2 techno seed=42 section=drop part=bass -> z4EBG9j...        a line of the text as sent
+"based_on": ["gen@2 techno seed=42 section=drop part=bass -> z4EBG9j..."]     the stored file's meta
+```
+
+- **What counts**: a comment that reads back as `# from: <call> -> <cid>` (`refs::vendored_line`): the call, then ` -> ` and a CID.
+  Every such line of the text, in the order written, each once (`refs::from_lines`, read from the lexer's comments). Spacing around
+  the parts does not matter; the stored form is `<call> -> <cid>`.
+- **What does not**: a `# from:` line with no pin (`# from: gen@2 techno seed=42`, or prose: `# from: an idea of Ann's`) is a
+  comment like any other, and so is an expansion's own `# from seed(...)` or `# from template(...)` line (no colon). Nothing is
+  refused: a comment is never an error, and the program is stored as it would be without the line.
+- **Where it is decided**: the storage gate. `gate::admit` reads the text as sent, so what it admits carries the lines
+  (`Admitted::based_on`), and `gate::write_program`, the only write of a program, puts them in `meta.based_on` (and drops a
+  caller's own: the text is their only source). Every write path keeps them the same way because none can write without the gate.
+- **Where it is read back**: `GET /api/programs/<cid>` and the MCP `share` and `open` answers say `meta.based_on`; the `.beatscript`
+  download (`/api/programs/<cid>.beatscript`) writes the lines back under its `#!` header, so a save of the file keeps them again; the
+  program's `<beatscript-view>` JSON-LD (its page, the editor's `/?cid=`, the open-data dumps) lists each in `isBasedOn` as
+  `vendored`, exactly as the text's own lines would (`progld::Facts::based_on`); and lineage counts the program in `vendoredFrom`
+  of the call and of the CID each line names. The three agree because they share one reader: `refs::based_on`.
+- **The page** sends the editor's text as written when it stores a program (the short link, streaming, export), so its `# from:`
+  lines reach the server (and, through the short link's `PUT /api/shares`, its doc comments); a text over the size limit (16384
+  bytes) goes as its canonical text, which has the same CID, without them.
+
+**Decided: the pin is kept as written.** The save does not resolve the call again to check the CID: a `gen` call's pin depends on
+the program it stood in (it is fitted to that program's key and tempo), which need not be this one, and a stored program's CID may
+name one this host does not keep. The line is a claim, like the credits; the CID must be well formed, and the call is a key lineage
+counts by, nothing more.
+
+**Decided: the first save's meta stays.** The store is append-only (first write wins), and the comments are not in the CID: the
+same notes saved again, with other lines or none, keep the lines of the first save, as the rights do.
+
+**Decided: no backfill.** Before this, no write path kept the lines: the page sent the canonical text, and MCP `share` sent the
+formatted text but kept only the meta fields it knew. The comments were never stored or logged (the access log has no bodies), so
+there is nothing to recover the lines from; a program stored before keeps its calls and borrows (in its text) and counts as
+vendoring nothing. No script.
 
 ## Swing
 
@@ -224,3 +265,12 @@ runner, but were not measured.
 - The booth (djhost::beatscript_env) has no generator: `gen` calls check in `beatscript`, beatscript-serve, the page and the editor, not in djapp.
 - A `gen` call's let takes the section's first stretch (an `evolve` in the generated section is not followed).
 - `tempo=` was asked for as a name; seeded calls it `bpm`, and the call uses seeded's names (taste call).
+- The editor opening a stored program by CID loads its canonical text, not its kept `# from:` lines, so a fork made there and saved
+  says nothing of what the original vendored (the `.beatscript` download does carry them).
+- The render route's `<cid>.<packed>` store keeps the canonical text of the link; a link's unsealed notes are not read for `# from:`
+  lines.
+
+## Proposals
+
+- The editor writes `meta.based_on` back as `# from:` lines above the program when it opens a stored one (as the `.beatscript` download
+  does), so a fork keeps saying what it vendored.

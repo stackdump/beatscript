@@ -1293,7 +1293,9 @@ arrange from gen@2 techno seed=42 bpm=128 key=am            the whole program
   bring it, as they never bring the tempo.
 - **Eject**: `beatscript expand`, the MCP `expand` and the editor write one reference out in place, under a `# from: <call> -> <cid>`
   line. The line is a comment: the ejected program has the CID of the same notes typed by hand, and the line keeps where they
-  came from.
+  came from. Saved on the site, the program is stored as its canonical text with its `# from:` lines kept beside it, in
+  `meta.based_on` (`["<call> -> <cid>"]`, each line once, in order; a `# from:` line with no CID is a plain comment): its JSON-LD
+  lists each in `isBasedOn` as `vendored`, and lineage counts it in `vendoredFrom`.
 - **No fetch**: the generator is compiled into the host (`beatscript`, beatscript.app, the page's wasm, the editor). A host without it
   says `gen@2 is not here` at the call. `seed(techno, 42)` is another generator (the beats sequencer's, seeds v1) and stays as it was.
 - `check`: an unknown genre or section is an error with the nearest names; a `let` names one section and one part; a `bpm=`,
