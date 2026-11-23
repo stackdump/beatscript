@@ -6963,7 +6963,7 @@ Needs a bearer token: it reads the tabs of the token&apos;s account, by default 
 		<ns:toolTitle xml:lang="en">What a browser tab is playing</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-instruments">
-		<skos:definition xml:lang="en">The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family&apos;s generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. Read-only, no sign-in, cached for five minutes.</skos:definition>
+		<skos:definition xml:lang="en">The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family&apos;s generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. acid (a saw) and acid-square are a 303-style voice made in the engine: an accent ! is louder and opens its filter further, accents in a row build, a slide ^ glides into the next note (60 ms, or glide=), decay= is its filter&apos;s decay. Read-only, no sign-in, cached for five minutes.</skos:definition>
 		<skos:prefLabel xml:lang="en">instruments</skos:prefLabel>
 		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
@@ -10531,11 +10531,23 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>inst=808-bass</ns:writtenAs>
 	</ns:BeatScriptVoice>
-	<ns:Instrument rdf:about="https://beatscript.app/ontology/instrument/acid">
+	<ns:BeatScriptVoice rdf:about="https://beatscript.app/ontology/instrument/acid-square">
+		<skos:definition xml:lang="en">The BeatScript voice acid-square, written inst=acid-square.</skos:definition>
+		<skos:prefLabel xml:lang="en">acid-square</skos:prefLabel>
+		<ns:inVoiceFamily rdf:resource="https://beatscript.app/ontology/concept/voice-family-acid"/>
+		<ns:inVoiceFamily rdf:resource="https://beatscript.app/ontology/concept/voice-family-square"/>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>inst=acid-square</ns:writtenAs>
+	</ns:BeatScriptVoice>
+	<ns:BeatScriptVoice rdf:about="https://beatscript.app/ontology/instrument/acid">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Instrument"/>
 		<rdfs:label xml:lang="en">acid</rdfs:label>
 		<skos:definition xml:lang="en">A resonant filtered sawtooth bass of the acid-house kind.</skos:definition>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/instrument/acid"/>
-	</ns:Instrument>
+		<ns:inVoiceFamily rdf:resource="https://beatscript.app/ontology/concept/voice-family-acid"/>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>inst=acid</ns:writtenAs>
+	</ns:BeatScriptVoice>
 	<ns:BeatScriptVoice rdf:about="https://beatscript.app/ontology/instrument/acoustic-guitar">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Instrument"/>
 		<rdfs:label xml:lang="en">acoustic-guitar</rdfs:label>

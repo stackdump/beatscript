@@ -498,7 +498,7 @@
         "readOnlyHint": true,
         "title": "Voices, kits and palettes"
       },
-      "description": "The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family's generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. Read-only, no sign-in, cached for five minutes.",
+      "description": "The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family's generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. acid (a saw) and acid-square are a 303-style voice made in the engine: an accent ! is louder and opens its filter further, accents in a row build, a slide ^ glides into the next note (60 ms, or glide=), decay= is its filter's decay. Read-only, no sign-in, cached for five minutes.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},

@@ -6309,7 +6309,7 @@
 <https://beatscript.app/ontology/concept/tool-beatscript-get>	<https://beatscript.app/ontology/ns#toolParameter>	"session"
 <https://beatscript.app/ontology/concept/tool-beatscript-get>	<https://beatscript.app/ontology/ns#toolTitle>	"What a browser tab is playing"@en
 <https://beatscript.app/ontology/concept/tool-beatscript-instruments>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#McpTool>
-<https://beatscript.app/ontology/concept/tool-beatscript-instruments>	<http://www.w3.org/2004/02/skos/core#definition>	"The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family's generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. Read-only, no sign-in, cached for five minutes."@en
+<https://beatscript.app/ontology/concept/tool-beatscript-instruments>	<http://www.w3.org/2004/02/skos/core#definition>	"The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family's generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. acid (a saw) and acid-square are a 303-style voice made in the engine: an accent ! is louder and opens its filter further, accents in a row build, a slide ^ glides into the next note (60 ms, or glide=), decay= is its filter's decay. Read-only, no sign-in, cached for five minutes."@en
 <https://beatscript.app/ontology/concept/tool-beatscript-instruments>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"instruments"@en
 <https://beatscript.app/ontology/concept/tool-beatscript-instruments>	<https://beatscript.app/ontology/ns#inputSchema>	"{\"additionalProperties\":false,\"properties\":{},\"required\":[],\"type\":\"object\"}"
 <https://beatscript.app/ontology/concept/tool-beatscript-instruments>	<https://beatscript.app/ontology/ns#needsToken>	"false"^^<http://www.w3.org/2001/XMLSchema#boolean>
@@ -9484,10 +9484,21 @@
 <https://beatscript.app/ontology/instrument/808-bass>	<https://beatscript.app/ontology/ns#inVoiceFamily>	<https://beatscript.app/ontology/concept/voice-family-bass>
 <https://beatscript.app/ontology/instrument/808-bass>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/instrument/808-bass>	<https://beatscript.app/ontology/ns#writtenAs>	"inst=808-bass"
+<https://beatscript.app/ontology/instrument/acid-square>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#BeatScriptVoice>
+<https://beatscript.app/ontology/instrument/acid-square>	<http://www.w3.org/2004/02/skos/core#definition>	"The BeatScript voice acid-square, written inst=acid-square."@en
+<https://beatscript.app/ontology/instrument/acid-square>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"acid-square"@en
+<https://beatscript.app/ontology/instrument/acid-square>	<https://beatscript.app/ontology/ns#inVoiceFamily>	<https://beatscript.app/ontology/concept/voice-family-acid>
+<https://beatscript.app/ontology/instrument/acid-square>	<https://beatscript.app/ontology/ns#inVoiceFamily>	<https://beatscript.app/ontology/concept/voice-family-square>
+<https://beatscript.app/ontology/instrument/acid-square>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/instrument/acid-square>	<https://beatscript.app/ontology/ns#writtenAs>	"inst=acid-square"
+<https://beatscript.app/ontology/instrument/acid>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#BeatScriptVoice>
 <https://beatscript.app/ontology/instrument/acid>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#Instrument>
 <https://beatscript.app/ontology/instrument/acid>	<http://www.w3.org/2000/01/rdf-schema#label>	"acid"@en
 <https://beatscript.app/ontology/instrument/acid>	<http://www.w3.org/2004/02/skos/core#definition>	"A resonant filtered sawtooth bass of the acid-house kind."@en
 <https://beatscript.app/ontology/instrument/acid>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/instrument/acid>
+<https://beatscript.app/ontology/instrument/acid>	<https://beatscript.app/ontology/ns#inVoiceFamily>	<https://beatscript.app/ontology/concept/voice-family-acid>
+<https://beatscript.app/ontology/instrument/acid>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/instrument/acid>	<https://beatscript.app/ontology/ns#writtenAs>	"inst=acid"
 <https://beatscript.app/ontology/instrument/acoustic-guitar>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#BeatScriptVoice>
 <https://beatscript.app/ontology/instrument/acoustic-guitar>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#Instrument>
 <https://beatscript.app/ontology/instrument/acoustic-guitar>	<http://www.w3.org/2000/01/rdf-schema#label>	"acoustic-guitar"@en

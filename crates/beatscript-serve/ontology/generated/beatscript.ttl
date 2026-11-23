@@ -4363,6 +4363,19 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-808> ;
     <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-bass> .
 
+<https://beatscript.app/ontology/instrument/acid> a <https://beatscript.app/ontology/ns#BeatScriptVoice> ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "inst=acid" ;
+    <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-acid> .
+
+<https://beatscript.app/ontology/instrument/acid-square> a <https://beatscript.app/ontology/ns#BeatScriptVoice> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "acid-square"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The BeatScript voice acid-square, written inst=acid-square."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "inst=acid-square" ;
+    <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-acid> ;
+    <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-square> .
+
 <https://beatscript.app/ontology/instrument/acoustic-guitar> a <https://beatscript.app/ontology/ns#BeatScriptVoice> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "acoustic-guitar"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The BeatScript voice acoustic-guitar, written inst=acoustic-guitar."@en ;
@@ -8700,7 +8713,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/tool-beatscript-instruments> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "instruments"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family's generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. Read-only, no sign-in, cached for five minutes."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The sounds a program may name: voices (inst=NAME), families (a name that contains one plays that family's generic voice and check warns about it), drum kits (kit=NAME) and palettes. Use only names from this answer: an unknown inst= is a check error with the nearest names. acid (a saw) and acid-square are a 303-style voice made in the engine: an accent ! is louder and opens its filter further, accents in a row build, a slide ^ glides into the next note (60 ms, or glide=), decay= is its filter's decay. Read-only, no sign-in, cached for five minutes."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "instruments" ;
