@@ -60,6 +60,7 @@ pub fn sample(class: &str, rng: &mut Rng) -> String {
         "PHRASE" => pick(rng, &["@hands_up", "@feel_the_bass", "@drop_it", "@tempest_such_stuff"]),
         "GEN" => pick(rng, &["gen@1", "gen@2", "gen"]),
         "MACRO" => pick(rng, &["macro", "macro@1"]),
+        "SEED" => pick(rng, &["seed", "seed@2", "seed@1"]),
         // a ghost's `.` touches its step, and nothing touches it (a `.` before a word is `A.kick`'s): marked for [`join`]
         "GHOST" => format!("{GHOST}."),
         "RATCHET" => pick(rng, &[":2", ":3", ":4"]),

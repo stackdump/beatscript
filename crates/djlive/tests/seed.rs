@@ -3,6 +3,8 @@
 //! - its BeatScript plays the notes the generator plays: every onset and pitch, bar by bar, for a sample of genres,
 //!   seeds and structures (velocity and length are a part's, so those are near, not exact; measured below);
 //! - expand(p) plays as p does, and the CID of p (unexpanded) is stable;
+//! - `seed@2(...)` (seeds v2) is the v1 track and its genre's swing, in every place a seed stands; a bare `seed(...)` stays v1;
+//!   both are pinned (tests/fixtures/seed/seed-pins.txt);
 //! - check's errors and warnings.
 
 use std::collections::BTreeSet;
@@ -179,6 +181,153 @@ fn seeds_v1_are_pinned() {
     assert_eq!(compiled("arrange from seed(techno, 42)\n").cid, "z4EBG9jEPpNLAqXAf6Rz4KkpfPnEWFKNhK2vxXhx2Hqzcx3CcoE");
     // and the written-out program is a program of its own, which plays the same
     assert_eq!(played(&compiled(&golden)), played(&compiled("arrange from seed(techno, 42)\n")));
+}
+
+/// Seeds v1 are written out straight: the beats project carries its genre's swing on its own 0..100 scale (jazz 60, house 20),
+/// which v1's writer never turned into BeatScript's 0..1 `swing`, so no seed says one. That is part of what v1 means; a writer
+/// that said it would be seeds v2 (docs/beatscript/ext-ffi.md, "Swing": proposals for it). `gen@2 jazz ...` says its swing.
+#[test]
+fn seeds_v1_write_no_swing() {
+    let mut swung = 0;
+    for g in seed::GENRES {
+        let t = seed::track(g, 7, "standard");
+        swung += usize::from(t.swing > 0.0);
+        let e = match seed::expand(&format!("arrange from seed({g}, 7)\n")) {
+            Some(Ok(e)) => e.text,
+            other => panic!("{other:?}"),
+        };
+        assert!(!e.lines().any(|l| l.starts_with("swing")), "seed({g}, 7) (project swing {}) wrote a swing line: that is seeds v2", t.swing);
+    }
+    assert!(swung >= 10, "only {swung} genres swing in the beats tables");
+}
+
+/// An expansion's lines without its `# from` comments and its `swing` line: what v1 and v2 share.
+fn shared(text: &str) -> Vec<String> {
+    text.lines().filter(|l| !l.trim_start().starts_with("# from") && !l.starts_with("swing ")).map(str::to_string).collect()
+}
+
+fn expanded(src: &str) -> String {
+    match seed::expand(src) {
+        Some(Ok(e)) => e.text,
+        other => panic!("{src}: {other:?}"),
+    }
+}
+
+/// `seed@2(...)` (seeds v2) is the v1 track and its genre's swing: the beats project's 0..100 written as BeatScript's 0..1, held to
+/// 0.6 as the seeded generator prints it (jazz 0.6, house 0.2), and nothing else changes; a straight genre writes none, so its
+/// written-out program is v1's (one expanded CID). A bare `seed(...)` stays v1.
+#[test]
+fn seed_at_2_writes_the_genres_swing_and_nothing_else() {
+    let mut swung = 0;
+    for g in seed::GENRES {
+        let t = seed::track(g, 7, "standard");
+        let (v1, v2) = (expanded(&format!("arrange from seed({g}, 7)\n")), expanded(&format!("arrange from seed@2({g}, 7)\n")));
+        assert_eq!(shared(&v1), shared(&v2), "seed@2({g}, 7) changed more than its swing");
+        let want = (t.swing / 100.0).clamp(0.0, 0.6);
+        let lines: Vec<&str> = v2.lines().filter(|l| l.starts_with("swing ")).collect();
+        assert_eq!(seed::swing_of(&t, 2), (want > 0.0).then_some(want), "{g}");
+        assert_eq!(seed::swing_of(&t, 1), None, "{g}: v1 writes no swing");
+        assert!(v2.starts_with(&format!("# from seed@2({g}, 7): ")) && v2.lines().next().unwrap().ends_with("seeds v2"), "{v2}");
+        let (c1, c2) = (compiled(&v1), compiled(&v2));
+        assert_eq!(played(&c1), played(&c2), "{g}: the notes are v1's");
+        if want > 0.0 {
+            swung += 1;
+            assert_eq!(lines, [format!("swing {}", djlive::print::num(want))], "{g} (project swing {})", t.swing);
+            assert_eq!(c2.swing, Some(want));
+            assert_ne!(c1.cid, c2.cid, "{g}");
+        } else {
+            assert!(lines.is_empty(), "{g} is straight: {lines:?}");
+            assert_eq!(c1.cid, c2.cid, "{g}: a straight genre's v2 is v1's program");
+        }
+        // the program as written keeps its version: its own CID
+        assert_ne!(compiled(&format!("arrange from seed({g}, 7)\n")).cid, compiled(&format!("arrange from seed@2({g}, 7)\n")).cid);
+    }
+    assert!(swung >= 10, "only {swung} genres swing");
+    assert!(expanded("arrange from seed@2(jazz, 7)\n").contains("\nswing 0.6\n"));
+    assert!(expanded("arrange from seed@2(house, 7)\n").contains("\nswing 0.2\n"));
+}
+
+/// One spelling: `seed@1(...)` is `seed(...)` and prints bare (as `macro@1` does); `seed@2` keeps its version, in every place a
+/// seed stands. The program's own `swing` wins over the track's, as its `tempo` and `key` do.
+#[test]
+fn seed_at_2_is_spelt_with_its_version_and_stands_where_a_seed_does() {
+    let a = compiled("arrange from seed@1(techno, 42)\n");
+    assert_eq!(a.text, "arrange from seed(techno, 42)\n");
+    assert_eq!(a.cid, compiled("arrange from seed(techno, 42)\n").cid);
+    let b = compiled("arrange from seed@2( house , 7 , loop )[1..2]\n");
+    assert_eq!(b.text, "arrange from seed@2(house, 7, loop)[1..2]\n");
+    assert_eq!(b.swing, Some(0.2));
+    // a section, a part line and a let: the v1 track's bars (a setting never comes with a piece), each place its own text
+    for (v2, v1) in [
+        ("section intro from seed@2(jazz, 7)[1..8]\narrange intro\n", "section intro from seed(jazz, 7)[1..8]\narrange intro\n"),
+        ("deck A: bass seed@2(jazz, 7).bass[1..4] inst=fm-bass\n", "deck A: bass seed(jazz, 7).bass[1..4] inst=fm-bass\n"),
+        ("let riff = seed@2(jazz, 7).bass[1..4]\ndeck A: bass riff\n", "let riff = seed(jazz, 7).bass[1..4]\ndeck A: bass riff\n"),
+        ("deck A: bass seed@2(jazz, 7)[5]\n", "deck A: bass seed(jazz, 7)[5]\n"),
+    ] {
+        let (c2, c1) = (compiled(v2), compiled(v1));
+        assert_eq!(c2.text, v2, "{v2}");
+        assert_eq!(played(&c2), played(&c1), "{v2}");
+        assert_eq!(c2.swing, None, "{v2}: a piece brings no swing");
+        assert_ne!(c2.cid, c1.cid, "{v2}");
+        assert_eq!(shared(&expanded(v2)), shared(&expanded(v1)), "{v2}");
+    }
+    // the program's own swing (and tempo, key) win
+    let own = expanded("swing 0.1\narrange from seed@2(jazz, 7)\n");
+    assert_eq!(own.lines().filter(|l| l.starts_with("swing ")).collect::<Vec<_>>(), ["swing 0.1"], "{own}");
+    // what it resolves to (refs' pin) is the piece as a program of its own: the whole track with its swing
+    let r = seed::resolve("seed@2(jazz, 7)", None).unwrap();
+    assert_eq!(r.call, "seed@2(jazz, 7)");
+    assert!(r.text.contains("\nswing 0.6\n"), "{}", r.text);
+    assert_ne!(r.cid, seed::resolve("seed(jazz, 7)", None).unwrap().cid);
+    assert_eq!(seed::generator_of(&r.call), "seeds@v2");
+    assert_eq!(seed::generator_of("seed(jazz, 7).bass[1..4]"), "seeds@v1");
+}
+
+/// A version this build has not got is refused at the head, naming the ones it has; a `#! seeds: v2` line is refused with the
+/// spelling that pins (a comment is outside the CID).
+#[test]
+fn an_unknown_seed_version_is_refused_with_the_ones_there_are() {
+    let d = diags("arrange from seed@3(techno, 42)\n");
+    assert!(d.iter().any(|(s, at, m)| *s == Severity::Error && at == "seed@3" && m.contains("seed (v1) and seed@2") && m.contains("seed@2(techno, 42)")), "{d:?}");
+    assert_eq!(d.iter().filter(|(s, _, _)| *s == Severity::Error).count(), 1, "one mistake, one error: {d:?}");
+    let d = diags("#! seeds: v2\narrange from seed(techno, 42)\n");
+    assert!(d.iter().any(|(s, _, m)| *s == Severity::Error && m.contains("seeds v1") && m.contains("seed@2(techno, 42)") && m.contains("outside the CID")), "{d:?}");
+    // a mistake inside seed@2's parentheses is the same error as a seed's
+    let d = diags("arrange from seed@2(tecno, 42)\n");
+    assert!(d.iter().any(|(s, at, m)| *s == Severity::Error && at == "tecno" && m.contains("`techno`")), "{d:?}");
+}
+
+/// seeds v2 are pinned as v1 are: what a sample of programs (swung and straight genres, each place, a structure) and the same
+/// programs with a bare `seed(...)` compile to, unexpanded and written out. `BEATSCRIPT_BLESS=1` rewrites the pins, only when meant.
+#[test]
+fn seeds_v2_and_v1_are_pinned() {
+    let progs = [
+        "arrange from seed@2(jazz, 7)\n",
+        "arrange from seed(jazz, 7)\n",
+        "arrange from seed@2(house, 7)\n",
+        "arrange from seed(house, 7)\n",
+        "arrange from seed@2(lofi, 3)\n",
+        "arrange from seed@2(bossa, 1, loop)\n",
+        "arrange from seed@2(techno, 42)\n",
+        "arrange from seed(techno, 42)\n",
+        "arrange from seed@2(trance, 7)\n",
+        "section intro from seed@2(blues, 7)[1..8]\narrange intro\n",
+        "deck A: bass seed@2(funk, 7).bass[1..4]\n",
+    ];
+    let got: String = progs
+        .iter()
+        .map(|p| {
+            let c = compiled(p);
+            format!("{} -> {} {}\n", p.trim_end().replace('\n', " / "), c.cid, compiled(&expanded(p)).cid)
+        })
+        .collect();
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/seed/seed-pins.txt");
+    if std::env::var("BEATSCRIPT_BLESS").is_ok() {
+        std::fs::write(path, &got).unwrap();
+    } else {
+        let want = std::fs::read_to_string(path).expect("the pins (BEATSCRIPT_BLESS=1 writes them)");
+        assert_eq!(got, want, "a seed no longer writes out as it did: that is a new seeds version");
+    }
 }
 
 fn diags(src: &str) -> Vec<(Severity, String, String)> {

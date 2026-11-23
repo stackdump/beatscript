@@ -101,11 +101,14 @@ fn pieces(src: &str, exp: &Expansion, kind: &'static str, out: &mut Vec<Site>) {
         // the reference itself, inside what is replaced
         let lead: &str = match kind {
             "gen" => "gen",
-            "seed" => "seed(",
+            "seed" => "seed",
             "template" => "template(",
             _ => call.split('.').next().unwrap_or(&call),
         };
-        let span = match src[orig.start..orig.end].find(lead) {
+        let here = &src[orig.start..orig.end];
+        // a seed's head is `seed(` or `seed@N(`, as it is written (`seed@1(` is canonically `seed(`)
+        let found = if kind == "seed" { here.match_indices("seed").map(|(i, _)| i).find(|i| matches!(here.as_bytes().get(i + 4), Some(b'(' | b'@'))) } else { here.find(lead) };
+        let span = match found {
             Some(i) if place != "part" => Span::new(orig.start + i, orig.end),
             _ => *orig,
         };

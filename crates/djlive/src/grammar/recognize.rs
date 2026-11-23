@@ -52,6 +52,7 @@ pub const CLASSES: &[(&str, &str)] = &[
     ("CID", "a saved program's CID: `z` and 20 to 80 base58 characters (`z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ`)"),
     ("GEN", "the generator's call word, its version glued with `@` (`gen@2`, `gen@1`), or a bare `gen` (gen@2)"),
     ("MACRO", "the macro line's word, its version glued with `@` (`macro@1`), or a bare `macro` (macro@1)"),
+    ("SEED", "a seed's head, touching its `(`: `seed` (seeds v1), or its version glued with `@` (`seed@2`, `seed@1`)"),
     // the classes of a lyric's text, read over characters ([`recognize_text`]), not tokens
     ("TEXT", "in a lyric: one character that is not `/`, a space and a letter alike"),
     ("SPACE", "in a lyric: one space, tab or line break"),
@@ -87,6 +88,7 @@ fn class_ends(name: &str, toks: &[Token], src: &str, at: usize) -> Vec<usize> {
         "CID" => one(word(&crate::stored::is_cid)),
         "GEN" => one(word(&|w: &str| w == "gen" || w.strip_prefix("gen@").is_some_and(|n| !n.is_empty() && n.bytes().all(|c| c.is_ascii_digit())))),
         "MACRO" => one(word(&crate::macros::is_head)),
+        "SEED" => one(word(&|w: &str| crate::seed::head_version(w).is_some())),
         "GHOST" => one(matches!(t.tok, Tok::Ghost)),
         "RATCHET" => match toks.get(at + 1) {
             Some(n) if matches!(t.tok, Tok::Colon) && matches!(n.tok, Tok::Num { int: true, .. }) && n.span.start == t.span.end && at > 0 && toks[at - 1].span.end == t.span.start => vec![at + 2],

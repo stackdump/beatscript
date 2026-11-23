@@ -4,7 +4,7 @@
 
    Notation (ISO 14977): name = ... ;   "text" a terminal   [ x ] optional   { x } none or more   ( x ) a group
    x | y one of, and comments between round brackets and stars.  An UPPER-CASE name that is no production is a token class of the lexer:
-   NEWLINE NAME WORD INT NUMBER DECIMAL STRING PARAM NOTE PITCH KEY CHORD ROMAN SDEG UNIT TOKEN GLOB SUGAR PHRASE CID GEN MACRO (recognize.rs
+   NEWLINE NAME WORD INT NUMBER DECIMAL STRING PARAM NOTE PITCH KEY CHORD ROMAN SDEG UNIT TOKEN GLOB SUGAR PHRASE CID GEN MACRO SEED (recognize.rs
    what each matches; NEWLINE also ends the program at the end of the text). Comments go away before the grammar is read,
    and a `#` inside a word is a sharp.
    A production whose note says [host] needs a host's store to be read (saved snippets, saved programs): the
@@ -187,7 +187,7 @@ block_end   = "end" | "loop" | "loop" INT [ "then" { NAME } "end" ] ;   (* defau
 
 (* == Start from a seed == *)
 ref         = seed | gen | stored ;                           (* music from elsewhere, written out as BeatScript before the program is read *)
-seed        = "seed" "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ] ;   (* a track of the beats generator: genre, seed; a part, bars from 1 *)
+seed        = SEED "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ] ;   (* a track of the beats generator: genre, seed; a part, bars from 1; SEED is seed (seeds v1) or seed@2 (v2: with its genre's swing) *)
 stored      = CID [ "." NAME ] [ "." role ] ;                 (* a saved program's section or part, by its CID: <cid>.drop  <cid>.drop.bass; a bare <cid> is a program with no sections [host] *)
 gen         = GEN NAME "seed" "=" ( INT | NAME ) { gen_param } ;   (* gen@2 techno seed=42 section=drop part=bass: the seeded generator, called; GEN is gen@2 or a bare gen [host] *)
 gen_param   = "bpm" "=" NUMBER | "key" "=" KEY | "length" "=" ( "short" | "standard" | "long" ) | "section" "=" NAME | "part" "=" role ;

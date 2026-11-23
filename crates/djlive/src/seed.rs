@@ -8,12 +8,14 @@
 //! section intro from seed(techno, 42)[1..8]              bars 1 to 8 as one section
 //! deck B: bass seed(techno, 42).bass[1..8] inst=fm-bass  one part's bars as a pattern
 //! let riff = seed(techno, 42).bass[5..8]                 the same, named
+//! arrange from seed@2(jazz, 7)                           seeds v2: the same track, and its genre's swing
 //! ```
 //!
 //! The generator is `djrust::gen::compose` (beats.bitwrap.io's, byte for byte: `djrust/tests/beats_composer.rs` holds it
-//! to beats' own JavaScript) and the notes are what `musicality::note_log` hears it play. Seeds are versioned ([`VERSION`]):
-//! a reference always means the same music, so the CID of the unexpanded text is stable, and [`expand`] gives the
-//! literal text it stands for, which plays the same (tests/seed.rs).
+//! to beats' own JavaScript) and the notes are what `musicality::note_log` hears it play. Seeds are versioned, in the text
+//! ([`VERSIONS`]): a bare `seed(...)` is v1 for good, `seed@2(...)` writes the track's swing as well ([`SWING`]). A reference
+//! always means the same music, so the CID of the unexpanded text is stable, and [`expand`] gives the literal text it stands
+//! for, which plays the same (tests/seed.rs).
 //!
 //! Pure: no I/O and no clock. A small cache keeps the last few tracks, because composing one is the slow part.
 
@@ -28,8 +30,29 @@ use crate::diag::{Diagnostic, Span};
 use crate::lex::{lex, Tok, Token};
 use crate::parse::{nearest, ROLES};
 
-/// The seeds this BeatScript knows: `#! seeds: v1` (also what a program with no such header means).
+/// What a bare `seed(...)` is, for good: `#! seeds: v1` (also what a program with no such header means).
 pub const VERSION: &str = "v1";
+/// The versions a reference can name, oldest first: `seed(...)` (or `seed@1(...)`) is v1, `seed@2(...)` v2. The version is in the
+/// reference's text, so in its CID; a `#! seeds:` line is a comment and pins nothing.
+pub const VERSIONS: [u32; 2] = [1, 2];
+/// The first version that writes the track's swing: the beats project carries its genre's swing on its own 0..100 scale (jazz
+/// 60, house 20), which v1's writer never turned into BeatScript's 0..1 `swing` (docs/beatscript/ext-ffi.md, "seed@2").
+pub const SWING: u32 = 2;
+
+/// The version a reference's head word names: `seed` is 1, `seed@2` is 2 (a version this BeatScript may not have: [`VERSIONS`]).
+pub fn head_version(w: &str) -> Option<u32> {
+    if w == "seed" {
+        return Some(1);
+    }
+    let n = w.strip_prefix("seed@")?;
+    (!n.is_empty() && n.bytes().all(|c| c.is_ascii_digit())).then(|| n.parse::<u32>().unwrap_or(u32::MAX))
+}
+
+/// The generator and version a reference (its canonical text) resolves with: `seeds@v1`, `seeds@v2`.
+pub fn generator_of(call: &str) -> String {
+    let v = call.split('(').next().and_then(head_version).unwrap_or(1);
+    format!("seeds@v{v}")
+}
 /// The song structures of the generator, the default first (beats.bitwrap.io's "standard").
 pub const STRUCTURES: [&str; 4] = ["standard", "loop", "minimal", "extended"];
 /// Drum kits a part may name with `kit=` (the web engine's).
@@ -50,7 +73,7 @@ pub const GENRES: [&str; 19] = [
 /// A word the parser reads as a reference to music the engine makes (one word since `collapse`): `seed(...)...`, or a
 /// `gen@N ...` call (gen.rs).
 pub fn is_ref_word(w: &str) -> bool {
-    w.starts_with("seed(") || crate::gen::is_call_word(w)
+    w.starts_with("seed(") || (w.starts_with("seed@") && w.contains('(')) || crate::gen::is_call_word(w)
 }
 
 /// The genres a seed may name ([`GENRES`]).
@@ -58,9 +81,12 @@ pub fn genres() -> Vec<String> {
     GENRES.iter().map(|s| s.to_string()).collect()
 }
 
-/// `seed(genre, n[, structure])[.part][[a..b]]`, as read.
+/// `seed(genre, n[, structure])[.part][[a..b]]`, as read (`seed@2(...)`: the same, of seeds v2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SeedRef {
+    /// 1 for `seed(...)` and `seed@1(...)`, 2 for `seed@2(...)`.
+    pub version: u32,
+    pub version_span: Span,
     pub genre: String,
     pub genre_span: Span,
     pub n: u32,
@@ -78,9 +104,11 @@ impl SeedRef {
         self.structure.as_deref().unwrap_or(STRUCTURES[0])
     }
 
-    /// The canonical spelling: `seed(techno, 42).bass[1..8]`; the default structure is left out and `[3..3]` is `[3]`.
+    /// The canonical spelling: `seed(techno, 42).bass[1..8]`; the default structure is left out and `[3..3]` is `[3]`. Version 1
+    /// is written bare (`seed@1(...)` prints `seed(...)`, as `macro@1` prints `macro`), any other with its `@N`.
     pub fn text(&self) -> String {
-        let mut s = format!("seed({}, {}", self.genre, self.n);
+        let head = if self.version == 1 { "seed".to_string() } else { format!("seed@{}", self.version) };
+        let mut s = format!("{head}({}, {}", self.genre, self.n);
         if self.structure() != STRUCTURES[0] {
             s.push_str(&format!(", {}", self.structure()));
         }
@@ -110,12 +138,12 @@ fn touches(a: &Token, b: &Token) -> bool {
     a.span.end == b.span.start
 }
 
-/// Every `seed(` in `toks`, read as far as it goes.
+/// Every `seed(` (and `seed@N(`) in `toks`, read as far as it goes.
 pub(crate) fn runs(toks: &[Token]) -> Vec<Run> {
     let mut out = Vec::new();
     let mut i = 0;
     while i < toks.len() {
-        let is_seed = matches!(&toks[i].tok, Tok::Word(w) if w == "seed") && toks.get(i + 1).is_some_and(|t| t.tok == Tok::LParen && touches(&toks[i], t));
+        let is_seed = matches!(&toks[i].tok, Tok::Word(w) if head_version(w).is_some()) && toks.get(i + 1).is_some_and(|t| t.tok == Tok::LParen && touches(&toks[i], t));
         if !is_seed {
             i += 1;
             continue;
@@ -131,10 +159,26 @@ pub(crate) fn runs(toks: &[Token]) -> Vec<Run> {
     out
 }
 
-const SHAPE: &str = "seed(genre, n), seed(genre, n, structure), then `.part` and `[a..b]` bars: seed(techno, 42).bass[1..8]";
+const SHAPE: &str = "seed(genre, n), seed(genre, n, structure), then `.part` and `[a..b]` bars: seed(techno, 42).bass[1..8]; seed@2(...) writes its swing";
 
-/// Read one reference from `toks[i]` (the word `seed`): where it ends, and the reference or what is wrong with it.
+/// Read one reference from `toks[i]` (the word `seed` or `seed@N`): where it ends, and the reference or what is wrong with it.
 fn read_ref(toks: &[Token], i: usize) -> (usize, Result<SeedRef, Diagnostic>) {
+    let (end, r) = read_body(toks, i);
+    let version = match &toks[i].tok {
+        Tok::Word(w) => head_version(w).unwrap_or(1),
+        _ => 1,
+    };
+    if !VERSIONS.contains(&version) {
+        let have: Vec<String> = VERSIONS.iter().map(|v| if *v == 1 { "seed (v1)".to_string() } else { format!("seed@{v}") }).collect();
+        let d = Diagnostic::error(toks[i].span, format!("this BeatScript has {}, not `seed@{version}`", have.join(" and ")))
+            .help(format!("seed@{}(techno, 42) (a version always means the same music)", VERSIONS[VERSIONS.len() - 1]));
+        return (end, Err(d));
+    }
+    (end, r.map(|s| SeedRef { version, version_span: toks[i].span, ..s }))
+}
+
+/// The reference after its head word `toks[i]`, as version 1 (the caller sets the version).
+fn read_body(toks: &[Token], i: usize) -> (usize, Result<SeedRef, Diagnostic>) {
     let mut j = i + 2;
     let at = |j: usize| toks.get(j).map(|t| &t.tok);
     let here = |j: usize| toks.get(j).or(toks.last()).map_or(Span::new(0, 0), |t| t.span);
@@ -251,7 +295,7 @@ fn read_ref(toks: &[Token], i: usize) -> (usize, Result<SeedRef, Diagnostic>) {
         bars_span = open.to(toks[k].span);
         j = k + 1;
     }
-    (j, Ok(SeedRef { genre, genre_span, n, structure, part, part_span, bars, bars_span, span: Span::new(0, 0) }))
+    (j, Ok(SeedRef { version: 1, version_span: toks[i].span, genre, genre_span, n, structure, part, part_span, bars, bars_span, span: Span::new(0, 0) }))
 }
 
 /// Each reference made one word token (its canonical spelling) for the parser, and what is wrong with any of them.
@@ -648,7 +692,13 @@ fn version_check(src: &str, comments: &[Span]) -> Option<Diagnostic> {
         let Some(v) = rest.trim().strip_prefix("seeds:") else { continue };
         let v = v.trim();
         if v != VERSION {
-            return Some(Diagnostic::error(*c, format!("this BeatScript has seeds {VERSION}, not `{v}`")).help(format!("#! seeds: {VERSION} (a seed always means the same music in one version)")));
+            // the line says what a bare seed(...) is, v1 for good: a later version is written in the reference, where the CID sees it
+            let later = v.strip_prefix('v').and_then(|n| n.parse::<u32>().ok()).filter(|n| *n != 1 && VERSIONS.contains(n));
+            let help = match later {
+                Some(n) => format!("write the version in the reference, seed@{n}(techno, 42): a `#!` line is a comment, outside the CID, so it pins nothing (#! seeds: {VERSION} says what a bare seed(...) is)"),
+                None => format!("#! seeds: {VERSION} (a seed always means the same music in one version)"),
+            };
+            return Some(Diagnostic::error(*c, format!("this BeatScript has seeds {VERSION}, not `{v}`")).help(help));
         }
     }
     None
@@ -777,7 +827,7 @@ pub fn expand(src: &str) -> Option<Result<Expansion, Vec<Diagnostic>>> {
                 }
                 whole_seen = true;
                 let start = toks[from].span;
-                match whole(&t, a, b, &roles, &refx, !has("tempo"), !has("key"), !has("swing")) {
+                match whole(&t, s.version, a, b, &roles, &refx, !has("tempo"), !has("key"), !has("swing")) {
                     Ok(text) => pieces.push((start.to(run.span), text, refx)),
                     Err((r, TooLong(p))) => errors.push(too_long(r, p)),
                 }
@@ -843,18 +893,29 @@ fn form_of(toks: &[Token], run: &Run) -> Result<Form, Diagnostic> {
         .help("bass seed(techno, 42)[1..8]   let riff = seed(techno, 42).bass[1..8]   section intro from seed(techno, 42)[1..8]   arrange from seed(techno, 42)"))
 }
 
+/// The `swing` setting a track of seeds `version` writes, if any. v1's guard reads the project's swing as if it were already on
+/// BeatScript's 0..1 scale, so it never writes one (kept: a v1 seed always means the same music); from v2 ([`SWING`]) it is the
+/// genre's 0..100 / 100, held to 0.6, as the seeded generator (beatscript_api::generate) prints it.
+pub fn swing_of(t: &Track, version: u32) -> Option<f64> {
+    if version >= SWING {
+        let s = (t.swing / 100.0).clamp(0.0, 0.6);
+        return (s > 0.0).then_some(s);
+    }
+    (t.swing > 0.0 && t.swing <= 1.0).then_some(t.swing)
+}
+
 /// `arrange from seed(...)`: the settings it needs, a `let` for each bar of each part, the sections and the arrange.
 #[allow(clippy::too_many_arguments)]
-fn whole(t: &Track, a: usize, b: usize, roles: &[&str], refx: &str, tempo: bool, key: bool, swing: bool) -> Result<String, (&'static str, TooLong)> {
-    let mut out = format!("# from {refx}: \"{}\", the beats generator, seeds {VERSION}\n", t.name.replace('"', "'"));
+fn whole(t: &Track, version: u32, a: usize, b: usize, roles: &[&str], refx: &str, tempo: bool, key: bool, swing: bool) -> Result<String, (&'static str, TooLong)> {
+    let mut out = format!("# from {refx}: \"{}\", the beats generator, seeds v{version}\n", t.name.replace('"', "'"));
     if tempo {
         out.push_str(&format!("tempo {}\n", crate::print::num(t.tempo)));
     }
     if key {
         out.push_str(&format!("key {}\n", t.key));
     }
-    if swing && t.swing > 0.0 && t.swing <= 1.0 {
-        out.push_str(&format!("swing {}\n", crate::print::num(t.swing)));
+    if let Some(s) = swing_of(t, version).filter(|_| swing) {
+        out.push_str(&format!("swing {}\n", crate::print::num(s)));
     }
     // the bars of each part, named in the order they first play: kick_a, kick_b, ...
     let mut names: BTreeMap<(String, String), String> = BTreeMap::new();
@@ -962,7 +1023,7 @@ pub fn resolve(word: &str, role: Option<&str>) -> Result<Resolved, Diagnostic> {
         None => ROLES.to_vec(),
     };
     let call = s.text();
-    let text = whole(&t, a, b, &roles, &call, true, true, true).map_err(|(r, TooLong(p))| Diagnostic::error(s.span, format!("the {r} of {call} changes over {p} bars, more than a part can hold ({MAX_PERIOD})")))?;
+    let text = whole(&t, s.version, a, b, &roles, &call, true, true, true).map_err(|(r, TooLong(p))| Diagnostic::error(s.span, format!("the {r} of {call} changes over {p} bars, more than a part can hold ({MAX_PERIOD})")))?;
     let cid = crate::compile::program_cid(&crate::print::canonical(&crate::parse::parse(&text).program));
     Ok(Resolved { call, name: t.name.clone(), model: t.model_sha.clone(), text, cid })
 }

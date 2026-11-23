@@ -116,7 +116,7 @@ A program has two halves: its **structure** is the track's own source, and its *
 - **An engine call** reaches into the engine: a generator's track, a DJ move, a verb of the control registry, a ramp on a
   deck's or the master's strip. BeatScript treats the engine as a foreign-function interface. The text records the call,
   never its result, so a call that makes music is pinned and versioned: `seed(techno, 42)` is the generator of seeds v1, and
-  always the same track.
+  always the same track (`seed@2(techno, 42)` names v2, in the text).
 - **The two stay apart.** A part line holds notes and never a control call; a control line holds a control call and never a
   note. An engine call that makes music (a generator's track) feeds the parts: its result is written out as structure, a
   pattern or a section, before the program is lowered, so the browser, the phone and the booth only ever play plain BeatScript.
@@ -364,7 +364,7 @@ block_end   = "end" | "loop" | "loop" INT [ "then" { NAME } "end" ] ;   (* defau
 
 (* == Start from a seed == *)
 ref         = seed | gen | stored ;                           (* music from elsewhere, written out as BeatScript before the program is read *)
-seed        = "seed" "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ] ;   (* a track of the beats generator: genre, seed; a part, bars from 1 *)
+seed        = SEED "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ] ;   (* a track of the beats generator: genre, seed; a part, bars from 1; SEED is seed (seeds v1) or seed@2 (v2: with its genre's swing) *)
 stored      = CID [ "." NAME ] [ "." role ] ;                 (* a saved program's section or part, by its CID: <cid>.drop  <cid>.drop.bass; a bare <cid> is a program with no sections [host] *)
 gen         = GEN NAME "seed" "=" ( INT | NAME ) { gen_param } ;   (* gen@2 techno seed=42 section=drop part=bass: the seeded generator, called; GEN is gen@2 or a bare gen [host] *)
 gen_param   = "bpm" "=" NUMBER | "key" "=" KEY | "length" "=" ( "short" | "standard" | "long" ) | "section" "=" NAME | "part" "=" role ;
@@ -446,7 +446,8 @@ filter's cutoff, `filter lp 300hz`, is the number and nothing else; the hours of
 `until`). `NOTE`, `PITCH` (a note with its octave), `KEY`, `CHORD` and `ROMAN` are pitch words read as one token
 (`f#2`, `c4`, `d:dorian`, `am7`, `ii°`); `SDEG` a written degree in `deg( )` (`b3`, `#4`); `PARAM` a def's or a
 repeat's `$name`; `SUGAR` a control noun said without `do`; `STRING` a double-quoted string; `TOKEN` any token; `GLOB` a
-name with `*` in it; `CID` a saved program's id; `GHOST` a ghost's `.` and `RATCHET` a ratchet's `:N` (`x.` `x:3`). `±` may be written `+-` after
+name with `*` in it; `CID` a saved program's id; `GEN` a generator call's head (`gen@2`, a bare `gen`) and `SEED` a seed's (`seed`,
+`seed@2`); `GHOST` a ghost's `.` and `RATCHET` a ratchet's `:N` (`x.` `x:3`). `±` may be written `+-` after
 a unit (`3m30s +- 5s`). In a lyric, `PHONES` is an escape's text:
 `aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j`, `-` cuts a word, `_` rests,
 `:` holds a vowel, `!` accents it; `/` and a space: a phrase break.
@@ -1162,6 +1163,7 @@ arrange from seed(techno, 42)                          the whole track
 section intro from seed(techno, 42)[1..8]              bars 1 to 8 as a section
 deck B: bass seed(techno, 42).bass[17..24] inst=fm-bass    a part's bars; your params win
 let riff = seed(techno, 42).bass[17..20]               the same, named (say which part)
+arrange from seed@2(jazz, 7)                           seeds v2: the track and its genre's swing (swing 0.6)
 section hook from <cid>.drop                  a saved program's section (parts, key)
 deck B: bass <cid>.drop inst=hoover           its part (the line's role; .melody another)
 arrange from template(deep-house, @tempest_such_stuff)  a phrase as a track
@@ -1176,17 +1178,29 @@ arrange from template(rondo, @hands_up, refrain=ode_to_joy)  a form, a role boun
 - It is written out before the program is lowered, so the browser, the phone and the booth all play plain BeatScript:
   every note on the grid where the generator plays it, the drums and the bass on deck A, the melody, harmony and arp on
   B, each part with its instrument (or kit), a `vel=` range with `!` on its accented hits and its commonest `len=`
-  (so the velocities and lengths are near the generator's, not each one exact). `arrange from` adds the `tempo`, `key`
-  and `swing` a program does not say itself, and a `loop` track goes round.
+  (so the velocities and lengths are near the generator's, not each one exact). `arrange from` adds the `tempo` and `key`
+  a program does not say itself, and a `loop` track goes round. A bare `seed(...)` never adds a `swing`: seeds v1 write a
+  swung genre's track straight. `seed@2(...)` adds the `swing` too, as the next bullet says.
 - **Write it out to edit it**: `beatscript fmt --expand` (or `beatscript expand`, the MCP `expand` tool) gives the text a seed
   stands for, each place under a `# from seed(...)` line; `--lineage` opens it with `#! forked-from: <CID>` of the
   program as given, so a shared fork says where it came from. The written-out program plays the same as the reference.
   In the editor (beatscriptls), any reference hovers with its expansion, shows or hides it inline, and ejects in place: docs/beatscriptls.md.
-- **The same music, always**: seeds are versioned (`#! seeds: v1`, also what a program with no such line means). A seed
-  always means the same track, so the CID of a program with references (of its text, references and all) never moves; a
-  change to the generator that changed any seed would be seeds v2.
+- **The same music, always**: seeds are versioned, and the version is in the text, so in the CID. A bare `seed(...)` is
+  seeds v1 for good (`seed@1(...)` is the same and prints bare; a `#! seeds: v1` line says so, and is what a program with no
+  such line means). A seed always means the same track, so the CID of a program with references (of its text, references
+  and all) never moves; a change to the generator that changed any seed is a new version, written in the reference.
+- **Seeds v2, `seed@2(genre, n)`**: the v1 track with its genre's swing written. The generator's tables give each genre a
+  swing from 0 to 100 (jazz 60, blues 50, bossa 40, lofi 35, funk and garage 30, reggae 25, house 20, dubstep and country
+  15, dnb and trap 10, the rest 0), and v2 writes it as the program's `swing`, the value / 100 held to 0.6, as the
+  seeded generator (`gen@N`) prints it: `arrange from seed@2(jazz, 7)` says `swing 0.6`, a straight genre says none, so
+  `seed@2(techno, 42)` writes out the same program as `seed(techno, 42)`. Only `arrange from` writes the swing (it is a
+  setting of the whole program, and a section, a part or a `let` brings none), and the program's own `swing` wins.
+  `seed@2` stands wherever `seed` does, with the same parts, bars and structures. A `#! seeds: v2` line is refused: a
+  comment is outside the CID and pins nothing, so the version goes in the reference. Long note: `docs/beatscript/ext-ffi.md`,
+  "`seed@2`".
 - `check`: an unknown genre is an error with the nearest names; bars outside the track an error; a part the genre does
-  not have a warning (it is silent). A structure is `seed(house, 7, loop)`: standard (the default), loop, minimal or extended.
+  not have a warning (it is silent); a version this BeatScript has not got (`seed@3(...)`) an error naming the ones it has.
+  A structure is `seed(house, 7, loop)`: standard (the default), loop, minimal or extended.
 
 ### Borrow from a stored program
 
@@ -1262,7 +1276,11 @@ arrange from gen@2 techno seed=42 bpm=128 key=am            the whole program
 - **What it is written out as**: a part line and `section X from` borrow from the generated program as from a stored one
   ("Borrow from a stored program": its parts and their params, never its control lines). A `let` is the notes the part plays
   there, a let a bar (`bed_1`, `bed_2` ... and `let bed = <bed_1 bed_2>`), so `~ bed_* rot 2` mutates it as it would a local
-  let. `arrange from` is the whole program, less the `tempo` and `key` lines the program says itself.
+  let. `arrange from` is the whole program, less the `tempo`, `key` and `swing` lines the program says itself.
+- **Swing**: a genre that swings in the generator's tables (jazz, blues, bossa, lofi, funk, garage, reggae, house ...) prints the
+  program-wide `swing`, the table's 0..100 as 0..1 (at most 0.6: `gen@2 jazz` says `swing 0.6`, `gen@2 house` `swing 0.2`); a
+  straight genre (techno, trance) prints none. Every version does. `arrange from` keeps it; a part, a section and a `let` never
+  bring it, as they never bring the tempo.
 - **Eject**: `beatscript expand`, the MCP `expand` and the editor write one reference out in place, under a `# from: <call> -> <cid>`
   line. The line is a comment: the ejected program has the CID of the same notes typed by hand, and the line keeps where they
   came from.

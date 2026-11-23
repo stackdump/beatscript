@@ -125,8 +125,8 @@ pub fn glued_pair(prev: &Tok, t: &Tok) -> bool {
         || (matches!(t, Tok::Eq) && matches!(prev, Tok::Eq | Tok::Lt | Tok::Gt | Tok::Bang))
         || (matches!(t, Tok::Star) && matches!(prev, Tok::Word(_)))
         || (matches!(t, Tok::Word(_)) && matches!(prev, Tok::Star))
-        // a seed reference: `seed(` touches (seed.rs)
-        || (matches!(t, Tok::LParen) && matches!(prev, Tok::Word(w) if w == "seed"))
+        // a seed reference: `seed(` and `seed@2(` touch (seed.rs)
+        || (matches!(t, Tok::LParen) && matches!(prev, Tok::Word(w) if djlive::seed::head_version(w).is_some()))
         // and a template reference: `template(` touches (template.rs)
         || (matches!(t, Tok::LParen) && matches!(prev, Tok::Word(w) if w == "template"))
 }

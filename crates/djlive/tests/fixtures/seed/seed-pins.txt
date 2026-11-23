@@ -1,0 +1,11 @@
+arrange from seed@2(jazz, 7) -> z4EBG9j2afUuKwZ7F3GAkpTuzPMEvooVxMqbKbFYxDMGFdR2igV z4EBG9jB3Fdeje3U17yX2QYudLQB3Rrim89fqu42yBtNmrChpUs
+arrange from seed(jazz, 7) -> z4EBG9jFFuC2F3oZGJ7ysrruA3zwRZwsvf5HTmL5wtGYW5N217n z4EBG9j29udDRaVaYcqAW6hDUBgwQQrGagpw1QhdGbZ2nmECEhh
+arrange from seed@2(house, 7) -> z4EBG9jEgBGpLRWPd7AZPA5JCYVxeNkve1kAopCC9uu7FWxGTV2 z4EBG9j4a7cbffQd193P9qVrFLPeuHUuToJJWXAYWPEiZYx6FBN
+arrange from seed(house, 7) -> z4EBG9jA2FQtrqDqrAJnVCScGKKqJTMSMPwWuq7DNb3JVrycv1K z4EBG9j8TLFr9yEiW4MqXxCL6BVLLaZEvFgcPfuaofgkNyGyHqq
+arrange from seed@2(lofi, 3) -> z4EBG9jBCzcB82P7k75VjvzHidrhUmBPxQozXzaPVDAW73bbcvS z4EBG9j2kJJzPaLUfhAbfwFygyVLiBDywAmFZATsoNE4ZMzx7A4
+arrange from seed@2(bossa, 1, loop) -> z4EBG9jGXKPzcRELdfGGbsRxF3eANLKMV5xSpppc66ukTF1mNrZ z4EBG9j9yRBg8svNwgjBYSdhHxAEaNAm7dNGwrugsoyiUpqGr85
+arrange from seed@2(techno, 42) -> z4EBG9j4vyGpyBmi7yoenGyTvFDB5i99m9PZ6jKB16UiVzdoNsY z4EBG9j9YdSNSDsb7t3dbEWdQbPBw1CTsdMyUyTPdGu6Ktq7Es9
+arrange from seed(techno, 42) -> z4EBG9jEPpNLAqXAf6Rz4KkpfPnEWFKNhK2vxXhx2Hqzcx3CcoE z4EBG9j9YdSNSDsb7t3dbEWdQbPBw1CTsdMyUyTPdGu6Ktq7Es9
+arrange from seed@2(trance, 7) -> z4EBG9j63SZfSWpy9kEk6Mkv1xbzsPJyjsQnKEWzHE47azsKV1A z4EBG9jExaumRS8sNsmqFSU7iLF4ZodG9vGkawbzoCzw1gL36qe
+section intro from seed@2(blues, 7)[1..8] / arrange intro -> z4EBG9j9FkQ1hDcJJEpdqeavQmdhzAWrwAXb4mxc19hNGxJKDtR z4EBG9jH7BWx2EzysjNTCE22QrimqUCMY6bofhTuFz2nVXvr1nc
+deck A: bass seed@2(funk, 7).bass[1..4] -> z4EBG9izRVmy2koQVkyG2ynRjhVzfugXWjPiGvmZwwRtBoj9amM z4EBG9jCw5cq62gC8HvGSLiXYKs11GXcBEzKCAVazFqgUbx3b7q
