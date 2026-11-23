@@ -1,0 +1,9 @@
+#! name: swung seed
+#! license: CC0-1.0
+# swung-seed.beatscript: a jazz track of the beats generator, with its swing (CC0). Original.
+# `seed@2(jazz, 7)` is seeds v2: the track that a bare `seed(jazz, 7)` writes out, plus jazz's swing. The generator's tables
+# give jazz 60 out of 100, which v2 writes as `swing 0.6`; seeds v1 write every genre straight. Only `arrange from` brings the
+# swing, because it is a setting of the whole program: a section or a part of a seed is notes. The program's own `tempo` wins
+# over the track's, and its own `swing` would too. `beatscript expand` writes the track out under its `# from seed@2(jazz, 7)` line.
+tempo 104
+arrange from seed@2(jazz, 7)

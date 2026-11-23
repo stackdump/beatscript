@@ -2,7 +2,8 @@
 
 Roadmaps 6668 (load seeded-pure generated tracks by reference), 6670 (BeatScript's FFI to beats.bitwrap), 6680 (recipe and
 expanded CIDs). Built on `spec/gen-reference`. The short reference is BEATSCRIPT.md, "Two halves: structure and engine" and "Call the
-generator: `gen@v`"; this note has the decisions and what is left.
+generator: `gen@v`"; this note has the decisions and what is left. It also has `seed@2`, seeds v2: the beats generator's track
+with its genre's swing ("`seed@2`: seeds with their swing").
 
 ## The two halves
 
@@ -61,7 +62,7 @@ with no `key`/`tempo` gets the genre's own. A section's own `key` does not refit
 | `let bed = gen@2 ... section=S part=R` | the notes R plays in S, a let a bar: `bed_1` ... `bed_k`, `let bed = <bed_1 ... bed_k>` (the shortest run of bars it repeats, a one-step bar as a group `[c3]` so a mutation can take it) |
 | `deck B: arp gen@2 ... section=S` | a stored reference to the generated program (`<cid>.S`), written out by stored.rs: the part's pattern and params, the line's own params win |
 | `section X from gen@2 ... section=S` | the same: S's parts, its length, its key when it differs; never its control lines (a warning names them) |
-| `arrange from gen@2 ...` | the whole program, less the `tempo` and `key` lines the program says itself, under its `# from:` line |
+| `arrange from gen@2 ...` | the whole program, less the `tempo`, `key` and `swing` lines the program says itself, under its `# from:` line |
 
 The generated program is the source for the stored stage only for as long as the check that resolved the call runs
 (`gen::with_generated`): a hand-written `<cid>.drop` of a generated program resolves only where the host has that program, as
@@ -102,6 +103,79 @@ its fully written-out program (`refs::expanded`: the same recipe, the same expan
 (`referencedBy`) and that vendored it (`vendoredFrom`), on each node's JSON-LD and through `Lineage::curation`. The store keeps a
 program's canonical text, which has no comments, so a vendored count needs the save to keep the `# from:` lines in
 `meta.based_on` (`["<call> -> <cid>"]`); the page's share/save does not send them yet (follow-up).
+
+## Swing
+
+**A call's program says its genre's swing.** The beats tables give each genre a `swing` from 0 to 100: jazz 60, blues 50, bossa 40,
+lofi 35, funk and garage 30, reggae 25, house 20, dubstep, country and deephouse 15, dnb, trap and acid 10, electro 8, and 0 for
+techno, trance, edm, ambient, metal, speedcore, synthwave and italo. seeded@1 and seeded@2 both print it as the program's
+`swing` setting, on BeatScript's 0..1 scale: the table's value / 100, held to 0.6. So `gen@2 jazz` says `swing 0.6` and
+`gen@2 house` says `swing 0.2`. A straight genre prints no `swing` line. `arrange from gen@2 ...` keeps the line unless the program
+says its own `swing`. A part line, a section and a `let` never bring it, because it is a setting of the whole program, like the
+tempo. `crates/beatscript-api/tests/generate.rs` holds every genre of every version to this.
+
+## `seed@2`: seeds with their swing
+
+```text
+arrange from seed@2(jazz, 7)              the v1 track and `swing 0.6`
+section intro from seed@2(jazz, 7)[1..8]  the v1 bars (a section brings no setting)
+deck A: bass seed@2(jazz, 7).bass[1..4]   the same: a part, a let, bars, a structure as `seed(...)` takes them
+```
+
+**Grammar.** `seed = SEED "(" NAME "," INT [ "," structure ] ")" [ "." role ] [ "[" INT [ ".." INT ] "]" ]`; `SEED` is the
+word `seed` or `seed@N`, touching its `(`, as `GEN` is `gen` or `gen@N` (grammar.ebnf, `recognize.rs`).
+
+**What it lowers to.** Exactly what `seed(...)` (seeds v1) writes out, plus one line: `arrange from seed@2(...)` adds the
+genre's `swing` when the program does not say its own. The value is `djlive::seed::swing_of`: the beats project's 0..100 / 100,
+held to 0.6, which is the seeded generator's mapping. A straight genre writes no line, so `seed@2(techno, 42)` writes out the
+same program as `seed(techno, 42)`, and the two expansions have one CID. The program as written keeps its version, so its CID is
+its own. A reference resolves (`refs`, the pin) to the piece as a program of its own, with its swing, under the generator
+`seeds@v2`. The expansion's `# from seed@2(...)` line ends `seeds v2`.
+
+**What it refuses.**
+- `seed@3(techno, 42)`: "this BeatScript has seed (v1) and seed@2, not `seed@3`", help `seed@2(techno, 42)`. One error, at the head.
+- `#! seeds: v2`: "this BeatScript has seeds v1, not `v2`", help: write the version in the reference, `seed@2(techno, 42)`. A `#!`
+  line is a comment and is outside the CID, so it pins nothing.
+- Everything `seed(...)` refuses, the same way: an unknown genre (with the nearest names), bars outside the track, a part that is
+  no role, a `let` that names no part.
+
+**Decisions.**
+- **The version went where the bug was (taste call, 2026-11-22).** Matt asked for "a NEW generator version, seeded@3 / gen@3",
+  so that no old program changes. But the seeded generator (`gen@N`) already writes swing, as the section above says. The guard
+  that never writes swing is seeds v1's (`djlive/src/seed.rs`, `whole`): it took a swing only in 0..1, while the beats project
+  carries 0..100, so `arrange from seed(jazz, 7)` never said its swing, though "Start from a seed" said `arrange from` adds it.
+  So the new version is `seed@2`, and there is no seeded@3.
+- **In the text, as `gen@N`.** A `seed@2` reference is in the CID. A seeds v2 chosen by a `#! seeds:` line would give two kinds
+  of music one CID. A bare `seed(...)` is v1 for good, as a bare `gen` is `gen@2` and a bare `macro` is `macro@1`, so every stored
+  program keeps its text, its CID and its music.
+- **`seed@1(...)` prints bare**, as `macro@1` does. The canonical text writes the version only when it is not 1, so
+  `seed@1(techno, 42)` and `seed(techno, 42)` are one program.
+- **Only the swing changes.** v2 is v1's writer with the swing guard fixed, and nothing else that would move a note, so the notes
+  and the expanded CID of a straight genre are v1's (tested for all 19 genres).
+- **No `#! seeds: v2` header in the expansion.** Its `# from seed@2(...) ... seeds v2` comment says the version for a reader. The
+  `#! seeds:` line keeps meaning what a bare seed is.
+- **The same mapping as the seeded generator.** The value / 100, held to 0.6. No genre is over 60, so the hold never acts today.
+  It is there so the two generators agree.
+
+**Tests.** `crates/djlive/tests/seed.rs`: `seed_at_2_writes_the_genres_swing_and_nothing_else` (every genre: the same lines as
+v1 but the swing, the same notes, the swing line by the table), `seed_at_2_is_spelt_with_its_version_and_stands_where_a_seed_does`,
+`an_unknown_seed_version_is_refused_with_the_ones_there_are`, `seeds_v1_write_no_swing`, and `seeds_v2_and_v1_are_pinned`
+(`tests/fixtures/seed/seed-pins.txt`: the CIDs, unexpanded and written out, of seed@2 on swung and straight genres in each place,
+and of the same bare seeds). Example: `examples/beatscript/swung-seed.beatscript`.
+
+**Not done.**
+- `seed@2` does not carry the beats project's `humanize`. BeatScript has no song-wide setting for it: `humanize()` is a pattern's
+  velocity function.
+- Nobody has measured whether BeatScript's `swing` is heard as strongly as beats' own swing. The program carries it as `swing`
+  on its nets' envelope, as every `swing` line does.
+
+**Proposals.**
+- Check how strong the engine plays the setting, for Matt. I have only read the code, not run or listened to it. Going by that
+  reading, a program's `swing` goes into the nets' envelope unscaled (`djlive::compile::DeckIr::envelope`). djrust then reads it as
+  `Project.swing`, and its runner uses that as a percentage of half a sixteenth (`wave/runner.rs`: `swing / 100 * tick_ms *
+  0.5`, and only with the groove on). If so, `swing 0.6` delays the off-steps by 0.3% of a sixteenth, where beats' jazz at 60
+  delays them by 30%. That would affect every `swing` line, hand-written or generated, and changing it would change the
+  audio and the envelope pins, but not any program's text or CID.
 
 ## Offline, missing, CC0
 
