@@ -557,6 +557,23 @@ mod tests {
         assert_eq!(u32::from_str_radix(std::str::from_utf8(&h[148..154]).unwrap(), 8).unwrap(), sum);
     }
 
+    /// The `# from:` lines a save kept (`meta.based_on`) are in the dump's JSON-LD as vendored `isBasedOn`: the text is canonical.
+    #[test]
+    fn the_dumps_json_ld_says_what_a_program_vendored() {
+        let d = tempfile::tempdir().unwrap();
+        let pin = "z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf";
+        let line = format!("{pin}.drop -> {pin}");
+        let cid = put(d.path(), "tempo 120\ndeck A: kick x ~ x ~\n", json!({"license": "CC0-1.0", "based_on": [line]}));
+        let plain = put(d.path(), "tempo 121\ndeck A: kick x ~ x ~\n", json!({"license": "CC0-1.0"}));
+        let es = scan(d.path());
+        let e = es.iter().find(|e| e.cid == cid).unwrap();
+        assert_eq!(e.based_on, [line]);
+        let j = block_json(e, None).unwrap();
+        assert!(j.contains(&format!(r#""isBasedOn":[{{"@type":"CreativeWork","name":"{pin}.drop","resolves":"{pin}","derivation":"vendored"}}]"#)), "{j}");
+        let p = es.iter().find(|e| e.cid == plain).unwrap();
+        assert!(p.based_on.is_empty() && !block_json(p, None).unwrap().contains("isBasedOn"));
+    }
+
     #[test]
     fn gzip_and_tar_are_standard() {
         assert_eq!(crc32(b"123456789"), 0xCBF4_3926);

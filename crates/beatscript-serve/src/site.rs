@@ -57,6 +57,24 @@ pub struct Examples {
     pub text: HashMap<String, String>,
 }
 
+impl Examples {
+    /// The meta an example answers with (`api.Meta`), and the `# from:` lines its file says it vendored as `based_on` (what a
+    /// save of that text would keep, gate::write_program), so every read of an example agrees with lineage, which counts them.
+    pub fn meta(&self, e: &Example) -> Value {
+        let mut m = json!({"license": e.license, "visibility": "public", "name": e.name, "source": "example"});
+        let lines = self.based_on(&e.name);
+        if !lines.is_empty() {
+            m["based_on"] = json!(lines);
+        }
+        m
+    }
+
+    /// The `# from:` lines of the example `name`'s file (djlive refs::from_lines).
+    pub fn based_on(&self, name: &str) -> Vec<String> {
+        self.text.get(name).map(|t| djlive::refs::from_lines(t)).unwrap_or_default()
+    }
+}
+
 fn example_name_ok(n: &str) -> bool {
     let b = n.as_bytes();
     !b.is_empty() && b.len() <= 64 && matches!(b[0], b'a'..=b'z' | b'0'..=b'9') && b.iter().all(|c| matches!(c, b'a'..=b'z' | b'0'..=b'9' | b'.' | b'_' | b'-'))
@@ -489,6 +507,18 @@ mod tests {
         }
         assert_eq!(types, ["text/plain; charset=utf-8", "text/plain; charset=utf-8", "text/beatscript; charset=utf-8", "text/beatscript; charset=utf-8"]);
         assert_eq!(example_file(&ex, "techno.txt", &HeaderMap::new()).status(), 404);
+    }
+
+    /// An example's meta carries its file's own `# from:` lines as `based_on` (lineage counts them), and nothing for one with none.
+    #[test]
+    fn an_examples_meta_says_what_its_file_vendored() {
+        let pin = "z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf";
+        let e = |name: &str| Example { name: name.into(), title: String::new(), description: String::new(), cid: String::new(), bpm: 0.0, bars: 0, license: "CC0-1.0".into() };
+        let mut ex = Examples::default();
+        ex.text.insert("vend".into(), format!("#! name: vend\n# from {pin}.drop\n# from: no pin\ntempo 120\ndeck A: kick x ~ x ~\n"));
+        ex.text.insert("plain".into(), "# a note\ntempo 120\ndeck A: kick x ~ x ~\n".into());
+        assert_eq!(ex.meta(&e("vend")), json!({"license": "CC0-1.0", "visibility": "public", "name": "vend", "source": "example", "based_on": [format!("{pin}.drop -> {pin}")]}));
+        assert_eq!(ex.meta(&e("plain")), json!({"license": "CC0-1.0", "visibility": "public", "name": "plain", "source": "example"}));
     }
 
     #[test]

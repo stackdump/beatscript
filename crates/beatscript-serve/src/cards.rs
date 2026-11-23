@@ -599,7 +599,8 @@ impl Cards {
         for e in ex.list.iter().filter(|e| e.cid == cid) {
             if let Some(t) = ex.text.get(&e.name) {
                 let h = lex::header_meta(t);
-                let mut m = Meta { name: h.name, license: h.license, visibility: h.visibility, ..Meta::default() };
+                // (its `# from:` lines as a save would keep them: the page's isBasedOn agrees with lineage, which counts them)
+                let mut m = Meta { name: h.name, license: h.license, visibility: h.visibility, based_on: djlive::refs::from_lines(t), ..Meta::default() };
                 if m.name.is_empty() {
                     m.name = e.name.clone();
                 }

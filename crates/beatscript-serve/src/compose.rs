@@ -143,7 +143,7 @@ pub fn stored(app: &crate::App, cid: &str) -> Option<(String, Value)> {
     }
     if let Some(e) = app.examples.list.iter().find(|e| e.cid == cid) {
         let p = app.store.get(cid)?;
-        return Some((p.text, json!({"license": e.license, "visibility": "public", "name": e.name, "source": "example"})));
+        return Some((p.text, app.examples.meta(e)));
     }
     let b = std::fs::read(app.cfg.programs.join(format!("{cid}.json"))).ok();
     if let Some(b) = b {
@@ -227,6 +227,10 @@ pub fn put(app: &crate::App, eng: &Engine, owner: &str, text: &str, meta: Value)
     }
     meta["license"] = json!(adm.license());
     meta["visibility"] = json!("public");
+    // the text is the only source of based_on (as gate::write_program has it): a caller's own never reaches the answer
+    if let Some(o) = meta.as_object_mut() {
+        o.remove("based_on");
+    }
     if !adm.based_on().is_empty() {
         meta["based_on"] = json!(adm.based_on());
     }

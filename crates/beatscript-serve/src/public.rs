@@ -846,8 +846,7 @@ impl Pub {
                 Some(p) => p.text,
                 None => s_of(&store::check(self.app.examples.text.get(&ex.name)?), "canonical"),
             };
-            let meta = json!({"license": ex.license, "visibility": "public", "name": ex.name, "source": "example"});
-            return Some((text, meta));
+            return Some((text, self.app.examples.meta(ex)));
         }
         let p = self.app.store.get(cid)?;
         let meta = match self.app.store.file_meta(cid) {

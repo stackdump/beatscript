@@ -379,3 +379,23 @@ fn an_examples_own_from_lines_count_as_vendoring() {
     let l = Lineage::new(d.path(), vec![Example { cid: ex, name: "written-out".into(), license: "CC0-1.0".into(), text }]);
     assert_eq!(l.curation(&src), Curation { referenced_by: 0, vendored_from: 1 });
 }
+
+/// A line names one program at most: a borrow must be pinned by the program it names, so `# from: <victim> -> <other>` adds
+/// nothing to the victim (and is not kept); expand's own `# from <cid>.drop` over a borrowed section counts as that borrow.
+#[test]
+fn a_line_counts_only_for_its_pin() {
+    let d = tempfile::tempdir().unwrap();
+    let p = d.path();
+    let victim = put(p, ROOT, json!({"visibility": "public"}));
+    let other = put(p, FAST, json!({"visibility": "public"}));
+    let forged = crate::gate::admit(&format!("# from: {victim} -> {other}\n# from: {victim}.drop -> {other}\n{UP}"), "", "").unwrap();
+    assert!(forged.based_on().is_empty(), "{:?}", forged.based_on());
+    crate::gate::write_program(p, &forged, json!({}), |v| v.to_string()).unwrap();
+    let expanded = crate::gate::admit(&format!("# from {other}.drop\n{FAST2}"), "", "").unwrap();
+    assert_eq!(expanded.based_on(), [format!("{other}.drop -> {other}")]);
+    crate::gate::write_program(p, &expanded, json!({}), |v| v.to_string()).unwrap();
+    let l = Lineage::new(p, Vec::new());
+    l.refresh(true);
+    assert_eq!(l.curation(&victim), Curation::default());
+    assert_eq!(l.curation(&other), Curation { referenced_by: 0, vendored_from: 1 });
+}
