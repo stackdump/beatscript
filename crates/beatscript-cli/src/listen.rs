@@ -16,6 +16,8 @@
 //! - **detected**: the tempo (djrust's beat-grid analyzer on the master) and the key (djengine's
 //!   chroma key detection) next to the declared ones, with a verdict for each.
 //! - **sections**: each section's loudness and a per-bar loudness curve; **clipping** on the master.
+//! - **macros** (only when the program has a `macro` line): each call in the window, the bar the engine starts it on (`at_bar`,
+//!   counted as the time words count), and whether it `played`, with the engine's reason when it was `refused` (also a warning).
 //!
 //! What the offline render leaves out (some control lines) is in `notes`, as `render` says it. The render runs at [`SR`]
 //! (22.05 kHz), not the site's 44.1 kHz.
@@ -849,7 +851,7 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
     let mut tap = ListenTap::new(win, sr, true);
     let mut ev_sink = std::io::sink();
     let mut ev = Events::new(&mut ev_sink);
-    render::render_compiled(c, check_ms, &opts, &mut std::io::sink(), &mut ev, t0, &mut tap)?;
+    let main = render::render_compiled(c, check_ms, &opts, &mut std::io::sink(), &mut ev, t0, &mut tap)?;
     tap.master.finish();
     for m in tap.stems.values_mut() {
         m.finish();
@@ -1045,6 +1047,28 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
     if tap.clipped > 0 {
         warnings.push(JsonValue::str(format!("the master clips: {} samples over full scale", tap.clipped)));
     }
+    // the macro lines (docs/beatscript/ext-control.md): each call in the window, the bar the engine starts it on, and whether it played
+    // (only when the program has one, so every other summary is the one it was)
+    let fired: Vec<&render::MacroCall> = main.macros.iter().filter(|m| (from_bar..from_bar + bars).contains(&m.starts_bar())).collect();
+    if !fired.is_empty() {
+        let mut list = Vec::new();
+        for m in fired {
+            let mut o = JsonObject::new();
+            o.set("line", JsonValue::int(m.line as i64));
+            o.set("text", JsonValue::str(m.text.clone()));
+            o.set("id", JsonValue::str(m.id.clone()));
+            o.set("deck", JsonValue::str(m.target.clone()));
+            o.set("bars", m.bars.map_or(JsonValue::Null, |n| JsonValue::int(i64::from(n))));
+            o.set("at_bar", JsonValue::int(i64::from(m.starts_bar())));
+            o.set("played", JsonValue::Bool(m.refused.is_none()));
+            if let Some(why) = &m.refused {
+                o.set("refused", JsonValue::str(why.clone()));
+                warnings.push(JsonValue::str(format!("line {} `{}`: the engine did not play it at bar {}: {why}", m.line, m.text, m.starts_bar())));
+            }
+            list.push(JsonValue::Object(o));
+        }
+        out.set("macros", JsonValue::Array(list));
+    }
     out.set("warnings", JsonValue::Array(warnings));
     out.set("notes", JsonValue::Array(notes.into_iter().map(JsonValue::str).collect()));
     let mut t = JsonObject::new();
@@ -1145,6 +1169,25 @@ mod tests {
 
     fn mix() -> DeckMix {
         DeckMix { volume: 0.8, mute: false, crossfader: 0.5, crossfade_gain: 0.707, master: 1.0, kills: vec![], filter: 0.5, insert_filter: None, vocoder: false }
+    }
+
+    /// `listen` names each macro line it heard (docs/beatscript/ext-control.md): the bar the engine starts it on, counted as the time words
+    /// count (`at bar 2` starts at 2), and whether it played, with the engine's reason when it did not (a song macro on a deck that
+    /// plays no net), which is also a warning.
+    #[test]
+    fn listen_reports_each_macro_line_and_what_the_engine_said() {
+        let text = "tempo 120\ndeck A: kick x ~ x ~ | bass c2 ~ c2 ~\nat bar 2: macro filter on A over 2 bars\nat bar 4: macro breakdown on B over 2 bars\nend at bar 6\n";
+        let j = listen(text, &ListenOptions { budget_seconds: 0.0, ..Default::default() }).unwrap();
+        let m = j.get("macros").and_then(JsonValue::as_array).unwrap_or_else(|| panic!("no macros in {}", j.js_stringified()));
+        assert_eq!(m.len(), 2, "{}", j.js_stringified());
+        assert_eq!(m[0].canonical_js(), r#"{"at_bar":2,"bars":2,"deck":"A","id":"filter","line":3,"played":true,"text":"at bar 2: macro filter on A over 2 bars"}"#);
+        assert_eq!(m[1].get("at_bar").and_then(JsonValue::as_f64), Some(4.0));
+        assert_eq!(m[1].get("played").and_then(JsonValue::as_bool), Some(false));
+        assert!(m[1].get("refused").and_then(JsonValue::as_str).is_some_and(|w| w.contains("net deck")), "{}", m[1].js_stringified());
+        assert!(j.get("warnings").map(|w| w.js_stringified()).is_some_and(|w| w.contains("the engine did not play it at bar 4")), "{}", j.js_stringified());
+        // a program with none has no `macros` (every other summary is the one it was)
+        let plain = listen("tempo 120\ndeck A: kick x ~ x ~\nend at bar 2\n", &ListenOptions { budget_seconds: 0.0, ..Default::default() }).unwrap();
+        assert!(plain.get("macros").is_none());
     }
 
     #[test]

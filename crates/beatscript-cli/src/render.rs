@@ -292,8 +292,33 @@ enum Move {
     /// strip's level, EQ and mute, the master level, the crossfader, ramps and lfos sampled the way the runtime sends them.
     Arrange(ArrangeEvent),
     /// What the program's control net fires (`djlive::nets`, as `djhost::beatscript_render::render` plays it): inserts (filter,
-    /// reverb, delay, crush) set and switched, their ramps a sixteenth of a bar at a time, the two moves the net holds.
-    Net(djlive::nets::Event),
+    /// reverb, delay, crush) set and switched, their ramps a sixteenth of a bar at a time, the two moves the net holds, and a
+    /// `macro` line's `effects fire` / `release`. With the beat it is on.
+    Net(djlive::nets::Event, f64),
+}
+
+/// A `macro` line's call as the render made it (docs/beatscript/ext-control.md): `listen` reports each one, with what the engine said.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MacroCall {
+    /// The beat the call was made on (a beat ahead of the bar line its line names: the engine starts it on the next one).
+    pub beat: f64,
+    pub target: String,
+    pub id: String,
+    pub bars: Option<u32>,
+    /// The line of the program text (1-based) and its text.
+    pub line: usize,
+    pub text: String,
+    /// Why the engine refused it, when it did (a net macro on a deck that plays no net).
+    pub refused: Option<String>,
+}
+
+impl MacroCall {
+    /// The program bar (0-based) the engine starts it on: the next bar line after its call.
+    pub fn starts_bar(&self) -> u32 {
+        let b = self.beat / 4.0;
+        let next = if (b - b.round()).abs() < 1e-9 { b.round() + 1.0 } else { b.ceil() };
+        next.max(0.0) as u32
+    }
 }
 
 /// The program's control lines as one timeline, in frames: the arrangement's control moves first on a tie, then the net's.
@@ -304,6 +329,10 @@ pub struct Controls {
     next: usize,
     /// Control lines the render does not hear (neither the arrangement nor the net carries them): for the start event's notes.
     unheard: Vec<String>,
+    /// A macro line's place for its call: (target, id, bars) to (line, text).
+    macro_lines: Vec<((String, String, Option<u32>), (usize, String))>,
+    /// The macro calls made so far, with what the engine said.
+    pub macros: Vec<MacroCall>,
 }
 
 impl Controls {
@@ -312,7 +341,7 @@ impl Controls {
         let bpm = c.tempo.unwrap_or(120.0);
         let mut moves: Vec<(i64, u8, usize, Move)> = Vec::new();
         if c.controls.is_empty() {
-            return Controls { moves, next: 0, unheard: Vec::new() };
+            return Controls { moves, next: 0, unheard: Vec::new(), macro_lines: Vec::new(), macros: Vec::new() };
         }
         let (arr, left_out) = djhost::beatscript_render::control_events(c, bpm, beats, true);
         for (i, e) in arr.into_iter().enumerate() {
@@ -330,14 +359,29 @@ impl Controls {
             if beat >= beats {
                 continue;
             }
-            moves.push((frame_of(beat), 1, i, Move::Net(e)));
+            moves.push((frame_of(beat), 1, i, Move::Net(e, beat)));
         }
         moves.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
         // unheard: a line the arrangement leaves out that the net does not hold either
         let residual: BTreeSet<&str> = net.residual.iter().map(|(k, _)| k.as_str()).collect();
         let lines: BTreeSet<usize> = c.controls.iter().filter(|ctl| residual.contains(ctl.key.as_str())).map(|ctl| djlive::diag::line_col(&c.source, ctl.span.start).0).collect();
         let unheard = left_out.lines.iter().filter(|l| lines.contains(&l.line)).map(|l| format!("line {} `{}` ({})", l.line, l.text, l.kind)).collect();
-        Controls { moves, next: 0, unheard }
+        let mut macro_lines = Vec::new();
+        for ctl in &c.controls {
+            let djlive::compile::Effect::Calls(cs) = &ctl.effect else { continue };
+            for call in cs.iter().filter(|x| x.noun == "effects") {
+                if let Some(vec) = djlive::nets::call_events(call) {
+                    for e in vec {
+                        if let djlive::nets::Event::Fire { target, id, bars } = e {
+                            let line = djlive::diag::line_col(&c.source, ctl.span.start).0;
+                            let text = ctl.span.text(&c.source).lines().next().unwrap_or("").trim().to_string();
+                            macro_lines.push(((target, id, bars), (line, text)));
+                        }
+                    }
+                }
+            }
+        }
+        Controls { moves, next: 0, unheard, macro_lines, macros: Vec::new() }
     }
 
     fn peek(&self) -> Option<i64> {
@@ -360,8 +404,14 @@ impl Controls {
                         let _ = engine.apply_arrange_op(op);
                     }
                 },
-                Move::Net(e) => {
-                    let _ = djhost::beatscript_render::apply_event(engine, e);
+                Move::Net(e, beat) => {
+                    let r = djhost::beatscript_render::apply_event(engine, e);
+                    // a macro's call is kept, with what the engine said, for `listen`
+                    if let djlive::nets::Event::Fire { target, id, bars } = e {
+                        let key = (target.clone(), id.clone(), *bars);
+                        let (line, text) = self.macro_lines.iter().find(|(k, _)| *k == key).map(|(_, v)| v.clone()).unwrap_or_default();
+                        self.macros.push(MacroCall { beat: *beat, target: target.clone(), id: id.clone(), bars: *bars, line, text, refused: r.err() });
+                    }
                 }
             }
             self.next += 1;
@@ -491,6 +541,8 @@ pub struct Summary {
     pub ttfb_ms: f64,
     pub render_ms: f64,
     pub bars: u32,
+    /// The macro lines' calls the render made (`listen` reports them).
+    pub macros: Vec<MacroCall>,
 }
 
 /// Check `text` and stream its render: PCM to `pcm`, events to `ev`. `t0` is when the process (or the
@@ -592,7 +644,7 @@ pub fn render_compiled(c: &Compiled, check_ms: f64, o: &Options, pcm: &mut dyn W
         ("ttfb_ms", num(ttfb_ms)),
         ("render_ms", num(render_ms)),
     ]);
-    Ok(Summary { frames, seconds: frames as f64 / sr, ttfb_ms, render_ms, bars: plan.bars })
+    Ok(Summary { frames, seconds: frames as f64 / sr, ttfb_ms, render_ms, bars: plan.bars, macros: std::mem::take(&mut ctls.macros) })
 }
 
 /// What [`drive`] hands the one who runs it: the engine once it stands on the first section, every block it

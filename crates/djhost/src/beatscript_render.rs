@@ -26,7 +26,8 @@
 //! **The control net** (docs/design/NETS-ALL-THE-WAY-DOWN.md, phase 1). The lines the arrangement has no op for (filters,
 //! inserts, moves) are played by [`render`] from the program's control net (`djlive::nets`), merged with the arrangement's own
 //! events frame by frame, so the offline render hears what the net says. A line the net does not hold yet is named in
-//! [`Render::beside`] and is not heard.
+//! [`Render::beside`] and is not heard. A `macro` line (docs/beatscript/ext-control.md) is the net's `fire` (and a held one's
+//! `release`), applied through [`crate::fx_view::fire`]: the registry's `effects fire`, as the booth runs it.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -298,6 +299,7 @@ fn kind_of(noun: &str, p: &JsonValue) -> String {
         "inserts" => text("effect").or_else(|| text("param").and_then(|x| x.split('.').next().map(str::to_string))).unwrap_or_else(|| "insert".into()),
         "fx" => text("param").unwrap_or_else(|| "fx".into()),
         "moves" => "move".into(),
+        "effects" if text("action").as_deref() == Some("fire") => text("id").map_or_else(|| "macro".into(), |id| format!("macro {id}")),
         "deck" => text("action").map_or_else(|| "deck".into(), |a| format!("deck {a}")),
         other => other.into(),
     }
@@ -814,6 +816,9 @@ pub fn apply_event(e: &mut djengine::host::deck::engine::Engine, ev: &Event) -> 
             });
             e.trick(deck, k, *on, args, TrickQuant::Now)
         }
+        // a `macro` line (docs/beatscript/ext-control.md): the registry's `effects fire` / `release`, as the booth runs them
+        Event::Fire { target, id, bars } => crate::fx_view::fire(e, target, id, *bars, false),
+        Event::Release { target, id } => crate::fx_view::release(e, target, id),
     }
 }
 

@@ -485,3 +485,27 @@ fn a_render_sings_a_sing_line() {
     let diff: Vec<f64> = (0..n).map(|i| x[i] - y[i]).collect();
     assert!(rms(&diff) > 0.1 * rms(&y[..n]), "the voice is not in the render: diff {} vs {}", rms(&diff), rms(&y[..n]));
 }
+
+/// A `macro` line (docs/beatscript/ext-control.md) is heard: the render plays the registry's `effects fire` on the offline engine, the same
+/// bytes every time and whatever the chunk size, the same as the program without it up to the bar its line names and different from
+/// that bar on (the call goes a beat ahead, and the engine starts it on the next bar line).
+#[test]
+fn a_macro_line_is_heard_from_its_bar_and_the_render_stays_deterministic() {
+    let with = "tempo 120\ndeck A: kick x ~ x ~ x ~ x ~ | bass c2 ~ c2 ~ c2 ~ c2 ~ | hihat x x x x x x x x\nat bar 2: macro filter on A over 2 bars\nat bar 5: macro riser on A over 2 bars\nend at bar 8\n";
+    let plain = "tempo 120\ndeck A: kick x ~ x ~ x ~ x ~ | bass c2 ~ c2 ~ c2 ~ c2 ~ | hihat x x x x x x x x\nend at bar 8\n";
+    let a = run(with, &opts());
+    assert!(a.result.is_ok(), "{:?}", a.result.as_ref().err().map(|e| &e.message));
+    let b = run(with, &Options { chunk_ms: 7, ..opts() });
+    assert!(a.pcm == b.pcm, "two renders of a macro line differ");
+    // nothing is said to be left out of the render
+    let notes = event(&a, "start")[0].get("notes").map(|n| n.js_stringified()).unwrap_or_default();
+    assert!(!notes.contains("not in this render"), "{notes}");
+    let p = run(plain, &opts());
+    assert_eq!(a.pcm.len(), p.pcm.len());
+    let bar = bar_frames(1, 120.0, 44_100);
+    let first = a.pcm.chunks_exact(4).zip(p.pcm.chunks_exact(4)).position(|(x, y)| x != y).expect("the macro is heard");
+    assert!(first >= 2 * bar && first < 2 * bar + bar / 4, "the filter starts on bar 2, not at frame {first} (bar {:.3})", first as f64 / bar as f64);
+    // the riser: bar 5 on, louder than the program without it (noise rising to half level over two bars)
+    let d = rms_db(&a.pcm, 120.0, 44_100, 5, 7) - rms_db(&p.pcm, 120.0, 44_100, 5, 7);
+    assert!(d.abs() > 0.5, "the riser changes bars 5 and 6: {d:.2} dB");
+}
