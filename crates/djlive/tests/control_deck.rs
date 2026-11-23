@@ -91,6 +91,9 @@ const PAIRS: &[(&str, &str)] = &[
     ),
     // a guard that reads an input is decided while the program plays, on the control deck as off it
     ("deck A: kick x ~ x ~\non phrase: control: swap pairs when knob(1) > 0.5\n", "deck A: kick x ~ x ~\non phrase: swap pairs when knob(1) > 0.5\n"),
+    // a macro of the DJ catalogue (tests/macros.rs), its two words in either order, a held one-shot and its release
+    ("deck A: kick x ~ x ~\ncontrol: macro riser on A over 8 bars\nat bar 24: control: macro@1 cathedral over 2 bars on B\n", "deck A: kick x ~ x ~\nmacro riser on A over 8 bars\nat bar 24: macro cathedral on B over 2 bars\n"),
+    ("deck A: kick x ~ x ~\nevery 16 bars: control: macro tape_stop on A over 2 bars\n", "deck A: kick x ~ x ~\nevery 16 bars: macro tape_stop on A over 2 bars\n"),
 ];
 
 #[test]
@@ -180,12 +183,14 @@ fn the_control_deck_holds_no_part_and_no_strip_action() {
     }
     let (m, h) = error(&format!("{k}control: at bar 4: queue next\n"));
     assert!(m.contains("is a time word: it comes before the head") && h.contains("at bar 12: control:"), "{m} / {h}");
-    // a typo, and what is not built yet
+    // a typo (of `macro` too: it is an engine call the control deck takes, tests/macros.rs)
     let (m, h) = error(&format!("{k}control: mvoe echo_out on B\n"));
     assert!(m.contains("not an engine call") && h.contains("did you mean `move`?"), "{m} / {h}");
-    let (m, h) = error(&format!("{k}control: macro riser over 8 bars on A\n"));
-    assert!(m.contains("`macro` is designed and not built yet") && h.contains("aux macro=cathedral"), "{m} / {h}");
-    assert!(error(&format!("{k}macro riser over 8 bars on A\n")).1.contains("designed and not built yet"));
+    let (m, h) = error(&format!("{k}control: macor riser on A\n"));
+    assert!(m.contains("not an engine call") && h.contains("did you mean `macro`?"), "{m} / {h}");
+    // the checks of a macro are the line's with no head
+    assert!(error(&format!("{k}control: macro rizer on A\n")).1.contains("did you mean `riser`?"));
+    assert!(error(&format!("{k}control: macro riser over 8 bars\n")).0.contains("needs the deck it fires on"));
     // the checks of the call itself are the line's with no head: a move needs its deck, a pair swap a move it can use
     assert!(error(&format!("{k}control: move echo_out\n")).0.contains("needs the deck it acts on"));
     assert!(error(&format!("{k}control: swap pairs with bass_swap\n")).0.contains("is not a move a pair swap can use"));

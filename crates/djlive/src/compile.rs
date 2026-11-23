@@ -2055,6 +2055,11 @@ impl<'a> Compiler<'a> {
             return;
         }
         let target = l.target.map(|(t, _)| t);
+        // a macro's length is its `over` (macros.rs): `for N bars` has nothing more to say
+        if let (Body::Action(Action::Macro { head, .. }), Some((_, hsp))) = (&l.body, l.hold) {
+            self.err(Diagnostic::error(hsp, "a macro's length is its `over`, so it takes no `for`").help(format!("{} ID on A over 4 bars", head.text(self.src))));
+            return;
+        }
         let effect = match &l.body {
             Body::Action(a) => self.action(fl.span, target, l.target.map(|(_, sp)| sp), a),
             Body::Do(d) => docall::compile_do(d, &self.env, self.src, &mut self.diags, self.seg_end),
@@ -2084,6 +2089,28 @@ impl<'a> Compiler<'a> {
             restore = Some(len);
             undo.push(Call::new("mixer", [("deck", deck.into()), ("mute", false.into())]));
         }
+        // a macro: its call a beat ahead of a bar-line time (the engine starts it on the next bar line), and a held one-shot let
+        // go after its bars
+        let (mut timing, mut hold) = (fl.timing, fl.hold);
+        if let Body::Action(Action::Macro { version, id, over, .. }) = &l.body {
+            timing = crate::macros::lead(fl.timing);
+            if let Ok(e) = crate::macros::find(*version, &id.text) {
+                if let crate::macros::Length::Held(n) = e.length {
+                    let n = over.and_then(|(o, _)| o.whole_bars()).unwrap_or(n);
+                    let wait = crate::macros::wait_to_bar(fl.timing, timing);
+                    hold = Rat::int(i64::from(n)).add(wait).ok().and_then(Dur::from_bars);
+                    if let Effect::Calls(cs) = &effect {
+                        undo.extend(cs.iter().map(|c| {
+                            let mut p = c.params.clone();
+                            if let JsonValue::Object(o) = &mut p {
+                                o.set("action", JsonValue::str("release"));
+                            }
+                            Call { noun: c.noun.clone(), params: p }
+                        }));
+                    }
+                }
+            }
+        }
         if let Some(n) = fl.hold {
             undo.extend(docall::derive_undo(&effect));
             if undo.is_empty() {
@@ -2095,7 +2122,7 @@ impl<'a> Compiler<'a> {
                 return;
             }
         }
-        self.controls.push(Control { key: format!("{}{}", fl.path, print::line(l)), timing: fl.timing, effect, span: fl.span, hold: fl.hold, undo, restore, via: fl.via.clone(), notice, window: None });
+        self.controls.push(Control { key: format!("{}{}", fl.path, print::line(l)), timing, effect, span: fl.span, hold, undo, restore, via: fl.via.clone(), notice, window: None });
     }
 
     pub(crate) fn need_target(&mut self, what: &str, target: Option<Target>, span: Span, want: &str) -> bool {
@@ -2225,7 +2252,70 @@ impl<'a> Compiler<'a> {
             Action::Shaped { name, mode, motion } => self.shaped(span, target, tspan, name, mode.as_ref(), motion),
             // (a tempo line is read in `control`, before it gets here)
             Action::Tempo(_) => None,
+            Action::Macro { version, head, id, deck, over } => {
+                if target.is_some() {
+                    self.need_target("`macro`", target, on_target, &format!("takes no target: it names its deck itself, `{} {} on A`", head.text(self.src), id.text));
+                    return None;
+                }
+                self.macro_call(*version, *head, id, *deck, over.as_ref())
+            }
         }
+    }
+
+    /// `macro ID on DECK over N bars` (macros.rs): checked against its version's table, lowered to the registry's `effects fire`.
+    fn macro_call(&mut self, version: u32, head: Span, id: &Word, deck: Option<Deck>, over: Option<&(Dur, Span)>) -> Option<Effect> {
+        use crate::macros::{self, Length, Miss};
+        let written = head.text(self.src).to_string();
+        let e = match macros::find(version, &id.text) {
+            Ok(e) => e,
+            Err(Miss::NoVersion) => {
+                let have = macros::version_names();
+                self.err(
+                    Diagnostic::error(head, format!("this BeatScript has {}, not `{written}`", have.join(", ")))
+                        .help(format!("macro {} ...   (a bare `macro` is macro@1, and a version always means the same catalogue)", id.text)),
+                );
+                return None;
+            }
+            Err(Miss::NotIn { near, later }) => {
+                let mut d = Diagnostic::error(id.span, format!("`{}` is not in the macro catalogue of {}", id.text, if version == macros::BARE { "macro@1 (a bare `macro`)".to_string() } else { format!("macro@{version}") }))
+                    .found(format!("`{}`", id.text));
+                d = match (later, near) {
+                    (Some(v), _) => d.help(format!("`{}` is in macro@{v}: `{} {} ...`", id.text, macros::head_text(v), id.text)),
+                    (None, Some(n)) => d.help(format!("did you mean `{n}`?")),
+                    (None, None) => d.help("the `macros` list has every id: riser, tape_stop, breakdown, cathedral, ping-pong, feel-build ..."),
+                };
+                self.err(d);
+                return None;
+            }
+        };
+        let Some(deck) = deck else {
+            self.err(Diagnostic::error(id.span, format!("`{written} {}` needs the deck it fires on", id.text)).help(format!("{written} {} on A", id.text)));
+            return None;
+        };
+        let bars = match over {
+            Some((_, osp)) if e.length == Length::Own => {
+                self.err(Diagnostic::error(*osp, format!("`{}` is a one-shot: it runs its own length, so it takes no `over`", e.id)).help(format!("{written} {} on {}", e.id, deck.name())));
+                return None;
+            }
+            Some((o, osp)) => match o.whole_bars() {
+                Some(n) if (1..=macros::MAX_BARS).contains(&n) => Some(n),
+                Some(n) => {
+                    self.err(Diagnostic::error(*osp, format!("a macro runs 1 to {} bars, not {n}", macros::MAX_BARS)).found(o.canonical()).help(format!("{written} {} on {} over {} bars", e.id, deck.name(), n.clamp(1, macros::MAX_BARS))));
+                    return None;
+                }
+                None => {
+                    self.err(Diagnostic::error(*osp, "a macro takes whole bars").found(o.canonical()).help(format!("{written} {} on {} over 4 bars", e.id, deck.name())));
+                    return None;
+                }
+            },
+            None => e.length.default_bars(),
+        };
+        let mut pairs = vec![("action", JsonValue::str("fire")), ("target", JsonValue::str(deck.name())), ("id", JsonValue::str(e.id))];
+        // a held one-shot is fired with no length and let go after it (`control`); an own-length one has none
+        if let (Length::Bars(_) | Length::Sweep(_), Some(n)) = (e.length, bars) {
+            pairs.push(("bars", JsonValue::int(i64::from(n))));
+        }
+        Some(Effect::Calls(vec![Call { noun: "effects".into(), params: JsonValue::Object(JsonObject::from_pairs(pairs)) }]))
     }
 
     #[allow(clippy::too_many_arguments)]

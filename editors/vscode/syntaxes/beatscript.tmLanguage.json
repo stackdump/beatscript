@@ -139,7 +139,7 @@
       "name": "support.function.action.beatscript"
     },
     "keyword": {
-      "match": "(?<![A-Za-z0-9_-])(restricted|arrange|control|license|pattern|s\\-curve|section|silence|station|weights|assert|before|choose|chords|evolve|import|launch|linear|master|phrase|repeat|rhythm|sample|square|after|beats|drums|every|forms|group|maybe|pairs|stack|start|swing|tempo|under|until|bars|beat|deck|duck|else|emit|from|gens|loop|next|over|pair|play|sine|sing|step|stop|then|when|wire|with|and|bar|bpm|def|end|exp|for|gen|key|let|lfo|log|mix|not|out|saw|set|tri|use|as|at|do|in|on|or)(?![A-Za-z0-9_-])",
+      "match": "(?<![A-Za-z0-9_-])(restricted|arrange|control|license|pattern|s\\-curve|section|silence|station|weights|assert|before|choose|chords|evolve|import|launch|linear|master|phrase|repeat|rhythm|sample|square|after|beats|drums|every|forms|group|macro|maybe|pairs|stack|start|swing|tempo|under|until|bars|beat|deck|duck|else|emit|from|gens|loop|next|over|pair|play|sine|sing|step|stop|then|when|wire|with|and|bar|bpm|def|end|exp|for|gen|key|let|lfo|log|mix|not|out|saw|set|tri|use|as|at|do|in|on|or)(?![A-Za-z0-9_-])",
       "name": "keyword.control.beatscript"
     },
     "number": {

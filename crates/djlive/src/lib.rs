@@ -31,6 +31,7 @@ pub mod highlight;
 pub mod launch;
 pub mod lex;
 pub mod linked;
+pub mod macros;
 pub mod meter;
 pub mod mixmoves;
 pub mod music;

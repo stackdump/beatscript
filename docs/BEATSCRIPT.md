@@ -282,7 +282,8 @@ engine      = "crossfader" change                             (* no target, or c
             | "swap" "pairs" [ "with" MOVE ]                  (* the booth's: the desktop app plays these *)
             | "move" MOVE "on" deck [ span ]
             | "load" "pair" SPEC [ "group" INT ]
-            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD ) ;
+            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD )
+            | MACRO NAME ( "on" deck [ span ] | span "on" deck ) ;   (* macro riser on A over 8 bars: the DJ macro catalogue, by id; MACRO is macro or macro@1 *)
 change      = value                                           (* a plain value *)
             | value "->" value span [ shape ]                 (* a ramp: 2k -> 8k over 8 bars exp *)
             | lfo ;                                           (* a value that keeps moving *)

@@ -50,13 +50,13 @@ pub const EXT_WORDS: [&str; 65] = [
 /// `assert ...`, `sing "..."`, `emit ...`, an operator of a guard) that a name in its place could not be told from.
 pub const EXT_RESERVED: [&str; 17] = ["stack", "then", "silence", "wire", "assert", "sing", "under", "choose", "maybe", "deg", "lfo", "and", "or", "not", "voice-lead", "s-curve", "emit"];
 /// Every word that can start a statement: what a typo at the start of a line is compared with.
-pub const STATEMENT_WORDS: [&str; 28] = [
+pub const STATEMENT_WORDS: [&str; 29] = [
     "tempo", "swing", "key", "let", "def", "repeat", "section", "arrange", "end", "loop", "sample", "use", "set", "wire", "assert", "evolve", "import", "deck", "master", "every", "on", "at", "after", "before", "do", "launch",
-    "control", "station",
+    "control", "station", "macro",
 ];
 pub const KEY_VERBS: [&str; 6] = ["status", "detect", "set", "lock", "tempo", "compat"];
 /// What the control deck takes, after `control:` (docs/beatscript/ext-control.md): the engine calls that take no target.
-pub const CONTROL_DECK_WORDS: [&str; 10] = ["move", "swap pairs", "load pair", "queue", "crossfader", "tempo", "duck", "mix", "do", "a sugar noun (freeze, vocoder, wheel ...)"];
+pub const CONTROL_DECK_WORDS: [&str; 11] = ["move", "swap pairs", "load pair", "queue", "crossfader", "tempo", "duck", "mix", "do", "macro", "a sugar noun (freeze, vocoder, wheel ...)"];
 
 /// Is a `control` with `next` after it and `prev` before it the control deck's head? Before a colon, where a line's head goes:
 /// at the start of a line, in a block, or after a time word's colon. (`after control:` names a section.)
@@ -385,6 +385,10 @@ pub(crate) fn is_syntax_here(w: &str, toks: &[Token], i: usize, out: &[Token], i
         return true;
     }
     match w {
+        // `macro riser on A` (macros.rs): the head where a line's verb goes, and the id after it, are syntax (a scalar `let riser = 4`
+        // is not put in place of the id; `macro` is no reserved word and names a let anywhere else)
+        _ if crate::macros::is_head(w) && matches!(prev, None | Some(Tok::Newline | Tok::Colon | Tok::LBrace)) && matches!(next, Some(Tok::Word(_))) => true,
+        _ if matches!(prev, Some(Tok::Word(p)) if crate::macros::is_head(p)) && matches!(out.len().checked_sub(2).map(|k| &out[k].tok), None | Some(Tok::Newline | Tok::Colon | Tok::LBrace)) => true,
         "min" | "max" | "knob" | "pad" | "fader" | "held" => next == Some(&Tok::LParen),
         // (`rests` names a `let` as any word may, and is the call only before its `(`)
         n if crate::answer::ANSWERS.contains(&n) => next == Some(&Tok::LParen),
@@ -1980,8 +1984,8 @@ impl<'a> Parser<'a> {
                 let ex = ex.replace("reverb", &w);
                 Err(Diagnostic::error(at, format!("`{w}` turns a deck's or the master's strip, so it is not a line of the control deck")).help(format!("{deck_line}: {ex}")))
             }
-            "macro" => Err(Diagnostic::error(at, "`macro` is designed and not built yet (docs/beatscript/ext-control.md)")
-                .help("an aux macro fires with `control: aux macro=cathedral deck=A bars=2`, a trick with `control: trick on deck=A kind=riser`")),
+            // `control: macro riser on A over 8 bars`: an entry of the DJ macro catalogue (macros.rs)
+            _ if crate::macros::is_head(&w) => Ok(Body::Action(self.action()?)),
             _ if ROLES.contains(&w.as_str()) || self.pexpr_next() => Err(Diagnostic::error(at, format!("the control deck holds engine calls, never parts or notes: `{w}` is a part"))
                 .help("a part goes on a note deck: `deck A: kick x ~ x ~`")),
             _ if sugar_noun(&w).is_some() && !ACTION_WORDS.contains(&w.as_str()) => Ok(Body::Do(self.do_call(true)?)),
@@ -2596,6 +2600,8 @@ impl<'a> Parser<'a> {
                 self.bump();
                 Ok(Action::Tempo(self.tempo_spec()?))
             }
+            // `macro riser on A over 8 bars` (macros.rs, docs/beatscript/ext-control.md)
+            _ if crate::macros::is_head(&w) => self.macro_call(),
             _ => {
                 // what a line may start with: an action, and the statements (the typo of `assert` or `wire` is read here)
                 let mut expected: Vec<&str> = ACTION_WORDS.to_vec();
@@ -2612,14 +2618,48 @@ impl<'a> Parser<'a> {
                     d = d.help("`emit` is a statement of the body of a def that has `out:` ports: `def walker() out: bass { emit c2 }`");
                 } else if w == "set" {
                     d = d.help("a set is `set {` with its brace on the same line, then `play` and `mix` lines: set { play NAME  mix 8 bars with crossfade  play OTHER }");
-                } else if w == "macro" {
-                    d = d.help("`macro` is designed and not built yet (docs/beatscript/ext-control.md): an aux macro fires with `aux macro=cathedral deck=A bars=2`, a trick with `trick on deck=A kind=riser`");
                 } else if let Some(n) = near {
                     d = d.help(format!("did you mean `{n}`?"));
                 }
                 Err(d)
             }
         }
+    }
+
+    /// `macro[@N] ID [on DECK] [over N bars]`, the two words in either order, each once. What the id is, whether the deck is there
+    /// and whether the length is whole bars the compiler says (it has the version's table); here only the shape is read.
+    fn macro_call(&mut self) -> R<Action> {
+        let head = self.bump();
+        let version = match &head.tok {
+            Tok::Word(w) => crate::macros::head_version(w).unwrap_or(crate::macros::BARE),
+            _ => crate::macros::BARE,
+        };
+        let id = match self.peek() {
+            Tok::Word(w) if w != "on" && w != "over" => self.word("an entry of the macro catalogue")?,
+            _ => {
+                return Err(self
+                    .expected(&["a macro of the catalogue, like riser"], &format!("`{}` fires an entry of the DJ macro catalogue by name, found {}", head.span.text(self.src), self.found()))
+                    .help("macro riser on A over 8 bars   (the `macros` list has every id: riser, breakdown, cathedral, ping-pong ...)"))
+            }
+        };
+        let (mut deck, mut over) = (None, None);
+        loop {
+            if self.word_is("on") {
+                if deck.is_some() {
+                    return Err(Diagnostic::error(self.span(), format!("`{} {}` says its deck twice", head.span.text(self.src), id.text)).help(format!("macro {} on A over 4 bars", id.text)));
+                }
+                self.bump();
+                deck = Some(self.deck_word()?);
+            } else if self.word_is("over") {
+                if over.is_some() {
+                    return Err(Diagnostic::error(self.span(), format!("`{} {}` says its length twice", head.span.text(self.src), id.text)).help(format!("macro {} on A over 4 bars", id.text)));
+                }
+                over = self.over()?;
+            } else {
+                break;
+            }
+        }
+        Ok(Action::Macro { version, head: head.span, id, deck, over })
     }
 
     /// `value [-> value] [over N bars]`.

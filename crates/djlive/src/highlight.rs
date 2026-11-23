@@ -101,7 +101,8 @@ pub fn highlight(src: &str) -> Vec<(Span, Class)> {
                     Class::Role
                 } else if (KEYWORDS.contains(&w.as_str()) || crate::chance::HIGHLIGHT_KEYWORDS.contains(&w.as_str()) || crate::mixmoves::KEYWORDS.contains(&w.as_str()) || crate::shape::HIGHLIGHT_KEYWORDS.contains(&w.as_str()) || crate::assertion::HIGHLIGHT_KEYWORDS.contains(&w.as_str()) || (w == "pan" && matches!(prev, Some(Tok::Word(d)) if d == "A" || d == "B" || d == "master"))) && !name_here(w) {
                     Class::Keyword
-                } else if ACTION_WORDS.contains(&w.as_str()) || (w == "drive" && !name_here(w)) {
+                } else if ACTION_WORDS.contains(&w.as_str()) || (w == "drive" && !name_here(w)) || (crate::macros::is_head(w) && matches!(prev, None | Some(Tok::Newline | Tok::Colon | Tok::LBrace)) && matches!(next, Some(Tok::Word(_)))) {
+                    // (`macro riser on A`: the head of a macro line, where a line's verb goes; `macro` is no reserved word)
                     Class::Action
                 } else if w == "x" || crate::music::parse_note(w).is_some() || crate::scale::is_roman(w) || crate::scale::degree_word(w).is_some() {
                     // a note, a Roman numeral (`ii°`, `V7`) or a flat / sharp degree in `deg( )` (F5)

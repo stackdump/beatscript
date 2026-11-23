@@ -706,5 +706,16 @@ pub fn action(a: &Action) -> String {
         }
         Action::Shaped { name, mode, motion } => crate::shape::print_shaped(name, mode.as_ref(), motion),
         Action::Tempo(t) => format!("tempo {}", crate::tempo::print_spec(t)),
+        // in the order `move` has (`on`, then `over`); the version only when it is not 1
+        Action::Macro { version, id, deck, over, .. } => {
+            let mut s = format!("{} {}", crate::macros::head_text(*version), id.text);
+            if let Some(d) = deck {
+                s.push_str(&format!(" on {}", d.name()));
+            }
+            if let Some((o, _)) = over {
+                s.push_str(&format!(" over {}", o.canonical()));
+            }
+            s
+        }
     }
 }

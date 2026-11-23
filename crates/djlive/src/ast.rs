@@ -715,4 +715,7 @@ pub enum Action {
     Shaped { name: Word, mode: Option<Word>, motion: crate::shape::Motion },
     /// `tempo 128 -> 140 over 4 bars` on a timed line: `at bar 16: tempo 128 -> 140 over 4 bars` (F3, tempo.rs).
     Tempo(crate::tempo::TempoSpec),
+    /// `macro riser on A over 8 bars`, `macro@1 breakdown over 4 bars on A`: an entry of the DJ macro catalogue by name
+    /// (macros.rs). `version` is 1 for a bare `macro`; `head` is the span of `macro` / `macro@N`.
+    Macro { version: u32, head: Span, id: Word, deck: Option<Deck>, over: Option<(Dur, Span)> },
 }

@@ -64,6 +64,11 @@ pub enum Event {
     Mute { deck: String, on: bool },
     /// A performance trick (`filter`, `wash`) on or off, with the args a move gives it.
     Trick { deck: String, kind: String, on: bool, amount: Option<f64>, bars: Option<f64>, beats: Option<f64> },
+    /// An entry of the DJ macro catalogue engaged on a deck's next bar line, for whole bars or its own length (`effects fire`, a
+    /// `macro` line: macros.rs).
+    Fire { target: String, id: String, bars: Option<u32> },
+    /// A held one (a tape stop) let go (`effects release`).
+    Release { target: String, id: String },
 }
 
 fn onoff(on: bool) -> &'static str {
@@ -91,6 +96,11 @@ impl Event {
                 }
                 s
             }
+            Event::Fire { target, id, bars } => match bars {
+                Some(n) => format!("fire {target} {id} bars={n}"),
+                None => format!("fire {target} {id}"),
+            },
+            Event::Release { target, id } => format!("release {target} {id}"),
         }
     }
 
@@ -120,6 +130,12 @@ impl Event {
                 }
                 Ok(Event::Trick { deck: d.to_string(), kind: k.to_string(), on: on(o)?, amount, bars, beats })
             }
+            ["fire", t, id] => Ok(Event::Fire { target: t.to_string(), id: id.to_string(), bars: None }),
+            ["fire", t, id, b] => {
+                let n = b.strip_prefix("bars=").and_then(|n| n.parse::<u32>().ok()).ok_or_else(|| format!("`{b}` is not bars=N"))?;
+                Ok(Event::Fire { target: t.to_string(), id: id.to_string(), bars: Some(n) })
+            }
+            ["release", t, id] => Ok(Event::Release { target: t.to_string(), id: id.to_string() }),
             _ => Err(format!("`{s}` is not an event")),
         }
     }
@@ -150,6 +166,12 @@ pub fn call_events(c: &Call) -> Option<Vec<Event>> {
         // the FX unit's drive on a deck's chain (`master:` is the `fx` noun with no deck: both decks'): a knob of that target
         "fx" => match (s("action")?, s("param")?) {
             ("set", "drive") => Some(vec![Event::Set { target: s("deck").unwrap_or("Master").into(), param: "drive".into(), value: n("value")? }]),
+            _ => None,
+        },
+        // a macro line (macros.rs): the catalogue entry fired, and a held one let go
+        "effects" => match s("action")? {
+            "fire" => Some(vec![Event::Fire { target: s("target")?.into(), id: s("id")?.into(), bars: n("bars").map(|v| v as u32) }]),
+            "release" => Some(vec![Event::Release { target: s("target")?.into(), id: s("id")?.into() }]),
             _ => None,
         },
         "mixer" => {
