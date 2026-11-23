@@ -150,7 +150,19 @@
       "say": [["check", "refs"], ["check", "expanded_cid"], ["check", "resolution"], ["check", "With expand true, each entry of refs also carries its expansion"], ["expand", "A gen@N call"], ["expand", "eject"], ["listen", "from"]],
       "calls": [
         {"tool": "check", "args": {"text": "tempo 124\nkey am\nlet drop_bass = gen@2 techno seed=42 section=drop part=bass\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  deck B: bass drop_bass\n}\narrange drop\n"}, "expect": [["/ok", "=", true], ["/expanded_cid", "has"], ["/refs", "~", "gen@2 techno seed=42 section=drop part=bass"], ["/resolution", "~", "seeded@2"]]},
-        {"tool": "expand", "args": {"text": "tempo 124\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  deck B: bass gen@2 techno seed=42 section=drop\n}\narrange drop\n", "eject": "5:19"}, "expect": [["/text", "~", "# from: gen@2 techno seed=42 section=drop -> z"]]}
+        {"tool": "expand", "args": {"text": "tempo 124\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  deck B: bass gen@2 techno seed=42 section=drop\n}\narrange drop\n", "eject": "5:19"}, "expect": [["/text", "~", "# from: gen@2 techno seed=42 section=drop -> z"]]},
+        {"tool": "expand", "args": {"text": "arrange from gen@2 jazz seed=1\n"}, "expect": [["/text", "~", "# from: gen@2 jazz seed=1 -> z"], ["/text", "~", "\nswing 0.6\n"]]},
+        {"tool": "expand", "args": {"text": "swing 0.1\narrange from gen@2 jazz seed=1\n"}, "expect": [["/text", "~", "swing 0.1\n"], ["/text", "!~", "swing 0.6"]]}
+      ]
+    },
+    {
+      "id": "seed-swing",
+      "docs": [],
+      "say": [["expand", "seed@2(genre, n) is seeds v2, the same track with its genre's swing written"]],
+      "calls": [
+        {"tool": "expand", "args": {"text": "arrange from seed@2(jazz, 7)\n"}, "expect": [["/text", "~", "# from seed@2(jazz, 7): "], ["/text", "~", "\nswing 0.6\n"]]},
+        {"tool": "expand", "args": {"text": "arrange from seed(jazz, 7)\n"}, "expect": [["/text", "~", "# from seed(jazz, 7): "], ["/text", "!~", "swing"]]},
+        {"tool": "check", "args": {"text": "tempo 104\narrange from seed@2(jazz, 7)\n"}, "expect": [["/ok", "=", true], ["/swing", "=", 0.6], ["/refs", "~", "seed@2(jazz, 7)"], ["/resolution", "~", "seeds@v2"]]}
       ]
     },
     {
