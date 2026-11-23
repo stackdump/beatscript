@@ -539,4 +539,42 @@ mod expansion_tests {
         let plain = check("tempo 120\ndeck A: kick x ~ x ~\n");
         assert!(plan_expansion(plain["cid"].as_str().unwrap(), plain["canonical"].as_str().unwrap(), "").is_none());
     }
+
+    /// Where the stored expansion meets the rename: a BeatScript 1 recipe writes out to a BeatScript 1 program, which the gate
+    /// stores with its BeatScript 2 twin (as every BeatScript 1 program is, so `/p/<expanded_cid>` redirects to it), the twin
+    /// keeping what the expansion was written out from (`expanded_from`, `based_on`); a BeatScript 2 recipe's expansion is
+    /// BeatScript 2, its version line first, with no twin; and the two recipes' expansions are each other's twins, so the second
+    /// recipe stored finds its expansion stored already (first write wins).
+    #[test]
+    fn a_beatscript_1_recipes_expansion_is_stored_with_its_twin() {
+        use djlive::version::{of_canonical, Version};
+        let v1 = "arrange from template(canon, @mgm_pease_porridge_hot, subject=[d5 c#5 b4 a4])\n";
+        let mut expansions = Vec::new();
+        for (text, version) in [(v1.to_string(), Version::V1), (format!("#! beatscript 2\n{v1}"), Version::V2)] {
+            let d = tempfile::tempdir().unwrap();
+            let (s, _) = Store::open(d.path(), None, false).unwrap();
+            let rep = check(&text);
+            let (cid, canonical) = (rep["cid"].as_str().unwrap().to_string(), rep["canonical"].as_str().unwrap().to_string());
+            let plan = plan_expansion(&cid, &canonical, "CC0-1.0").expect("a recipe has a plan");
+            let o = s.put_expansion(plan, &cid, &json!({"license": "CC0-1.0", "name": "round"}), 1 << 20, None).unwrap();
+            assert!(o.stored && o.created, "{o:?}");
+            assert_eq!(o.cid, rep["expanded_cid"].as_str().unwrap());
+            let x = s.get(&o.cid).unwrap().text;
+            assert_eq!(of_canonical(&x), version, "{x}");
+            let meta = s.file_meta(&o.cid).unwrap();
+            assert!(meta["based_on"].as_array().is_some_and(|b| !b.is_empty()), "{meta}");
+            if version == Version::V1 {
+                let twin = djlive::compile::renamed_cid(&x);
+                assert_eq!(s.renamed_to(&o.cid).as_deref(), Some(twin.as_str()), "stored with its twin");
+                let tm = s.file_meta(&twin).unwrap();
+                assert_eq!((tm["derivation"].as_str(), tm["expanded_from"].as_str()), (Some("renamed"), Some(cid.as_str())), "{tm}");
+                assert_eq!(tm["based_on"], meta["based_on"], "the twin keeps what the expansion was written out from");
+            } else {
+                assert!(x.starts_with("#! beatscript 2\n"), "{x}");
+                assert_eq!(s.renamed_to(&o.cid), None);
+            }
+            expansions.push(x);
+        }
+        assert_eq!(djlive::compile::renamed_cid(&expansions[0]), djlive::compile::program_cid(&expansions[1]), "the BeatScript 1 expansion's twin is the BeatScript 2 recipe's expansion");
+    }
 }
