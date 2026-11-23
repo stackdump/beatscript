@@ -150,7 +150,7 @@ pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
     // what it is based on (refs.rs `based_on`): the engine calls and borrows its text makes, each with the CID it resolves to,
     // and what an eject vendored into it (its `# from:` lines, or the ones its save kept); outside the CID, like the doc comments.
     // A stored expansion's text makes none: what its recipe wrote out into it comes from the store (`based_on`), each `expanded`
-    let basis = if f.expanded_from.is_some() {
+    let mut basis = if f.expanded_from.is_some() {
         let mut basis = crate::refs::based_on(&c.text, &c.notes);
         for l in f.based_on {
             if let Some((call, cid)) = crate::refs::read_from_line(&format!("# from: {l}")) {
@@ -164,6 +164,12 @@ pub fn document(c: &Compiled, f: &Facts) -> JsonValue {
         let notes: Vec<String> = c.notes.iter().cloned().chain(f.based_on.iter().map(|l| format!("from: {l}"))).collect();
         crate::refs::based_on(&c.text, &notes)
     };
+    // a program is never based on itself: a source that resolves to this very program says its call alone
+    for b in &mut basis {
+        if b.cid.as_deref() == Some(c.cid.as_str()) {
+            b.cid = None;
+        }
+    }
     if !basis.is_empty() {
         let generator = crate::gen::generator().map(|g| g.name().to_string());
         let items: Vec<JsonValue> = basis

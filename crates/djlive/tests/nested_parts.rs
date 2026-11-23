@@ -121,10 +121,14 @@ fn a_stored_expansion_says_its_recipe_and_what_it_was_written_out_from() {
     let env = Env { voices: Some(&v), ..Env::default() };
     let x = check_with(&expanded(NESTED), &env).compiled.unwrap();
     let recipe = program_cid("arrange from template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, ground=[g1 ~ d2 ~], upper=ode_to_joy))\n");
-    let based = vec![format!("template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, ground=[g1 ~ d2 ~], upper=ode_to_joy)) -> {recipe}"), "ode_to_joy".to_string()];
+    // (the last line resolves to the expansion itself, as a template with nothing after it would: a program is never based on
+    // itself, so it says its call alone)
+    let based = vec![format!("template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, ground=[g1 ~ d2 ~], upper=ode_to_joy)) -> {recipe}"), "ode_to_joy".to_string(), format!("template(canon, @mgm_pease_porridge_hot) -> {}", x.cid)];
     let d = djlive::progld::document(&x, &djlive::progld::Facts { expanded_from: Some(&recipe), based_on: &based, ..Default::default() }).js_stringified();
     assert!(d.contains(&format!(r#""expandedFrom":"{recipe}""#)), "{d}");
     assert!(d.contains(&format!(r#""resolves":"{recipe}","derivation":"expanded""#)), "{d}");
     assert!(d.contains(r#"{"@type":"CreativeWork","name":"ode_to_joy","derivation":"expanded"}"#), "{d}");
+    assert!(d.contains(r#"{"@type":"CreativeWork","name":"template(canon, @mgm_pease_porridge_hot)","derivation":"expanded"}"#), "{d}");
+    assert!(!d.contains(&format!(r#""resolves":"{}""#, x.cid)), "based on itself: {d}");
     assert!(!d.contains("expandsTo") && !d.contains("hasPart"), "an expansion has no references of its own: {d}");
 }

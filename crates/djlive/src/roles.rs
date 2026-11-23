@@ -1010,7 +1010,7 @@ impl Ctx<'_, '_> {
                 return None;
             }
         };
-        match crate::compile::check_with(&r.text, &Env::none()).compiled {
+        match paused(|| crate::compile::check_with(&r.text, &Env::none())).compiled {
             Some(comp) => Some(Generated { call: whole, comp }),
             None => {
                 self.err(Diagnostic::error(at, format!("{} does not compile", r.generator)));
@@ -1029,7 +1029,7 @@ impl Ctx<'_, '_> {
             src.push_str(&format!("key {k}\n"));
         }
         src.push_str(&format!("let probe = {}\n", call.text()));
-        match crate::gen::expand(&src) {
+        match paused(|| crate::gen::expand(&src)) {
             Some(Ok((e, _))) => Some(e.text.lines().filter(|l| l.starts_with("let probe_")).count()),
             Some(Err(ds)) => {
                 for d in ds {
@@ -1067,7 +1067,8 @@ impl Ctx<'_, '_> {
             return Err(Diagnostic::error(at, format!("the program {} is not the program it names: refused", djengine::rights::short_cid(cid))));
         }
         let plain = Env { registry: None, catalog: None, snippets: self.env.snippets, assets: None, private: false, voices: None, ontology: None, bank: None };
-        crate::compile::check_with(&text, &plain).compiled.ok_or_else(|| Diagnostic::error(at, format!("the program {} does not compile", djengine::rights::short_cid(cid))).help("it can be borrowed from once it checks"))
+        // (a stored program that is itself a template recipe is compiled whole here: its bindings are its own, not parts of this one)
+        paused(|| crate::compile::check_with(&text, &plain)).compiled.ok_or_else(|| Diagnostic::error(at, format!("the program {} does not compile", djengine::rights::short_cid(cid))).help("it can be borrowed from once it checks"))
     }
 
     /// A program a binding drew on that the written-out text will not name (a stored set), for the link to carry.
@@ -2239,15 +2240,48 @@ thread_local! {
     static PATH: std::cell::RefCell<Vec<String>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
+/// What [`recording`] and [`paused`] found on the thread, put back when they end, a panic included (so no thread is left
+/// recording into a list nothing reads).
+struct Restore {
+    bound: Option<Option<Vec<Bound>>>,
+    path: Option<Vec<String>>,
+}
+
+impl Restore {
+    /// Set the thread's recorder to `bound` and its path to empty, keeping what was there.
+    fn set(bound: Option<Vec<Bound>>) -> Restore {
+        let was = BOUND.with(|b| std::mem::replace(&mut *b.borrow_mut(), bound));
+        let path = PATH.with(|p| std::mem::take(&mut *p.borrow_mut()));
+        Restore { bound: Some(was), path: Some(path) }
+    }
+}
+
+impl Drop for Restore {
+    fn drop(&mut self) {
+        if let Some(b) = self.bound.take() {
+            BOUND.with(|x| *x.borrow_mut() = b);
+        }
+        if let Some(p) = self.path.take() {
+            PATH.with(|x| *x.borrow_mut() = p);
+        }
+    }
+}
+
 /// Run `f` (a template's expansion) and give back what it returns with every binding it wrote out, in the order they were
 /// written: the roles of an inner form before the role that holds it, siblings in the order the form names them.
 pub fn recording<T>(f: impl FnOnce() -> T) -> (T, Vec<Bound>) {
-    let outer = BOUND.with(|b| b.borrow_mut().replace(Vec::new()));
-    let path = PATH.with(|p| std::mem::take(&mut *p.borrow_mut()));
+    let restore = Restore::set(Some(Vec::new()));
     let out = f();
-    let got = BOUND.with(|b| std::mem::replace(&mut *b.borrow_mut(), outer)).unwrap_or_default();
-    PATH.with(|p| *p.borrow_mut() = path);
+    let got = BOUND.with(|b| b.borrow_mut().take()).unwrap_or_default();
+    drop(restore);
     (out, got)
+}
+
+/// Run `f` with nothing recorded: a program compiled whole inside a binding (a stored source, a generated one) has bindings of
+/// its own, which are not parts of the one being recorded.
+fn paused<T>(f: impl FnOnce() -> T) -> T {
+    let _restore = Restore::set(None);
+    f()
 }
 
 /// Keep what binding `b` wrote, when someone is recording.
@@ -2263,10 +2297,39 @@ fn record(cx: &Ctx<'_, '_>, b: &Binding, lines: Vec<String>) {
 
 /// `f` (an inner form written out) with its bindings recorded under `role`.
 fn within<T>(role: &str, f: impl FnOnce() -> T) -> T {
+    struct Pop;
+    impl Drop for Pop {
+        fn drop(&mut self) {
+            PATH.with(|p| {
+                p.borrow_mut().pop();
+            });
+        }
+    }
     PATH.with(|p| p.borrow_mut().push(role.to_string()));
-    let out = f();
-    PATH.with(|p| {
-        p.borrow_mut().pop();
-    });
-    out
+    let _pop = Pop;
+    f()
+}
+
+#[cfg(test)]
+mod recorder_tests {
+    use super::*;
+
+    fn armed() -> bool {
+        BOUND.with(|b| b.borrow().is_some()) || PATH.with(|p| !p.borrow().is_empty())
+    }
+
+    /// A panic inside a recording, or inside a role's inner form, leaves the thread as it was: not recording, no path.
+    #[test]
+    fn a_panic_leaves_nothing_recording() {
+        let r = std::panic::catch_unwind(|| recording(|| within("episodes", || -> () { panic!("in a binding") })));
+        assert!(r.is_err());
+        assert!(!armed(), "the thread is still recording after the panic");
+        // and a recording inside a pause inside a recording keeps each its own
+        let ((), outer) = recording(|| {
+            paused(|| assert!(BOUND.with(|b| b.borrow().is_none())));
+            let ((), inner) = recording(|| ());
+            assert!(inner.is_empty());
+        });
+        assert!(outer.is_empty() && !armed());
+    }
 }
