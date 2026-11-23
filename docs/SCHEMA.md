@@ -52,16 +52,25 @@ gets the context below. A browser gets this page. `https://beatscript.app/schema
 
 ### The CID is `@id`, and `text` is canonical
 
-`@id` is the program's CID: CIDv1, dag-json multicodec, sha2-256, base58btc (`z…`). It is the hash of
-`{"format":1,"text":<canonical text>,"type":"djrust.live"}`, the same CID a share link and `check` give.
+`@id` is the program's CID: CIDv1, dag-json multicodec, sha2-256, base58btc (`z…`), the same CID a share link and
+`check` give. It is the hash of a document that names the language version
+([Versions](/docs/language#versions)):
+
+- a BeatScript 2 program (one that starts `#! beatscript 2`): `{"format":2,"text":<canonical text>,"type":"beatscript"}`;
+- a BeatScript 1 program (the old spelling: `#! btw 1`, or no version line): `{"format":1,"text":<canonical text>,"type":"djrust.live"}`,
+  as every program before the rename.
 
 The text in the block is the canonical text: the program parsed and printed again, with no comments and no `#!`
-lines. So `text` hashes to `@id`. A reader must recompute it, and must refuse a block whose text does not hash to its
+lines but the version line, which a BeatScript 2 text keeps first (`#! beatscript 2\n` and then the statements; a
+BeatScript 1 text has no `#!` line at all). A reader tells the two apart by that first line alone. So `text` hashes to
+`@id`. A reader must recompute it, and must refuse a block whose text does not hash to its
 `@id`, rather than play it. The editor, the Android app and the server all do. A reformatted or edited text is a
 different CID, which is what makes a program's name its content.
 
 `#!` header lines (name, licence, author, genre, tags) are not part of the CID. In the block they are the fields
-beside `text`.
+beside `text`. The version line is the exception: it is part of the program, so the same music written in BeatScript 2
+has another CID than in BeatScript 1. beatscript.app keeps both, and gives the BeatScript 2 program an `isBasedOn` of the
+BeatScript 1 one with the derivation `renamed`.
 
 ### Attributes of `<beatscript-view>`
 
@@ -123,7 +132,8 @@ CID.
 <a id="forkedFrom"></a>**forkedFrom**: the CID of the program this one was forked from.
 
 <a id="isBasedOn"></a>**isBasedOn**: what the program is based on, schema.org's term: one CreativeWork for each engine call and
-borrow its text makes (`gen@2 techno seed=42 section=drop part=bass`, a seed, a stored program's section by CID) and for each
+borrow its text makes (`gen@2 techno seed=42 section=drop part=bass`, a seed, a stored program's section by CID), for the BeatScript 1
+program a BeatScript 2 one was renamed from, and for each
 part an eject wrote out into it (its `# from: <call> -> <cid>` line), each named by its call (`name`), with `resolves`,
 `pinnedGenerator` and `derivation`. Like the doc comments, it is outside the CID.
 
@@ -134,7 +144,8 @@ prints for it (its pin); for a borrow, the stored program's CID.
 same program for the same inputs.
 
 <a id="derivation"></a>**derivation**: how a source came in: `called` (an engine call the text makes), `borrowed` (a structural
-reference the text makes) or `vendored` (written out by an eject; the text has the notes, and the `# from:` line the call).
+reference the text makes), `vendored` (written out by an eject; the text has the notes, and the `# from:` line the call) or
+`renamed` (the same program in BeatScript 1, the old spelling: the same music, under its old CID).
 
 <a id="expandsTo"></a>**expandsTo**: a recipe's written-out program (every reference written out as BeatScript): its CID. The
 same recipe always expands to the same program, and the two play the same.
@@ -153,7 +164,9 @@ The block is the program with its source. A program also has a fuller linked-dat
 is unchanged by this:
 
 - `https://beatscript.app/p/<CID>.jsonld` (or `/c/<CID>.jsonld`): the program's structure, with `@context`
-  `https://beatscript.app/context/v1.jsonld` and `@type` `djrust:Program`. It gives the name, key, tempo, sections,
+  `https://beatscript.app/context/beatscript-v1.jsonld` (the context of BeatScript 2, `beatscript-context-v1.jsonld`; the
+  context before the rename, `https://beatscript.app/context/v1.jsonld`, stays served unchanged, for the documents that
+  name it) and `@type` `djrust:Program`. It gives the name, key, tempo, sections,
   author, and licence (`licenseId`, and `license` as a URI). Its rights statement adds only what the site stores: the
   credits (`credit`) and the program it was forked from (`forkedFrom`, and schema.org's `isBasedOn`), and
   `usageInfo`, `https://beatscript.app/authorship`: who authored a program and what rights it has, in plain language.

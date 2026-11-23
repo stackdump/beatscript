@@ -196,7 +196,9 @@ has one (7 of the 41 example programs, and an unknown share of the saved ones), 
 canonical form. The proposal: keep both for now; give `fmt` an opt-in fix (`btw fmt --control-deck`, and the editor's quick fix)
 that rewrites a program onto the control deck as a new program with `forked-from` its old CID; and only if the control deck wins
 in practice, make it the canonical form of a new format version (`#! btw 2`), the old texts reading and keeping their CIDs under
-`#! btw 1`. Never silently.
+`#! btw 1`. Never silently. (The rename to BeatScript has since made the new format version, for its own reason: BeatScript 2,
+`#! beatscript 2`, docs/BEATSCRIPT.md "Versions". It did not change the canonical form of control lines; a control-deck form
+would now be a later version.)
 
 **Should arrange be able to mutate the control deck per pass?** `arrange { }`'s mutations act on let patterns (`~ acid rot 2`),
 and the control deck holds no pattern, so `rot`, `thin` or `up` mean nothing to it. Sections already sequence it (an engine line

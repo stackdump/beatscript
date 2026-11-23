@@ -140,6 +140,7 @@ A program has two halves: its **structure** is the track's own source, and its *
 One program that uses both:
 
 ```text
+#! beatscript 2
 tempo 126
 key am
 
@@ -1361,6 +1362,7 @@ deterministic: there is no loop, no state and no clock in an expression. `$i`, `
 as tokens before an expression is read, so `$i * 2 + 1` is `3 * 2 + 1`.
 
 ```text
+#! beatscript 2
 tempo 120 + 4 * 2            # 128
 key am
 swing 1 / 16 + 1 / 16        # 0.125
@@ -1455,6 +1457,7 @@ exactly as before, so no CID moved. Long note: `docs/beatscript/ext-timing.md`.
 first bar; `at bar 16: tempo 128 -> 140 over 4 bars` is a timed one.
 
 ```text
+#! beatscript 2
 tempo 100 -> 128 over 8 bars s-curve   # from the first bar: it speeds up through the intro, then holds 128
 # ...
 section build 8 bars {
@@ -1546,6 +1549,7 @@ name with defaults left out, then `over`; a ramp's shape comes after its length.
 step or as the chord of `chord()` and `arp()`; a section may open with its own `key`; `voice-lead` moves chords as little as it can.
 
 ```text
+#! beatscript 2
 tempo 96
 key am
 
@@ -1597,6 +1601,7 @@ Canonical form: `deg(1 b3 5' 1,)` one space apart, marks glued; a numeral's qual
 `e(k, n, rot)` is checked and named; `role/N` gives a part a cycle of its own.
 
 ```text
+#! beatscript 2
 tempo 122
 key dm
 
@@ -1624,6 +1629,7 @@ Parts that differ from bar to bar and are still **a function of the text and the
 `maybe(p, 0.3, 4)`.
 
 ```text
+#! beatscript 2
 tempo 128
 key fm
 
@@ -1785,6 +1791,7 @@ params sorted; a `mix` prints one item a line with each number as the value it c
 ### Sung lyrics
 
 ```text
+#! beatscript 2
 deck A: kick x ~ x ~ | snare ~ x ~ x | hihat x*8 vel=60..90
 deck B: bass a2 ~ e2 ~ | harmony chord(am) | melody <[a4 c5 e5 c5] [g4 b4 d5 b4]>
 
@@ -1894,6 +1901,7 @@ expression folds constants and prints with one space round a binary operator. Lo
 `knob(3)`, `pad(5)`, `fader(A)`, `held(key)` and `held(c4)` read the controllers **while the program plays**.
 
 ```text
+#! beatscript 2
 deck A: kick x ~ x ~ | snare ~ x ~ x | hihat x*8 vel=60..90
 deck B: harmony chord(am7) | bass a1 ~ a1 ~
 
@@ -1951,6 +1959,7 @@ program's text or CID. Long note: `docs/beatscript/ext-perform.md`.
 Two more `#!` header lines say what a program is and link it to the bitwrap ontology (https://ontology.bitwrap.io/ns#).
 
 ```text
+#! beatscript 2
 #! genre: https://ontology.bitwrap.io/genre/techno
 #! tags: acid, supersaw, four on floor, drop
 
@@ -1995,6 +2004,7 @@ proves every row against the longhand given here). The ideas come from TidalCycl
 semantics and the code are BeatScript's own.
 
 ```text
+#! beatscript 2
 tempo 124
 key am
 
@@ -2067,6 +2077,7 @@ One deck plays a call, another plays what the call leaves. `rests(p)` is a hit o
 so editing it moves both decks together, and so does an arrange mutation of it.
 
 ```text
+#! beatscript 2
 tempo 122
 key am
 
@@ -2463,7 +2474,8 @@ A `sing` line (see "Sung lyrics") takes `voice=` from the same host: the formant
 riser opens over eight bars and ends on the phrase line where the drop starts (with a `loop_roll` four bars
 ahead of it by `before drop 4 bars`), a drop whose bass is the engine's `wobble-lead` voice (a checked
 name) under a filter that opens and shuts once a bar, a breakdown, a second drop and an outro, from lets, one
-def, sections and an `arrange`:
+def, sections and an `arrange`. The file is BeatScript 1 and stays so, since the tests pin its CID; `beatscript fmt` gives
+the same track in BeatScript 2, with `#! beatscript 2` first:
 
 ```text
 # hand-dubstep-140 v2: a whole track in one program.

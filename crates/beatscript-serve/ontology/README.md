@@ -17,7 +17,7 @@ A release is built from three inputs:
 |---|---|
 | `upstream/bitwrap-0.2.0/ns.nt` (+ `manifest.json`, pinned by `upstream.lock`) | the bitwrap 0.2.0 release, vendored by `sync.sh upstream` |
 | `fork.ttl` | the fork's own module: its `owl:Ontology` header (title, version, version IRI, issued, creator, licence, `prov:wasDerivedFrom` the bitwrap release) and the few terms it adds by hand (the products its MCP tools belong to) |
-| `generated/beatscript.ttl` | the BeatScript vocabulary, generated from beatscript-serve's own code: every production and keyword of `crates/djlive/grammar.ebnf`, the voices, kits, families and palettes (`beatscript-api::instruments_json()`), the control registry's nouns and verbs, djlive's generators, transforms and evolve and mutation operators, and both MCP servers' tools |
+| `generated/beatscript.ttl` | the BeatScript vocabulary, generated from beatscript-serve's own code: every production and keyword of `crates/djlive/grammar.ebnf`, the voices, kits, families and palettes (`beatscript_api::instruments_json()`), the control registry's nouns and verbs, djlive's generators, transforms and evolve and mutation operators, and both MCP servers' tools |
 
 `src/ontology/fork.rs` assembles them:
 
@@ -83,7 +83,7 @@ the serializations are one graph, the certificate replays to the pack's graph, a
 
 BeatScript programs link to the bitwrap ontology, not to this fork: a `#! genre:` / `#! tags:` line resolves against
 `crates/djhost/data/bitwrap-ontology.json` (a snapshot of bitwrap's terms, refreshed by `tools/ontology/refresh.py`),
-the program JSON-LD's `bw:` prefix is `https://ontology.bitwrap.io/ns#`, and `beatscript-serve::genres` reads bitwrap's IRIs.
+the program JSON-LD's `bw:` prefix is `https://ontology.bitwrap.io/ns#`, and `beatscript_serve::genres` reads bitwrap's IRIs.
 Those IRIs are upstream and stay valid, and nothing a program's CID covers changes.
 `ontology::tests::genres_read_the_fork_as_bitwrap` shows the genre conventions and `check`'s style warnings read the
 same from the fork, so they can move to it later without a change in what they say.

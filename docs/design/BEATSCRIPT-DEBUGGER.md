@@ -37,7 +37,7 @@ as a fork). No engine change, no grammar change. Web and Android follow in v1.1 
 
 | Source | Status |
 |---|---|
-| `docs/BEATSCRIPT.md` on `origin/feat/btw-language` (grammar, canonical form, evolve, marks) | read in full |
+| `docs/BTW.md` (now `docs/BEATSCRIPT.md`) on `origin/feat/btw-language` (grammar, canonical form, evolve, marks) | read in full |
 | `crates/djlive/src/runtime.rs` (`Live`, `service`, `watch_fires`, `marks`, `status`), `compile.rs` (`Compiled`, `Control`, `Timing`, `Generation`), `expand.rs` (call time words), `diag.rs` (`Span`) | read; claims below about them are verified |
 | `crates/djhost/src/beatscript_render.rs`, `docs/HEADLESS.md` (offline render) | read; the "control lines are not rendered offline" limit is BEATSCRIPT.md's own and is the biggest dependency (§10, R1) |
 | The compose route: `btwsite/DESIGN.md`, `internal/btwsite/compose/{service,handler}.go` in the **unpushed** worktree `beats-bitwrap-io/btw-site` (`origin/feat/btw-site` is not on the remote; only `feat/btw-link` is) | read; the route may still move |
@@ -791,7 +791,7 @@ The rule that decides placement: **anything that is a function of (text, bar) go
 
 ## 9. Surfaces
 
-### 9.1 Desktop: the btw window, and full screen
+### 9.1 Desktop: the `btw` window, and full screen
 
 ```
 ┌ BeatScript ─ ▸ drop 9/16 · bar 24 · phrase 3 · ● ● ● ● ● ● ● ○ · gen 2 ──────── [Full] [Follow] ┐
@@ -984,7 +984,7 @@ Everything pure is tested on the **fake clock** the repo already uses (`tests/be
 | **R7** | A private or restricted program leaks to a hosted model. | Refused in the bundle builder for any hosted model; the MCP-driven path sends nothing from the app. A test pins it. |
 | **R8** | Cost abuse of the hosted edit mode. | The compose route's limiter and spend cap, repair rounds counted; edit weight tunable. |
 | **R9** | A user keeps typing while a proposal is pending. | `base_cid` check plus statement-hash **rebase**; a conflict asks to re-propose rather than clobber. |
-| **R10** | The btw window is already dense; a debugger can swamp it. | One collapsible Debug block, the Ask in the same panel family, layout-audit shots in CI. Full screen keeps only transport + `Cmd+K`. |
+| **R10** | The `btw` window is already dense; a debugger can swamp it. | One collapsible Debug block, the Ask in the same panel family, layout-audit shots in CI. Full screen keeps only transport + `Cmd+K`. |
 | **R11** | Android audio underruns from compile work. | Worker thread; frames and slices are tiny and cached. |
 | **R12** | Scope creep into a general DAW transport. | The transport is *only* hold/pause/step/seek over the program clock; it never touches the sample decks or the setlist queue. |
 

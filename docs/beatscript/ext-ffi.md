@@ -105,7 +105,7 @@ program's canonical text, which has no comments, so a vendored count needs the s
 
 ## Offline, missing, CC0
 
-- The generator is compiled into each host (beatscript-api installs it: beatscript, beatscript-serve, the page's wasm, beatscriptls). A host with none (djlive
+- The generator is compiled into each host (beatscript-api installs it: `beatscript`, beatscript-serve, the page's wasm, beatscriptls). A host with none (djlive
   alone, the booth's djhost today) says `gen@2 is not here` at the call: hosts differ in whether it is there, never in what the
   music is. Nothing is fetched.
 - A version a build no longer has is an error naming the ones it has. A stored program's CID a host lacks is the existing
@@ -115,6 +115,6 @@ program's canonical text, which has no comments, so a vendored count needs the s
 
 ## Not done
 
-- The booth (djhost::beatscript_env) has no generator: `gen` calls check in beatscript, beatscript-serve, the page and the editor, not in djapp.
+- The booth (djhost::beatscript_env) has no generator: `gen` calls check in `beatscript`, beatscript-serve, the page and the editor, not in djapp.
 - A `gen` call's let takes the section's first stretch (an `evolve` in the generated section is not followed).
 - `tempo=` was asked for as a name; seeded calls it `bpm`, and the call uses seeded's names (taste call).

@@ -5,7 +5,7 @@ An `arrange { }` block is an arrangement that changes the program as it goes. Be
 small, total and deterministic. The same text is the same track, so its CID reproduces it and a CC0 program stays CC0.
 
 ```text
-#! btw 1
+#! beatscript 2
 #! name: arrange-mutations
 #! license: CC0-1.0
 tempo 132

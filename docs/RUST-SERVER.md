@@ -28,7 +28,7 @@ the same result on beatscript-serve as on Go. Nothing is deployed and nginx is u
 ```
 
 - **One crate, `crates/beatscript-serve`** in this private repo (it links `beatscript-api`, `djlive`, `djhost`, `djengine`). The
-  renderer is beatscript's own `render.rs`, included by path, so the CLI and the server cannot drift. Before the cutover it
+  renderer is the `beatscript` CLI's own `render.rs`, included by path, so the CLI and the server cannot drift. Before the cutover it
   should become `beatscript`'s library target (`[lib]`, `pub mod render`), a one-line change.
 - **HTTP**: axum 0.8 + hyper 1 (`http1`, `title_case_headers`) on tokio. Every answer goes through one header
   layer (`site_headers`) that adds Go's security headers, CSP, `publicRead` CORS and license `Link`s, then sorts the
@@ -63,7 +63,7 @@ branch, not merged · **missing** = still Go's (reaches Go through `-fallback`) 
 |---|---|---|
 | static site | `/` and `/p` (index.html with the generic card meta), every file under `-web` incl. engine wasm, `/privacy/`, `/delete-account/`, dotted segments 404, content ETag, `no-cache`, Range, 304 (server/handlers.go `handleStatic`, card `InjectGeneric`) | **done**: 86/86 cases identical |
 | mux behaviour | unclean path → 307, `/docs` → `/docs/`, 405 JSON with `Allow` from the catch-all | **done** |
-| docs (raw) | `/llms.txt`, `/llms-full.txt`, `/docs/BEATSCRIPT.md`, `/docs/cheatsheet.md` (file, else the engine's), `/docs/api.md` (docs/docs.go) | **done**: identical; cheat-sheet fallback is `beatscript_api::cheatsheet()` in-process (Go asks a beatscript child) |
+| docs (raw) | `/llms.txt`, `/llms-full.txt`, `/docs/BEATSCRIPT.md`, `/docs/cheatsheet.md` (file, else the engine's), `/docs/api.md` (docs/docs.go) | **done**: identical; cheat-sheet fallback is `beatscript_api::cheatsheet()` in-process (Go asks a `btwd` child, the CLI's old name) |
 | docs (HTML) | `/docs/`, `/docs/cheatsheet`, `/docs/language`, `/docs/api`, `/docs/assets/docs.{css,js}` (docs/html.go, **feat/docs-html**, goldmark) | **done**: byte-identical on the three shipped documents (pulldown-cmark events written out as goldmark writes them) |
 | examples | `GET /api/examples`, `/examples/<name>.beatscript` (index.json order, checked at start) | **done**: 18/18 identical |
 | health | `GET /healthz` | **done** (prototype) |
@@ -74,7 +74,7 @@ branch, not merged · **missing** = still Go's (reaches Go through `-fallback`) 
 | instruments | `GET /api/instruments` (check-ip-min limiter) | missing (`beatscript_api::instruments_json` ready; P2) |
 | linked data | `/context/v1.jsonld`, `/context.jsonld`, `/context` (+ OPTIONS) (ld/) | missing (static bytes; P2) |
 | programs read | `GET /api/programs/<cid>[.beatscript]` (ETag, examples first) | missing (`Store::get` exists; P2) |
-| checker | `POST /api/check` incl. **same_as / diff** (beatscript-api `same.rs`, `diff.rs`, on main), `/api/fmt`, `/api/share`, `/api/open` (beatscript children, 10 s, per-address budget) | missing (P3; needs the check budget, SEC-2) |
+| checker | `POST /api/check` incl. **same_as / diff** (`beatscript-api` `same.rs`, `diff.rs`, on main), `/api/fmt`, `/api/share`, `/api/open` (`btwd` children, 10 s, per-address budget) | missing (P3; needs the check budget, SEC-2) |
 | QR | `POST /api/qr` (go-qrcode, level L) | missing (P3) |
 | programs write | `PUT /api/programs/<cid>` (put-ip-hour, store-max-mb, first meta wins, link(2)) | partial: `put_canonical` for `<cid>.<packed>` renders; route missing (P3) |
 | auth | `GET /api/auth/challenge`, `POST login/logout`, `GET me`, `POST/DELETE token`; cookie `btw_session` (HMAC, `session.secret`), `tokens.json` (sha256), EIP-191 + ed25519, nonces in memory (auth/) | missing (P4) · **branch**: cookie, bearer and `BtwDevice` *verification* in `feat/btwserve-playlists` |
@@ -92,7 +92,7 @@ branch, not merged · **missing** = still Go's (reaches Go through `-fallback`) 
 | access log | JSONL `access-YYYYMMDD.jsonl`, HMAC'd addresses, 30 days, 100 MiB/day | **done** for Rust-served routes (render-cutover); proxied requests are logged by Go only |
 | config / env | every flag also `BEATSCRIPT_<NAME>`; `BEATSCRIPT_SESSION_SECRET`, `BEATSCRIPT_ADMIN_TOKEN`, `GEMINI_API_KEY`, `-public-url`, `-alt-origins`, `-legacy-hosts`, `-moved-to`, `-site-id` | same convention; beatscript-serve reads the shared env file. `-alt-origins`/`-legacy-hosts`/`-moved-to` arrive with P2/P4 |
 | data dirs | `programs/`, `render/`, `log/`, `cards/`, `spend/`, `session.secret`, `tokens.json`, `devices.json`, `site.json`, `compose.off` | see §4 |
-| webhooks | none: btwsite is deployed by `site/deploy/deploy.sh` from its own checkout (`~/Workspace/btw-bitwrap-io`), not by the main-push webhook | beatscript-serve ships as a built binary as beatscript does today (§6) |
+| webhooks | none: btwsite is deployed by `btwsite/deploy/deploy.sh` from its own checkout (`~/Workspace/btw-bitwrap-io`), not by the main-push webhook | beatscript-serve ships as a built binary as the CLI did (§6) |
 | metrics | no metrics endpoint; the access log, `/api/admin/stats` (compose) and the render status route are what there is | unchanged; `/healthz` is the probe |
 
 ## 3. Contract tests: the same requests to both servers
@@ -124,7 +124,7 @@ Go cache. Each later phase adds its group to `contract.py` and reuses the Go tes
 `btwsite/testdata/pair/vectors{,-v2}.json` (P4/P6), `btwsite/testdata/mcp/tools-list.json` (P7, byte for byte),
 `btwsite/testdata/compose/*.json` as the fake model (P7), `btwsite/testdata/cards/golden.json` (P5, perceptual).
 
-**Result on the ops host, 2026-11-20** (Go = `origin/main` f1862c4 merged with `feat/docs-html` 9c0daeb, with beatscript and
+**Result on the ops host, 2026-11-20** (Go = `origin/main` f1862c4 merged with `feat/docs-html` 9c0daeb, with `btwd` and
 ffmpeg 8; beatscript-serve = this branch; same `-web`, `-examples`, `-docs`, separate data dirs):
 
 | group | cases | identical | accepted | failed |
@@ -182,7 +182,7 @@ convert anything.
 
 ## 6. Cutover and rollback
 
-The kit is `crates/beatscript-serve/deploy/`; every step is one command of `deploy/cutover.sh` run on the ops host (it acts on
+The kit was `crates/btwserve/deploy/` (since replaced by `deploy/deploy.sh`); every step is one command of `deploy/cutover.sh` run on the ops host (it acts on
 pflow.dev over ssh). The first plan used port 18098, but that port is taken on pflow.dev (open-ontologies, behind
 ontology.pflow.xyz), so beatscript-serve listens on **127.0.0.1:18099**. That port was checked free on pflow.dev and is
 claimed by no console manifest.
@@ -191,7 +191,7 @@ claimed by no console manifest.
    an ubuntu:24.04 container on a Linux build host; glibc ≤ 2.39 either way) → `dist/beatscript-serve-linux-x86_64`. Run on
    the ops host it builds on the Mac over ssh and copies the binary back: the ops host only orchestrates.
 2. `cutover.sh preflight`: read-only checks (port, binary, env file, both /healthz, `nginx -t`).
-3. `cutover.sh install`: copies the binary to `btwsite/bin/beatscript-serve`, adds the `btw-rust` entry to `~/services`
+3. `cutover.sh install`: copies the binary to `btwsite/bin/btwserve`, adds the `btw-rust` entry to `~/services`
    (backup first; the command runs under a `systemd-run --user --scope` with MemoryHigh 1.5G / MemoryMax 2G, using the
    same env file as Go through `~/.env-services/btw-rust` → `btw-bitwrap`), starts it and checks `/healthz` on :18099.
    `deploy/btw-rust.service` is the systemd user unit alternative (use one or the other). `deploy/console-app-btw-rust.yaml`
@@ -222,7 +222,7 @@ and ships with no nginx change.
    `/api/` fallback). It is the first Rust-only route.
 3. **P3, the checker and store writes**: `POST /api/check` (with `same_as` / diff), `/api/fmt`, `/api/share`,
    `/api/open`, `/api/qr`, `PUT /api/programs/<cid>`. First the untrusted-check budget (SEC-2: a step/time budget in
-   `djlive::compile::check_with`, or a beatscript child for link text until then) and the per-address checker budget.
+   `djlive::compile::check_with`, or a `beatscript` child for link text until then) and the per-address checker budget.
    Removes a fork+exec per request, the biggest latency of these routes today.
 4. **P4, auth**: challenge + login together (in-memory nonces), logout, me, tokens. Port the SEC-1 tests first.
    beatscript-serve then owns `session.secret` and `tokens.json` writes.
@@ -234,8 +234,8 @@ and ships with no nginx change.
 7. **P8, retire Go** (in progress 2026-11-22: beats-bitwrap-io branch `retire-go-server` removes the Go server and
    its deploy steps; on pflow.dev `deploy.sh retire-go` stops `btw-bitwrap` and drops its `~/services` entry, and
    `cutover.sh rollback` then refuses): `-fallback` is removed, `btw-bitwrap` stops, and then delete `cmd/btwsite`,
-   `internal/btwsite/**` (about 15 500 lines plus tests) and the Go-only testdata harnesses in beats-bitwrap-io. beatscript
-   is no longer deployed (its code lives on in beatscript-serve), and so goes `site/deploy/deploy.sh`'s beatscript/ffmpeg steps
+   `internal/btwsite/**` (about 15 500 lines plus tests) and the Go-only testdata harnesses in beats-bitwrap-io. `btwd`
+   is no longer deployed (its code lives on in beatscript-serve), and so go `btwsite/deploy/deploy.sh`'s btwd/ffmpeg steps
    and the ffmpeg dependency on pflow.dev for btwsite. `btwsite/web`, the examples and the testdata fixtures stay
    public in beats-bitwrap-io. The console manifest `site/deploy/console-app-btw-bitwrap.yaml` is replaced by a
    `btw-rust` one.
@@ -272,4 +272,4 @@ feature (SIMD), one render feeding both formats, pre-render on store, Range on a
 - `feat/btwserve-playlists` (60fb7fb) branches from 41b7286: merge it into `feat/btwserve-phase1` after this lands
   (expect conflicts only in `main.rs`'s router and config).
 - beats-bitwrap-io: `feat/docs-html` is what beatscript-serve's `/docs/*` HTML matches. `feat/btw-pattern-sugar` touches the
-  language, not the server: regenerate `BEATSCRIPT.md` / the cheat-sheet and re-run the docs group when it lands.
+  language, not the server: regenerate `BEATSCRIPT.md` (then `BTW.md`) / the cheat-sheet and re-run the docs group when it lands.

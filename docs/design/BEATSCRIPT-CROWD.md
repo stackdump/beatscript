@@ -49,8 +49,8 @@ or an agent told the program while it played. It is a *second input*, never part
 
 ### What I read, and how sure I am
 
-Read in full: `docs/BEATSCRIPT.md` (the language claims are checked against it); `BEATSCRIPT-DEBUGGER.md` on `origin/design/btw-debugger`
-(its vocabulary is reused and dependencies on it are named); `site/DESIGN.md` and `internal/btwsite/api/api.go`.
+Read in full: `docs/BTW.md`, now `docs/BEATSCRIPT.md` (the language claims are checked against it); `BTW-DEBUGGER.md` (now `BEATSCRIPT-DEBUGGER.md`) on `origin/design/btw-debugger`
+(its vocabulary is reused and dependencies on it are named); `btwsite/DESIGN.md` and `internal/btwsite/api/api.go`.
 **Not read for this document: the `djlive` source** (`runtime.rs`, `compile.rs`, `evolve.rs`). The runtime facts used (the 0.75
 apply window, the bar-ahead load, a chain computed at compile time) are BEATSCRIPT.md's and the debugger design's account, and spikes
 S1 to S3 (§9) verify them first. *Walkaway* (Doctorow, 2017) is from memory, not re-read: only its premise is used.
@@ -225,7 +225,7 @@ evolve in groove: reads crowd.calm, crowd.mood, mood
 | host | what happens |
 |---|---|
 | **Browser** (`djweb`, `BeatscriptRun`) | `BeatscriptRun.input(source, key, intensity, origin)` stamps from its own clock and appends; `input_log()` and `inputs()` return JSON. The page never stamps in JS. |
-| **Desktop** (`djapp`) | the same `Live`; picks come from the btw window or the `crowd` / `mood` registry nouns (§7.2); `btw get` carries `inputs`. |
+| **Desktop** (`djapp`) | the same `Live`; picks come from the `btw` window or the `crowd` / `mood` registry nouns (§7.2); `btw get` carries `inputs`. |
 | **Offline renderer** (`beatscript render`, `djctl btw render`, `beatscript_render`) | takes the whole log up front (`--perf FILE`, a performance or a bare log), compiles every generation and renders; the cache key gains the performance CID; no log renders the neutral performance. |
 
 **The change this forces (the largest in the design).** Today `eval` answers the whole `lineage`, and each generation is a
@@ -406,7 +406,7 @@ hyped/3; cid differs from the witness`. On the site the same night is
 
 ## 5. The vibe modal
 
-**Opening it.** A **Vibe** button in the page's slim transport bar and in the desktop btw window's header, present while a
+**Opening it.** A **Vibe** button in the page's slim transport bar and in the desktop `btw` window's header, present while a
 program plays. Shortcuts (to confirm against the page's key map and `app.rs`, as the debugger design says of its own):
 `Alt+V` anywhere (matched on `code === "KeyV"`) and a plain `V` outside the editor. The prompt (§5.4) offers the modal; it
 never opens it by itself.
@@ -771,7 +771,7 @@ Engineer-days for someone who knows the repo, plus or minus half. Steps 1 to 4 a
 | 7 | MCP: four tools, the consent toggle, the `input` session event, `tools-list.json`; desktop registry nouns | Go, `djhost` | 3, 5 | 3 |
 | 8 | **Guide pane v1**: features, the 17 rules, ranking, the pane, the bundle, whole-program compose with `context`, canonical line diff, accept as a fork | page, Go | 5, 7 | 6 |
 | 9 | Guide on the debugger's ops, footprint, preview and A/B | `djlive`, page | 8, debugger P5 | 3 |
-| 10 | Desktop btw window: the modal and the pane | `djapp` | 3 | 5 |
+| 10 | Desktop `btw` window: the modal and the pane | `djapp` | 3 | 5 |
 
 **v1 is steps 0 to 8: about 32 days.** Step 9 and the desktop UI are v1.1. The cheapest first demonstration is steps 1 to 4
 (about 15 days with the spike): a program that reads a hand-written log, replays exactly and renders, with no UI at all. It

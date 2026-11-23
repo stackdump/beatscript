@@ -103,7 +103,7 @@ run that made it; the published files were fetched over HTTPS instead.)
 `djhost::live_store`. A `.beatscript` file's header gets the two lines after the rights lines, as full IRIs, tags sorted, each once (a set):
 
 ```text
-#! btw 1
+#! beatscript 2
 #! name: night bus
 #! license: CC0-1.0
 #! visibility: public

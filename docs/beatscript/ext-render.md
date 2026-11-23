@@ -121,7 +121,7 @@ note: not in this render: 4 control lines (filter x1, move x1, reverb x1, vocode
   `kind` is the effect for an insert (`filter`, `delay`, `reverb`, `crush`), the FX unit's knob (`drive`), `move`, or the registry noun (`vocal`, `vocoder`, `deck sync`).
 * A line is "left out" when any of its calls has no op, even if another call of it has one.
 
-## btw test
+## `btw test`
 
 `btw test` measures on `beatscript_render::arrangement`, so its level windows follow the render: **a deck that fades in over a section is measured fading in**. A test
 (`beatscript_test::tests::a_level_assertion_over_a_faded_in_deck_measures_the_fade`): the same section with `deck A: level 0 -> 1 over 4 bars` and with `deck A: level 1`,

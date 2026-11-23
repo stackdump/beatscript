@@ -77,8 +77,8 @@ real time).
 move, same closing event), so the s16 PCM equals the WAV's data chunk **byte for byte** (a test renders the
 official arrangement through `render_arrangement` and compares; `f32le` is the same signal before
 quantising, and the s16 conversion is `djrust::wav::wav_bytes`'s). The differences are only of defaults and
-framing: djctl's default rate is 48 000 Hz (beatscript's 44 100); djctl writes a WAV header and a program with no
-end is 16 bars in both; **beatscript honours `end at bar N` and `--max-bars`, djctl ignores them** (it renders 16
+framing: djctl's default rate is 48 000 Hz (`beatscript`'s 44 100); djctl writes a WAV header and a program with no
+end is 16 bars in both; **`beatscript` honours `end at bar N` and `--max-bars`, djctl ignores them** (it renders 16
 bars or `--beats`).
 
 ## Numbers

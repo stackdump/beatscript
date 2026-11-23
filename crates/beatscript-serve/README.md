@@ -4,7 +4,7 @@ The plan of record is `docs/RUST-SERVER.md` in this repo. beatscript-serve repla
 (`stackdump/beats-bitwrap-io`, `cmd/btwsite` + `internal/btwsite`) route group by route group. Every route it does not
 own yet goes to the Go server through `-fallback` (the strangler), so nginx has one target.
 
-The render route runs beatscript's own `render_to` (included by path) on a thread pool, and its PCM goes straight into the WAV
+The render route runs `beatscript`'s own `render_to` (included by path) on a thread pool, and its PCM goes straight into the WAV
 file or into an in-process Ogg Opus encoder. There is no `beatscript` child and no `ffmpeg` child.
 
 ```
@@ -16,7 +16,7 @@ target/release/beatscript-serve -addr 127.0.0.1:18098 -data <the Go server's -da
 
 Routes served here: `GET|HEAD /api/render/<cid>[.<packed>]?format=opus|wav&sr=44100|48000[&v=]`,
 `/api/render/<cid>/status`, `/healthz`, `/api/examples`, `/examples/<name>.beatscript`, `/llms.txt`, `/llms-full.txt`,
-`/docs/{BeatScript,cheatsheet,api}.md`, `/docs/` + `/docs/{cheatsheet,language,api}` (HTML) + `/docs/assets/*`, and the static
+`/docs/{BEATSCRIPT,cheatsheet,api}.md`, `/docs/` + `/docs/{cheatsheet,language,api}` (HTML) + `/docs/assets/*`, and the static
 site for every path no Go route takes. The rest goes to `-fallback`, or is a JSON 404 without it.
 
 `bench/contract.py` sends the same requests to both servers and compares status, headers and bodies (results in
@@ -52,7 +52,7 @@ site for every path no Go route takes. The rest goes to `-fallback`, or is a JSO
 
 ## Measured (cold renders, one request at a time; `bench/bench.py`: TTFB, total, CPU incl. reaped children, peak RSS of the process tree)
 
-A Linux box (i7-4790, 8 threads), median of 3, Go = btwsite + this tree's beatscript + ffmpeg 8.0:
+A Linux box (i7-4790, 8 threads), median of 3, Go = btwsite + this tree's `beatscript` + ffmpeg 8.0:
 
 | program (audio) | format | server | TTFB | total | CPU | peak RSS |
 |---|---|---|---|---|---|---|
@@ -65,7 +65,7 @@ A Linux box (i7-4790, 8 threads), median of 3, Go = btwsite + this tree's beatsc
 | | wav | Go | 395 ms | 10.28 s | 10.4 s | 146 MB |
 | | wav | Rust | 441 ms | 10.54 s | 10.6 s | 147 MB |
 
-pflow.dev (Xeon 8259CL, 2 vCPU), against the **live** Go process on 127.0.0.1:18097 (beatscript 0.1.0, ffmpeg 6.1.1),
+pflow.dev (Xeon 8259CL, 2 vCPU), against the **live** Go process on 127.0.0.1:18097 (`btwd` 0.1.0, as the CLI was called then, ffmpeg 6.1.1),
 beatscript-serve run once from /tmp on its own data dir; Opus, a fresh CID per program (`<cid>.<packed>`), n = 1 each:
 
 | program | server | TTFB | total | CPU | peak RSS |

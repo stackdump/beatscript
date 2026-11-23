@@ -39,10 +39,14 @@ A program's name is its CID: the hash of its canonical text.
 
 | `Accept` | answer |
 |---|---|
-| `text/plain` or `text/x-beatscript` | the `.beatscript` |
+| `text/plain`, `text/beatscript` (or the older `text/x-beatscript`) | the `.beatscript` |
 | `application/ld+json` or `application/json` | the `.jsonld` |
 | `audio/*` | `303 See Other` to the render |
 | anything else (a browser) | the page |
+
+A program written before the rename (BeatScript 1, the old spelling) whose BeatScript 2 twin is stored redirects:
+`/p/<old CID>` answers `308` to `/p/<new CID>`, and `/api/programs/<old CID>` still answers its own text, naming its successor.
+Both CIDs stay good names ([Versions](/docs/language#versions)).
 
 The page names its other formats in `<link rel="alternate">` tags in its head, and its licence in `<link
 rel="license">`. The `Link` header says the same. All of a page's existing preview tags (`og:*`, `twitter:*`, title,
@@ -108,8 +112,9 @@ programs give the same archive and the same name, and a dump with nothing new ch
 
 To check an archive:
 1. its sha256 must match its name;
-2. each `programs/<CID>.beatscript` must hash to its CID (`{"format":1,"text":<the file>,"type":"djrust.live"}`, sha2-256,
-   CIDv1 dag-json, base58btc);
+2. each `programs/<CID>.beatscript` must hash to its CID (sha2-256, CIDv1 dag-json, base58btc) as the document of its
+   version: `{"format":2,"text":<the file>,"type":"beatscript"}` when the file starts with `#! beatscript 2`, else
+   `{"format":1,"text":<the file>,"type":"djrust.live"}` (BeatScript 1);
 3. each `.jsonld`'s `@id` must be that CID.
 
 The manifest follows beats.bitwrap.io's snapshot manifest (`version`, `count`, `cids`, `docs`).
@@ -141,6 +146,6 @@ https://beatscript.app/phrasebook/<CID>.txt        the file, by CID
 https://beatscript.app/phrasebook/<CID>.jsonld     the linked data, by CID
 ```
 
-The corpus's CID is the CID of the file's text, by the function a program's CID is (`{"format":1,"text":<the file>,"type":"djrust.live"}`,
+The corpus's CID is the CID of the file's text, by the function a BeatScript 1 program's CID is (`{"format":1,"text":<the file>,"type":"djrust.live"}`,
 sha2-256, CIDv1 dag-json, base58btc), so a copy can be checked the way a program is. The two routes with a CID in them answer only
 for the CID the server ships and are `404` for any other: a new version of the corpus is a new CID, never a change under an old one.

@@ -61,6 +61,11 @@ stays off the keystroke path.
 | `codeAction` `refactor.inline` *Eject* (resolved and proved like the refactors) and *Copy the expansion* | `refs.rs`, `refactor.rs` |
 | `completion` in a `gen@2` call: genres, names, values (`section=`: the generated program's sections) | `complete.rs` |
 
+The three requests that are not LSP were `btw/diagnostics`, `btw/numberAt` and `btw/expand` before the rename, as the
+commands were `btw.expand.toggle`, `btw.expand.copy` and `btw.eject`, the language id `btw` and the grammar's scope
+`source.btw`. They are `beatscript/...`, `beatscript.*`, `beatscript` and `source.beatscript` now. The server still answers
+the old `btw/...` requests, so an editor built before the rename keeps working.
+
 `beatscript/numberAt` takes `{textDocument, position}` and answers `null` or the literal there: `range` (its span, a `-` sign
 included), `text`, `value`, `kind` (`tempo`, `vel`, `oct`, `len`, `glide`, `decay`, `pitch-drop`, `ratchet`, `times`, `chance`, `hits`, `steps`, `rotation`,
 `cutoff-lp`, `level`, `mix`, `bars`, `bar`, `beat`, `degree`, `note`, `chord`, `param`, `number`, ...), `label`, `min` and

@@ -9,19 +9,33 @@ deploy with its live checks.
 The engine underneath is [stackdump/djrust](https://github.com/stackdump/djrust) (Petri-net patterns and the
 audio host), a git dependency pinned in `Cargo.toml`.
 
+## BeatScript 2
+
+A program starts with its version line, `#! beatscript 2`. BeatScript 2 is the language that was called `btw`,
+renamed: every line means what it meant. A text with `#! btw 1`, or with no version line, is BeatScript 1, the old
+spelling, and keeps its old CID, so every program, share link and CID made before the rename still opens and plays the
+same. The version line is part of a BeatScript 2 program's canonical text, so the same music has a new CID there: `fmt`
+upgrades a text to BeatScript 2 (`beatscript fmt --keep-version` does not), and beatscript.app keeps both CIDs, the new
+one recorded as based on the old, with `/p/<old-cid>` redirecting to the new. Files are `.beatscript` (`.btw` is still
+read), the MIME type is `text/beatscript`. The whole story is "Versions" in [`docs/BEATSCRIPT.md`](docs/BEATSCRIPT.md).
+
+The names: the language and the product are BeatScript; `beatscript` is the name wherever a name is syntax (the CLI,
+the crates, the file extension, the editors' language id). The desktop booth in djrust still calls its command noun
+`btw` (`djctl btw eval`, `do btw`).
+
 ## Layout
 
 | path | what it is |
 |---|---|
 | `crates/djlive` | the language: parse, compile to djrust nets, mutate, evolve, perform; `grammar.ebnf`, the form templates |
 | `crates/djengine` | engine modules on top of djrust: vocals and the lexicon, themes, rights, key, SMF, import (plus booth modules) |
-| `crates/beatscript-api` | check / fmt / open / share / highlight / marks as JSON, pure; shared by the CLI, the server and the wasm |
+| `crates/beatscript-api` (`beatscript_api`) | check / fmt / open / share / highlight / marks as JSON, pure; shared by the CLI, the server and the wasm |
 | `crates/beatscriptls` | the language service (diagnostics, completion, hover, refactors), LSP-shaped and pure |
-| `crates/djweb` | the browser module: beatscript-api + beatscriptls + the djrust engine behind wasm-bindgen |
-| `crates/beatscript-serve` | the beatscript.app server: site, docs, render (Ogg Opus), check, sign-in, cards, pairing, MCP, ontology |
+| `crates/djweb` | the browser module (`beatscript.js`, `beatscript_bg.wasm`): `beatscript-api` + `beatscriptls` + the djrust engine behind wasm-bindgen |
+| `crates/beatscript-serve` | the beatscript.app server (binary `beatscript-serve`): site, docs, render (Ogg Opus), check, sign-in, cards, pairing, MCP, ontology |
 | `crates/beatscript-seal` | sealed private pushes to a paired phone |
-| `crates/beatscript-cli` | the CLI: check, fmt, render, cheatsheet, lsp, export |
-| `crates/beatscript-round` | the round trip: audio in, a program out that `check same_as` the original |
+| `crates/beatscript-cli` | the CLI, binary `beatscript`: check, fmt, render, cheatsheet, lsp, export |
+| `crates/beatscript-round` | the round trip (binary `beatscript-round`): audio in, a program out that `check same_as` the original |
 | `crates/djhost` | host modules (render path, ontology vocabulary, and the booth's devices behind features) |
 | `docs/` | the language reference (`BEATSCRIPT.md`), arrange, schema, open data, authorship, `docs/beatscript/` long notes |
 | `examples/` | example and reference programs |

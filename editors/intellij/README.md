@@ -9,7 +9,7 @@ plugin, Community and Ultimate editions alike). No plugin of our own is needed.
 2. Install LSP4IJ: Settings → Plugins → Marketplace → "LSP4IJ".
 3. Settings → Languages & Frameworks → Language Servers → `+`:
    - **Server**: name `BeatScript`, command `/path/to/beatscript lsp`.
-   - **Mappings** → *File name patterns*: `*.beatscript`, language id `btw`.
+   - **Mappings** → *File name patterns*: `*.beatscript` (and `*.btw`, the extension before the rename), language id `beatscript`.
    - **Configuration**: nothing needed.
 4. Colours: Settings → Editor → TextMate Bundles → `+` → choose `editors/vscode` of this repo (IntelliJ reads the VS Code
    grammar as a TextMate bundle). Without it LSP4IJ still gives everything but the colours.
@@ -33,6 +33,6 @@ A program's references (`gen@2 techno seed=42 section=drop part=bass`, `seed(tec
 
 ## What LSP4IJ needs from the server
 
-Only stdio and the standard requests; beatscriptls answers `initialize` with its capabilities (incremental sync, UTF-16 positions
+Only stdio and the standard requests; `beatscriptls` answers `initialize` with its capabilities (incremental sync, UTF-16 positions
 unless the client offers UTF-8). If something does not show, LSP4IJ's *Language Servers* tool window has a trace of the
 traffic (set the server's *Debug → Trace* to *verbose*).

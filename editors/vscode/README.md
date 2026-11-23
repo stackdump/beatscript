@@ -27,8 +27,8 @@ npm install
 code --extensionDevelopmentPath="$PWD" ../../examples/beatscript/showcase.beatscript
 ```
 
-Set `beatscript.server.path` to the beatscript binary if it is not on `PATH` (Settings → BeatScript). `BeatScript: Restart the language
-server` picks up a rebuilt beatscript. `beatscript.trace.server: verbose` logs the traffic.
+Set `beatscript.server.path` to the `beatscript` binary if it is not on `PATH` (Settings → BeatScript). `BeatScript: Restart the language
+server` picks up a rebuilt `beatscript`. `beatscript.trace.server: verbose` logs the traffic.
 
 To install it for good, package it: `npx @vscode/vsce package --allow-missing-repository --skip-license` makes
 `beatscript-0.1.0.vsix`; then `code --install-extension beatscript-0.1.0.vsix`.
