@@ -94,7 +94,7 @@ pub const TEMPLATES: [Template; 8] = [
         name: "quodlibet",
         summary: "a quodlibet at 96 in D: public-domain themes take turns by section and cross-morph toward each other and away in cycles; the phrase sung over the ground",
         example: "arrange from template(quodlibet, @psalm42_deep_calleth)",
-        examples: &[],
+        examples: &["quodlibet-of-four"],
         form: Some(Form {
             label: "quodlibet",
             shape: "canon ode fate voices canon voices: one theme leads each section, the others under it",
@@ -124,7 +124,7 @@ pub const TEMPLATES: [Template; 8] = [
         name: "canon",
         summary: "a canon at 90 in D: Pachelbel's violin line chased by copies of itself, a bar and a beat behind, over his ground; the phrase sung over them",
         example: "arrange from template(canon, @mgm_pease_porridge_hot)",
-        examples: &[],
+        examples: &["canon-of-the-crossing"],
         form: Some(Form {
             label: "canon",
             shape: "lead chase round sung round sung: one voice, then two, then three",
@@ -931,6 +931,12 @@ fn arrange_from(toks: &[Token], at: usize) -> Option<usize> {
 /// `env` gives the host's syllable counts (the same ones the `sing` line counts with), so that the line has a note for
 /// each syllable the voice sings.
 pub fn expand(src: &str, env: &Env) -> Option<Result<Expansion, Vec<Diagnostic>>> {
+    expand_drawing(src, env).map(|r| r.map(|(e, _)| e))
+}
+
+/// [`expand`], and the programs a role drew on that the written-out text does not name (a stored set, whose tracks it does
+/// name), (cid, text): what a link carries with the program (compile.rs `plays`).
+pub fn expand_drawing(src: &str, env: &Env) -> Option<Result<(Expansion, Vec<(String, String)>), Vec<Diagnostic>>> {
     let norm = normalise_input(src);
     let src: &str = &norm;
     let lexed = lex(src);
@@ -945,6 +951,7 @@ pub fn expand(src: &str, env: &Env) -> Option<Result<Expansion, Vec<Diagnostic>>
     }
     let known = names();
     let mut warnings = Vec::new();
+    let mut drawn: Vec<(String, String)> = Vec::new();
     let mut pieces: Vec<(Span, String, String)> = Vec::new();
     let has = |w: &str| says(toks, w);
     // a seed that makes the whole arrangement too
@@ -1034,11 +1041,16 @@ pub fn expand(src: &str, env: &Env) -> Option<Result<Expansion, Vec<Diagnostic>>
                 tempo: own.tempo.or_else(|| says_line("tempo ").and_then(|t| t.parse().ok())),
             };
             let key = host.key.clone().unwrap_or_else(|| "c".into());
-            let mut cx = crate::roles::Ctx { env, host, slots: &filled, errors: Vec::new(), notes: Vec::new() };
+            let mut cx = crate::roles::Ctx::new(env, host, &filled);
             match crate::roles::bind_form(&mut cx, tpl, &body, &t.roles, "", &key, 1) {
                 Some(b) if cx.errors.is_empty() => {
                     body = b;
                     warnings.extend(cx.notes);
+                    for d in cx.drawn {
+                        if !drawn.contains(&d) {
+                            drawn.push(d);
+                        }
+                    }
                 }
                 _ => {
                     errors.extend(cx.errors);
@@ -1065,7 +1077,7 @@ pub fn expand(src: &str, env: &Env) -> Option<Result<Expansion, Vec<Diagnostic>>
         at = sp.end;
     }
     text.push_str(&src[at..]);
-    Some(Ok(Expansion { text, edits, refs, warnings }))
+    Some(Ok((Expansion { text, edits, refs, warnings }, drawn)))
 }
 
 /// Every reference of the program written out, the templates and then the seeds they leave: what `beatscript expand` and the

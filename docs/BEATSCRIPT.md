@@ -372,10 +372,11 @@ structure   = "standard" | "loop" | "minimal" | "extended" ;  (* the generator's
 
 (* == Phrase templates == *)
 template    = "template" "(" NAME "," ( PHRASE | STRING ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form's roles *)
-binding     = NAME "=" source ;                               (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass *)
-source      = gen | NAME | notes | form | stored ;            (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program's part or sections *)
+binding     = NAME [ "." role ] "=" ( source | [ "-" ] INT ) ;   (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass; one part of a seed role: a.bass=[d2 ~ a1 ~]; a form's number: delay=6 interval=-12 *)
+source      = gen | NAME | notes | form | stored | track ;    (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template, or one section of it; a stored program's part or sections; a stored set's track *)
 notes       = "[" pattern "]" | "<" "[" pattern "]" { "[" pattern "]" } ">" ;   (* a bar, or bars one after another *)
-form        = "template" "(" NAME { "," binding } ")" ;       (* a form inside another takes no phrase: forms nest 3 deep *)
+form        = "template" "(" NAME { "," binding } ")" [ "." NAME [ "." role ] ] ;   (* a form inside another takes no phrase: forms nest 3 deep; .both is one of its sections, .both.arp that section's part *)
+track       = CID "." NAME [ "." NAME ] [ "." role ] ;        (* a stored set's track by number: <cid>.track2, its section <cid>.track2.drop, its part <cid>.track2.drop.bass [host] *)
 
 (* == Evolving == *)
 evolve      = "evolve" "every" INT "bars" "{" { NEWLINE } { rule NEWLINE { NEWLINE } } [ bound NEWLINE { NEWLINE } ] "}" ;   (* a rule a line; the bound last *)
@@ -1369,24 +1370,33 @@ arrange from template(rondo, @hands_up, refrain=gen@1 dubstep seed=54876, episod
 
 | form | roles: what each is (default) |
 |---|---|
+| `quodlibet` | `a`, `b`: two tunes drawn toward each other (Pachelbel's violin, Ode to Joy); `ground`: the bass (Pachelbel's ground); `third`: the line both are pulled toward (the fate motif in B minor) |
 | `passacaglia` | `ground`: the bass under every section, never changed (Holst's Mars ostinato); `upper`: the line the variations change (the form's own) |
-| `canon` | `subject`: the line chased by copies of itself, a bar and a beat behind (Pachelbel's violin); `ground`: the bass (Pachelbel's ground) |
+| `canon` | `subject`: the line chased by copies of itself, a bar and a beat behind (Pachelbel's violin); `ground`: the bass (Pachelbel's ground); the numbers `delay=` (beats behind) and `interval=` (semitones) of the chase's copy |
 | `rondo` | `refrain`: the tune that comes back (Joplin's Entertainer); `episodes`: a line, the episodes' figure (Bach's Prelude in C), or sections |
 | `fugue` | `subject`: entered, answered a fifth up, re-entered (Grieg's Mountain King); `counter`: drawn toward it (Bach's Badinerie) |
 | `theme-and-variations` | `theme`: the one source each variation changes (Dvorak's Largo) |
-| `cross` | `a`, `b`: two sources, each a melody, bass and chords (a whole seed; a line is the melody) |
+| `cross` | `a`, `b`: two sources, each a melody, bass and chords (a whole seed; a line is the melody); one part alone: `a.bass=`, `b.harmony=` |
 
 - **Sources**: a seed, `gen@1 dubstep seed=54876 [section=drop] [part=bass]` (the form fills in the role's part and the first
   section that plays it, the drop first); a public-domain theme by id (`ode_to_joy`); notes, a bar each (`[d2 ~ a1 ~]`,
   `<[d2 ~] [g1 ~]>`); a stored program's part (`<cid>.drop.bass`), and where a role takes sections a section of it
-  (`<cid>.drop`) or the whole of it (`<cid>`: its sections in its order); another template, with no phrase
-  (`template(passacaglia, ground=...)`): its sections under the role's prefix (`ep_ground`), its plan over the role's places.
+  (`<cid>.drop`) or the whole of it (`<cid>`: its sections in its order); a stored set (`<cid>`: its tracks in order, each its
+  sections; `<cid>.track2` one track); another template, with no phrase (`template(passacaglia, ground=...)`): its sections
+  under the role's prefix (`ep_ground`), its plan over the role's places; or one section of it (`template(cross).both`, and
+  `.both.arp` its part).
+- **Extensions** (docs/beatscript/forms.md "Extensions"): a section where a line goes gives the role its own part of it, as it first
+  plays (`subject=template(cross).both.arp`: the cross's overlap as a canon's subject); a seed role's parts bind one at a time
+  (`a.bass=[d2 ~ a1 ~]`, after the role in the canonical text); the canon's `delay=6` and `interval=7` put the chase's copy a bar
+  and two beats behind, a fifth up (without them: a bar behind, an octave down); the quodlibet's roles. Each has a default that
+  keeps every reference that does not say it written out as it was.
 - **Written out as structure**: a role is a let a bar the sections and the plan read by name (`ostinato`, `subject`, `tune`,
   `dux`, `air`, `a_melody` ...: `~ subject_* rot 2`), or sections; a seed stays a `let NAME = gen@1 ...` line for the gen
   stage, pinned. Every section keeps a doc comment; the header says what fills each role.
 - **Key**: a source plays in the key of the sections it fills (the program's, a seed fitted to it, a theme moved into it; an
   inner form's sections open with its own `key`, its seeds say it). The roles go in the form's order in the canonical text.
-- **Total**: forms nest 3 deep, a line is at most 16 bars, a role of sections at most 128 bars a pass; each an error at it.
+- **Total**: forms nest 3 deep, a line is at most 16 bars, a role of sections (a set's tracks too) at most 128 bars a pass; each
+  an error at it.
 - Eject writes the form out under `# from: <the reference> -> <CID>`, the whole chain of forms and seeds; the seeds in it eject
   in turn. Long note: `docs/beatscript/ext-roles.md`.
 
@@ -3268,6 +3278,18 @@ logs are the "Decisions" of each `docs/beatscript/ext-*.md`.)
   (the 23 of `tools/diffold.py`), the showcase's CID is the one it had, and the CIDs `tests/sets.rs` pins did not move.*
 - The change plan counts a tempo-only change as one change (`1 changed`), so the folded panel line and `plan_summary` never say
   "no changes" while `tempo curve changed` is listed.
+
+**Form extensions (sets, sections, parts, numbers; docs/beatscript/forms.md "Extensions")**
+
+- A set in a role is its tracks, not its mix: the form's own sections stand between the tracks, so the mixes and cuts stay behind,
+  said in a note. A playlist (an account's list, changed in place) is no source; a set, pinned by CID, is.
+- A section where a line goes is the role's own part of it, as it first plays (the stored program's first stretch, the same
+  `stored.rs` reads), written out as notes; a seed role takes each of its parts from it.
+- `a.bass=` wins over what `a=` gives the bass; only two bindings of the very same part are an error. The canon's `delay` counts
+  beats and wraps the leftover beats in the bar, so the copy stays made of the subject's bars; `interval` counts semitones, as
+  `transpose` does. The quodlibet's tunes are written `tune_a` and `tune_b` (a let named `a` reads as a note).
+- *No reference that says none of them moves*: its written-out text is pinned (`roles.rs` `bound_forms_are_pinned`, blessed before
+  the change, and `templates_v1_are_pinned`), and the examples keep their CIDs (`cid_pins.rs`).
 
 ## Not done
 

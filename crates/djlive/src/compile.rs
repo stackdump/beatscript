@@ -911,9 +911,8 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
     // a `gen` call (gen.rs) is resolved to the program the generator makes for it; its part lines and sections are then that
     // program's, borrowed as a stored program's are, with it known for as long as this check runs (`with_generated`)
     let mut generated: Vec<(String, String)> = Vec::new();
-    let expanded = crate::template::expand(src, env)
-        .or_else(|| crate::seed::expand(src))
-        .map(|r| r.map(|e| (e, Vec::new())))
+    let expanded = crate::template::expand_drawing(src, env)
+        .or_else(|| crate::seed::expand(src).map(|r| r.map(|e| (e, Vec::new()))))
         .or_else(|| {
             crate::gen::expand(src).map(|r| {
                 r.map(|(e, progs)| {

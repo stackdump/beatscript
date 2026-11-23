@@ -1,0 +1,8 @@
+#! name: quodlibet of four
+# quodlibet-of-four.beatscript: the quodlibet with every one of its roles bound (CC0). Original.
+# The quodlibet's roles (docs/forms.md "Extensions"): two tunes that cross-morph toward each other and away, a ground, and a
+# third line both are pulled toward. Here the tunes are Bach's Badinerie and Dvorak's New World Largo (moved from D-flat into
+# D), the third Grieg's Mountain King (B minor, D major's relative), over a ground written as notes.
+# What you hear: the Badinerie over the ground, then the Largo with the Badinerie under it, then the Mountain King with the
+# Largo under it, each drawn a little further toward the others every pass; the psalm sung over the ground.
+arrange from template(quodlibet, @psalm42_deep_calleth, a=badinerie, b=new_world_largo, ground=<[d2 ~ ~ ~ a1 ~ ~ ~] [b1 ~ ~ ~ f#1 ~ ~ ~]>, third=mountain_king)

@@ -1,0 +1,10 @@
+#! name: canon of the crossing
+# canon-of-the-crossing.beatscript: a canon whose subject is the overlap of a cross (CC0). Original.
+# The cross (docs/forms.md) crosses Ode to Joy with Bach's Badinerie, and its `both` section plays the two at once: the Badinerie
+# on top, Ode to Joy under it as an arp, by then drawn a quarter of the way toward the Badinerie by the cross's plan.
+# That arp, as the notes it plays there, is this canon's subject (`subject=template(cross).both.arp`): a section used as a line.
+# What you hear: the overlap alone over Pachelbel's ground, then chased by its copy a bar and two beats behind and a fifth up
+# (`delay=6`, `interval=7`), then a third voice a beat behind; the nursery rhyme sung over them, twice a pass.
+tempo 96
+
+arrange from template(canon, @mgm_pease_porridge_hot, subject=template(cross).both.arp, delay=6, interval=7)

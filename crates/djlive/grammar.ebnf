@@ -195,10 +195,11 @@ structure   = "standard" | "loop" | "minimal" | "extended" ;  (* the generator's
 
 (* == Phrase templates == *)
 template    = "template" "(" NAME "," ( PHRASE | STRING ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form's roles *)
-binding     = NAME "=" source ;                               (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass *)
-source      = gen | NAME | notes | form | stored ;            (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template; a stored program's part or sections *)
+binding     = NAME [ "." role ] "=" ( source | [ "-" ] INT ) ;   (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass; one part of a seed role: a.bass=[d2 ~ a1 ~]; a form's number: delay=6 interval=-12 *)
+source      = gen | NAME | notes | form | stored | track ;    (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template, or one section of it; a stored program's part or sections; a stored set's track *)
 notes       = "[" pattern "]" | "<" "[" pattern "]" { "[" pattern "]" } ">" ;   (* a bar, or bars one after another *)
-form        = "template" "(" NAME { "," binding } ")" ;       (* a form inside another takes no phrase: forms nest 3 deep *)
+form        = "template" "(" NAME { "," binding } ")" [ "." NAME [ "." role ] ] ;   (* a form inside another takes no phrase: forms nest 3 deep; .both is one of its sections, .both.arp that section's part *)
+track       = CID "." NAME [ "." NAME ] [ "." role ] ;        (* a stored set's track by number: <cid>.track2, its section <cid>.track2.drop, its part <cid>.track2.drop.bass [host] *)
 
 (* == Evolving == *)
 evolve      = "evolve" "every" INT "bars" "{" { NEWLINE } { rule NEWLINE { NEWLINE } } [ bound NEWLINE { NEWLINE } ] "}" ;   (* a rule a line; the bound last *)

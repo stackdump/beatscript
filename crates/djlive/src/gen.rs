@@ -531,23 +531,7 @@ fn let_bars(r: &Resolved, c: &GenCall, let_name: &str) -> Result<String, Diagnos
     if part.cycle_steps != 16 {
         return Err(Diagnostic::error(c.part_span, format!("its {role} has a cycle of its own ({} steps): a let a bar cannot hold it", part.cycle_steps)).help(format!("play it on a part line: {role} {}", c.text())));
     }
-    let bars: Vec<[Vec<crate::seed::Note>; 16]> = part
-        .cycles
-        .iter()
-        .map(|hs| {
-            let mut bar: [Vec<crate::seed::Note>; 16] = Default::default();
-            for h in hs {
-                let slot = &mut bar[usize::from(h.step.min(15))];
-                if !slot.iter().any(|n| n.note == h.note) {
-                    // an accent is written as `!`: the writer marks the notes at or over its threshold
-                    slot.push(crate::seed::Note { note: h.note, vel: if h.accent { 127 } else { 1 }, len: h.dur.max(1) });
-                    slot.sort();
-                }
-            }
-            bar
-        })
-        .collect();
-    let texts: Vec<String> = bars.iter().map(|b| crate::seed::bar_text(role, b, 64)).collect();
+    let texts = bar_texts(part, role);
     let p = crate::seed::period(&texts).max(1);
     if p > crate::seed::MAX_PERIOD {
         return Err(Diagnostic::error(c.span, format!("its {role} changes over {p} bars, more than a let can hold ({})", crate::seed::MAX_PERIOD)));
@@ -559,6 +543,26 @@ fn let_bars(r: &Resolved, c: &GenCall, let_name: &str) -> Result<String, Diagnos
     }
     out.push_str(&format!("let {let_name} = <{}>", (1..=p).map(|k| format!("{let_name}_{k}")).collect::<Vec<_>>().join(" ")));
     Ok(out)
+}
+
+/// The notes a part of 16-step bars plays, one bar of mini-notation for each of its cycles (`c2 ~ ~ c2 ~ ~ d#2 ~`, an accent
+/// as `!`): what a let a bar is written from (here, and a form's section taken as a line in roles.rs).
+pub(crate) fn bar_texts(part: &crate::compile::PartIr, role: &str) -> Vec<String> {
+    part.cycles
+        .iter()
+        .map(|hs| {
+            let mut bar: [Vec<crate::seed::Note>; 16] = Default::default();
+            for h in hs {
+                let slot = &mut bar[usize::from(h.step.min(15))];
+                if !slot.iter().any(|n| n.note == h.note) {
+                    // an accent is written as `!`: the writer marks the notes at or over its threshold
+                    slot.push(crate::seed::Note { note: h.note, vel: if h.accent { 127 } else { 1 }, len: h.dur.max(1) });
+                    slot.sort();
+                }
+            }
+            crate::seed::bar_text(role, &bar, 64)
+        })
+        .collect()
 }
 
 fn no_section(r: &Resolved, c: &GenCall) -> Diagnostic {
