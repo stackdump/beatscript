@@ -794,7 +794,7 @@ The rule that decides placement: **anything that is a function of (text, bar) go
 ### 9.1 Desktop: the `btw` window, and full screen
 
 ```
-┌ BeatScript ─ ▸ drop 9/16 · bar 24 · phrase 3 · ● ● ● ● ● ● ● ○ · gen 2 ──────── [Full] [Follow] ┐
+┌ btw ─ ▸ drop 9/16 · bar 24 · phrase 3 · ● ● ● ● ● ● ● ○ · gen 2 ──────── [Full] [Follow] ┐
 │ ⏸ HELD  window: bar 24 (1) · exact          [▶ resume] [⏭ bar] [⏭ phrase] [⏮ back] [seek ▾] │
 │ ├intro──┼build─┼─────drop────[█████▓░░░░░░░]┼breakdown┼───drop2────┼outro┤   ◂ ticks = breaks │
 │ 28 ●│   deck A: kick kicks | snare snares | hihat hats vel=50..80           ◂ ● breakpoint   │
@@ -1052,7 +1052,7 @@ Claude on the MCP the app already exposes.
     bridge, or expose the control registry over a LAN/mesh socket from djandroid like `djctl app`?
 13. **Deep links with a position** (`…@drop+8`) as part of v1.1 for the web: yes?
 14. **Where does the debugger noun's name stop?** `debug` is clear but it also reads as a diagnostics
-    flag; `btw debug` keeps it inside the BeatScript noun but then it would be callable from `do btw …` unless
+    flag; `btw debug` keeps it inside the `btw` noun but then it would be callable from `do btw …` unless
     `program_callable` is per-verb. Per-noun (`debug`) is simpler and recommended.
 
 ---

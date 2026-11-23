@@ -9,6 +9,8 @@ Conventions. Bodies are JSON unless noted; programs are plain UTF-8 text. A prog
 service stores or shares is **CC0-1.0** (public domain); programs that use `sample` / `loop` assets or `use restricted` are private
 and are refused by every route that stores, shares or renders. A program's **CID** (`z4EBG9j...`) is the hash of its *canonical text*
 (the parse printed again: spacing, comments, number and note spellings do not change it), so the same program is always the same CID.
+A program starts with its version line, `#! beatscript 2`, which its canonical text keeps first; a text with no version line (or
+`#! btw 1`) is BeatScript 1, the old spelling, and keeps the CID it always had (the language reference, "Versions").
 
 **Privacy and licence.** Everything generated here is published: a composed program, its CID, share link, social card and every render or
 audio stream made from it are stored publicly and released under CC0-1.0, and anyone with the link can play, copy and reuse them. A compose
@@ -79,17 +81,19 @@ tools and drive their own browser tabs.
 {"ok": true, "errors": 0, "warnings": 1,
  "diagnostics": [{"severity": "warning", "line": 3, "col": 14, "end_col": 15, "start": 42, "end": 43,
                   "message": "...", "expected": ["..."], "found": "...", "help": "...", "render": "warning: ...caret form..."}],
- "cid": "z4EBG9j...", "canonical": "tempo 140\n...", "nets": {"A": "z4EB..."}, "song_nets": {"A": "z..."},
+ "cid": "z4EBG9j...", "canonical": "#! beatscript 2\ntempo 140\n...", "version": 2, "renamed_cid": "z4EBG9j...",
+ "nets": {"A": "z4EB..."}, "song_nets": {"A": "z..."},
  "tempo": 140, "key": "fm", "swing": null, "arranged": true, "song_bars": 64, "ends": true, "loops": false,
  "sections": [{"name": "intro", "start": 0, "bars": 8}], "decks": ["A", "B"], "evolve": [], "lineage": [],
  "uses_assets": false, "restricted": false, "seconds": 109.7}
 ```
 
 `line` and `col` are 1-based; `start` and `end` are UTF-8 byte offsets into the text you sent; `help` says what would fix it; `render` is the
-error in caret form. `cid` and `canonical` are null when `ok` is false. **Always check before you play, share or render, and fix every
+error in caret form. `version` is the language version of the text (1 or 2) and `renamed_cid` the program's CID in the
+other one. `cid` and `canonical` are null when `ok` is false. **Always check before you play, share or render, and fix every
 error at its line:col**; a program with an error is refused whole.
 
-- `POST /api/fmt` `{"text"}` gives `{"ok", "text", "canonical", "cid", "comments": [...], "diagnostics": [...]}`: `text` is the program formatted with its `#!` header lines, comments and blank lines between blocks kept; `canonical` has none of them (the CID is of it).
+- `POST /api/fmt` `{"text"}` gives `{"ok", "text", "canonical", "cid", "comments": [...], "diagnostics": [...]}`: `text` is the program formatted with its `#!` header lines, comments and blank lines between blocks kept, and upgraded to BeatScript 2 (`#! beatscript 2` first); `canonical` has none of them but the version line (the CID is of it); `from_cid` is the CID of the text sent, so a BeatScript 1 text's old and new CIDs are both in the answer.
 - `POST /api/open` `{"url": "<link, #fragment, <CID>.<packed> or CID>"}` gives `{"ok", "cid", "canonical", "verified", "warnings", "notes_unverified", "error"}`.
   A link whose CID is not its text's is refused (`verified: false`, never trust its text).
 - `POST /api/share` `{"text"}` gives `{"ok", "url", "social_url", "beats_url", "cid", "chars", "canonical", "warnings"}`, see [Share links](#share-links).
@@ -237,7 +241,7 @@ name"), so use a voice that starts with a letter (`inst=sub-bass` for a deep bas
 | tool | needs a token | arguments | does |
 |---|---|---|---|
 | `check` | | `text`, `same_as`? | check a program: diagnostics with line:col, cid, canonical text. **Run it before anything else and fix the errors**. With `same_as` (a CID or another program's text) it also answers whether the two are the same song by their compiled nets and song-level settings, and, when they are not, a `diff` saying what changed in music: song settings, sections inserted/removed/moved/repeated/renamed, and per part a transform (transposed, rotated, reversed, ...) or the notes changed at bar:step, each with a one-line summary |
-| `fmt` | | `text` | the program formatted (`text`, header lines and comments kept), its canonical form (`canonical`) and its CID |
+| `fmt` | | `text` | the program formatted (`text`, header lines and comments kept) and upgraded to BeatScript 2, its canonical form (`canonical`), its CID and `from_cid`, the CID of the text given |
 | `share` | for the short links | `text`, `license`, `forked_from`, `credits`, `name` | the self-sealing link, the social link, the CID; with a token also stores the program and gives the CID-only `short_url`, `short_social_url`, `short_beats_url` and `fetch_url` |
 | `open` | | `url` | decode a link (self-sealing or CID-only: `/p/<CID>`, `/c/<CID>`, `#<CID>`, a bare CID), verified, with its rights |
 | `render` | | `text` or `cid` or `example`, `format` | store the program and answer `stream_url`, `status_url`, `cid`, `seconds` |

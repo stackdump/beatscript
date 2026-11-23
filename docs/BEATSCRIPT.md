@@ -9,9 +9,9 @@ good one keeps playing.
 
 The language is called BeatScript, and `beatscript` is its name wherever a name is syntax: the command line `beatscript`,
 files and snippets `.beatscript`, the MIME type `text/beatscript`, the editors' language id. It was called `btw` until
-BeatScript 2 ("Versions"). The desktop booth (djrust) still spells its command noun `btw`, and those are real commands: the
-registry noun `btw` (`live` and `livecode` still work), `do btw`, `btw test`, the MCP tool `djapp_btw`, the window `btw`,
-the shell `djctl btw`.
+BeatScript 2 ("Versions"). The desktop booth (djrust) still spells its command noun `btw`: it names a registry noun,
+not the language, and these are real commands: the registry noun `btw` (`live` and `livecode` still work), `do btw`,
+`btw test`, `djctl btw eval`, the MCP tool `djapp_btw`, the window `btw`.
 
 This page is the whole reference. The language grew in two steps: the base (mini-notation, control lines, `let` `def`
 `repeat` `section` `arrange`, `evolve`, saved and shared programs, and sets: programs of programs), and fourteen extensions written in one run
@@ -100,14 +100,11 @@ of a BeatScript 2 program means what it meant before, and plays the same.
   `/api/programs/<old-cid>` still answers its own text. Old share links still open: a BeatScript 1 link's text has no
   version line, so it verifies against its old CID.
 - **Files and types.** `.beatscript` is the file extension, and a `.btw` file is still read (opened and imported). The MIME
-  type is `text/beatscript` (`text/x-beatscript` is still read). The JSON-LD context is `beatscript-context-v1.jsonld`,
+  type is `text/beatscript` (`text/x-beatscript` and `text/btw` are still read). The JSON-LD context is `beatscript-context-v1.jsonld`,
   served at `https://beatscript.app/context/beatscript-v1.jsonld`; the old context stays served, unchanged, at
   `/context/v1.jsonld`.
 - **The generators.** `gen@1` and `gen@2` print what they always printed, byte for byte (BeatScript 1, so their pins hold);
   `gen@3` is `gen@2`'s program written in BeatScript 2, its version line first.
-
-The desktop booth's command noun is still spelled `btw` (`djctl btw eval`, `btw test`, `do btw`): it is the name of a
-registry noun, not of the language.
 
 ## Two halves: structure and engine
 
