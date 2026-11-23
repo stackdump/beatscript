@@ -85,8 +85,12 @@ pub fn read_entry(path: &Path) -> Option<Entry> {
 }
 
 /// Every public CC0 program in `dir`, newest first (then by CID, so the order is total).
+/// A BeatScript 1 program whose BeatScript 2 twin is stored too (the rename's migration writes one for every stored program)
+/// is listed once, as the twin: its old address redirects there.
 pub fn scan(dir: &Path) -> Vec<Entry> {
     let mut out: Vec<Entry> = std::fs::read_dir(dir).into_iter().flatten().flatten().filter_map(|e| read_entry(&e.path())).collect();
+    let have: std::collections::HashSet<String> = out.iter().map(|e| e.cid.clone()).collect();
+    out.retain(|e| djlive::version::of_canonical(&e.text) == djlive::version::Version::V2 || !have.contains(&djlive::compile::renamed_cid(&e.text)));
     out.sort_by(|a, b| b.created.cmp(&a.created).then_with(|| a.cid.cmp(&b.cid)));
     out
 }
@@ -418,6 +422,16 @@ mod tests {
         let cid = djlive::compile::program_cid(text);
         std::fs::write(dir.join(format!("{cid}.json")), serde_json::to_vec(&json!({"cid": cid, "text": text, "meta": meta})).unwrap()).unwrap();
         cid
+    }
+
+    #[test]
+    fn a_renamed_program_is_listed_once_as_its_beatscript_2_twin() {
+        let d = tempfile::tempdir().unwrap();
+        let old = put(d.path(), "tempo 120\ndeck A: kick x ~ x ~\n", json!({"created": "2026-11-20T10:00:00Z"}));
+        let twin = put(d.path(), "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n", json!({"created": "2026-11-20T10:00:00Z", "forked_from": old, "derivation": "renamed"}));
+        let alone = put(d.path(), "tempo 121\ndeck A: kick x ~ x ~\n", json!({"created": "2026-11-19T10:00:00Z"}));
+        let got: Vec<String> = scan(d.path()).into_iter().map(|e| e.cid).collect();
+        assert_eq!(got, [twin, alone], "the old one is not listed beside its twin; a BeatScript 1 program with no twin still is");
     }
 
     #[test]
