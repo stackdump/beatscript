@@ -90,6 +90,27 @@ fn glide_bends_a_slide_into_the_next_note_and_without_it_a_slide_only_holds() {
 }
 
 #[test]
+fn a_slide_on_the_acid_voice_glides_by_itself_as_a_303s_does() {
+    // the acid voice (a 303, djrust's "acid" engine): `^` glides without `glide=`, in 60 ms
+    for inst in ["acid", "acid-square"] {
+        assert!(djlive::compile::slides_by_itself(inst), "{inst}");
+        let b = bindings(&format!("deck B: bass f1 ~ ~ ~ f1^ ~ ~ ~ f2 ~ ~ ~ ~ ~ ~ ~ inst={inst}\n"), Deck::B, "bass");
+        assert_eq!(b.iter().map(|(s, m)| (*s, int(m, "glide"))).collect::<Vec<_>>(), [(0, None), (4, None), (8, Some(i64::from(djlive::compile::SELF_SLIDE_MS)))]);
+        // `glide=` sets the time, as on every voice
+        let b = bindings(&format!("deck B: bass f1^ f2 glide=150 inst={inst}\n"), Deck::B, "bass");
+        assert_eq!(b.iter().map(|(_, m)| int(m, "glide")).collect::<Vec<_>>(), [None, Some(150)]);
+        // no slide, no glide
+        assert!(bindings(&format!("deck B: bass f1 f2 inst={inst}\n"), Deck::B, "bass").iter().all(|(_, m)| m.get("glide").is_none()));
+    }
+    // every other voice's `^` holds, as it always has (a name that contains `acid` is not the voice)
+    for inst in ["sub-bass", "acid-bass", "bass"] {
+        assert!(!djlive::compile::slides_by_itself(inst), "{inst}");
+        let b = bindings(&format!("deck B: bass f1^ f2 inst={inst}\n"), Deck::B, "bass");
+        assert!(b.iter().all(|(_, m)| m.get("glide").is_none()), "{inst}");
+    }
+}
+
+#[test]
 fn decay_and_pitch_drop_are_on_every_note_of_the_part() {
     let b = bindings("deck B: bass f1 ~ ab1 ~ decay=900 pitch-drop=7\n", Deck::B, "bass");
     assert_eq!(b.len(), 2);

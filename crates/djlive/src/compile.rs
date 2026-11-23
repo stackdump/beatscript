@@ -79,6 +79,16 @@ pub struct PartExpr {
     pub pitch_drop: Option<u8>,
 }
 
+/// What a slide `^` glides in on a voice that slides by itself when its part gives no `glide=`, ms: a 303's slide.
+pub const SELF_SLIDE_MS: u16 = 60;
+
+/// Does the voice `inst` slide by itself on a `^`, as a 303 does? The acid voices (`acid`, `acid-square`): the entries of
+/// the engine's instrument table that play its `"acid"` engine. Every other voice's `^` holds its note, and bends only with
+/// `glide=`.
+pub fn slides_by_itself(inst: &str) -> bool {
+    djengine::wave::instruments::InstrumentTable::shared().entries.get(inst).and_then(|e| e.get("engine")).and_then(JsonValue::as_str) == Some("acid")
+}
+
 /// The range of each: `glide=` and `decay=` in milliseconds, `pitch-drop=` in semitones.
 pub const GLIDE_MS: (f64, f64) = (1.0, 2000.0);
 pub const DECAY_MS: (f64, f64) = (10.0, 10000.0);
@@ -169,8 +179,9 @@ impl PartIr {
         let mut notes = Vec::new();
         let bars: Vec<&[Hit]> = (0..period).map(|bar| self.cycles.get((bar + phase) % n).map_or(&[][..], |c| c.as_slice())).collect();
         // `glide=`: a note glides when the step before it (the net comes round, so the last step is before the
-        // first) has a slide on it
-        let glide = self.expr.glide_ms.filter(|_| bars.iter().any(|b| b.iter().any(|h| h.slide)));
+        // first) has a slide on it. On a voice that slides by itself (the acid voice) a slide glides without it, in a 303's time.
+        let own = || self.instrument.as_deref().filter(|i| slides_by_itself(i)).map(|_| SELF_SLIDE_MS);
+        let glide = self.expr.glide_ms.or_else(own).filter(|_| bars.iter().any(|b| b.iter().any(|h| h.slide)));
         let mut slid = glide.is_some() && bars.iter().rev().find(|b| !b.is_empty()).is_some_and(|b| {
             let last = b.iter().map(|h| h.step).max().unwrap_or(0);
             b.iter().any(|h| h.step == last && h.slide)
@@ -2619,7 +2630,7 @@ const _ROLES: [&str; 8] = ROLES;
 /// Voices worth trying in place of a family word's generic voice, by what the name is after.
 const FAMILY_HINTS: [(&str, &[&str]); 8] = [
     ("reese", &["wobble-lead", "detuned-saw", "big-saw", "hoover"]),
-    ("acid", &["pwm-lead", "sync-lead", "detuned-saw", "wobble-lead"]),
+    ("acid", &["acid", "acid-square", "pwm-lead", "sync-lead"]),
     ("bass", &["bass", "808-bass", "wobble-lead", "detuned-saw"]),
     ("sub", &["808-bass", "bass", "wobble-lead"]),
     ("pad", &["warm-pad", "dark-pad", "am-pad", "glass-pad"]),
