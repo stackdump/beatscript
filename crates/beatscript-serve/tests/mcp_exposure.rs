@@ -207,7 +207,7 @@ fn generate_generator(s: &Server) -> Result<(), String> {
     let r = s.call("generate", json!({"genre": "techno", "seed": 42, "generator": 1}));
     ensure(r["generator"] == "seeded@1" && r["gen"] == "gen@1 techno seed=42", format!("{}", json!({"generator": r["generator"], "gen": r["gen"]})))?;
     let now = s.call("generate", json!({"genre": "techno", "seed": 42}));
-    ensure(now["generator"] == "seeded@3" && now["gen"] == "gen@3 techno seed=42" && now["cid"] != r["cid"], "the default is seeded@3 (seeded@2's program in BeatScript 2), another program")?;
+    ensure(now["generator"] == "seeded@4" && now["gen"] == "gen@4 techno seed=42" && now["cid"] != r["cid"], "the default is seeded@4 (seeded@2's program in BeatScript 2, the acid genre's bass on the 303), another program")?;
     // the call is the program: checking `arrange from <gen>` resolves to its CID
     let c = s.call("check", json!({"text": format!("arrange from {}\n", now["gen"].as_str().unwrap_or(""))}));
     ensure(c["refs"][0]["resolved"] == now["cid"], format!("arrange from {} resolves to {}, not {}", now["gen"], c["refs"][0]["resolved"], now["cid"]))
@@ -216,7 +216,7 @@ fn generate_generator(s: &Server) -> Result<(), String> {
 fn generate_part(s: &Server) -> Result<(), String> {
     let r = s.call("generate", json!({"genre": "techno", "seed": 42, "part": "bass"}));
     let p = &r["part"];
-    ensure(p["role"] == "bass" && p["gen"] == "gen@3 techno seed=42 section=drop part=bass", format!("part: {p}"))?;
+    ensure(p["role"] == "bass" && p["gen"] == "gen@4 techno seed=42 section=drop part=bass", format!("part: {p}"))?;
     let l = r["let"].as_str().ok_or(format!("no let: {r}"))?;
     ensure(l.contains("let drop_bass_1 = ") && l.contains("let drop_bass = <"), format!("let: {l}"))?;
     ensure(r["parts"].as_array().is_some_and(|a| a.len() == 1), "with part, parts is that part alone")?;
@@ -232,7 +232,7 @@ fn generate_parts(s: &Server) -> Result<(), String> {
     ensure(parts.len() >= 3, format!("parts: {parts:?}"))?;
     for p in parts {
         let role = p["role"].as_str().unwrap_or("?");
-        ensure(p["gen"].as_str().is_some_and(|g| g.starts_with("gen@3 techno seed=42 section=") && g.ends_with(&format!(" part={role}"))), format!("gen: {p}"))?;
+        ensure(p["gen"].as_str().is_some_and(|g| g.starts_with("gen@4 techno seed=42 section=") && g.ends_with(&format!(" part={role}"))), format!("gen: {p}"))?;
         ensure(p.get("voice").is_some() || p.get("kit").is_some() || matches!(role, "snare" | "hihat" | "clap"), format!("voice or kit: {p}"))?;
         ensure(p["let"].is_string() || p["let_error"].is_string(), format!("let: {p}"))?;
         ensure(p["text"].as_str().is_some_and(|t| !t.is_empty()), format!("text: {p}"))?;
@@ -392,7 +392,7 @@ fn rows() -> Vec<Row> {
         Row { feature: "expanded_cid: the CID of the written-out program (6680)", covers: &["expanded_cid"], tool: "check", desc: &[EXPANDED_CID_DOC], doc: &[EXPANDED_CID_DOC], inputs: &[], call: check_expanded_cid, pending: None },
         Row { feature: "resolution: each reference's pin and generator version (6680)", covers: &["resolution", "nested"], tool: "check", desc: &[RESOLUTION_DOC, PARTS_DOC], doc: &[RESOLUTION_DOC, "is listed with `nested: true`"], inputs: &[], call: check_resolution, pending: None },
         Row { feature: "listen says which parts a reference made, and what it was fitted to (6668)", covers: &["from"], tool: "listen", desc: &["says so in `from` {call, kind, resolved, place, generator, sections}", "`expanded_cid` and `resolution`"], doc: &["`listen` marks each part a reference made with `from`"], inputs: &["text", "bars"], call: listen_from, pending: None },
-        Row { feature: "generate's generator: the version, as gen@N names it (6676)", covers: &[], tool: "generate", desc: &["generator picks the version (1, 2 or 3, as gen@1, gen@2 and gen@3 name them; 3 writes BeatScript 2)", "The answer also has gen, the call that is this program"], doc: &[], inputs: &["generator"], call: generate_generator, pending: None },
+        Row { feature: "generate's generator: the version, as gen@N names it (6676)", covers: &[], tool: "generate", desc: &["generator picks the version (1, 2, 3 or 4, as gen@1 to gen@4 name them; 3 writes BeatScript 2, 4 is 3 with the acid genre's bass on the 303)", "The answer also has gen, the call that is this program"], doc: &[], inputs: &["generator"], call: generate_generator, pending: None },
         Row { feature: "generate's part: one role's let, as a gen@N let writes it (6676)", covers: &[], tool: "generate", desc: &["With part (a role) the answer gains that part and its let alone"], doc: &[], inputs: &["part", "section"], call: generate_part, pending: None },
         Row { feature: "generate's structured parts: {role, let, text, voice or kit, gen} (6676)", covers: &[], tool: "generate", desc: &["{role, section, sections, voice or kit, text, let, gen}"], doc: &[], inputs: &[], call: generate_parts, pending: None },
         Row { feature: "generate's seeds: a compact summary a seed, at most 16 (6676)", covers: &[], tool: "generate", desc: &["seeds (a list, or {count, start}, at most 16) answers a compact summary a seed"], doc: &[], inputs: &["seeds"], call: generate_seeds, pending: None },

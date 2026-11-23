@@ -1324,6 +1324,66 @@ mod tests {
         assert_eq!(again.get("sections").map(|v| v.canonical_js()), r.get("sections").map(|v| v.canonical_js()));
     }
 
+    /// The acid voice's classic line (docs/beatscript/ext-acid.md), as the item that asked for `acid-bass` wrote it, but for two
+    /// words that do not check: a section cannot be named `a` (it reads as a note), and a plain `arrange` takes no `end` (a song
+    /// ends after its last section by default), so the section is `main` and the arrangement `arrange main`.
+    const ACID_LINE: &str = "#! beatscript 2\ntempo 124\nkey am\nlet acid = [1 1 ~ 1 3 ~ 1 5 ~ 1 4 ~ 1 1 7 1]\nsection main 8 bars {\n  deck A: kick e(4, 16) kit=drums-808\n  deck B: bass acid inst=acid-bass\n}\narrange main\n";
+
+    /// The bass alone, mono, at 44.1 kHz: `extra` is added to its part line.
+    fn acid_bass_alone(extra: &str) -> Vec<f64> {
+        let text = ACID_LINE.replace("  deck A: kick e(4, 16) kit=drums-808\n", "").replace("inst=acid-bass", &format!("inst=acid-bass{extra}"));
+        let o = Options { format: Format::F32le, max_bars: 2, ..Options::default() };
+        let (mut pcm, mut err) = (Vec::new(), Vec::new());
+        let mut ev = Events::new(&mut err);
+        render::render_to(&text, &o, &mut pcm, &mut ev, Instant::now()).unwrap_or_else(|e| panic!("{e:?}"));
+        pcm.chunks_exact(8).map(|f| (f64::from(f32::from_le_bytes([f[0], f[1], f[2], f[3]])) + f64::from(f32::from_le_bytes([f[4], f[5], f[6], f[7]]))) * 0.5).collect()
+    }
+
+    /// How much brighter each long note's start (5 to 45 ms in) is than its end (170 to 215 ms in), over two bars: the notes on
+    /// steps 1, 4, 7 and 10, which have a rest after them, so each sounds its two steps (242 ms at 124) without the next note
+    /// cutting in. Windows of 40 ms hold two periods of the lowest note (A1, 55 Hz), so where in its wave a window falls
+    /// hardly matters. Over 1 when the filter's envelope sweeps down on each note (about 1.25 at the voice's defaults),
+    /// about 1 when it does not (`env=0`: 0.97).
+    fn strike_sweep(x: &[f64]) -> f64 {
+        let bright = |w: &[f64]| {
+            let e: f64 = w.iter().map(|v| v * v).sum();
+            let d: f64 = w.windows(2).map(|p| (p[1] - p[0]) * (p[1] - p[0])).sum();
+            (d / e.max(1e-30)).sqrt()
+        };
+        let step = 44_100.0 * 60.0 / 124.0 / 4.0;
+        let ms = |m: f64| (m * 44.1) as usize;
+        let (mut head, mut tail) = (0.0, 0.0);
+        for bar in 0..2 {
+            for h in [1, 4, 7, 10] {
+                let at = ((bar * 16 + h) as f64 * step) as usize;
+                assert!(at + ms(215.0) <= x.len(), "two bars rendered: {}", x.len());
+                head += bright(&x[at + ms(5.0)..at + ms(45.0)]);
+                tail += bright(&x[at + ms(170.0)..at + ms(215.0)]);
+            }
+        }
+        head / tail
+    }
+
+    /// `inst=acid-bass` (the acid voice by its own name): the classic acid line checks with no word about its voice, `listen`
+    /// hears the bass, and on each strike its filter moves (the envelope sweeps the cutoff down), which turning `env=0` takes away.
+    #[test]
+    fn the_acid_bass_line_checks_clean_is_heard_and_its_filter_moves() {
+        let env = djhost::beatscript_env::BeatscriptEnv::new(Some(&beatscript_api::known::Known));
+        let checked = djlive::compile::check_with(ACID_LINE, &env.env());
+        assert!(checked.compiled.is_some(), "{:?}", checked.diagnostics);
+        assert!(checked.diagnostics.is_empty(), "no warning, about its voice or anything: {:?}", checked.diagnostics.iter().map(|d| &d.message).collect::<Vec<_>>());
+        let r = listen(ACID_LINE, &ListenOptions { max_bars: 8, budget_seconds: 0.0, ..ListenOptions::default() }).unwrap_or_else(|e| panic!("{e:?}"));
+        assert!(r.get("silent").and_then(JsonValue::as_array).is_some_and(|s| s.is_empty()), "{}", r.canonical_js());
+        let parts = r.get("parts").and_then(JsonValue::as_array).cloned().unwrap_or_default();
+        let bass = parts.iter().find(|p| p.get("part").and_then(JsonValue::as_str) == Some("bass")).unwrap_or_else(|| panic!("no bass part: {}", r.canonical_js()));
+        assert_eq!(bass.get("voice").and_then(JsonValue::as_str), Some("acid-bass"));
+        let lufs = bass.get("lufs").and_then(JsonValue::as_f64).unwrap_or(-99.0);
+        assert!(lufs > -30.0, "the bass is heard: {}", bass.canonical_js());
+        let (moving, flat) = (strike_sweep(&acid_bass_alone("")), strike_sweep(&acid_bass_alone(" env=0")));
+        assert!(moving > 1.15, "each strike opens the filter and it falls: {moving}");
+        assert!(moving > flat + 0.15, "env=0 takes the sweep away: {moving} vs {flat}");
+    }
+
     #[test]
     fn gating_and_silence() {
         assert_eq!(gated(&[(0.0, 0.0, 0.0); 10]), None);

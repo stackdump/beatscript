@@ -181,7 +181,7 @@
       "docs": [],
       "say": [["generate", "generator picks the version"], ["generate", "With part (a role) the answer gains that part and its let alone"], ["generate", "seeds (a list, or {count, start}, at most 16)"]],
       "calls": [
-        {"tool": "generate", "stores": true, "args": {"genre": "techno", "seed": 42, "part": "bass"}, "expect": [["/generator", "=", "seeded@3"], ["/part/gen", "=", "gen@3 techno seed=42 section=drop part=bass"], ["/text", "~", "#! beatscript 2\n"], ["/expanded_cid", "has"]]}
+        {"tool": "generate", "stores": true, "args": {"genre": "techno", "seed": 42, "part": "bass"}, "expect": [["/generator", "=", "seeded@4"], ["/part/gen", "=", "gen@4 techno seed=42 section=drop part=bass"], ["/text", "~", "#! beatscript 2\n"], ["/expanded_cid", "has"]]}
       ]
     },
     {

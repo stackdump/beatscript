@@ -71,13 +71,25 @@ impl PartialEq for MayGrid {
 
 /// A tonal part's envelope beyond its notes: `glide=` (a slide `^` bends into the next note over that many ms),
 /// `decay=` (each note's tail, ms) and `pitch-drop=` (each note starts that many semitones high and falls onto
-/// its pitch). None of them set is a part as it always was.
+/// its pitch), and the acid voice's knobs (`cutoff=` `res=` `env=` `accent=` `drive=`, [`ACID_PARAMS`]). None of
+/// them set is a part as it always was.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PartExpr {
     pub glide_ms: Option<u16>,
     pub decay_ms: Option<u16>,
     pub pitch_drop: Option<u8>,
+    pub acid: djengine::pflow::AcidKnobs,
 }
+
+/// The acid voice's knobs a tonal part may turn (`deck B: bass ... inst=acid-bass cutoff=400 res=80`): `cutoff=` the
+/// filter's floor in Hz ([`ACID_CUTOFF`]), and `res=` (resonance), `env=` (the envelope's depth), `accent=` (how much
+/// an accent does) and `drive=` (the filter's saturation), each 0 to 100, a knob's turn. Each is carried on every note's
+/// binding (`cutoff`, `res`, `env`, `accent`, `drive`), only when set, so no part without them moves. They are not
+/// reserved words (`section drive` is still a section), and a voice that is not the acid voice ignores them (`check` says so).
+pub const ACID_PARAMS: [&str; 5] = ["cutoff", "res", "env", "accent", "drive"];
+/// The range of `cutoff=`, Hz; the knobs' range, a turn of 0 to 100.
+pub const ACID_CUTOFF: (f64, f64) = (20.0, 12000.0);
+pub const ACID_KNOB: (f64, f64) = (0.0, 100.0);
 
 /// What a slide `^` glides in on a voice that slides by itself when its part gives no `glide=`, ms: a 303's slide.
 pub const SELF_SLIDE_MS: u16 = 60;
@@ -208,6 +220,14 @@ impl PartIr {
                 }
                 if let Some(st) = self.expr.pitch_drop {
                     x.set("pitchDrop", JsonValue::int(i64::from(st)));
+                }
+                if self.expr.acid.cutoff_hz > 0 {
+                    x.set("cutoff", JsonValue::int(i64::from(self.expr.acid.cutoff_hz)));
+                }
+                for (k, v) in [("res", self.expr.acid.res), ("env", self.expr.acid.env), ("accent", self.expr.acid.accent), ("drive", self.expr.acid.drive)] {
+                    if let Some(v) = v {
+                        x.set(k, JsonValue::int(i64::from(v)));
+                    }
                 }
                 if let Some(r) = h.marks.ratchet {
                     x.set("ratchet", JsonValue::int(i64::from(r)));
@@ -1987,18 +2007,49 @@ impl<'a> Compiler<'a> {
                         None => bad = true,
                     }
                 }
+                "cutoff" | "res" | "env" | "accent" | "drive" if drum => {
+                    self.err(Diagnostic::error(pr.name.span, format!("`{name}` is a knob of the acid voice, for a tonal part (bass, melody, harmony, arp)")).help("a drum part takes accents `x!`, ghosts `x.`, flams `x&` and ratchets `x:3`"));
+                    bad = true;
+                }
+                "cutoff" | "res" | "env" | "accent" | "drive" => {
+                    let (lo, hi) = if name == "cutoff" { ACID_CUTOFF } else { ACID_KNOB };
+                    match ranged(lo, hi, self) {
+                        Some((a, b)) if a == b => match name {
+                            "cutoff" => expr.acid.cutoff_hz = a as u16,
+                            "res" => expr.acid.res = Some(a as u8),
+                            "env" => expr.acid.env = Some(a as u8),
+                            "accent" => expr.acid.accent = Some(a as u8),
+                            _ => expr.acid.drive = Some(a as u8),
+                        },
+                        Some(_) => {
+                            self.err(Diagnostic::error(pr.span, format!("`{name}` is one number, not a range")));
+                            bad = true;
+                        }
+                        None => bad = true,
+                    }
+                }
                 "voice-lead" => match crate::scale::voice_lead_param(self, pr, role) {
                     Some(on) => lead = on,
                     None => bad = true,
                 },
                 _ => {
                     let mut d = Diagnostic::error(pr.name.span, format!("`{name}` is not a parameter of a part")).expected(&PARAMS.map(|p| p)).found(format!("`{name}`"));
-                    if let Some(n) = parse::nearest(name, PARAMS.iter().copied().chain(["voice-lead"])) {
+                    if let Some(n) = parse::nearest(name, PARAMS.iter().copied().chain(ACID_PARAMS).chain(["voice-lead"])) {
                         d = d.help(format!("did you mean `{n}`?"));
                     }
                     self.err(d);
                     bad = true;
                 }
+            }
+        }
+        // the acid voice's knobs on a voice that is not the acid voice: it has no such filter, and plays as it would without
+        if !expr.acid.is_plain() && !inst.as_deref().is_some_and(slides_by_itself) {
+            if let Some(pr) = part.params.iter().find(|p| ACID_PARAMS.contains(&p.name.text.as_str())) {
+                let plays = inst.as_deref().map_or_else(|| "the part's default voice".to_string(), |v| format!("`{v}`"));
+                self.diags.push(
+                    Diagnostic::warning(pr.name.span, format!("`{}=` is a knob of the acid voice: {plays} has none, and plays as it would without it", pr.name.text))
+                        .help("`inst=acid-bass` (or `acid-square`) is the voice these knobs turn"),
+                );
             }
         }
         let canonical = print::part(written);
@@ -2635,7 +2686,7 @@ const _ROLES: [&str; 8] = ROLES;
 /// Voices worth trying in place of a family word's generic voice, by what the name is after.
 const FAMILY_HINTS: [(&str, &[&str]); 8] = [
     ("reese", &["wobble-lead", "detuned-saw", "big-saw", "hoover"]),
-    ("acid", &["acid", "acid-square", "pwm-lead", "sync-lead"]),
+    ("acid", &["acid-bass", "acid-square", "pwm-lead", "sync-lead"]),
     ("bass", &["bass", "808-bass", "wobble-lead", "detuned-saw"]),
     ("sub", &["808-bass", "bass", "wobble-lead"]),
     ("pad", &["warm-pad", "dark-pad", "am-pad", "glass-pad"]),

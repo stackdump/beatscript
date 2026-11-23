@@ -1,0 +1,22 @@
+#! beatscript 2
+#! name: acid-bass-knobs
+#! license: CC0-1.0
+#! visibility: public
+# acid-bass-knobs.beatscript: the acid voice by its own name, `inst=acid-bass`, and its knobs as part params (CC0). Original.
+# Section plain is the voice at its defaults (cutoff 300 Hz, res 72, env 45, accent 80, drive 0): the classic squelch.
+# Section turned turns the knobs as a hand on a 303 would: the cutoff down, the resonance and the envelope up, every accent
+# at full and a little drive, so each strike opens a darker filter further and rings it harder. `decay=` is its decay
+# knob and the `^` slides glide by themselves in 60 ms.
+tempo 124
+key am
+let acid = [1 1 ~ 1 3 ~ 1 5 ~ 1 4 ~ 1 1 7 1]
+let squelch = [1 1! ~ 1 3^ 1 ~ 5! 1 ~ 4^ 3 1 1! 7 1]
+section plain 8 bars {
+  deck A: kick e(4, 16) kit=drums-808
+  deck B: bass acid inst=acid-bass
+}
+section turned 8 bars {
+  deck A: kick e(4, 16) kit=drums-808 | hihat ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x x. kit=drums-808
+  deck B: bass squelch decay=220 inst=acid-bass cutoff=180 res=88 env=70 accent=100 drive=25
+}
+arrange plain turned

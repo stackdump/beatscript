@@ -205,6 +205,11 @@ fn template(kind: &str) -> Option<&'static str> {
         "glide" => "deck B: bass 1^ 3 glide=@\n",
         "decay" => "deck B: bass 1 decay=@\n",
         "pitch-drop" => "deck B: bass 1 pitch-drop=@\n",
+        "cutoff" => "deck B: bass 1 inst=acid-bass cutoff=@\n",
+        "res" => "deck B: bass 1 inst=acid-bass res=@\n",
+        "env" => "deck B: bass 1 inst=acid-bass env=@\n",
+        "accent" => "deck B: bass 1 inst=acid-bass accent=@\n",
+        "drive" => "deck B: bass 1 inst=acid-bass drive=@\n",
         "ratchet" => "deck A: kick x:@\n",
         "seed" => "deck A: kick x?0.5 seed=@\n",
         "times" => "deck A: hihat x*@\n",
@@ -326,6 +331,12 @@ fn the_expression_numbers_say_what_they_are() {
         ("decay=300", 6, "decay"),
         ("pitch-drop=12", 11, "pitch-drop"),
     ] {
+        assert_eq!(kind(t, needle, skip), want, "{needle:?}+{skip}");
+    }
+    // the acid voice's knobs
+    let t = "deck B: bass 1 3 inst=acid-bass cutoff=400 res=80 env=50 accent=90 drive=20\n";
+    assert!(ok(t), "{:?}", beatscriptls::analysis::full_check(t).diagnostics);
+    for (needle, skip, want) in [("cutoff=400", 7, "cutoff"), ("res=80", 4, "res"), ("env=50", 4, "env"), ("accent=90", 7, "accent"), ("drive=20", 6, "drive")] {
         assert_eq!(kind(t, needle, skip), want, "{needle:?}+{skip}");
     }
     assert_ne!(kind("do loops load dnb:2602\n", "2602", 0), "ratchet");
