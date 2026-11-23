@@ -166,6 +166,17 @@
       ]
     },
     {
+      "id": "based-on",
+      "datum": 6670,
+      "docs": ["ext-ffi.md"],
+      "say": [["share", "meta.based_on"], ["share", "vendoredFrom"], ["lineage", "vendoredFrom"]],
+      "calls": [
+        {"tool": "share", "stores": true, "args": {"text": "#! name: exposure based_on\ntempo 124\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  # from: gen@2 techno seed=42 section=drop -> z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf\n  deck B: bass a1 ~ a1 c2 ~ a1 ~ e2\n}\narrange drop\n"}, "save": {"kept": "/cid"},
+         "expect": [["/stored", "=", true], ["/meta/based_on", "=", ["gen@2 techno seed=42 section=drop -> z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf"]], ["/canonical", "!~", "# from:"]]},
+        {"tool": "open", "args": {"url": "${kept}"}, "expect": [["/cid", "=", "${kept}"], ["/meta/based_on/0", "=", "gen@2 techno seed=42 section=drop -> z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf"]]}
+      ]
+    },
+    {
       "id": "generate-parts",
       "datum": 6676,
       "docs": [],
