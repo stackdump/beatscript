@@ -599,11 +599,15 @@ fn sounds(t: &Term) -> bool {
 const MAX_STEPS: usize = 64;
 
 /// What an operator works with besides the pattern: the key, and the other patterns (for the cross-pattern ones).
+#[derive(Clone, Copy)]
 struct Ctx<'a> {
     key: Key,
     others: &'a BTreeMap<String, Seq>,
     /// The octave the pattern is played in: where its `chord(...)` steps are voiced (`voiced`).
     octave: i32,
+    /// The bar of a `<...>` cycle the operator is on ([`apply_steps`]): a cross operator reads the same bar of the other
+    /// pattern when that one is a cycle too.
+    bar: Option<usize>,
 }
 
 /// A pitch an operator can move: a note with an octave (a MIDI number), a note with none (a pitch class, moved in its
@@ -668,6 +672,10 @@ fn map_pitches(t: &Term, key: Key, f: &mut dyn FnMut(i64) -> i64) -> Term {
             let p = f(pos);
             Atom::ScaleDeg(crate::scale::ScaleDeg { n: (p.rem_euclid(n) + 1) as u32, acc: d.acc, oct: p.div_euclid(n).clamp(-4, 4) as i8 })
         }
+        Atom::Note(w) if read_pitch(&t.atom).is_none() && crate::scale::is_roman(&w.text) => match crate::scale::parse_roman(&w.text) {
+            Ok(r) => Atom::Note(Word { text: roman_moved(&r, key, f).text(), span: w.span }),
+            Err(_) => t.atom.clone(),
+        },
         a => {
             let w = match a {
                 Atom::Note(w) => w.clone(),
@@ -691,6 +699,63 @@ fn scale_len(key: Key) -> i64 {
     key.intervals().len() as i64
 }
 
+/// A Roman numeral moved by `f` (a function of scale positions) along the seven degrees numerals count in. A numeral that is
+/// the key's own triad on its degree (`i`, `III`, `ii°` in A minor) becomes the key's own triad on the new one (`i` up two
+/// is `III`); any other (`V7`, `bVII`, `iv/3`) keeps its accidental, case and quality and moves its degree (`V7` up one is
+/// `VI7`). A numeral has no octave: a whole number of octaves leaves it where it is.
+fn roman_moved(r: &crate::scale::Roman, key: Key, f: &mut dyn FnMut(i64) -> i64) -> crate::scale::Roman {
+    use crate::scale::Roman;
+    let from = i64::from(r.degree) - 1;
+    // the move less its whole octaves of the key's scale (`oct` is a no-op in any key), counted in the numerals' degrees
+    let steps = (f(from) - from).rem_euclid(scale_len(key));
+    let to = (from + steps).rem_euclid(7) as u32 + 1;
+    if *r == Roman::triad(key, u32::from(r.degree)) {
+        Roman::triad(key, to)
+    } else {
+        Roman { degree: to as u8, ..r.clone() }
+    }
+}
+
+/// A generator whose notes are picked as it plays (`markov(...)`, `arp(...)`): pitched, but with no notes in the text for
+/// an operator to move by scale degrees. `oct` moves it whole ([`octave_call`]).
+fn generator_call(c: &Call) -> bool {
+    matches!(c.name.text.as_str(), "markov" | "arp")
+}
+
+/// The steps hold a generator ([`generator_call`]) at any depth the operators reach.
+fn has_generator(terms: &[Term]) -> bool {
+    terms.iter().any(|t| match &t.atom {
+        Atom::Group(seqs) => seqs.iter().any(|s| has_generator(&s.terms)),
+        Atom::Alt(ts) => has_generator(ts),
+        Atom::Call(c) => generator_call(c),
+        _ => false,
+    })
+}
+
+/// The name of the first generator in the steps.
+fn generator_name(terms: &[Term]) -> Option<String> {
+    terms.iter().find_map(|t| match &t.atom {
+        Atom::Group(seqs) => seqs.iter().find_map(|s| generator_name(&s.terms)),
+        Atom::Alt(ts) => generator_name(ts),
+        Atom::Call(c) if generator_call(c) => Some(c.name.text.clone()),
+        _ => None,
+    })
+}
+
+/// A term with each generator in it played `k` octaves on: `octave(markov(0.3, 1303), 1)`.
+fn octave_call(t: &Term, k: i64) -> Term {
+    let atom = match &t.atom {
+        Atom::Call(c) if generator_call(c) && k != 0 => {
+            let n = crate::ast::Num { value: k as f64, int: true, span: c.span, canon: None };
+            Atom::Call(Call { name: Word { text: "octave".to_string(), span: c.span }, args: vec![Arg::Call(Box::new(c.clone())), Arg::Num(n)], span: c.span })
+        }
+        Atom::Group(seqs) => Atom::Group(seqs.iter().map(|s| Seq { span: s.span, terms: s.terms.iter().map(|x| octave_call(x, k)).collect() }).collect()),
+        Atom::Alt(ts) => Atom::Alt(ts.iter().map(|x| octave_call(x, k)).collect()),
+        a => a.clone(),
+    };
+    Term { atom, ..t.clone() }
+}
+
 /// The first pitch of a pattern, as a scale position (the axis of `invert`).
 fn first_pos(terms: &[Term], key: Key) -> Option<i64> {
     for t in terms {
@@ -698,6 +763,7 @@ fn first_pos(terms: &[Term], key: Key) -> Option<i64> {
             Atom::Group(seqs) => seqs.iter().find_map(|s| first_pos(&s.terms, key)),
             Atom::Alt(ts) => first_pos(ts, key),
             Atom::ScaleDeg(d) => Some(i64::from(d.n.max(1)) - 1 + i64::from(d.oct) * scale_len(key)),
+            Atom::Note(w) if read_pitch(&t.atom).is_none() => crate::scale::parse_roman(&w.text).ok().map(|r| i64::from(r.degree) - 1),
             a => match read_pitch(a) {
                 Some(Pitch::Midi(m)) => Some(scale_pos(key, m)),
                 Some(Pitch::Class(c)) => Some(scale_pos(key, c + 60)),
@@ -718,8 +784,11 @@ fn has_pitch(terms: &[Term]) -> bool {
         Atom::Group(seqs) | Atom::Deg(seqs) => seqs.iter().any(|s| has_pitch(&s.terms)),
         Atom::Alt(ts) => has_pitch(ts),
         Atom::ScaleDeg(_) => true,
-        // `chord(gm7)` plays notes: it is pitched, and `voiced` writes it out as them for the operators
-        Atom::Call(c) => chord_call(c).is_some(),
+        // `chord(gm7)` plays notes: it is pitched, and `voiced` writes it out as them for the operators; a generator
+        // (`markov(...)`) plays notes it picks as it plays
+        Atom::Call(c) => chord_call(c).is_some() || generator_call(c),
+        // a Roman numeral (`iv`, `V7`) is a chord of the key
+        Atom::Note(w) if crate::scale::is_roman(&w.text) => true,
         a => read_pitch(a).is_some(),
     })
 }
@@ -835,7 +904,101 @@ fn num_arg(args: &[MutArg], i: usize) -> f64 {
 /// moved by that much, not one step that is a whole bar: a morph toward it takes its notes.
 fn pat_arg(args: &[MutArg], ctx: &Ctx) -> Option<Seq> {
     let b = args.iter().find_map(|a| if let MutArg::Word(w) = a { ctx.others.get(&w.text) } else { None })?;
-    Some(played_steps(b, ctx, 0).unwrap_or_else(|| b.clone()))
+    let b = played_steps(b, ctx, 0).unwrap_or_else(|| b.clone());
+    Some(steps_of(&b, ctx.bar))
+}
+
+/// A term an operator may look inside of: no repeat, accent, slide or mark of its own (those belong to the whole of it).
+fn plain(t: &Term) -> bool {
+    t.fast.is_none() && !t.accent && !t.slide && t.marks.is_plain()
+}
+
+/// The steps an operator works on, as [`apply_steps`] sees a pattern: a `[...]` written alone is the steps inside it, and,
+/// when the operator is on bar `bar` of a cycle, a `<...>` cycle is that bar of it (with no bar in hand a cycle stays the
+/// one step it is).
+fn steps_of(s: &Seq, bar: Option<usize>) -> Seq {
+    if let [t] = s.terms.as_slice() {
+        if plain(t) {
+            match &t.atom {
+                Atom::Group(seqs) if seqs.len() == 1 => return steps_of(&seqs[0], bar),
+                Atom::Alt(bars) if bars.len() > 1 && bar.is_some() => {
+                    let b = &bars[bar.unwrap_or(0) % bars.len()];
+                    return steps_of(&Seq { span: b.span, terms: vec![b.clone()] }, None);
+                }
+                _ => {}
+            }
+        }
+    }
+    s.clone()
+}
+
+/// A term that is `rotate(p, k)` or `reverse(p)` alone, with `p` steps written out (or a pattern `let`) and `k` a whole
+/// number: `p`'s steps turned `k` later (or backwards), as one `[...]`, which is what it plays. None for anything else.
+/// `iter(p, n)` and `palindrome(p)` write their later bars as these calls, so a mutation reaches them as it reaches the
+/// longhand.
+fn rotated_steps(t: &Term, ctx: &Ctx) -> Option<Term> {
+    let Atom::Call(c) = &t.atom else { return None };
+    if !plain(t) {
+        return None;
+    }
+    // `rotate(p, k)`, or `reverse(p)` (what `palindrome(p)` writes its second bar as): the steps backwards
+    let k = match (c.name.text.as_str(), c.args.as_slice()) {
+        ("rotate", [_, Arg::Num(k)]) if k.value.fract() == 0.0 => Some(k.value as i64),
+        ("reverse", [_]) => None,
+        _ => return None,
+    };
+    let p = match &c.args[0] {
+        Arg::Word(w) => ctx.others.get(&w.text)?.clone(),
+        a @ Arg::Pat(_) => crate::pattern::pattern_arg(a),
+        _ => return None,
+    };
+    let mut steps = steps_of(&p, None);
+    let n = steps.terms.len();
+    if n == 0 || n != crate::pattern::slots(&p) {
+        return None;
+    }
+    match k {
+        Some(k) => steps.terms.rotate_right(k.rem_euclid(n as i64) as usize),
+        // `reverse` also turns round what is inside a step (`[x x.]`, `x*2`): only steps with nothing inside are just reordered
+        None if steps.terms.iter().all(|x| x.fast.is_none() && !matches!(x.atom, Atom::Group(_) | Atom::Alt(_) | Atom::Call(_) | Atom::Sized(_))) => steps.terms.reverse(),
+        None => return None,
+    }
+    Some(Term { span: t.span, atom: Atom::Group(vec![steps]), fast: None, accent: false, slide: false, marks: Marks::default() })
+}
+
+/// One operator on a pattern's steps. A pattern written as one `[...]` (a bar of sixteenths, `[1 1 ~ 1 3 ...]`) is its
+/// steps, not one step: the operator works inside the brackets. A `<...>` cycle of bars is worked on a bar at a time, each
+/// bar as its own steps, with one stream of dice through them. Anything else is [`apply_op`] on its top-level terms.
+fn apply_steps(op: &MutOp, seq: &Seq, ctx: &Ctx, rng: &mut Rng) -> Seq {
+    if let [t] = seq.terms.as_slice() {
+        if plain(t) {
+            match &t.atom {
+                Atom::Group(seqs) if seqs.len() == 1 => {
+                    let inner = apply_steps(op, &seqs[0], ctx, rng);
+                    return Seq { span: seq.span, terms: vec![Term { atom: Atom::Group(vec![inner]), ..t.clone() }] };
+                }
+                Atom::Alt(bars) if bars.len() > 1 => {
+                    let out = bars
+                        .iter()
+                        .enumerate()
+                        .map(|(i, b)| {
+                            // a bar `rotate(p, k)` (what `iter(p, n)` writes its later bars as) is the steps of `p` turned
+                            let b = rotated_steps(b, ctx).unwrap_or_else(|| b.clone());
+                            let one = Seq { span: b.span, terms: vec![b.clone()] };
+                            let r = apply_steps(op, &one, &Ctx { bar: Some(i), ..*ctx }, rng);
+                            match r.terms.as_slice() {
+                                [single] => single.clone(),
+                                _ => Term { span: b.span, atom: Atom::Group(vec![r]), fast: None, accent: false, slide: false, marks: Marks::default() },
+                            }
+                        })
+                        .collect();
+                    return Seq { span: seq.span, terms: vec![Term { atom: Atom::Alt(out), ..t.clone() }] };
+                }
+                _ => {}
+            }
+        }
+    }
+    apply_op(op, seq, ctx, rng)
 }
 
 /// `transpose(x, n)` / `octave(x, n)` alone, with `x` a pattern let or a pattern: the steps of `x`, `n` semitones (octaves) on.
@@ -964,9 +1127,17 @@ fn apply_op(op: &MutOp, seq: &Seq, ctx: &Ctx, rng: &mut Rng) -> Seq {
         "ratchet" => {
             for x in &mut t {
                 if sounds(x) && rng.unit() < a {
+                    // a step longer than a sixteenth doubles on the grid (`x*2` of an eighth is two sixteenths); a sixteenth,
+                    // or a step that cannot double and stay on it, is struck inside itself: the ratchet mark (`x:2`), whose
+                    // strikes do not leave the step, so no hit snaps or is lost
                     let k = x.fast.unwrap_or(1) * 2;
-                    if k <= 64 {
+                    if (l as u32).saturating_mul(k) <= 16 && 16 % (l as u32 * k) == 0 {
                         x.fast = Some(k);
+                    } else {
+                        let (r, most) = (x.marks.ratchet.unwrap_or(1), RATCHET_RANGE.1);
+                        if r < most {
+                            x.marks.ratchet = Some((r * 2).min(most));
+                        }
                     }
                 }
             }
@@ -1006,7 +1177,7 @@ fn apply_op(op: &MutOp, seq: &Seq, ctx: &Ctx, rng: &mut Rng) -> Seq {
         }
         "oct" => {
             let k = a as i64 * scale_len(key);
-            t = t.iter().map(|x| map_pitches(x, key, &mut |p| p + k)).collect();
+            t = t.iter().map(|x| octave_call(&map_pitches(x, key, &mut |p| p + k), a as i64)).collect();
         }
         "drift" => {
             t = t
@@ -1298,6 +1469,13 @@ fn check_op(op: &MutOp, at: (usize, usize, usize), under_jux: bool, hits: &[Stri
                 let then = if under_jux { "`jux` gives it no right copy" } else { "it does nothing there" };
                 c.diags.push(Diagnostic::warning(op.span, format!("`{}` moves pitches, and `{h}` is a drum pattern: {then}", op.name.text)));
                 c.skip.insert(at);
+            } else if op.name.text != "oct" && has_generator(&pats[h].terms) {
+                // a generator picks its notes as it plays: there are none in the text to move by a degree or a voicing
+                let name = generator_name(&pats[h].terms).unwrap_or_default();
+                c.diags.push(
+                    Diagnostic::warning(op.span, format!("`{h}` plays `{name}(...)`, whose notes are picked as it plays: `{}` leaves them as they are", op.name.text))
+                        .help("`oct 1` moves a generator by whole octaves; to move it by scale degrees, write its notes out"),
+                );
             } else if let (true, Some(o)) = (has_chord_call(&pats[h].terms), octaves.get(h)) {
                 // a chord call plays in the octave of the part that reads it: one let, one voicing
                 if let [first, second, ..] = o.as_slice() {
@@ -1983,7 +2161,7 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         let left_pats: BTreeMap<String, Seq> = cur_pats.iter().map(|(n, p)| (n.clone(), p.left.clone())).collect();
         let right_pats: BTreeMap<String, Seq> = cur_pats.iter().map(|(n, p)| (n.clone(), p.right_or_left().clone())).collect();
         let octave = octaves.get(name).and_then(|o| o.first().copied()).unwrap_or_else(|| crate::music::role_octave("harmony"));
-        let (lctx, rctx) = (Ctx { key, others: &left_pats, octave }, Ctx { key, others: &right_pats, octave });
+        let (lctx, rctx) = (Ctx { key, others: &left_pats, octave, bar: None }, Ctx { key, others: &right_pats, octave, bar: None });
         let mut pair = base.clone();
         let mut forked = false;
         for (oi, op) in t.ops.iter().enumerate() {
@@ -1992,16 +2170,16 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
             }
             if let Some(inner) = &op.inner {
                 let mut rng = Rng::new_right(cid, pass, mi, ti, oi);
-                pair.right = Some(apply_op(inner, &pair.left, &rctx, &mut rng));
+                pair.right = Some(apply_steps(inner, &pair.left, &rctx, &mut rng));
                 forked = true;
                 continue;
             }
             if !forked {
-                pair.left = apply_op(op, &pair.left, &lctx, &mut Rng::new(cid, pass, mi, ti, oi));
+                pair.left = apply_steps(op, &pair.left, &lctx, &mut Rng::new(cid, pass, mi, ti, oi));
             }
             if let Some(r) = &pair.right {
                 if forked || base.right.is_some() {
-                    let next = apply_op(op, r, &rctx, &mut Rng::new_right(cid, pass, mi, ti, oi));
+                    let next = apply_steps(op, r, &rctx, &mut Rng::new_right(cid, pass, mi, ti, oi));
                     pair.right = Some(next);
                 }
             }
@@ -2339,7 +2517,15 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
     }
     for (name, seq) in new_lets.into_iter().chain(via_lets) {
         let span = lets.get(name.split(['@', '.']).next().unwrap_or(&name)).map_or(block_span, |(_, sp)| *sp);
-        program.stmts.push(Stmt { span, kind: StmtKind::Let(LetDef { name: Word { text: name, span }, value: seq_tokens(&seq, span, src.len()), ratio: false }) });
+        let mut value = seq_tokens(&seq, span, src.len());
+        // a let of one token (`x`, `~`: a pattern a mutation took down to one step) is a value, put in place of its name
+        // before the text is read, which this let comes too late for: the name would stay a word that is no step. Written
+        // as the one step in brackets, `[~]`, it is the same step and a pattern
+        if value.len() == 1 || crate::parse::is_unit_value(&value) {
+            let one = Seq { span: seq.span, terms: vec![Term { span: seq.span, atom: Atom::Group(vec![seq.clone()]), fast: None, accent: false, slide: false, marks: Marks::default() }] };
+            value = seq_tokens(&one, span, src.len());
+        }
+        program.stmts.push(Stmt { span, kind: StmtKind::Let(LetDef { name: Word { text: name, span }, value, ratio: false }) });
     }
     Some(table)
 }

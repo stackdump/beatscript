@@ -204,7 +204,7 @@ track       = CID "." NAME [ "." NAME ] [ "." role ] ;        (* a stored set's 
 (* == Evolving == *)
 evolve      = "evolve" "every" INT "bars" "{" { NEWLINE } { rule NEWLINE { NEWLINE } } [ bound NEWLINE { NEWLINE } ] "}" ;   (* a rule a line; the bound last *)
 rule        = ( role | "deck" deck ) ":" op { "|" op } [ "when" "gen" [ "%" INT ] cmp INT ] ;
-op          = ( "rotate" | "transpose" | "octave" | "invert" | "reverse" | "thin" ) { NUMBER | "<" NUMBER { NUMBER } ">" } [ "seed=" INT ] ;
+op          = ( "rotate" | "transpose" | "octave" | "invert" | "reverse" | "thin" | "fill" | "slow" | "fast" ) { NUMBER | "<" NUMBER { NUMBER } ">" } [ "seed=" INT ] ;   (* seed= on thin and fill *)
 bound       = "stop" "when" "gen" ( "==" | ">=" | ">" ) INT | "for" INT "gens" ;
 
 (* == Typed ports == *)
