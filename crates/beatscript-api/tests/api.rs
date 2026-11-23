@@ -358,7 +358,8 @@ fn a_link_opens_to_the_program_that_made_it_in_every_form() {
         // the site's two links seal the same part: the CID and the formatted text (comments and `#!` headers kept)
         let frag = url.split_once('#').unwrap().1;
         assert_eq!(s(&sh, "social_url").split_once("/c/").unwrap().1, frag);
-        let formatted = s(&parse(&beatscript_api::fmt_json(&text)), "text").to_string();
+        // (formatted in the version it is in: a share never upgrades a program, so the link's CID is the text's)
+        let formatted = beatscript_api::format_text(&text).unwrap();
         assert_eq!(unpacked(url), formatted, "{name}");
         // beats' form is djlive's own and packs the canonical text (beats' page hashes what it unpacks)
         let comp = djlive::compile::check_with(&text, &beatscript_api::web_env().env()).compiled.unwrap();
@@ -430,7 +431,7 @@ fn a_link_keeps_the_header_and_the_comments_and_opens_to_them() {
     let text = rag_rondo();
     let fmt = parse(&beatscript_api::fmt_json(&text));
     let formatted = s(&fmt, "text").to_string();
-    assert!(formatted.starts_with("#! name: Rag Rondo\n") && formatted.contains("\n# rag-rondo: the reference program"), "{formatted}");
+    assert!(formatted.starts_with("#! beatscript 2\n#! name: Rag Rondo\n") && formatted.contains("\n# rag-rondo: the reference program"), "{formatted}");
     let sh = parse(&beatscript_api::share_json(&text, None, false, ""));
     assert!(b(&sh, "ok"), "{}", sh.js_stringified());
     assert_eq!(unpacked(s(&sh, "url")), formatted);
@@ -454,10 +455,11 @@ fn the_cid_is_the_same_with_and_without_the_comments() {
     let text = rag_rondo();
     let with = parse(&beatscript_api::share_json(&text, None, false, ""));
     let canonical = s(&with, "canonical").to_string();
-    assert!(!canonical.lines().any(|l| l.trim_start().starts_with('#')), "the canonical text has no comments or headers");
+    assert!(canonical.starts_with(djlive::version::CANONICAL_HEAD), "BeatScript 2 keeps its version line");
+    assert!(!djlive::version::legacy_canonical(&canonical).lines().any(|l| l.trim_start().starts_with('#')), "the canonical text has no comments or other headers");
     let without = parse(&beatscript_api::share_json(&canonical, None, false, ""));
     assert_eq!(s(&with, "cid"), s(&without, "cid"));
-    assert_eq!(s(&with, "cid"), "z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw", "the CID rag-rondo.beatscript names");
+    assert_eq!(s(&with, "cid"), "z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW", "the CID rag-rondo.beatscript names");
     // the two links differ only in the packed text; each opens to its own text and the same program
     assert_ne!(s(&with, "url"), s(&without, "url"));
     for (sh, text) in [(&with, text.as_str()), (&without, canonical.as_str())] {
@@ -520,7 +522,7 @@ fn a_tampered_link_is_refused_and_its_comments_are_unsealed() {
     let edited = text.replacen("#! name: Rag Rondo", "#! name: Rag Rondo (edited)", 1);
     let o = parse(&beatscript_api::open_json(&format!("https://beatscript.app/#{cid}.{}", pack(&edited))));
     assert!(b(&o, "ok") && b(&o, "verified") && s(&o, "cid") == cid, "{}", o.js_stringified());
-    assert!(s(&o, "text").starts_with("#! name: Rag Rondo (edited)\n"));
+    assert!(s(&o, "text").starts_with("#! beatscript 2\n#! name: Rag Rondo (edited)\n"));
     assert!(get(&o, "warnings").as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("unsealed")));
 }
 
