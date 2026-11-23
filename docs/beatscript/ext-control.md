@@ -184,19 +184,27 @@ made on bar 24's line would land on bar 25. A macro's call is therefore made a b
 bar 23 beat 3, `every 16 bars:` at 15 3/4, 31 3/4 ..., a section's first bar a beat before the section, and the macro starts on the
 bar its line names. A time between bar lines (`at bar 3 beat 2`) is kept, and the macro starts on the next bar line, as a pad does.
 Two places have no beat before them, and a macro there starts a bar later: the song's first bar (bar 0, and a line with no time
-word in a program with no sections, offline), and `on next phrase`, which waits for its bar. The control's key is the line, so
-`btw get` and the runtime's words name the line; its time is the call's.
+word in a program with no sections, offline), and `on next phrase`, which waits for its bar. `every N bars from 0` is two calls: its
+first, on bar 0 (which starts on bar 1), and the rest led as `every N bars` is (a second control, keyed `... (from bar N)`). The
+control's key is the line, so `btw get` and the runtime's words name the line; its time is the call's, and what is judged against the
+line's place (the section-end warning, a set track's window) is the line's own time (`Control::lead` says how far ahead the call is).
 
 **Offline.** The control net (`djlive::nets`) carries a macro as `fire A riser bars=8` (and a held one's `release A tape_stop`) on
 the tick its call is made; the desktop's render (`djhost::beatscript_render::render`) and beatscript's stream (`render`, `listen`) apply it to
 the offline engine through `fx_view::fire`. The same text renders the same samples every time, the same as the program without it
-up to the bar its line names (`tests/macro_render.rs`, beatscript's `render_inproc.rs`). `listen`'s summary gains `macros` when a program
-has one: each call's line and text, `at_bar` (the bar the engine starts it on, counted as the time words count), and `played`,
-with the engine's reason in `refused` (and in `warnings`) when it did not play. `btw test` renders the arrangement only and lists a
-macro line among what it leaves out.
+up to the bar its line names (`tests/macro_render.rs`, beatscript's `render_inproc.rs`). A macro starts on its deck's own bar line, so the
+deck's bars must be the program's: a deck that comes in at a later section now starts on that section's bar line (both renderers
+started it a beat ahead, which put its notes a beat early and a macro on it three beats late), and a call made in the beat before such
+a deck comes in waits for it and is made just before it starts (on a deck that does not play yet the engine starts an engagement at
+once), or on its bar if the deck never comes. `listen`'s summary gains `macros` when a program has one: each call's line and text
+(by the line that made it, when two lines make the same call), `at_bar` (where the engine starts it, read off the deck's own clock
+when the call is made, counted as the time words count), `held_bars` for a held one-shot, `latch` for a latched `do effects fire`,
+and `played`, with the engine's reason in `refused` (and in `warnings`) when it did not play. `btw test` renders the arrangement only
+and lists a macro line among what it leaves out. `on next phrase` fires once in the control net, as the runtime fires it.
 
-**On beatscript.app.** The browser engine plays none of the catalogue: a macro line checks, and the page lists it as "not played
-here: macro riser" (`engine-calls.js`), as it does the sugar nouns. Stream mode plays no control lines.
+**On beatscript.app.** The browser engine plays none of the catalogue: a macro line checks (with the warning "the browser does not
+play this: `macro riser` ...; render and listen do", `snapshot::browser_plays`), and the page lists it as "not played here: macro
+riser" (`engine-calls.js`), as it does the sugar nouns. Stream mode plays no control lines.
 
 ### What it refuses
 
@@ -206,7 +214,8 @@ here: macro riser" (`engine-calls.js`), as it does the sugar nouns. Stream mode 
 | `macro@7 riser on A` | this BeatScript has macro@1, not `macro@7` | `macro riser ...` |
 | `macro riser over 8 bars` | `macro riser` needs the deck it fires on | `macro riser on A` (the focused deck is the person's, not the text's) |
 | `macro breakdown on A over 2 beats` | a macro takes whole bars | `... over 4 bars` |
-| `macro breakdown on A over 65 bars` | a macro runs 1 to 64 bars | `... over 64 bars` |
+| `macro breakdown on A over 65 bars`, `over 0 bars` | a macro runs 1 to 64 bars, not 65 bars | `... over 64 bars` / `... over 1 bar` |
+| `macro filter on master` | a macro fires on a deck, `A` or `B`, not `master` | `macro filter on A` |
 | `macro cut on A over 2 bars` | `cut` is a one-shot: it runs its own length, so it takes no `over` | `macro cut on A` |
 | `at bar 4 for 2 bars: macro breakdown on A` | a macro's length is its `over`, so it takes no `for` | `macro ID on A over 4 bars` |
 | `deck A: macro riser on A` | `macro` takes no target: it names its deck itself | |
@@ -229,6 +238,12 @@ here: macro riser" (`engine-calls.js`), as it does the sugar nouns. Stream mode 
 - **The call goes a beat ahead** of a bar-line time so the macro starts on the bar its line names, live and offline alike (the
   runtime fires a time between bar lines when the position crosses it). The alternative, the engine's next bar after the line,
   would start every section's macro a bar late.
+- **A deck that comes in starts on its bar line, offline.** Every family of the catalogue starts on its deck's own bar line (a trick
+  on `deck_grid_frame`, an aux macro on the deck's loop clock, a net or master macro on the service tick at the deck's bar), so a
+  macro can only be on the program's bar when the deck's bars are the program's. Both offline renderers started a deck that comes in
+  a beat ahead of its section, which put its notes a beat early (measured: its first note at bar 3.75 of a section on bar 4); it now
+  plays from the bar line, which is where the arrangement meant it (it loads two beats ahead so the net is there). Placing each family
+  on an exact frame instead would need the engine's private jobs, and would leave the notes a beat early.
 - **The verb keeps its name**, `effects fire`: the noun is the Effects window's, and the DJ language (run 1f12e380) builds on it as
   the macro surface.
 - **`macro` is no reserved word**, like `control` and `drive`: it is the head only where a line's verb goes, before a word. A let, a

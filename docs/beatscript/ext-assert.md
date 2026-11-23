@@ -298,8 +298,8 @@ All have a line, a column and, where a name was wrong, a did-you-mean:
 ## Not done
 
 * The window does not draw a panel of assertion states and `btw check`'s answer carries the pending notes as `diagnostics`, not an `assertions` list; `btw test` is the report.
-* A deck that **comes in** at a section is started a beat before its bar line by `beatscript_render::arrangement` (it loads two beats ahead and plays one beat ahead), so the window of the
-  section before it hears up to a beat of it. The measurement says what the render plays; the arrangement's timing is the render's (shared with `btw render`), not changed here.
+* (Fixed with `macro`, docs/beatscript/ext-control.md: a deck that **comes in** at a section was started a beat before its bar line by `beatscript_render::arrangement`, so its notes
+  fell a beat early and the window of the section before it heard up to a beat of it. It now loads two beats ahead and plays from the bar line, in `btw render` too.)
 * Control lines are in the offline render as far as `beatscript_render` puts them (docs/beatscript/ext-render.md): the mixer's (a fade, a tremolo, a mute, the crossfader), `duck` and `mix` are, so a level
   assertion measures a deck fading in; a filter, delay, reverb, crush, move or `do` call to anything but the mixer is not, and a level assertion about one measures the render without it. The report
   says how many such lines there are (`note: not in this render: 2 control lines (filter x1, reverb x1): line 10 ...`, the JSON's `not_in_render`).

@@ -3278,8 +3278,8 @@ What the language does not do, as honestly as the long notes say it. (Each featu
 else of the control lines: no filter, insert, `do` call, ramp, lfo, `move`, `load`, `queue` or `sing` (the arrangement
 format has no op for a registry call). A render holds a tempo ramp inside one net at ±50 % of the net's own tempo, and
 a program that has no end renders 16 bars unless told. A level assertion about a filter sweep therefore measures a
-render without the sweep, a performed level, filter or `do` line is not in it whatever the inputs read, and a deck
-that comes in at a section is started a beat before its bar line, so the section before it hears up to a beat of it.
+render without the sweep, and a performed level, filter or `do` line is not in it whatever the inputs read. A deck
+that comes in at a section starts on the section's bar line (it was started a beat ahead, so its notes fell a beat early).
 The mix snapshot has no mixer to read there and goes back to the engine's starting positions.
 
 **Controllers.** `held(key)` is the lowest key held over 127, so the lowest MIDI note (0, below any keyboard of the supported
