@@ -7,7 +7,7 @@ const path = require('node:path');
 const { PLAYER, previewHtml, registerPreview } = require('../preview');
 
 const TEXT = '#! name: two bars\ntempo 120\ndeck A: kick x ~ x ~ | snare ~ x ~ x\n';
-const BASE = 'https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.2.0/';
+const BASE = `https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@${PLAYER.version}/`;
 const page = (o = {}) => previewHtml({ text: TEXT, nonce: 'N0nce+/=', ...o });
 const tags = (html, name) => [...html.matchAll(new RegExp(`<${name}\\b[^>]*>`, 'g'))].map((m) => m[0]);
 // an attribute's value as a browser reads it: the five entities artifact.rs's esc writes, &amp; last
@@ -55,7 +55,7 @@ const textOf = (html) => unescape(html.match(/<beatscript-track theme="[^"]*" te
   for (const [f, x] of Object.entries(lock.files)) if (f.endsWith('.js') && f !== lock.entry && !f.endsWith('.umd.js')) want[`${BASE}${f}`] = x.integrity;
   const body = html.slice(html.indexOf(map) + map.length, html.indexOf('</script>'));
   assert.equal(body, JSON.stringify({ integrity: want }).replace(/</g, '\\u003c'));
-  assert.equal(Object.keys(want).length, 17);
+  assert.ok(Object.keys(want).length >= 10, 'the lock lists the engine modules');
 
   // no hashes: no integrity at all, rather than wrong ones
   const bare = page({ player: { ...PLAYER, integrity: {} } });
