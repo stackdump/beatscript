@@ -561,22 +561,14 @@ pub struct Plan {
 
 /// The rights and the shape of `c`, or why it is not rendered.
 pub fn plan(c: &Compiled, o: &Options) -> Result<Plan, RenderError> {
-    if c.rights.declared_private || c.rights.private_required {
+    if c.rights.restricted() {
         return Err(RenderError::new("restricted", "this program is restricted (`use restricted`, `#! visibility: private` or a restricted asset): it is private and beatscript does not render it"));
     }
-    if !c.rights.assets.is_empty() {
+    if c.rights.uses_assets() {
         return Err(RenderError::new("uses_assets", "this program uses samples or loops (`sample` / `loop \"...\" as`): beatscript has no files and does not render them"));
     }
     let bpm = c.tempo.unwrap_or(120.0);
-    // an arranged song is as long as its sections, unless an `end` (`end at bar N`, `end after SECTION`) cuts it shorter:
-    // the live runtime stops there, and the render did not (it played every section, past the program's end)
-    let program_bars = if c.arranged {
-        let song = c.song_bars().unwrap_or(16);
-        c.end.map_or(song, |e| e.min(song))
-    } else {
-        c.end.unwrap_or(16)
-    }
-    .max(1);
+    let program_bars = djhost::beatscript_render::program_bars(c);
     let bars = program_bars.min(o.max_bars);
     let mut notes = Vec::new();
     if c.looped && c.arranged {

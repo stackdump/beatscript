@@ -158,6 +158,18 @@ impl RightsReport {
         RightsReport { tier: Tier::Open, license: None, declared_private: false, private_required: false, why: Vec::new(), credits: Vec::new(), assets: Vec::new() }
     }
 
+    /// The program is private: it says so (`use restricted`, `#! visibility: private`) or a restricted asset makes it so.
+    /// What a render for anyone else refuses (`beatscript render`, a clip from a render, the check report's `restricted`).
+    pub fn restricted(&self) -> bool {
+        self.declared_private || self.private_required
+    }
+
+    /// The program names a sample or a loop: a render has no files, so it refuses it (`beatscript render`, a clip from a render,
+    /// the check report's `uses_assets`).
+    pub fn uses_assets(&self) -> bool {
+        !self.assets.is_empty()
+    }
+
     /// Why the program cannot be shared or made public, or None. Names the asset.
     pub fn refusal(&self) -> Option<String> {
         let a = self.assets.iter().find(|a| a.rights == AssetRights::RestrictedPrivate)?;

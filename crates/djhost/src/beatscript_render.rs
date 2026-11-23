@@ -63,15 +63,41 @@ pub fn arrangement_report(c: &Compiled) -> (JsonValue, f64, NotInRender) {
     build(c, true)
 }
 
+/// How many bars a program is, as a render for anyone else plays it (`beatscript render`, a clip from a render): an arranged song
+/// its sections, unless an `end` (`end at bar N`, `end after SECTION`) cuts it shorter (the live runtime stops there); a
+/// program with no sections its `end at bar N`, else 16 bars. (The desktop's [`arrangement`] plays a program with no
+/// sections for 16 bars whatever its `end` says.)
+pub fn program_bars(c: &Compiled) -> u32 {
+    if c.arranged {
+        let song = c.song_bars().unwrap_or(16);
+        c.end.map_or(song, |e| e.min(song))
+    } else {
+        c.end.unwrap_or(16)
+    }
+    .max(1)
+}
+
+/// The arrangement of a program with no sections played for `bars` bars (not the 16 [`arrangement`] gives it), and how many
+/// beats it is. An arranged song is its sections, whatever `bars` says.
+pub fn arrangement_bars(c: &Compiled, bars: u32) -> (JsonValue, f64) {
+    let (j, beats, _) = build_flat(c, true, bars.max(1));
+    (j, beats)
+}
+
 /// `own_lines`: the program's own mixer and transport lines are in the arrangement (what a render is). A replay
 /// ([`arrangement_with_replay`]) has the calls of every such line from its run, so it leaves them out and carries the section
 /// loads, the `duck` and the `mix` lines only.
 fn build(c: &Compiled, own_lines: bool) -> (JsonValue, f64, NotInRender) {
+    build_flat(c, own_lines, 16)
+}
+
+/// [`build`], a program with no sections played for `flat_bars` bars.
+fn build_flat(c: &Compiled, own_lines: bool, flat_bars: u32) -> (JsonValue, f64, NotInRender) {
     let bpm = c.tempo.unwrap_or(120.0);
     let sets: Vec<(u32, u32, &BTreeMap<Deck, DeckIr>)> = if c.arranged {
         c.segments.iter().map(|s| (s.start, s.bars, &s.decks)).collect()
     } else {
-        vec![(0, 16, &c.decks)]
+        vec![(0, flat_bars, &c.decks)]
     };
     let beats = sets.last().map_or(64.0, |(s, b, _)| f64::from(s + b) * 4.0);
     // a tempo curve (F3): a staircase of tempo-fader moves, and every event says the tempo it falls in
@@ -831,27 +857,48 @@ pub fn apply_event(e: &mut djengine::host::deck::engine::Engine, ev: &Event) -> 
 /// timeline, each on the frame of its beat. `controls: false` renders as before (notes, sounds and
 /// sections only), for comparison.
 pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, String> {
-    use djengine::host::deck::offline::{arrangement_conductor, stand_on_start, ArrangeRenderOptions, OfflineConductor};
-    use djengine::session::wav::RenderedAudio;
     let (json, beats) = arrangement(c);
-    let (arr, bad) = Arrangement::from_json(&json).ok_or("not an arrangement")?;
+    let arr = parsed(&json)?;
+    render_with(c, &arr, beats, beats, sample_rate, controls, None)
+}
+
+/// An arrangement this module made, read back (every event must parse).
+pub fn parsed(json: &JsonValue) -> Result<Arrangement, String> {
+    let (arr, bad) = Arrangement::from_json(json).ok_or("not an arrangement")?;
     if bad > 0 {
         return Err(format!("{bad} arrangement events did not parse"));
     }
+    Ok(arr)
+}
+
+/// What [`render_with`] shows the engine to: once when the start stands (its first nets installed, nothing rendered) and
+/// after every block. A stem plays the other parts' lanes at level 0 here (`crate::clip_source`).
+pub type Watch<'a> = &'a mut dyn FnMut(&mut djengine::host::deck::offline::OfflineConductor);
+
+/// [`render`] of `arr`, an arrangement of `c` that is `beats` long ([`arrangement`], [`arrangement_bars`]): its first `until`
+/// beats (the same frames as the whole render's, which is stepped from frame 0 all the same), with `watch` shown the engine.
+pub fn render_with(c: &Compiled, arr: &Arrangement, beats: f64, until: f64, sample_rate: f64, controls: bool, mut watch: Option<Watch<'_>>) -> Result<Render, String> {
+    use djengine::host::deck::offline::{arrangement_conductor, stand_on_start, ArrangeRenderOptions, OfflineConductor};
+    use djengine::session::wav::RenderedAudio;
     let opts = ArrangeRenderOptions { sample_rate, ..Default::default() };
-    let mut cond = arrangement_conductor(&arr, &opts);
-    let mut refused = stand_on_start(&mut cond, &arr, None, None);
+    let mut cond = arrangement_conductor(arr, &opts);
+    let mut refused = stand_on_start(&mut cond, arr, None, None);
+    if let Some(w) = watch.as_mut() {
+        // the first section's nets installed now, so what the watch does to them is there before the first frame
+        cond.pump();
+        w(&mut cond);
+    }
     let net = djlive::nets::control_net(c, (beats / 4.0).ceil() as u32);
     let ev: Vec<(i64, Event)> = if controls { net.events(None) } else { Vec::new() };
     // the move lines the net leaves beside it, on the booth's own scheduler (crate::offline_moves); none without controls
-    let clock = crate::offline_moves::Clock::of_arrangement(&arr, sample_rate);
+    let clock = crate::offline_moves::Clock::of_arrangement(arr, sample_rate);
     let mut moves = controls.then(|| crate::offline_moves::ProgramMoves::new(c, beats, &net, clock)).filter(|m| !m.is_empty() || !m.unplayed.is_empty());
     // one timeline: (frame, 0 = an arrangement move | 1 = a net event, index); the arrangement first on a tie
     let frame_of = |at: f64| (arr.seconds_at(at) * sample_rate).round() as i64;
     let mut tl: Vec<(i64, u8, usize)> = arr.events.iter().enumerate().map(|(i, e)| (frame_of(e.at), 0, i)).collect();
     tl.extend(ev.iter().enumerate().map(|(i, (t, _))| (frame_of(*t as f64 / 4.0), 1, i)));
     tl.sort();
-    let want = (arr.seconds_at(beats) * sample_rate).round().max(0.0) as usize;
+    let want = (arr.seconds_at(until.min(beats)) * sample_rate).round().max(0.0) as usize;
     let (mut left, mut right) = (Vec::with_capacity(want), Vec::with_capacity(want));
     let (mut next, mut applied) = (0, 0);
     // a macro's call on a deck that does not play yet (one that comes in on the bar the macro starts on) waits for it: made just
@@ -918,7 +965,9 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
         if let Some(m) = moves.as_mut() {
             m.run(cond.engine_mut(), frame, &frame_of);
         }
-        let mut n = (want - left.len()).min(OfflineConductor::BLOCK_FRAMES);
+        // a render cut short of its arrangement steps the engine in the blocks the whole render does (its last one is not cut
+        // at `until`, the frames past it are dropped), so its frames are the whole render's however the engine takes a block
+        let mut n = if until < beats { OfflineConductor::BLOCK_FRAMES } else { (want - left.len()).min(OfflineConductor::BLOCK_FRAMES) };
         if let Some(t) = tl.get(next) {
             n = n.min((t.0 - frame).max(1) as usize);
         }
@@ -931,6 +980,9 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
         let (l, r) = cond.step_frames(n);
         left.extend_from_slice(l);
         right.extend_from_slice(r);
+        if let Some(w) = watch.as_mut() {
+            w(&mut cond);
+        }
     }
     left.truncate(want);
     right.truncate(want);
