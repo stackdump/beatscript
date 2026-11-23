@@ -51,11 +51,11 @@
   },
   "share": {
     "ok": true,
-    "url": "https://btw.bitwrap.io/#z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU5bCgIxDPzvKeYCSln2x34IHqWtUZZ1myUpKvg4u-kq_i0hCUlmMlNpmhk775RyHbiAC6FHiqJ4OOBIecQhYBys3_FuaetEJxZCvTG6BRwwRa0kAUJXkgSPzR5-24Nt_IHc6y_TmOsy33jaXRW5M9lWjB5FYjnT4tJeuAvz7D4",
-    "social_url": "https://btw.bitwrap.io/c/z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU5bCgIxDPzvKeYCSln2x34IHqWtUZZ1myUpKvg4u-kq_i0hCUlmMlNpmhk775RyHbiAC6FHiqJ4OOBIecQhYBys3_FuaetEJxZCvTG6BRwwRa0kAUJXkgSPzR5-24Nt_IHc6y_TmOsy33jaXRW5M9lWjB5FYjnT4tJeuAvz7D4",
+    "url": "https://beatscript.app/#z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU_LCoNADLzvVwz0WkXESz0U-imrTXVRN7IbaqGPb29WS28SkpDHzCQHWET2HaS3gpF5jkcsTnrtN3TjQNnoPOVGaJoZp8JEasWxB3tChcaGiKcBrtQOuNQYnOYHPsm1vXFAFka5LteYbBQKNQLdKTQokJ1R5BVYy9-Sef9lEnJfZrOXzmNEW6psCgq3IVjf0XqlUpj0mfkC",
+    "social_url": "https://beatscript.app/c/z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU_LCoNADLzvVwz0WkXESz0U-imrTXVRN7IbaqGPb29WS28SkpDHzCQHWET2HaS3gpF5jkcsTnrtN3TjQNnoPOVGaJoZp8JEasWxB3tChcaGiKcBrtQOuNQYnOYHPsm1vXFAFka5LteYbBQKNQLdKTQokJ1R5BVYy9-Sef9lEnJfZrOXzmNEW6psCgq3IVjf0XqlUpj0mfkC",
     "beats_url": "https://beats.bitwrap.io/p#z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA.dU5bCgIxDPzvKeYCSln2x34IHqWtUZZ1myUpKvg4u-kq_i0hCUlmMlNpmhk775RyHbiAC6FHiqJ4OOBIecQhYBys3_FuaetEJxZCvTG6BRwwRa0kAUJXkgSPzR5-24Nt_IHc6y_TmOsy33jaXRW5M9lWjB5FYjnT4tJeuAvz7D4",
     "cid": "z4EBG9jCqXbo2dYXhXiQtxvN5TNL6Ra39zDCUqGg1rFp3Ks8jDA",
-    "chars": 247,
+    "chars": 280,
     "canonical": "tempo 90\nsection one 4 bars {\n  deck A: kick x ~ x ~\n  before two 2 bars: master: reverb 0 -> 0.4 over 2 bars\n}\nsection two 4 bars {\n  deck A: kick x x x x | bass c2 ~ c2 ~\n}\narrange one two\nloop\n",
     "warnings": []
   }

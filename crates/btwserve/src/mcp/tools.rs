@@ -1934,12 +1934,12 @@ mod tests {
         assert_eq!(bare_cid(&format!("https://beatscript.app/c/{c}.abc")), None);
     }
 
-    /// btwsite/testdata/mcp/tools-list.json (Go's mcpsrv test fixture, public origin https://btw.bitwrap.io): the
-    /// same tools, descriptions and schemas. The fixture is re-indented with sorted keys; the wire order is checked
+    /// src/mcp/testdata/tools-list.json (from Go's mcpsrv test fixture; public origin https://beatscript.app since links
+    /// moved there): the same tools, descriptions and schemas. The fixture is re-indented with sorted keys; the wire order is checked
     /// by the contract test.
     #[test]
     fn tools_list_matches_go_fixture() {
-        let got = json!({"tools": tool_list("https://btw.bitwrap.io", 16384, 60, 30, (50, 20, 30, 8, 30))});
+        let got = json!({"tools": tool_list("https://beatscript.app", 16384, 60, 30, (50, 20, 30, 8, 30))});
         // BTW_UPDATE_TOOLS_LIST=1: rewrite the fixture from the list (a tool added or reworded on purpose: listen, get's mixer)
         if std::env::var_os("BTW_UPDATE_TOOLS_LIST").is_some() {
             let path = concat!(env!("CARGO_MANIFEST_DIR"), "/src/mcp/testdata/tools-list.json");

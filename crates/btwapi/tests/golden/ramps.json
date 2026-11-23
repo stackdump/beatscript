@@ -101,11 +101,11 @@
   },
   "share": {
     "ok": true,
-    "url": "https://btw.bitwrap.io/#z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY7dCoJAFITvfYq5DpKjlmxCQY-y6RHF9QdXRCF69o5uJnWxOzB8--0MXHctglB5Fc_Iay_jtMI9QVVKTnit54miLPSA6aAwsrmeyfcVSf3Q1iIPBFkur9Z24D5BXhpJmA4REY43KJJsR-mUvOntl-zZto1uUgb54UKSrxx4cuC2x7B8vEOXH0imSSKIkbdbmeBvTdEhJvLE08-fGTuTsdGzeKNV7-Shk78B",
-    "social_url": "https://btw.bitwrap.io/c/z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY7dCoJAFITvfYq5DpKjlmxCQY-y6RHF9QdXRCF69o5uJnWxOzB8--0MXHctglB5Fc_Iay_jtMI9QVVKTnit54miLPSA6aAwsrmeyfcVSf3Q1iIPBFkur9Z24D5BXhpJmA4REY43KJJsR-mUvOntl-zZto1uUgb54UKSrxx4cuC2x7B8vEOXH0imSSKIkbdbmeBvTdEhJvLE08-fGTuTsdGzeKNV7-Shk78B",
+    "url": "https://beatscript.app/#z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY_dSsQwEIXv8xQHvBMNaVeXWFDwUeJmSkPzU5K4tiA-u9PWddGLZODw5cuZG2QTpoIU4WKhXAtMtAhupgxPZ_LlDgbVBbLwLhI-XB2YwXu0SYpKYUpoWi1GWtAHYek04rXD6HjO-NrOJwY3mIr5VoOVz49KSq04fjOloG8YWS8RTKmUO_TO1_X_CQelcP8CrXimM2ea3-TyS2YqKZp4IijZrqSSegcfdvDSZ9vlCj39gbgaTzRH9OkSdvjXZphwVEqwJy8_Na6MJW8W9h42_S5vd_k3",
+    "social_url": "https://beatscript.app/c/z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY_dSsQwEIXv8xQHvBMNaVeXWFDwUeJmSkPzU5K4tiA-u9PWddGLZODw5cuZG2QTpoIU4WKhXAtMtAhupgxPZ_LlDgbVBbLwLhI-XB2YwXu0SYpKYUpoWi1GWtAHYek04rXD6HjO-NrOJwY3mIr5VoOVz49KSq04fjOloG8YWS8RTKmUO_TO1_X_CQelcP8CrXimM2ea3-TyS2YqKZp4IijZrqSSegcfdvDSZ9vlCj39gbgaTzRH9OkSdvjXZphwVEqwJy8_Na6MJW8W9h42_S5vd_k3",
     "beats_url": "https://beats.bitwrap.io/p#z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn.XY7dCoJAFITvfYq5DpKjlmxCQY-y6RHF9QdXRCF69o5uJnWxOzB8--0MXHctglB5Fc_Iay_jtMI9QVVKTnit54miLPSA6aAwsrmeyfcVSf3Q1iIPBFkur9Z24D5BXhpJmA4REY43KJJsR-mUvOntl-zZto1uUgb54UKSrxx4cuC2x7B8vEOXH0imSSKIkbdbmeBvTdEhJvLE08-fGTuTsdGzeKNV7-Shk78B",
     "cid": "z4EBG9jCXFgptZ2bU4DDE5v5hiuqHuvGxXTrG1KEySHPGxt2Ykn",
-    "chars": 304,
+    "chars": 360,
     "canonical": "tempo 128\nkey fm\ndeck A: kick x ~ x ~ | hihat x*8 vel=50..80 | bass f1 ~ f1 ~\nmaster: filter lp 300 -> 8000 over 8 bars\nmaster: resonance 0.2 -> 0.8 over 4 bars\ndeck A: level 0.2 -> 0.9 over 4 bars\nat bar 16 for 4 bars: master: filter hp 600\nevery 8 bars: master: delay 0.3 -> 0 over 2 bars\n",
     "warnings": []
   }

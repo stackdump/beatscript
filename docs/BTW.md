@@ -2644,15 +2644,23 @@ its own: it names its program by the program CID, so changing a program's tags o
 ## Share links
 
 ```text
+https://beatscript.app/#<CID>.<base64url(deflate(formatted text))>[.<sig>][*<base64url(deflate(programs))>]
 https://beats.bitwrap.io/p#<CID>.<base64url(deflate(canonical text))>[.<sig>][~<base64url(deflate(notes))>][*<base64url(deflate(programs))>]
 ```
 
-`btw share` makes one: the sealed part is the CID and exactly the canonical text; `sig` is the author's wallet
-signature over the CID, carried as given (the wallet makes and checks it); `~notes` carries the comments, which
-are in neither the CID nor the signature, and are shown as **unverified**. `btw open <url or CID>` decodes it,
-parses and canonicalises the text, recompiles it and recomputes the CID, and **refuses** a link whose CID is
-not its text's (`refused: the link says z... but its text is z...`); a text that was not in canonical form is a
-warning (the CID is still its canonical text's); a CID alone is looked up in storage, where there is any.
+`btw share` makes one: the sealed part is the CID and the program's **formatted** text (what `fmt` prints: the
+canonical text with the `#!` header lines, the comments and one blank line between blocks kept), so a program
+opens as it was written. The CID is still the canonical text's: the header lines and comments are in neither the
+CID nor the signature, and come along **unsealed** (open says so). `sig` is the author's wallet signature over the
+CID, carried as given (the wallet makes and checks it). The site's links are on `https://beatscript.app` unless
+another origin is named; `btw.bitwrap.io` is only a legacy host the server still answers. beats' form (second line)
+packs the canonical text, since beats' page hashes what it unpacks as it is; there `~notes` carries the comments,
+shown as **unverified**. `btw open <url or CID>` decodes it, parses and canonicalises the text, recompiles it and
+recomputes the CID, and **refuses** a link whose CID is not its text's (`refused: the link says z... but its text
+is z...`). It answers the canonical text (what is stored and hashed) and the text formatted, with what the link
+carried beside the program, for the editor. A link made before links carried the formatted text packs the
+canonical text and opens as it always did; a text that is neither canonical nor formatted is a warning (the CID is
+still its canonical text's); a CID alone is looked up in storage, where there is any.
 **A program that draws on others carries them.** For an `import` or a set's tracks, the part after the `*` holds the canonical text of
 each program it draws on, and of each of those in turn, by CID (what a program needs first). Each is hashed against its CID before
 it is used, and a text that is not the program its CID names is refused (`the program z... in this link is not the program it names`),

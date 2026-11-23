@@ -910,7 +910,7 @@ impl Docs {
         b.push_str("- Structure: `let`, `def` (no recursion), `repeat N`, `section NAME N bars { ... }`, `arrange`, `end after`, `loop`.\n");
         b.push_str("- Control lines: ramps `a -> b over N bars`, `at bar N:`, `every N bars:`, `before <section> N bars:`, `do <noun> <verb>`. Seeded transforms (`rotate`, `transpose`, `degrade`, `humanize`); `evolve every N bars { ... }` with a reported tail and period.\n");
         b.push_str(&format!("- Only instruments from {p}/api/instruments. Always run check (the MCP tool, or POST {p}/api/check) and fix every line:column error before playing: a program with an error is refused whole.\n"));
-        b.push_str(&format!("- Share link: {p}/#<CID>.<base64url(deflate(canonical text))>. The CID is of the canonical text, so formatting and comments never change it.\n\n"));
+        b.push_str(&format!("- Share link: {p}/#<CID>.<base64url(deflate(formatted text))>: the program as `fmt` prints it, its `#!` header lines and comments kept. The CID is of the canonical text, so formatting and comments never change it (they travel unsealed).\n\n"));
         b.push_str("## Docs\n");
         if self.read_doc("BTW.md").is_some() {
             b.push_str(&format!("- [BTW.md]({p}/docs/BTW.md): the language reference: its two halves (structure, the track's own source, and engine calls, pinned and versioned), grammar (EBNF), mini-notation, control lines, evolve, canonical form, share links\n"));

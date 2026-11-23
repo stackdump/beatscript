@@ -257,6 +257,10 @@ impl Engine {
         m.insert("ok".into(), b(&r["ok"]));
         m.insert("cid".into(), json!(s(&r["cid"])));
         m.insert("canonical".into(), json!(s(&r["canonical"])));
+        if !s(&r["text"]).is_empty() {
+            // the program formatted, with the `#!` headers and comments the link carried: what an editor shows
+            m.insert("text".into(), json!(s(&r["text"])));
+        }
         m.insert("verified".into(), b(&r["verified"]));
         for k in ["warnings", "notes_unverified"] {
             let v = strings(&r[k]);

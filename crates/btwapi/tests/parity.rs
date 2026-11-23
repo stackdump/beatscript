@@ -250,11 +250,14 @@ fn the_same_cids_as_djctl_btw_on_every_program() {
                 assert_eq!(s(&r, &format!("song_nets.{deck}")), ncid, "{name}");
             }
         }
-        // share: the same link as beats'
+        // share: the site's link (the formatted text, on beatscript.app), and with --beats the same link as beats'
         let (_, link, _) = run(&["share"], &file);
+        let beats = Command::new(&bin).args(["btw", "share"]).arg(&file).arg("--beats").env("DJ_LIVE_DIR", &store).output().expect("run djctl");
+        let beats = String::from_utf8_lossy(&beats.stdout).to_string();
         if !b(&r, "restricted") {
             let sh = parse(&btwapi::share_json(&text, None, false, ""));
-            assert_eq!(link.trim(), s(&sh, "beats_url"), "{name}");
+            assert_eq!(link.trim(), s(&sh, "url"), "{name}");
+            assert_eq!(beats.trim(), s(&sh, "beats_url"), "{name}");
         }
         compared += 1;
     }

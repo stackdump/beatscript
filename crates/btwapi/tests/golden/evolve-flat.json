@@ -122,11 +122,11 @@
   },
   "share": {
     "ok": true,
-    "url": "https://btw.bitwrap.io/#z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RY3NDoIwEITvfYq5ePFgACWYRkz0NQyHChtogJa0DUL8eXZXNPGwu8nMNzuB-sEiTiLR0gzVi4rKFieJVvOd8FrmgUY3KmBa77_AWaKnzlYzLmqHMgWlqNOCwavynsWEU8SrEDTabiTQSG7Gjn3ncRf45SWcDSoQYs4Gp4wfrCccIqTIEB0ZXKolQqMNok0MT1TlWzY-VRLa8OeAW0MGNc8KCfIcMQM-2OFvsJiJp3gD",
-    "social_url": "https://btw.bitwrap.io/c/z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RY3NDoIwEITvfYq5ePFgACWYRkz0NQyHChtogJa0DUL8eXZXNPGwu8nMNzuB-sEiTiLR0gzVi4rKFieJVvOd8FrmgUY3KmBa77_AWaKnzlYzLmqHMgWlqNOCwavynsWEU8SrEDTabiTQSG7Gjn3ncRf45SWcDSoQYs4Gp4wfrCccIqTIEB0ZXKolQqMNok0MT1TlWzY-VRLa8OeAW0MGNc8KCfIcMQM-2OFvsJiJp3gD",
+    "url": "https://beatscript.app/#z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RU9LasNADN3PKR6UbroIthuTYupCe42SxcQW9mB7ZEbCjunn7FWTQBaaEe8j6T3AR9DC40IIER5z4i75CWvQHpEh1GjgKBWCYh79JtYIeI3gdDLMxxYUW9k5pWlm5EXmBtrgJ9dSM-C9whDsP-P3Ut_oQ-8V56eXq-CjwkQjtxs-_R5NCSrRlUcTnryIgYW5yJ6jux1KC6UNe-OT4Mvh5q-QWL0ScvNq8lFmFsJrhhIHZG8mvKyuoL1lzXa5paO2fjbif5VFjDZZsfYU0Vk9okBdIzeBKM93wsCD-3F_",
+    "social_url": "https://beatscript.app/c/z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RU9LasNADN3PKR6UbroIthuTYupCe42SxcQW9mB7ZEbCjunn7FWTQBaaEe8j6T3AR9DC40IIER5z4i75CWvQHpEh1GjgKBWCYh79JtYIeI3gdDLMxxYUW9k5pWlm5EXmBtrgJ9dSM-C9whDsP-P3Ut_oQ-8V56eXq-CjwkQjtxs-_R5NCSrRlUcTnryIgYW5yJ6jux1KC6UNe-OT4Mvh5q-QWL0ScvNq8lFmFsJrhhIHZG8mvKyuoL1lzXa5paO2fjbif5VFjDZZsfYU0Vk9okBdIzeBKM93wsCD-3F_",
     "beats_url": "https://beats.bitwrap.io/p#z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL.RY3NDoIwEITvfYq5ePFgACWYRkz0NQyHChtogJa0DUL8eXZXNPGwu8nMNzuB-sEiTiLR0gzVi4rKFieJVvOd8FrmgUY3KmBa77_AWaKnzlYzLmqHMgWlqNOCwavynsWEU8SrEDTabiTQSG7Gjn3ncRf45SWcDSoQYs4Gp4wfrCccIqTIEB0ZXKolQqMNok0MT1TlWzY-VRLa8OeAW0MGNc8KCfIcMQM-2OFvsJiJp3gD",
     "cid": "z4EBG9jEXmeF7QEV1Hh8frZt5SEoVk2m6cqVYL4DEY5UeL9oHCL",
-    "chars": 312,
+    "chars": 372,
     "canonical": "tempo 120\nkey am\ndeck A: kick x ~ x ~ | hihat x*8\ndeck B: melody [a4 c5 e5 g5] | bass [a2 ~ e2 ~]\nevolve every 4 bars {\n  melody: rotate 1 | transpose <0 5 7 0>\n  hihat: thin 0.1 seed=3\n  bass: invert when gen % 2 == 1\n  stop when gen == 7\n}\n",
     "warnings": []
   }

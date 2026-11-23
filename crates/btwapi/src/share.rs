@@ -1,6 +1,8 @@
 //! Self-sealing links (`djlive::share`) as JSON, for any origin: the page's own
-//! `https://btw.bitwrap.io/#<CID>.<packed>`, the social form `/c/<CID>.<packed>` link unfurlers can fetch,
-//! and beats' `https://beats.bitwrap.io/p#...`. The sealed part is the same in all of them.
+//! `https://beatscript.app/#<CID>.<packed>`, the social form `/c/<CID>.<packed>` link unfurlers can fetch,
+//! and beats' `https://beats.bitwrap.io/p#...`. The site's two pack the formatted text (the `#!` headers and the
+//! comments kept), beats' the canonical text (its page hashes what it unpacks as it is); the CID is the canonical
+//! text's in all three.
 
 use djengine::json::{JsonObject, JsonValue};
 use djlive::compile::check_with;
@@ -10,12 +12,13 @@ use crate::report::{diagnostics_json, obj, opt_str, strs};
 use crate::snapshot::web_env;
 use crate::utf16::Utf16Index;
 
-/// The site's origin when the caller gives none.
-pub const DEFAULT_ORIGIN: &str = "https://btw.bitwrap.io";
+/// The site's origin when the caller gives none: beatscript.app.
+pub const DEFAULT_ORIGIN: &str = links::ORIGIN;
 
 /// `share(text, sig, notes, origin)`: the link for a program. `sig` is the author's signature over the CID,
-/// carried as given (the wallet makes and checks it); `notes` carries the comments, unsealed. A program
-/// with errors, or one that is private (`use restricted`, a restricted asset), gets no link.
+/// carried as given (the wallet makes and checks it). The link packs the program formatted, so its `#!` header lines
+/// and comments come along (unsealed: the CID is the canonical text's); `notes` adds them to beats' link only, as
+/// its `~notes`. A program with errors, or one that is private (`use restricted`, a restricted asset), gets no link.
 pub fn share_json(text: &str, sig: Option<&str>, notes: bool, origin: &str) -> String {
     let env = web_env().env();
     let ix = Utf16Index::new(text);
@@ -40,18 +43,17 @@ pub fn share_json(text: &str, sig: Option<&str>, notes: bool, origin: &str) -> S
         let why = c.rights.refusal().unwrap_or_else(|| "it declares `use restricted`: a private program is never shared".to_string());
         return fail(format!("not shared: {why}"));
     }
-    let origin = origin.trim().trim_end_matches('/');
-    let origin = if origin.is_empty() { DEFAULT_ORIGIN } else { origin };
     let sig = sig.map(str::trim).filter(|s| !s.is_empty());
-    // beats' form is what djlive makes; the others are the same sealed part under another origin. The link carries every program
-    // this one draws on (an `import`, a set's tracks), so that it opens on a machine that has none of them
-    let (beats, carried) = links::encode_with_tracks(c, sig, notes);
+    // The link carries every program this one draws on (an `import`, a set's tracks), so that it opens on a machine that
+    // has none of them. The site's link packs the formatted text; beats' form packs the canonical text
+    let formatted = links::formatted(text, &env, c);
+    let (url, carried) = links::encode_formatted(c, &formatted, origin, sig);
     if !c.plays.is_empty() && !carried {
         return fail(format!("not shared: the {} programs it draws on add up to more than a link carries ({} KiB)", c.plays.len(), links::MAX_CARRIED >> 10));
     }
-    let frag = beats.split_once('#').map_or("", |(_, f)| f);
+    let beats = links::encode_with_tracks(c, sig, notes).0;
+    let (origin, frag) = url.split_once("/#").unwrap_or((DEFAULT_ORIGIN, ""));
     let sealed = frag.split(['~', '*']).next().unwrap_or(frag);
-    let url = format!("{origin}/#{frag}");
     let social = format!("{origin}/c/{sealed}");
     let mut warnings: Vec<String> = Vec::new();
     if url.chars().count() > 2000 {
@@ -102,6 +104,7 @@ fn failure(error: String, claimed: Option<String>, has_text: bool) -> String {
         ("ok", JsonValue::Bool(false)),
         ("cid", JsonValue::Null),
         ("canonical", JsonValue::Null),
+        ("text", JsonValue::Null),
         ("verified", JsonValue::Bool(false)),
         ("warnings", JsonValue::Array(Vec::new())),
         ("notes_unverified", JsonValue::Array(Vec::new())),
@@ -114,7 +117,9 @@ fn failure(error: String, claimed: Option<String>, has_text: bool) -> String {
 }
 
 /// `open(urlOrCidOrFragment)`: decode the text a link carries, canonicalise and compile it, recompute the
-/// CID and refuse a link whose CID is not its text's. A CID alone has no text to verify: the answer says so
+/// CID and refuse a link whose CID is not its text's. `canonical` is the program's canonical text (what is stored
+/// and hashed); `text` is the same program formatted, with the `#!` header lines and comments the link carried, for
+/// the editor (a link made before links carried them: the canonical text). A CID alone has no text to verify: the answer says so
 /// (`claimed_cid`, `has_text: false`) for a caller with a store to look it up in.
 pub fn open_json(s: &str) -> String {
     let env = web_env().env();
@@ -141,6 +146,8 @@ pub fn open_json(s: &str) -> String {
                 ("ok", JsonValue::Bool(true)),
                 ("cid", JsonValue::str(o.cid.clone())),
                 ("canonical", JsonValue::str(canonical)),
+                // what an editor shows: the program formatted, with the `#!` headers and comments the link carried
+                ("text", JsonValue::str(o.text.clone())),
                 ("verified", JsonValue::Bool(true)),
                 ("warnings", strs(warnings)),
                 ("notes_unverified", strs(o.link.notes.iter().cloned())),

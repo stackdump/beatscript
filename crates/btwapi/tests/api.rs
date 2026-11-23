@@ -337,21 +337,27 @@ fn a_link_opens_to_the_program_that_made_it_in_every_form() {
         }
         assert_eq!(s(&sh, "cid"), s(&c, "cid"), "{name}");
         let url = s(&sh, "url");
-        assert!(url.starts_with("https://btw.bitwrap.io/#z"), "{url}");
+        assert!(url.starts_with("https://beatscript.app/#z"), "{url}");
         assert_eq!(n(&sh, "chars") as usize, url.chars().count());
-        assert!(s(&sh, "social_url").starts_with("https://btw.bitwrap.io/c/z") && !s(&sh, "social_url").contains('#'));
+        assert!(s(&sh, "social_url").starts_with("https://beatscript.app/c/z") && !s(&sh, "social_url").contains('#'));
         assert!(s(&sh, "beats_url").starts_with("https://beats.bitwrap.io/p#z"));
-        // the sealed part is the same in all three and is djlive's own
+        // the site's two links seal the same part: the CID and the formatted text (comments and `#!` headers kept)
         let frag = url.split_once('#').unwrap().1;
-        assert_eq!(s(&sh, "beats_url").split_once('#').unwrap().1, frag);
         assert_eq!(s(&sh, "social_url").split_once("/c/").unwrap().1, frag);
+        let formatted = s(&parse(&btwapi::fmt_json(&text)), "text").to_string();
+        assert_eq!(unpacked(url), formatted, "{name}");
+        // beats' form is djlive's own and packs the canonical text (beats' page hashes what it unpacks)
         let comp = djlive::compile::check_with(&text, &btwapi::web_env().env()).compiled.unwrap();
         assert_eq!(s(&sh, "beats_url"), djlive::share::encode(&comp, None, false));
+        assert_eq!(unpacked(s(&sh, "beats_url")), s(&c, "canonical"), "{name}");
         for form in [url.to_string(), s(&sh, "social_url").to_string(), s(&sh, "beats_url").to_string(), format!("#{frag}"), frag.to_string(), format!("  {url}\n")] {
             let o = parse(&btwapi::open_json(&form));
             assert!(b(&o, "ok") && b(&o, "verified"), "{name} {form}: {}", o.js_stringified());
             assert_eq!(s(&o, "cid"), s(&c, "cid"), "{name}");
             assert_eq!(s(&o, "canonical"), s(&c, "canonical"), "{name}");
+            // the editor's text: the program as written (formatted), or the canonical text where the link carries only that
+            let want = if form.contains("beats.bitwrap.io") { s(&c, "canonical") } else { formatted.as_str() };
+            assert_eq!(s(&o, "text"), want, "{name} {form}");
             assert!(matches!(get(&o, "error"), JsonValue::Null));
             assert_eq!(get(&o, "notes_unverified").as_array().unwrap().len(), 0);
             forms += 1;
@@ -364,20 +370,158 @@ fn a_link_opens_to_the_program_that_made_it_in_every_form() {
 fn a_custom_origin_and_a_signature_and_notes_travel_as_given() {
     let text = "# a note\ntempo 120\ndeck A: kick x ~ x ~\n";
     let sh = parse(&btwapi::share_json(text, Some("sigAAAA_-"), true, "http://127.0.0.1:18097/"));
-    assert!(s(&sh, "url").starts_with("http://127.0.0.1:18097/#z") && s(&sh, "url").contains(".sigAAAA_-") && s(&sh, "url").contains('~'), "{}", s(&sh, "url"));
+    // the comment is in the packed text, so the site's link needs no `~notes`
+    assert!(s(&sh, "url").starts_with("http://127.0.0.1:18097/#z") && s(&sh, "url").ends_with(".sigAAAA_-"), "{}", s(&sh, "url"));
     assert!(s(&sh, "social_url").starts_with("http://127.0.0.1:18097/c/z") && s(&sh, "social_url").ends_with(".sigAAAA_-") && !s(&sh, "social_url").contains('~'), "{}", s(&sh, "social_url"));
     assert!(get(&sh, "warnings").as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("signature")));
-    let o = parse(&btwapi::open_json(s(&sh, "url")));
-    assert!(b(&o, "ok"), "{}", o.js_stringified());
-    assert_eq!(s(&o, "sig"), "sigAAAA_-");
+    for u in [s(&sh, "url"), s(&sh, "social_url")] {
+        let o = parse(&btwapi::open_json(u));
+        assert!(b(&o, "ok"), "{}", o.js_stringified());
+        assert_eq!(s(&o, "sig"), "sigAAAA_-");
+        assert_eq!(s(&o, "text"), text);
+        assert!(get(&o, "notes_unverified").as_array().unwrap().is_empty());
+        assert!(get(&o, "warnings").as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("unsealed")));
+    }
+    // beats' link carries them as `~notes`, unverified, beside the canonical text
+    assert!(s(&sh, "beats_url").contains('~'), "{}", s(&sh, "beats_url"));
+    let o = parse(&btwapi::open_json(s(&sh, "beats_url")));
+    assert!(b(&o, "ok") && s(&o, "sig") == "sigAAAA_-", "{}", o.js_stringified());
     assert_eq!(get(&o, "notes_unverified").js_stringified(), r#"["a note"]"#);
-    assert!(get(&o, "warnings").as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("unsealed")));
-    // the social form drops the notes, keeps the signature
-    let o = parse(&btwapi::open_json(s(&sh, "social_url")));
-    assert!(b(&o, "ok") && s(&o, "sig") == "sigAAAA_-" && get(&o, "notes_unverified").as_array().unwrap().is_empty());
-    // no notes asked, none in the link
+    assert_eq!(s(&o, "text"), "tempo 120\ndeck A: kick x ~ x ~\n");
+    // no notes asked: none in beats' link; the site's link still carries the comment in its text
     let sh = parse(&btwapi::share_json(text, None, false, ""));
-    assert!(!s(&sh, "url").contains('~'));
+    assert!(!s(&sh, "url").contains('~') && !s(&sh, "beats_url").contains('~'));
+    assert_eq!(unpacked(s(&sh, "url")), text);
+}
+
+/// The text a link packs (the part after `<CID>.`, inflated).
+fn unpacked(url: &str) -> String {
+    let frag = url.split_once('#').map_or(url, |(_, f)| f);
+    let frag = frag.split_once("/c/").map_or(frag, |(_, f)| f);
+    let packed = frag.split(['~', '*']).next().unwrap().split('.').nth(1).unwrap();
+    let raw = miniz_oxide::inflate::decompress_to_vec(&djengine::codec::base64_url_decode(packed).unwrap()).unwrap();
+    String::from_utf8(raw).unwrap()
+}
+
+fn pack(text: &str) -> String {
+    djengine::codec::base64_url(&miniz_oxide::deflate::compress_to_vec(text.as_bytes(), 10))
+}
+
+fn rag_rondo() -> String {
+    std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/btw/rag-rondo.btw")).unwrap()
+}
+
+#[test]
+fn a_link_keeps_the_header_and_the_comments_and_opens_to_them() {
+    let text = rag_rondo();
+    let fmt = parse(&btwapi::fmt_json(&text));
+    let formatted = s(&fmt, "text").to_string();
+    assert!(formatted.starts_with("#! name: Rag Rondo\n") && formatted.contains("\n# rag-rondo: the reference program"), "{formatted}");
+    let sh = parse(&btwapi::share_json(&text, None, false, ""));
+    assert!(b(&sh, "ok"), "{}", sh.js_stringified());
+    assert_eq!(unpacked(s(&sh, "url")), formatted);
+    for u in [s(&sh, "url"), s(&sh, "social_url")] {
+        let o = parse(&btwapi::open_json(u));
+        assert!(b(&o, "ok") && b(&o, "verified"), "{}", o.js_stringified());
+        // the editor's text keeps the header, the comments and the blank lines; the canonical text is the program's
+        assert_eq!(s(&o, "text"), formatted);
+        assert_eq!(s(&o, "canonical"), s(&fmt, "canonical"));
+        assert_eq!(s(&o, "cid"), s(&fmt, "cid"));
+        // opened text formats to itself and shares to the same link: the round trip is a fixed point
+        let again = parse(&btwapi::share_json(s(&o, "text"), None, false, ""));
+        assert_eq!(s(&again, "url"), s(&sh, "url"));
+        let w: Vec<&str> = get(&o, "warnings").as_array().unwrap().iter().map(|w| w.as_str().unwrap()).collect();
+        assert!(w.iter().any(|w| w.contains("unsealed")) && !w.iter().any(|w| w.contains("not in canonical form")), "{w:?}");
+    }
+}
+
+#[test]
+fn the_cid_is_the_same_with_and_without_the_comments() {
+    let text = rag_rondo();
+    let with = parse(&btwapi::share_json(&text, None, false, ""));
+    let canonical = s(&with, "canonical").to_string();
+    assert!(!canonical.lines().any(|l| l.trim_start().starts_with('#')), "the canonical text has no comments or headers");
+    let without = parse(&btwapi::share_json(&canonical, None, false, ""));
+    assert_eq!(s(&with, "cid"), s(&without, "cid"));
+    assert_eq!(s(&with, "cid"), "z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw", "the CID rag-rondo.btw names");
+    // the two links differ only in the packed text; each opens to its own text and the same program
+    assert_ne!(s(&with, "url"), s(&without, "url"));
+    for (sh, text) in [(&with, text.as_str()), (&without, canonical.as_str())] {
+        let o = parse(&btwapi::open_json(s(sh, "url")));
+        assert!(b(&o, "ok") && b(&o, "verified"));
+        assert_eq!((s(&o, "cid"), s(&o, "canonical")), (s(&with, "cid"), canonical.as_str()));
+        assert_eq!(s(&o, "text"), s(&parse(&btwapi::fmt_json(text)), "text"));
+    }
+    // the size the comments add (examples/btw/rag-rondo.btw: twelve header and comment lines over a 4.6 KB program)
+    let (a, b2) = (n(&without, "chars"), n(&with, "chars"));
+    eprintln!("rag-rondo link: {a} chars canonical only, {b2} chars with its header and comments (+{})", b2 - a);
+    assert!(b2 > a);
+}
+
+#[test]
+fn a_link_made_before_links_kept_the_comments_still_opens() {
+    // links made by main bc5f1ce2 (before 7ec3fd76): the canonical text only, on btw.bitwrap.io (and two rag-rondo links
+    // made there by `btwd share`, one with `--notes`)
+    let fixture = parse(&std::fs::read_to_string(dir("testdata").join("links-before-formatted.json")).unwrap());
+    let links = get(&fixture, "links").as_array().unwrap();
+    assert!(links.len() >= 10 && links.iter().any(|l| s(l, "program") == "rag-rondo --notes"));
+    for l in links {
+        let url = s(l, "url");
+        assert!(url.starts_with("https://btw.bitwrap.io/#z"), "{url}");
+        assert_eq!(unpacked(url), s(l, "canonical"), "an old link packs the canonical text");
+        let o = parse(&btwapi::open_json(url));
+        assert!(b(&o, "ok") && b(&o, "verified"), "{}: {}", s(l, "program"), o.js_stringified());
+        assert_eq!(s(&o, "cid"), s(l, "cid"));
+        assert_eq!(s(&o, "canonical"), s(l, "canonical"));
+        // nothing beside the program came along in the text: the editor gets the canonical text, with no warning about it
+        assert_eq!(s(&o, "text"), s(l, "canonical"), "{}", s(l, "program"));
+        let w: Vec<&str> = get(&o, "warnings").as_array().unwrap().iter().map(|w| w.as_str().unwrap()).collect();
+        assert!(!w.iter().any(|w| w.contains("canonical form") || w.contains("header lines")), "{}: {w:?}", s(l, "program"));
+        // and the same program shared today gets the same CID
+        let now = parse(&btwapi::share_json(s(l, "canonical"), None, false, ""));
+        assert_eq!(s(&now, "cid"), s(l, "cid"));
+    }
+    // the old --notes link's comments are still read, as unverified notes
+    let notes = links.iter().find(|l| s(l, "program") == "rag-rondo --notes").unwrap();
+    let o = parse(&btwapi::open_json(s(notes, "url")));
+    let nu = get(&o, "notes_unverified").as_array().unwrap();
+    assert!(nu.len() >= 9 && nu.iter().any(|n| n.as_str().unwrap().contains("Scott Joplin")), "{}", o.js_stringified());
+}
+
+#[test]
+fn a_tampered_link_is_refused_and_its_comments_are_unsealed() {
+    let sh = parse(&btwapi::share_json(&rag_rondo(), None, false, ""));
+    let cid = s(&sh, "cid").to_string();
+    let text = unpacked(s(&sh, "url"));
+    // a change to the music, under the same CID: refused
+    for (from, to) in [("tempo 122", "tempo 123"), ("swing 0.18", "swing 0.2"), ("key c", "key d")] {
+        assert!(text.contains(from), "{from}");
+        let forged = format!("https://beatscript.app/#{cid}.{}", pack(&text.replacen(from, to, 1)));
+        let o = parse(&btwapi::open_json(&forged));
+        assert!(!b(&o, "ok") && !b(&o, "verified"), "{from} -> {to}: {}", o.js_stringified());
+        assert!(s(&o, "error").starts_with("refused: the link says "), "{}", s(&o, "error"));
+        assert!(matches!(get(&o, "text"), JsonValue::Null));
+    }
+    // a change to a comment or a header line is not covered by the CID: it opens, and says the comments are unsealed
+    let edited = text.replacen("#! name: Rag Rondo", "#! name: Rag Rondo (edited)", 1);
+    let o = parse(&btwapi::open_json(&format!("https://beatscript.app/#{cid}.{}", pack(&edited))));
+    assert!(b(&o, "ok") && b(&o, "verified") && s(&o, "cid") == cid, "{}", o.js_stringified());
+    assert!(s(&o, "text").starts_with("#! name: Rag Rondo (edited)\n"));
+    assert!(get(&o, "warnings").as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("unsealed")));
+}
+
+#[test]
+fn links_are_made_on_beatscript_app_unless_another_site_is_named() {
+    assert_eq!(btwapi::DEFAULT_ORIGIN, "https://beatscript.app");
+    assert_eq!(djlive::share::ORIGIN, "https://beatscript.app");
+    for origin in ["", "  ", "https://beatscript.app", "https://beatscript.app/"] {
+        let sh = parse(&btwapi::share_json("deck A: kick x ~ x ~\n", None, false, origin));
+        assert!(s(&sh, "url").starts_with("https://beatscript.app/#z") && s(&sh, "social_url").starts_with("https://beatscript.app/c/z"), "{origin:?}: {}", sh.js_stringified());
+        assert!(!sh.js_stringified().contains("btw.bitwrap.io"));
+    }
+    // a named site is kept (a local server, or the legacy host if someone asks for it)
+    let sh = parse(&btwapi::share_json("deck A: kick x ~ x ~\n", None, false, "https://btw.bitwrap.io"));
+    assert!(s(&sh, "url").starts_with("https://btw.bitwrap.io/#z"));
 }
 
 #[test]
@@ -389,7 +533,7 @@ fn a_forged_link_is_refused() {
     let (packed_a, packed_b) = (packed(&la), packed(&lb));
     // A's text under B's CID, and the other way round
     for (cid, packed) in [(&cid_b, &packed_a), (&cid_a, &packed_b)] {
-        for form in [format!("https://btw.bitwrap.io/#{cid}.{packed}"), format!("https://btw.bitwrap.io/c/{cid}.{packed}"), format!("{cid}.{packed}")] {
+        for form in [format!("https://beatscript.app/#{cid}.{packed}"), format!("https://beatscript.app/c/{cid}.{packed}"), format!("{cid}.{packed}")] {
             let o = parse(&btwapi::open_json(&form));
             assert!(!b(&o, "ok") && !b(&o, "verified"), "{form}");
             assert!(s(&o, "error").starts_with("refused: the link says "), "{}", s(&o, "error"));
@@ -399,7 +543,7 @@ fn a_forged_link_is_refused() {
     }
     // a damaged text: not base64, not deflate, cut short, not a program
     let good = s(&la, "url").to_string();
-    for bad in [format!("https://btw.bitwrap.io/#{cid_a}.!!!!"), format!("https://btw.bitwrap.io/#{cid_a}.AAAA"), good[..good.len() - 40].to_string(), format!("https://btw.bitwrap.io/#{cid_a}.{}", &packed_a[..packed_a.len() / 2])] {
+    for bad in [format!("https://beatscript.app/#{cid_a}.!!!!"), format!("https://beatscript.app/#{cid_a}.AAAA"), good[..good.len() - 40].to_string(), format!("https://beatscript.app/#{cid_a}.{}", &packed_a[..packed_a.len() / 2])] {
         let o = parse(&btwapi::open_json(&bad));
         assert!(!b(&o, "ok") && !b(&o, "verified"), "{bad}: {}", o.js_stringified());
         assert!(!s(&o, "error").is_empty());
@@ -425,7 +569,7 @@ fn a_link_to_a_program_that_no_longer_checks_still_opens_with_a_warning() {
     let cid = djlive::compile::program_cid(&bad);
     // djlive makes links only of programs that check: pack the text by hand the way `encode` does
     let packed = djengine::codec::base64_url(&miniz_oxide::deflate::compress_to_vec(bad.as_bytes(), 10));
-    let url = format!("https://btw.bitwrap.io/#{cid}.{packed}");
+    let url = format!("https://beatscript.app/#{cid}.{packed}");
     let o = parse(&btwapi::open_json(&url));
     assert!(b(&o, "ok") && b(&o, "verified"), "{}", o.js_stringified());
     assert_eq!(s(&o, "cid"), cid);

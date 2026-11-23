@@ -293,8 +293,8 @@ at generation 2"), not an invalid performance.
 ### 3.3 Links: performance versus program
 
 ```text
-program link      https://btw.bitwrap.io/#<program CID>.<base64url(deflate(canonical text))>[.<sig>][~<notes>]
-performance link  https://btw.bitwrap.io/#perf:<perf CID>.<base64url(deflate({"text": canonical text, "log": tuples}))>
+program link      https://beatscript.app/#<program CID>.<base64url(deflate(formatted text))>[.<sig>]
+performance link  https://beatscript.app/#perf:<perf CID>.<base64url(deflate({"text": canonical text, "log": tuples}))>
 ```
 
 A program link is unchanged and **always means the neutral performance** (BTW.md's "opening it reproduces every generation,

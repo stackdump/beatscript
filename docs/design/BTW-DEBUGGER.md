@@ -3,7 +3,7 @@
 *Design only. Nothing here is implemented.* Branch `design/btw-debugger`, cut from `origin/feat/btw-language`
 at `dad7d72`. Written 2026-11-17 for Matt.
 
-**The ask.** A user of btw (djapp on the desktop, btw.bitwrap.io on the web, djandroid on the phone) can
+**The ask.** A user of btw (djapp on the desktop, beatscript.app on the web, djandroid on the phone) can
 pause playback at a chosen place, see exactly where they are, and say "add a transition effect here",
 "make this bar halftime", "drop the hats for 2 bars". A model gets that exact context and answers with a
 **small, checked edit** to the program text. The user previews it, A/B's it against the original, accepts
@@ -825,7 +825,7 @@ The rule that decides placement: **anything that is a function of (text, bar) go
 - The window already folds the plan under one line; the debugger **adds one collapsible block (Debug)**
   rather than a second panel, in the same style, to keep the audit shots of `layout_audit.rs` stable.
 
-### 9.2 Web (btw.bitwrap.io)
+### 9.2 Web (beatscript.app)
 
 The core is `djlive`, so `BtwRun` (the wasm `Live` plus a command-queue host) gains the same debug
 methods, and the page is `driver.js` + `editor.js` + a new `debug.js`:

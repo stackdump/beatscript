@@ -1,6 +1,6 @@
 [package]
 name = "djweb"
-description = "The browser module for btw.bitwrap.io: btwapi + the Live runtime behind wasm-bindgen, plus the public djrust engine facade (Dj, DjComposer) in the same .wasm."
+description = "The browser module for beatscript.app: btwapi + the Live runtime behind wasm-bindgen, plus the public djrust engine facade (Dj, DjComposer) in the same .wasm."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

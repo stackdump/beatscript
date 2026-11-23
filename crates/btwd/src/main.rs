@@ -1,4 +1,4 @@
-//! btwd: btw from a shell and for the btw.bitwrap.io server. Program text on stdin (`-`) or `--file`;
+//! btwd: btw from a shell and for the beatscript.app server. Program text on stdin (`-`) or `--file`;
 //! JSON on stdout; exit 0 whenever the tool ran (a program with errors is an answer, not a failure),
 //! non-zero only for usage, I/O or a panic. `render` is render.rs's.
 

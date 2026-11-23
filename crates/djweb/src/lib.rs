@@ -87,7 +87,9 @@ pub fn btw_open(url_or_cid_or_fragment: &str) -> String {
 }
 
 /// The self-sealing link for a program. `sig`: the author's signature over the CID, carried as given.
-/// `notes`: carry the comments (unsealed, `~notes`). `origin`: the site's origin (default `https://btw.bitwrap.io`).
+/// The link packs the text formatted (`#!` headers and comments kept,
+/// unsealed: the CID is the canonical text's). `notes`: carry the comments in beats' link too (`~notes`). `origin`: the site's
+/// origin (default `https://beatscript.app`).
 #[wasm_bindgen]
 pub fn btw_share(text: &str, sig: Option<String>, notes: bool, origin: Option<String>) -> String {
     init();
@@ -295,8 +297,12 @@ mod tests {
 
     #[test]
     fn share_default_origin_is_the_site() {
-        assert_eq!(btwapi::DEFAULT_ORIGIN, "https://btw.bitwrap.io");
-        let j = btwapi::share_json("deck A: kick x ~ x ~\n", None, false, btwapi::DEFAULT_ORIGIN);
-        assert!(j.contains("https://btw.bitwrap.io/#"), "{j}");
+        assert_eq!(btwapi::DEFAULT_ORIGIN, "https://beatscript.app");
+        // what btw_share does with no origin given; the link opens to the text as written, comment and all
+        let j = btwapi::share_json("# a comment\ndeck A: kick x ~ x ~\n", None, false, btwapi::DEFAULT_ORIGIN);
+        assert!(j.contains("\"url\":\"https://beatscript.app/#z") && !j.contains("btw.bitwrap.io"), "{j}");
+        let url = j.split("\"url\":\"").nth(1).and_then(|r| r.split('"').next()).unwrap();
+        let o = btwapi::open_json(url);
+        assert!(o.contains("\"text\":\"# a comment\\ndeck A: kick x ~ x ~\\n\""), "{o}");
     }
 }

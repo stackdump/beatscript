@@ -462,7 +462,7 @@ const A_LIVE: &[Action] = &[
     Action::new("fmt", "the canonical form of a program: its text as the CID sees it, the CID, and the comments (which are not part of it)", Effect::Read)
         .with(&[Param::new("text", "string", "the program; none: the window's text")])
         .probe(r#"{"text":"deck A: kick"}"#),
-    Action::new("share", "a self-sealing link, https://beats.bitwrap.io/p#<CID>.<deflated canonical text>[.<sig>][~<notes>]; a private program is refused", Effect::Read)
+    Action::new("share", "a self-sealing link, https://beatscript.app/#<CID>.<deflated formatted text>[.<sig>] (the `#!` headers and comments kept, unsealed); a private program is refused", Effect::Read)
         .with(&[
             Param::new("id", "string", "a saved program (cid, part of one, name); none: the running program, else `text`"),
             Param::new("text", "string", "a program to share"),
@@ -1892,8 +1892,8 @@ pub(super) const NOUNS: &[Noun] = &[
               note spelling, param order do not change it). save {name, text?, license?, visibility?, author?}: a licensed .btw object \
               (CC0 public unless said); load {id | path, eval?}; list; fork {id}: records forkedFrom and carries credits; license / \
               visibility {id, value}; export {id, path} and import {path | text}: .btw files; share {id | text, sig?, notes?}: a \
-              self-sealing link https://beats.bitwrap.io/p#CID.text; open {url}: decodes it, recompiles, recomputes the CID and refuses \
-              a mismatch; instruments: every voice, kit and palette `inst=`, `kit=` and `sound=` accept. stop: end the program (the \
+              self-sealing link https://beatscript.app/#CID.text (the text formatted: `#!` headers and comments kept, unsealed); open {url}: decodes it, \
+              recompiles, recomputes the CID and refuses a mismatch, and puts the formatted text in the editor; instruments: every voice, kit and palette `inst=`, `kit=` and `sound=` accept. stop: end the program (the \
               decks play on; a strip a move muted is put back). `#! genre: techno` and `#! tags: acid, drop` header lines link a program to the \
               bitwrap ontology (a misspelt term is a warning in check, with a did-you-mean, and an error in save and import; save {genre, tags} \
               sets them): jsonld {id | text}: the program as JSON-LD; terms {kind}: the vocabulary; generation {gen, scope?}: the CID of generation N of an `evolve`; \

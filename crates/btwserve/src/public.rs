@@ -224,7 +224,7 @@ impl Checker {
         Ok(shape_open(&Self::parse(&out, "open")?))
     }
 
-    /// `Checker.Share`: the `api.ShareReport` with btwd's default origin (https://btw.bitwrap.io); `fix_share` makes
+    /// `Checker.Share`: the `api.ShareReport` with btwd's default origin (https://beatscript.app); `fix_share` makes
     /// the links a site's own.
     pub async fn share(&self, owner: &str, text: &str) -> Result<Value, ApiError> {
         let t = text.to_string();
@@ -429,6 +429,7 @@ pub fn shape_open(v: &Value) -> Value {
     m.insert("ok".into(), json!(b_of(v, "ok")));
     m.insert("cid".into(), json!(s_of(v, "cid")));
     m.insert("canonical".into(), json!(s_of(v, "canonical")));
+    put_s(&mut m, "text", s_of(v, "text"), true);
     m.insert("verified".into(), json!(b_of(v, "verified")));
     put_strs(&mut m, "warnings", strs_of(v, "warnings"));
     put_strs(&mut m, "notes_unverified", strs_of(v, "notes_unverified"));
@@ -1281,6 +1282,23 @@ mod tests {
         let keys: Vec<&String> = rep.as_object().unwrap().keys().collect();
         assert_eq!(keys[..6], ["ok", "errors", "warnings", "diagnostics", "cid", "canonical"]);
         assert_eq!(clip("ab€".into(), 3), "ab…");
+    }
+
+    /// `/api/open` and the MCP `open` answer the text the link carried, formatted with its `#!` header and comments, beside
+    /// the canonical text; `/api/share` makes the link on beatscript.app with that text in it.
+    #[test]
+    fn open_and_share_keep_the_header_and_comments() {
+        let text = "#! name: Two Kicks\n# the only comment\ntempo 120\ndeck A: kick x ~ x ~\n";
+        let sh = shape_share(&serde_json::from_str(&btwapi::share_json(text, None, false, "")).unwrap());
+        assert!(sh["url"].as_str().unwrap().starts_with("https://beatscript.app/#z"), "{sh}");
+        let o = shape_open(&serde_json::from_str(&btwapi::open_json(sh["url"].as_str().unwrap())).unwrap());
+        assert_eq!(o["ok"], true);
+        assert_eq!(o["text"], text);
+        assert_eq!(o["canonical"], "tempo 120\ndeck A: kick x ~ x ~\n");
+        assert_eq!(o["cid"], sh["cid"]);
+        // a refused link has no text
+        let bad = shape_open(&serde_json::from_str(&btwapi::open_json("zabc.AAAA")).unwrap());
+        assert!(bad.get("text").is_none(), "{bad}");
     }
 
     /// Doc comments (project-datum 6662) reach a client: `/api/check` and the MCP `check` answer through these shapes,

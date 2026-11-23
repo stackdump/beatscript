@@ -624,9 +624,11 @@ impl Cards {
         } else {
             return Ok(Prog::bare(cid, St::Unknown));
         };
+        // the page's "open" link keeps the link's own packed text when it is the program the CID names: the canonical text
+        // (an older link) or the formatted one, whose `#!` headers and comments then open with it
         if !packed.is_empty() && !p.canonical.is_empty() {
             if let Some((_, t)) = parse_link(&format!("{cid}.{packed}")) {
-                if t == p.canonical {
+                if t == p.canonical || p.report.as_ref().is_some_and(|r| r.ok && r.cid == cid) {
                     p.packed = packed.to_string();
                 }
             }

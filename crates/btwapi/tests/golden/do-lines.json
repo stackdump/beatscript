@@ -163,11 +163,11 @@
   },
   "share": {
     "ok": true,
-    "url": "https://btw.bitwrap.io/#z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP.NY_dboMwDIXv8xTnspu6DhBjDCmTujcJ4CoIkiAnZTBVe_Ym_bmwEtvH37EDmdkhLyox0gZlRE_diGODcYgv7T72qF9wgbeKCf9Yb3GBHrQKWF9rLDTJKjscvrL77E8Drdg4u6HTjvudMp-JoHhOkdI9znPiClqIN-QVWsW-wYmJ_gizZuXpVpOFiDbxhxonxygfysBpPWeRLOUxbmt76cM5BGLROyyucz0xPAWYYZUZ3r6Rw0W_SEoM8auJJvjNdk8IqzA4mb-XT8-ywV012Mhd1ISWVPBRUjxmhFE-thpwOqVFdijEFQ",
-    "social_url": "https://btw.bitwrap.io/c/z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP.NY_dboMwDIXv8xTnspu6DhBjDCmTujcJ4CoIkiAnZTBVe_Ym_bmwEtvH37EDmdkhLyox0gZlRE_diGODcYgv7T72qF9wgbeKCf9Yb3GBHrQKWF9rLDTJKjscvrL77E8Drdg4u6HTjvudMp-JoHhOkdI9znPiClqIN-QVWsW-wYmJ_gizZuXpVpOFiDbxhxonxygfysBpPWeRLOUxbmt76cM5BGLROyyucz0xPAWYYZUZ3r6Rw0W_SEoM8auJJvjNdk8IqzA4mb-XT8-ywV012Mhd1ISWVPBRUjxmhFE-thpwOqVFdijEFQ",
+    "url": "https://beatscript.app/#z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP.NZBdbsIwEITffYqR-kIrSJOIUhoplSgn2cQLsUjsaG0CqVDPXifAw8p_s9_M-gXarVpj2YOshj8fSZaoG65PrEFHMtYHhIZROxvEtRA-Gh9kxGK_T5e4iAmBLQ5OZlkVLtQbBPbBvyYqcNc7ZPlGnXgEdUrpiMauwMnElRcfS2xfcYO3JIw_XOe6oTENBVzfthi4LTdpknyl996fAg1J5-wYczrRC-o-JwJJP9V0XOLcT1yleOAYNdugIvEFDsL8y-gbIc_zXZmr6BN32M4zrB_KIFM-ZzF5lrsY1-rSh3McVpR2GFztNAs8B3TmWqZYfSODi36RNDHUpWFu4UdbPyFCwbgye18_PdcF7ipjI3egFhVT8FGSP3pURz4-FfHfI7pCmuTqHw",
+    "social_url": "https://beatscript.app/c/z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP.NZBdbsIwEITffYqR-kIrSJOIUhoplSgn2cQLsUjsaG0CqVDPXifAw8p_s9_M-gXarVpj2YOshj8fSZaoG65PrEFHMtYHhIZROxvEtRA-Gh9kxGK_T5e4iAmBLQ5OZlkVLtQbBPbBvyYqcNc7ZPlGnXgEdUrpiMauwMnElRcfS2xfcYO3JIw_XOe6oTENBVzfthi4LTdpknyl996fAg1J5-wYczrRC-o-JwJJP9V0XOLcT1yleOAYNdugIvEFDsL8y-gbIc_zXZmr6BN32M4zrB_KIFM-ZzF5lrsY1-rSh3McVpR2GFztNAs8B3TmWqZYfSODi36RNDHUpWFu4UdbPyFCwbgye18_PdcF7ipjI3egFhVT8FGSP3pURz4-FfHfI7pCmuTqHw",
     "beats_url": "https://beats.bitwrap.io/p#z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP.NY_dboMwDIXv8xTnspu6DhBjDCmTujcJ4CoIkiAnZTBVe_Ym_bmwEtvH37EDmdkhLyox0gZlRE_diGODcYgv7T72qF9wgbeKCf9Yb3GBHrQKWF9rLDTJKjscvrL77E8Drdg4u6HTjvudMp-JoHhOkdI9znPiClqIN-QVWsW-wYmJ_gizZuXpVpOFiDbxhxonxygfysBpPWeRLOUxbmt76cM5BGLROyyucz0xPAWYYZUZ3r6Rw0W_SEoM8auJJvjNdk8IqzA4mb-XT8-ywV012Mhd1ISWVPBRUjxmhFE-thpwOqVFdijEFQ",
     "cid": "z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP",
-    "chars": 386,
+    "chars": 470,
     "canonical": "tempo 126\nkey am\ndeck A: kick e(5, 8) | snare ~ x ~ x | hihat x*8 vel=60..90\ndeck B: harmony chord(am7) | arp arp(am7, up, 8)\nevery 16 bars: freeze phrase bars=2\nat bar 8 for 4 bars: trick on deck=A kind=stutter\ndo vocoder set mix=0 -> 1 over 8 bars\nwheel sync deck=A ratio=1/4\nat bar 4: wheel interval beats=1/2 deck=A\nmaster: reverb 0.2\n",
     "warnings": []
   }
