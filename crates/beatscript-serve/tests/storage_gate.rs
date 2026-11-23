@@ -661,6 +661,78 @@ fn share_stores_the_canonical_text_and_names_it_from_the_header() {
     assert_eq!(o["cid"], cid_of(LOOSE));
 }
 
+/// A recipe's expansion is stored beside it (roadmap 6680 item 3): on each program write path (MCP share signed in, PUT
+/// /api/programs, PUT /api/shares) a program with references gets its written-out program stored as a program of its own under
+/// check's `expanded_cid`, through the gate, with the recipe's licence; `/p/<expanded_cid>` serves it; the two name each other
+/// (the recipe's meta `expands_to`, the expansion's `expanded_from` and `based_on`), and both pages' blocks say so.
+#[test]
+fn a_recipe_is_stored_with_its_expansion_beside_it() {
+    let s = start();
+    let programs = s.dir.path().join("programs");
+    let expanded_of = |t: &str| serde_json::from_str::<Value>(&beatscript_api::check_json(t)).unwrap()["expanded_cid"].as_str().unwrap().to_string();
+    let file = |cid: &str| -> Value { serde_json::from_str(&std::fs::read_to_string(programs.join(format!("{cid}.json"))).unwrap_or_else(|e| panic!("{cid}: {e}"))).unwrap() };
+
+    // MCP share, signed in
+    let recipe = "#! name: Season\narrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n";
+    let (cid, x) = (cid_of(recipe), expanded_of(recipe));
+    assert_ne!(cid, x);
+    let (err, v) = s.mcp(TOKEN_A, "share", json!({"text": recipe, "license": "CC-BY-4.0", "credits": ["ann"]}));
+    assert!(!err && v["stored"] == true, "{v}");
+    assert_eq!(v["expanded_cid"], x, "{v}");
+    assert_eq!(v["expanded_url"], format!("http://{}/p/{x}", s.addr));
+    let (r, e) = (file(&cid), file(&x));
+    assert_eq!(r["meta"]["expands_to"], x);
+    assert_eq!(e["text"], serde_json::from_str::<Value>(&beatscript_api::expand_json(recipe, false)).unwrap()["canonical"], "the expansion stored is expand's");
+    let m = &e["meta"];
+    assert_eq!((m["license"].as_str(), m["source"].as_str(), m["expanded_from"].as_str(), m["name"].as_str()), (Some("CC-BY-4.0"), Some("expansion"), Some(cid.as_str()), Some("Season")));
+    assert_eq!(m["credits"], json!(["ann"]));
+    let based = m["based_on"].as_array().unwrap();
+    assert!(based.iter().any(|l| l.as_str().is_some_and(|l| l.starts_with("template(passacaglia, @eccl3_season, upper=ode_to_joy) -> z"))), "{m}");
+    assert!(based.iter().any(|l| l == "ode_to_joy"), "{m}");
+    // /p/<expanded_cid> serves it: its canonical text, and its page's block says where it came from
+    let t = s.call("GET", &format!("/p/{x}.beatscript"), &[], b"");
+    assert_eq!((t.status, t.body.as_str()), (200, e["text"].as_str().unwrap()));
+    let page = s.call("GET", &format!("/p/{x}"), &[("Accept", "text/html".into())], b"");
+    assert_eq!(page.status, 200);
+    assert!(page.body.contains(&format!(r#""expandedFrom":"{cid}""#)) && page.body.contains(r#""derivation":"expanded""#), "{}", page.body);
+    // and the recipe's says what it expands to, and its nested part (the theme in its role) by CID
+    let page = s.call("GET", &format!("/p/{cid}"), &[("Accept", "text/html".into())], b"");
+    assert!(page.body.contains(&format!(r#""expandsTo":"{x}""#)) && page.body.contains(r#""hasPart":[{"@type":"CreativeWork","@id":"z"#), "{}", page.body);
+    // the store's own audit: everything stored is admitted
+    assert!(beatscript_serve::gate::audit_dir(&programs).is_empty());
+    // sharing it again changes nothing (first write wins) and still answers the expansion
+    let (_, v) = s.mcp(TOKEN_A, "share", json!({"text": recipe}));
+    assert_eq!(v["expanded_cid"], x);
+
+    // PUT /api/programs/<cid> (anonymous, CC0)
+    let recipe = "arrange from template(canon, @mgm_pease_porridge_hot, subject=[d5 c#5 b4 a4])\n";
+    let (cid, x) = (cid_of(recipe), expanded_of(recipe));
+    let r = s.call("PUT", &format!("/api/programs/{cid}"), &[("Content-Type", "text/plain".into())], recipe.as_bytes());
+    assert_eq!(r.status, 201, "{}", r.body);
+    assert_eq!(r.json()["expanded_cid"], x);
+    assert_eq!(r.json()["meta"]["expands_to"], x);
+    assert_eq!((file(&x)["meta"]["license"].as_str(), file(&x)["meta"]["expanded_from"].as_str()), (Some("CC0-1.0"), Some(cid.as_str())));
+    let a = s.call("GET", &format!("/api/programs/{x}"), &[], b"");
+    assert_eq!(a.status, 200, "{}", a.body);
+
+    // PUT /api/shares/<cid> (signed in)
+    let recipe = "arrange from template(passacaglia, @eccl3_season, ground=[g1 ~ d2 ~])\n";
+    let (cid, x) = (cid_of(recipe), expanded_of(recipe));
+    let body = json!({"text": recipe}).to_string();
+    let r = s.call("PUT", &format!("/api/shares/{cid}"), &[Server::bearer(TOKEN_A), ("Content-Type", "application/json".into())], body.as_bytes());
+    assert_eq!(r.status, 201, "{}", r.body);
+    assert_eq!(r.json()["expanded_cid"], x, "{}", r.body);
+    assert!(r.json()["expanded_url"].as_str().unwrap().ends_with(&format!("/p/{x}")));
+    assert_eq!(file(&cid)["meta"]["expands_to"], x);
+    assert_eq!(file(&x)["meta"]["source"], "expansion");
+
+    // a program with no references has nothing beside it
+    let r = s.call("PUT", &format!("/api/programs/{}", cid_of(PLAIN)), &[("Content-Type", "text/plain".into())], PLAIN.as_bytes());
+    assert_eq!(r.status, 201, "{}", r.body);
+    assert!(r.json().get("expanded_cid").is_none() && r.json()["meta"].get("expands_to").is_none(), "{}", r.body);
+    assert!(beatscript_serve::gate::audit_dir(&programs).is_empty());
+}
+
 fn link_of(s: &Server, text: &str) -> String {
     let (_, v) = s.mcp(TOKEN_A, "share", json!({"text": text}));
     v["url"].as_str().unwrap().to_string()

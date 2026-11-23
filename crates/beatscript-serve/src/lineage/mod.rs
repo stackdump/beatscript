@@ -14,6 +14,12 @@
 //! to its CID, and which checks without `use restricted` or samples. A walk stops at a program that is not: its CID is
 //! not shown, and nothing beyond it is reached through it.
 //!
+//! **A recipe and its expansion** (roadmap 6680): a program with references is stored with its expansion beside it (store.rs
+//! `put_expansion`). The recipe's node says the CID it `expandsTo` (what `check` gives as its `expanded_cid`); the expansion's says
+//! the recipes it was `expandedFrom` (its own meta, and every recipe whose meta names it) and `isBasedOn` each reference they wrote
+//! out into it, with its pin. A tree shows the root's expansion, or its recipes, among its programs. An expansion's sources are
+//! its recipe's, which counts them already: they are not counted again for curation.
+//!
 //! The store is append-only (first write wins), so the index grows by reading only the files it has not seen, at most
 //! every [`RESCAN`], and a pair's diff, once computed, is kept.
 //!
@@ -80,6 +86,10 @@ struct Entry {
     /// `vendored`). Vendored parts come from `meta.based_on` (`["<call> -> <cid>"]`, the `# from:` lines its text had when it
     /// was saved, gate::write_program: the canonical text has no comments).
     bases: Vec<(String, Option<String>, &'static str)>,
+    /// A recipe's stored expansion, as its meta names it (`expands_to`).
+    expands_to: String,
+    /// A stored expansion's recipe (`expanded_from`): its bases are what the recipe wrote out into it.
+    expanded_from: String,
 }
 
 /// How often public programs draw on a CID or a call: the curation signal (roadmap 6670): what is imported, called and vendored
@@ -117,6 +127,12 @@ pub struct Node {
     pub renamed_to: String,
     /// A BeatScript 2 program whose legacy (BeatScript 1) CID may be shown: that CID.
     pub renamed_from: String,
+    /// A recipe's expansion: the CID of the program its references write out to (check's `expanded_cid`), when that is another.
+    pub expands_to: Option<String>,
+    /// A stored expansion's recipes that may be shown, by CID (sorted).
+    pub expanded_from: Vec<String>,
+    /// A stored expansion's sources: each reference its recipe wrote out into it, and the CID it is pinned to.
+    pub based_on: Vec<(String, Option<String>)>,
 }
 
 impl Node {
@@ -167,6 +183,8 @@ pub struct Tree {
     /// Every fork below the root, breadth first, each with its parent.
     pub forks: Vec<Node>,
     pub edges: Vec<Edge>,
+    /// The root's stored expansion, or the recipes it is the expansion of, that may be shown.
+    pub expansions: Vec<Node>,
     /// The parent the rights name is not shown (not public, not stored here, or the chain is longer than the cap).
     pub ancestors_cut: bool,
     /// More forks or siblings than the caps.
@@ -182,6 +200,8 @@ struct Index {
     children: HashMap<String, BTreeSet<String>>,
     /// A CID or a call (`gen@2 techno seed=42 section=drop part=bass`) -> the public files that reference it, and that vendored it.
     referenced: HashMap<String, (BTreeSet<String>, BTreeSet<String>)>,
+    /// A stored expansion's CID -> the recipes that expand to it (from either side's meta).
+    recipes: HashMap<String, BTreeSet<String>>,
 }
 
 pub struct Lineage {
@@ -198,6 +218,8 @@ struct Facts {
     tempo: Option<f64>,
     key: String,
     text: String,
+    /// check's `expanded_cid`.
+    expanded: String,
 }
 
 static SHARED: OnceLock<Arc<Lineage>> = OnceLock::new();
@@ -258,7 +280,19 @@ fn read_file(path: &Path, cid: &str) -> Option<Entry> {
     // what it is based on: the calls and borrows of its text, and what its saved `# from:` lines say it vendored
     let notes: Vec<String> = m.get("based_on").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(|l| format!("from: {l}")).collect()).unwrap_or_default();
     let bases = djlive::refs::based_on(text, &notes).into_iter().map(|b| (b.call, b.cid, b.how)).collect();
-    Some(Entry { name: s("name"), license: s("license"), author: s("author"), forked_from: if is_cid(&forked) { forked } else { String::new() }, credits, created: s("created"), renamed, bases })
+    let cid_or_none = |k: &str| Some(s(k)).filter(|c| is_cid(c) && c != cid).unwrap_or_default();
+    Some(Entry {
+        name: s("name"),
+        license: s("license"),
+        author: s("author"),
+        forked_from: if is_cid(&forked) { forked } else { String::new() },
+        credits,
+        created: s("created"),
+        renamed,
+        bases,
+        expands_to: cid_or_none("expands_to"),
+        expanded_from: cid_or_none("expanded_from"),
+    })
 }
 
 impl Lineage {
@@ -321,8 +355,16 @@ impl Lineage {
                 if !en.forked_from.is_empty() && en.forked_from != cid && !en.renamed {
                     ix.children.entry(en.forked_from.clone()).or_default().insert(cid.to_string());
                 }
-                // nor is it another program drawing on what the old one draws on: the same music counts once, as the old CID
-                for (call, resolves, how) in en.bases.iter().filter(|_| !en.renamed) {
+                if !en.expands_to.is_empty() {
+                    ix.recipes.entry(en.expands_to.clone()).or_default().insert(cid.to_string());
+                }
+                if !en.expanded_from.is_empty() {
+                    ix.recipes.entry(cid.to_string()).or_default().insert(en.expanded_from.clone());
+                }
+                // an expansion's sources are its recipe's, counted through the recipe; and a twin is not another program drawing on
+                // what the old one draws on: the same music counts once, as the old CID
+                let counted: &[(String, Option<String>, &'static str)] = if en.expanded_from.is_empty() && !en.renamed { &en.bases } else { &[] };
+                for (call, resolves, how) in counted {
                     for k in std::iter::once(call.clone()).chain(resolves.clone()) {
                         let e = ix.referenced.entry(k).or_default();
                         if *how == "vendored" { e.1.insert(cid.to_string()) } else { e.0.insert(cid.to_string()) };
@@ -343,7 +385,12 @@ impl Lineage {
             if rep["ok"] != true || rep["cid"].as_str() != Some(cid) || rep["restricted"] == true || rep["uses_assets"] == true {
                 return None;
             }
-            Some(Facts { tempo: rep["tempo"].as_f64(), key: rep["key"].as_str().unwrap_or("").to_string(), text: rep["canonical"].as_str().map(str::to_string).unwrap_or(t) })
+            Some(Facts {
+                tempo: rep["tempo"].as_f64(),
+                key: rep["key"].as_str().unwrap_or("").to_string(),
+                text: rep["canonical"].as_str().map(str::to_string).unwrap_or(t),
+                expanded: rep["expanded_cid"].as_str().unwrap_or("").to_string(),
+            })
         });
         let mut m = self.facts.lock().unwrap();
         if m.len() >= MAX_CACHED {
@@ -392,6 +439,8 @@ impl Lineage {
             djlive::version::Version::V1 => (twin, String::new()),
             djlive::version::Version::V2 => (String::new(), twin),
         };
+        let expanded_from = self.recipes_of(cid);
+        let based_on = if ent.expanded_from.is_empty() { Vec::new() } else { ent.bases.iter().map(|(c, r, _)| (c.clone(), r.clone())).collect() };
         Some(Node {
             cid: cid.to_string(),
             name: ent.name,
@@ -409,7 +458,16 @@ impl Lineage {
             renamed: ent.renamed && !parent_hidden,
             renamed_to,
             renamed_from,
+            expands_to: Some(f.expanded.clone()).filter(|x| is_cid(x) && x != cid),
+            expanded_from,
+            based_on,
         })
+    }
+
+    /// The recipes that expand to `cid` and may be shown (sorted).
+    fn recipes_of(&self, cid: &str) -> Vec<String> {
+        let rs: Vec<String> = self.index.lock().unwrap().recipes.get(cid).map(|s| s.iter().cloned().collect()).unwrap_or_default();
+        rs.into_iter().filter(|r| r != cid && self.shown(r)).collect()
     }
 
     /// The canonical text of a program that may be shown.
@@ -608,7 +666,16 @@ impl Lineage {
                 Edge { from, to, renamed: false, change }
             })
             .collect();
-        Some(Tree { root, ancestors, siblings, forks, edges, ancestors_cut, truncated })
+        // across the other way: the root's expansion, stored beside it, or the recipes it was written out from
+        let mut expansions = Vec::new();
+        for x in root.expands_to.iter().chain(root.expanded_from.iter()) {
+            if seen.insert(x.clone()) {
+                if let Some(n) = self.node(x) {
+                    expansions.push(n);
+                }
+            }
+        }
+        Some(Tree { root, ancestors, siblings, forks, edges, expansions, ancestors_cut, truncated })
     }
 
     /// `a` against `b`: both nodes and the change from a to b. None when either may not be shown.
@@ -698,6 +765,27 @@ impl Node {
         if self.curation.vendored_from > 0 {
             m.insert("vendoredFrom".into(), json!(self.curation.vendored_from));
         }
+        // a recipe and its expansion (the block's terms: expandsTo, expandedFrom, isBasedOn with resolves and derivation)
+        if let Some(x) = &self.expands_to {
+            m.insert("expandsTo".into(), json!(x));
+        }
+        if !self.expanded_from.is_empty() {
+            m.insert("expandedFrom".into(), json!(self.expanded_from));
+        }
+        if !self.based_on.is_empty() {
+            let items: Vec<Value> = self
+                .based_on
+                .iter()
+                .map(|(call, cid)| {
+                    let mut o = json!({"@type": "CreativeWork", "name": call, "derivation": "expanded"});
+                    if let Some(c) = cid {
+                        o["resolves"] = json!(c);
+                    }
+                    o
+                })
+                .collect();
+            m.insert("isBasedOn".into(), Value::Array(items));
+        }
         Value::Object(m)
     }
 }
@@ -755,6 +843,7 @@ impl Tree {
         programs.extend(self.ancestors.iter().rev().map(|n| n.json_ld(origin)));
         programs.extend(self.siblings.iter().map(|n| n.json_ld(origin)));
         programs.extend(self.forks.iter().map(|n| n.json_ld(origin)));
+        programs.extend(self.expansions.iter().map(|n| n.json_ld(origin)));
         let mut m = Map::new();
         m.insert("@context".into(), json!([SCHEMA, "https://schema.org"]));
         m.insert("@type".into(), json!("Lineage"));

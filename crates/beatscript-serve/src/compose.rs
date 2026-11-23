@@ -130,10 +130,29 @@ pub fn go_meta(m: &Value) -> Value {
             o.insert(k.into(), json!(s(k)));
         }
     }
+    // a recipe and its stored expansion name each other (roadmap 6680), and the expansion keeps what it was written out from
+    for k in ["expands_to", "expanded_from"] {
+        if !s(k).is_empty() {
+            o.insert(k.into(), json!(s(k)));
+        }
+    }
     if let Some(b) = m["based_on"].as_array().filter(|b| !b.is_empty()) {
         o.insert("based_on".into(), Value::Array(b.iter().filter_map(Value::as_str).map(|l| json!(l)).collect()));
     }
     Value::Object(o)
+}
+
+/// Store a recipe's expansion beside it (store.rs `put_expansion`) and say so in the stored program's answer: `expanded_cid`, when
+/// the program has references and its expansion is stored (or was already). A failure to store it leaves the recipe stored and
+/// the answer without `expanded_cid` (it is logged).
+fn beside(app: &crate::App, mut prog: Value) -> Value {
+    let (Some(cid), Some(text)) = (prog["cid"].as_str().map(str::to_string), prog["text"].as_str().map(str::to_string)) else { return prog };
+    match app.store.put_expansion(&cid, &text, &prog["meta"]) {
+        Ok(Some(x)) => prog["expanded_cid"] = json!(x.cid),
+        Ok(None) => {}
+        Err(e) => eprintln!("beatscript-serve: the expansion of {cid} was not stored: {e}"),
+    }
+    prog
 }
 
 /// A program the site has: (canonical text, meta, "store"). Examples first, as `Server.Get`.
@@ -204,7 +223,8 @@ pub fn put(app: &crate::App, eng: &Engine, owner: &str, text: &str, meta: Value)
     if let Ok(b) = std::fs::read(&path) {
         if let Ok(v) = serde_json::from_slice::<Value>(&b) {
             if v["cid"].as_str() == Some(&cid) && v["text"].as_str() == Some(&canonical) {
-                return Ok((json!({"cid": cid, "text": canonical, "meta": go_meta(&v["meta"])}), rep));
+                // (a recipe stored before its expansion was kept gets it now)
+                return Ok((beside(app, json!({"cid": cid, "text": canonical, "meta": go_meta(&v["meta"])})), rep));
             }
         }
     }
@@ -234,15 +254,17 @@ pub fn put(app: &crate::App, eng: &Engine, owner: &str, text: &str, meta: Value)
     if !adm.based_on().is_empty() {
         meta["based_on"] = json!(adm.based_on());
     }
+    // what it expands to, when it has references: its expansion is stored beside it (below)
+    crate::store::with_expands_to(&mut meta, &cid, &rep);
     let prog = json!({"cid": cid, "text": canonical, "meta": go_meta(&meta)});
     if app.cfg.programs_readonly {
         let _ = app.store.put_canonical(&cid, &canonical);
-        return Ok((prog, rep));
+        return Ok((beside(app, prog), rep));
     }
     match beatscript_serve::gate::write_program(&app.cfg.programs, &adm, prog["meta"].clone(), gojson::to_string) {
-        Ok(Some(_)) => Ok((prog, rep)),
+        Ok(Some(_)) => Ok((beside(app, prog), rep)),
         Ok(None) => match stored(app, &cid) {
-            Some((t, m)) => Ok((json!({"cid": cid, "text": t, "meta": go_meta(&m)}), rep)),
+            Some((t, m)) => Ok((beside(app, json!({"cid": cid, "text": t, "meta": go_meta(&m)})), rep)),
             None => Err(fail(500, "internal", "the program could not be stored")),
         },
         Err(_) => Err(fail(500, "internal", "the program could not be stored")),

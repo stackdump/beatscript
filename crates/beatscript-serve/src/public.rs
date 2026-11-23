@@ -507,7 +507,7 @@ pub fn shape_meta(v: &Value) -> Value {
         put_s(&mut m, k, s_of(v, k), true);
     }
     put_strs(&mut m, "credits", strs_of(v, "credits"));
-    for k in ["prompt_sha256", "author", "created", "source", "renamed_at"] {
+    for k in ["prompt_sha256", "author", "created", "source", "renamed_at", "expands_to", "expanded_from"] {
         put_s(&mut m, k, s_of(v, k), true);
     }
     // what the text as saved said it vendored (its `# from:` lines), the stored text being canonical (gate::write_program)
@@ -1012,10 +1012,36 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
         return ApiError::new(422, "cid_mismatch", format!("that text is program {got}, not {cid}")).response();
     }
     let warnings = i_of(&rep, "warnings");
-    let reply = |status: u16, created: bool, meta: Value| json_resp(status, &json!({"cid": got, "created": created, "meta": meta, "warnings": warnings}));
+    // a recipe's expansion is stored beside it (store.rs `put_expansion`): the answer says its CID
+    let expansion = |meta: Value| {
+        let (ps, cid, canonical) = (st.clone(), cid.clone(), canonical.clone());
+        async move {
+            let p2 = ps.clone();
+            let x = tokio::task::spawn_blocking(move || p2.app.store.put_expansion(&cid, &canonical, &meta)).await;
+            match x {
+                Ok(Ok(Some(x))) => {
+                    ps.store_total.fetch_add(x.bytes as i64, Ordering::Relaxed);
+                    Some(x.cid)
+                }
+                Ok(Err(e)) => {
+                    eprintln!("beatscript-serve: an expansion was not stored: {e}");
+                    None
+                }
+                _ => None,
+            }
+        }
+    };
+    let reply = |status: u16, created: bool, meta: Value, expanded: Option<String>| {
+        let mut v = json!({"cid": got, "created": created, "meta": meta, "warnings": warnings});
+        if let Some(x) = expanded {
+            v["expanded_cid"] = json!(x);
+        }
+        json_resp(status, &v)
+    };
     if let Some(m) = st.app.store.file_meta(&cid) {
         if st.app.store.get(&cid).is_some() {
-            return reply(200, false, shape_meta(&m));
+            let x = expansion(m.clone()).await;
+            return reply(200, false, shape_meta(&m), x);
         }
     }
     let mut meta = Map::new();
@@ -1033,7 +1059,8 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
     if !based_on.is_empty() {
         meta.insert("based_on".into(), json!(based_on));
     }
-    let meta = Value::Object(meta);
+    let mut meta = Value::Object(meta);
+    store::with_expands_to(&mut meta, &cid, &rep);
     let size = go_encode(&json!({"cid": cid, "text": canonical, "meta": meta})).len() as i64;
     if st.store_total.load(Ordering::Relaxed) + size > st.store_cap {
         return ApiError::new(507, "store_full", "the programs store is full").retry(3600).response();
@@ -1041,10 +1068,14 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
     match st.app.store.put_new(&cid, &text, meta.clone(), go_encode) {
         Ok(Some(n)) => {
             st.store_total.fetch_add(n as i64, Ordering::Relaxed);
-            reply(201, true, meta)
+            let x = expansion(meta.clone()).await;
+            reply(201, true, meta, x)
         }
         Ok(None) => match st.program(&cid) {
-            Some((_, m)) => reply(200, false, m),
+            Some((_, m)) => {
+                let x = expansion(m.clone()).await;
+                reply(200, false, m, x)
+            }
             None => ApiError::internal("the stored program cannot be read back".into()).response(),
         },
         Err(e) => ApiError::internal(e.to_string()).response(),

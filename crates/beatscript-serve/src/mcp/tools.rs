@@ -1347,7 +1347,8 @@ impl Tools {
         }
         if let Some(c) = out.get("text").and_then(Value::as_str).and_then(|t| djlive::compile::check(t).compiled) {
             let onto: &dyn djlive::linked::Ontology = djhost::ontology::vocabulary();
-            let f = djlive::progld::Facts { ontology: Some(onto), docs: &docs, ..Default::default() };
+            let env = beatscript_api::web_env().env();
+            let f = djlive::progld::Facts { ontology: Some(onto), docs: &docs, env: Some(&env), ..Default::default() };
             out.insert("program_ld".into(), serde_json::from_str(&djlive::progld::document(&c, &f).js_stringified()).unwrap_or(Value::Null));
         }
         if connected > 0 {
@@ -1541,6 +1542,13 @@ impl Tools {
             "note": "jsonld_url is the program as linked data (its @context is the context URL). url is the self-sealing link (the program is in the link; opening it checks the CID). Post social_url where a link preview is wanted.",
             "lexicon": self.harvest(&text, Some(&chk)),
         });
+        // a program with references (a template, a gen call, a seed, a borrowed section): the CID of the program written out, which
+        // a signed-in share stores beside it (expanded_url)
+        let expanded = chk["expanded_cid"].as_str().filter(|x| Some(*x) != rep["cid"].as_str() && !x.is_empty()).map(str::to_string);
+        if let Some(x) = &expanded {
+            out["expanded_cid"] = json!(x);
+            out["expanded_url"] = Value::Null;
+        }
         let none = |out: &mut Value, note: String| {
             out["short_url"] = Value::Null;
             out["short_social_url"] = Value::Null;
@@ -1570,6 +1578,12 @@ impl Tools {
                 out["meta"] = prog["meta"].clone();
                 out["fetch_url"] = json!(format!("{}/api/programs/{cid}", self.public));
                 out["note"] = json!(format!("url is the self-sealing link (the program is in the link; opening it checks the CID). short_url is the CID-only link: the program is stored on the site (public, {}; the first share's rights stay), and opening it fetches the text and checks it against the CID. Post social_url or short_social_url where a link preview is wanted.", prog["meta"]["license"].as_str().unwrap_or("")));
+                // its expansion, stored beside it (compose::put): a program of its own, at expanded_url
+                if let Some(x) = prog["expanded_cid"].as_str() {
+                    out["expanded_cid"] = json!(x);
+                    out["expanded_url"] = json!(format!("{}/p/{x}", self.public));
+                    out["note"] = json!(format!("{} expanded_url is the same track with every reference written out as plain BeatScript, stored beside it as a program of its own (expanded_cid; it plays the same).", out["note"].as_str().unwrap_or("")));
+                }
             }
             Ok(_) => none(&mut out, "the program could not be stored. The self-sealing link above still works.".into()),
             Err(e) => none(&mut out, format!("{}. The self-sealing link above still works.", e.err.message)),

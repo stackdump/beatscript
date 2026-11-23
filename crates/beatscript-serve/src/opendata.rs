@@ -261,7 +261,9 @@ pub fn block_json(e: &Entry, ontology: Option<&dyn djlive::linked::Ontology>) ->
         .filter(|(k, _, _)| k == "section")
         .map(|(_, n, d)| djlive::doc::DocComment { kind: "section", name: n.clone(), doc: d.clone(), item: djlive::Span::new(0, 0), comment: djlive::Span::new(0, 0) })
         .collect();
+    let env = beatscript_api::web_env().env();
     let f = djlive::progld::Facts {
+        env: Some(&env),
         docs: &docs,
         based_on: &e.based_on,
         name: Some(e.name.as_str()).filter(|s| !s.is_empty()),

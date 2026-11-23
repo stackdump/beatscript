@@ -249,6 +249,84 @@ fn hold_twin(l: &mut HashMap<String, Program>, cid: &str, canonical: &str, meta:
     }
 }
 
+/// A stored recipe's expansion (roadmap 6680 item 3, docs/beatscript/ext-template.md "The stored expansion"): what `put_expansion`
+/// stored, or found stored.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Expansion {
+    /// Its CID: the recipe's `expanded_cid`.
+    pub cid: String,
+    /// This call stored it (false: it was there already; first write wins, as for any program).
+    pub created: bool,
+    /// The bytes it took (0 when it was there, or is only held in memory).
+    pub bytes: usize,
+}
+
+/// The recipe's meta with what it expands to (`expands_to`) when that is another program: so the store says which program is
+/// its expansion without writing it out again.
+pub fn with_expands_to(meta: &mut Value, recipe_cid: &str, rep: &Value) {
+    if let Some(x) = rep["expanded_cid"].as_str().filter(|x| *x != recipe_cid && is_cid(x)) {
+        if let Value::Object(m) = meta {
+            m.insert("expands_to".into(), json!(x));
+        }
+    }
+}
+
+impl Store {
+    /// Store a recipe's expansion beside it: the program with every reference written out as plain BeatScript (as `check`'s
+    /// `expanded_cid` names it: djlive::refs::expanded in the checker's environment), canonical, under its own CID, through the
+    /// storage gate. Its meta: the recipe's licence, credits, name and author (the expansion is the same track, and holds the
+    /// recipe's own text), `source: "expansion"`, `expanded_from` the recipe, and `based_on` every reference it wrote out with the
+    /// CID it is pinned to (beatscript_api::resolution::sources). None for a program with no references.
+    pub fn put_expansion(&self, recipe_cid: &str, recipe: &str, recipe_meta: &Value) -> std::io::Result<Option<Expansion>> {
+        let env = beatscript_api::web_env().env();
+        let Ok(Some((canonical, cid))) = djlive::refs::expanded(recipe, &env) else { return Ok(None) };
+        if cid == recipe_cid || !is_cid(&cid) {
+            return Ok(None);
+        }
+        let s = |k: &str| recipe_meta[k].as_str().unwrap_or("").trim().to_string();
+        let license = s("license");
+        let refs = beatscript_api::resolution::of_with(recipe, recipe_cid, &env);
+        let based_on = beatscript_api::resolution::sources(&refs, recipe);
+        // (what it was written out from is the store's own provenance, kept by the gate beside the canonical text, as `# from:`
+        // lines are for a text as sent)
+        let a = admit_as(&cid, &canonical, &license, "")?.with_based_on(based_on.clone());
+        let mut meta = serde_json::Map::new();
+        meta.insert("license".into(), json!(a.license()));
+        meta.insert("visibility".into(), json!("public"));
+        for k in ["name"] {
+            if !s(k).is_empty() {
+                meta.insert(k.into(), json!(s(k)));
+            }
+        }
+        if let Some(c) = recipe_meta["credits"].as_array().filter(|c| !c.is_empty()) {
+            meta.insert("credits".into(), Value::Array(c.clone()));
+        }
+        if !s("author").is_empty() {
+            meta.insert("author".into(), json!(s("author")));
+        }
+        meta.insert("created".into(), json!(rfc3339_now()));
+        meta.insert("source".into(), json!("expansion"));
+        meta.insert("expanded_from".into(), json!(recipe_cid));
+        if !based_on.is_empty() {
+            meta.insert("based_on".into(), json!(based_on));
+        }
+        if self.readonly {
+            let mut l = self.links.lock().unwrap();
+            if l.contains_key(&cid) {
+                return Ok(Some(Expansion { cid, created: false, bytes: 0 }));
+            }
+            if l.len() >= MAX_LINKS {
+                l.clear();
+            }
+            l.insert(cid.clone(), Program { cid: cid.clone(), text: canonical.clone() });
+            hold_twin(&mut l, &cid, &canonical, &Value::Object(meta));
+            return Ok(Some(Expansion { cid, created: true, bytes: 0 }));
+        }
+        let n = beatscript_serve::gate::write_program(&self.dir, &a, Value::Object(meta), go_json)?;
+        Ok(Some(Expansion { cid, created: n.is_some(), bytes: n.unwrap_or(0) }))
+    }
+}
+
 /// The storage gate's verdict for a program a caller has already checked (`text`: as sent, or canonical), as an
 /// io::Error (PermissionDenied) when it is refused or is not the CID the caller named.
 pub fn admit_as(cid: &str, text: &str, license: &str, visibility: &str) -> std::io::Result<beatscript_serve::gate::Admitted> {

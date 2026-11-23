@@ -363,8 +363,18 @@ fn form_cross(s: &Server) -> Result<(), String> {
 }
 
 fn nested_templates(s: &Server) -> Result<(), String> {
-    let r = s.call("genre_template", json!({"genre": "techno", "form": "rondo"}));
-    ensure(r["resolution"].as_array().is_some_and(|a| a.iter().any(|x| x["nested"] == true && is_cid(&x["cid"]))), "a nested template's node has no CID of its own")
+    let args = json!({"genre": "techno", "form": "rondo", "roles": {"episodes": "template(passacaglia, ground=gen@1 dubstep seed=54876)"}});
+    let r = s.call("genre_template", args.clone());
+    let res = r["resolution"].as_array().ok_or(format!("no resolution: {r}"))?;
+    let t = res.iter().find(|x| x["kind"] == "template").ok_or(format!("no template entry: {res:?}"))?;
+    let ep = &t["parts"][0];
+    ensure(ep["path"] == "episodes" && ep["kind"] == "template" && is_cid(&ep["cid"]), format!("the form in a role is a part with a CID of its own: {}", t["parts"]))?;
+    let g = &ep["parts"][0];
+    ensure(g["path"] == "episodes/ground" && g["kind"] == "gen" && is_cid(&g["cid"]) && is_cid(&g["resolves"]) && g["generator"] == "seeded@1" && g["cid"] != g["resolves"], format!("its role is a part of it, pinned: {g}"))?;
+    ensure(res.iter().any(|x| x["nested"] == true && x["kind"] == "gen" && is_cid(&x["cid"])), format!("a gen call a role wrote is listed nested with its own pin: {res:?}"))?;
+    // the same recipe, the same parts
+    let again = s.call("genre_template", args);
+    ensure(again["resolution"] == r["resolution"], "the same recipe gave other part CIDs")
 }
 
 fn eject(s: &Server) -> Result<(), String> {
@@ -373,14 +383,14 @@ fn eject(s: &Server) -> Result<(), String> {
 }
 
 // beatscript-api's words for the three fields: the descriptions are built from them, and the docs must say them too
-use beatscript_api::resolution::{EXPANDED_CID_DOC, IMPORTS_DOC, REFS_DOC, RESOLUTION_DOC};
+use beatscript_api::resolution::{EXPANDED_CID_DOC, IMPORTS_DOC, PARTS_DOC, REFS_DOC, RESOLUTION_DOC};
 
 fn rows() -> Vec<Row> {
     vec![
         Row { feature: "check reports gen references: resolved CID, fitted key/tempo, provenance (6668)", covers: &["gen@", "refs"], tool: "check", desc: &[REFS_DOC, "fitted to the program's key and tempo"], doc: &[REFS_DOC], inputs: &["text"], call: check_gen_refs, pending: None },
         Row { feature: "check's expand: each reference's expansion (6668)", covers: &["expand"], tool: "check", desc: &["With expand true, each entry of refs also carries its expansion"], doc: &["each one also carries its `expansion`"], inputs: &["expand"], call: check_expand, pending: None },
         Row { feature: "expanded_cid: the CID of the written-out program (6680)", covers: &["expanded_cid"], tool: "check", desc: &[EXPANDED_CID_DOC], doc: &[EXPANDED_CID_DOC], inputs: &[], call: check_expanded_cid, pending: None },
-        Row { feature: "resolution: each reference's pin and generator version (6680)", covers: &["resolution", "nested"], tool: "check", desc: &[RESOLUTION_DOC], doc: &[RESOLUTION_DOC, "is listed with `nested: true`"], inputs: &[], call: check_resolution, pending: None },
+        Row { feature: "resolution: each reference's pin and generator version (6680)", covers: &["resolution", "nested"], tool: "check", desc: &[RESOLUTION_DOC, PARTS_DOC], doc: &[RESOLUTION_DOC, "is listed with `nested: true`"], inputs: &[], call: check_resolution, pending: None },
         Row { feature: "listen says which parts a reference made, and what it was fitted to (6668)", covers: &["from"], tool: "listen", desc: &["says so in `from` {call, kind, resolved, place, generator, sections}", "`expanded_cid` and `resolution`"], doc: &["`listen` marks each part a reference made with `from`"], inputs: &["text", "bars"], call: listen_from, pending: None },
         Row { feature: "generate's generator: the version, as gen@N names it (6676)", covers: &[], tool: "generate", desc: &["generator picks the version (1, 2 or 3, as gen@1, gen@2 and gen@3 name them; 3 writes BeatScript 2)", "The answer also has gen, the call that is this program"], doc: &[], inputs: &["generator"], call: generate_generator, pending: None },
         Row { feature: "generate's part: one role's let, as a gen@N let writes it (6676)", covers: &[], tool: "generate", desc: &["With part (a role) the answer gains that part and its let alone"], doc: &[], inputs: &["part", "section"], call: generate_part, pending: None },
@@ -405,7 +415,7 @@ fn rows() -> Vec<Row> {
         Row { feature: "what a `use` can name: list_examples imports, genre_template's use lines (6668)", covers: &[], tool: "list_examples", desc: &["With imports true"], doc: &[], inputs: &["imports"], call: use_listing, pending: None },
         Row { feature: "the DJ macro catalogue by name: `macro riser over 8 bars on A` (6670)", covers: &["macro"], tool: "check", desc: &["macro"], doc: &[], inputs: &[], call: dj_macro, pending: Some("macros by name are not built yet (6670)") },
         Row { feature: "role-bound form templates and `cross` two seeds (6673, 6674)", covers: &["cross"], tool: "genre_template", desc: &["cross (a quodlibet of two sources, roles a and b)", "each role is bound to a source"], doc: &[], inputs: &["form", "roles"], call: form_cross, pending: None },
-        Row { feature: "nested templates with depth and bar caps, each node its own CID (6678, 6680)", covers: &[], tool: "genre_template", desc: &["depth"], doc: &[], inputs: &["form"], call: nested_templates, pending: Some("nested templates landed (6678), but template::expand returns one text, not its nodes, so a node has no CID of its own yet (6680 item 2)") },
+        Row { feature: "nested templates with depth and bar caps, each node its own CID (6678, 6680)", covers: &[], tool: "genre_template", desc: &["at any depth", "the template's entry in resolution has parts"], doc: &[PARTS_DOC], inputs: &["form", "roles"], call: nested_templates, pending: None },
         Row { feature: "eject over MCP: `expand` with `eject` (line:col) writes one reference out under `# from:` (6668)", covers: &["eject"], tool: "expand", desc: &["With eject \"line:col\" it writes out only the reference there"], doc: &[], inputs: &["eject"], call: eject, pending: None },
     ]
 }

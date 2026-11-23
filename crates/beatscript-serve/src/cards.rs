@@ -153,9 +153,13 @@ struct Meta {
     /// text, as `name` is from its `#! name:`: the canonical text the store keeps has no comments, so they are kept
     /// beside it. The program's JSON-LD gives each documented section its `description` from them.
     docs: Vec<(String, String, String)>,
+    /// A recipe's expansion, stored beside it (roadmap 6680): its CID, on the recipe.
+    expands_to: String,
+    /// On a stored expansion: the recipe it was written out from.
+    expanded_from: String,
     /// What the text as shared said it vendored: its `# from: <call> -> <cid>` lines as `<call> -> <cid>` (gate::Admitted's
-    /// `based_on`, which gate::write_program keeps). The program's JSON-LD lists each in `isBasedOn` as `vendored`, and
-    /// lineage counts them (`vendoredFrom`).
+    /// `based_on`, which gate::write_program keeps); on a stored expansion, each reference the recipe wrote out into it. The
+    /// program's JSON-LD lists each in `isBasedOn` (`vendored`, or `expanded`), and lineage counts what was vendored.
     based_on: Vec<String>,
 }
 
@@ -185,6 +189,8 @@ impl Meta {
                         .collect()
                 })
                 .unwrap_or_default(),
+            expands_to: s("expands_to"),
+            expanded_from: s("expanded_from"),
             based_on: v.get("based_on").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default(),
         }
     }
@@ -231,6 +237,13 @@ impl Meta {
         if !self.docs.is_empty() {
             m.insert("docs".into(), Value::Array(self.docs.iter().map(|(k, n, d)| json!({"kind": k, "name": n, "doc": d})).collect()));
         }
+        let mut opt = |k: &str, v: &str| {
+            if !v.is_empty() {
+                m.insert(k.into(), json!(v));
+            }
+        };
+        opt("expands_to", &self.expands_to);
+        opt("expanded_from", &self.expanded_from);
         if !self.based_on.is_empty() {
             m.insert("based_on".into(), json!(self.based_on));
         }
@@ -940,7 +953,7 @@ fn program_iri(cid: &str) -> String {
 /// is the block's `@id`, and the rights and provenance its meta keeps. The editor loads it, the phone and the MCP read
 /// it. None when the text does not compile to its CID (then there is nothing to vouch for).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn program_view_of(cid: &str, canonical: &str, name: &str, license: &str, author: &str, forked_from: &str, sig: Option<&str>, docs: &[djlive::doc::DocComment], based_on: &[String]) -> Option<String> {
+pub(crate) fn program_view_of(cid: &str, canonical: &str, name: &str, license: &str, author: &str, forked_from: &str, sig: Option<&str>, docs: &[djlive::doc::DocComment], expanded_from: &str, based_on: &[String]) -> Option<String> {
     let c = djlive::compile::check(canonical).compiled?;
     if c.cid != cid {
         return None;
@@ -949,12 +962,27 @@ pub(crate) fn program_view_of(cid: &str, canonical: &str, name: &str, license: &
     let (name, license, author, forked) = (some(name), some(license), some(author), some(forked_from));
     // the key's scale and the instruments linked to the bitwrap ontology (the host's snapshot of it)
     let onto: &dyn djlive::linked::Ontology = djhost::ontology::vocabulary();
-    let f = djlive::progld::Facts { name: name.as_deref(), license: license.as_deref(), author: author.as_deref(), forked_from: forked.as_deref(), signature: sig, ontology: Some(onto), docs, based_on, ..Default::default() };
+    // the references written out as the checker writes them, so expandsTo and hasPart are the CIDs check gives; a stored expansion
+    // says the recipe it came from and what that wrote out into it
+    let env = beatscript_api::web_env().env();
+    let f = djlive::progld::Facts {
+        name: name.as_deref(),
+        license: license.as_deref(),
+        author: author.as_deref(),
+        forked_from: forked.as_deref(),
+        signature: sig,
+        ontology: Some(onto),
+        docs,
+        env: Some(&env),
+        expanded_from: Some(expanded_from).filter(|x| !x.is_empty()),
+        based_on,
+        ..Default::default()
+    };
     Some(djlive::progld::view_html(&djlive::progld::document(&c, &f), true, "bar"))
 }
 
 fn program_view(p: &Prog, sig: Option<&str>) -> Option<String> {
-    program_view_of(&p.cid, &p.canonical, &p.label(), &p.meta.license, &p.meta.author, &p.meta.forked_from, sig, &p.meta.doc_comments(), &p.meta.based_on)
+    program_view_of(&p.cid, &p.canonical, &p.label(), &p.meta.license, &p.meta.author, &p.meta.forked_from, sig, &p.meta.doc_comments(), &p.meta.expanded_from, &p.meta.based_on)
 }
 
 /// The `<beatscript-view>` block of a stored public program, for the editor's own page (`/?cid=`). None: not stored,
@@ -964,7 +992,7 @@ pub(crate) fn stored_view(dir: &std::path::Path, cid: &str) -> Option<String> {
     if !meta.visibility.is_empty() && meta.visibility != "public" {
         return None;
     }
-    program_view_of(cid, &text, &meta.name, &meta.license, &meta.author, &meta.forked_from, None, &meta.doc_comments(), &meta.based_on)
+    program_view_of(cid, &text, &meta.name, &meta.license, &meta.author, &meta.forked_from, None, &meta.doc_comments(), &meta.expanded_from, &meta.based_on)
 }
 
 /// What `Accept` asks `/p/<cid>` for first.
@@ -1698,6 +1726,10 @@ impl Cards {
         meta.based_on = adm.based_on().to_vec();
         meta.license = adm.license().to_string();
         meta.visibility = "public".into();
+        // what it expands to, when it has references: its expansion is stored beside it (put_share)
+        if let Some(x) = rep["expanded_cid"].as_str().filter(|x| *x != cid && crate::store::is_cid(x)) {
+            meta.expands_to = x.to_string();
+        }
         let body = go_json(&json!({"cid": cid, "text": canonical, "meta": meta.to_json()}));
         let cap = (self.app.cfg.flag_num("store-max-mb", 256).max(0) as u64) << 20;
         if self.store_total(&dir) + body.len() as u64 > cap {
@@ -1777,9 +1809,36 @@ async fn put_share(State(c): State<Arc<Cards>>, req: Request) -> Response<Body> 
         Err(PutErr::Api(e, details)) => write_error(e.status, e.code, &e.message, e.retry, details),
         Ok((meta, rep, created, cid)) => {
             let site = c.app.cfg.public_url.trim_end_matches('/');
+            // a recipe's expansion, stored beside it (store.rs `put_expansion`)
+            let expanded = {
+                let (cc, cid, canonical, mj) = (c.clone(), cid.clone(), rep["canonical"].as_str().unwrap_or("").to_string(), meta.to_json());
+                match tokio::task::spawn_blocking(move || {
+                    let x = cc.app.store.put_expansion(&cid, &canonical, &mj);
+                    if let Ok(Some(x)) = &x {
+                        if let Some(t) = cc.store_total.lock().unwrap().as_mut() {
+                            *t += x.bytes as u64;
+                        }
+                    }
+                    x
+                })
+                .await
+                {
+                    Ok(Ok(Some(x))) => Some(x.cid),
+                    Ok(Err(e)) => {
+                        eprintln!("beatscript-serve: an expansion was not stored: {e}");
+                        None
+                    }
+                    _ => None,
+                }
+            };
             let mut m = Map::new();
             m.insert("cid".into(), json!(cid));
             m.insert("created".into(), json!(created));
+            // (the keys in Go's order, sorted)
+            if let Some(x) = &expanded {
+                m.insert("expanded_cid".into(), json!(x));
+                m.insert("expanded_url".into(), json!(format!("{site}/p/{x}")));
+            }
             m.insert("fetch_url".into(), json!(format!("{}/api/programs/{cid}", c.app.cfg.public_url)));
             m.insert("meta".into(), meta.to_json());
             m.insert("short_social_url".into(), json!(format!("{site}/c/{cid}")));
@@ -2050,7 +2109,7 @@ mod tests {
             height: 630,
         };
         let plain = page_html(&mk(None));
-        let block = program_view_of(&djlive::compile::program_cid("tempo 128\n"), "tempo 128\n", "night bus", "", "", "", Some("0xsig"), &[], &[]).unwrap();
+        let block = program_view_of(&djlive::compile::program_cid("tempo 128\n"), "tempo 128\n", "night bus", "", "", "", Some("0xsig"), &[], "", &[]).unwrap();
         let with = page_html(&mk(Some(block.clone())));
         let head = |s: &str| s[..s.find("</head>").unwrap()].to_string();
         assert_eq!(head(&with), head(&plain));

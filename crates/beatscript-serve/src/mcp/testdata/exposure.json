@@ -16,7 +16,6 @@
     "ext-shape.md": "the language (shapes, lfo): check compiles it",
     "ext-sing.md": "the language (sing): check compiles it; the lexicon and found-phrases rows cover what MCP adds",
     "ext-sugar.md": "the language (pattern sugar): check compiles it",
-    "ext-template.md": "the language (phrase templates): check and expand compile it",
     "ext-tempo.md": "the language (tempo curves): check compiles it",
     "ext-timing.md": "the language (sub-bar timing): check compiles it",
     "showcase.md": "one example track, not a feature"
@@ -321,6 +320,18 @@
       "calls": [
         {"tool": "instruments", "args": {}, "expect": [["/voices", "~", "\"acid\""], ["/voices", "~", "\"acid-square\""], ["/note", "~", "303-style voice"]]},
         {"tool": "check", "args": {"text": "tempo 126\ndeck B: bass a1 a1! a2^ a1 c2! ~ e2^ d2 decay=200 inst=acid\n"}, "expect": [["/ok", "=", true], ["/diagnostics", "!~", "family voice"]]}
+      ]
+    },
+    {
+      "id": "expansion-parts",
+      "datum": 6680,
+      "docs": ["ext-template.md"],
+      "say": [["check", "a template's entry in resolution has parts"], ["check", "and each part its text"], ["genre_template", "the template's entry in resolution has parts"], ["expand", "a template's nested parts"], ["share", "expanded_url"], ["share", "stores that expansion beside it"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "arrange from template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, ground=gen@1 dubstep seed=54876))\n", "expand": true}, "expect": [["/ok", "=", true], ["/resolution/0/kind", "=", "template"], ["/resolution/0/parts/0/path", "=", "episodes"], ["/resolution/0/parts/0/kind", "=", "template"], ["/resolution/0/parts/0/cid", "~", "z"], ["/resolution/0/parts/0/parts/0/path", "=", "episodes/ground"], ["/resolution/0/parts/0/parts/0/generator", "=", "seeded@1"], ["/resolution/0/parts/0/parts/0/resolves", "~", "z"], ["/resolution/0/parts/0/parts/0/text", "~", "let ep_"]]},
+        {"tool": "expand", "args": {"text": "arrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n"}, "expect": [["/ok", "=", true], ["/resolution/0/parts/0/path", "=", "upper"], ["/resolution/0/parts/0/kind", "=", "theme"], ["/resolution/0/parts/0/cid", "~", "z"]]},
+        {"tool": "share", "stores": true, "args": {"text": "arrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n"}, "save": {"x": "/expanded_cid"}, "expect": [["/stored", "=", true], ["/expanded_cid", "~", "z"], ["/expanded_url", "~", "/p/z"]]},
+        {"tool": "open", "args": {"url": "${x}"}, "expect": [["/cid", "=", "${x}"], ["/meta/source", "=", "expansion"], ["/meta/expanded_from", "has"], ["/meta/based_on", "~", "ode_to_joy"]]}
       ]
     }
   ]

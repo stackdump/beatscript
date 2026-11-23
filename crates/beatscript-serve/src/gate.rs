@@ -82,6 +82,14 @@ impl Admitted {
     pub fn based_on(&self) -> &[String] {
         &self.based_on
     }
+
+    /// The same program, with `lines` as what it is based on: the store's own provenance for a program it writes itself (a stored
+    /// expansion: each reference its recipe wrote out into it, `<call> -> <cid>`), which [`write_program`] keeps as it keeps a
+    /// text's `# from:` lines. Never a caller's: a caller's `based_on` is only ever read from the text it sends.
+    pub fn with_based_on(mut self, lines: Vec<String>) -> Admitted {
+        self.based_on = lines;
+        self
+    }
 }
 
 /// The SPDX id of a Creative Commons licence, in its canonical spelling, or None. CC0-1.0 and the six CC BY
