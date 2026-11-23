@@ -581,6 +581,9 @@ def main():
             facts.append((nsx("controlParameter"), lit(p["name"], None)))
         for w in sorted(sugar.get(name, [])):
             facts.append((nsx("sugarWord"), lit(w, None)))
+        # another name do answers to (the noun btw is also do beatscript, do live, do livecode)
+        for a in sorted(n.get("aliases", [])):
+            facts.append((f"<{SKOS}altLabel>", lit(a)))
         out.term(c("noun-" + slug(name)), [skos_concept, nsx("ControlNoun")], name, f"The control noun {name}: do {name} <verb>.", facts, "ControlNoun")
     for v in sorted(verbs):
         facts = [(nsx("actsOn"), c("noun-" + slug(n))) for n in sorted(verbs[v])]

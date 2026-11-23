@@ -202,6 +202,8 @@ fn language_versions_are_data() {
     assert_eq!(g.all(&n("Program"), "http://www.w3.org/2004/02/skos/core#hiddenLabel"), ["btw program"]);
     assert!(g.all(&v1, "http://www.w3.org/2004/02/skos/core#altLabel").contains(&"btw".to_string()));
     assert!(g.first(&v1, "http://www.w3.org/2004/02/skos/core#historyNote").contains("before language version 2"));
+    // the control noun keeps its upstream spelling, btw, and answers to beatscript too
+    assert!(g.all(&c("noun-btw"), "http://www.w3.org/2004/02/skos/core#altLabel").contains(&"beatscript".to_string()));
 }
 
 #[test]

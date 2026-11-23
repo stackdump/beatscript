@@ -197,7 +197,8 @@ pub fn drift(g: &Index) -> Vec<String> {
     same("voice family", strs(&inst["families"]), by(g, "VoiceFamily", "writtenAs").into_keys(), &mut errs);
     same("palette", strs(&inst["palettes"]), by(g, "Palette", "writtenAs").into_keys(), &mut errs);
 
-    // the control registry: nouns, and each noun's verbs
+    // the control registry: nouns, each noun's verbs, and the other names it answers to (its skos:altLabel: the noun btw
+    // is also beatscript)
     let nouns = by(g, "ControlNoun", "writtenAs");
     let want: BTreeSet<String> = src["control_nouns"].as_array().unwrap().iter().map(|n| format!("do {}", n["name"].as_str().unwrap())).collect();
     same("control noun", want, nouns.keys().cloned(), &mut errs);
@@ -207,6 +208,7 @@ pub fn drift(g: &Index) -> Vec<String> {
             let verbs = n["actions"].as_array().unwrap().iter().map(|a| a["name"].as_str().unwrap().to_string()).collect();
             let have = g.all(s, &format!("{NS}acceptsVerb")).into_iter().map(|v| g.label(&v));
             same(&format!("verb of {name}"), verbs, have, &mut errs);
+            same(&format!("alias of {name}"), strs(&n["aliases"]), g.all(s, &format!("{SKOS}altLabel")), &mut errs);
         }
     }
 
