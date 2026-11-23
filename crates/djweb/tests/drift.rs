@@ -130,7 +130,7 @@ fn the_page_tunes_a_station_as_the_server_does() {
         assert_eq!(page, btwapi::station_json(&req), "btw_station (the page) and station_json (the server) differ for {req}");
         assert!(JsonValue::parse(&page).is_ok(), "{page}");
     }
-    let mut ls = djweb::BtwLs::new();
+    let mut ls = djweb::BeatscriptLs::new();
     same_everywhere("a station", station, &mut ls, true);
 }
 
