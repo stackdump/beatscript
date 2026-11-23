@@ -411,13 +411,13 @@ pub fn station(m: &mut Map<String, Value>, v: &Value) {
 }
 
 /// What the recipe makes (beatscript_api::resolution), as beatscript-api wrote it: `expanded_cid` (a program that checks has one), and `refs`
-/// and `resolution` (a program with references has them). The MCP check's shape (compose::engine::go_check_report) keeps the
-/// same three.
+/// and `resolution` (a program with references has them), and `imports` (a program with `use` lines has it). The MCP check's
+/// shape (compose::engine::go_check_report) keeps the same.
 pub fn references(m: &mut Map<String, Value>, v: &Value) {
     if let Some(e) = v.get("expanded_cid").and_then(Value::as_str) {
         m.insert("expanded_cid".into(), json!(e));
     }
-    for k in ["refs", "resolution"] {
+    for k in ["refs", "resolution", "imports"] {
         if let Some(a) = v.get(k).and_then(Value::as_array).filter(|a| !a.is_empty()) {
             m.insert(k.into(), Value::Array(a.clone()));
         }

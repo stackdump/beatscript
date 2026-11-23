@@ -67,8 +67,9 @@ key_match same|relative|differs|unsure|undeclared). `sections` gives each sectio
 plays with lines of its control deck held back: the calls that do not fire there), `bar_lufs` a loudness per bar, and \
 master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a \
 reference (a gen@2 call, a seed(...), a template, a stored program's section) says so in `from` {{call, kind, resolved, place, \
-generator, sections}} (`also_from` when several made it); a gen call fitted to the program's key or tempo says so in `notes`, \
-in check's words; and the answer gains `expanded_cid` and `resolution`, as check's. Give exactly one of text, \
+generator, sections}} (`also_from` when several made it; a `use` line's also has its `name`); a gen call fitted to the program's \
+key or tempo says so in `notes`, in check's words; and the answer gains `expanded_cid` and `resolution`, as check's (and \
+`imports`, the names its `use` lines give). Give exactly one of text, \
 cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). \
 Nothing is stored and no sign-in is needed. At most {per_hour} new listens an hour per caller; the same program, section \
 and bars again is answered from the cache. Programs are at most {max_prog} bytes; the render covers at most {MAX_BARS} \

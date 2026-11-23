@@ -300,6 +300,19 @@
         {"tool": "genre_template", "args": {"genre": "house", "form": "quodlibet", "roles": {"third": "ode_to_joy"}}, "expect": [["/form/roles/3/name", "=", "third"], ["/expanded", "~", "let third_1 = "]]},
         {"tool": "genre_template", "args": {"genre": "techno", "form": "cross", "roles": {"a.bass": "[d2 ~ a1 ~]"}}, "expect": [["/form/roles/0/parts/1/bind", "=", "a.bass"], ["/expanded", "~", "# a.bass, bound: [d2 ~ a1 ~]"]]}
       ]
+    },
+    {
+      "id": "use",
+      "datum": 6668,
+      "docs": ["ext-roles.md"],
+      "say": [["check", "`use SOURCE as NAME`"], ["check", "imports lists each `use SOURCE as NAME` line"], ["expand", "the answer then also has imports"], ["list_examples", "With imports true"], ["genre_template", "use genre@1 techno.drop as drop"], ["listen", "a `use` line's also has its `name`"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "tempo 110\nkey am\nuse theme ode_to_joy as tune\nuse template(passacaglia).ground as ground\nuse genre@1 techno.drop as drop\nuse phrase @tyger_burning_bright as tyger\nsection verse 4 bars {\n  deck B: melody tune inst=piano\n  deck B: sing tyger on melody\n}\narrange ground verse drop\n"},
+         "expect": [["/ok", "=", true], ["/refs", "~", "\"kind\":\"use\""], ["/imports/0/name", "=", "tune"], ["/imports/0/from", "=", "theme ode_to_joy"], ["/imports/1/source", "=", "template"], ["/imports/2/from", "=", "genre@1 techno.drop"], ["/imports/3/is", "=", "phrase"]]},
+        {"tool": "expand", "args": {"text": "key am\nuse theme ode_to_joy as tune\ndeck B: melody tune\n"}, "expect": [["/text", "~", "let tune_1 = e4"], ["/text", "!~", "use theme"], ["/imports/0/name", "=", "tune"]]},
+        {"tool": "list_examples", "args": {"imports": true}, "expect": [["/imports/templates", "~", "use template(passacaglia).ground as ground"], ["/imports/genres", "~", "use genre@1 techno.drop as drop"]]},
+        {"tool": "genre_template", "args": {"genre": "techno"}, "expect": [["/use", "~", "use genre@1 techno.drop as drop"]]}
+      ]
     }
   ]
 }

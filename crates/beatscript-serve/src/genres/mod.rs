@@ -670,6 +670,11 @@ pub fn template_answer_with(g: Option<&dyn Graph>, genre: &str, phrase: Option<&
         return Err(format!("the template for {} did not pass check: {}", gn.label, rep["diagnostics"]));
     }
     let mut out = json!({"text": text, "cid": rep["cid"], "canonical": rep["canonical"], "seconds": rep["seconds"], "genre": summary(g, &gn)});
+    // each section of the genre's template as frozen (genre templates v1): the line that borrows it by name (djlive uses.rs)
+    let v = djlive::uses::GENRE_BARE;
+    if let Some(secs) = djlive::uses::genre_sections(v, &gn.slug) {
+        out["use"] = json!(secs.iter().map(|s| format!("use genre@{v} {}.{s} as {s}", gn.slug)).collect::<Vec<_>>());
+    }
     if let Some(s) = sung {
         out["phrase"] = s;
         out["warnings"] = rep["warnings"].clone();

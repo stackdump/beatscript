@@ -108,3 +108,35 @@ mod tests {
         assert!(form_json("x", t, f)["roles"][1]["sections"].as_str().unwrap().contains("stand in for `episode`"));
     }
 }
+
+/// What a `use SOURCE as NAME` line can name (docs/BEATSCRIPT.md "Name a source: `use`", djlive `uses.rs`), as `list_examples` with
+/// `imports` answers it: the kinds of source, each template's sections (a canned section: `use template(passacaglia).ground as
+/// ground`, written with the template's own example phrase when it names none) and each genre template's, with a line to write.
+pub fn imports() -> Value {
+    let kinds: Vec<Value> = djlive::uses::KINDS.iter().map(|(k, w, is)| json!({"kind": k, "write": w, "is": is})).collect();
+    let templates: Vec<Value> = djlive::template::TEMPLATES
+        .iter()
+        .filter_map(|t| {
+            let (sections, phrase) = djlive::uses::template_sections(t.name)?;
+            let first = sections.first()?.clone();
+            let line = if t.form.is_some() { format!("use template({}).{first} as {first}", t.name) } else { format!("use template({}, {phrase}).{first} as {first}", t.name) };
+            Some(json!({"template": t.name, "sections": sections, "phrase": phrase, "use": line}))
+        })
+        .collect();
+    let mut genres: Vec<Value> = Vec::new();
+    for v in djengine::genre_templates::VERSIONS {
+        for g in djengine::genre_templates::genres(v) {
+            let Some(sections) = djlive::uses::genre_sections(v, g) else { continue };
+            let pick = sections.iter().find(|s| *s == "drop").or(sections.first()).cloned().unwrap_or_default();
+            genres.push(json!({"genre": g, "version": v, "sections": sections, "use": format!("use genre@{v} {g}.{pick} as {pick}")}));
+        }
+    }
+    json!({
+        "how": "use SOURCE as NAME, on a line of its own at the top; the name is then used as a section, a let or a phrase of the program's own, and in a role as its source (docs/BEATSCRIPT.md \"Name a source: `use`\")",
+        "kinds": kinds,
+        "templates": templates,
+        "genres": genres,
+        "themes": "list_examples with themes true lists the themes: use theme ode_to_joy as tune",
+        "phrasebook": "list_examples with phrasebook true lists the lines: use phrase @tempest_such_stuff as line",
+    })
+}

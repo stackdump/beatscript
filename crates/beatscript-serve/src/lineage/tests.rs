@@ -399,3 +399,21 @@ fn a_line_counts_only_for_its_pin() {
     assert_eq!(l.curation(&victim), Curation::default());
     assert_eq!(l.curation(&other), Curation { referenced_by: 0, vendored_from: 1 });
 }
+
+/// A program that names sources with `use` is based on them (djlive `uses.rs`): the stored program a line names, by its CID (a
+/// borrow, as `<cid>.bass` written in a part is), and the library a theme comes from; both count in the curation signal.
+#[test]
+fn a_use_line_is_what_a_program_is_based_on() {
+    let d = tempfile::tempdir().unwrap();
+    let p = d.path();
+    let root = put(p, ROOT, json!({"visibility": "public"}));
+    let (_, root_text) = canon(ROOT);
+    beatscript_api::known::know(&root, &root_text).unwrap();
+    let named = format!("tempo 124\nkey am\nuse {root}.bass as walk\nuse theme ode_to_joy as tune\ndeck A: bass walk\ndeck B: melody tune\n");
+    let a = put(p, &named, json!({"visibility": "public"}));
+    let l = Lineage::new(p, Vec::new());
+    l.refresh(true);
+    assert_eq!(l.curation(&root).referenced_by, 1);
+    assert_eq!(l.curation("theme ode_to_joy").referenced_by, 1);
+    assert!(l.node(&a).is_some());
+}

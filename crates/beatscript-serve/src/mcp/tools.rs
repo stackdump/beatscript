@@ -595,6 +595,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                     ("key", sprop("Only the themes in this key, matched on its tonic: a key word (d, bm, db). Implies themes.", &[("maxLength", json!(16))])),
                     ("role", sprop("Only the themes of this role: melody, bass, harmony or arp. Implies themes.", &[("maxLength", json!(16))])),
                     ("composer", sprop("Only the themes by this composer (any part of the name: beethoven). Implies themes.", &[("maxLength", json!(64))])),
+                    ("imports", json!({"type": "boolean", "description": "Also return what a `use SOURCE as NAME` line can name (default false): the kinds of source, each with how it is written and what the name is; the templates and their sections (canned sections: use template(passacaglia).ground as ground); the genre templates and their sections (use genre@1 techno.drop as drop); themes and phrasebook lines are listed by themes and phrasebook."})),
                     ("lexicon", json!({"type": "boolean", "description": format!("Also return the lexicon harvest (default false): the words the checking tools collected from programs' lyrics, ranked for the CC0 lexicon, at most {LEXICON_TOP}: those with an annotated escape (word=/phonemes/) first, then by how many programs gave them. Each is {{word, programs, conflict, in_lexicon, variants[{{phones, source (annotated or rule), count, first, last, cids}}]}}; conflict: two annotated pronunciations disagree. Read-only.")})),
                 ],
                 &[],
@@ -1730,7 +1731,7 @@ impl Tools {
     // ---------- list_examples, instruments ----------
 
     fn list_examples(&self, a: Args) -> R {
-        a.only(&["name", "phrasebook", "meter", "syllables", "themes", "key", "role", "composer", "lexicon"])?;
+        a.only(&["name", "phrasebook", "meter", "syllables", "themes", "key", "role", "composer", "lexicon", "imports"])?;
         let name = a.str("name", 64)?;
         let meter = a.str("meter", 64)?;
         let syllables = a.str("syllables", 16)?;
@@ -1762,6 +1763,9 @@ impl Tools {
         }
         if want_themes {
             out["themes"] = beatscript_serve::themes::list(key.as_deref(), role.as_deref(), composer.as_deref()).map_err(|m| bad(&m))?;
+        }
+        if a.boolean("imports")? {
+            out["imports"] = beatscript_serve::forms::imports();
         }
         if a.boolean("lexicon")? {
             out["lexicon"] = json!({

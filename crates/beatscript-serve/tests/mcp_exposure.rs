@@ -316,9 +316,40 @@ fn control_deck(s: &Server) -> Result<(), String> {
     ensure(r["ok"] == true && r["canonical"].as_str().is_some_and(|t| t.contains("at bar 2: control: crossfader 0.5")), format!("a control: line does not check: {}", r["diagnostics"][0]["message"]))
 }
 
+/// A program that names a theme, a canned section, a genre template's section and a phrase with `use`.
+const USE_PROG: &str = "tempo 110\nkey am\nuse theme ode_to_joy as tune\nuse template(passacaglia).ground as ground\nuse genre@1 techno.drop as drop\nuse phrase @tyger_burning_bright as tyger\nsection verse 4 bars {\n  deck B: melody tune inst=piano\n  deck B: sing tyger on melody\n}\narrange ground verse drop\n";
+
 fn structural_use(s: &Server) -> Result<(), String> {
-    let r = s.call("check", json!({"text": "tempo 124\nuse ode_to_joy\ndeck B: melody ode_to_joy\n"}));
-    ensure(r["ok"] == true && r["refs"].as_array().is_some_and(|a| a.iter().any(|x| x["kind"] == "use")), format!("use: {}", r["diagnostics"][0]["message"]))
+    let r = s.call("check", json!({"text": USE_PROG}));
+    ensure(r["ok"] == true, format!("use: {}", r["diagnostics"]))?;
+    let refs = r["refs"].as_array().ok_or(format!("no refs: {r}"))?;
+    let t = refs.iter().find(|x| x["kind"] == "use" && x["name"] == "tune").ok_or(format!("no use ref: {refs:?}"))?;
+    ensure(t["call"] == "theme ode_to_joy" && t["place"] == "let" && is_cid(&t["resolved"]), format!("the theme's ref: {t}"))?;
+    let im = r["imports"].as_array().ok_or(format!("no imports: {r}"))?;
+    let got: Vec<(String, String, String)> = im.iter().map(|x| (x["name"].as_str().unwrap_or("").to_string(), x["is"].as_str().unwrap_or("").to_string(), x["source"].as_str().unwrap_or("").to_string())).collect();
+    let want: Vec<(String, String, String)> = [("tune", "line", "theme"), ("ground", "section", "template"), ("drop", "section", "genre"), ("tyger", "phrase", "phrase")].iter().map(|(a, b, c)| (a.to_string(), b.to_string(), c.to_string())).collect();
+    ensure(got == want, format!("imports: {got:?}"))?;
+    ensure(im[1]["from"] == "template(passacaglia).ground" && im[2]["from"] == "genre@1 techno.drop", format!("from: {im:?}"))?;
+    // the note at each line says what the name is
+    ensure(r["diagnostics"].as_array().into_iter().flatten().any(|d| d["severity"] == "info" && d["message"].as_str().is_some_and(|m| m.starts_with("`tune` is a line"))), format!("no note: {}", r["diagnostics"]))
+}
+
+fn use_expand(s: &Server) -> Result<(), String> {
+    let r = s.call("expand", json!({"text": "key am\nuse theme ode_to_joy as tune\ndeck B: melody tune\n"}));
+    let t = r["text"].as_str().unwrap_or("");
+    ensure(t.contains("let tune_1 = e4") && !t.contains("use theme"), format!("expand: {r}"))?;
+    ensure(r["imports"][0]["name"] == "tune" && r["imports"][0]["from"] == "theme ode_to_joy", format!("imports: {}", r["imports"]))
+}
+
+fn use_listing(s: &Server) -> Result<(), String> {
+    let l = s.call("list_examples", json!({"imports": true}));
+    let im = &l["imports"];
+    ensure(im["templates"].to_string().contains("use template(passacaglia).ground as ground") && im["genres"].to_string().contains("use genre@1 techno.drop as drop"), format!("imports: {im}"))?;
+    let g = s.call("genre_template", json!({"genre": "techno"}));
+    let line = g["use"].as_array().and_then(|a| a.iter().find_map(|x| x.as_str().filter(|x| x.ends_with(".drop as drop")))).ok_or(format!("genre_template's use: {}", g["use"]))?;
+    // the line is a program's: it checks
+    let c = s.call("check", json!({"text": format!("{line}\narrange drop\n")}));
+    ensure(c["ok"] == true, format!("{line}: {}", c["diagnostics"]))
 }
 
 fn dj_macro(s: &Server) -> Result<(), String> {
@@ -342,7 +373,7 @@ fn eject(s: &Server) -> Result<(), String> {
 }
 
 // beatscript-api's words for the three fields: the descriptions are built from them, and the docs must say them too
-use beatscript_api::resolution::{EXPANDED_CID_DOC, REFS_DOC, RESOLUTION_DOC};
+use beatscript_api::resolution::{EXPANDED_CID_DOC, IMPORTS_DOC, REFS_DOC, RESOLUTION_DOC};
 
 fn rows() -> Vec<Row> {
     vec![
@@ -369,7 +400,9 @@ fn rows() -> Vec<Row> {
         Row { feature: "genre_template's expanded_cid and resolution (6680)", covers: &[], tool: "genre_template", desc: &["The answer also has expanded_cid"], doc: &[], inputs: &["genre", "form"], call: genre_template_refs, pending: None },
         // ---- placeholders: other branches' features, expected to fail until they land
         Row { feature: "the control deck: `control:` lines, engine calls only (6671)", covers: &["control:"], tool: "check", desc: &["A `control:` line is the control deck"], doc: &["### The control deck"], inputs: &[], call: control_deck, pending: None },
-        Row { feature: "structural imports: `use` canned sections and themes as text (6668, 6670)", covers: &["use"], tool: "check", desc: &["`use`"], doc: &[], inputs: &[], call: structural_use, pending: Some("`use` is being built on another branch") },
+        Row { feature: "structural imports: `use SOURCE as NAME`, canned sections, genre templates, themes, phrases (6668, 6670)", covers: &["use", "imports"], tool: "check", desc: &["`use SOURCE as NAME`", IMPORTS_DOC], doc: &[IMPORTS_DOC, "### Name a source: `use`"], inputs: &["text"], call: structural_use, pending: None },
+        Row { feature: "expand writes a `use` line out and names the imports (6668)", covers: &[], tool: "expand", desc: &["the answer then also has imports"], doc: &[], inputs: &["text"], call: use_expand, pending: None },
+        Row { feature: "what a `use` can name: list_examples imports, genre_template's use lines (6668)", covers: &[], tool: "list_examples", desc: &["With imports true"], doc: &[], inputs: &["imports"], call: use_listing, pending: None },
         Row { feature: "the DJ macro catalogue by name: `macro riser over 8 bars on A` (6670)", covers: &["macro"], tool: "check", desc: &["macro"], doc: &[], inputs: &[], call: dj_macro, pending: Some("macros by name are not built yet (6670)") },
         Row { feature: "role-bound form templates and `cross` two seeds (6673, 6674)", covers: &["cross"], tool: "genre_template", desc: &["cross (a quodlibet of two sources, roles a and b)", "each role is bound to a source"], doc: &[], inputs: &["form", "roles"], call: form_cross, pending: None },
         Row { feature: "nested templates with depth and bar caps, each node its own CID (6678, 6680)", covers: &[], tool: "genre_template", desc: &["depth"], doc: &[], inputs: &["form"], call: nested_templates, pending: Some("nested templates landed (6678), but template::expand returns one text, not its nodes, so a node has no CID of its own yet (6680 item 2)") },
@@ -430,8 +463,8 @@ fn every_feature_is_reachable_and_described_through_mcp() {
     for k in &docs {
         assert!(covered.contains(&k.as_str()), "docs/BEATSCRIPT.md documents `{k}` and no row of the MCP exposure table covers it: add one (pending if it is still being built)");
     }
-    // (the generator and the control deck are current now; `use` and `macro` are still coming)
-    assert!(docs.iter().any(|k| k == "use") && docs.iter().any(|k| k == "expanded_cid"), "the docs scan found nothing: {docs:?}");
+    // (the generator, the control deck and `use` are current now; the scan still reads what is coming)
+    assert!(docs.iter().any(|k| k == "expanded_cid") && docs.iter().any(|k| k == "imports"), "the docs scan found nothing: {docs:?}");
 
     let s = start();
     let list = s.rpc("tools/list", json!({}));
