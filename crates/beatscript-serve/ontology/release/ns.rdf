@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF xmlns:dct="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" xmlns:owl="http://www.w3.org/2002/07/owl#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:its="http://www.w3.org/2005/11/its" xmlns:prov="http://www.w3.org/ns/prov#" xmlns:ns="https://beatscript.app/ontology/ns#" xmlns:pflow="https://ontology.pflow.xyz/ns#">
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/beatscript-1">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<skos:altLabel xml:lang="en">btw</skos:altLabel>
+		<skos:definition xml:lang="en">BeatScript 1: a text is in it when its header block has the version line #! btw 1, or no version line at all. Its canonical text has no #! line, and its program CID is the CID of the document {&quot;format&quot;:1,&quot;text&quot;:&quot;&lt;canonical text&gt;&quot;,&quot;type&quot;:&quot;djrust.live&quot;}.</skos:definition>
+		<skos:historyNote xml:lang="en">The name of the language before language version 2 was btw: BeatScript 1 is the language as it was written then. Every BeatScript 1 program, link and CID keeps its meaning; fmt upgrades a program to BeatScript 2, which plays the same under a new CID.</skos:historyNote>
+		<skos:prefLabel xml:lang="en">BeatScript 1</skos:prefLabel>
+		<ns:programCidFormat rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns:programCidFormat>
+		<ns:programCidType>djrust.live</ns:programCidType>
+		<ns:status>stable</ns:status>
+		<ns:versionLine>#! btw 1</ns:versionLine>
+		<ns:versionOf rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-language"/>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/beatscript-2">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<skos:definition xml:lang="en">BeatScript 2: a text is in it when its header block has the version line #! beatscript 2. Its canonical text begins with #! beatscript 2, and its program CID is the CID of the document {&quot;format&quot;:2,&quot;text&quot;:&quot;&lt;canonical text&gt;&quot;,&quot;type&quot;:&quot;beatscript&quot;}. The current version: what fmt upgrades a program to and what the generators write.</skos:definition>
+		<skos:prefLabel xml:lang="en">BeatScript 2</skos:prefLabel>
+		<prov:wasRevisionOf rdf:resource="https://beatscript.app/ontology/concept/beatscript-1"/>
+		<ns:programCidFormat rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns:programCidFormat>
+		<ns:programCidType>beatscript</ns:programCidType>
+		<ns:status>stable</ns:status>
+		<ns:versionLine>#! beatscript 2</ns:versionLine>
+		<ns:versionOf rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-language"/>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/bjorklund">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EngineConcept"/>
 		<rdfs:seeAlso rdf:resource="https://en.wikipedia.org/wiki/Euclidean_rhythm"/>
@@ -118,7 +141,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/fmt">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EngineConcept"/>
-		<skos:definition xml:lang="en">The formatter: rewrites a btw program into its canonical form without changing what it plays.</skos:definition>
+		<skos:definition xml:lang="en">The formatter: rewrites a BeatScript program into its canonical form without changing what it plays. The fmt a person or an agent asks for also upgrades a BeatScript 1 program to BeatScript 2, a new CID for the same music; the formatting a program gets on its way in (eval, load, share, queue, push) keeps its version, so its CID never moves.</skos:definition>
 		<skos:prefLabel xml:lang="en">fmt</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/concept/fmt"/>
 		<ns:categoricalReading rdf:resource="https://beatscript.app/ontology/concept/normal-form"/>
@@ -194,7 +217,7 @@
 		<ns:formShape xml:lang="en">ground variation sung variation sung variation sung: the ground under every section</ns:formShape>
 		<ns:formTemplate rdf:resource="https://beatscript.app/ontology/concept/template-passacaglia"/>
 		<ns:mutationPlan xml:lang="en">cumulative variations above the ground, each `~` added on top of the last: `rot 2 | accent`, `thin`, `rev | drift`, `grow`, `up 1`, `down 1`, `decay`; the ground is never mutated</ns:mutationPlan>
-		<ns:referenceProgram>z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1</ns:referenceProgram>
+		<ns:referenceProgram>z4EBG9j3xZiLH5Sa8EnFW5sg2WuSPRuMbBaTr3JHeQjfWWE7Ug9</ns:referenceProgram>
 		<ns:status>stable</ns:status>
 		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-accent"/>
 		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-decay"/>
@@ -219,7 +242,7 @@
 		<ns:formShape xml:lang="en">canon ode fate voices canon voices: one theme leads each section, the others under it</ns:formShape>
 		<ns:formTemplate rdf:resource="https://beatscript.app/ontology/concept/template-quodlibet"/>
 		<ns:mutationPlan xml:lang="en">`~ a_* morph b_1 p` paired later with `~ b_* morph a_1 p`, the pair pulled away by a morph toward a third line, `@` one-shot borrowings; `~` persists and compounds pass on pass (loop 3)</ns:mutationPlan>
-		<ns:referenceProgram>z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx</ns:referenceProgram>
+		<ns:referenceProgram>z4EBG9j86dPTC9HH6EjtBJFAWZsJLiPum4np9zoJQC9PzWm9SoC</ns:referenceProgram>
 		<ns:status>stable</ns:status>
 		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-decay"/>
 		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-grow"/>
@@ -241,7 +264,7 @@
 		<ns:formShape xml:lang="en">refrain episode refrain sung refrain episode refrain sung refrain: A B A C A B A C A</ns:formShape>
 		<ns:formTemplate rdf:resource="https://beatscript.app/ontology/concept/template-rondo"/>
 		<ns:mutationPlan xml:lang="en">the refrain mutated on each return: `~ rot 2 | accent`, `@ mirror | vel 2` for one return, `~ up 1` then `~ down 1`; the episode morphs toward the refrain</ns:mutationPlan>
-		<ns:referenceProgram>z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw</ns:referenceProgram>
+		<ns:referenceProgram>z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW</ns:referenceProgram>
 		<ns:status>stable</ns:status>
 		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-accent"/>
 		<ns:usesMutation rdf:resource="https://beatscript.app/ontology/concept/mutation-op-down"/>
@@ -1516,7 +1539,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-lyric">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The lyric production of BeatScript&apos;s grammar (its text is lyric_text; docs/btw/phonemes.md).</skos:definition>
+		<skos:definition xml:lang="en">The lyric production of BeatScript&apos;s grammar (its text is lyric_text; docs/beatscript/phonemes.md).</skos:definition>
 		<skos:prefLabel xml:lang="en">lyric</skos:prefLabel>
 		<ns:ebnf>STRING</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Mix moves and sung lyrics</ns:grammarSection>
@@ -4637,6 +4660,9 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-btw">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">beatscript</skos:altLabel>
+		<skos:altLabel xml:lang="en">live</skos:altLabel>
+		<skos:altLabel xml:lang="en">livecode</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun btw: do btw &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">btw</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-check"/>
@@ -4869,6 +4895,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-describe">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">help</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun describe: do describe &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">describe</skos:prefLabel>
 		<ns:controlParameter>noun</ns:controlParameter>
@@ -5010,6 +5037,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-input">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">inputs</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun input: do input &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">input</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-calibrate-latency"/>
@@ -5208,6 +5236,8 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-loopsets">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">collections</skos:altLabel>
+		<skos:altLabel xml:lang="en">loop_collections</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun loopsets: do loopsets &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">loopsets</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-collections"/>
@@ -5234,6 +5264,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-mashup">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">mashups</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun mashup: do mashup &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">mashup</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-add"/>
@@ -5481,6 +5512,8 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-record">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">recording</skos:altLabel>
+		<skos:altLabel xml:lang="en">setrec</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun record: do record &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">record</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-cancel"/>
@@ -5669,6 +5702,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-track">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">tracks</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun track: do track &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">track</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-delete"/>
@@ -5739,6 +5773,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-vocal">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">lyrics</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun vocal: do vocal &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">vocal</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-create"/>
@@ -5862,6 +5897,7 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/noun-voice">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlNoun"/>
+		<skos:altLabel xml:lang="en">formant</skos:altLabel>
 		<skos:definition xml:lang="en">The control noun voice: do voice &lt;verb&gt;.</skos:definition>
 		<skos:prefLabel xml:lang="en">voice</skos:prefLabel>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-load"/>
@@ -6207,6 +6243,23 @@
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>phrasebook-pd</ns:writtenAs>
 	</rdf:Description>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/product-beatscript-language">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<rdfs:seeAlso rdf:resource="https://beatscript.app/ontology/ns#Program"/>
+		<skos:altLabel xml:lang="en">BeatScript</skos:altLabel>
+		<skos:definition xml:lang="en">The language of BeatScript: whole tracks written as text, one line per deck, compiled to the Petri nets a deck runs. Small, total and deterministic: the same canonical text always has the same CID. Its documents are programs, written as .beatscript files.</skos:definition>
+		<skos:hiddenLabel xml:lang="en">btw</skos:hiddenLabel>
+		<skos:historyNote xml:lang="en">Called btw, its files .btw, before language version 2 (BeatScript 2, 2026-11-22). A btw program is a BeatScript 1 program: it is still read, and keeps its meaning and its CID.</skos:historyNote>
+		<skos:prefLabel xml:lang="en">BeatScript language</skos:prefLabel>
+		<ns:currentVersion rdf:resource="https://beatscript.app/ontology/concept/beatscript-2"/>
+		<ns:fileExtension>.beatscript</ns:fileExtension>
+		<ns:inProductFamily rdf:resource="https://beatscript.app/ontology/concept/product-beatscript"/>
+		<ns:legacyFileExtension>.btw</ns:legacyFileExtension>
+		<ns:legacyMediaType>text/btw</ns:legacyMediaType>
+		<ns:legacyMediaType>text/x-beatscript</ns:legacyMediaType>
+		<ns:mediaType>text/beatscript</ns:mediaType>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/product-beatscript-mcp">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#McpServer"/>
 		<skos:definition xml:lang="en">Tools that let an AI assistant such as Claude use BeatScript: check, format and render programs, and play them on a paired phone.</skos:definition>
@@ -6657,13 +6710,13 @@
 		<ns:toolTitle xml:lang="en">A program as a page to publish</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-check">
-		<skos:definition xml:lang="en">Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BTW.md &quot;The control deck&quot;): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head.
+		<skos:definition xml:lang="en">Check a BeatScript program without playing it: parse, type-check and compile the text. ALWAYS call check before eval, share or render, and fix every error at its line:col before trying again: a program with an error is refused whole. Warnings do not block. A `control:` line is the control deck (docs/BEATSCRIPT.md &quot;The control deck&quot;): engine calls only (move, swap pairs, load pair, queue, crossfader, a timed tempo, duck, mix, do), beside deck A:, deck B: and master:, sequenced by sections like a deck; it checks and plays as the same line with no head.
 
-Answers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references. docs is the text&apos;s doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section&apos;s, when it has one. line and col are 1-based; help says what would fix it (&quot;did you mean ...&quot;); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID). A station program (radio: a `station { }` block, see the station tool) checks the tracks of its first pass of forms and its first segue, and the answer gains station {text, cid, genre, generator, seed, step, forms, tempo, key, length, start_cid, version, tracks, segue}.
+Answers {ok, errors, warnings, diagnostics[{severity, line, col, end_col, message, expected, found, help, render}], cid, canonical, version, renamed_cid, expanded_cid, tempo, key, sections, song_bars, seconds, evolve, uses_assets, restricted, docs}, and refs and resolution for a program with references. docs is the text&apos;s doc comments, [{kind, name, doc}]: the `#` lines directly above a section, let, def or arrange (a comment, so the CID does not change); sections[].doc is a section&apos;s, when it has one. line and col are 1-based; help says what would fix it (&quot;did you mean ...&quot;); render is the same error in caret form. ok:false is an answer, not a tool error. cid and canonical are of the canonical text (comments and spacing do not change the CID). version is the language version: 2 for a text whose header has `#! beatscript 2` (write that), 1 for a text with `#! btw 1` or no version line (BeatScript 1, the old spelling, which checks as before and keeps its old CID); renamed_cid is the CID of the same program in the other version (fmt upgrades a BeatScript 1 text to it). A station program (radio: a `station { }` block, see the station tool) checks the tracks of its first pass of forms and its first segue, and the answer gains station {text, cid, genre, generator, seed, step, forms, tempo, key, length, start_cid, version, tracks, segue}.
 
 With same_as (another program&apos;s CID or text) the answer gains same_as {same, text_same, basis, why, diffs[{section, deck, start_bar, a_cid, b_cid}], only_in_a, only_in_b, renamed, song, diff}: whether the two are the same song by their compiled nets and song-level settings, not their text. When they are not, diff says what changed in music: diff.summary is one line per change (&quot;tempo 124 -&gt; 126&quot;, &quot;moved outro: bar 13 -&gt; bar 5&quot;, &quot;drop2 bass = drop bass transposed +1&quot;, &quot;drop bass: 1 note changed (1:7 c3 -&gt; d3)&quot;), with song, arrangement (inserted, removed, moved, repeated, renamed, changed) and parts (a transform: transpose, octave, rotate, reverse, thin, fill, fast, slow; else the notes added, removed or changed at bar:step) as JSON. Use it to prove a refactor changed nothing, or to find what an edit did.
 
-This is the loop for writing a program (there is no compose tool): read https://beatscript.app/docs/cheatsheet.md and one or two list_examples programs, call instruments, write the program, call check and fix every line:col error until ok, then eval / load to play it and share to store it. Voices come from the instruments tool: use only names from it. For a sung line, a public-domain phrasebook line (list_examples with phrasebook true) comes with its meter, stress and phoneme escapes, so that sing @id on melody checks with no unknown-word warning (https://beatscript.app/docs/found-phrases.md). A voice name with a leading digit (808-bass) cannot be written: inst=808-bass reads as 808 - bass and a quoted &quot;808-bass&quot; is refused, so pick a voice that starts with a letter (inst=sub-bass for a deep bass). Read-only, no sign-in. Limits: the text is at most 16384 bytes; about 60 calls a minute.
+This is the loop for writing a program (there is no compose tool): read https://beatscript.app/docs/cheatsheet.md and one or two list_examples programs, call instruments, write the program (its first line `#! beatscript 2`), call check and fix every line:col error until ok, then eval / load to play it and share to store it. Voices come from the instruments tool: use only names from it. For a sung line, a public-domain phrasebook line (list_examples with phrasebook true) comes with its meter, stress and phoneme escapes, so that sing @id on melody checks with no unknown-word warning (https://beatscript.app/docs/found-phrases.md). A voice name with a leading digit (808-bass) cannot be written: inst=808-bass reads as 808 - bass and a quoted &quot;808-bass&quot; is refused, so pick a voice that starts with a letter (inst=sub-bass for a deep bass). Read-only, no sign-in. Limits: the text is at most 16384 bytes; about 60 calls a minute.
 
 References: a program can call the seeded generator (gen@2 techno seed=42 section=drop part=bass is the program generate prints, fitted to the program&apos;s key and tempo unless it says bpm= or key=) or borrow from seed(...), template(...) or a stored program by CID. Its cid is of the text as written (the recipe), and the answer says what the recipe makes: refs lists each reference of the program (a gen@N call, a seed(...), a template(...), a &lt;cid&gt;.section borrowed from a stored program): its kind, half (engine or structure), call, place (part, let, section or arrange), name, line and col, resolved (the CID it is pinned to), generator, fitted (what a gen call took from the program: key, bpm) and track; expanded_cid is the CID of the program with every reference written out as plain BeatScript: cid addresses the recipe, expanded_cid the result; the same recipe always gives the same expanded_cid, and a program with no references has expanded_cid equal to cid; resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it (seeded@2), and for a gen call the key and bpm it was generated in. With expand true, each entry of refs also carries its expansion (the BeatScript it is written out as where it stands). A diagnostic of severity info at each gen call says the CID it resolved to and the key and tempo it was fitted to; the expand tool writes the whole program out.
 
@@ -6682,7 +6735,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Check a BeatScript program</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-devices">
-		<skos:definition xml:lang="en">List the phones paired with the token&apos;s account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; btwsite/PAIRING.md): id, name, fingerprint (the code both ends showed at pairing), paired, connected (djrust has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a phone paired by an account is driven over MCP with that account&apos;s token and no other.
+		<skos:definition xml:lang="en">List the phones paired with the token&apos;s account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; site/PAIRING.md): id, name, fingerprint (the code both ends showed at pairing), paired, connected (djrust has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a phone paired by an account is driven over MCP with that account&apos;s token and no other.
 
 Pass a phone&apos;s id as device to eval, load, get or stop to drive that phone alone (eval and load run the same checks as for a tab; a program with errors, samples or &quot;use restricted&quot; is not sent). Needs a bearer token. Read-only.</skos:definition>
 		<skos:prefLabel xml:lang="en">devices</skos:prefLabel>
@@ -6730,7 +6783,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Write out a program&apos;s seeds and templates</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-fmt">
-		<skos:definition xml:lang="en">Format a BeatScript program as the editor&apos;s fmt button does: one statement a line, one space between tokens, blocks indented two spaces, numbers, notes and chords spelled one way; the `#!` header lines, the comments and the blank lines between blocks stay where they are. Answers text (the formatted program), canonical (the same with no comments or header lines: the CID is of that), cid and comments. Formatting never changes the CID, so use fmt to tidy a program or to compare two; eval, load, queue, share and push_private already format what they are given. A program that does not parse answers the same diagnostics as check. Read-only, no sign-in.</skos:definition>
+		<skos:definition xml:lang="en">Format a BeatScript program as the editor&apos;s fmt button does, in BeatScript 2: one statement a line, one space between tokens, blocks indented two spaces, numbers, notes and chords spelled one way, and the version line `#! beatscript 2` first; the other `#!` header lines, the comments and the blank lines between blocks stay where they are. A BeatScript 1 text (`#! btw 1`, or no version line) is upgraded: the same program under a new CID, and from_cid is the CID of the text as given (the old CID keeps working). Answers text (the formatted program), canonical (the same with no comments and no header lines but the version line: the CID is of that), cid, version (2), from_cid (only when it upgraded) and comments. A BeatScript 2 text formats to its own CID, so use fmt to tidy a program, to upgrade one, or to compare two; eval, load, queue, share and push_private already format what they are given and never upgrade it. A program that does not parse answers the same diagnostics as check. Read-only, no sign-in.</skos:definition>
 		<skos:prefLabel xml:lang="en">fmt</skos:prefLabel>
 		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;text&quot;:{&quot;description&quot;:&quot;The program text.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;text&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
@@ -6744,11 +6797,11 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-generate">
 		<skos:definition xml:lang="en">Generate a whole BeatScript track from a seed, with no model and no sign-in: the beats generator picks the genre&apos;s rhythms (Euclidean), chord progression, instruments and song structure from the seed, and the result is printed as readable source (named lets, a def for the shared groove, sections, an arrange, filter ramps, the chords as Roman numerals and e()/arp()/markov()/every/rotate/degrade with their seeds written out, so one `key` line moves the whole song) for you to edit. Same genre, bpm, key, length and seed: the same text and CID, every time; the seed and generator are in the #! header so the track can be re-derived. The program passes check and is stored as public CC0 (source generate). Answers text, cid, name, seed, generator, url and render_url; play it with eval or load, or edit it and check again.
 
-The answer also has gen, the call that is this program in BeatScript (gen@2 techno seed=42, with the bpm=, key= and length= you gave: `arrange from gen@2 techno seed=42` plays it), expanded_cid (the same as cid: a generated program has no references), and parts, so you can pick parts without reading the text: one entry a role, {role, section, sections, voice or kit, text, let, gen}, where gen is the call that is just that part (gen@2 techno seed=42 section=drop part=bass) and let is what `let drop_bass = &lt;gen&gt;` writes (a let a bar). Put a part&apos;s gen in a let or on a part line of your own program to layer it, mutate it in an arrange or cross it with another seed; there it is fitted to your program&apos;s key and tempo unless it says key= and bpm=, and check reports it in refs. With part (a role) the answer gains that part and its let alone; generator picks the version (1 or 2, as gen@1 and gen@2 name them); seeds (a list, or {count, start}, at most 16) answers a compact summary a seed instead of one program.
+The answer also has gen, the call that is this program in BeatScript (gen@2 techno seed=42, with the bpm=, key= and length= you gave: `arrange from gen@2 techno seed=42` plays it), expanded_cid (the same as cid: a generated program has no references), and parts, so you can pick parts without reading the text: one entry a role, {role, section, sections, voice or kit, text, let, gen}, where gen is the call that is just that part (gen@2 techno seed=42 section=drop part=bass) and let is what `let drop_bass = &lt;gen&gt;` writes (a let a bar). Put a part&apos;s gen in a let or on a part line of your own program to layer it, mutate it in an arrange or cross it with another seed; there it is fitted to your program&apos;s key and tempo unless it says key= and bpm=, and check reports it in refs. With part (a role) the answer gains that part and its let alone; generator picks the version (1, 2 or 3, as gen@1, gen@2 and gen@3 name them; 3 writes BeatScript 2); seeds (a list, or {count, start}, at most 16) answers a compact summary a seed instead of one program.
 
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">generate</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;bpm&quot;:{&quot;description&quot;:&quot;Tempo; default the genre&apos;s.&quot;,&quot;maximum&quot;:300,&quot;minimum&quot;:40,&quot;type&quot;:&quot;number&quot;},&quot;generator&quot;:{&quot;description&quot;:&quot;The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen) or 2 (seeded@2, the chords and arps as Roman numerals); default 2. A version always prints the same program for the same inputs.&quot;,&quot;enum&quot;:[1,2],&quot;type&quot;:&quot;integer&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;The genre whose rhythms, chords, instruments and song structure it uses (default techno).&quot;,&quot;enum&quot;:[&quot;techno&quot;,&quot;house&quot;,&quot;jazz&quot;,&quot;ambient&quot;,&quot;dnb&quot;,&quot;edm&quot;,&quot;speedcore&quot;,&quot;dubstep&quot;,&quot;country&quot;,&quot;blues&quot;,&quot;synthwave&quot;,&quot;trance&quot;,&quot;lofi&quot;,&quot;reggae&quot;,&quot;funk&quot;,&quot;bossa&quot;,&quot;trap&quot;,&quot;garage&quot;,&quot;metal&quot;,&quot;electro&quot;,&quot;deephouse&quot;,&quot;italo&quot;,&quot;acid&quot;],&quot;type&quot;:&quot;string&quot;},&quot;key&quot;:{&quot;description&quot;:&quot;Key: am, c, f#m, d:dorian ...; default the genre&apos;s.&quot;,&quot;maxLength&quot;:16,&quot;type&quot;:&quot;string&quot;},&quot;length&quot;:{&quot;description&quot;:&quot;Song length (default standard).&quot;,&quot;enum&quot;:[&quot;short&quot;,&quot;standard&quot;,&quot;long&quot;],&quot;type&quot;:&quot;string&quot;},&quot;part&quot;:{&quot;description&quot;:&quot;One part (a role): the answer gains part (that role&apos;s entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = &lt;drop_bass_1 ...&gt;), to paste into a program of your own.&quot;,&quot;enum&quot;:[&quot;kick&quot;,&quot;snare&quot;,&quot;hihat&quot;,&quot;clap&quot;,&quot;bass&quot;,&quot;melody&quot;,&quot;harmony&quot;,&quot;arp&quot;],&quot;type&quot;:&quot;string&quot;},&quot;section&quot;:{&quot;description&quot;:&quot;With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).&quot;,&quot;maxLength&quot;:32,&quot;type&quot;:&quot;string&quot;},&quot;seed&quot;:{&quot;description&quot;:&quot;A number or a word (default 1). Same inputs, same program text and CID.&quot;,&quot;type&quot;:[&quot;string&quot;,&quot;integer&quot;]},&quot;seeds&quot;:{&quot;anyOf&quot;:[{&quot;items&quot;:{&quot;type&quot;:[&quot;string&quot;,&quot;integer&quot;]},&quot;maxItems&quot;:16,&quot;minItems&quot;:1,&quot;type&quot;:&quot;array&quot;},{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;count&quot;:{&quot;maximum&quot;:16,&quot;minimum&quot;:1,&quot;type&quot;:&quot;integer&quot;},&quot;start&quot;:{&quot;minimum&quot;:0,&quot;type&quot;:&quot;integer&quot;}},&quot;required&quot;:[&quot;count&quot;],&quot;type&quot;:&quot;object&quot;}],&quot;description&quot;:&quot;Instead of seed: many seeds, as a list ([1, 2, \&quot;sunrise\&quot;]) or as {count, start} (count seeds from start, default 1), at most 16. The answer is programs, one compact summary a seed in order: seed, generator, cid, name, key, tempo, bars, gen, parts (role, section, sections, voice or kit, text, gen) and url and render_url; each program is stored as one generate stores it, and nothing else is. The same seeds give the same summaries.&quot;}},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;bpm&quot;:{&quot;description&quot;:&quot;Tempo; default the genre&apos;s.&quot;,&quot;maximum&quot;:300,&quot;minimum&quot;:40,&quot;type&quot;:&quot;number&quot;},&quot;generator&quot;:{&quot;description&quot;:&quot;The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen), 2 (seeded@2, the chords and arps as Roman numerals) or 3 (seeded@3: seeded@2&apos;s music written in BeatScript 2, `#! beatscript 2` first); default 3. A version always prints the same program for the same inputs.&quot;,&quot;enum&quot;:[1,2,3],&quot;type&quot;:&quot;integer&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;The genre whose rhythms, chords, instruments and song structure it uses (default techno).&quot;,&quot;enum&quot;:[&quot;techno&quot;,&quot;house&quot;,&quot;jazz&quot;,&quot;ambient&quot;,&quot;dnb&quot;,&quot;edm&quot;,&quot;speedcore&quot;,&quot;dubstep&quot;,&quot;country&quot;,&quot;blues&quot;,&quot;synthwave&quot;,&quot;trance&quot;,&quot;lofi&quot;,&quot;reggae&quot;,&quot;funk&quot;,&quot;bossa&quot;,&quot;trap&quot;,&quot;garage&quot;,&quot;metal&quot;,&quot;electro&quot;,&quot;deephouse&quot;,&quot;italo&quot;,&quot;acid&quot;],&quot;type&quot;:&quot;string&quot;},&quot;key&quot;:{&quot;description&quot;:&quot;Key: am, c, f#m, d:dorian ...; default the genre&apos;s.&quot;,&quot;maxLength&quot;:16,&quot;type&quot;:&quot;string&quot;},&quot;length&quot;:{&quot;description&quot;:&quot;Song length (default standard).&quot;,&quot;enum&quot;:[&quot;short&quot;,&quot;standard&quot;,&quot;long&quot;],&quot;type&quot;:&quot;string&quot;},&quot;part&quot;:{&quot;description&quot;:&quot;One part (a role): the answer gains part (that role&apos;s entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = &lt;drop_bass_1 ...&gt;), to paste into a program of your own.&quot;,&quot;enum&quot;:[&quot;kick&quot;,&quot;snare&quot;,&quot;hihat&quot;,&quot;clap&quot;,&quot;bass&quot;,&quot;melody&quot;,&quot;harmony&quot;,&quot;arp&quot;],&quot;type&quot;:&quot;string&quot;},&quot;section&quot;:{&quot;description&quot;:&quot;With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).&quot;,&quot;maxLength&quot;:32,&quot;type&quot;:&quot;string&quot;},&quot;seed&quot;:{&quot;description&quot;:&quot;A number or a word (default 1). Same inputs, same program text and CID.&quot;,&quot;type&quot;:[&quot;string&quot;,&quot;integer&quot;]},&quot;seeds&quot;:{&quot;anyOf&quot;:[{&quot;items&quot;:{&quot;type&quot;:[&quot;string&quot;,&quot;integer&quot;]},&quot;maxItems&quot;:16,&quot;minItems&quot;:1,&quot;type&quot;:&quot;array&quot;},{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;count&quot;:{&quot;maximum&quot;:16,&quot;minimum&quot;:1,&quot;type&quot;:&quot;integer&quot;},&quot;start&quot;:{&quot;minimum&quot;:0,&quot;type&quot;:&quot;integer&quot;}},&quot;required&quot;:[&quot;count&quot;],&quot;type&quot;:&quot;object&quot;}],&quot;description&quot;:&quot;Instead of seed: many seeds, as a list ([1, 2, \&quot;sunrise\&quot;]) or as {count, start} (count seeds from start, default 1), at most 16. The answer is programs, one compact summary a seed in order: seed, generator, cid, name, key, tempo, bars, gen, parts (role, section, sections, voice or kit, text, gen) and url and render_url; each program is stored as one generate stores it, and nothing else is. The same seeds give the same summaries.&quot;}},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:readOnly>
@@ -6766,11 +6819,11 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Generate a track from a seed (no model)</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-genre-template">
-		<skos:definition xml:lang="en">A starting BeatScript program for a genre, built from the bitwrap ontology&apos;s data for it (https://ontology.bitwrap.io, CC0): its tempo, key (root and scale), swing, drum kit and Euclidean kick, snare and hihat rhythms, its bass, arp and melody voices, its first chord progression (the chords, bass, arp and melody are Roman numerals, so a `key` line moves them all), and its family&apos;s standard song structure, each section with the roles the family&apos;s section profile makes active and its usual length. Returns {text, cid, canonical, seconds, genre{genre, label, family, tempo, tempo_range, scale, kit, voices, progressions, sections}} (and phrase, warnings with a phrase). The text passes check (it is checked before it is returned) and carries a `#! genre:` line, so check reports its style against the genre. Edit it, check it, then play or share it. For vocals, pass phrase (a phrasebook id from list_examples with phrasebook true, or any words): it is sung on the melody part of each section that has one, and the answer gains phrase with its source, year, meter, stress, syllables and phoneme escapes and whether its meter fits the genre (https://beatscript.app/docs/found-phrases.md). For a classical form, pass form (quodlibet, passacaglia, canon, rondo, fugue or theme-and-variations): the program is that form&apos;s template at the genre&apos;s tempo, built from public-domain themes, with the phrase (or the form&apos;s own) sung in it, and the answer gains form (its sections, mutation plan, themes and reference track) and expanded (the program written out to edit). To borrow one theme instead, pass theme (an id from list_examples with themes true): its lets go in, moved to the genre&apos;s key, played by the part of its role. See https://beatscript.app/docs/forms.md. For a whole track made from a phrase, write `arrange from template(deep-house, &quot;your words&quot;)` (see expand). Read-only, no sign-in. The answer also has expanded_cid (the CID of the program written out: the same as cid for a program with no references) and, for a program with references (a form&apos;s template(...)), refs and resolution, as check gives them. A form takes its sources as roles (docs/btw/ext-roles.md): with form and roles, each role is bound to a source (a seed of the seeded generator, a public-domain theme, notes, a stored program&apos;s part or section, another form), and the forms include cross (a quodlibet of two sources, roles a and b): two seeds that lead in turn, overlap, and morph toward each other and back.
+		<skos:definition xml:lang="en">A starting BeatScript program for a genre, built from the bitwrap ontology&apos;s data for it (https://ontology.bitwrap.io, CC0): its tempo, key (root and scale), swing, drum kit and Euclidean kick, snare and hihat rhythms, its bass, arp and melody voices, its first chord progression (the chords, bass, arp and melody are Roman numerals, so a `key` line moves them all), and its family&apos;s standard song structure, each section with the roles the family&apos;s section profile makes active and its usual length. Returns {text, cid, canonical, seconds, genre{genre, label, family, tempo, tempo_range, scale, kit, voices, progressions, sections}} (and phrase, warnings with a phrase). The text passes check (it is checked before it is returned) and carries a `#! genre:` line, so check reports its style against the genre. Edit it, check it, then play or share it. For vocals, pass phrase (a phrasebook id from list_examples with phrasebook true, or any words): it is sung on the melody part of each section that has one, and the answer gains phrase with its source, year, meter, stress, syllables and phoneme escapes and whether its meter fits the genre (https://beatscript.app/docs/found-phrases.md). For a classical form, pass form (quodlibet, passacaglia, canon, rondo, fugue or theme-and-variations): the program is that form&apos;s template at the genre&apos;s tempo, built from public-domain themes, with the phrase (or the form&apos;s own) sung in it, and the answer gains form (its sections, mutation plan, themes and reference track) and expanded (the program written out to edit). To borrow one theme instead, pass theme (an id from list_examples with themes true): its lets go in, moved to the genre&apos;s key, played by the part of its role. See https://beatscript.app/docs/forms.md. For a whole track made from a phrase, write `arrange from template(deep-house, &quot;your words&quot;)` (see expand). Read-only, no sign-in. The answer also has expanded_cid (the CID of the program written out: the same as cid for a program with no references) and, for a program with references (a form&apos;s template(...)), refs and resolution, as check gives them. A form takes its sources as roles (docs/beatscript/ext-roles.md): with form and roles, each role is bound to a source (a seed of the seeded generator, a public-domain theme, notes, a stored program&apos;s part or section, another form), and the forms include cross (a quodlibet of two sources, roles a and b): two seeds that lead in turn, overlap, and morph toward each other and back.
 
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">genre_template</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;form&quot;:{&quot;description&quot;:&quot;Optional (docs/btw/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form&apos;s template at the genre&apos;s tempo, arrange from template(&lt;form&gt;, &lt;phrase&gt;), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:&lt;name&gt;, or its https://ontology.bitwrap.io/genre/ IRI.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;phrase&quot;:{&quot;description&quot;:&quot;Optional, for vocals (found phrases, see docs/btw/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.&quot;,&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;roles&quot;:{&quot;additionalProperties&quot;:{&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;description&quot;:&quot;Optional, with form (docs/btw/ext-roles.md): the form&apos;s roles, each bound to a source, {\&quot;ROLE\&quot;: \&quot;SOURCE\&quot;}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program&apos;s part or section by CID, or another form (template(passacaglia, ground=gen@1 dubstep seed=54876)). cross takes a and b; passacaglia ground and upper; canon subject and ground; rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form&apos;s key and tempo and stays an engine call, pinned (see resolution).&quot;,&quot;type&quot;:&quot;object&quot;},&quot;theme&quot;:{&quot;description&quot;:&quot;Optional (docs/btw/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre&apos;s key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;genre&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;form&quot;:{&quot;description&quot;:&quot;Optional (docs/beatscript/forms.md): a classical form, one of quodlibet, passacaglia, canon, rondo, fugue, theme-and-variations, or cross (a quodlibet of two sources, roles a and b). The program is then that form&apos;s template at the genre&apos;s tempo, arrange from template(&lt;form&gt;, &lt;phrase&gt;), and the answer gains form (shape, mutation plan, themes, reference track) and expanded (the program written out as plain BeatScript). Not with theme.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;genre&quot;:{&quot;description&quot;:&quot;A genre of the bitwrap ontology: its name (techno, house, jazz, dnb, ...), genre:&lt;name&gt;, or its https://ontology.bitwrap.io/genre/ IRI.&quot;,&quot;maxLength&quot;:200,&quot;type&quot;:&quot;string&quot;},&quot;phrase&quot;:{&quot;description&quot;:&quot;Optional, for vocals (found phrases, see docs/beatscript/found-phrases.md): a phrasebook id (tyger_burning_bright, from list_examples with phrasebook true) or any words. It is sung on the melody part of each section that has one, and the answer gains phrase: its source, year, meter, stress, syllables and phoneme escapes, and whether its meter fits the genre.&quot;,&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;roles&quot;:{&quot;additionalProperties&quot;:{&quot;maxLength&quot;:400,&quot;type&quot;:&quot;string&quot;},&quot;description&quot;:&quot;Optional, with form (docs/beatscript/ext-roles.md): the form&apos;s roles, each bound to a source, {\&quot;ROLE\&quot;: \&quot;SOURCE\&quot;}: a seed of the seeded generator (gen@1 dubstep seed=54876, gen@2 techno seed=42 section=drop part=bass), a public-domain theme id (ode_to_joy), notes in brackets, a stored program&apos;s part or section by CID, or another form (template(passacaglia, ground=gen@1 dubstep seed=54876)). cross takes a and b; passacaglia ground and upper; canon subject and ground; rondo refrain and episodes; fugue subject and counter; theme-and-variations theme. A seed is fitted to the form&apos;s key and tempo and stays an engine call, pinned (see resolution).&quot;,&quot;type&quot;:&quot;object&quot;},&quot;theme&quot;:{&quot;description&quot;:&quot;Optional (docs/beatscript/forms.md): a theme of the public-domain theme library (ode_to_joy, pachelbel_ground, from list_examples with themes true). Its lets go into the program, moved to the genre&apos;s key, and the part of its role plays it in every section that has one; the answer gains theme. Not with form.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;genre&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:readOnly>
@@ -6822,7 +6875,7 @@ Needs a bearer token: it reads the tabs of the token&apos;s account, by default 
 		<ns:toolTitle xml:lang="en">A program&apos;s family tree</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-list-examples">
-		<skos:definition xml:lang="en">The public example programs of https://beatscript.app, all CC0-1.0: name, title, description, cid, bpm, bars, license and the url of the raw .btw. Pass name to get that program&apos;s full text as well. Read two or three before writing a program of your own: after the cheat-sheet (https://beatscript.app/docs/cheatsheet.md) they are the best guide to the language, from a four-line beat (first-beat) to whole tracks with sections, defs, ramps and evolve. With phrasebook true (or a meter, or syllables) it also returns the public-domain phrasebook: lines first published before 1929, each with its text, source, year, meter, stress pattern, syllables and phoneme escapes, to sing by id (sing @tempest_such_stuff on melody); choose one for its meter, see https://beatscript.app/docs/found-phrases.md. With themes true (or a key, a role or a composer) it also returns the public-domain theme library: melodies, basses and figures composed and published before 1929, each as BeatScript bars in a stated key with the let lines and the part that play it, its work, composer, year and the themes it morphs well with; borrow one as found material or build a form from it, see https://beatscript.app/docs/forms.md. Read-only, no sign-in.</skos:definition>
+		<skos:definition xml:lang="en">The public example programs of https://beatscript.app, all CC0-1.0: name, title, description, cid, bpm, bars, license and the url of the raw .beatscript. Pass name to get that program&apos;s full text as well. Read two or three before writing a program of your own: after the cheat-sheet (https://beatscript.app/docs/cheatsheet.md) they are the best guide to the language, from a four-line beat (first-beat) to whole tracks with sections, defs, ramps and evolve. With phrasebook true (or a meter, or syllables) it also returns the public-domain phrasebook: lines first published before 1929, each with its text, source, year, meter, stress pattern, syllables and phoneme escapes, to sing by id (sing @tempest_such_stuff on melody); choose one for its meter, see https://beatscript.app/docs/found-phrases.md. With themes true (or a key, a role or a composer) it also returns the public-domain theme library: melodies, basses and figures composed and published before 1929, each as BeatScript bars in a stated key with the let lines and the part that play it, its work, composer, year and the themes it morphs well with; borrow one as found material or build a form from it, see https://beatscript.app/docs/forms.md. Read-only, no sign-in.</skos:definition>
 		<skos:prefLabel xml:lang="en">list_examples</skos:prefLabel>
 		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;composer&quot;:{&quot;description&quot;:&quot;Only the themes by this composer (any part of the name: beethoven). Implies themes.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;key&quot;:{&quot;description&quot;:&quot;Only the themes in this key, matched on its tonic: a key word (d, bm, db). Implies themes.&quot;,&quot;maxLength&quot;:16,&quot;type&quot;:&quot;string&quot;},&quot;lexicon&quot;:{&quot;description&quot;:&quot;Also return the lexicon harvest (default false): the words the checking tools collected from programs&apos; lyrics, ranked for the CC0 lexicon, at most 50: those with an annotated escape (word=/phonemes/) first, then by how many programs gave them. Each is {word, programs, conflict, in_lexicon, variants[{phones, source (annotated or rule), count, first, last, cids}]}; conflict: two annotated pronunciations disagree. Read-only.&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;meter&quot;:{&quot;description&quot;:&quot;Only the phrasebook lines of this meter: a family (iambic, trochaic, anapestic, dactylic, common-meter, sprung, nursery, parallelism, oratory, call-and-response) or a word of a meter&apos;s name (pentameter). Implies phrasebook.&quot;,&quot;maxLength&quot;:64,&quot;type&quot;:&quot;string&quot;},&quot;name&quot;:{&quot;description&quot;:&quot;Optional: also return this example&apos;s full text.&quot;,&quot;maxLength&quot;:64,&quot;pattern&quot;:&quot;^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;phrasebook&quot;:{&quot;description&quot;:&quot;Also return the public-domain phrasebook: lines first published before 1929, each with its text, source, year, meter, stress pattern, syllables and phoneme escapes (default false).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;role&quot;:{&quot;description&quot;:&quot;Only the themes of this role: melody, bass, harmony or arp. Implies themes.&quot;,&quot;maxLength&quot;:16,&quot;type&quot;:&quot;string&quot;},&quot;syllables&quot;:{&quot;description&quot;:&quot;Only the phrasebook lines with this many syllables: a number (8) or a range (8-12). Implies phrasebook.&quot;,&quot;maxLength&quot;:16,&quot;type&quot;:&quot;string&quot;},&quot;themes&quot;:{&quot;description&quot;:&quot;Also return the public-domain theme library: melodies, basses and figures composed and published before 1929, each as BeatScript bars in a stated key (let-ready), with its role, meter, work, composer, year and pairings (default false).&quot;,&quot;type&quot;:&quot;boolean&quot;}},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
@@ -6893,7 +6946,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-push-private">
 		<skos:definition xml:lang="en">Send a private program to one of your paired phones, end-to-end encrypted, and never stored. Use it for what https://beatscript.app does not keep: covers, programs with local samples (`sample ... from`), `use restricted`, anything not under a Creative Commons licence. The program is sealed for the phone&apos;s own key (X25519 from its pairing key, ChaCha20-Poly1305) and handed to the phone&apos;s live connection in memory: it is not written to disk, a database or a log (only its size and the device id are logged), no CID is registered, and if the phone is not connected nothing is sent and nothing is kept (push again when it is). The phone opens it, checks it and plays it itself; samples resolve against files in the phone&apos;s own sample library, and any that are missing are reported back in get&apos;s diagnostics, never fetched. Give device and exactly one of text (sealed here, so the text is in this server&apos;s memory for this call, where it is formatted first, as eval&apos;s is) or sealed (an envelope you sealed yourself for the phone&apos;s seal_key from devices: then this server only ever sees ciphertext). Needs a bearer token; only your own paired phones.</skos:definition>
 		<skos:prefLabel xml:lang="en">push_private</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;device&quot;:{&quot;description&quot;:&quot;Id of one of your paired phones, from the devices tool.&quot;,&quot;maxLength&quot;:64,&quot;pattern&quot;:&quot;^[A-Za-z0-9_-]{6,64}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;load&quot;:{&quot;description&quot;:&quot;Load it on the phone and leave it stopped unless play (default false: play it as eval does).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;play&quot;:{&quot;description&quot;:&quot;Start playing too (default false: load it and leave it stopped, or leave a playing tab as it is).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;sealed&quot;:{&quot;description&quot;:&quot;An envelope you sealed for the phone&apos;s seal_key (btwseal v1). Give text or sealed.&quot;,&quot;maxLength&quot;:65536,&quot;type&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, sealed here for the phone. Give text or sealed.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;device&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;device&quot;:{&quot;description&quot;:&quot;Id of one of your paired phones, from the devices tool.&quot;,&quot;maxLength&quot;:64,&quot;pattern&quot;:&quot;^[A-Za-z0-9_-]{6,64}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;load&quot;:{&quot;description&quot;:&quot;Load it on the phone and leave it stopped unless play (default false: play it as eval does).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;play&quot;:{&quot;description&quot;:&quot;Start playing too (default false: load it and leave it stopped, or leave a playing tab as it is).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;sealed&quot;:{&quot;description&quot;:&quot;An envelope you sealed for the phone&apos;s seal_key (beatscript-seal v1). Give text or sealed.&quot;,&quot;maxLength&quot;:65536,&quot;type&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, sealed here for the phone. Give text or sealed.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;device&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:readOnly>
@@ -6931,7 +6984,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Up next: queue programs on a browser tab</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-record">
-		<skos:definition xml:lang="en">Set up a demo recording of a program: the page in record mode (full screen code, the firing markers and follow-scroll on) and the steps that turn it into a video. Give exactly one of text, cid or example (as render does: a text or example is checked and stored publicly as CC0-1.0, nothing private). Answers {cid, seconds, record_url, record_url_manual_clock, audio_url, recipe}. record_url opens the page in record mode and plays it for a person to screen-record; record_url_manual_clock opens it on a fake clock that a script steps frame by frame (window.__btw.setTime(seconds); window.__btw.frame()), which is how btwsite/tools/record-demo.mjs in the repo makes a perfectly synced, stutter-free MP4 (H.264, AAC, 1920x1080) plus a silent hero loop (MP4 and WebM) and a poster PNG, taking the audio from audio_url (the offline render of the same program). This tool does not capture video itself: it needs a browser and ffmpeg on your side. The audio is the offline render: notes and sounds, not control lines (filters, reverb). Call check first. Rendering limits apply (about 30 programs an hour per client). No sign-in needed.</skos:definition>
+		<skos:definition xml:lang="en">Set up a demo recording of a program: the page in record mode (full screen code, the firing markers and follow-scroll on) and the steps that turn it into a video. Give exactly one of text, cid or example (as render does: a text or example is checked and stored publicly as CC0-1.0, nothing private). Answers {cid, seconds, record_url, record_url_manual_clock, audio_url, recipe}. record_url opens the page in record mode and plays it for a person to screen-record; record_url_manual_clock opens it on a fake clock that a script steps frame by frame (window.__btw.setTime(seconds); window.__btw.frame()), which is how site/tools/record-demo.mjs in the repo makes a perfectly synced, stutter-free MP4 (H.264, AAC, 1920x1080) plus a silent hero loop (MP4 and WebM) and a poster PNG, taking the audio from audio_url (the offline render of the same program). This tool does not capture video itself: it needs a browser and ffmpeg on your side. The audio is the offline render: notes and sounds, not control lines (filters, reverb). Call check first. Rendering limits apply (about 30 programs an hour per client). No sign-in needed.</skos:definition>
 		<skos:prefLabel xml:lang="en">record</skos:prefLabel>
 		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;cid&quot;:{&quot;description&quot;:&quot;CID of a program already stored (for instance the cid render or a signed-in share returned).&quot;,&quot;maxLength&quot;:100,&quot;pattern&quot;:&quot;^z[1-9A-HJ-NP-Za-km-z]{20,100}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;example&quot;:{&quot;description&quot;:&quot;Name of an example, from list_examples.&quot;,&quot;maxLength&quot;:64,&quot;pattern&quot;:&quot;^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text. It must pass check; it is stored publicly (CC0-1.0).&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
@@ -6964,7 +7017,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Render a program to streaming audio</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-share">
-		<skos:definition xml:lang="en">Make the share links of a program. Always the self-sealing link: https://beatscript.app/#&lt;CID&gt;.&lt;base64url(deflate(formatted text))&gt;; the program travels inside the link with its `#!` header lines and comments, and whoever opens it gets exactly that program, verified against the CID (the canonical text&apos;s: the headers and comments are not covered by it), and can play and fork it. Also social_url (https://beatscript.app/c/&lt;CID&gt;.&lt;packed&gt;, the form to post where a link preview is wanted: it carries a card image) and the same program on beats.bitwrap.io (that link packs the canonical text, without the comments). Called signed in (a bearer token), it also stores the program on the site (public, with its rights: license, forked_from, credits, name; the first share&apos;s rights stay) and returns the CID-only forms: short_url (https://beatscript.app/p/&lt;CID&gt;), short_social_url (https://beatscript.app/c/&lt;CID&gt;) and short_beats_url (https://beats.bitwrap.io/p/&lt;CID&gt;), plus fetch_url, a public GET that returns the canonical text and rights for a phone or an app. Opening a short link fetches the text, recompiles it, recomputes the CID and refuses a mismatch. Anonymous calls get the self-sealing links and short_url null. The program must pass check and must not use samples or &quot;use restricted&quot; (a private program is never shared or stored); programs shared here are CC0 unless license says otherwise. The text is formatted on the way in (the stored program is its canonical text, whose CID the header lines and comments do not change, and the link carries the formatted text; a `#! name:` line names the stored program). Links over about 2000 characters (chars says) may be cut by some apps; short links are not. A stored program also embeds in other sites: embed_url (https://beatscript.app/embed/&lt;CID&gt;) is a player any page may frame, https://beatscript.app/embed.js gives &lt;beatscript-player cid=&quot;&lt;CID&gt;&quot;&gt;, and https://beatscript.app/oembed?url=&lt;a /p/ or /c/ link&gt; answers oEmbed; see https://beatscript.app/docs/embed. Who authored a program and what rights it has, in plain language: https://beatscript.app/authorship.
+		<skos:definition xml:lang="en">Make the share links of a program. Always the self-sealing link: https://beatscript.app/#&lt;CID&gt;.&lt;base64url(deflate(formatted text))&gt;; the program travels inside the link with its `#!` header lines and comments, and whoever opens it gets exactly that program, verified against the CID (the canonical text&apos;s: the headers and comments are not covered by it), and can play and fork it. Also social_url (https://beatscript.app/c/&lt;CID&gt;.&lt;packed&gt;, the form to post where a link preview is wanted: it carries a card image) and the same program on beats.bitwrap.io (that link packs the canonical text, without the comments). Called signed in (a bearer token), it also stores the program on the site (public, with its rights: license, forked_from, credits, name; the first share&apos;s rights stay) and returns the CID-only forms: short_url (https://beatscript.app/p/&lt;CID&gt;), short_social_url (https://beatscript.app/c/&lt;CID&gt;) and short_beats_url (https://beats.bitwrap.io/p/&lt;CID&gt;), plus fetch_url, a public GET that returns the canonical text and rights for a phone or an app. Opening a short link fetches the text, recompiles it, recomputes the CID and refuses a mismatch. A short link to a BeatScript 1 program (https://beatscript.app/p/&lt;old CID&gt;) redirects to its BeatScript 2 upgrade (the CID check&apos;s renamed_cid gives, the program fmt writes) once the site stores it; the old CID&apos;s text stays at fetch_url. Anonymous calls get the self-sealing links and short_url null. The program must pass check and must not use samples or &quot;use restricted&quot; (a private program is never shared or stored); programs shared here are CC0 unless license says otherwise. The text is formatted on the way in, its version kept (the stored program is its canonical text, whose CID the header lines and comments do not change, and the link carries the formatted text; a `#! name:` line names the stored program). Links over about 2000 characters (chars says) may be cut by some apps; short links are not. A stored program also embeds in other sites: embed_url (https://beatscript.app/embed/&lt;CID&gt;) is a player any page may frame, https://beatscript.app/embed.js gives &lt;beatscript-player cid=&quot;&lt;CID&gt;&quot;&gt;, and https://beatscript.app/oembed?url=&lt;a /p/ or /c/ link&gt; answers oEmbed; see https://beatscript.app/docs/embed. Who authored a program and what rights it has, in plain language: https://beatscript.app/authorship.
 
 Lexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules&apos; pronunciation. Only the word, its phonemes and the program&apos;s CID are kept, never the text. The answer&apos;s lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/.</skos:definition>
 		<skos:prefLabel xml:lang="en">share</skos:prefLabel>
@@ -7082,7 +7135,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:toolParameter>min_bpm</ns:toolParameter>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-ontology-search-terms">
-		<skos:definition xml:lang="en">Find terms whose label or definition contains the text (case-insensitive). A class with no definition of its own gets the one of the glossary concept it closeMatches, or its rdfs:comment.</skos:definition>
+		<skos:definition xml:lang="en">Find terms whose label, other label (an alternative or a former name, such as btw for BeatScript) or definition contains the text (case-insensitive). A class with no definition of its own gets the one of the glossary concept it closeMatches, or its rdfs:comment.</skos:definition>
 		<skos:prefLabel xml:lang="en">search_terms</skos:prefLabel>
 		<ns:inputSchema>{&quot;properties&quot;:{&quot;limit&quot;:{&quot;description&quot;:&quot;max results, default 25, at most 200&quot;,&quot;type&quot;:&quot;integer&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;text to look for&quot;,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;text&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
@@ -10881,7 +10934,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:status>stable</ns:status>
 	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#CanonicalForm">
-		<rdfs:comment xml:lang="en">The normal form of a btw program: whitespace, numbers, note spelling and comments are normalised, so two spellings of one program have one canonical text and therefore one CID.</rdfs:comment>
+		<rdfs:comment xml:lang="en">The normal form of a BeatScript program: whitespace, numbers, note spelling and comments are normalised, so two spellings of one program have one canonical text and therefore one CID. A BeatScript 2 canonical text begins with its version line, #! beatscript 2; a BeatScript 1 canonical text has no #! line, so the first line alone tells the version.</rdfs:comment>
 		<rdfs:label xml:lang="en">canonical form</rdfs:label>
 		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#MusicConcept"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#CanonicalForm"/>
@@ -10913,7 +10966,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:label xml:lang="en">content identifier</rdfs:label>
 		<rdfs:seeAlso rdf:resource="https://ontology.pflow.xyz/ns#modelCID"/>
 		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#MusicConcept"/>
-		<skos:scopeNote xml:lang="en">pflow&apos;s modelCID is the content identifier of a net model; ProgramCID and NetCID are the same kind of name for a btw program and for the net a deck runs.</skos:scopeNote>
+		<skos:scopeNote xml:lang="en">pflow&apos;s modelCID is the content identifier of a net model; ProgramCID and NetCID are the same kind of name for a BeatScript program and for the net a deck runs.</skos:scopeNote>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#ContentId"/>
 		<ns:status>stable</ns:status>
 	</owl:Class>
@@ -11159,6 +11212,12 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#MusicConcept"/>
 		<ns:status>stable</ns:status>
 	</owl:Class>
+	<owl:Class rdf:about="https://beatscript.app/ontology/ns#LanguageVersion">
+		<rdfs:comment xml:lang="en">One version of a language: the version line that says a text is in it, how its programs are canonicalized and what their CIDs are the CIDs of. A later version is prov:wasRevisionOf the one before it, and a program written in the earlier one keeps its meaning and its CID.</rdfs:comment>
+		<rdfs:label xml:lang="en">language version</rdfs:label>
+		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<ns:status>stable</ns:status>
+	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#LetLine">
 		<rdfs:comment xml:lang="en">Binds a name to a value or pattern for use further down the program.</rdfs:comment>
 		<rdfs:label xml:lang="en">let line</rdfs:label>
@@ -11332,10 +11391,12 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:status>stable</ns:status>
 	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#Program">
-		<rdfs:comment xml:lang="en">A piece written in btw, the bitwrap language: lines of text that compile to the Petri nets of a DJ deck. Identified by the CID of its canonical text.</rdfs:comment>
-		<rdfs:label xml:lang="en">btw program</rdfs:label>
+		<rdfs:comment xml:lang="en">A piece written in BeatScript: lines of text that compile to the Petri nets of a DJ deck. Identified by the CID of its canonical text, so a BeatScript 1 program and its upgrade to BeatScript 2, which play the same, are two programs: the upgrade is prov:wasRevisionOf the original, and each has its own ns:programCid and ns:inLanguageVersion.</rdfs:comment>
+		<rdfs:label xml:lang="en">BeatScript program</rdfs:label>
 		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#MusicConcept"/>
 		<skos:closeMatch rdf:resource="https://ontology.pflow.xyz/ns#PetriNet"/>
+		<skos:hiddenLabel xml:lang="en">btw program</skos:hiddenLabel>
+		<skos:historyNote xml:lang="en">Before language version 2 (2026-11-22) the language was called btw, and a program was a btw program.</skos:historyNote>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#Program"/>
 		<ns:status>in-development</ns:status>
 	</owl:Class>
@@ -11347,11 +11408,17 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:status>in-development</ns:status>
 	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#ProgramLine">
-		<rdfs:comment xml:lang="en">One line of a btw program. The kind of line says what it declares.</rdfs:comment>
+		<rdfs:comment xml:lang="en">One line of a BeatScript program. The kind of line says what it declares.</rdfs:comment>
 		<rdfs:label xml:lang="en">program line</rdfs:label>
 		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#MusicConcept"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#ProgramLine"/>
 		<ns:status>in-development</ns:status>
+	</owl:Class>
+	<owl:Class rdf:about="https://beatscript.app/ontology/ns#ProgrammingLanguage">
+		<rdfs:comment xml:lang="en">A text language whose documents are programs a product runs. Its versions (ns:LanguageVersion) are in the generated vocabulary, from the code that reads them.</rdfs:comment>
+		<rdfs:label xml:lang="en">programming language</rdfs:label>
+		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#Product"/>
+		<ns:status>stable</ns:status>
 	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#Queue">
 		<rdfs:comment xml:lang="en">The segments waiting to play next on a deck.</rdfs:comment>
@@ -11681,6 +11748,14 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
 		<ns:status>stable</ns:status>
 	</owl:DatatypeProperty>
+	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#currentVersion">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+		<rdfs:comment xml:lang="en">The version new text is written in: what fmt upgrades a program to and what the generators write.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<rdfs:label xml:lang="en">current version</rdfs:label>
+		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<ns:status>stable</ns:status>
+	</owl:FunctionalProperty>
 	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#cycleSteps">
 		<rdfs:comment xml:lang="en">The sixteenths one bar of the theme takes on the grid: 16, 12 for 3/4, 20 for 5/4.</rdfs:comment>
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#ThemeEntry"/>
@@ -11769,6 +11844,13 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#Feel"/>
 		<ns:status>stable</ns:status>
 	</owl:ObjectProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#fileExtension">
+		<rdfs:comment xml:lang="en">The extension a program file in the language is written with, with its dot.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<rdfs:label xml:lang="en">file extension</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
 	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#filterOpen">
 		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
 		<rdfs:comment xml:lang="en">How open the filter is in the section, 0 (closed) to 1 (open).</rdfs:comment>
@@ -11994,6 +12076,14 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#GenreFamily"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#inFamily"/>
 	</owl:FunctionalProperty>
+	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#inLanguageVersion">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+		<rdfs:comment xml:lang="en">The version the program is written in, which the first line of its canonical text tells. A program and its upgrade to a later version play the same but are two texts with two CIDs, so two programs: the upgrade is prov:wasRevisionOf the original, and each has one ns:programCid.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#Program"/>
+		<rdfs:label xml:lang="en">in language version</rdfs:label>
+		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<ns:status>stable</ns:status>
+	</owl:FunctionalProperty>
 	<owl:ObjectProperty rdf:about="https://beatscript.app/ontology/ns#inPhrasebook">
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#PhrasebookEntry"/>
 		<rdfs:label xml:lang="en">in phrasebook</rdfs:label>
@@ -12079,6 +12169,20 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:subPropertyOf rdf:resource="https://beatscript.app/ontology/ns#drumRhythm"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#kickRhythm"/>
 	</owl:ObjectProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#legacyFileExtension">
+		<rdfs:comment xml:lang="en">An extension program files in the language had under an earlier name: such a file is still opened and imported, and never written.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<rdfs:label xml:lang="en">legacy file extension</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#legacyMediaType">
+		<rdfs:comment xml:lang="en">Another media type a program text is still accepted as (in Accept and Content-Type), never the one it is served as.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<rdfs:label xml:lang="en">legacy media type</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
 	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#letText">
 		<rdfs:comment xml:lang="en">The theme as the let lines a program pastes: a let a bar, then their alternation.</rdfs:comment>
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#ThemeEntry"/>
@@ -12129,6 +12233,13 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
 		<ns:status>stable</ns:status>
 	</owl:ObjectProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#mediaType">
+		<rdfs:comment xml:lang="en">The media (MIME) type a program text in the language is served and accepted as.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<rdfs:label xml:lang="en">media type</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
 	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#melodyDensity">
 		<rdfs:comment xml:lang="en">Share of melody steps that sound rather than rest, 0 to 1.</rdfs:comment>
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#Genre"/>
@@ -12279,6 +12390,22 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#programCid"/>
 		<ns:status>in-development</ns:status>
 	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#programCidFormat">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+		<rdfs:comment xml:lang="en">The format of the document a program CID of this version is the CID of: {&quot;format&quot;: this number, &quot;text&quot;: the canonical text, &quot;type&quot;: the version&apos;s ns:programCidType}.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<rdfs:label xml:lang="en">program CID format</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#programCidType">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+		<rdfs:comment xml:lang="en">The type of the document a program CID of this version is the CID of.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<rdfs:label xml:lang="en">program CID type</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
 	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#providedBy">
 		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#McpTool"/>
@@ -12300,7 +12427,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#queuesSegment"/>
 	</owl:ObjectProperty>
 	<owl:ObjectProperty rdf:about="https://beatscript.app/ontology/ns#reachesVerb">
-		<rdfs:comment xml:lang="en">The control verb a btw do line runs.</rdfs:comment>
+		<rdfs:comment xml:lang="en">The control verb a BeatScript do line runs.</rdfs:comment>
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#DoLine"/>
 		<rdfs:label xml:lang="en">reaches verb</rdfs:label>
 		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#ControlVerb"/>
@@ -12625,6 +12752,21 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#variantLabel"/>
 	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#versionLine">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+		<rdfs:comment xml:lang="en">The header line (a leading #! line) that says a text is in this version.</rdfs:comment>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<rdfs:label xml:lang="en">version line</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
+	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#versionOf">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#LanguageVersion"/>
+		<rdfs:label xml:lang="en">version of</rdfs:label>
+		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#ProgrammingLanguage"/>
+		<ns:status>stable</ns:status>
+	</owl:FunctionalProperty>
 	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#visibility">
 		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#TrackObject"/>
@@ -12647,16 +12789,17 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 	</owl:DatatypeProperty>
 	<rdf:Description rdf:about="https://beatscript.app/ontology/ns">
 		<dct:creator>stackdump</dct:creator>
-		<dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2026-11-21</dct:issued>
+		<dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2026-11-22</dct:issued>
 		<dct:license rdf:resource="https://creativecommons.org/publicdomain/zero/1.0/"/>
 		<dct:publisher rdf:resource="https://beatscript.app"/>
 		<dct:rights xml:lang="en">Dedicated to the public domain under CC0 1.0 Universal.</dct:rights>
 		<dct:title xml:lang="en">BeatScript ontology</dct:title>
 		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
-		<rdfs:comment xml:lang="en">The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the BeatScript language itself (its grammar&apos;s productions and keywords, voices, kits, control nouns and verbs, operators and both MCP servers&apos; tools), generated from the code that implements them. Forked from the bitwrap ontology 0.2.0, whose terms it carries under this namespace, each linked to the bitwrap term it came from by prov:wasDerivedFrom; it evolves on its own from here.</rdfs:comment>
+		<rdfs:comment xml:lang="en">The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the BeatScript language itself (its versions, its grammar&apos;s productions and keywords, voices, kits, control nouns and verbs, operators and both MCP servers&apos; tools), generated from the code that implements them. Forked from the bitwrap ontology 0.2.0, whose terms it carries under this namespace, each linked to the bitwrap term it came from by prov:wasDerivedFrom; it evolves on its own from here.</rdfs:comment>
 		<rdfs:seeAlso rdf:resource="https://ontology.pflow.xyz/ns"/>
-		<owl:versionIRI rdf:resource="https://beatscript.app/ontology/0.1.0"/>
-		<owl:versionInfo>0.1.0</owl:versionInfo>
+		<owl:priorVersion rdf:resource="https://beatscript.app/ontology/0.1.0"/>
+		<owl:versionIRI rdf:resource="https://beatscript.app/ontology/0.2.0"/>
+		<owl:versionInfo>0.2.0</owl:versionInfo>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/release/bitwrap-ontology-0.2.0.tar"/>
 	</rdf:Description>
 	<ns:SectionProfile rdf:about="https://beatscript.app/ontology/profile/chill-breakdown">
@@ -13144,6 +13287,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:prefLabel xml:lang="en">acid-rave-138</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/program/acid-rave-138"/>
 		<ns:camelot>9A</ns:camelot>
+		<ns:inLanguageVersion rdf:resource="https://beatscript.app/ontology/concept/beatscript-1"/>
 		<ns:keyScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
 		<ns:keyTonic>E</ns:keyTonic>
 		<ns:ofGenre rdf:resource="https://beatscript.app/ontology/genre/house"/>
@@ -13157,6 +13301,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:prefLabel xml:lang="en">dark-techno-122</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/program/dark-techno-122"/>
 		<ns:camelot>7A</ns:camelot>
+		<ns:inLanguageVersion rdf:resource="https://beatscript.app/ontology/concept/beatscript-1"/>
 		<ns:keyScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
 		<ns:keyTonic>D</ns:keyTonic>
 		<ns:ofGenre rdf:resource="https://beatscript.app/ontology/genre/techno"/>
@@ -13169,6 +13314,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:prefLabel xml:lang="en">hand-dubstep-140</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/program/hand-dubstep-140"/>
 		<ns:camelot>4A</ns:camelot>
+		<ns:inLanguageVersion rdf:resource="https://beatscript.app/ontology/concept/beatscript-1"/>
 		<ns:keyScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
 		<ns:keyTonic>F</ns:keyTonic>
 		<ns:ofGenre rdf:resource="https://beatscript.app/ontology/genre/dubstep"/>
@@ -13181,6 +13327,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:prefLabel xml:lang="en">hand-proghouse-124</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/program/hand-proghouse-124"/>
 		<ns:camelot>8A</ns:camelot>
+		<ns:inLanguageVersion rdf:resource="https://beatscript.app/ontology/concept/beatscript-1"/>
 		<ns:keyScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
 		<ns:keyTonic>A</ns:keyTonic>
 		<ns:ofGenre rdf:resource="https://beatscript.app/ontology/genre/house"/>
@@ -13193,6 +13340,7 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:prefLabel xml:lang="en">trance-138-story</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/program/trance-138-story"/>
 		<ns:camelot>8A</ns:camelot>
+		<ns:inLanguageVersion rdf:resource="https://beatscript.app/ontology/concept/beatscript-1"/>
 		<ns:keyScale rdf:resource="https://beatscript.app/ontology/scale/minor"/>
 		<ns:keyTonic>A</ns:keyTonic>
 		<ns:ofGenre rdf:resource="https://beatscript.app/ontology/genre/trance"/>

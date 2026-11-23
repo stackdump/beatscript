@@ -1,9 +1,9 @@
 {
   "name": "beatscript-ontology",
-  "version": "0.1.0",
-  "released": "2026-11-21",
+  "version": "0.2.0",
+  "released": "2026-11-22",
   "namespace": "https://beatscript.app/ontology/ns#",
-  "version_iri": "https://beatscript.app/ontology/0.1.0",
+  "version_iri": "https://beatscript.app/ontology/0.2.0",
   "derived_from": {
     "name": "bitwrap-ontology",
     "version": "0.2.0",
@@ -12,21 +12,21 @@
     "pack_content_sha256": "6555fd2acd31e66535f999879b131e8ffc0096cf5f926c5087ece72e4eabedb5",
     "ns.nt": "9b724ffdd5150edc11e8cb278d27a40ac27ecfa58b9d94796192d7c66c5ac14c"
   },
-  "pack_content_sha256": "b4b4f31c59fcb3d2ddd648d0e45505bbb4a3bbefcb8cd47aacdf244171a6dc9c",
-  "pack_tool_version": "btwserve-ontology-fork/1",
-  "pack_triples": 19581,
+  "pack_content_sha256": "64bedbb6459077010b19173a28d1ed921ecc7215e6430ea77792b7163c974044",
+  "pack_tool_version": "beatscript-serve-ontology-fork/1",
+  "pack_triples": 19739,
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "certificate_scope": "RDFS and OWL 2 RL schema rules only (rdfs2, rdfs3, rdfs5, rdfs7, rdfs9, rdfs11, eq-sym, prp-inv1, prp-inv2, prp-symp, prp-trp, scm-dom1, scm-dom2, scm-eqc1, scm-eqp1, scm-rng1, scm-rng2); other OWL axioms are not covered",
   "files": {
-    "cert/asserted.sha256": "6cebcf8e613cf2710b5bba17ef3849e0cfd8493c17851fdc4c3d353018729179",
-    "cert/asserted.tsv": "9bc9a2a4825941d5bb8c64582adba8436bbc8b61b29971475f4d4dde12a07492",
-    "cert/derivations.tsv": "b38cc66c9686b79eaf56d78378b65e0adf58667254a250c817bc356b220f0001",
+    "cert/asserted.sha256": "b69062bd4efc7d38ff7c34cb7715f26026def5357134d0954b3ec0981cb3ec46",
+    "cert/asserted.tsv": "f2e425a2599b1b698621eb5d521246a2be179cc7ccb4550a8f8e6ac62acd7575",
+    "cert/derivations.tsv": "e776898c9114b6f4fef49d49f5d5ce09d57644bd86769c6ea6ab3ce409680969",
     "cert/scope.tsv": "2464cd751287051b9afdf7bb23ba05e2177452247a6e29fa155092434f487946",
-    "ns.jsonld": "7c238126a271dd32b1ecdd1427bc47c4bb058e83ef6aaf4c8a0c766b8b7d8544",
-    "ns.nt": "bf045774bb00be4a6ac433cf89aae61a637c50c5eeff551e2efc37a7cfe3c72e",
-    "ns.rdf": "42253bdb89fb0ad662fbe9048a1807fcdf6deb72cad83bb7dc440d522e9583cc",
-    "ns.ttl": "4dc33f5a96dfbe271b1c252452f9c86978bb6fc5c6b14b1a44562ca0602abd83",
-    "pack.json": "8de57c82b135070f03f1341764a132fc60c9346cc7886dd05b20c717d302cd1b"
+    "ns.jsonld": "0f193a9b4b0f4910921811b81131491753af659038e2de1b0ee1e02dd026b36a",
+    "ns.nt": "b7fa4e0cff245f92899c7b19f6ee670ce7a68241c475517a071457bb4b0ec6a4",
+    "ns.rdf": "8d243d250f4f46f2b1b5ba1b848885ba052f41f52841bba90ebd872e8d472d0e",
+    "ns.ttl": "0d71f89e2d930c3565aec22caebc8a98d2563488d02f4640f500d2c4ea2965a2",
+    "pack.json": "a2355367f4d0cdddd5c97151a5cb59b02235c48e14ad1b56bcc091f87e580718"
   }
 }
