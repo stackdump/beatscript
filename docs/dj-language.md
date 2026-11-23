@@ -28,7 +28,7 @@ section drop 16 bars {
   deck A: kick x x x x
   deck B: mute vocals                            # proposed: a stem of the deck
   control: move bass_swap on B over 8 bars       # existing
-  at bar 12: control: macro riser on A over 4 bars   # when built: run 16aa6899's macro@1
+  at bar 12: control: macro riser on A over 4 bars   # existing: macro@1, the DJ macro catalogue
 }
 arrange build drop
 ```
@@ -43,7 +43,7 @@ arrange build drop
 | cues | `do deck hot_cue`, `do deck loop` (existing, sample decks); a beat jump on both deck kinds and loops on a net deck, in the engine (tonight) | `cue SOURCE.NAME at bar N`; `deck A: jump`, `deck A: loop` |
 | stems | the four exact stems of a render (tonight); `mashup` stems, the `stemMute` deck action, `do deck role` (existing) | `deck A: mute vocals`, `unmute`, `solo` |
 | moves | all six on the control deck; the render plays `filter_exit` and `echo_out` (existing); the other four in the offline render and `listen` where they can act offline (tonight) | `bass_swap` as a set transition |
-| macros | designed (ext-control.md), being built by run 16aa6899 as `macro@1` | (that run's) |
+| macros | `control: macro riser on A over 8 bars`, `macro@1`, lowering to `effects fire` (existing, run 16aa6899) | nothing |
 | set recording | a recorded set written out as a `set { }` program plus a take that holds the action log (tonight) | outside sources in a set |
 | authorship | `#! author:` with the `$DJ_AUTHOR` default (existing); forks keep the parent's author in lineage (tonight) | none |
 | controllers | performed inputs `knob(N)` `pad(N)` `fader(A)` `held(key)`, controller profiles and presets, Mixxx import (existing) | `#! controller: <mapping cid>` |
@@ -102,7 +102,7 @@ arrange build drop
 | a program by CID: its sections, parts, slices, render and stems | yes (`play <cid>` in a set, `<cid>.drop`, `use <cid> as` when it lands) | |
 | a sample or a library loop as a deck source, its grid, key, loudness or cues | | yes |
 | stems of outside audio (`stems@1`) | | yes, opt-in |
-| moves, the control deck, scenes, `launch`, macros when built | yes | |
+| moves, macros, the control deck, scenes, `launch` | yes | |
 | a recorded set of programs | yes | |
 | a recorded set that played outside audio | | yes |
 | a controller mapping | data, not text | a Mixxx-derived mapping (a translation of a GPL file) |
@@ -247,11 +247,12 @@ roll on a net deck using the new net-deck loop instead of the stutter.
 
 ## Macros
 
-The DJ macro catalogue (39 effects: risers, sweeps, cuts, breakdowns, tricks, pan and shape) is run 16aa6899's, as
-designed in `docs/beatscript/ext-control.md`: `control: macro riser on A over 8 bars` (the canonical text writes `macro@2`
-only when the version is not 1), lowering to an `effects fire` verb the engine is gaining. The DJ language uses it as it
-lands and adds nothing beside it. A move stays a `move`: a move is a schedule over the strip (when to cut, when to mute,
-when to let go), a macro one effect for a length; folding them would lose the move's put-back rules.
+The DJ macro catalogue (39 effects: risers, sweeps, cuts, breakdowns, tricks, pan and shape) is built (run 16aa6899,
+`docs/beatscript/ext-control.md`): `control: macro riser on A over 8 bars`, pinned by the frozen `macro@1` table (the
+canonical text writes `macro@2` only when the version is not 1), lowering to the registry's `effects fire id=ID target=DECK
+bars=N`, sent a beat early so it starts on the bar its line names, heard offline and named by `listen`. The DJ language
+uses it as it is and adds nothing beside it. A move stays a `move`: a move is a schedule over the strip (when to cut, when to
+mute, when to let go), a macro one effect for a length; folding them would lose the move's put-back rules.
 
 ## Stems: solo, mute, swap
 
