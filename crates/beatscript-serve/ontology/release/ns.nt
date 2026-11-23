@@ -4474,6 +4474,7 @@
 <https://beatscript.app/ontology/concept/noun-deck> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-file> .
 <https://beatscript.app/ontology/concept/noun-deck> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-focus> .
 <https://beatscript.app/ontology/concept/noun-deck> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-hot-cue> .
+<https://beatscript.app/ontology/concept/noun-deck> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-jump> .
 <https://beatscript.app/ontology/concept/noun-deck> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-load> .
 <https://beatscript.app/ontology/concept/noun-deck> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-loop> .
 <https://beatscript.app/ontology/concept/noun-deck> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-macro> .
@@ -5129,6 +5130,7 @@
 <https://beatscript.app/ontology/concept/noun-record> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-get> .
 <https://beatscript.app/ontology/concept/noun-record> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-list> .
 <https://beatscript.app/ontology/concept/noun-record> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-mark> .
+<https://beatscript.app/ontology/concept/noun-record> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-program> .
 <https://beatscript.app/ontology/concept/noun-record> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-replay> .
 <https://beatscript.app/ontology/concept/noun-record> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-start> .
 <https://beatscript.app/ontology/concept/noun-record> <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-status> .
@@ -7401,8 +7403,9 @@
 <https://beatscript.app/ontology/concept/verb-jsonld> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/verb-jump> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/verb-jump> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ControlVerb> .
-<https://beatscript.app/ontology/concept/verb-jump> <http://www.w3.org/2004/02/skos/core#definition> "The control verb jump, accepted by: queue."@en .
+<https://beatscript.app/ontology/concept/verb-jump> <http://www.w3.org/2004/02/skos/core#definition> "The control verb jump, accepted by: deck, queue."@en .
 <https://beatscript.app/ontology/concept/verb-jump> <http://www.w3.org/2004/02/skos/core#prefLabel> "jump"@en .
+<https://beatscript.app/ontology/concept/verb-jump> <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-deck> .
 <https://beatscript.app/ontology/concept/verb-jump> <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-queue> .
 <https://beatscript.app/ontology/concept/verb-jump> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/verb-keep-awake> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
@@ -7963,6 +7966,12 @@
 <https://beatscript.app/ontology/concept/verb-process> <http://www.w3.org/2004/02/skos/core#prefLabel> "process"@en .
 <https://beatscript.app/ontology/concept/verb-process> <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-post> .
 <https://beatscript.app/ontology/concept/verb-process> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/verb-program> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/verb-program> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ControlVerb> .
+<https://beatscript.app/ontology/concept/verb-program> <http://www.w3.org/2004/02/skos/core#definition> "The control verb program, accepted by: record."@en .
+<https://beatscript.app/ontology/concept/verb-program> <http://www.w3.org/2004/02/skos/core#prefLabel> "program"@en .
+<https://beatscript.app/ontology/concept/verb-program> <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-record> .
+<https://beatscript.app/ontology/concept/verb-program> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/verb-quant> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/verb-quant> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ControlVerb> .
 <https://beatscript.app/ontology/concept/verb-quant> <http://www.w3.org/2004/02/skos/core#definition> "The control verb quant, accepted by: keys."@en .

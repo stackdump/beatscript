@@ -3167,7 +3167,7 @@
 <https://beatscript.app/ontology/concept/noun-deck> a skos:Concept , ns:ControlNoun ;
 	skos:definition "The control noun deck: do deck <verb>."@en ;
 	skos:prefLabel "deck"@en ;
-	ns:acceptsVerb <https://beatscript.app/ontology/concept/verb-auto-gain> , <https://beatscript.app/ontology/concept/verb-clear-cue> , <https://beatscript.app/ontology/concept/verb-copy> , <https://beatscript.app/ontology/concept/verb-cue> , <https://beatscript.app/ontology/concept/verb-demo> , <https://beatscript.app/ontology/concept/verb-file> , <https://beatscript.app/ontology/concept/verb-focus> , <https://beatscript.app/ontology/concept/verb-hot-cue> , <https://beatscript.app/ontology/concept/verb-load> , <https://beatscript.app/ontology/concept/verb-loop> , <https://beatscript.app/ontology/concept/verb-macro> , <https://beatscript.app/ontology/concept/verb-master-macro> , <https://beatscript.app/ontology/concept/verb-next> , <https://beatscript.app/ontology/concept/verb-nudge> , <https://beatscript.app/ontology/concept/verb-panic> , <https://beatscript.app/ontology/concept/verb-pause> , <https://beatscript.app/ontology/concept/verb-pitch-range> , <https://beatscript.app/ontology/concept/verb-pitch> , <https://beatscript.app/ontology/concept/verb-play> , <https://beatscript.app/ontology/concept/verb-rewind> , <https://beatscript.app/ontology/concept/verb-role-disable> , <https://beatscript.app/ontology/concept/verb-role> , <https://beatscript.app/ontology/concept/verb-section> , <https://beatscript.app/ontology/concept/verb-seed-step> , <https://beatscript.app/ontology/concept/verb-seek> , <https://beatscript.app/ontology/concept/verb-sound> , <https://beatscript.app/ontology/concept/verb-state> , <https://beatscript.app/ontology/concept/verb-stop> , <https://beatscript.app/ontology/concept/verb-sync> , <https://beatscript.app/ontology/concept/verb-tempo> , <https://beatscript.app/ontology/concept/verb-toggle> ;
+	ns:acceptsVerb <https://beatscript.app/ontology/concept/verb-auto-gain> , <https://beatscript.app/ontology/concept/verb-clear-cue> , <https://beatscript.app/ontology/concept/verb-copy> , <https://beatscript.app/ontology/concept/verb-cue> , <https://beatscript.app/ontology/concept/verb-demo> , <https://beatscript.app/ontology/concept/verb-file> , <https://beatscript.app/ontology/concept/verb-focus> , <https://beatscript.app/ontology/concept/verb-hot-cue> , <https://beatscript.app/ontology/concept/verb-jump> , <https://beatscript.app/ontology/concept/verb-load> , <https://beatscript.app/ontology/concept/verb-loop> , <https://beatscript.app/ontology/concept/verb-macro> , <https://beatscript.app/ontology/concept/verb-master-macro> , <https://beatscript.app/ontology/concept/verb-next> , <https://beatscript.app/ontology/concept/verb-nudge> , <https://beatscript.app/ontology/concept/verb-panic> , <https://beatscript.app/ontology/concept/verb-pause> , <https://beatscript.app/ontology/concept/verb-pitch-range> , <https://beatscript.app/ontology/concept/verb-pitch> , <https://beatscript.app/ontology/concept/verb-play> , <https://beatscript.app/ontology/concept/verb-rewind> , <https://beatscript.app/ontology/concept/verb-role-disable> , <https://beatscript.app/ontology/concept/verb-role> , <https://beatscript.app/ontology/concept/verb-section> , <https://beatscript.app/ontology/concept/verb-seed-step> , <https://beatscript.app/ontology/concept/verb-seek> , <https://beatscript.app/ontology/concept/verb-sound> , <https://beatscript.app/ontology/concept/verb-state> , <https://beatscript.app/ontology/concept/verb-stop> , <https://beatscript.app/ontology/concept/verb-sync> , <https://beatscript.app/ontology/concept/verb-tempo> , <https://beatscript.app/ontology/concept/verb-toggle> ;
 	ns:controlParameter "align" , "bars" , "beats" , "bpm" , "deck" , "delta" , "from" , "genre" , "id" , "index" , "on" , "op" , "palette" , "path" , "ratio" , "role" , "seconds" , "seed" , "slot" , "spec" , "start" , "step" , "structure" , "to" , "value" ;
 	ns:defaultVerb <https://beatscript.app/ontology/concept/verb-state> ;
 	ns:status "stable" ;
@@ -3383,7 +3383,7 @@
 	skos:altLabel "recording"@en , "setrec"@en ;
 	skos:definition "The control noun record: do record <verb>."@en ;
 	skos:prefLabel "record"@en ;
-	ns:acceptsVerb <https://beatscript.app/ontology/concept/verb-cancel> , <https://beatscript.app/ontology/concept/verb-delete> , <https://beatscript.app/ontology/concept/verb-fork> , <https://beatscript.app/ontology/concept/verb-get> , <https://beatscript.app/ontology/concept/verb-list> , <https://beatscript.app/ontology/concept/verb-mark> , <https://beatscript.app/ontology/concept/verb-replay> , <https://beatscript.app/ontology/concept/verb-start> , <https://beatscript.app/ontology/concept/verb-status> , <https://beatscript.app/ontology/concept/verb-stop> , <https://beatscript.app/ontology/concept/verb-tracklist> , <https://beatscript.app/ontology/concept/verb-verify> ;
+	ns:acceptsVerb <https://beatscript.app/ontology/concept/verb-cancel> , <https://beatscript.app/ontology/concept/verb-delete> , <https://beatscript.app/ontology/concept/verb-fork> , <https://beatscript.app/ontology/concept/verb-get> , <https://beatscript.app/ontology/concept/verb-list> , <https://beatscript.app/ontology/concept/verb-mark> , <https://beatscript.app/ontology/concept/verb-program> , <https://beatscript.app/ontology/concept/verb-replay> , <https://beatscript.app/ontology/concept/verb-start> , <https://beatscript.app/ontology/concept/verb-status> , <https://beatscript.app/ontology/concept/verb-stop> , <https://beatscript.app/ontology/concept/verb-tracklist> , <https://beatscript.app/ontology/concept/verb-verify> ;
 	ns:controlParameter "cid" , "deck" , "id" , "kind" , "label" , "max_minutes" , "name" ;
 	ns:defaultVerb <https://beatscript.app/ontology/concept/verb-status> ;
 	ns:status "stable" ;
@@ -4997,9 +4997,9 @@
 	ns:actsOn <https://beatscript.app/ontology/concept/noun-btw> ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/concept/verb-jump> a skos:Concept , ns:ControlVerb ;
-	skos:definition "The control verb jump, accepted by: queue."@en ;
+	skos:definition "The control verb jump, accepted by: deck, queue."@en ;
 	skos:prefLabel "jump"@en ;
-	ns:actsOn <https://beatscript.app/ontology/concept/noun-queue> ;
+	ns:actsOn <https://beatscript.app/ontology/concept/noun-deck> , <https://beatscript.app/ontology/concept/noun-queue> ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/concept/verb-keep-awake> a skos:Concept , ns:ControlVerb ;
 	skos:definition "The control verb keep_awake, accepted by: menu."@en ;
@@ -5400,6 +5400,11 @@
 	skos:definition "The control verb process, accepted by: post."@en ;
 	skos:prefLabel "process"@en ;
 	ns:actsOn <https://beatscript.app/ontology/concept/noun-post> ;
+	ns:status "stable" .
+<https://beatscript.app/ontology/concept/verb-program> a skos:Concept , ns:ControlVerb ;
+	skos:definition "The control verb program, accepted by: record."@en ;
+	skos:prefLabel "program"@en ;
+	ns:actsOn <https://beatscript.app/ontology/concept/noun-record> ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/concept/verb-quant> a skos:Concept , ns:ControlVerb ;
 	skos:definition "The control verb quant, accepted by: keys."@en ;

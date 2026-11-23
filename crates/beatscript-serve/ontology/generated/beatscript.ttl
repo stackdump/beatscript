@@ -5955,6 +5955,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-hot-cue> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-clear-cue> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-loop> ;
+    <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-jump> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-seek> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-role> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-macro> ;
@@ -7390,6 +7391,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-list> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-get> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-tracklist> ;
+    <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-program> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-verify> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-replay> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-fork> ;
@@ -8026,8 +8028,9 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/verb-jump> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#ControlVerb> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "jump"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The control verb jump, accepted by: queue."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The control verb jump, accepted by: deck, queue."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-deck> ;
     <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-queue> .
 
 <https://beatscript.app/ontology/concept/verb-keep> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#ControlVerb> ;
@@ -8587,6 +8590,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The control verb process, accepted by: post."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-post> .
+
+<https://beatscript.app/ontology/concept/verb-program> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#ControlVerb> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "program"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The control verb program, accepted by: record."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-record> .
 
 <https://beatscript.app/ontology/concept/verb-quant> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#ControlVerb> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "quant"@en ;
