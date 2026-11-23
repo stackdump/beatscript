@@ -244,6 +244,15 @@ impl Checker {
         Ok(out.trim().to_string())
     }
 
+    /// A station request (radio, docs/btw/radio.md): btwapi's answer to the JSON `request` (station, n, count, segue, check,
+    /// retune, locks, neighbours), on the checker's budget and slots like a check (its tracks and segues are checked when it
+    /// asks). `POST /api/station` and the MCP `station` tool; stores nothing.
+    pub async fn station(&self, owner: &str, request: &str) -> Result<Value, ApiError> {
+        let r = request.to_string();
+        let out = self.run(owner, "station", request.len(), move || btwapi::station_json(&r)).await?;
+        Self::parse(&out, "station")
+    }
+
     /// `Checker.Instruments`: btwd's answer, trimmed, kept (it never changes for one binary).
     pub fn instruments(&self) -> &str {
         self.instruments.get_or_init(|| btwapi::instruments_json().trim().to_string())
@@ -1034,6 +1043,28 @@ async fn generate(State(st): St, req: Request) -> Response<Body> {
     }
 }
 
+/// `POST /api/station`: a station (radio, docs/btw/radio.md), as the MCP `station` tool and the page's `btw_station` answer
+/// it: JSON `{station, n, count, segue, check, retune, locks, neighbours}` in, btwapi's answer out (`ok: false` with the error
+/// is an answer, as check's is). Rate-limited like check and run on the checker's budget; it stores nothing.
+async fn station_route(State(st): St, req: Request) -> Response<Body> {
+    answer(async {
+        let ip = st.ip(&req);
+        let (ok, retry) = st.allow_check(&ip);
+        limited(ok, retry, "station")?;
+        let b = read_body(req.into_body(), MAX_CHECK_BODY).await;
+        if b.len() > MAX_CHECK_BODY {
+            return Err(ApiError::new(413, "too_large", format!("request body is over {MAX_CHECK_BODY} bytes")).response());
+        }
+        let body = match std::str::from_utf8(&b) {
+            Ok(s) if serde_json::from_str::<Value>(s).is_ok_and(|v| v.is_object()) => s.to_string(),
+            _ => return Err(ApiError::new(400, "bad_request", "send a JSON object: {station, n, count, segue, check, retune, locks, neighbours}").response()),
+        };
+        let rep = st.checker.station(&ip, &body).await.map_err(|e| e.response())?;
+        Ok(json_resp(200, &rep))
+    }
+    .await)
+}
+
 async fn fmt(State(st): St, req: Request) -> Response<Body> {
     answer(async {
         let (ip, text, _) = check_body(&st, req).await?;
@@ -1241,6 +1272,7 @@ pub fn routes(app: &AppState) -> Router {
         .route("/api/programs/{cid}", by_method!(GET => get_program, PUT => put_program))
         .route("/api/check", by_method!(POST => check))
         .route("/api/generate", by_method!(POST => generate))
+        .route("/api/station", by_method!(POST => station_route))
         .route("/api/fmt", by_method!(POST => fmt))
         .route("/api/share", by_method!(POST => share))
         .route("/api/open", by_method!(POST => open))

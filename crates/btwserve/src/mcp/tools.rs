@@ -32,7 +32,7 @@ mod listen;
 #[path = "artifact.rs"]
 mod artifact;
 
-pub const TOOL_NAMES: [&str; 21] = ["artifact", "check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private"];
+pub const TOOL_NAMES: [&str; 22] = ["artifact", "check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private", "station"];
 
 /// The tools that need a signed-in caller.
 /// The account a `/mcp` bearer token acts as: an OAuth access token bound to `/mcp` (oauth.rs), or a pasted `btw_`
@@ -633,6 +633,36 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 ],
                 &["action"],
             ),
+            tool(
+                "station",
+                "A radio station: the track at a position",
+                fill(text::STATION_DESC, &[p]),
+                [true, false, true, false],
+                vec![
+                    ("station", sprop(&format!("The station program: its tempo and key lines and its station {{ from, next, forms }} block (at most {mp} bytes)."), &[("maxLength", mpv.clone())])),
+                    ("n", json!({"type": "integer", "minimum": 0, "description": "The position: the station's track n (default 0). Track n of a station is always the same track."})),
+                    ("count", json!({"type": "integer", "minimum": 1, "maximum": btwapi::station::MAX_COUNT, "description": format!("How many tracks from n (default 1, at most {}).", btwapi::station::MAX_COUNT)})),
+                    ("segue", json!({"type": "boolean", "description": "Also the segue after each track, track n into n+1: the cross form of their two seeds, with its own CID (default true)."})),
+                    ("check", json!({"type": "boolean", "description": "Check each track and segue: {ok, expanded_cid, bars, seconds, errors} (default false). Each program checked counts as one call of the checker."})),
+                    ("retune", json!({
+                        "type": "object",
+                        "additionalProperties": false,
+                        "description": "Knobs to set before anything else, each to a value or to \"+1\" / \"-1\" for one notch: {\"tempo\": \"+1\"}, {\"seed\": 7, \"forms\": \"seeded cross\"}. The position n is kept: the answer is track n of the retuned station.",
+                        "properties": {
+                            "genre": {"type": "string", "description": "A genre of the seeded generator, by name (a genre has no notch)."},
+                            "seed": {"type": ["string", "integer"], "description": "The first track's seed: a whole number or a word, or \"+1\" / \"-1\"."},
+                            "step": {"type": "string", "description": "The walk: \"+1\", \"+2\" ... or \"~\"; a notch turns between +1 and ~."},
+                            "forms": {"type": ["string", "array"], "items": {"type": "string"}, "description": "The forms in turn (\"seeded passacaglia\" or a list), or a notch: rotated by one."},
+                            "tempo": {"type": ["string", "number"], "description": "40 to 300, or a notch of 2."},
+                            "key": {"type": "string", "description": "A key (am, c, f#m ...), or a notch: a fifth round the circle in its own mode."},
+                            "length": {"type": "string", "description": "short, standard or long, or a notch."},
+                        },
+                    })),
+                    ("locks", json!({"type": "array", "items": {"type": "string", "enum": djlive::station::KNOBS}, "maxItems": djlive::station::KNOBS.len(), "description": "Knobs held fixed: retuning one is refused, and neighbours never turns one."})),
+                    ("neighbours", json!({"type": "boolean", "description": "Also the neighbouring stations, one notch away along each unlocked knob, each with its text, its CID and its track at n (default false)."})),
+                ],
+                &["station"],
+            ),
         ];
         v.push(listen::tool_def(max_prog, render_per_hour));
         v.push(artifact::tool_def(p, max_prog));
@@ -856,6 +886,7 @@ impl Tools {
                 crate::music_tools::call(&crate::lineage(&self.app), &self.public, &cid).map(Text::Json)
             }
             "push_private" => self.push_private(c, a).map(Text::Json),
+            "station" => self.station_tool(c, a).map(Text::Json),
             "beta_signups" if self.beta_tool() => self.beta_signups(c, a).map(Text::Json),
             _ => Err(Fail::new(404, "not_found", "no such tool")),
         }
@@ -1303,6 +1334,52 @@ impl Tools {
         let mut v = self.hub.push_private(uid, &dev, what, self.max_prog)?;
         v["note"] = json!("Sent to the phone only, sealed for its key; nothing was stored. The phone checks and plays it: call get with this device for what it reports (missing samples are listed in its diagnostics).");
         Ok(sorted(v))
+    }
+
+    /// `station` (radio, docs/btw/radio.md): btwapi's answer to a station request, the one `POST /api/station` and the page's
+    /// wasm give. Read-only, no sign-in, nothing stored. The walk is one call of the checker; with check, each track and segue
+    /// it checks is one (as generate charges a seed).
+    fn station_tool(&self, c: &Caller, a: Args) -> R {
+        a.only(&["station", "n", "count", "segue", "check", "retune", "locks", "neighbours"])?;
+        let text = self.program(&a, "station")?;
+        let mut req = Map::new();
+        req.insert("station".into(), json!(text));
+        let whole = |k: &str| match a.present(k) {
+            None => Ok(None),
+            Some(v) if v.as_f64().is_some_and(|f| f >= 0.0 && f.fract() == 0.0) => Ok(Some(v.clone())),
+            Some(_) => Err(bad(format!("argument {} must be a whole number of 0 or more", q(k)))),
+        };
+        if let Some(n) = whole("n")? {
+            req.insert("n".into(), n);
+        }
+        a.num("count", 1.0, btwapi::station::MAX_COUNT as f64)?;
+        let count = whole("count")?;
+        if let Some(k) = &count {
+            req.insert("count".into(), k.clone());
+        }
+        for k in ["segue", "check", "neighbours"] {
+            if a.present(k).is_some() {
+                req.insert(k.into(), json!(a.boolean(k)?));
+            }
+        }
+        if let Some(r) = a.present("retune") {
+            if !r.is_object() {
+                return Err(bad("argument \"retune\" is an object of knobs, each a value or \"+1\" / \"-1\": {\"tempo\": \"+1\"}"));
+            }
+            req.insert("retune".into(), r.clone());
+        }
+        if let Some(l) = a.present("locks") {
+            if !l.as_array().is_some_and(|l| l.iter().all(Value::is_string)) {
+                return Err(bad(format!("argument \"locks\" is a list of knob names: {}", djlive::station::KNOBS.join(", "))));
+            }
+            req.insert("locks".into(), l.clone());
+        }
+        let segue = a.present("segue").is_none() || a.boolean("segue")?;
+        let checked = if a.boolean("check")? { count.and_then(|k| k.as_u64()).unwrap_or(1) * if segue { 2 } else { 1 } } else { 1 };
+        for _ in 0..checked {
+            self.limit_cpu(c)?;
+        }
+        Ok(self.eng.station(&c.ip, &Value::Object(req).to_string())?)
     }
 
     fn devices(&self, c: &Caller, a: Args) -> R {

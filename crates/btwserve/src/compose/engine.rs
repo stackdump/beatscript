@@ -179,6 +179,15 @@ impl Engine {
         }
     }
 
+    /// A station request as JSON (btwapi::station_json, docs/btw/radio.md): on the checker's budget when there is one, else in
+    /// process. The MCP `station` tool; `POST /api/station` calls the checker itself.
+    pub fn station(&self, owner: &str, request: &str) -> Result<Value, ApiError> {
+        match &self.checker {
+            Some(c) => self.block(c.station(owner, request)),
+            None => Ok(serde_json::from_str(&btwapi::station_json(request)).unwrap_or(Value::Null)),
+        }
+    }
+
     /// `expand` (btwapi::expand_json): the program with its seed(...) references written out. In process: it needs no
     /// checker child (a seed is composed once and cached).
     pub fn expand(&self, text: &str, lineage: bool) -> Result<Value, ApiError> {

@@ -152,7 +152,7 @@ fn every_write_route_is_gated() {
     ];
     // routes with a body that store no program
     let not_programs = [
-        "/api/check", "/api/fmt", "/api/share", "/api/open", "/api/qr", // answers only
+        "/api/check", "/api/fmt", "/api/share", "/api/open", "/api/qr", "/api/station", // answers only
         "/api/auth/", "/pair", "/api/pair", "/api/devices", "/api/device", "/api/session", // sign-in, pairing, the hub (memory)
         "/api/admin", "/api/playlists/{id}/share", "/api/playlists/{id}/items/{item}", "/api/playlists/p/{token}",
         "/api/beta/signup", "/api/beta/status", "/api/beta/remove", // the Android beta list (beta-signups.json): an email, no program
