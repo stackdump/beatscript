@@ -497,9 +497,14 @@ pub fn expand_json(text: &str, lineage: bool) -> String {
                 ("canonical", JsonValue::str(c.text.clone())),
                 ("cid", JsonValue::str(c.cid.clone())),
                 ("from_cid", JsonValue::str(from.cid.clone())),
-                ("refs", strs(refs.into_iter())),
+                ("refs", strs(refs.iter().cloned())),
                 ("diagnostics", diagnostics_json(&chk.diagnostics, &out, &oix)),
             ];
+            // the manifest, as check gives it: each reference once with its pin, and a template's nested parts by their CIDs
+            if !refs.is_empty() {
+                let r = crate::resolution::of_with(text, &from.cid, &env);
+                fields.push(("resolution", crate::resolution::resolution_json(&r, text)));
+            }
             if !imports.is_empty() {
                 fields.push(("imports", crate::resolution::imports_json(&imports, text)));
             }

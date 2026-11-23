@@ -155,3 +155,71 @@ fn one_part_and_its_section_are_asked_for_by_name() {
     assert_eq!(there[0].section, other);
     assert!(beatscript_api::generate::parts_of(&g.text, call, false, Some("bass"), Some("nowhere")).is_err());
 }
+
+/// A form in a role, its own role bound to a seed (roadmap 6680 item 2).
+const NESTED: &str = "arrange from template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, ground=gen@1 dubstep seed=54876))\n";
+
+/// Each role the template binds is a part of its entry in resolution, at any depth, with the CID of what it is written out as;
+/// the gen call a role wrote is listed nested with its own pin (the part's `resolves`), in the key and tempo of the written-out
+/// program; the same recipe gives the same parts; with expand each part carries its text, which the expansion holds.
+#[test]
+fn a_templates_parts_have_cids_of_their_own_and_a_nested_call_its_pin() {
+    let r = report(NESTED, false);
+    assert_eq!(r.get("ok").and_then(JsonValue::as_bool), Some(true), "{}", r.js_stringified());
+    let res = arr(&r, "resolution");
+    let t = res.iter().find(|x| s(x, "kind") == "template").expect("a template entry");
+    let ep = &arr(t, "parts")[0];
+    assert_eq!((s(ep, "path"), s(ep, "role"), s(ep, "kind")), ("episodes", "episodes", "template"));
+    assert_eq!(s(ep, "call"), "template(passacaglia, ground=gen@1 dubstep seed=54876)");
+    assert!(s(ep, "cid").starts_with('z') && ep.get("text").is_none(), "{}", ep.js_stringified());
+    let g = &arr(ep, "parts")[0];
+    assert_eq!((s(g, "path"), s(g, "kind"), s(g, "call"), s(g, "generator")), ("episodes/ground", "gen", "gen@1 dubstep seed=54876", "seeded@1"));
+    assert!(s(g, "resolves").starts_with('z') && s(g, "cid") != s(g, "resolves"), "the part is what the binding wrote, the pin the program the call prints");
+    // the gen call that role wrote: nested, pinned to the same program
+    let n = res.iter().find(|x| x.get("nested").and_then(JsonValue::as_bool) == Some(true) && s(x, "kind") == "gen").expect("a nested gen entry");
+    assert!(s(n, "call").starts_with("gen@1 dubstep seed=54876"), "{}", n.js_stringified());
+    assert_eq!((s(n, "cid"), s(n, "generator")), (s(g, "resolves"), "seeded@1"));
+    // the written-out program's key and tempo are the rondo's: the nested call was resolved in them (it says the passacaglia's key)
+    assert_eq!(n.get("bpm").and_then(JsonValue::as_f64), Some(116.0), "{}", n.js_stringified());
+    // its `<pin>.section` reference is the call's own: not listed again
+    assert!(!res.iter().any(|x| s(x, "call").starts_with(s(g, "resolves"))), "{res:?}");
+    // the same recipe, the same parts
+    assert_eq!(report(NESTED, false).get("resolution"), r.get("resolution"));
+    // with expand, each part's text: a program of its own, whose let lines the expansion has
+    let x = report(NESTED, true);
+    let gx = &arr(&arr(arr(&x, "resolution").iter().find(|x| s(x, "kind") == "template").unwrap(), "parts")[0], "parts")[0];
+    let text = s(gx, "text");
+    assert_eq!(djlive::compile::program_cid(text), s(g, "cid"));
+    let whole = JsonValue::parse(&beatscript_api::expand_json(NESTED, false)).unwrap();
+    let canon = s(&whole, "canonical");
+    assert!(text.starts_with("tempo 116\nkey c\nlet ep_"), "{text}");
+    for l in text.lines().filter(|l| l.starts_with("let ")) {
+        assert!(canon.contains(l), "`{l}` is not in the expansion");
+    }
+    // expand answers the same manifest, parts and all
+    assert_eq!(whole.get("resolution"), r.get("resolution"), "{}", whole.js_stringified());
+    // the recipe and its expansion play the same nets
+    assert_eq!(nets(NESTED), nets(canon));
+}
+
+/// What a stored expansion says it is based on (beatscript_api::resolution::sources): each reference its recipe wrote out once, with
+/// its pin, then the parts that are no reference of their own.
+#[test]
+fn an_expansion_is_based_on_each_reference_its_recipe_wrote_out() {
+    let src = "arrange from template(passacaglia, @eccl3_season, ground=gen@1 dubstep seed=54876, upper=ode_to_joy)\n";
+    let rep = report(src, false);
+    let r = beatscript_api::resolution::of(src, s(&rep, "cid"));
+    let lines = beatscript_api::resolution::sources(&r, src);
+    let tpl = &r.sites[0];
+    assert_eq!(lines[0], format!("{} -> {}", tpl.call, tpl.resolved.clone().unwrap()));
+    let pin = djlive::nested::flatten(&r.parts).iter().find(|p| p.kind == "gen").and_then(|p| p.resolves.clone()).unwrap();
+    assert!(lines.iter().any(|l| l.starts_with("gen@1 dubstep seed=54876") && l.ends_with(&format!(" -> {pin}"))), "{lines:?}");
+    assert!(lines.contains(&"ode_to_joy".to_string()), "{lines:?}");
+    // each once
+    let mut seen = lines.clone();
+    seen.dedup();
+    assert_eq!(seen.len(), lines.len());
+    // a program with no references is based on nothing it wrote out
+    let plain = "tempo 120\ndeck A: kick x ~ x ~\n";
+    assert!(beatscript_api::resolution::sources(&beatscript_api::resolution::of(plain, s(&report(plain, false), "cid")), plain).is_empty());
+}
