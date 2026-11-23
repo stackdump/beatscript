@@ -829,7 +829,7 @@ const A_ANALYSIS: &[Action] = &[
     Action::new("status", "the analysis worker, Beat This! and its models, the settings, the grids found", Effect::Read),
     Action::new(
         "beats",
-        "find the beats, tempo and bar 1 of a capture, a loop, an input's history, a file or the library (off the audio thread; cached by content hash)",
+        "find the beats, tempo and bar 1 of a capture, a loop, an input's history, a file or the library (off the audio thread; cached by content hash and analyzer); the grid names its analyzer: beatgrid@1 the DSP detector, beatgrid@2:<model SHA-256> Beat This!",
         Effect::Live,
     )
     .with(&[
@@ -842,7 +842,7 @@ const A_ANALYSIS: &[Action] = &[
         Param::new("trim", "boolean", "target capture: also trim it to start on the downbeat and run whole bars (new captures are trimmed by themselves)"),
     ])
     .probe(r#"{"target":"clip","id":"__no_such_clip__"}"#),
-    Action::new("grid", "the grid already found for a target (no analysis started)", Effect::Read).with(&[
+    Action::new("grid", "the grid already found for a target, with the analyzer that found it (no analysis started)", Effect::Read).with(&[
         Param::new("target", "string", "capture | clip | input | file | library").req(),
         Param::new("id", "string", ""),
         Param::new("input", "string", ""),
@@ -856,7 +856,7 @@ const A_ANALYSIS: &[Action] = &[
         Param::new("history_auto", "boolean", "analyse an input's history by itself while it has signal"),
         Param::new("history_seconds", "number", "how many seconds of an input's recording an analysis listens to"),
     ]),
-    Action::new("models", "the model files: where, pinned size and SHA-256, whether they are there", Effect::Read),
+    Action::new("models", "the model files: where, pinned size and SHA-256, whether they are there; Beat This!'s analyzer id is beatgrid@2:<that SHA-256>", Effect::Read),
     Action::new("fetch_models", "download the Beat This! models now (about 11 MB, checksum-verified)", Effect::Live).probe("!"),
     Action::new("retry", "try loading Beat This! again after a failure", Effect::Live).probe("!"),
 ];
@@ -2426,8 +2426,10 @@ pub(super) const NOUNS: &[Noun] = &[
               or a folder of vocals (target vox, path): the DSP grid at once, then Beat This! \
               (about 11 MB of models fetched on first use, checksum-verified; without them the DSP \
               grid stands) fitted so bar 1 is a downbeat. It runs off the audio thread and is cached \
-              by the audio's content hash; the call answers with the state and any grid already \
-              known, `grid` reads it later. New captures are trimmed to start on the downbeat and run \
+              by the audio's content hash and the analyzer. Every grid names its analyzer, pinned like \
+              gen@N: beatgrid@1 is the DSP detector, beatgrid@2:<SHA-256 of the model> is Beat This!, so \
+              a changed detector or model analyses again and never answers with an old grid. The call \
+              answers with the state and any grid already known, `grid` reads it later. New captures are trimmed to start on the downbeat and run \
               whole bars (capture_trim). `set` changes neural, capture_trim, min_confidence, snap \
               (off|beat|bar: a released history scrub lands on that line of the input's grid), \
               history_auto, history_seconds. status shows the worker, the models and every grid. \

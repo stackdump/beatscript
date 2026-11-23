@@ -9,8 +9,10 @@
 //!   through the steady-first fitter. A backend that is missing, fails, or finds less than the
 //!   DSP did leaves the DSP grid, with a note saying why.
 //! - [`worker::Worker`]: all of it on a thread of its own, so analysis never blocks the window or
-//!   the audio. Results come back as events; a grid is cached by the content hash of its audio.
+//!   the audio. Results come back as events; a grid is cached by the content hash of its audio and
+//!   the analyzer that found it.
 //! - [`models`]: where the model files live, and fetching them with a checksum.
+//! - [`analyzers`]: the ids that pin which detector made a result, as `gen@N` pins the generator.
 
 use std::time::Instant;
 
@@ -27,6 +29,27 @@ pub mod models;
 pub mod neural;
 pub mod worker;
 
+/// Analyzer ids: which detector, at which version, made a result (as `gen@N` names the generator).
+/// Every result names its analyzer, and the cache keeps and finds a result under it, so a changed
+/// detector is a new id and is never answered with an old one's results. A detector whose output
+/// changes takes the next number. This is the one place the ids are written.
+pub mod analyzers {
+    /// The DSP beat grid as it is: [`djengine::beatgrid::dsp_analyze`] with the default options.
+    pub const BEATGRID_DSP: &str = "beatgrid@1";
+    /// Beat This!'s small model (the `neural` feature). Its id is this and the model file's SHA-256
+    /// ([`neural`], [`super::models::analyzer`]), so another model is another analyzer.
+    pub const BEATGRID_NEURAL: &str = "beatgrid@2";
+    /// The key: `djengine::key::detect` with the Ensemble profile and `ChromaOpts::DEFAULT`.
+    /// Nothing in this module finds a key yet: whatever computes or caches one here names this.
+    pub const KEY: &str = "key@1";
+
+    /// The id of [`BEATGRID_NEURAL`] run with the model whose SHA-256 is `model_sha256`:
+    /// `beatgrid@2:<sha256>`.
+    pub fn neural(model_sha256: &str) -> String {
+        format!("{BEATGRID_NEURAL}:{model_sha256}")
+    }
+}
+
 /// What a backend found: beat and downbeat times, seconds.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RawBeats {
@@ -38,6 +61,9 @@ pub struct RawBeats {
 /// from the analysis worker.
 pub trait Backend: Send {
     fn name(&self) -> &'static str;
+    /// Its analyzer id ([`analyzers`]): what its grids are named by and cached under. Two
+    /// backends (or one with another model) that can answer differently have two ids.
+    fn analyzer(&self) -> String;
     fn detect(&mut self, mono: &[f32], sample_rate: f64) -> Result<RawBeats, String>;
 }
 
@@ -80,6 +106,9 @@ pub struct Analysis {
     pub detections: Detections,
     /// `neural`, `dsp` or `none`.
     pub method: &'static str,
+    /// The analyzer that found `grid` ([`analyzers`]): `beatgrid@1`, or the backend's id. Empty
+    /// when no detector made the grid (a known tempo) or there is none.
+    pub analyzer: String,
     /// Why the backend's answer was not used (or what it said), empty when it was.
     pub note: String,
     /// Seconds the analysis took.
@@ -206,6 +235,7 @@ pub fn pre_analysis(mono: &[f32], sample_rate: f64, opts: &Options) -> Option<An
         dsp: None,
         detections: Detections::default(),
         method,
+        analyzer: String::new(),
         note,
         seconds: 0.0,
         duration,
@@ -243,6 +273,7 @@ pub fn analyze(
     let mut best = None;
     let mut detections = dsp_det.clone();
     let mut method = if dsp.is_some() { "dsp" } else { "none" };
+    let mut analyzer = if dsp.is_some() { analyzers::BEATGRID_DSP.to_string() } else { String::new() };
     match backend {
         None => note = why_none.to_string(),
         Some(b) => match b.detect(mono, sample_rate) {
@@ -266,6 +297,7 @@ pub fn analyze(
                         let (times, weights) = snap_to_onsets(&raw.beats, &onsets, 0.05);
                         detections = Detections { times, weights, fold: 1 };
                         method = "neural";
+                        analyzer = b.analyzer();
                         best = Some(g);
                     }
                 }
@@ -281,6 +313,7 @@ pub fn analyze(
         dsp,
         detections,
         method,
+        analyzer,
         note,
         seconds: t0.elapsed().as_secs_f64(),
         duration,
@@ -313,6 +346,22 @@ pub fn grid_to_json(g: &BeatGrid, with_beats: bool) -> JsonValue {
     if with_beats && !g.steady {
         o.set("beats", JsonValue::Array(g.beats.iter().map(|t| num(*t)).collect()));
     }
+    JsonValue::Object(o)
+}
+
+/// A grid as an answer gives it (the control language's `analysis beats` and `grid`): the grid
+/// ([`grid_to_json`], no beat list), the method, the analyzer that found it ([`analyzers`];
+/// absent when none did) and the note.
+pub fn grid_answer_json(g: &BeatGrid, method: &str, analyzer: &str, note: &str) -> JsonValue {
+    let mut o = match grid_to_json(g, false) {
+        JsonValue::Object(o) => o,
+        _ => JsonObject::new(),
+    };
+    o.set("method", JsonValue::str(method));
+    if !analyzer.is_empty() {
+        o.set("analyzer", JsonValue::str(analyzer));
+    }
+    o.set("note", JsonValue::str(note));
     JsonValue::Object(o)
 }
 
@@ -445,6 +494,9 @@ pub(crate) mod testutil {
         fn name(&self) -> &'static str {
             "oracle"
         }
+        fn analyzer(&self) -> String {
+            "oracle@1".into()
+        }
         fn detect(&mut self, mono: &[f32], sr: f64) -> Result<RawBeats, String> {
             self.calls += 1;
             let dur = mono.len() as f64 / sr;
@@ -464,6 +516,9 @@ pub(crate) mod testutil {
     impl Backend for Broken {
         fn name(&self) -> &'static str {
             "broken"
+        }
+        fn analyzer(&self) -> String {
+            "broken@1".into()
         }
         fn detect(&mut self, _: &[f32], _: f64) -> Result<RawBeats, String> {
             Err("model blew up".into())
@@ -563,6 +618,35 @@ mod tests {
         b[1000] += 0.001;
         assert_ne!(content_key(&a, SR), content_key(&b, SR));
         assert_ne!(content_key(&a, SR), content_key(&a, 48_000.0));
+    }
+
+    #[test]
+    fn every_analysis_names_the_analyzer_that_found_its_grid() {
+        let audio = click_track(124.0, 0.30, 16.0, SR);
+        let n = analyze(&audio, SR, Some(&mut Oracle { bpm: 124.0, first: 0.30, jitter: 0.0, calls: 0 }), "", Options::default());
+        assert_eq!((n.method, n.analyzer.as_str()), ("neural", "oracle@1"));
+        let d = analyze(&audio, SR, None, "no models", Options::default());
+        assert_eq!((d.method, d.analyzer.as_str()), ("dsp", analyzers::BEATGRID_DSP));
+        let f = analyze(&audio, SR, Some(&mut Broken), "", Options::default());
+        assert_eq!(f.analyzer, analyzers::BEATGRID_DSP, "a failed backend leaves the DSP grid, and says so");
+        // no detector: a known tempo, or silence
+        let k = analyze(&audio, SR, None, "", Options { known_bpm: Some(124.0), ..Options::default() });
+        assert_eq!((k.method, k.analyzer.as_str()), ("known", ""));
+        assert_eq!(analyze(&vec![0.0; 44_100 * 8], SR, None, "", Options::default()).analyzer, "");
+        // the answer says it; a grid no detector found has no analyzer in it
+        let j = grid_answer_json(n.grid.as_ref().unwrap(), n.method, &n.analyzer, &n.note);
+        assert_eq!(j.get("analyzer").and_then(JsonValue::as_str), Some("oracle@1"));
+        assert_eq!(j.get("method").and_then(JsonValue::as_str), Some("neural"));
+        assert!((j.get("bpm").and_then(JsonValue::as_f64).unwrap() - 124.0).abs() < 0.05);
+        assert!(grid_answer_json(k.grid.as_ref().unwrap(), k.method, &k.analyzer, "").get("analyzer").is_none());
+    }
+
+    #[test]
+    fn the_analyzer_ids_are_pinned_and_the_neural_one_names_its_model() {
+        assert_eq!((analyzers::BEATGRID_DSP, analyzers::BEATGRID_NEURAL, analyzers::KEY), ("beatgrid@1", "beatgrid@2", "key@1"));
+        let id = models::analyzer();
+        assert_eq!(id, format!("beatgrid@2:{}", models::SMALL.sha256));
+        assert_ne!(analyzers::neural("0".repeat(64).as_str()), id, "another model is another analyzer");
     }
 
     #[test]
