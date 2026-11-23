@@ -75,7 +75,8 @@ function measureRows(nodes, text, a, b) {
 export class Editor {
   /**
    * root: the .ed element. handlers: {onInput(text), onEval(), onStop(), onCursor(line, col), onToggleFollow(), onKey(e),
-   * onHoverInfo(line, vcol), onHoverTarget(element) (a note drawn over the code: its hover, {html} or null), onLayout()}
+   * onHoverInfo(line, vcol), onHoverTarget(element) (a note drawn over the code: its hover {html}, {html: null} for none, or
+   * null when the element is not one), onLayout()}
    */
   constructor(root, handlers = {}) {
     this.root = root;
@@ -459,6 +460,12 @@ export class Editor {
     const vcol = at ? at.vcol : -1;
     const d = at && this.diags.length ? this.diagAt(line, vcol) : null;
     const er = this.root.getBoundingClientRect();
+    if (own && !own.html) {
+      // the note says it itself (its title)
+      this._hoverKey = null;
+      this.tip.hidden = true;
+      return;
+    }
     if (own) {
       this._hoverKey = null;
       this.tip.innerHTML = own.html; // built from escaped text by assist-model.mdToHtml

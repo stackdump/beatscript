@@ -1018,6 +1018,68 @@ try {
       check('Eject from the note\'s popup (the beatscript.eject command) writes the same text', (await text()) === byRefactor, (await text()).slice(0, 200));
       await sleep(400);
       check('after the eject there is no reference left: no note, no lens', (await count('.as-exps:not([hidden]) .as-exp')) === 0, await q('.as-exps'));
+
+      // Option+E types where there is no reference (é, €, ę on a Mac): the key is taken only on a reference
+      await page.eval(`__app.setProgram(${JSON.stringify(`# a café bed\n${PROG}`)})`);
+      await sleep(300);
+      const optE = (needle, k, key) => page.eval(`(()=>{const ta=document.querySelector(".ed-ta"); const i=__app.editor.text.indexOf(${JSON.stringify(needle)})+${k}; ta.focus(); ta.setSelectionRange(i,i); const e=new KeyboardEvent("keydown",{key:${JSON.stringify(key)},code:"KeyE",altKey:true,bubbles:true,cancelable:true}); ta.dispatchEvent(e); return e.defaultPrevented})()`);
+      await page.eval('document.getElementById("toasts").replaceChildren()');
+      const typed = [await optE('café', 2, 'Dead'), await optE('tempo', 2, '€'), await optE('arrange', 3, 'ę')];
+      check('Option+E is left to type in a comment and off any reference (dead key, €, ę): not taken, no toast', typed.every((x) => x === false) && !/No reference here/.test(await q('#toasts')), JSON.stringify(typed));
+      check('and on a reference it is the toggle', (await optE('gen@2', 2, 'Dead')) === true && (await page.eval('__app.assist.shown.size')) === 1);
+
+      // a program loaded in its place drops what was shown and closes the popup; a non-key edit (a paste with the mouse, a
+      // drop) closes it too; an eject made for another text is refused
+      const TWO = 'tempo 128\nkey c\nlet bed = gen@2 techno seed=42 section=drop part=bass\nlet pad = gen@2 techno seed=43 section=drop part=bass\nsection groove 4 bars {\n  deck A: kick x x x x | bass bed\n  deck B: bass pad\n}\narrange groove groove\n';
+      await page.eval(`__app.setProgram(${JSON.stringify(TWO)})`);
+      await sleep(300);
+      check('a program loaded in place of the text drops the shown expansions', (await page.eval('__app.assist.shown.size')) === 0 && (await count('.as-exps:not([hidden]) .as-exp:not(.as-lens)')) === 0);
+      await caretAt('seed=43', 2);
+      await alt('e');
+      await page.click('.as-exp:not(.as-lens)');
+      await sleep(120);
+      const popOpen = () => page.eval('!document.querySelector(".as-pop").hidden');
+      check('pad\'s note opens its popup', (await popOpen()) && /seed=43/.test(await q('.as-pop')), await q('.as-pop'));
+      await page.eval('(()=>{const ta=document.querySelector(".ed-ta"); ta.focus(); ta.setSelectionRange(0,0); document.execCommand("insertText", false, "# pasted with the mouse\\n")})()');
+      await sleep(150);
+      check('an edit with no key (a paste with the mouse, a drop) closes the popup made for the old text', (await popOpen()) === false);
+      await sleep(500);
+      await page.click('.as-exp:not(.as-lens)');
+      await sleep(120);
+      await page.eval(`__app.setProgram(${JSON.stringify(TWO)})`);
+      await sleep(150);
+      check('so does a program loaded in its place', (await popOpen()) === false);
+      await page.eval('document.getElementById("toasts").replaceChildren()');
+      const refused = await page.eval('__app.assist.eject({ uri: "main", position: { line: 3, character: 10 }, length: 1 })');
+      check('an eject made for another text (its length) is refused, and the text is untouched', refused === false && /changed since/.test(await q('#toasts')) && (await text()) === TWO, await q('#toasts'));
+
+      // a line as wide as the row: the note is not drawn over its text (the expansion is still shown: hover, Alt+Enter, popup)
+      await page.eval(`__app.setProgram(${JSON.stringify(PROG)})`);
+      await page.eval('(()=>{const ed=__app.editor, m=ed.metrics, el=document.getElementById("ed"); const want=Math.ceil(2*m.padLeft+53*m.charW); el.style.flex="none"; el.style.width=`${el.clientWidth-(ed.code.clientWidth-want)}px`})()');
+      await sleep(400);
+      await caretAt('gen@2', 2);
+      await alt('e');
+      const full = await page.eval('(()=>{const ed=__app.editor, m=ed.metrics; const n=document.querySelector(".as-exps:not([hidden]) .as-exp:not(.as-lens)"); return {rows: ed.wrap.lines[2].rows.length, room: (ed.code.clientWidth-m.padLeft-(m.padLeft+53*m.charW))/m.charW, shown: __app.assist.shown.size, note: n ? n.parentElement.getBoundingClientRect().left-ed.code.getBoundingClientRect().left : null, end: m.padLeft+53*m.charW}})()');
+      check('a reference line exactly as wide as the row: shown, but no note over its text', full.rows === 1 && full.room < 1 && full.shown === 1 && (full.note === null || full.note >= full.end), JSON.stringify(full));
+      await page.eval('(()=>{const el=document.getElementById("ed"); el.style.width=""; el.style.flex=""})()');
+      await sleep(300);
+
+      // a stored reference typed or pasted: the program is fetched and told to the module after the caret's first questions;
+      // the service is asked again, so the lens and Alt+E work at once
+      const SRC = 'tempo 120\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~ | bass a1 ~ ~ ~ c2 ~ ~ ~ e2 ~ ~ ~ a1 ~ ~ ~\n}\narrange drop\n';
+      const canon = await page.eval(`__app.beatscript.fmt(${JSON.stringify(SRC)})`);
+      const put = await fetch(T(`api/programs/${canon.cid}`), { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: canon.canonical });
+      const STORED = `tempo 120\nkey am\nlet riff = ${canon.cid}.drop.bass\nsection grv 4 bars {\n  deck A: kick x x x x | bass riff\n}\narrange grv\n`;
+      await setText(STORED);
+      await caretAt('.drop.bass', -3);
+      await page.waitFor(`__app.resolver.texts.has(${JSON.stringify(canon.cid)}) && __app.report && __app.report.ok`, 8000).catch(() => null);
+      await sleep(400);
+      check('a pasted stored reference: once its program is fetched the caret\'s lens is there', put.ok && (await count('.as-exps:not([hidden]) .as-lens')) === 1, `put ${put.status}; ${await q('.as-exps')}`);
+      await page.eval('document.getElementById("toasts").replaceChildren()');
+      await alt('e');
+      const sn = await note();
+      check('and Alt+E shows its expansion (the note names the stored program\'s CID)', !!sn && sn.text.startsWith('⇒ ') && sn.text.endsWith(`[z…${canon.cid.slice(-8)}]`) && !/is not here/.test(await q('#toasts')), `${JSON.stringify(sn)} ${await q('#toasts')}`);
+      check('a screen reader is told when the whole opens', await (async () => { await page.click('.as-exp:not(.as-lens)'); await sleep(120); const said = await q('.as-live'); await page.key('Escape'); return /^The whole expansion of z…[1-9A-HJ-NP-Za-km-z]{8}\.drop\.bass is open, \d+ lines?/.test(said); })(), await q('.as-live'));
     }
   }
 

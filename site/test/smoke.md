@@ -102,7 +102,11 @@ browser. Exit code 1 if any check fails or the page logs a console error.
    *Eject*; Copy puts the `# from:` line and the text on the clipboard; an edit that moves the reference keeps it shown at its
    new line; Alt+E again hides it, Alt+Shift+E shows and hides every one's; Alt+Enter lists eject, copy, show and open; Eject
    from Alt+Enter (the refactor) and from the note's popup (the `beatscript.eject` command) write the same text, which checks, and one
-   Undo takes it back.
+   Undo takes it back. Option+E (a dead key, €, ę) is left to type in a comment and off a reference, and toggles on one; a
+   program loaded in place of the text drops what was shown; a paste with no key and a load close the popup; an eject whose
+   length is another text's is refused; on a reference line exactly as wide as the row the expansion is shown with no note
+   over the text; a pasted stored reference (`<cid>.drop.bass`, its program PUT to the mock server first) has its lens and
+   Alt+E as soon as the program is fetched; opening the whole is read out.
 
 ## What it does not cover
 

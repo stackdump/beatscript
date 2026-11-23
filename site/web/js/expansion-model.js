@@ -146,6 +146,33 @@ export function wholeMarkdown(ref) {
   return `${head(ref)}\n\n\`\`\`\n${ref.from}\n${ref.text}\n\`\`\``;
 }
 
+/** The text's length in UTF-8 bytes: what the service compares a command's `length` with (an eject of a changed text is refused). */
+export const utf8Length = (text) => new TextEncoder().encode(String(text)).length;
+
+/** Does the LSP range hold the LSP position (both ends included)? */
+export function rangeHolds(range, pos) {
+  const { start: a, end: b } = range;
+  const after = pos.line > a.line || (pos.line === a.line && pos.character >= a.character);
+  const before = pos.line < b.line || (pos.line === b.line && pos.character <= b.character);
+  return after && before;
+}
+
+/**
+ * Is UTF-16 offset `at` inside a quoted phrase or a comment of its line? There Alt+E is left to type (Option+E is é, € or ę on
+ * a Mac). A comment's `#` starts the line or follows a space (in a word it is a sharp: `c#4`).
+ */
+export function inPhraseOrComment(text, at) {
+  const t = String(text);
+  let i = Math.max(t.lastIndexOf('\n', at - 1), t.lastIndexOf('\r', at - 1)) + 1;
+  let quoted = false;
+  for (; i < at && i < t.length; i++) {
+    const c = t[i];
+    if (c === '"') quoted = !quoted;
+    else if (c === '#' && !quoted && (i === 0 || /[\s]/.test(t[i - 1]))) return true;
+  }
+  return quoted;
+}
+
 /** What copying an expansion puts on the clipboard: what eject would write (the `# from:` line, the text), as VS Code copies it. */
 export const copyText = (ref) => `${ref.from}\n${ref.text}\n`;
 
@@ -153,6 +180,12 @@ export const copyText = (ref) => `${ref.from}\n${ref.text}\n`;
 export function spoken(ref) {
   const lines = String(ref.text || '').split('\n');
   return `Expansion of ${shortCall(ref.call)} shown: ${lines[0].trim()}${lines.length > 1 ? `, and ${lines.length - 1} more line${lines.length === 2 ? '' : 's'}` : ''}.`;
+}
+
+/** One sentence for a screen reader when the whole expansion opens under the reference (the popup is not focused). */
+export function spokenOpen(ref, rows) {
+  const n = String(ref.text || '').split('\n').length;
+  return `The whole expansion of ${shortCall(ref.call)} is open, ${n} line${n === 1 ? '' : 's'}, first: ${String(ref.text || '').split('\n')[0].trim()}. Up and Down pick ${rows.map((r) => r.label.split(' ')[0].toLowerCase()).join(', ')}; Enter runs it; Escape closes it.`;
 }
 
 /**

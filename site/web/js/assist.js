@@ -11,7 +11,8 @@
 //                       program's `<cid>.drop.bass`, a `template(...)`): a read-only note at the end of its line, its first
 //                       line, how many more and its CID. Hover the note for more of it; click it for the whole, copy, eject
 //                       and hide. While the caret is on a reference whose expansion is hidden, `⇒ show expansion` stands there.
-//   Alt+Shift+E         every reference's expansion: shown, or hidden when any is
+//                       Taken only on a reference: elsewhere, and in a quoted phrase or a comment, it types (é on a Mac).
+//   Alt+Shift+E         every reference's expansion: shown, or hidden when any is (when the program has a reference)
 //
 // On a reference the Alt+Enter list also has *Eject* (the service makes the edit and proves it), *Copy the expansion*, and
 // the page's show/hide, every one's, and *Open the whole expansion*. Which expansions are shown is the page's state
@@ -20,7 +21,7 @@
 // The squiggles stay the checker's (beatscript_check): the service adds to the editor, it does not replace what the page had.
 
 import { lspPos, offsetOf, offsetOfVcol, expandSnippet, mergeEdits, mdToHtml, flattenSymbols, filterRows, kindLetter, TRIGGERS } from './assist-model.js';
-import { EJECT, GAP, refKey, shortCall, toggleOne, toggleAll, decorations, label, lensLabel, hoverMarkdown, wholeMarkdown, copyText, spoken, route, referenceRows, popupRows } from './expansion-model.js';
+import { EJECT, GAP, refKey, shortCall, toggleOne, toggleAll, decorations, label, lensLabel, hoverMarkdown, wholeMarkdown, copyText, spoken, spokenOpen, route, referenceRows, popupRows, utf8Length, rangeHolds, inPhraseOrComment } from './expansion-model.js';
 import { lineStarts, lineOf, visualCol } from './geometry.js';
 import { h } from './util.js';
 import { cellXY } from './wrap-model.js';
@@ -54,7 +55,8 @@ export class Assist {
       const el = e.target.closest('[data-x]');
       const it = el && this.expItems[+el.dataset.x];
       if (!it) return;
-      e.preventDefault(); // the caret stays where it was
+      e.preventDefault(); // the caret stays where it was, and the keys reach the popup
+      this.ed.ta.focus({ preventScroll: true });
       if (it.lens) this.toggleRef(it.ref);
       else this.openExpansion(it.ref);
     });
@@ -125,11 +127,11 @@ export class Assist {
     }
     if (mod && e.key === ' ') { e.preventDefault(); this.complete(); return true; }
     if (e.altKey && e.key === 'Enter') { e.preventDefault(); this.openActions(); return true; }
-    // Alt+E (e.code: Option+E is a dead key on a Mac): the expansion at the caret; with Shift, every reference's
+    // Alt+E (e.code: Option+E is a dead key on a Mac): the expansion at the caret; with Shift, every reference's. Taken only
+    // when there is a reference for it: elsewhere, and in a quoted phrase or a comment, the key types (é, €, ę on a Mac)
     if (e.altKey && !mod && (e.code === 'KeyE' || e.key === 'e' || e.key === 'E')) {
+      if (!this.expansionKey(e.shiftKey)) return false;
       e.preventDefault();
-      if (e.shiftKey) this.toggleAllExpansions();
-      else this.toggleExpansion();
       return true;
     }
     if (mod && e.shiftKey && (e.key === 'o' || e.key === 'O')) { e.preventDefault(); this.outline(); return true; }
@@ -142,6 +144,8 @@ export class Assist {
     // the edit may have moved the references: their notes go until they are drawn again for the new text (once it rests)
     if (this.on && !this.exps.hidden && this.expFor !== this.ed.text) this.exps.hidden = true;
     if (!this.on || programmatic) { this.close(); return; }
+    // a paste with the mouse, a drop: a list made for the old text (the fixes, the outline, an expansion) goes
+    if (this.list && this.list.kind !== 'complete') this.close();
     const t = this.ed.text;
     const at = this.ed.ta.selectionStart;
     const ch = t[at - 1];
@@ -175,20 +179,40 @@ export class Assist {
     const x = this.on && el && el.closest ? el.closest('.as-exp') : null;
     const it = x && this.expItems[+x.dataset.x];
     if (!it) return null;
-    if (it.lens) return { html: mdToHtml(`\`${it.ref.call}\`: click to show its expansion here (Alt+E). Alt+Enter: copy it, or eject it into local text.`) };
+    if (it.lens) return { html: null }; // its title says it
     return { html: mdToHtml(hoverMarkdown(it.ref)) };
   }
 
   /** The page checked the text (it changed, or a program it draws on arrived): the notes for that text. */
   onChecked() {
     if (!this.on) return;
-    // the references could not be worked out (a stored program not known yet): ask again with the document opened afresh,
-    // since a program told to the module since then may be what they lacked
-    if (this.refsOf.errors.length) {
-      this.synced = null;
-      this.refsOf = { text: null, refs: [], errors: [] };
+    if (this.knownSince) {
+      // a program was told to the module: the caret's reference and its actions, asked again of the reopened document
+      this.knownSince = false;
+      this.updateBulb();
     }
     if (this.shown.size || this.caretRef) this.paintExpansions();
+  }
+
+  /**
+   * The module was told a program (the page fetched one that a stored reference names). The service works a text's
+   * references out once and keeps them, so what it answered for this text may have lacked that program: the document is
+   * opened afresh at the next request, and the caret's reference is asked again after the check that follows.
+   */
+  onKnown() {
+    this.synced = null;
+    this.refsOf = { text: null, refs: [], errors: [] };
+    this.knownSince = true;
+  }
+
+  /** A program was loaded in place of the text (an example, a link, an assistant's eval): what was shown was the old one's. */
+  onLoad() {
+    if (!this.on) return;
+    this.close();
+    this.shown.clear();
+    this.caretRef = null;
+    this.caretFor = null;
+    this.paintExpansions();
   }
 
   /** The editor's width or font changed (the text wraps again): the notes move with it. */
@@ -375,13 +399,37 @@ export class Assist {
     return this.refsOf.refs;
   }
 
-  /** The reference at an LSP position (the caret's): {ref}, or {why} to tell the user. */
+  /** The reference at an LSP position (the caret's): {ref}, or {why} to tell the user and `here`, a problem of a reference there. */
   referenceAt(position = this.caretPos()) {
     const res = this.req('beatscript/expand', { position });
     const ref = res && res.references && res.references[0];
     if (ref) return { ref };
-    const err = res && res.errors && res.errors[0];
-    return { ref: null, why: err ? String(err.message).split('\n')[0] : res && res.error ? res.error : NO_REF };
+    const errs = (res && res.errors) || [];
+    const here = errs.find((d) => d.range && rangeHolds(d.range, position));
+    const err = here || errs[0];
+    return { ref: null, here: !!here, why: err ? String(err.message).split('\n')[0] : res && res.error ? res.error : NO_REF };
+  }
+
+  /**
+   * Alt+E (`all`: Alt+Shift+E) when there is something for it: a reference at the caret, or one of its problems there (said);
+   * for every one's, any reference. False: nothing, so the key is left to type.
+   */
+  expansionKey(all) {
+    if (inPhraseOrComment(this.ed.text, this.ed.ta.selectionStart)) return false;
+    const position = this.caretPos();
+    if (all) {
+      const refs = this.references();
+      const here = this.refsOf.errors.find((d) => d.range && rangeHolds(d.range, position));
+      if (!refs.length && !here) return false;
+      if (refs.length) this.toggleAllExpansions();
+      else this.toast(String(here.message).split('\n')[0], 'ok');
+      return true;
+    }
+    const { ref, why, here } = this.referenceAt(position);
+    if (!ref && !here) return false;
+    if (ref) this.toggleRef(ref);
+    else this.toast(why, 'ok');
+    return true;
   }
 
   /** Alt+E: show or hide the expansion of the reference at `position` (the caret's). The reference, or null. */
@@ -444,7 +492,7 @@ export class Assist {
 
   /** A command the service named (a code action's), routed as the VS Code extension's middleware routes it. */
   runCommand(command) {
-    const { run, at } = route(command, { uri: URI, position: this.caretPos() });
+    const { run, at } = route(command, { uri: URI, position: this.caretPos(), length: utf8Length(this.ed.text) });
     if (run === 'toggle') this.toggleExpansion(at.position);
     else if (run === 'copy') this.copyExpansion(at.position);
     else if (run === 'eject') this.eject(at);
@@ -455,10 +503,14 @@ export class Assist {
   openExpansion(ref) {
     const doc = wholeMarkdown(ref);
     const position = ref.range.start;
-    const go = { toggle: () => this.toggleRef(ref), copy: () => this.copyExpansion(position), eject: () => this.eject({ uri: URI, position }) };
-    const rows = popupRows(ref, this.shown).map((r) => ({ label: r.label, detail: r.detail, icon: '⇒', doc, go: go[r.id] }));
+    // the eject says which text it was made for (its UTF-8 length): the service refuses it for another
+    const at = { uri: URI, position, length: utf8Length(this.ed.text) };
+    const go = { toggle: () => this.toggleRef(ref), copy: () => this.copyExpansion(position), eject: () => this.eject(at) };
+    const made = popupRows(ref, this.shown);
+    const rows = made.map((r) => ({ label: r.label, detail: r.detail, icon: '⇒', doc, go: go[r.id] }));
     this.list = { kind: 'expansion', rows, sel: 0, anchor: offsetOf(this.ed.text, position) };
     this.paint();
+    this.say(spokenOpen(ref, made));
   }
 
   /** Draw the notes: each shown expansion, and the lens of the caret's reference, at the end of its line. */
@@ -480,15 +532,21 @@ export class Assist {
     const out = [];
     for (const g of groups) {
       if (g.line >= starts.length) continue;
-      const p = cellXY(this.ed.wrap, g.line, visualCol(t, starts[g.line], g.end) + GAP);
-      const x = Math.max(padLeft, Math.min(p.x, right - 2 * charW));
-      const cols = Math.max(1, Math.floor((right - x) / charW));
+      // after the line's last character, on its last row; never over the text: a line that leaves fewer than three columns
+      // gets no note (the hover, Alt+Enter and the popup still reach the expansion)
+      const end = cellXY(this.ed.wrap, g.line, visualCol(t, starts[g.line], g.end));
+      const room = Math.floor((right - end.x) / charW + 1e-6);
+      if (room < 3) continue;
+      const gap = Math.max(1, Math.min(GAP, room - 2));
+      const x = end.x + gap * charW;
+      const p = { y: end.y };
+      const cols = room - gap;
       const each = Math.max(1, Math.floor((cols - 2 * (g.items.length - 1)) / g.items.length));
       const kids = [];
       for (const it of g.items) {
         if (kids.length) kids.push('  ');
         const i = this.expItems.push(it) - 1;
-        kids.push(h('span', { class: it.lens ? 'as-exp as-lens' : 'as-exp', 'data-x': String(i) }, it.lens ? lensLabel(each) : label(it.ref, each)));
+        kids.push(h('span', { class: it.lens ? 'as-exp as-lens' : 'as-exp', 'data-x': String(i), title: it.lens ? `Show the expansion of ${shortCall(it.ref.call)} here (Alt+E); Alt+Enter: copy it, or eject it into local text` : null }, it.lens ? lensLabel(each) : label(it.ref, each)));
       }
       const row = h('div', { class: 'as-exp-line' }, ...kids);
       row.style.left = `${x}px`;

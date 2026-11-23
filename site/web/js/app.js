@@ -247,7 +247,8 @@ export class App {
       // the programs a text draws on (an `import`): fetched once by CID and told to the module, which never fetches (closure.js)
       this.resolver = new Resolver({
         fetchProgram: async (cid) => { const p = await this.api.getProgram(cid); this.stored.add(cid); return p; },
-        know: this.beatscript.know,
+        // a program told to the module: the language service's analysis of this text may have lacked it (assist.js)
+        know: this.beatscript.know ? (cid, text) => { const r = this.beatscript.know(cid, text); if (this.assist) this.assist.onKnown(); return r; } : null,
         onChange: () => this.checkSoon(),
       });
       this.driver = new Driver(this.beatscript);
@@ -363,6 +364,7 @@ export class App {
     // a link in the address bar names the program that was opened or shared, not the one loaded now
     if (!keepHash && location.hash.length > 1) history.replaceState(null, '', location.pathname + location.search);
     this.editor.setText(text);
+    if (this.assist) this.assist.onLoad(); // its popups and shown expansions were the old program's
     if (!example) this.el.examples.value = '';
     this.editor.scroller.scrollTop = 0;
     this.follow.reset();

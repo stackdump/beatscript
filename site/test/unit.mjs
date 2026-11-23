@@ -1839,6 +1839,30 @@ test('expansion: the service\'s commands route as the VS Code extension routes t
   assert.deepEqual([xm.TOGGLE, xm.COPY, xm.EJECT], ['beatscript.expand.toggle', 'beatscript.expand.copy', 'beatscript.eject'], 'the service\'s executeCommandProvider.commands (crates/beatscriptls/src/refs.rs COMMANDS)');
 });
 
+test('expansion: Alt+E is left to type in a quoted phrase or a comment (Option+E is é, € or ę on a Mac)', () => {
+  const at = (t, needle, k = 0) => xm.inPhraseOrComment(t, t.indexOf(needle) + k);
+  const t = 'tempo 120\nlet bed = gen@2 techno seed=42 section=drop part=bass  # the café bed\narrange from template(deep-house, "the café is open")\ndeck A: bass c#4 ~ | lead f#3\n';
+  assert.equal(at(t, 'gen@2', 2), false, 'on the call');
+  assert.equal(at(t, 'café bed', 2), true, 'in the trailing comment');
+  assert.equal(at(t, 'café is', 2), true, 'in the template\'s quoted words');
+  assert.equal(at(t, 'deep-house'), false, 'in the template call, outside its words');
+  assert.equal(at(t, '")', 2), false, 'after the closing quote');
+  assert.equal(at(t, '~ | lead'), false, 'a sharp in a note is not a comment');
+  assert.equal(xm.inPhraseOrComment('# a whole comment line', 5), true);
+  assert.equal(xm.inPhraseOrComment('a\r# old-style line end', 4), true, 'a lone \\r ends a line too');
+});
+
+test('expansion: the length a command carries is the UTF-8 length the service compares; a problem\'s range holds the caret', () => {
+  assert.equal(xm.utf8Length('abc'), 3);
+  assert.equal(xm.utf8Length('# é𝄞\n'), 2 + 2 + 4 + 1, 'é is two bytes, 𝄞 four (and two UTF-16 units)');
+  const r = rng(3, 10, 3, 20);
+  assert.ok(xm.rangeHolds(r, { line: 3, character: 10 }) && xm.rangeHolds(r, { line: 3, character: 20 }) && xm.rangeHolds(r, { line: 3, character: 15 }));
+  assert.ok(!xm.rangeHolds(r, { line: 3, character: 9 }) && !xm.rangeHolds(r, { line: 3, character: 21 }) && !xm.rangeHolds(r, { line: 4, character: 0 }));
+  assert.ok(xm.rangeHolds(rng(1, 5, 3, 2), { line: 2, character: 99 }), 'a line between the ends');
+  const said = xm.spokenOpen(xref(), xm.popupRows(xref(), new Set()));
+  assert.equal(said, 'The whole expansion of gen@2 techno seed=42 section=drop part=bass is open, 3 lines, first: let bed_1 = a1 ~ ~ ~ c2 ~ ~ ~. Up and Down pick show, copy, eject; Enter runs it; Escape closes it.');
+});
+
 test('expansion: the Alt+Enter rows and the popup rows follow what is shown', () => {
   const a = xref();
   const b = xref({ kind: 'stored', call: `${CID1}.drop.bass`, place: 'let', name: 'riff' });
@@ -1882,7 +1906,10 @@ test('expansion: the real module answers beatscript/expand, and eject by command
   const copied = req('workspace/executeCommand', { command: xm.COPY, arguments: [{ uri: 'main', position: r.range.start }] });
   assert.equal(xm.copyText(r), `${copied.text}\n`);
   // eject as the note's popup does it (the command, the service proves it) and as Alt+Enter does (the refactor, resolved)
-  const ej = req('workspace/executeCommand', { command: xm.EJECT, arguments: [{ uri: 'main', position: r.range.start }] });
+  // the length the page sends is the one the service compares (UTF-8 bytes, not JS's UTF-16 length): one off is refused
+  const stale = req('workspace/executeCommand', { command: xm.EJECT, arguments: [{ uri: 'main', position: r.range.start, length: text.length }] });
+  assert.match(stale.error.message, /changed since/, 'the text\'s UTF-16 length is not its byte length here (é𝄞)');
+  const ej = req('workspace/executeCommand', { command: xm.EJECT, arguments: [{ uri: 'main', position: r.range.start, length: xm.utf8Length(text) }] });
   const out = am.mergeEdits(text, ej.edit.changes.main).text;
   assert.ok(out.includes(r.from) && out.includes(r.text) && !out.includes('= gen@2'), out);
   const acts = req('textDocument/codeAction', { range: { start: r.range.start, end: r.range.start }, context: { diagnostics: [] } });
