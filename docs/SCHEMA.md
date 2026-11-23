@@ -155,24 +155,46 @@ same recipe always expands to the same program, and the two play the same.
 <a id="signature"></a>**signature**: the author's signature over the CID, opaque to everything but the wallet that
 checks it.
 
+<a id="Section"></a>**Section**: a section of a program's song, as its program document lists it: its `name`, its `start`
+and its `bars`, and its `key` when the section sets one itself.
+
+<a id="sections"></a>**sections**: the song's sections in order, a list of `Section`s, one for each time the arrangement places
+one, by start bar (a section placed twice is listed twice). It is the same property as `section` (`bs:section`), under the
+name the program documents give it.
+
+<a id="start"></a>**start**: the bar a section starts on, counted from 0.
+
+<a id="bars"></a>**bars**: a length in bars: how long a section is.
+
+<a id="cid"></a>**cid**: a program's CID as a value, beside an `@id` (a credited program carries its own).
+
+<a id="credit"></a>**credit**: the programs this one credits, a set: a CC BY parent it was forked from, a program it imports.
+Each is named by its `@id` and `cid`, with its `name`, `author`, `licenseId` and `license`.
+
+<a id="visibility"></a>**visibility**: `public` or `private`. A private program is never stored or shared by the site.
+
+<a id="euclid"></a>**euclid**: the Euclidean rhythms the program's song plays (its `e(k, n[, rot])` calls, written out), one node
+for each distinct shape: a bitwrap ontology `EuclideanRhythm` with its pulses, steps and rotation, its `uses`, and the named
+rhythms of the same shape (`sameShapeAs`).
+
+<a id="uses"></a>**uses**: how many times the written-out song plays a Euclidean rhythm.
+
+<a id="sameShapeAs"></a>**sameShapeAs**: the bitwrap ontology's named rhythms of exactly this shape, as IRIs (the ontology
+names its rhythms by genre and role, so a shape may have several, or none).
+
 <a id="ProgramDump"></a>**ProgramDump**: an archive of programs: `count`, the sorted `cids`, and the files (see
 [Open data](/docs/open-data)).
 
 ## The other documents
 
-The block is the program with its source. A program also has a fuller linked-data document with the same CID, which
-is unchanged by this:
+The block is the program with its source. A program also has a fuller linked-data document with the same CID:
 
-- `https://beatscript.app/p/<CID>.jsonld` (or `/c/<CID>.jsonld`): the program's structure, with `@context`
-  `https://beatscript.app/context/beatscript-v1.jsonld` (the context of BeatScript 2, `beatscript-context-v1.jsonld`; the
-  context before the rename, `https://beatscript.app/context/v1.jsonld`, stays served unchanged, for the documents that
-  name it) and `@type` `djrust:Program`. It gives the name, key, tempo, sections,
-  author, and licence (`licenseId`, and `license` as a URI). Its rights statement adds only what the site stores: the
-  credits (`credit`) and the program it was forked from (`forkedFrom`, and schema.org's `isBasedOn`), and
+- `https://beatscript.app/p/<CID>.jsonld` (or `/c/<CID>.jsonld`): the program's structure. It gives the name, key, tempo,
+  sections, author, and licence (`licenseId`, and `license` as a URI). Its rights statement adds only what the site
+  stores: the credits (`credit`) and the program it was forked from (`forkedFrom`, and schema.org's `isBasedOn`), and
   `usageInfo`, `https://beatscript.app/authorship`: who authored a program and what rights it has, in plain language.
   A section the shared text documented (a `#` comment line directly above its `section` line) has that doc comment as
-  its `description`. Those schema.org terms come in a local context beside v1 (`@context` is `[v1, {...}]`), as v1 is
-  never edited.
+  its `description`. The context it names is its program's version's ([the two contexts](#the-two-contexts), below).
 - The engine's own JSON-LD export (on the command line, `djctl btw jsonld FILE`) says more in the same vocabulary: Euclidean rhythms linked to the bitwrap
   ontology (`https://ontology.bitwrap.io/ns#`), the genre and tags as ontology IRIs, credits and `forkedFrom`.
 - `https://beatscript.app/phrasebook.jsonld` (and `/phrasebook/<CID>.jsonld`): the public-domain phrasebook as linked data, a
@@ -184,6 +206,21 @@ is unchanged by this:
 - The program pages `/p/<CID>` and `/c/<CID>` carry that document in their head, as before, and the block in their
   body. Their `og:*` and `twitter:*` tags, title, description and canonical link are unchanged.
 - The editor at `/?cid=<CID>` carries the block for a stored public program.
+
+### The two contexts
+
+A program document names one of two contexts, by the version its program is written in
+([Versions](/docs/language#versions)). Both stay served, and neither is ever edited: a change is a new context.
+
+- **`https://beatscript.app/context/beatscript-v1.jsonld`** (`docs/beatscript-context-v1.jsonld`): BeatScript 2 programs.
+  The document's `@id` is `https://beatscript.app/p/<CID>`. Its vocabulary is this page's, `https://beatscript.app/schema#`
+  (prefix `bs:`), beside `bw:` (the bitwrap ontology) and `schema:` (schema.org): each `bs:` term it maps is defined under
+  [Terms](#terms). Three terms moved from the old context: `author` is `bs:author` (it was `dct:creator`), `license` is
+  `bs:license` (it was `dct:license`) and `name` is `schema:name` (it was `dct:title`). `description`, `isBasedOn` and
+  `usageInfo` are schema.org's, in the context itself.
+- **`https://beatscript.app/context/v1.jsonld`** (`docs/btw-context-v1.jsonld`): BeatScript 1 programs, the old spelling,
+  unchanged. Their documents keep `@type` `djrust:Program` and the `djrust:` and `dct:` terms, and the schema.org terms
+  come in a local context beside it (`@context` is `[v1, {...}]`).
 
 ## What changed from the beats conventions, and why
 

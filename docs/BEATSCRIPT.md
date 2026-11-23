@@ -51,8 +51,7 @@ kilohertz to eight kilohertz over eight bars."
 
 - A program is **lines**. A line is blank, a `# comment`, or one statement. A line that starts with
   `|` continues the statement above it.
-- A program starts with its **version line**, `#! beatscript 2`. A text with no version line (or with `#! btw 1`) is
-  BeatScript 1, the old spelling: it plays the same, and keeps its old CID ("Versions").
+- The first line is the version line, `#! beatscript 2`; a text without one is BeatScript 1 ("Versions").
 - Words are lower case. Deck names are `A` and `B`. Numbers are plain: `5`, `0.7`, `2k` (= 2000),
   `50%` (= 0.5), and **wherever the language takes a number it takes arithmetic**: `tempo 120 + 6`,
   `at bar $i * 2 + 1`, `kick e($i % 4 + 1, 8)`.
@@ -559,7 +558,7 @@ A **range** `a..b` is *any value from a to b*, only ever for a parameter of a pa
 
 `tempo 126` (BPM, 40..300), `swing 0.1` (0..1), `key am`. A setting applies to the whole program. `key`
 is the default for notes with no octave, scale degrees, Roman numerals, `markov`, and the key tag the share carries.
-No `key`: C major. No `tempo`: the decks keep theirs. A number here is arithmetic like any other (`tempo 120 + 6`).
+No `key`: C major. No `tempo`: the decks keep theirs.
 
 The tempo can move. `tempo 100 -> 130 over 8 bars exp` ramps it from the program's first bar and holds the end; a
 `tempo` line may stand anywhere a place does (`at bar 16: tempo 128 -> 140 over 4 bars`) and a section may set its own
