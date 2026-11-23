@@ -189,6 +189,15 @@
       ]
     },
     {
+      "id": "control-per-pass",
+      "docs": ["ext-control.md"],
+      "say": [["check", "~ control off"], ["check", "plays[].control_off"], ["listen", "control_off"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "tempo 120\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  deck B: bass a1 ~ a1 ~\n  control: mix { B level 0 }\n}\narrange {\n  drop\n  ~ control off\n  drop\n}\n"}, "expect": [["/ok", "=", true], ["/canonical", "~", "  ~ control off\n"], ["/arrange/plays/0/name", "=", "drop"], ["/arrange/plays/1/name", "=", "drop@2"], ["/arrange/plays/1/control_off", "=", ["mix"]]]},
+        {"tool": "listen", "args": {"text": "tempo 120\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  deck B: bass a1 ~ a1 ~\n  control: mix { B level 0 }\n}\narrange {\n  drop\n  ~ control off\n  drop\n}\n"}, "expect": [["/sections/1/name", "=", "drop@2"], ["/sections/1/control_off", "=", ["mix"]], ["/sections/0/control_off", "!~", "mix"]]}
+      ]
+    },
+    {
       "id": "form-roles",
       "datum": 6674,
       "docs": ["ext-roles.md"],

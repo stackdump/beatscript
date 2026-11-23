@@ -63,7 +63,8 @@ RMS and peak in dBFS and loudness in LUFS. `silent` lists every deck or part tha
 (under -60 LUFS), with `reason` when the mixer explains it (master_zero, mute, level_0, crossfader, filter_closed, \
 eq_killed; voice_missing when the mixer lets a part through and its voice made nothing; no_sound otherwise) and `why` in \
 words. `detected` gives the tempo and key heard against the declared ones (bpm_match same|half|double|two_thirds|three_halves|differs; \
-key_match same|relative|differs|unsure|undeclared). `sections` gives each section's loudness, `bar_lufs` a loudness per bar, and \
+key_match same|relative|differs|unsure|undeclared). `sections` gives each section's loudness (and `control_off` on a section an `arrange {{ }}` switch such as `~ control off` \
+plays with lines of its control deck held back: the calls that do not fire there), `bar_lufs` a loudness per bar, and \
 master.clipped_samples counts samples over full scale. `warnings` is the short list to act on. A part that came from a \
 reference (a gen@2 call, a seed(...), a template, a stored program's section) says so in `from` {{call, kind, resolved, place, \
 generator, sections}} (`also_from` when several made it); a gen call fitted to the program's key or tempo says so in `notes`, \
