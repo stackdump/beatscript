@@ -19,9 +19,11 @@
 //!   program is its own net, so the split is exact, not a separation. [`NetStems`] sorts the nets: drums by channel 10-15
 //!   or a drum name, bass and vocals by net id, and harmony, melody and anything else are `other`. The other stems' parts
 //!   still play, at level 0, as the export makes its stems (docs/EXPORT.md): a kick that is not heard still pumps the bass,
-//!   and a deck's loudness is still measured on its whole net. So a stem is what its parts add to the mix, and the four
-//!   add up to the mix except where a deck's limiter moved (the one stage that is not linear). A render's stems are the
-//!   program's own parts: they are exact, and they are CC0 when the program is.
+//!   and a deck's loudness is still measured on its whole net. A deck's peak limiter is the one stage that is not linear,
+//!   so a stem is two renders: the mix, each limiter keeping the gain it gave each frame, then the stem, each limiter
+//!   giving those gains again. So a stem is what its parts add to the mix, and the four add up to the mix (but for a riser
+//!   into a drop, a stinger and a control net, which are in no stem). A render's stems are the program's own parts: they
+//!   are exact, and they are CC0 when the program is.
 //!
 //! [`to_prepared_sample`] and [`deck_source`] put a clip on a sample deck with the program's grid, so no beat detection runs.
 //! The booth's `deck load spec=render:...` is a thin call into this module.
@@ -30,6 +32,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use djengine::beatgrid::{BeatGrid, GridSource};
+use djengine::fx::GainTap;
 use djengine::rights::{short_cid, License, Rights, Visibility};
 use djengine::session::DeckSource;
 use djengine::stems::{NetStems, StemClass, StemSource};
@@ -374,20 +377,61 @@ pub fn render_clip_stem(program: Program<'_>, cid: &str, slice: Option<(u32, u32
     render(program, cid, slice, sample_rate, Some(stem))
 }
 
-/// Plays every lane of a deck's net that is not in the stem at level 0, as each net is installed.
-struct Mute {
-    stem: DjStem,
+/// The gains one deck's peak limiter gave the mix, one a frame ([`GainTap`]), and how many a replay has given. A loud mix
+/// is limited on most of its frames (the test's: 96 in 100), so they are kept as they are: four bytes a frame a deck, half what
+/// the clip's own audio takes.
+#[derive(Default)]
+struct Gains {
+    kept: Vec<f32>,
+    given: usize,
+}
+
+impl Gains {
+    /// The next `n` gains (fewer at the end) onto the limiter's queue.
+    fn feed(&mut self, q: &mut std::collections::VecDeque<f32>, n: usize) {
+        let k = n.min(self.kept.len() - self.given);
+        q.extend(&self.kept[self.given..self.given + k]);
+        self.given += k;
+    }
+}
+
+/// How far ahead of the engine a replay keeps a limiter's queue (frames): more than a block, which is the most the engine
+/// takes between two looks.
+const GAINS_AHEAD: usize = 4 * OfflineConductor::BLOCK_FRAMES;
+
+/// What a stem's render is shown after every block (as the export makes its stems, docs/EXPORT.md). Its first pass is the
+/// mix, every deck's limiter recording the gain it gave each frame. Its second is the stem: every lane of a deck's net that
+/// is not in the stem plays at level 0, as each net is installed, and each deck's limiter applies the mix's gains instead
+/// of its own. So a stem is its parts as they sat in the limited mix, and the four add up to the mix.
+struct StemPass {
+    /// None: the mix, recording.
+    stem: Option<DjStem>,
+    gains: BTreeMap<String, Gains>,
     /// (deck, the net's generation) to the ids of its nets that are in the stem.
     kept: BTreeMap<(String, i32), BTreeSet<String>>,
 }
 
-impl Mute {
+impl StemPass {
     fn apply(&mut self, cond: &mut OfflineConductor) {
         let decks: Vec<String> = cond.engine().decks.iter().map(|d| d.name.clone()).collect();
         for d in decks {
             let Some(core) = cond.renderer.deck_mut(&d) else { continue };
+            if let Some(lim) = core.limiter.as_mut() {
+                let g = self.gains.entry(d.clone()).or_default();
+                match self.stem {
+                    None => {
+                        lim.tap = GainTap::Record;
+                        g.kept.extend(lim.tap_gains.drain(..));
+                    }
+                    Some(_) => {
+                        lim.tap = GainTap::Replay;
+                        let short = GAINS_AHEAD.saturating_sub(lim.tap_gains.len());
+                        g.feed(&mut lim.tap_gains, short);
+                    }
+                }
+            }
+            let Some(stem) = self.stem else { continue };
             let Some(p) = core.runner.project_mut() else { continue };
-            let stem = self.stem;
             let keep = self.kept.entry((d, p.generation)).or_insert_with(|| stem_nets(&p.graph.project, stem));
             for lane in p.lanes_mut() {
                 if !keep.contains(&lane.net_id) && lane.level() != 0.0 {
@@ -416,9 +460,11 @@ fn render(program: Program<'_>, cid: &str, slice: Option<(u32, u32)>, sample_rat
     let (b0, b1) = (f64::from(from - 1) * 4.0, f64::from(to) * 4.0);
     let r = match stem {
         Some(s) => {
-            let mut m = Mute { stem: s, kept: BTreeMap::new() };
-            let mut watch = |cond: &mut OfflineConductor| m.apply(cond);
-            beatscript_render::render_with(&c, &arr, beats, b1, sr, true, Some(&mut watch))
+            // the mix first, for the gains its limiters gave it, then the stem with those gains (`StemPass`)
+            let mut mix = StemPass { stem: None, gains: BTreeMap::new(), kept: BTreeMap::new() };
+            beatscript_render::render_with(&c, &arr, beats, b1, sr, true, Some(&mut |cond: &mut OfflineConductor| mix.apply(cond))).map_err(ClipError::Render)?;
+            let mut one = StemPass { stem: Some(s), gains: mix.gains, kept: BTreeMap::new() };
+            beatscript_render::render_with(&c, &arr, beats, b1, sr, true, Some(&mut |cond: &mut OfflineConductor| one.apply(cond)))
         }
         None => beatscript_render::render_with(&c, &arr, beats, b1, sr, true, None),
     }
@@ -627,27 +673,45 @@ mod tests {
     fn the_four_stems_add_up_to_the_mix() {
         let text = "tempo 124\nkey am\ndeck A: kick x ~ x ~ | hihat ~ x ~ x | bass a1 ~ a1 c2\ndeck B: melody <[a3 c4 e4 c4] [a3 c4 e4 g4]> | harmony chord(am) inst=warm-pad\ndeck B: sing \"we are the rave to-night\" on melody voice=robot-choir\nend at bar 4\n";
         let cid = cid_of(text);
-        let mix = render_clip(Program::Text(text), &cid, None, SR).unwrap();
-        let stems: Vec<RenderClip> = DjStem::ALL.iter().map(|s| render_clip_stem(Program::Text(text), &cid, None, SR, *s).unwrap()).collect();
         let peak = |a: &[f32]| a.iter().fold(0f32, |p, x| p.max(x.abs()));
-        for s in &stems {
-            assert_eq!(s.frames(), mix.frames());
-            assert!(peak(&s.left) > 0.001, "the {} stem is heard: {}", s.stem.unwrap().name(), peak(&s.left));
+        // the limiter moves in this mix, so the stems add up only because each replays the mix's gains: before they did
+        // (each stem limited on its own), the sum was 9.0 dB under the peak at worst and 29.2 dB in rms
+        let c = prepare(Program::Text(text), &cid).unwrap();
+        let (json, beats) = beatscript_render::arrangement_bars(&c, beatscript_render::program_bars(&c));
+        let arr = beatscript_render::parsed(&json).unwrap();
+        let mut rec = StemPass { stem: None, gains: BTreeMap::new(), kept: BTreeMap::new() };
+        let r = beatscript_render::render_with(&c, &arr, beats, beats, SR, true, Some(&mut |cond: &mut OfflineConductor| rec.apply(cond))).unwrap();
+        for (d, g) in &rec.gains {
+            assert_eq!(g.kept.len(), r.audio.left.len(), "deck {d}'s limiter kept a gain a frame");
         }
-        let (mut max_abs, mut sq) = (0f64, 0f64);
-        for i in 0..mix.frames() {
-            for (ch, m) in [(0, mix.left[i]), (1, mix.right[i])] {
-                let sum: f64 = stems.iter().map(|s| f64::from(if ch == 0 { s.left[i] } else { s.right[i] })).sum();
-                let d = (sum - f64::from(m)).abs();
-                max_abs = max_abs.max(d);
-                sq += d * d;
+        let limited = rec.gains.values().flat_map(|g| &g.kept).filter(|g| **g < 1.0).count();
+        let deck_frames: usize = rec.gains.values().map(|g| g.kept.len()).sum();
+        assert!(limited > 0, "a limiter moved in this mix");
+        for slice in [None, Some((2, 3))] {
+            let mix = render_clip(Program::Text(text), &cid, slice, SR).unwrap();
+            let stems: Vec<RenderClip> = DjStem::ALL.iter().map(|s| render_clip_stem(Program::Text(text), &cid, slice, SR, *s).unwrap()).collect();
+            for s in &stems {
+                assert_eq!(s.frames(), mix.frames());
+                assert!(peak(&s.left) > 0.001, "the {} stem is heard: {}", s.stem.unwrap().name(), peak(&s.left));
             }
+            let (mut max_abs, mut sq) = (0f64, 0f64);
+            for i in 0..mix.frames() {
+                for (ch, m) in [(0, mix.left[i]), (1, mix.right[i])] {
+                    let sum: f64 = stems.iter().map(|s| f64::from(if ch == 0 { s.left[i] } else { s.right[i] })).sum();
+                    let d = (sum - f64::from(m)).abs();
+                    max_abs = max_abs.max(d);
+                    sq += d * d;
+                }
+            }
+            let p = f64::from(peak(&mix.left).max(peak(&mix.right)));
+            let rms_err = (sq / (2 * mix.frames()) as f64).sqrt();
+            let db = |x: f64| 20.0 * (x.max(1e-12) / p).log10();
+            eprintln!("stems sum check {slice:?}: peak {p:.4}, max |sum - mix| {max_abs:.3e} ({:.1} dB under the peak), rms {rms_err:.3e} ({:.1} dB); {limited} of {deck_frames} deck frames limited", db(max_abs), db(rms_err));
+            // measured on gir (22.05 kHz, the whole program): the worst sample 136.1 dB under the peak (1.4e-7), the rms
+            // 156.5 dB under it (1.4e-8), float rounding; the bounds leave 16 dB
+            assert!(db(max_abs) < -120.0, "the stems add up to the mix: the worst sample is {:.1} dB under the peak", db(max_abs));
+            assert!(db(rms_err) < -140.0, "the stems add up to the mix: the rms error is {:.1} dB under the peak", db(rms_err));
         }
-        let p = f64::from(peak(&mix.left).max(peak(&mix.right)));
-        let rms_err = (sq / (2 * mix.frames()) as f64).sqrt();
-        let db = |x: f64| 20.0 * (x.max(1e-12) / p).log10();
-        eprintln!("stems sum check: peak {p:.4}, max |sum - mix| {max_abs:.3e} ({:.1} dB under the peak), rms {rms_err:.3e} ({:.1} dB)", db(max_abs), db(rms_err));
-        assert!(db(rms_err) < -60.0, "the stems add up to the mix: rms error {:.1} dB under the peak", db(rms_err));
     }
 
     #[test]
