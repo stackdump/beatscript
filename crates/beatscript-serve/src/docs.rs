@@ -1469,8 +1469,9 @@ mod tests {
         }
         // every theme id the page writes in backticks is a theme of the library (`word_word` that is no phrasebook line)
         for tok in FORMS_MD.split('`').skip(1).step_by(2) {
-            // (a role's lets and sections are named for the role: `a_melody`, `b_leads`, `ep_ground`, docs/beatscript/ext-roles.md)
-            let role_name = ["a_", "b_", "ep_"].iter().any(|p| tok.starts_with(p));
+            // (a role's lets and sections are named for the role: `a_melody`, `b_leads`, `ep_ground`, the quodlibet's `tune_a`,
+            // docs/beatscript/ext-roles.md)
+            let role_name = ["a_", "b_", "ep_", "tune_"].iter().any(|p| tok.starts_with(p));
             if tok.contains('_') && !role_name && !tok.contains('=') && !tok.contains(' ') && !tok.contains('*') && !tok.contains('(') && !tok.contains('/') && djengine::vocal::phoneme::pd_phrase(tok.trim_start_matches('@')).is_none() && !["genre_template", "list_examples"].contains(&tok) {
                 let bar_of = tok.rsplit_once('_').filter(|(_, n)| n.bytes().all(|c| c.is_ascii_digit())).map(|(t, _)| t);
                 assert!(djengine::themes::theme(tok).is_some() || bar_of.is_some_and(|t| djengine::themes::theme(t).is_some()), "the page names `{tok}`, which is no theme (nor a theme's bar)");

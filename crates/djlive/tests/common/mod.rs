@@ -63,7 +63,9 @@ pub fn reformat(src: &str, rng: &mut Rng) -> String {
             }
             Tok::Word(w) => {
                 let after_deck = matches!(i.checked_sub(1).and_then(|j| toks.get(j)).map(|t| &t.tok), Some(Tok::Word(d)) if d == "deck");
-                if !after_deck && w != "A" && w != "B" {
+                // a word before `=` or `.` is a name (a form's role `a=`, its part `a.bass=`, a param), never a pitch
+                let a_name = matches!(toks.get(i + 1).map(|n| &n.tok), Some(Tok::Eq | Tok::Dot));
+                if !after_deck && !a_name && w != "A" && w != "B" {
                     if let Some((pc, oct)) = music::parse_note(w) {
                         const FLAT: [&str; 12] = ["c", "db", "d", "eb", "e", "f", "gb", "g", "ab", "a", "bb", "b"];
                         const SHARP: [&str; 12] = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"];

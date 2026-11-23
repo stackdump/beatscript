@@ -239,7 +239,7 @@ The whole design is the long note `docs/beatscript/ext-roles.md`.
 ## Extensions: sets, sections, parts, numbers
 
 Five ways to go further with a form's roles, each with a default that keeps every reference that does not say it written out
-as it was (`roles.rs` `bound_forms_are_pinned`, `templates_v1_are_pinned`, the examples' pins). Code: `crates/djlive/src/roles.rs`;
+as it was (the pins of `roles.rs bound_forms_are_pinned` and `template.rs templates_v1_are_pinned`, and the examples' pins). Code: `crates/djlive/src/roles.rs`;
 tests: `crates/djlive/tests/form_extensions.rs` (no generator) and `crates/beatscript-api/tests/forms_roles.rs` (sets, stored programs,
 seeds). Example: **Canon of the crossing** (`canon-of-the-crossing`).
 
@@ -386,7 +386,7 @@ arrange from template(quodlibet, @psalm42_deep_calleth, a=badinerie, b=new_world
 
 ### Not done
 
-- `cids_of` (what a store credits like an `import`) does not see a CID inside a role's reference with three names after it
+- `stored.rs cids_of` (what a store credits like an `import`) does not see a CID inside a role's reference with three names after it
   (`<cid>.track2.drop.bass`), nor a bare CID in a role; the written-out text's references are credited.
 - A whole stored program in a role whose arrangement mutates a section borrows `drop@2` by that name (a name `section ... from`
   cannot read); a set's tracks borrow the section (`drop`) instead. The same fix in `borrowed` is a one-liner left for its own
