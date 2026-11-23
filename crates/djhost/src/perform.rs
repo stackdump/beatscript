@@ -519,6 +519,11 @@ impl Moves {
         self.active.is_empty()
     }
 
+    /// Whether move `id` is still in flight (armed or running): false once it is over or cancelled.
+    pub fn in_flight(&self, id: u64) -> bool {
+        self.active.iter().any(|a| a.id == id)
+    }
+
     fn note(&mut self, kind: MoveKind, deck: &str, text: String) {
         let deck = if kind.one_at_a_time() { "*".to_string() } else { deck.to_string() };
         self.last.insert((kind, deck), text);

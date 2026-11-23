@@ -30,6 +30,7 @@ pub mod live_store;
 pub mod loop_collections;
 pub mod mashups;
 pub mod mixxx;
+pub mod offline_moves;
 pub mod ontology;
 pub mod setlist;
 // a recorded set written out as a BeatScript `set` and its take (no wallet: it reads set.json)

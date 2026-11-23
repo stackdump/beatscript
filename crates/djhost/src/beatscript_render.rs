@@ -25,9 +25,12 @@
 //!
 //! **The control net** (docs/design/NETS-ALL-THE-WAY-DOWN.md, phase 1). The lines the arrangement has no op for (filters,
 //! inserts, moves) are played by [`render`] from the program's control net (`djlive::nets`), merged with the arrangement's own
-//! events frame by frame, so the offline render hears what the net says. A line the net does not hold yet is named in
-//! [`Render::beside`] and is not heard. A `macro` line (docs/beatscript/ext-control.md) is the net's `fire` (and a held one's
-//! `release`), applied through [`crate::fx_view::fire`]: the registry's `effects fire`, as the booth runs it.
+//! events frame by frame, so the offline render hears what the net says. A `macro` line (docs/beatscript/ext-control.md) is
+//! the net's `fire` (and a held one's `release`), applied through [`crate::fx_view::fire`]: the registry's `effects fire`, as
+//! the booth runs it. The `move` lines the net does not hold (a loop roll, a bass swap, a phrase sync's cut, a move with `for N
+//! bars`) are armed on the booth's own scheduler, [`crate::perform::Moves`], serviced on the render's clock
+//! ([`crate::offline_moves`]). A line neither holds is named in [`Render::beside`] and is not heard (a move that cannot act
+//! offline, with why).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -126,7 +129,7 @@ const MAX_FIRES: usize = 4096;
 
 /// The places (in bars from the start, exact) a control fires at within a render of `total` bars: a bar line, or a time
 /// between two (`at bar 4 beat 2`, `every 2 beats`).
-fn fire_pos(t: Timing, total: u32) -> Vec<Rat> {
+pub(crate) fn fire_pos(t: Timing, total: u32) -> Vec<Rat> {
     let end = Rat::int(i64::from(total));
     let every = |from: Rat, step: Rat| -> Vec<Rat> {
         let mut out = Vec::new();
@@ -278,7 +281,7 @@ impl NotInRender {
 /// Where a control line is in the text that was compiled, and what to call it: the line itself (a line a `def` of the same text
 /// copies is one place, the def's own line); but a line that came from an **import** has no text of its own here (its span is the
 /// `import`), so it is the call that brought it (one place each), named by the call and the canonical line it made.
-fn place_of(c: &Compiled, ctl: &djlive::compile::Control) -> (usize, String) {
+pub(crate) fn place_of(c: &Compiled, ctl: &djlive::compile::Control) -> (usize, String) {
     let own = ctl.span.text(&c.source).lines().next().unwrap_or("").trim();
     if !own.is_empty() && !own.starts_with("import") {
         return (ctl.span.start, own.to_string());
@@ -840,6 +843,9 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
     let mut refused = stand_on_start(&mut cond, &arr, None, None);
     let net = djlive::nets::control_net(c, (beats / 4.0).ceil() as u32);
     let ev: Vec<(i64, Event)> = if controls { net.events(None) } else { Vec::new() };
+    // the move lines the net leaves beside it, on the booth's own scheduler (crate::offline_moves); none without controls
+    let clock = crate::offline_moves::Clock::of_arrangement(&arr, sample_rate);
+    let mut moves = controls.then(|| crate::offline_moves::ProgramMoves::new(c, beats, &net, clock)).filter(|m| !m.is_empty() || !m.unplayed.is_empty());
     // one timeline: (frame, 0 = an arrangement move | 1 = a net event, index); the arrangement first on a tie
     let frame_of = |at: f64| (arr.seconds_at(at) * sample_rate).round() as i64;
     let mut tl: Vec<(i64, u8, usize)> = arr.events.iter().enumerate().map(|(i, e)| (frame_of(e.at), 0, i)).collect();
@@ -908,6 +914,10 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
                 k += 1;
             }
         }
+        // the moves: what is due on this frame, then the scheduler's pass on the render's clock (every block)
+        if let Some(m) = moves.as_mut() {
+            m.run(cond.engine_mut(), frame, &frame_of);
+        }
         let mut n = (want - left.len()).min(OfflineConductor::BLOCK_FRAMES);
         if let Some(t) = tl.get(next) {
             n = n.min((t.0 - frame).max(1) as usize);
@@ -915,13 +925,24 @@ pub fn render(c: &Compiled, sample_rate: f64, controls: bool) -> Result<Render, 
         if let Some(d) = deferred.iter().map(|(f, _)| *f).min() {
             n = n.min((d - frame).max(1) as usize);
         }
+        if let Some(f) = moves.as_ref().and_then(|m| m.next_frame(cond.engine(), frame, &frame_of)) {
+            n = n.min((f - frame).max(1) as usize);
+        }
         let (l, r) = cond.step_frames(n);
         left.extend_from_slice(l);
         right.extend_from_slice(r);
     }
     left.truncate(want);
     right.truncate(want);
-    Ok(Render { audio: RenderedAudio { sample_rate, left, right }, applied, refused, beside: net.residual })
+    // a move line played on the scheduler is heard: not beside; one that cannot act says why
+    let beside = match &moves {
+        None => net.residual,
+        Some(m) => net.residual.into_iter().filter(|(k, _)| !m.plays(k)).map(|(k, why)| match m.why_unplayed(&k) {
+            Some(w) => (k, w.to_string()),
+            None => (k, why),
+        }).collect(),
+    };
+    Ok(Render { audio: RenderedAudio { sample_rate, left, right }, applied, refused, beside })
 }
 
 #[cfg(test)]

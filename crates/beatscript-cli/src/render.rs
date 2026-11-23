@@ -359,7 +359,8 @@ fn engagement_start(engine: &djengine::host::deck::engine::Engine, deck: &str, f
     at(frame as f64 + ahead.round())
 }
 
-/// The program's control lines as one timeline, in frames: the arrangement's control moves first on a tie, then the net's.
+/// The program's control lines as one timeline, in frames: the arrangement's control moves first on a tie, then the net's,
+/// then the DJ moves the net leaves beside it (`djhost::offline_moves`: the booth's scheduler, serviced on every block).
 /// Built once, before the first chunk, for the whole program (not `--max-bars` or `--from-bar`), so a cut or a seek hears
 /// exactly the moves the full render does up to that point.
 pub struct Controls {
@@ -371,12 +372,16 @@ pub struct Controls {
     macro_lines: BTreeMap<String, (usize, String)>,
     /// The tempo the render's clock runs at (a frame is a beat at it).
     bpm: f64,
+    /// The render's sample rate (the moves' scheduler reads beats off frames at it).
+    sr: f64,
     /// The macro calls made so far, with what the engine said.
     pub macros: Vec<MacroCall>,
     /// Macro calls on a deck that did not play yet when they came due (a deck that comes in on the bar the macro starts on): the
     /// frame of that bar, and the move. Made just before the deck starts (the engine starts an engagement on a deck that does not
     /// play at once, so it starts with the deck), or at that bar if the deck never comes.
     deferred: Vec<(i64, usize)>,
+    /// The `move` lines the net does not hold, armed on the render's engine (None: the program has none).
+    perform: Option<djhost::offline_moves::ProgramMoves>,
 }
 
 /// The program's next bar line after `beat`, in beats (a bar line itself: the next one).
@@ -386,12 +391,14 @@ fn next_bar_beat(beat: f64) -> f64 {
 }
 
 impl Controls {
-    pub fn new(c: &Compiled, program_bars: u32, frame_of: &dyn Fn(f64) -> i64) -> Controls {
+    /// The control lines of `c` in a render of `program_bars` bars at `sr`, on the program's tempo.
+    pub fn new(c: &Compiled, program_bars: u32, sr: f64) -> Controls {
         let beats = f64::from(program_bars) * 4.0;
         let bpm = c.tempo.unwrap_or(120.0);
+        let frame_of = |beat: f64| -> i64 { (beat * 60.0 / bpm * sr).round() as i64 };
         let mut moves: Vec<(i64, u8, usize, Move)> = Vec::new();
         if c.controls.is_empty() {
-            return Controls { moves, next: 0, unheard: Vec::new(), macro_lines: BTreeMap::new(), bpm, macros: Vec::new(), deferred: Vec::new() };
+            return Controls { moves, next: 0, unheard: Vec::new(), macro_lines: BTreeMap::new(), bpm, sr, macros: Vec::new(), deferred: Vec::new(), perform: None };
         }
         let (arr, left_out) = djhost::beatscript_render::control_events(c, bpm, beats, true);
         for (i, e) in arr.into_iter().enumerate() {
@@ -412,28 +419,47 @@ impl Controls {
             moves.push((frame_of(beat), 1, i, Move::Net(e, beat, key)));
         }
         moves.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
-        // unheard: a line the arrangement leaves out that the net does not hold either
-        let residual: BTreeSet<&str> = net.residual.iter().map(|(k, _)| k.as_str()).collect();
-        let lines: BTreeSet<usize> = c.controls.iter().filter(|ctl| residual.contains(ctl.key.as_str())).map(|ctl| djlive::diag::line_col(&c.source, ctl.span.start).0).collect();
-        let unheard = left_out.lines.iter().filter(|l| lines.contains(&l.line)).map(|l| format!("line {} `{}` ({})", l.line, l.text, l.kind)).collect();
+        // the DJ moves the net leaves beside it, on the booth's scheduler
+        let perform = djhost::offline_moves::ProgramMoves::new(c, beats, &net, djhost::offline_moves::Clock::steady(bpm, sr));
+        // unheard: a line the arrangement leaves out that neither the net nor the moves' scheduler plays (a move that cannot
+        // act offline says why)
+        let residual: BTreeSet<&str> = net.residual.iter().map(|(k, _)| k.as_str()).filter(|k| !perform.plays(k)).collect();
+        let lines: BTreeMap<usize, Option<&str>> = c.controls.iter().filter(|ctl| residual.contains(ctl.key.as_str())).map(|ctl| (djlive::diag::line_col(&c.source, ctl.span.start).0, perform.why_unplayed(&ctl.key))).collect();
+        let unheard = left_out
+            .lines
+            .iter()
+            .filter_map(|l| {
+                lines.get(&l.line).map(|why| match why {
+                    Some(w) => format!("line {} `{}` ({}: {w})", l.line, l.text, l.kind),
+                    None => format!("line {} `{}` ({})", l.line, l.text, l.kind),
+                })
+            })
+            .collect();
+        let perform = (!perform.is_empty()).then_some(perform);
         let mut macro_lines = BTreeMap::new();
         for ctl in c.controls.iter().filter(|ctl| matches!(ctl.effect.base(), djlive::compile::Effect::Calls(cs) if cs.iter().any(|x| x.noun == "effects"))) {
             let line = djlive::diag::line_col(&c.source, ctl.span.start).0;
             let text = ctl.span.text(&c.source).lines().next().unwrap_or("").trim().to_string();
             macro_lines.insert(ctl.key.clone(), (line, text));
         }
-        Controls { moves, next: 0, unheard, macro_lines, bpm, macros: Vec::new(), deferred: Vec::new() }
+        Controls { moves, next: 0, unheard, macro_lines, bpm, sr, macros: Vec::new(), deferred: Vec::new(), perform }
     }
 
-    fn peek(&self) -> Option<i64> {
-        let d = self.deferred.iter().map(|(f, _)| *f).min();
-        match (self.moves.get(self.next).map(|m| m.0), d) {
-            (Some(a), Some(b)) => Some(a.min(b)),
-            (a, b) => a.or(b),
-        }
+    fn frame_of(&self, beat: f64) -> i64 {
+        (beat * 60.0 / self.bpm * self.sr).round() as i64
     }
 
-    /// Apply every move due at or before `frame`.
+    /// The next frame after `frame` a control line is due on: the timeline's next move, a deferred macro's bar, or what the DJ
+    /// moves do next.
+    fn peek(&self, frame: i64, engine: &djengine::host::deck::engine::Engine) -> Option<i64> {
+        let line = self.moves.get(self.next).map(|m| m.0);
+        let deferred = self.deferred.iter().map(|(f, _)| *f).min();
+        let moves = self.perform.as_ref().and_then(|p| p.next_frame(engine, frame, &|b| self.frame_of(b)));
+        [line, deferred, moves].into_iter().flatten().min()
+    }
+
+    /// Apply every move due at or before `frame` (a macro on a deck not playing yet waits for it), then the DJ moves' pass on the
+    /// render's clock.
     fn apply_due(&mut self, frame: i64, engine: &mut djengine::host::deck::engine::Engine) {
         while let Some((f, ..)) = self.moves.get(self.next) {
             if *f > frame {
@@ -452,6 +478,11 @@ impl Controls {
             self.apply_move(i, frame, engine);
         }
         self.apply_deferred(None, frame, engine);
+        // the moves: the scheduler's pass on the render's clock, every block (after the net's events, as beatscript_render's)
+        let (bpm, sr) = (self.bpm, self.sr);
+        if let Some(p) = self.perform.as_mut() {
+            p.run(engine, frame, &|b| (b * 60.0 / bpm * sr).round() as i64);
+        }
     }
 
     /// The deferred macro calls on `deck`, just before it starts to play; with None, those whose bar has come (the deck never did).
@@ -692,7 +723,7 @@ pub fn render_compiled(c: &Compiled, check_ms: f64, o: &Options, pcm: &mut dyn W
     }
     let skip = frame_of(f64::from(o.from_bar) * 4.0).min(want);
     // the control lines: levels, mixer moves and ramps (the desktop's arrangement events), inserts and their ramps (the net)
-    let mut ctls = Controls::new(c, plan.program_bars, &frame_of);
+    let mut ctls = Controls::new(c, plan.program_bars, sr);
     let mut notes = plan.notes.clone();
     if !ctls.unheard.is_empty() {
         let n = ctls.unheard.len();
@@ -804,7 +835,7 @@ pub fn drive(c: &Compiled, plan: &Plan, sr: f64, want: i64, ctls: &mut Controls,
         if let Some((f, _)) = &next_ev {
             n = n.min((f - frame).max(1) as usize);
         }
-        if let Some(f) = ctls.peek() {
+        if let Some(f) = ctls.peek(frame, cond.engine()) {
             n = n.min((f - frame).max(1) as usize);
         }
         let (l, r) = cond.step_frames(n);
