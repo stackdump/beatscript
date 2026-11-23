@@ -217,3 +217,12 @@ fn the_arrange_section_links_the_eight_line_example() {
     let chapter = BEATSCRIPT_MD.split("### Arrange mutations").nth(1).unwrap().split("\n### ").next().unwrap();
     assert!(chapter.contains(url));
 }
+
+#[test]
+fn it_teaches_macro_and_says_the_browser_does_not_play_it() {
+    let sheet = beatscript_api::cheatsheet();
+    assert!(sheet.lines().any(|l| l == "macro riser on A over 8 bars"), "the Control table's line");
+    assert!(sheet.contains("MACRO NAME"), "the grammar's alternative");
+    let tail = sheet.split("## On beatscript.app").nth(1).expect("the closing note");
+    assert!(tail.contains("`queue`, `macro` (`render` and `listen` do) or the sugar nouns: the page lists each as \"not played here\""), "the closing note");
+}

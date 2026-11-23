@@ -23,6 +23,7 @@ reformattings keep its CID. All of them are original and CC0-1.0. A file that ne
 | `algebra.beatscript` | `stack(...)`, `then(...)`, `silence`, a `let` that names a composition, `arrange intro stack(then(riff, riff), verse) coda` | Composition: stack and then | `ext-algebra.md` |
 | `ports.beatscript` | `def` with `in:` and `out:` ports, `emit`, `wire a.out -> b.chords`: checked glue | Typed ports | `ext-ports.md` |
 | `ports-import.beatscript` | the same across an `import`: a saved snippet keeps its defs with their ports and its wires (`skip-test`: tested with a fake store in `crates/djlive/tests/ext_ports.rs`) | Typed ports | `ext-ports.md` |
+| `macros.beatscript` | `macro riser on A over 8 bars`, `macro ping-pong`, `macro breakdown`, `macro cathedral`, `macro tape_stop`: the DJ macro catalogue by name on the control deck, each starting on the bar its line names (`render` and `listen` play them) | Macros: the DJ catalogue | `ext-control.md` |
 | `mix.beatscript` | `duck B under A.kick 6db attack=5ms release=120ms` and a `mix { ... }` that is put back where its section ends | Mix moves: duck and mix | `ext-mix.md` |
 | `sing.beatscript` | `sing "words" on melody voice=alto`: typed lyrics on a part's own notes (a neural voice falls back to the formant voice and `check` says so) | Sung lyrics | `ext-sing.md` |
 | `linked.beatscript` | the `#! genre:` and `#! tags:` header lines that link a program to the bitwrap ontology, and the Euclidean rhythms `btw jsonld` links | Links to the ontology | `ext-linked.md` |

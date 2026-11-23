@@ -72,7 +72,7 @@ Generated from docs/BEATSCRIPT.md. BeatScript writes a whole track as text: patt
 const TAIL: &str = "## On beatscript.app
 
 - Everything above checks here; `import` and `<cid>` need the program (a link carries it). `sample` checks (a local file needs `use restricted`), but a program with either is not public: never stored or rendered, it keeps only its inline link.
-- `loop` and the booth's lines (`move`, `swap pairs`, `deck B: load`, `deck A: sync`, `queue`, `crossfader`, `deck A: play` / `stop` / `mute`) check, and so do the sugar nouns (`wheel`, `trick`, `freeze`, `vocoder`, `vocal` ...). The browser engine does not play `move`, `swap pairs`, `load`, `sync`, `queue` or the sugar nouns: the page lists each as \"not played here\". The grammar above leaves the booth's lines out; they belong to the desktop app.
+- `loop` and the booth's lines (`move`, `swap pairs`, `deck B: load`, `deck A: sync`, `queue`, `crossfader`, `deck A: play` / `stop` / `mute`) check, and so do the sugar nouns (`wheel`, `trick`, `freeze`, `vocoder`, `vocal` ...). The browser engine does not play `move`, `swap pairs`, `load`, `sync`, `queue`, `macro` (`render` and `listen` do) or the sugar nouns: the page lists each as \"not played here\". The grammar above leaves the booth's lines out; they belong to the desktop app.
 - `inst=` and `kit=` take the voices and kits `/api/instruments` lists.
 - ✦generate (key G): the seeded generator, no model or sign-in; `[` `]` step the seed as it plays.
 ";

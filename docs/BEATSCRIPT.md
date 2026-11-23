@@ -593,6 +593,7 @@ calls `djctl app` and the `djapp_*` MCP tools make, so a line can be checked wit
 | `mix { A level 0.7, A eq low -3 }` | `mixer {deck: A, volume: 0.7}`, `mixer {deck: A, low: 0.4375}`; in a section the mixer is read first with `mixer {}` and put back when the section ends |
 | `deck B: sing "words" on melody` | `vocal {action: create, lyrics: ..., notes: [...], ...}`, then `vocal {action: to_row, play: true}` (the browser: a sung part in deck B's net, docs/beatscript/phonemes.md) |
 | `at bar 16: tempo 128 -> 140 over 4 bars` | no call of its own: a tempo is an event of the program's tempo map; the runtime sets the decks' tempo (`deck {action: tempo, deck: A, bpm: ...}`) each service pass |
+| `macro riser on A over 8 bars` | `effects {action: fire, target: A, id: riser, bars: 8}`: an entry of the DJ macro catalogue by name ("Macros", below), made a beat ahead so it starts on the line's bar |
 
 A **ramp** `filter lp 2k -> 8k over 8 bars` sends the value afresh on every service pass, from the bar
 it starts on to the end of the span, so it moves smoothly inside the bars, and it ends where it says. A
@@ -685,7 +686,7 @@ A `move` takes whole bars (the registry's `moves arm` takes bars): `over 2 beats
 ### The control deck
 
 `control:` is a deck of engine calls, beside `deck A:`, `deck B:` and `master:`. It takes the lines that take no target
-(`move`, `swap pairs`, `load pair`, `queue`, `crossfader`, a `tempo` at a place, `duck`, `mix`, `do` and its sugar nouns), in
+(`move`, `swap pairs`, `load pair`, `queue`, `crossfader`, a `tempo` at a place, `duck`, `mix`, `macro`, `do` and its sugar nouns), in
 the place a target goes, and sections, repeats, defs, guards and time words sequence it like any line:
 
 ```text
@@ -705,7 +706,32 @@ and `move echo_out on B` are two spellings with two CIDs; both stay, and no prog
 a part or a note (`control: kick x ~ x ~` is an error that says to write it on `deck A:`), a strip's action (`control: filter lp
 400`: on `deck A:`, `deck B:` or `master:`), a deck's transport, a `sing`, a def's call or a setting (`control: tempo 140` with
 no time word is `tempo 140`). `control` is no reserved word: it is the head only before its colon. The long note is
-`docs/beatscript/ext-control.md`, with the design of `macro`.
+`docs/beatscript/ext-control.md`, with `macro`'s.
+
+### Macros: the DJ catalogue
+
+```text
+control: macro riser on A over 8 bars
+at bar 24: control: macro cathedral on B over 2 bars
+macro@1 breakdown over 4 bars on A
+```
+
+`macro ID on DECK [over N bars]` fires one entry of the engine's DJ macro catalogue, the 39 pads of the apps' Effects window
+(`riser`, `tape_stop`, `breakdown`, `cathedral`, `ping-pong`, `feel-build` ...: the `macros` MCP tool lists them), on a deck: the
+registry's `effects fire`, so the booth, the window and the program fire the same thing. It is a line of the control deck, and a
+line with no head. `on DECK` is required (the focused deck is the person's, not the text's); `over N bars` takes 1 to 64 whole bars,
+and with none the entry runs the window's own length (1 bar, 2 for a sweep). A transition runs its own length: the riser rises over
+its `over` (4 bars with none), a tape stop, a spin back or a reverb freeze is held `over N bars` and let go (1 with none), and a cut
+or a double drop takes no `over`. The engine starts an engagement on the deck's next bar line, so the call goes a beat ahead of a
+bar-line time and the macro starts on the bar its line names (`at bar 24:` is sent at bar 23 beat 3); at the song's very first bar
+there is no beat before it, and it starts on the next.
+
+**Versioned.** `macro` is `macro@1`: a frozen copy of the catalogue as of the engine this repo pins, each id with its category,
+family and length, never edited, so a stored program's `macro riser` means what it meant. A later catalogue is `macro@2`, a table
+beside it; the canonical text writes the version only when it is not 1 (`macro@1 riser` is `macro riser`). An unknown id is an error
+with the nearest (`macro rizer`: did you mean `riser`?), and an id only a later version has says which. `render` and `listen` play
+a macro line (`listen` names each in `macros`, with the bar it starts on and whether the engine played it); a browser tab does not,
+and lists it as not played here. `macro` is no reserved word.
 
 ## The whole surface: `do`
 

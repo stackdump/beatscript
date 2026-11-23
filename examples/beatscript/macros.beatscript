@@ -1,0 +1,49 @@
+# macro: the DJ macro catalogue by name (docs/beatscript/ext-control.md). A riser into the drop, a ping-pong on the lead, a breakdown
+# with the pad in a cathedral, a tape stop to end on. Each starts on the bar its line names (the call goes a beat ahead: the
+# engine starts an effect on the next bar line); `render` and `listen` play them, a browser tab lists them as not played here.
+tempo 126
+key am
+
+let kicks = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let hats = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let line = a2 ~ a2 c3 ~ a2 e3 ~ a2 ~ g2 ~ a2 ~ c3 ~
+let lead = ~ ~ e4 ~ c4 ~ ~ a3 ~ ~ e4 ~ g4 ~ e4 ~
+let changes = <chord(am) chord(f) chord(c) chord(g)>
+
+section intro 8 bars {
+  deck A: kick kicks | hihat hats vel=50..80
+  deck B: harmony changes inst=warm-pad
+}
+
+section build 8 bars {
+  deck A: kick kicks | hihat x*8 vel=50..100 | bass line inst=sub-bass
+  deck B: harmony changes inst=warm-pad | melody lead inst=pwm-lead
+  # eight bars of rising noise, from the build's first bar to the drop's; it is loud, so the build's master is down
+  control: macro riser on A over 8 bars
+  mix { master level 0.6 }
+}
+
+section drop 16 bars {
+  deck A: kick kicks | hihat hats | bass line inst=sub-bass
+  deck B: melody lead inst=pwm-lead | harmony changes inst=warm-pad
+  # the lead bounces left and right for the drop's last four bars
+  at bar 12: control: macro ping-pong on B over 4 bars
+}
+
+section breakdown 8 bars {
+  deck A: kick kicks | hihat hats vel=40..60 | bass line inst=sub-bass
+  deck B: harmony changes inst=warm-pad
+  # deck A broken down and the pad in a cathedral, for four bars
+  control: macro breakdown on A over 4 bars
+  control: macro cathedral on B over 4 bars
+}
+
+section outro 8 bars {
+  deck A: kick kicks | hihat hats vel=40..70
+  deck B: harmony changes inst=warm-pad
+  # the record stops for the last two bars
+  at bar 6: control: macro tape_stop on A over 2 bars
+}
+
+arrange intro build drop breakdown outro
+end after outro

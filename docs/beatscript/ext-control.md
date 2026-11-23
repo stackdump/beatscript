@@ -1,9 +1,12 @@
-# The control deck (`control:`) and the design of `macro`
+# The control deck (`control:`) and `macro`
 
-*Roadmap 6671 (the control deck, built) and 6670 item 2 (`macro`, designed here, not built). Code: `crates/djlive/src/parse.rs`
-(`control_deck_body`, `control_head_next`, `control_head_at`), `ast.rs` (`Line::control`), `print.rs`, `expand.rs` (the head
-dropped before lowering, the untimed tempo refused), `highlight.rs`; the grammar `crates/djlive/grammar.ebnf` (`headed`,
-`engine`); tests `crates/djlive/tests/control_deck.rs`. The rule it follows is BEATSCRIPT.md's "Two halves: structure and engine".*
+*Roadmap 6671 (the control deck) and 6670 item 2 (`macro`), both built. Code: `crates/djlive/src/parse.rs`
+(`control_deck_body`, `control_head_next`, `control_head_at`, `macro_call`), `ast.rs` (`Line::control`, `Action::Macro`),
+`print.rs`, `expand.rs` (the head dropped before lowering, the untimed tempo refused), `macros.rs` (the `macro@1` table, the
+call's lead), `compile.rs` (`macro_call`), `nets.rs` (`fire` / `release`), `highlight.rs`; the engine verb
+`crates/djhost/src/fx_view.rs` (`fire`) and the registry's `effects fire`; the grammar `crates/djlive/grammar.ebnf` (`headed`,
+`engine`, `MACRO`); tests `crates/djlive/tests/control_deck.rs`, `crates/djlive/tests/macros.rs`, `crates/djhost/tests/macro_render.rs`.
+The rule it follows is BEATSCRIPT.md's "Two halves: structure and engine".*
 
 A program has two halves, its structure and its engine calls. The control deck is where the engine calls go: just another
 deck, one that only takes engine commands, written beside `deck A:`, `deck B:` and `master:` and sequenced by sections,
@@ -33,7 +36,8 @@ engine      = "crossfader" change
             | "swap" "pairs" [ "with" MOVE ]
             | "move" MOVE "on" deck [ span ]
             | "load" "pair" SPEC [ "group" INT ]
-            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD ) ;
+            | "queue" ( "play" | "pause" | "stop" | "next" | "loop" | "jump" INT | "add" WORD )
+            | MACRO NAME ( "on" deck [ span ] | span "on" deck ) ;   (* MACRO: macro, macro@1 *)
 ```
 
 `engine` is what `action` used to hold for the lines that take no target; it moved out of `action` into a production of its
@@ -59,6 +63,7 @@ The head goes where a target goes: after the time word and its colon, before the
 | `control: mix { A level 0.7 }` | `mix { A level 0.7 }` | `mixer {deck: A, volume: 0.7}`, put back at the section's end |
 | `control: do vocoder set mix=0 -> 1 over 8 bars` | `do vocoder set mix=0 -> 1 over 8 bars` | `vocoder {action: set, mix: v}`, ramped |
 | `every 16 bars: control: freeze phrase bars=2` | `every 16 bars: freeze phrase bars=2` | `freeze {action: phrase, bars: 2}` |
+| `at bar 24: control: macro cathedral on B over 2 bars` | `at bar 24: macro cathedral on B over 2 bars` | `effects {action: fire, target: B, id: cathedral, bars: 2}`, sent at bar 23 beat 3 (below) |
 
 **Lowering is the line with no head.** The parser reads `control:` into `Line::control` (the head's span) and leaves the line
 with no target; `expand.rs` drops the head when it lowers the line, so everything after it (the compiler, the control net,
@@ -89,8 +94,7 @@ of one lowering: the same runtime controls, deck nets, control-net events and te
 | `control: key am`, `control: swing 0.1` | a setting of the program, structure | `key am` (`control: key detect deck=A` is the registry's `key`) |
 | `deck A: control: ...`, `control: deck A: ...` | a line has one head | |
 | `control: at bar 4: ...` | a time word comes before the head | `at bar 4: control: ...` |
-| `control: mvoe echo_out on B` | not an engine call the control deck takes | did you mean `move`? |
-| `control: macro riser ...` | `macro` is designed and not built yet | `aux macro=cathedral deck=A bars=2`, `trick on deck=A kind=riser` |
+| `control: mvoe echo_out on B`, `control: macor riser on A` | not an engine call the control deck takes | did you mean `move`? / `macro`? |
 
 A note deck keeps the rules it had: `deck A: move ...`, `master: swap pairs`, `deck B: crossfader 1` still "take no target",
 and `filter lp 400` with no head still "needs a target".
@@ -123,66 +127,124 @@ and `filter lp 400` with no head still "needs a target".
   (`crates/beatscript-api/tests/cid_pins.rs`, and `tests/control_deck.rs` against the same pins for the example programs djlive compiles
   alone).
 
-## The design of `macro` (not built)
+## `macro`: the DJ macro catalogue
 
-`macro` would fire one entry of the DJ macro catalogue by name, for a length, on a deck: an engine call, so a line of the
-control deck (and, as `move` is, a line with no head).
+`macro` fires one entry of the DJ macro catalogue by name, for a length, on a deck: an engine call, so a line of the control deck
+and, as `move` is, a line with no head.
 
 ```text
 control: macro riser on A over 8 bars
 at bar 24: control: macro cathedral on B over 2 bars
-macro@1 breakdown on A over 4 bars
+macro@1 breakdown over 4 bars on A
 ```
 
-**The catalogue.** `djrust::fx::catalogue::ENTRIES` (djengine re-exports it) is the 39 effects the apps' panels show, each in one
-category and one engine family: 11 tricks (`riser tape_stop spin_back verb_freeze filter delay wash stutter pump half_time
-double_time`), 6 net macros (`cut double-drop beat-repeat tempo-anchor drop breakdown`), 13 master-chain macros (`filter-res
-build-crush phaser-drone octave-up octave-down pitch-bend feel-chill feel-drive feel-ambient feel-euphoric feel-build
-feel-wind-down feel-reset`) and 9 pan / shape / aux macros (`cathedral ping-pong auto-pan mono hard-left hard-right tighten loosen
-pulse`). The catalogue has rules of its own: a transition (`riser tape_stop spin_back verb_freeze cut double-drop`) is momentary
-only, a sweep (`feel-build feel-wind-down feel-reset`) has bars but no latch, the rest run 1 to 4 bars or latch, and a net, pan or
-shape entry needs a net deck. `Engine::engage(deck, id, Engagement)` fires any entry on the deck's next bar with those rules.
+### Grammar
 
-**Versioning.** `macro@1` is a copy of the catalogue's ids as of now (the 39 above, with each one's family and whether it is a
-transition), compiled into djlive and never edited: a stored program's `macro riser` means what it meant when it was stored.
-A later catalogue is `macro@2`, a table of its own beside the first. A bare `macro` is `macro@1`, for good, and the canonical text
-writes the version only when it is not 1 (`macro riser`, `macro@2 riser`): every program written against `@1` keeps its text and
-CID when `@2` arrives, as `seed(techno, 42)` is the generator of seeds v1 without saying so. An id that is not in the version's
-table is an error with the nearest names (`macro rizer`: did you mean `riser`?); an id of `@2` written as `macro` says which version
-has it.
+```ebnf
+engine      = ... | MACRO NAME ( "on" deck [ span ] | span "on" deck ) ;
+MACRO       = macro | macro@1 | ...      (* one word, the version glued with `@`: recognize.rs *)
+```
 
-**Syntax.** `macro ID [on DECK] [over N bars]`, both words in either order, printed in the order `move` has (`move bass_swap on
-B over 8 bars`): one order for the two booth calls. `on DECK` is required in a program (the registry's default, the focused
-deck, is the person's, not the text's), and `over N bars` takes whole bars as a move does; with none, the entry's own length.
-`for N bars` is not needed (the length is the call's), and a transition with `over` is refused unless the engine learns to hold
-one (below).
+`on DECK` and `over N bars` come in either order, each once, and print in the order `move` has (`macro riser on A over 8 bars`):
+one order for the two booth calls. The canonical text writes the version only when it is not 1: `macro@1 riser over 8 bars on A`
+is `macro riser on A over 8 bars`, one text and one CID.
 
-**What it would lower to, and what is missing in the engine.** No registry verb fires a catalogue entry by id for a length
-today:
+### The catalogue, and `macro@1`
 
-- `effects tap id=ID target=A` engages any entry, but for the Effects window's own length (`effects length`, state of the
-  window), and a tap toggles (off when it is on): what it does depends on what was clicked before, not on the line.
-- `aux macro=ID deck=A bars=N` (`Engine::fire_macro_traced`) fires a net, master or aux macro for N bars, but no trick; its registry
-  schema lists only the 11 aux ids, so `do aux macro=breakdown` is refused by the checker though the handler takes it; and its
-  `riser` is the master-chain riser (`MasterMacro::Riser`, merged out of the catalogue) where the catalogue's `riser` is the
-  noise-riser trick: one id, two sounds.
-- `trick on kind=K` fires the tricks, with `for N bars` to put one back.
+`djrust::fx::catalogue::ENTRIES` (djengine re-exports it) is the 39 effects the apps' Effects window shows, each in one category
+and one engine family: 11 tricks (`riser tape_stop spin_back verb_freeze filter delay wash stutter pump half_time double_time`), 6
+net macros (`cut double-drop beat-repeat tempo-anchor drop breakdown`), 13 master-chain macros (`filter-res build-crush
+phaser-drone octave-up octave-down pitch-bend feel-chill feel-drive feel-ambient feel-euphoric feel-build feel-wind-down
+feel-reset`) and 9 pan / shape / aux macros (`cathedral ping-pong auto-pan mono hard-left hard-right tighten loosen pulse`).
 
-A lowering by family in djlive (tricks to `trick on` / `off`, the rest to `aux macro=`) would copy the catalogue's rules into the
-language and disagree with the panel on `riser`. The engine needs one verb instead: `effects fire id=ID target=DECK bars=N` (or
-`latch`), which is `Engine::engage(deck, id, Engagement::Bars(n))` with its own refusals, so `macro riser on A over 8 bars`
-lowers to `effects {action: fire, target: A, id: riser, bars: 8}` and the booth, the panel and the program fire the same thing.
-Two engine questions come with it: what a transition does with a length (Matt's own example, `macro riser over 8 bars on A`, is
-a transition: the noise riser sweeps over its `bars`, 4 by default, and `engage` passes it none), and whether a length past the
-panel's 4 bars is allowed (`Engagement::Bars` takes any whole number; the panel offers 1 to 4). The browser engine plays none of
-the catalogue: on beatscript.app a `macro` line would check and be listed as "not played here", as the sugar nouns are.
+`macro@1` (`djlive::macros::V1`) is a copy of the catalogue's ids as of the engine this repo pins (djrust `7420204`), each with its
+category, its family, whether it is a transition, whether it needs a net deck, and its length, compiled into djlive and never
+edited: a stored program's `macro riser` means what it meant when it was stored. `tests/macros.rs` pins the table's CID and holds
+it to the engine's catalogue entry by entry, so moving the pin to an engine whose catalogue changed fails until the new catalogue is
+`macro@2`, a table of its own beside the first (`macros::VERSIONS`). A bare `macro` is `macro@1` for good, as `seed(techno, 42)` is
+seeds v1 without saying so. The `macros` MCP tool lists a version's table.
 
-Until then, the catalogue is reachable through the registry: `control: aux macro=cathedral deck=A bars=2` (the 11 aux ids),
-`control: trick on deck=A kind=riser bars=8`, `control: do deck master_macro deck=A id=build-crush bars=4`.
+| length | entries | `over N bars` | with no `over` | lowers to |
+|---|---|---|---|---|
+| bars | the 33 that are not transitions | runs N whole bars, 1 to 64 | 1 bar (the Effects window's own length); 2 for a sweep (`feel-build`, `feel-wind-down`, `feel-reset`) | `effects {action: fire, target, id, bars: N}` |
+| sweep | `riser` | the noise rises over N bars | its own 4 | `effects {action: fire, target, id: riser, bars: N}` |
+| held | `tape_stop`, `spin_back`, `verb_freeze` | held N bars, then let go | 1 bar | `effects {action: fire, target, id}`, then `effects {action: release, ...}` after N bars |
+| own | `cut`, `double-drop` | refused | its own length | `effects {action: fire, target, id}` |
+
+### What it lowers to: `effects fire`
+
+`macro riser on A over 8 bars` is `effects {action: fire, target: A, id: riser, bars: 8}`: the registry verb `effects fire` (docs/CONTROL.md),
+which is `djhost::fx_view::fire`, `Engine::engage(deck, id, Engagement::Bars(n))` with refusals of its own (an unknown id with the
+nearest, `bars` outside 1 to 64, a length on a one-shot or none on the rest, a latch where the category has none, and the engine's
+own: a net, pan or shape entry on a deck that plays no net). So the booth, the Effects window and the program fire the same thing.
+The verb also takes `latch=true` (on until released), for the booth; a program has no latch (below).
+
+**When it starts.** The engine starts every engagement on the deck's *next* bar line (at least a few milliseconds ahead), so a call
+made on bar 24's line would land on bar 25. A macro's call is therefore made a beat ahead of a bar-line time: `at bar 24:` is sent at
+bar 23 beat 3, `every 16 bars:` at 15 3/4, 31 3/4 ..., a section's first bar a beat before the section, and the macro starts on the
+bar its line names. A time between bar lines (`at bar 3 beat 2`) is kept, and the macro starts on the next bar line, as a pad does.
+Two places have no beat before them, and a macro there starts a bar later: the song's first bar (bar 0, and a line with no time
+word in a program with no sections, offline), and `on next phrase`, which waits for its bar. The control's key is the line, so
+`btw get` and the runtime's words name the line; its time is the call's.
+
+**Offline.** The control net (`djlive::nets`) carries a macro as `fire A riser bars=8` (and a held one's `release A tape_stop`) on
+the tick its call is made; the desktop's render (`djhost::beatscript_render::render`) and beatscript's stream (`render`, `listen`) apply it to
+the offline engine through `fx_view::fire`. The same text renders the same samples every time, the same as the program without it
+up to the bar its line names (`tests/macro_render.rs`, beatscript's `render_inproc.rs`). `listen`'s summary gains `macros` when a program
+has one: each call's line and text, `at_bar` (the bar the engine starts it on, counted as the time words count), and `played`,
+with the engine's reason in `refused` (and in `warnings`) when it did not play. `btw test` renders the arrangement only and lists a
+macro line among what it leaves out.
+
+**On beatscript.app.** The browser engine plays none of the catalogue: a macro line checks, and the page lists it as "not played
+here: macro riser" (`engine-calls.js`), as it does the sugar nouns. Stream mode plays no control lines.
+
+### What it refuses
+
+| line | error | help |
+|---|---|---|
+| `macro rizer on A` | `rizer` is not in the macro catalogue of macro@1 | did you mean `riser`? (an id only a later version has: `` `vinyl-brake` is in macro@2 ``) |
+| `macro@7 riser on A` | this BeatScript has macro@1, not `macro@7` | `macro riser ...` |
+| `macro riser over 8 bars` | `macro riser` needs the deck it fires on | `macro riser on A` (the focused deck is the person's, not the text's) |
+| `macro breakdown on A over 2 beats` | a macro takes whole bars | `... over 4 bars` |
+| `macro breakdown on A over 65 bars` | a macro runs 1 to 64 bars | `... over 64 bars` |
+| `macro cut on A over 2 bars` | `cut` is a one-shot: it runs its own length, so it takes no `over` | `macro cut on A` |
+| `at bar 4 for 2 bars: macro breakdown on A` | a macro's length is its `over`, so it takes no `for` | `macro ID on A over 4 bars` |
+| `deck A: macro riser on A` | `macro` takes no target: it names its deck itself | |
+| `macro on A`, `macro riser on A on B` | the id is missing; the deck (or the length) twice | `macro riser on A over 8 bars` |
+
+### Decisions
+
+- **A transition with a length.** The design left open what a transition does with `over`. Decided by what each one's sound has:
+  the riser's length *is* its sweep, so `macro riser on A over 8 bars` rises over 8 bars (the trick fired with `bars: 8` on the
+  deck's next bar line; `engage` takes no length for a one-shot, so the verb fires the trick itself); a held one-shot (tape stop,
+  spin back, reverb freeze) runs while its pad is held, so `over N bars` holds it N bars and lets it go (`effects release`), and
+  with none it is held a bar, never left on (a program has no hand to lift); a song one-shot (cut, double drop) runs its own length
+  and refuses `over`.
+- **Past the panel's 4 bars.** 1 to 64 whole bars, the engine's own bound on `Engagement::Bars` (`engage` refuses 0 and above
+  64). The window's 1 to 4 is a choice of its buttons, not of the engine; a build of 8 or 16 bars is ordinary in a program.
+- **With no `over`**, the Effects window's own length: 1 bar, 2 for a sweep, the riser's 4, a held one held 1 bar, a song one-shot
+  its own. The length is in the frozen table, so a later window or engine default does not move `macro@1`.
+- **No latch in a program.** Nothing in a program lets a latch go (no pad lifts), so `macro` has a length, always; the verb's
+  `latch` is the booth's.
+- **The call goes a beat ahead** of a bar-line time so the macro starts on the bar its line names, live and offline alike (the
+  runtime fires a time between bar lines when the position crosses it). The alternative, the engine's next bar after the line,
+  would start every section's macro a bar late.
+- **The verb keeps its name**, `effects fire`: the noun is the Effects window's, and the DJ language (run 1f12e380) builds on it as
+  the macro surface.
+- **`macro` is no reserved word**, like `control` and `drive`: it is the head only where a line's verb goes, before a word. A let, a
+  def or a section may be called `macro`, and a scalar `let riser = 4` is not put in place of the id after it.
+- **The table is data in djlive, not read from the engine at check time**, so the language stays pure and the meaning of a stored
+  program cannot move with the engine; the agreement test is what ties them.
 
 ## Not done
 
-- `macro` (above).
+- The browser engine does not play a macro line (beatscript.app lists it as not played here). djrust's wasm facade has
+  `Dj.engage(deck, id, mode)`; a worklet op for it is the second proposal below.
+- In the booth, djapp (djrust-vevr-se) has the registry's `effects fire` to answer: its Effects handler routes it to
+  `djhost::fx_view::fire` once its copy of djhost has this commit.
+- A riser given a length is fired as the trick itself, so the Effects window's pad does not light for it (`engage` records only
+  what it fires); a length for a one-shot in `Engagement` (djrust) would let it.
+- A macro at the song's first bar, or after `on next phrase`, starts a bar later (no beat before it to make the call in).
 - The editors colour `control` as a keyword everywhere in VS Code and IntelliJ (one word list); djlive's highlighter and the
   page colour it as a head only before its colon.
 - `btw fmt` offers no fix that moves an untargeted engine call onto the control deck (see the first proposal).
@@ -199,6 +261,11 @@ in practice, make it the canonical form of a new format version (`#! btw 2`), th
 `#! btw 1`. Never silently. (The rename to BeatScript has since made the new format version, for its own reason: BeatScript 2,
 `#! beatscript 2`, docs/BEATSCRIPT.md "Versions". It did not change the canonical form of control lines; a control-deck form
 would now be a later version.)
+
+**Should beatscript.app play macro lines?** djrust's wasm facade already has `Dj.engage(deck, id, mode)` (`momentary`, `latch`
+or a number of bars), so a worklet op `{type: 'engage', deck, id, mode}` would play the catalogue in the browser: the bars entries
+as they are, the riser through the `trick` live op with its `bars`, a held one-shot with `Dj.release` after its bars. It is a few
+lines, but it cannot be heard from here (no browser in the build loop), so it is left for a pass with the page open.
 
 **Should arrange be able to mutate the control deck per pass?** `arrange { }`'s mutations act on let patterns (`~ acid rot 2`),
 and the control deck holds no pattern, so `rot`, `thin` or `up` mean nothing to it. Sections already sequence it (an engine line
