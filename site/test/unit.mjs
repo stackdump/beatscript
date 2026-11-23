@@ -1982,6 +1982,13 @@ test('engine-calls: the FX unit\'s drive is the engine\'s own `fx` action on a d
   for (const p of [null, undefined, 3, 'a', {}, { deck: 3 }, { action: 'set', param: 'drive' }]) mapCall('fx', p);
 });
 
+test('engine-calls: a macro line (effects fire / release) is not played here, and is named as the line names it', () => {
+  assert.deepEqual(mapCall('effects', { action: 'fire', target: 'A', id: 'riser', bars: 8 }), { ops: [], ignored: 'macro riser' });
+  assert.deepEqual(mapCall('effects', { action: 'release', target: 'A', id: 'tape_stop' }), { ops: [], ignored: 'macro tape_stop' });
+  assert.deepEqual(mapCall('effects', { action: 'tap', id: 'riser' }), { ops: [], ignored: 'effects' });
+  for (const p of [null, undefined, 3, {}, { action: 'fire' }, { action: 'fire', id: 3 }]) assert.equal(mapCall('effects', p).ops.length, 0);
+});
+
 // ---------------------------------------------------------------------------------------------------------------
 // the programs a program draws on (closure.js): fetched once by CID, kept, told to the module, never fetched by it
 // ---------------------------------------------------------------------------------------------------------------

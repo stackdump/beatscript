@@ -33,6 +33,8 @@
  *   vocal (a `sing` line that is timed or performed, `do vocal ...`), vocoder status / list / select / cycle_* / preset_*,
  *   moves (filter_exit, echo_out, loop_roll, bass_swap, phrase_sync), loopsets, queue, autodj, td3,
  *   wheel, `deck load|sync`, mixer pfl / aux / headphone_*, and any other noun
+ *   effects fire / release (a `macro` line, docs/beatscript/ext-control.md): noted by its id, `macro riser`, as the line says it; the
+ *   offline render and `listen` play it, this engine plays none of the DJ catalogue yet
  * The desktop's offline render ignores control lines altogether; the stream the server renders does the same.
  */
 
@@ -190,6 +192,12 @@ export function mapCall(noun, params) {
         else if (action === 'add') ops.push(live('vocoder', { instance: rest.instance ?? 1, on: rest.on ?? true }));
         else if (action === 'remove') ops.push(live('vocoder', { instance: rest.instance ?? 1, remove: true }));
         else skipped.push(`vocoder ${action}`);
+        break;
+    }
+    case 'effects': {
+        // a `macro` line: named as the line names it (`macro riser`), so the page's "not played here" reads as the program
+        if ((p.action === 'fire' || p.action === 'release') && typeof p.id === 'string' && p.id) skipped.push(`macro ${p.id}`);
+        else skipped.push('effects');
         break;
     }
     case 'moves': {
