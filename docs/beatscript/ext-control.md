@@ -1,6 +1,7 @@
-# The control deck (`control:`) and `macro`
+# The control deck (`control:`), its switch per pass, and `macro`
 
-*Roadmap 6671 (the control deck) and 6670 item 2 (`macro`), both built. Code: `crates/djlive/src/parse.rs`
+*Roadmap 6671 (the control deck), the control deck per pass (an `arrange { }` switch: "Per pass: the switch" below) and
+6670 item 2 (`macro`), all built. Code: `crates/djlive/src/parse.rs`
 (`control_deck_body`, `control_head_next`, `control_head_at`, `macro_call`), `ast.rs` (`Line::control`, `Action::Macro`),
 `print.rs`, `expand.rs` (the head dropped before lowering, the untimed tempo refused), `macros.rs` (the `macro@1` table, the
 call's lead), `compile.rs` (`macro_call`), `nets.rs` (`fire` / `release`), `highlight.rs`; the engine verb
@@ -126,6 +127,119 @@ and `filter lp 400` with no head still "needs a target".
 - **No CID moves.** Every program written before the control deck has the canonical text and CID it had
   (`crates/beatscript-api/tests/cid_pins.rs`, and `tests/control_deck.rs` against the same pins for the example programs djlive compiles
   alone).
+
+## Per pass: the switch (built)
+
+*The leftovers batch's item "ctlpass". Code: `crates/djlive/src/mutate.rs` (`Switch`, `Switches`, `control_calls`, `switch_diags`;
+a section's copies keyed by the generations it reads and the calls it holds back), `ast.rs` (`SectionBlock::quiet`,
+`Body::call_name`), `expand.rs` (`Scope::quiet`, `Lowered::quiet`), `compile.rs` (`check_quiet`), beatscript-api `report.rs`
+(`arrange.plays[].control_off`), beatscript `listen.rs` (`sections[].control_off`); the grammar's `switch`; tests
+`crates/djlive/tests/control_per_pass.rs` and beatscript listen's `a_switch_of_the_control_deck_is_heard_and_said`; the example
+`examples/beatscript/control-per-pass.beatscript`.*
+
+An `arrange { }` rewrites `let` patterns between the sections it plays (docs/ARRANGE.md); the control deck holds no pattern, so
+`rot` or `up` mean nothing to it. What the control deck can do pass by pass is fire or not: a line of the block switches it.
+
+```text
+arrange {
+  groove
+  @3 control freeze off        # pass 3: this lift does not freeze
+  lift
+  ~2 control off               # passes 2 and 4: the control deck goes quiet from here on ...
+  ~2 control duck on           # ... all but the duck, which keeps pumping
+  groove lift
+  ~ control on                 # and every line is back for the next pass
+} loop 4 then outro end
+```
+
+### Grammar
+
+```ebnf
+mutation    = ( "~" | "@" ) [ INT ] ( switch | mut_target mut_op { "|" mut_op } { "," mut_target mut_op { "|" mut_op } } ) ;
+switch      = "control" [ NAME ] ( "on" | "off" ) ;
+```
+
+The marks mean what they mean for a pattern, and so does the count:
+
+| line | which control-deck lines fire |
+|---|---|
+| `~ control off` | none, in every section after it (pass on pass, until another switch) |
+| `~ control on` | all of them again (a call switched alone since is forgotten) |
+| `~ control freeze off` | all but the `freeze` lines; `~ control freeze on` brings them back, also after a `~ control off` |
+| `@ control off` | none, in the next section played only (later in this pass, the next pass's first, or the coda); then as before |
+| `@ control move on` | the `move` lines too, in the next section only, over a `~ control off` |
+| `~3 control off`, `@4 control on` | the same, on passes 3, 6, 9 ... (and 4, 8 ...) only, as `~3 acid rev` |
+
+`NAME` is the call the lines make: the first word of the line as it writes it (`move`, `swap`, `load`, `queue`, `crossfader`,
+`tempo`, `duck`, `mix`), or the registry noun of a `do` and of its sugar (`do freeze phrase bars=2` and `freeze phrase bars=2` are
+both `freeze`).
+
+### What it lowers to
+
+**A copy of the section without the lines.** A section that a play reads with lines held back is lowered as a copy of it, as a
+section read with another generation is (`drop@2`): the same text, its held-back lines in no segment. So no runtime control, no
+event of the control net and no tempo event comes of them in that play, and the playhead does not light them; the other plays
+of the section fire them. Everything downstream (the compiler, the runtime, the render, the phone) plays plain sections, as it
+does for the patterns.
+
+- **What a section holds** is its own `control:` lines, the ones in its repeats and the ones of the defs it calls (a def's
+  `control:` lines are the section's where it is called).
+- **Each copy is one reading**: the generations a play reads and the calls it holds back. A section with no line of a call the
+  switches hold back is not copied (`calm` above plays as itself whatever the switches say).
+- **The held-back lines are checked.** They are expanded and timed like every line and compiled for what the compiler says of
+  them, then kept nowhere: an error in a line that no pass fires is an error of the program, and a line one play fires and another
+  holds back says its words once. (A `duck` or a `mix` is checked as far as the parser and the expansion go: "Not done".)
+- **What says so.** `check` (and `eval`, and the MCP `check` tool) report it in `arrange.plays[].control_off`: the calls whose
+  lines a play holds back, present only when there are some; a counted switch is in `arrange.fires` as a counted mutation is (by
+  its line among the block's mutation lines). `listen` (beatscript and the MCP tool) puts the same list on each section of its answer
+  as `sections[].control_off`.
+- **What it sounds like.** The offline render plays the control lines it has ops for (the mixer, a `mix`, a `duck`, the tempo
+  map), so a switch is heard there: a section whose `control: mix { B level 0 }` takes deck B down is silent on B where it fires
+  and heard where `~ control off` holds it back (listen's `silent` says so section by section).
+- **Deterministic.** A switch rolls no dice: the same text is the same copies, controls and render. The switch is in the
+  program's text, so it is in the CID (`~ control off` and `~ control on` are two programs).
+
+### What it refuses
+
+| line | says | help |
+|---|---|---|
+| `~ control crossfadr off` | error: the control deck has no `crossfadr` line | did you mean `crossfader`? |
+| `~ acid rot 2, control off`, `~ control off, acid rot 2` | error: a switch of the control deck is a line of its own | `~ acid rot 2` and `~ control off`, a line each |
+| `~ control`, `@ control freeze` | error: a switch of the control deck says `on` or `off` | `~ control off`, `~ control freeze on` |
+| `~ control off` and no section has a `control:` line | warning: this switch does nothing | the lines outside every section play the whole song (put them in the sections that want them); an engine call with no head is not on the control deck (`control: move echo_out on B`) |
+| `~ control freeze off` and every `freeze` line is outside the sections | warning: this switch does nothing | the same |
+| `~3 control off` in a block with no third pass | warning at the count: it never fires | as for `~3 acid rev` |
+| `@ control off` at the end of the block, no section after it | warning: the one-shot has no next section | |
+
+### Decisions
+
+- **The control deck only.** A switch reaches the lines written with `control:`. An engine call with no head (`move echo_out on
+  B`) makes the same calls, but it is not on the deck the switch names: this is the one place where the head means more than its
+  spelling, and the switch is a reason to write engine calls on the control deck. A switch that finds only lines with no head
+  says so, with the line as it would be on the deck.
+- **A section's lines only.** A mutation rewrites the patterns a section reads, and a line outside every section reads the
+  pattern as written; in the same way a switch reaches a section's control deck, and a `control:` line outside every section
+  plays the whole song and keeps firing. A switch that reaches nothing is a warning, not an error: a block is edited between
+  states, as a glob that matches nothing is a warning.
+- **A call, not a line.** Asked: can a switch target one control line, by its label or its key? Decided: the whole deck, or the
+  lines of one call. A line has no label, and its key is its whole canonical text (`at bar 12: swap pairs with filter_exit`):
+  naming it in the arrange would write the line twice, and any edit of it (a bar number, a value) would leave the switch naming
+  nothing. Labels on lines would be a naming scheme for this one use. A call is the name a line already has; a section usually
+  holds one line of a call, so the call is the line, and two `move` lines in one section switch together. A noun is matched as
+  the line writes it (a `do` through an alias of the noun is its own name).
+- **A line of its own.** The switch has no operator chain and no glob; a line that is either a switch or a mutation prints and
+  reads plainly, so the two are never joined by a comma.
+- **The marks mean what they mean.** `~` from here on, `@` the next section only on top of what the `~` lines say at that point,
+  as a one-shot pattern is on top of its current generation; a pending one-shot stands over a `~` written after it before the
+  next section, as it does for a pattern. Counts are the counted mutations' (`~2`, passes 2, 4 ...), on the same clock.
+- **Lowering by copies, not a new kind of line.** The block already lowers each reading of a section to a copy; the calls held
+  back are one more part of the reading. Nothing past expand learns anything new, and a copy is a section any tool can read.
+- **The held-back lines are checked.** A false guard removes its line unchecked because the line may name what does not exist in
+  that repetition; a switched line exists in the program whatever the passes do, so what is wrong with it is said.
+- **`control` stays a free name.** `~ control rot 2` is a mutation of a `let control = ...`; `on` and `off` are no operators and
+  a call after `control` is read only when it is no operator, so every block that read before reads the same.
+- **No CID moves.** A block without a switch lowers as it did (no play holds anything back, so no copy is made for it, and the
+  report has no new field); every pinned CID is as it was (`crates/beatscript-api/tests/cid_pins.rs`, the example pins).
 
 ## `macro`: the DJ macro catalogue
 
@@ -260,6 +374,12 @@ riser" (`engine-calls.js`), as it does the sugar nouns. Stream mode plays no con
 - A riser given a length is fired as the trick itself, so the Effects window's pad does not light for it (`engage` records only
   what it fires); a length for a one-shot in `Engagement` (djrust) would let it.
 - A macro at the song's first bar, or after `on next phrase`, starts a bar later (no beat before it to make the call in).
+- Per pass, a control's values (proposal below); a switch fires a line or holds it back.
+- A `duck` or a `mix` that a switch holds back in every play is parsed and expanded, not compiled: what only the compiler says of
+  one (the mix pass reads the segments, where a held-back line is not) is said where a play fires it. The other calls are compiled
+  in full.
+- The editors and djlive's highlighter colour `control` in a switch as a name, and the language server offers neither `control`
+  nor a call's name after `~`; the editor's generation chip does not say which calls a play holds back (`check` has it).
 - The editors colour `control` as a keyword everywhere in VS Code and IntelliJ (one word list); djlive's highlighter and the
   page colour it as a head only before its colon.
 - `btw fmt` offers no fix that moves an untargeted engine call onto the control deck (see the first proposal).
@@ -282,8 +402,31 @@ or a number of bars), so a worklet op `{type: 'engage', deck, id, mode}` would p
 as they are, the riser through the `trick` live op with its `bars`, a held one-shot with `Dj.release` after its bars. It is a few
 lines, but it cannot be heard from here (no browser in the build loop), so it is left for a pass with the page open.
 
-**Should arrange be able to mutate the control deck per pass?** `arrange { }`'s mutations act on let patterns (`~ acid rot 2`),
-and the control deck holds no pattern, so `rot`, `thin` or `up` mean nothing to it. Sections already sequence it (an engine line
-lives in the section that wants it). The proposal: not now. If a pass-by-pass change is wanted, the narrow form is a switch, `@
-control off` (the control deck's lines do not fire in the next section) and `~ control off` / `~ control on` (from here on), with
-the counted forms (`~3 control off`); no mutation of a control's values.
+**Should arrange be able to mutate the control deck per pass?** Built, as the narrow form this proposal named: the switch
+("Per pass: the switch", above). What it left open, a control's values changing pass by pass, is the next proposal.
+
+**Ramps that change per pass (designed, not built).** The switch fires a line or holds it back; it does not change what the
+line says. A crossfade over 4 bars on the first pass and over 8 on the second, or a filter that opens a little further each
+pass, needs a value per pass. Three ways to it:
+
+- *A pass number in a section's lines* (`control: crossfader 0 -> ($pass / 4) over 8 bars`, `master: filter lp 400 -> (2k *
+  $pass) over 4 bars`). The block already reads a section once per distinct reading; a section that names `$pass` would be read
+  once per pass, the number put in place as `$i` is in a repeat, and lowered as a copy (`lift@3`) like any other reading. It is
+  the general form (a part could read `$pass` too, `kick e($pass + 2, 8)`), it stays total and deterministic (the passes are
+  counted), and the canonical text is the text as written. What it costs: a section's body is read into statements when the
+  program is parsed, and arithmetic is worked out then; `$i` exists only in the bodies of repeats and defs because those stay
+  tokens until they are expanded. A section that names `$pass` would have to stay tokens too (or be read again per pass), which
+  touches the parser and every place that reads a section's statements before the block is lowered (the pattern readers, the
+  section keys, the doc comments, the linked-data export), and `$pass` outside an `arrange { }` would need a meaning (pass 1, or
+  an error). That is a change to the language's reading order, so it is a decision for Matt, not a leftover.
+- *A mutation of a control's values* (`~ control crossfader scale 0.5`): operators over a control line's numbers. Each call's
+  values have their own range and unit (hertz, a share, bars, a registry param's type), so the operator set would be per call,
+  a second closed set beside the patterns' with its own checks; the first proposal said "no mutation of a control's values" for
+  that reason, and it still holds.
+- *What works today:* two sections that differ in the line (`lift` with `crossfader 0 -> 1 over 4 bars`, `lift_long` with `over 8
+  bars`) and the block naming the one each pass wants (`~2` cannot pick a section, so the block lists both and the switch holds
+  one's line back: `@2 control crossfader off` before the one that should not ramp). Clumsy past two values.
+
+The recommendation, if per-pass values are wanted: the pass number, because it is one rule that reaches parts and controls
+alike and adds no operator set; built behind a `#! btw 1` reading that keeps every stored text and CID (no program names
+`$pass` today, and `$` is refused outside a body, so nothing that reads now reads otherwise).

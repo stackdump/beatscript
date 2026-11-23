@@ -122,6 +122,9 @@ pub struct Lowered {
     pub placements: Vec<crate::linked::Placed>,
     /// The `launch` statements, checked (launch.rs).
     pub launches: Vec<crate::launch::Launch>,
+    /// The control-deck lines a switch of an `arrange { }` holds back in the copy of a section a play reads (`~ control off`,
+    /// mutate.rs): expanded and timed like every line, so the compiler checks them, and in no segment, so nothing fires them.
+    pub quiet: Vec<FlatLine>,
 }
 
 pub(crate) struct DefInfo {
@@ -157,6 +160,8 @@ pub(crate) struct Lower<'a> {
     pub(crate) evolves: Vec<(usize, EvolveBlock)>,
     /// Typed ports on defs and the wires between them (ports.rs).
     pub(crate) ports: crate::ports::PortState,
+    /// The control-deck lines a switch holds back ([`Lowered::quiet`]).
+    pub(crate) quiet: Vec<FlatLine>,
 }
 
 #[derive(Clone)]
@@ -171,6 +176,9 @@ pub(crate) struct Scope {
     pub(crate) via: Vec<Span>,
     /// A time word of a call, or a repeat, put this code where it is: the lines in it are timed whatever they say themselves.
     pub(crate) timed: bool,
+    /// The calls whose control-deck lines this code holds back: a section's copy an `arrange { }` switch made
+    /// ([`SectionBlock::quiet`]), and the repeats and calls in it.
+    pub(crate) quiet: Vec<String>,
 }
 
 /// Whether a line says no time: none written, or the `now` and `on next bar` that mean the same.
@@ -194,6 +202,7 @@ pub fn lower(parsed: &Parsed, src: &str, diags: &mut Vec<Diagnostic>) -> Lowered
         over_budget: false,
         evolves: Vec::new(),
         ports: Default::default(),
+        quiet: Vec::new(),
     };
     let out = lw.run(parsed);
     diags.extend(lw.diags);
@@ -524,7 +533,7 @@ impl<'a> Lower<'a> {
                 SegmentLines { name: n.clone(), start: *start, bars: *bars, lines: Vec::new(), header: sections.get(n).map(|s| s.span), key: None, chain: false, header_more: Vec::new(), phase: 0 }
             });
         }
-        let top = Scope { base: None, depth: 0, path: String::new(), segment: None, via: Vec::new(), timed: false };
+        let top = Scope { base: None, depth: 0, path: String::new(), segment: None, via: Vec::new(), timed: false, quiet: Vec::new() };
         let mut globals = Vec::new();
         for st in &parsed.program.stmts {
             match &st.kind {
@@ -541,6 +550,7 @@ impl<'a> Lower<'a> {
         self.layer_lines(&plan, &sections, &mut out);
         out.globals = globals;
         out.evolves = std::mem::take(&mut self.evolves);
+        out.quiet = std::mem::take(&mut self.quiet);
         self.port_warnings();
         out
     }
@@ -856,7 +866,13 @@ impl<'a> Lower<'a> {
             line.body = Body::Parts(self.put_parts(ps));
         }
         let untimed = !sc.timed && says_no_time(l) && l.hold.is_none();
-        out.push(FlatLine { span, line, timing, hold: l.hold.map(|(d, _)| d), path: sc.path.clone(), via: sc.via.clone(), phase: None, untimed });
+        let fl = FlatLine { span, line, timing, hold: l.hold.map(|(d, _)| d), path: sc.path.clone(), via: sc.via.clone(), phase: None, untimed };
+        // a control-deck line an `arrange { }` switch holds back in this play (`~ control off`): checked, never fired
+        if l.control.is_some() && l.body.call_name().is_some_and(|c| sc.quiet.iter().any(|q| q == c)) {
+            self.quiet.push(fl);
+            return;
+        }
+        out.push(fl);
     }
 
     pub(crate) fn place(&mut self, name: &Word) -> Option<(u32, u32)> {
@@ -1061,7 +1077,7 @@ impl<'a> Lower<'a> {
         }
         let mut via = vec![span];
         via.extend(sc.via.iter().copied());
-        let sub = Scope { base, depth: sc.depth + 1, path: format!("{}{}: ", sc.path, call_text.trim_end_matches(':')), segment: sc.segment, via, timed: sc.timed || !says_no_time(l) };
+        let sub = Scope { base, depth: sc.depth + 1, path: format!("{}{}: ", sc.path, call_text.trim_end_matches(':')), segment: sc.segment, via, timed: sc.timed || !says_no_time(l), quiet: sc.quiet.clone() };
         for st in &stmts {
             // the lines of a call that failed to read are not run
             self.stmt(st, &sub, out, segs);
@@ -1115,7 +1131,7 @@ impl<'a> Lower<'a> {
             };
             let mut via = vec![span];
             via.extend(sc.via.iter().copied());
-            let sub = Scope { base, depth: sc.depth + 1, path: format!("{}[repeat {}/{}] ", sc.path, i + 1, r.n), segment: sc.segment, via, timed: true };
+            let sub = Scope { base, depth: sc.depth + 1, path: format!("{}[repeat {}/{}] ", sc.path, i + 1, r.n), segment: sc.segment, via, timed: true, quiet: sc.quiet.clone() };
             for st in &stmts {
                 self.stmt(st, &sub, out, segs);
             }

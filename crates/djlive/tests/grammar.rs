@@ -290,14 +290,42 @@ fn a_counted_mutation_is_in_the_grammar_and_only_where_the_grammar_puts_it() {
         assert!(recognize::recognize(&g, &src).is_err(), "`{line}` is not a sentence");
         assert!(!djlive::parse::parse(&src).ok(), "`{line}` does not parse");
     }
+    // (a mutation is a rare sentence: a block of the program's two lines, a gap of it; since the control deck's switch shares the
+    // mark, two depths of 3000 walks each are what it takes to see a few)
     let mut w = Writer::new(&g);
-    w.max_depth = 12;
-    let counted = (0..1500u64)
-        .map(|seed| w.sentence("program", &mut Rng::new(seed * 31 + 12)))
-        .filter(|src| src.lines().any(|l| matches!(l.trim_start().strip_prefix(['~', '@']), Some(r) if r.trim_start().starts_with(|c: char| c.is_ascii_digit()))))
-        .inspect(|src| assert!(djlive::parse::parse(src).diagnostics.iter().all(|d| !d.is_error() || SEMANTIC.iter().any(|m| d.message.starts_with(m))), "{src}"))
-        .count();
+    let mut counted = 0;
+    for depth in [12usize, 16] {
+        w.max_depth = depth;
+        counted += (0..3000u64)
+            .map(|seed| w.sentence("program", &mut Rng::new(seed * 31 + depth as u64)))
+            .filter(|src| src.lines().any(|l| matches!(l.trim_start().strip_prefix(['~', '@']), Some(r) if r.trim_start().starts_with(|c: char| c.is_ascii_digit()))))
+            .inspect(|src| assert!(djlive::parse::parse(src).diagnostics.iter().all(|d| !d.is_error() || SEMANTIC.iter().any(|m| d.message.starts_with(m))), "{src}"))
+            .count();
+    }
     assert!(counted > 0, "the sentences of the grammar never write a counted mutation");
+}
+
+/// The control deck's switch (`switch = "control" [ NAME ] ( "on" | "off" )`, docs/beatscript/ext-control.md "Per pass: the switch"):
+/// a sentence after the mark and its count, and the parser reads each. What the grammar says wider than the language is said out
+/// loud: `control off` is also a `mut_target mut_op` to the grammar (`control` is a NAME), so a switch beside a pattern on one
+/// line is a sentence of it, and the parser wants a switch on a line of its own.
+#[test]
+fn the_switch_is_a_sentence_of_the_grammar_and_the_parser_reads_it() {
+    let g = grammar::grammar();
+    let prog = |line: &str| format!("let a = x ~ x ~\nsection s 1 bars {{\n  deck A: kick a\n  control: crossfader 0.5\n}}\narrange {{\n  s\n  {line}\n  s\n}} loop 4 then end\n");
+    for line in ["~ control off", "~ control on", "@ control crossfader off", "~3 control off", "@ 2 control crossfader on"] {
+        let src = prog(line);
+        assert!(recognize::recognize(&g, &src).is_ok(), "`{line}` is a sentence");
+        assert!(djlive::parse::parse(&src).ok(), "`{line}` parses");
+    }
+    for line in ["~ control off, a rev", "~ a rev, control off"] {
+        let src = prog(line);
+        assert!(recognize::recognize(&g, &src).is_ok(), "`{line}` is a mutation of two targets to the grammar");
+        assert!(!djlive::parse::parse(&src).ok(), "`{line}`: and the parser wants the switch on a line of its own");
+    }
+    // the count goes after the mark, as a mutation's
+    let src = prog("~ control 3 off");
+    assert!(!djlive::parse::parse(&src).ok(), "a count after `control` is no switch");
 }
 
 /// A reference to a stored program is a sentence of the grammar, and the parser reads it (it needs a host to be *checked*: the

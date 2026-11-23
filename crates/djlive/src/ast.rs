@@ -271,6 +271,10 @@ pub struct SectionBlock {
     pub bars: u32,
     pub bars_span: Span,
     pub body: Vec<Stmt>,
+    /// Never written: the lowering of an `arrange { }` with a switch of the control deck (`~ control off`, mutate.rs) sets it on
+    /// the copy of a section a play reads: the calls (`move`, `freeze` ...) whose control-deck lines do not fire in that copy.
+    /// expand.rs holds those lines back (checked, never fired). Empty for every section as written.
+    pub quiet: Vec<String>,
 }
 
 /// `set { ... }`: tracks and the mixes between them, in order.
@@ -496,6 +500,30 @@ pub enum Body {
     Mix(crate::mixmoves::MixBlock),
     /// `sing "robots on the road" on melody voice=alto`: typed lyrics sung on a part's notes (sing.rs).
     Sing(crate::sing::SingCall),
+}
+
+impl Body {
+    /// The name an `arrange { }` switch gives a control-deck line by (`~ control freeze off`, docs/beatscript/ext-control.md): the
+    /// call's first word as the line writes it (`move`, `swap`, `load`, `queue`, `crossfader`, `tempo`, `duck`, `mix`), or the
+    /// registry noun of a `do` and of its sugar (`do vocoder ...` and `vocoder ...` are both `vocoder`). None for a body that
+    /// is no engine call (parts, a def's call, a `sing`).
+    pub fn call_name(&self) -> Option<&str> {
+        match self {
+            Body::Action(a) => Some(match a {
+                Action::Move { .. } => "move",
+                Action::SwapPairs { .. } => "swap",
+                Action::LoadPair { .. } | Action::Load { .. } => "load",
+                Action::Queue { .. } => "queue",
+                Action::Tempo(_) => "tempo",
+                Action::Transport(w) => w.text.as_str(),
+                Action::Change { name, .. } | Action::Shaped { name, .. } => name.text.as_str(),
+            }),
+            Body::Do(d) => Some(d.noun.text.as_str()),
+            Body::Duck(_) => Some("duck"),
+            Body::Mix(_) => Some("mix"),
+            Body::Parts(_) | Body::Invoke(_) | Body::Sing(_) => None,
+        }
+    }
 }
 
 /// A call on the control-language registry, written out.

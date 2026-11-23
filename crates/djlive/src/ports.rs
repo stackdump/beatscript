@@ -1242,6 +1242,7 @@ mod tests {
             over_budget: false,
             evolves: Vec::new(),
             ports: PortState::default(),
+            quiet: Vec::new(),
         }
     }
 

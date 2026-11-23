@@ -1003,6 +1003,8 @@ fn check_mode_in(src: &str, env: &Env, enforce: bool, scene: Option<&crate::laun
     let key = c.key.unwrap_or(Key::C_MAJOR);
     let section_keys = crate::scale::section_keys(&lowered, key, &mut diags);
     let mut segments = c.build(&lowered, key);
+    // the control-deck lines an `arrange { }` switch holds back in a play are checked as the lines they are, and fire nowhere
+    c.check_quiet(&lowered.quiet);
     crate::meter::report_period(&mut c, &lowered);
     crate::perform::report(&mut c);
     let (lineage, evolves, top_total) = c.evolve(&lowered, &mut segments);
@@ -1282,6 +1284,26 @@ impl<'a> Compiler<'a> {
             }
         }
         raw
+    }
+
+    /// The control-deck lines a switch of an `arrange { }` holds back ([`expand::Lowered::quiet`], docs/beatscript/ext-control.md): each
+    /// is compiled as a control line is, for what the compiler says of it, and kept nowhere (no control, no tempo event), so a line
+    /// that no play fires is checked all the same. What a line said where another play fires it is not said twice.
+    pub(crate) fn check_quiet(&mut self, lines: &[FlatLine]) {
+        if lines.is_empty() {
+            return;
+        }
+        let (controls, tempos, said) = (self.controls.len(), self.tempos.len(), self.diags.len());
+        let seg_end = self.seg_end.take();
+        self.controls_of(lines);
+        self.controls.truncate(controls);
+        self.tempos.truncate(tempos);
+        self.seg_end = seg_end;
+        for d in self.diags.split_off(said) {
+            if !self.diags.iter().any(|x| x.span == d.span && x.message == d.message) {
+                self.diags.push(d);
+            }
+        }
     }
 
     pub(crate) fn controls_of(&mut self, lines: &[FlatLine]) {

@@ -1,0 +1,38 @@
+#! btw 1
+#! name: control-per-pass
+#! license: CC0-1.0
+#! visibility: public
+# control-per-pass: the arrange switches the control deck pass by pass.
+# `~ control off` holds the control deck's lines back in the sections after it (`@`: the next section only),
+# `~ control duck on` brings one call's lines back, and a count (`~2`) fires the line on every 2nd pass only.
+tempo 126
+key am
+let riff = a3 c4 e4 g4 a4 g4 e4 c4
+let walk = a1 ~ a1 ~ c2 ~ a1 e2
+let kik = x ~ x ~
+let hats = ~ x ~ x ~ x ~ x
+section groove 4 bars {
+  deck A: kick kik | hihat hats
+  deck B: bass walk inst=fm-bass | arp riff
+  control: duck B under A.kick 6db
+  control: mix { B level 0.6 }
+}
+section lift 4 bars {
+  deck A: kick kik | snare ~ x ~ x | hihat hats
+  deck B: bass walk inst=fm-bass | arp riff
+  control: crossfader 0.3 -> 0.7 over 4 bars
+  at bar 3: control: freeze phrase bars=1
+}
+section outro 4 bars {
+  deck A: kick kik
+  control: crossfader 0.5
+}
+arrange {
+  groove
+  @3 control freeze off        # pass 3: this lift does not freeze
+  lift
+  ~2 control off               # passes 2 and 4: the control deck goes quiet from here on ...
+  ~2 control duck on           # ... all but the duck, which keeps pumping
+  groove lift
+  ~ control on                 # and every line is back for the next pass
+} loop 4 then outro end

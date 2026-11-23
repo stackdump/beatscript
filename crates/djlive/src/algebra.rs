@@ -801,7 +801,7 @@ impl Lower<'_> {
             let (key, keyed) = self.section_keys(&sec.block.body);
             keys.push(key);
             let alone = covered.len() == 1 && plan.stretches[first].layers.len() == 1 && plan.stretches[first].start == p.start && plan.stretches[first].bars == p.bars;
-            let scope = Scope { base: Some(p.start), depth: 0, path: format!("[{}@{}] ", p.name, p.start), segment: Some(first), via: Vec::new(), timed: false };
+            let scope = Scope { base: Some(p.start), depth: 0, path: format!("[{}@{}] ", p.name, p.start), segment: Some(first), via: Vec::new(), timed: false, quiet: sec.block.quiet.clone() };
             let mut lines = Vec::new();
             for st in sec.block.body.iter().skip(keyed) {
                 if !alone && matches!(st.kind, StmtKind::Evolve(_)) {

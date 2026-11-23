@@ -59,6 +59,8 @@ The body is written one item to a line; commas also separate section names.
 | `@ hoov rev` | **one-shot**: on top of the current generation, for the next section only; then it reverts |
 | `~3 acid_a rev` | **every 3rd pass**: a count right after the mark; the line fires on passes 3, 6, 9 ... and not on the others |
 | `@4 hoov rev` | the one-shot, on every 4th pass only |
+| `~ control off` / `~ control on` | **the control deck**: its lines do not fire (or fire again) in the sections from here on |
+| `@ control freeze off` | the control deck's `freeze` lines only, in the next section only (with `~`, `@` and counts as above) |
 
 A mutation runs to the end of its line.
 
@@ -102,6 +104,37 @@ arrange {
   with a `loop` that has no count (it is laid out as one pass), or in a named block (its mutations run over one pass).
   `loop 3 then end` is enough for `~3`: it fires once, on the last pass, and the coda reads it.
 - **`evolve every N bars`** is another clock: it counts bars inside one section. `~N` counts passes of the block.
+
+### The control deck, per pass
+
+A pattern is rewritten; the control deck (docs/BEATSCRIPT.md "The control deck": the `control:` lines of a section) is switched. A
+switch is a line of the block of its own, with the marks and counts of a mutation:
+
+```text
+arrange {
+  groove
+  @3 control freeze off        # pass 3: this lift does not freeze
+  lift
+  ~2 control off               # passes 2 and 4: the control deck goes quiet from here on ...
+  ~2 control duck on           # ... all but the duck, which keeps pumping
+  groove lift
+  ~ control on                 # and every line is back for the next pass
+} loop 4 then outro end
+```
+
+- `~ control off` holds back every `control:` line of the sections after it, `~ control on` lets them all fire again;
+  `@ control off` holds them back in the next section only.
+- `~ control freeze off` switches the lines of one call: the line's first word (`move`, `swap`, `load`, `queue`, `crossfader`,
+  `tempo`, `duck`, `mix`) or its registry noun (`freeze`, `vocoder`). There is no switch for one line by itself: two `move` lines
+  of one section switch together.
+- It reaches a section's own `control:` lines, those in its repeats and those of the defs it calls. A `control:` line outside
+  every section plays the whole song, and a line with no head (`move echo_out on B`) is not on the control deck: no switch
+  reaches either (a switch that reaches nothing is a warning that says which).
+- A section played with lines held back is a copy without them (`drop@2`), as a section read with another generation is. The
+  held-back lines are checked all the same, and they fire in the plays that do not hold them back.
+
+`examples/beatscript/control-per-pass.beatscript` is the block above in a whole program. The long note, with the decisions: docs/beatscript/ext-control.md
+"Per pass: the switch".
 
 ### A named block
 
@@ -270,6 +303,9 @@ wall clock and no global random generator. So:
 | `jux` on a pattern a kick or a bass plays | a warning: the low end leaves the middle |
 | `jux` on a pattern read outside a section's lines, by a sampled part, or by more than four parts of a deck | a warning: that reader plays one copy, both copies in the middle, or a lot of voices |
 | a section that does not exist | an error, with the nearest name |
+| `~ control NAME off` for a call no `control:` line makes | an error, with the nearest call |
+| a switch beside a pattern on one line (`~ acid rot 2, control off`), or with no `on` / `off` | an error |
+| a switch that reaches no line (no section has a `control:` line, or that call's lines are all outside the sections) | a warning: the switch does nothing |
 
 The fixer's output, for `~ acid_a rot 2 | wobble 3 | thin 0.1`:
 
@@ -282,10 +318,11 @@ The fixer's output, for `~ acid_a rot 2 | wobble 3 | thin 0.1`:
 - `passes`;
 - `unbounded`;
 - `plays`: every section played, in order, with its `pass`, `coda`, `start_bar` and `bars`. Each play also has
-  `reads`: the patterns a mutation touched, each with its `gen`, `once` and `text`;
+  `reads`: the patterns a mutation touched, each with its `gen`, `once` and `text`; and, when a switch holds lines of its control
+  deck back, `control_off`: the calls whose lines do not fire in that play;
 - `patterns`: every generation of every mutated pattern, with the `pass` and `mutation` that made it and its `ops`
   (and `every`, when its line has a count);
-- `fires`, only when a line has a count: for each counted line, its `mutation` (the line's number among the block's
+- `fires`, only when a line has a count: for each counted line (a switch too), its `mutation` (the line's number among the block's
   mutations), `every`, `once`, the `passes` it fired on (from 0), and the `plays` (indices into `plays`) that first read each
   firing.
 
@@ -310,5 +347,6 @@ covers `drop@2` too). `examples/beatscript/constraints.beatscript` has the three
 
 The block is lowered before the program is expanded. Each pattern generation that some section reads becomes a
 plain `let` (`acid_a@3`). Each section that is played with different generations becomes its own copy (`drop@2`).
+A section played with control-deck lines held back by a switch becomes a copy of its own too, without them.
 The block itself becomes a plain `arrange intro build drop drop@2 ...`. The engine, the renderer and the phone app
 play that, so nothing downstream changes. The canonical text, and so the CID, is the block as written.

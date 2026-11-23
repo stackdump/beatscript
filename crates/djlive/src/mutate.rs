@@ -9,9 +9,14 @@
 //!   peak
 //!   @ hoov_b rev                       # one-shot: the next section only, then it reverts
 //!   ~3 acid_a rev                      # every 3rd pass of the block only (a count right after the mark)
+//!   ~ control off                      # the control deck: its lines do not fire in the sections from here on
 //!   outro
 //! } loop 4 then outro end
 //! ```
+//!
+//! A switch of the control deck (`~ control off`, `@ control freeze on`: docs/beatscript/ext-control.md "Per pass: the switch") is a
+//! line of the block too: it rewrites no pattern, and a section a play reads with control-deck lines held back is lowered as a
+//! copy of its own ([`crate::ast::SectionBlock::quiet`]), whose held-back lines expand.rs keeps out of every segment.
 //!
 //! The block is a path through the program's state: a `~` mutation rewrites the **text** of the `let` patterns it names
 //! (their token lists), and every later section reads the new text; a `@` mutation does so for the next section only. The
@@ -63,7 +68,21 @@ pub struct Mutation {
     pub every: u32,
     /// The written count's span, for what it can be said about (`~3` in a block that has no third pass).
     pub every_span: Option<Span>,
+    /// The patterns it rewrites; empty for a switch of the control deck.
     pub targets: Vec<MutTarget>,
+    /// `~ control off`, `@ control freeze on`: the line switches the control deck instead (docs/beatscript/ext-control.md). A line of its
+    /// own: it has no targets.
+    pub switch: Option<Switch>,
+    pub span: Span,
+}
+
+/// `control [CALL] on|off`: whether the control deck's lines fire in the sections after it (`~`) or in the next one (`@`): all
+/// of them, or the lines of one call (`~ control freeze off`: [`crate::ast::Body::call_name`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Switch {
+    pub call: Option<Word>,
+    pub on: bool,
+    /// `control` to the `on` / `off`.
     pub span: Span,
 }
 
@@ -184,10 +203,15 @@ pub fn print_block(b: &ArrangeBlock) -> String {
 }
 
 pub fn mutation_text(m: &Mutation) -> String {
-    let targets: Vec<String> = m.targets.iter().map(|t| format!("{} {}", t.name.text, t.ops.iter().map(MutOp::text).collect::<Vec<_>>().join(" | "))).collect();
     // the count is glued to the mark, and left out when it is 1, the default: `~1 x` and `~ x` are one program
     let every = if m.every > 1 { m.every.to_string() } else { String::new() };
-    format!("{}{every} {}", if m.once { "@" } else { "~" }, targets.join(", "))
+    let mark = if m.once { "@" } else { "~" };
+    if let Some(s) = &m.switch {
+        let call = s.call.as_ref().map(|c| format!(" {}", c.text)).unwrap_or_default();
+        return format!("{mark}{every} control{call} {}", if s.on { "on" } else { "off" });
+    }
+    let targets: Vec<String> = m.targets.iter().map(|t| format!("{} {}", t.name.text, t.ops.iter().map(MutOp::text).collect::<Vec<_>>().join(" | "))).collect();
+    format!("{mark}{every} {}", targets.join(", "))
 }
 
 impl<'a> Parser<'a> {
@@ -237,15 +261,65 @@ impl<'a> Parser<'a> {
     fn mutation(&mut self) -> R<Mutation> {
         let at = self.bump();
         let once = at.tok == Tok::At;
-        let (every, every_span) = self.mut_every(if once { "@" } else { "~" })?;
+        let mark = if once { "@" } else { "~" };
+        let (every, every_span) = self.mut_every(mark)?;
+        if let Some(switch) = self.switch(mark)? {
+            if self.peek() == &Tok::Comma {
+                return Err(own_line(self.span(), mark));
+            }
+            if !matches!(self.peek(), Tok::Newline | Tok::RBrace | Tok::Eof) {
+                return Err(self.expected(&["the end of the line"], &format!("a switch of the control deck ends its line, found {}", self.found())).help(format!("{mark} control off   {mark} control freeze on")));
+            }
+            return Ok(Mutation { once, every, every_span, targets: Vec::new(), switch: Some(switch), span: at.span.to(self.prev_span()) });
+        }
         let mut targets = vec![self.mut_target()?];
         while self.eat(&Tok::Comma) {
+            if self.switch_shape().is_some() {
+                return Err(own_line(self.span(), mark));
+            }
             targets.push(self.mut_target()?);
         }
         if !matches!(self.peek(), Tok::Newline | Tok::RBrace | Tok::Eof) {
             return Err(self.expected(&["`|`", "`,`", "the end of the line"], &format!("expected `|` (another operator), `,` (another target) or the end of the line, found {}", self.found())));
         }
-        Ok(Mutation { once, every, every_span, targets, span: at.span.to(self.prev_span()) })
+        Ok(Mutation { once, every, every_span, targets, switch: None, span: at.span.to(self.prev_span()) })
+    }
+
+    /// `control off` / `control on` / `control CALL off` after the mark: the control deck's switch (docs/beatscript/ext-control.md), as
+    /// many tokens as it takes. `control` with an operator after it is a mutation of a `let` that is called `control` (`~
+    /// control rot 2`): it is no reserved word, and `on` and `off` are no operators, so no program that read before reads
+    /// otherwise now.
+    fn switch_shape(&self) -> Option<usize> {
+        if !self.word_is("control") {
+            return None;
+        }
+        let word = |k: usize| match self.peek_n(k) {
+            Tok::Word(w) => Some(w.as_str()),
+            _ => None,
+        };
+        match (word(1), word(2)) {
+            (Some("on" | "off"), _) => Some(2),
+            (Some(call), Some("on" | "off")) if op_spec(call).is_none() => Some(3),
+            _ => None,
+        }
+    }
+
+    /// The control deck's switch, if the line is one; an error where it starts like one and does not say `on` or `off`.
+    fn switch(&mut self, mark: &str) -> R<Option<Switch>> {
+        let Some(n) = self.switch_shape() else {
+            // `~ control` and `~ control freeze`, the line ending there: a switch with its `on` or `off` left out
+            let ends = |t: &Tok| matches!(t, Tok::Newline | Tok::RBrace | Tok::Eof | Tok::Comma);
+            let bare = self.word_is("control") && (ends(self.peek_n(1)) || matches!(self.peek_n(1), Tok::Word(w) if op_spec(w).is_none()) && ends(self.peek_n(2)));
+            if bare {
+                return Err(Diagnostic::error(self.span(), "a switch of the control deck says `on` or `off`").help(format!("{mark} control off   (every line of the control deck)   {mark} control freeze on   (its `freeze` lines)")));
+            }
+            return Ok(None);
+        };
+        let start = self.bump().span;
+        let call = if n == 3 { Some(self.word("the call whose lines it switches")?) } else { None };
+        let on = self.word_is("on");
+        let end = self.bump().span;
+        Ok(Some(Switch { call, on, span: start.to(end) }))
     }
 
     /// `~3` / `@4`: a whole number right after the mark (spaced or glued, the same program) is how often the line
@@ -360,6 +434,11 @@ impl<'a> Parser<'a> {
         }
         Ok(BlockEnd::Passes { n: value as u32, span: sp, coda })
     }
+}
+
+/// A switch of the control deck written beside a mutation, on one line with a comma: each goes on a line of its own.
+fn own_line(at: Span, mark: &str) -> Diagnostic {
+    Diagnostic::error(at, "a switch of the control deck is a line of its own, not a target beside a pattern").help(format!("{mark} acid rot 2\n  {mark} control off"))
 }
 
 // ---- the operators
@@ -1254,6 +1333,138 @@ pub struct Play {
     pub coda: bool,
     /// The patterns of the program the section reads, each at the generation it reads.
     pub reads: Vec<Read>,
+    /// The calls (`move`, `freeze` ...) whose lines on the section's control deck do not fire in this play: a switch
+    /// (`~ control off`, `@ control freeze off`) holds them back. Empty: every control-deck line of the section fires.
+    pub control_off: Vec<String>,
+}
+
+/// Which lines of the control deck fire: the switches of an `arrange { }` applied in order. Every line fires until a switch
+/// says otherwise.
+#[derive(Clone, Debug, Default, PartialEq)]
+struct Switches {
+    /// `~ control off` said last of the whole deck.
+    off: bool,
+    /// A call switched since (`~ control freeze on`): on or off, over what the whole deck is.
+    calls: BTreeMap<String, bool>,
+}
+
+impl Switches {
+    fn fires(&self, call: &str) -> bool {
+        self.calls.get(call).copied().unwrap_or(!self.off)
+    }
+
+    fn with(mut self, s: &Switch) -> Switches {
+        match &s.call {
+            None => {
+                self.off = !s.on;
+                self.calls.clear();
+            }
+            Some(c) => {
+                self.calls.insert(c.text.clone(), s.on);
+            }
+        }
+        self
+    }
+}
+
+/// The calls of the control-deck lines in these statements (a section's body), through the repeats in them and the defs they
+/// call: what a switch can hold back there ([`crate::ast::Body::call_name`]; in a body still in tokens, the word after
+/// `control:`, or after `control: do`).
+fn control_calls(stmts: &[Stmt], defs: &BTreeMap<String, &[Token]>, out: &mut BTreeSet<String>) {
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    for st in stmts {
+        match &st.kind {
+            StmtKind::Line(l) => {
+                if let (Some(_), Some(c)) = (l.control, l.body.call_name()) {
+                    out.insert(c.to_string());
+                }
+                if let Body::Invoke(inv) = &l.body {
+                    if let Some(body) = defs.get(inv.name.text.as_str()) {
+                        if seen.insert(inv.name.text.clone()) {
+                            token_calls(body, defs, &mut seen, out);
+                        }
+                    }
+                }
+            }
+            StmtKind::Repeat(r) => token_calls(&r.body, defs, &mut seen, out),
+            _ => {}
+        }
+    }
+}
+
+fn token_calls(toks: &[Token], defs: &BTreeMap<String, &[Token]>, seen: &mut BTreeSet<String>, out: &mut BTreeSet<String>) {
+    for (i, t) in toks.iter().enumerate() {
+        let Tok::Word(w) = &t.tok else { continue };
+        let next = toks.get(i + 1).map(|t| &t.tok);
+        if w == "control" && crate::parse::control_head_at(next, i.checked_sub(1).map(|p| &toks[p].tok)) {
+            let word = |k: usize| match toks.get(k).map(|t| &t.tok) {
+                Some(Tok::Word(w)) => Some(w.clone()),
+                _ => None,
+            };
+            if let Some(c) = word(i + 2).and_then(|c| if c == "do" { word(i + 3) } else { Some(c) }) {
+                out.insert(c);
+            }
+        } else if next == Some(&Tok::LParen) {
+            if let Some(body) = defs.get(w.as_str()) {
+                if seen.insert(w.clone()) {
+                    token_calls(body, defs, seen, out);
+                }
+            }
+        }
+    }
+}
+
+/// The engine calls of these statements written with no head (`move echo_out on B` in a section): the control deck's lines in
+/// all but the head, which no switch reaches. For the help of a switch that reaches nothing.
+fn headless_engine_lines(stmts: &[Stmt], src: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for st in stmts {
+        if let StmtKind::Line(l) = &st.kind {
+            let engine = matches!(&l.body, Body::Do(_) | Body::Duck(_) | Body::Mix(_))
+                || matches!(&l.body, Body::Action(Action::Move { .. } | Action::SwapPairs { .. } | Action::LoadPair { .. } | Action::Queue { .. } | Action::Tempo(_)))
+                || matches!(&l.body, Body::Action(Action::Change { name, .. } | Action::Shaped { name, .. }) if name.text == "crossfader");
+            if engine && l.control.is_none() && l.target.is_none() {
+                out.push(format!("line {} `{}`", crate::diag::line_col(src, st.span.start).0, crate::print::line(l)));
+            }
+        }
+    }
+    out
+}
+
+/// What the switches of a block are said to do: a call no control-deck line has is an error with the nearest names; a switch
+/// that reaches no line (the control deck's lines are all outside every section, or there are none) is a warning.
+fn switch_diags(b: &ArrangeBlock, in_sections: &BTreeSet<String>, outside: &BTreeSet<String>, headless: &[String]) -> Vec<Diagnostic> {
+    let mut out = Vec::new();
+    let outside_help = "the control deck's lines outside every section play the whole song, and a switch reaches a section's lines: put them in the sections that want them, section drop 8 bars { control: freeze phrase bars=2 }";
+    for it in &b.items {
+        let ArrItem::Mutation(m) = it else { continue };
+        let Some(s) = &m.switch else { continue };
+        match &s.call {
+            Some(c) if in_sections.contains(&c.text) => {}
+            Some(c) if outside.contains(&c.text) => out.push(Diagnostic::warning(c.span, format!("every `{}` line of the control deck is outside the sections: this switch does nothing", c.text)).help(outside_help)),
+            Some(c) => {
+                let all: Vec<String> = in_sections.iter().chain(outside).cloned().collect();
+                let d = Diagnostic::error(c.span, format!("the control deck has no `{}` line: a switch names the call of a line on it (`move`, `freeze` ...)", c.text));
+                out.push(match crate::env::suggest(&c.text, &all, 1).first() {
+                    Some(n) => d.help(format!("did you mean `{n}`?")),
+                    None if !all.is_empty() => d.help(format!("its calls: {}", all.join(", "))),
+                    None => d.help("write the line in a section first: control: freeze phrase bars=2"),
+                });
+            }
+            None if in_sections.is_empty() => {
+                let d = Diagnostic::warning(s.span, "no section has a line on the control deck: this switch does nothing");
+                out.push(if !outside.is_empty() {
+                    d.help(outside_help)
+                } else if let Some(h) = headless.first() {
+                    d.help(format!("a switch reaches the lines written on the control deck, and {h} has no head: control: {}", h.split('`').nth(1).unwrap_or("")))
+                } else {
+                    d.help("a section's `control:` lines are what it switches: section drop 8 bars { control: move echo_out on B }")
+                });
+            }
+            None => {}
+        }
+    }
+    out
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1652,8 +1863,38 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         }
     }
     let checked = check_block(&block, &pats, &drums, &octaves, &other_names);
-    let errors = checked.diags.iter().any(Diagnostic::is_error);
+    let mut errors = checked.diags.iter().any(Diagnostic::is_error);
     diags.extend(checked.diags.iter().cloned());
+    // the control deck's lines each section holds (through its repeats and the defs it calls), and those outside every section,
+    // for the switches (`~ control off`)
+    let mut sec_calls: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    if block.items.iter().any(|i| matches!(i, ArrItem::Mutation(m) if m.switch.is_some())) {
+        let mut defs: BTreeMap<String, &[Token]> = BTreeMap::new();
+        for d in parsed.imports.iter().flat_map(|i| i.defs.iter()) {
+            defs.insert(d.name.text.clone(), &d.body);
+        }
+        let program = &parsed.program;
+        for st in &program.stmts {
+            if let StmtKind::Def(d) = &st.kind {
+                defs.insert(d.name.text.clone(), &d.body);
+            }
+        }
+        let mut headless = Vec::new();
+        for st in &program.stmts {
+            if let StmtKind::Section(s) = &st.kind {
+                control_calls(&s.body, &defs, sec_calls.entry(s.name.text.clone()).or_default());
+                headless.extend(headless_engine_lines(&s.body, src));
+            }
+        }
+        let mut outside = BTreeSet::new();
+        let top: Vec<Stmt> = program.stmts.iter().filter(|s| matches!(s.kind, StmtKind::Line(_) | StmtKind::Repeat(_))).cloned().collect();
+        control_calls(&top, &defs, &mut outside);
+        let in_sections: BTreeSet<String> = sec_calls.values().flatten().cloned().collect();
+        let sd = switch_diags(&block, &in_sections, &outside, &headless);
+        errors |= sd.iter().any(Diagnostic::is_error);
+        diags.extend(sd);
+    }
+    let program = &mut parsed.program;
     if !errors {
         diags.extend(jux_notes(&block, &checked, &roles, program));
     }
@@ -1703,9 +1944,14 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         coda: bool,
         at: BTreeMap<String, u32>,
         once: BTreeMap<String, Pair>,
+        /// Which of its control-deck lines fire.
+        ctl: Switches,
     }
     let mut raws: Vec<Raw> = Vec::new();
     let mut once: BTreeMap<String, Pair> = BTreeMap::new();
+    // the switches of the control deck: from here on (`~`), and on top of that for the next section only (`@`)
+    let mut ctl = Switches::default();
+    let mut ctl_once: Option<Switches> = None;
     // One target's chain on a pattern. Operators before a `jux` work on the pattern (both copies, when it is already a
     // pair); at the `jux` the right copy is made from the left one and its operator works on it; what follows works on
     // the right copy only. The right copy has dice of its own, so the left one is what it would be without the `jux`.
@@ -1744,11 +1990,25 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         for it in &block.items {
             match it {
                 ArrItem::Section(w) => {
-                    raws.push(Raw { section: w.text.clone(), word: w.clone(), pass, coda: false, at: current.clone(), once: std::mem::take(&mut once) });
+                    let sw = ctl_once.take().unwrap_or_else(|| ctl.clone());
+                    raws.push(Raw { section: w.text.clone(), word: w.clone(), pass, coda: false, at: current.clone(), once: std::mem::take(&mut once), ctl: sw });
                 }
                 ArrItem::Mutation(m) => {
                     // `~3`: only on every 3rd pass. The line still counts (`mi`), so the lines after it roll the same dice
                     if (pass + 1) % m.every != 0 {
+                        mi += 1;
+                        continue;
+                    }
+                    // a switch of the control deck: no pattern changes, the sections after it (or the next one) fire fewer lines
+                    if let Some(s) = &m.switch {
+                        if m.every > 1 {
+                            record_fire(&mut table.fires, mi, m, pass, raws.len());
+                        }
+                        if m.once {
+                            ctl_once = Some(ctl_once.take().unwrap_or_else(|| ctl.clone()).with(s));
+                        } else {
+                            ctl = ctl.with(s);
+                        }
                         mi += 1;
                         continue;
                     }
@@ -1785,9 +2045,10 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         }
     }
     for w in &coda {
-        raws.push(Raw { section: w.text.clone(), word: w.clone(), pass: passes.saturating_sub(1), coda: true, at: current.clone(), once: std::mem::take(&mut once) });
+        let sw = ctl_once.take().unwrap_or_else(|| ctl.clone());
+        raws.push(Raw { section: w.text.clone(), word: w.clone(), pass: passes.saturating_sub(1), coda: true, at: current.clone(), once: std::mem::take(&mut once), ctl: sw });
     }
-    if !once.is_empty() {
+    if !once.is_empty() || ctl_once.is_some() {
         diags.push(Diagnostic::warning(block.span, "a one-shot `@` mutation at the end of the `arrange` has no next section to play in"));
     }
     // keep only the patterns a mutation touched in the table
@@ -1876,18 +2137,21 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
     if !gen_ok {
         return None;
     }
-    // each play's reading: pattern -> the let it reads
-    let mut variants: BTreeMap<String, Vec<BTreeMap<String, String>>> = BTreeMap::new();
+    // each play's reading: pattern -> the let it reads, and the calls whose control-deck lines it holds back
+    type Reading = (BTreeMap<String, String>, Vec<String>);
+    let mut variants: BTreeMap<String, Vec<Reading>> = BTreeMap::new();
     let mut words: Vec<Word> = Vec::new();
     let mut once_count: BTreeMap<String, u32> = BTreeMap::new();
     // a named block is one arrangement of several: a section the others play as written keeps its name and its text, so
     // the block's mutated readings are the variants after it (`drop@2`)
     if block.named.is_some() {
         for r in &raws {
-            variants.entry(r.section.clone()).or_insert_with(|| vec![BTreeMap::new()]);
+            variants.entry(r.section.clone()).or_insert_with(|| vec![(BTreeMap::new(), Vec::new())]);
         }
     }
     for r in &raws {
+        // the section's control-deck lines this play's switches hold back (a section with none is never copied for a switch)
+        let quiet: Vec<String> = sec_calls.get(&r.section).into_iter().flatten().filter(|c| !r.ctl.fires(c)).cloned().collect();
         let mut reading: BTreeMap<String, String> = BTreeMap::new();
         let mut reads: Vec<Read> = Vec::new();
         for p in &reads_of[&r.section] {
@@ -1968,6 +2232,7 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         }
         let list = variants.entry(r.section.clone()).or_default();
         // a one-shot reading is its own variant every time (its let is its own)
+        let reading = (reading, quiet);
         let idx = match list.iter().position(|v| *v == reading) {
             Some(i) => i,
             None => {
@@ -1977,7 +2242,7 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
         };
         let name = if idx == 0 { r.section.clone() } else { format!("{}@{}", r.section, idx + 1) };
         words.push(Word { text: name.clone(), span: r.word.span });
-        table.plays.push(Play { section: r.section.clone(), name, pass: r.pass, coda: r.coda, reads });
+        table.plays.push(Play { section: r.section.clone(), name, pass: r.pass, coda: r.coda, reads, control_off: reading.1 });
     }
     // the sections: the first variant in place, the others after it
     let mut inserts: Vec<(usize, Stmt)> = Vec::new();
@@ -1991,10 +2256,11 @@ pub fn apply(parsed: &mut Parsed, src: &str, cid: &str, diags: &mut Vec<Diagnost
             });
         };
         let original = program.stmts[i].clone();
-        for (k, reading) in list.iter().enumerate() {
+        for (k, (reading, quiet)) in list.iter().enumerate() {
             let mut st = original.clone();
             if let StmtKind::Section(s) = &mut st.kind {
                 rename(&mut s.body, reading);
+                s.quiet = quiet.clone();
                 if k > 0 {
                     s.name.text = format!("{sec}@{}", k + 1);
                 }

@@ -1181,12 +1181,12 @@ impl<'a> Parser<'a> {
                 if self.peek() != &Tok::RBrace {
                     // (a block cut short by a text nested too deep was said once, at the opener that was too deep)
                     if self.peek() == &Tok::Eof && self.diags.iter().any(|d| d.message.ends_with(&format!("nest more than {MAX_NESTING} deep"))) {
-                        return Ok(Stmt { span: start.to(self.prev_span()), kind: StmtKind::Section(SectionBlock { name, bars, bars_span, body }) });
+                        return Ok(Stmt { span: start.to(self.prev_span()), kind: StmtKind::Section(SectionBlock { name, bars, bars_span, body, quiet: Vec::new() }) });
                     }
                     return Err(Diagnostic::error(start, format!("the `{{` of section `{}` is never closed", name.text)));
                 }
                 self.bump();
-                return Ok(Stmt { span: start.to(self.prev_span()), kind: StmtKind::Section(SectionBlock { name, bars, bars_span, body }) });
+                return Ok(Stmt { span: start.to(self.prev_span()), kind: StmtKind::Section(SectionBlock { name, bars, bars_span, body, quiet: Vec::new() }) });
             }
             "arrange" if matches!(self.peek_n(1), Tok::LBrace) => {
                 self.bump();

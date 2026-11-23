@@ -356,7 +356,8 @@ loop        = "loop" ;                                        (* a song starts a
 arrange_block = "arrange" "{" { arr_gap } NAME { arr_gap | NAME } "}" [ block_end ]   (* at least one section; see "Arrange mutations" *)
             | "arrange" NAME ":" "{" { arr_gap } NAME { arr_gap | NAME } "}" [ arr_end ] ;   (* a named arrangement with mutations *)
 arr_gap     = NEWLINE | "," | mutation NEWLINE ;               (* a mutation runs to the end of its line *)
-mutation    = ( "~" | "@" ) [ INT ] mut_target mut_op { "|" mut_op } { "," mut_target mut_op { "|" mut_op } } ;   (* ~ from here on, @ the next section only; ~3: every 3rd pass *)
+mutation    = ( "~" | "@" ) [ INT ] ( switch | mut_target mut_op { "|" mut_op } { "," mut_target mut_op { "|" mut_op } } ) ;   (* ~ from here on, @ the next section only; ~3: every 3rd pass *)
+switch      = "control" [ NAME ] ( "on" | "off" ) ;           (* the control deck's lines fire or not: all of them, or one call's (~ control freeze off); a line of its own *)
 mut_target  = GLOB | NAME ;                                   (* a let pattern, or a glob: acid_* *)
 mut_op      = NAME { NUMBER | "-" NUMBER | NAME } ;           (* rot 2  thin 0.1  oct -1  morph b 0.5  jux rev: the operators of "Arrange mutations" *)
 block_end   = "end" | "loop" | "loop" INT [ "then" { NAME } "end" ] ;   (* default end; loop N: 1 to 256 passes, then a coda *)
@@ -733,6 +734,10 @@ with the nearest (`macro rizer`: did you mean `riser`?), and an id only a later 
 a macro line (`listen` names each in `macros`, with the bar it starts on and whether the engine played it); a browser tab does not,
 and lists it as not played here. `macro` is no reserved word.
 
+An `arrange { }` switches the control deck pass by pass: `~ control off` (its lines do not fire in the sections from here on),
+`~ control on`, `@ control off` (the next section only), `~ control freeze off` (the lines of one call), `~3 control off` (every
+3rd pass). The head is what a switch reaches: `move echo_out on B` with no head keeps firing ("Arrange mutations").
+
 ## The whole surface: `do`
 
 ```text
@@ -1086,6 +1091,7 @@ arrange {
   peak
   @ hoov_b rev                       # the next section only
   outro
+  ~ control off                      # the control deck: its lines stop firing from here on
 } loop 4 then outro end
 ```
 
@@ -1126,6 +1132,14 @@ file say it in words.
   lays out one pass); `loop N then end` plays N passes, mutations piling up pass on pass, and every one is rendered;
   `loop N then outro end` adds a coda that reads the last generation.
 - **`name@n`** in a section reads generation `n` of a pattern (`acid_a@0` is the text as written).
+- **The control deck, per pass**: `~ control off` holds back the `control:` lines of the sections after it, `~ control on` lets
+  them fire again, `@ control off` holds them back in the next section only, and `~ control freeze off` switches the lines of one
+  call (the line's first word, `move` `swap` `crossfader` `tempo` `duck` `mix` ..., or its registry noun); counts work as for a
+  mutation (`~2 control off`). A switch is a line of its own. It reaches a section's own `control:` lines (with its repeats and
+  the defs it calls), not a line outside every section nor an engine call with no head; a section played with lines held back is
+  a copy without them (`drop@2`), the held-back lines still checked. `check` says what each play holds back
+  (`arrange.plays[].control_off`), and so does `listen` (`sections[].control_off`). See docs/beatscript/ext-control.md "Per pass: the
+  switch" and `examples/beatscript/control-per-pass.beatscript`.
 - **Deterministic**: the dice are a hash of (the program's CID, the pass, the mutation, the target, the operator); no clock.
   The same text is the same generations, so a track stays CID-reproducible. `check` reports the table (`arrange`: each
   play, its pass, and the generation and text of each pattern it reads; with a counted line, `fires`: the passes it fired
