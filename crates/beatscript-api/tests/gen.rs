@@ -273,6 +273,10 @@ fn the_examples_that_call_the_generator_check_clean() {
         if !src.lines().any(|l| !l.trim_start().starts_with('#') && l.contains("gen@")) {
             continue;
         }
+        // (one that also borrows from a saved program is checked where that program is given: tests/uses.rs)
+        if !djlive::stored::cids_of(&src).is_empty() {
+            continue;
+        }
         seen += 1;
         let c = check(&src);
         let loud: Vec<String> = c.diagnostics.iter().filter(|d| d.severity != Severity::Info).map(|d| format!("{} `{}`", d.message, d.span.text(&src))).collect();

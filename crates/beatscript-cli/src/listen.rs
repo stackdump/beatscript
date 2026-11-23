@@ -798,6 +798,10 @@ fn referenced(text: &str, cid: &str, v: &mut JsonValue) {
                 o.set("resolved", s.resolved.clone().map_or(JsonValue::Null, JsonValue::str));
                 o.set("place", JsonValue::str(s.place));
                 o.set("generator", s.generator.clone().map_or(JsonValue::Null, JsonValue::str));
+                // a `use` line's: the name it gave its source
+                if s.kind == "use" {
+                    o.set("name", s.name.clone().map_or(JsonValue::Null, JsonValue::str));
+                }
                 // the sections it made the part in; null: wherever the part plays
                 let secs: Vec<String> = hits.iter().filter_map(|t| t.section.clone()).collect();
                 o.set("sections", if hits.iter().any(|t| t.section.is_none()) { JsonValue::Null } else { JsonValue::Array(secs.into_iter().map(JsonValue::str).collect()) });
@@ -828,6 +832,9 @@ fn referenced(text: &str, cid: &str, v: &mut JsonValue) {
         notes.extend(fitted.into_iter().map(JsonValue::str));
     }
     out.set("resolution", beatscript_api::resolution::resolution_json(&r, text));
+    if !r.imports.is_empty() {
+        out.set("imports", beatscript_api::resolution::imports_json(&r.imports, text));
+    }
 }
 
 pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<JsonValue, RenderError> {

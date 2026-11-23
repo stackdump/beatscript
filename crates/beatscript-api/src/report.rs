@@ -487,17 +487,24 @@ pub fn expand_json(text: &str, lineage: bool) -> String {
     };
     let chk = check_with(&out, &env);
     let oix = Utf16Index::new(&out);
+    // the `use` lines it wrote out: each name with its source (crate::resolution::IMPORTS_DOC)
+    let imports = djlive::uses::imports(text, &env).unwrap_or_default();
     match chk.compiled {
-        Some(c) => obj([
-            ("ok", JsonValue::Bool(true)),
-            ("text", JsonValue::str(out.clone())),
-            ("canonical", JsonValue::str(c.text.clone())),
-            ("cid", JsonValue::str(c.cid.clone())),
-            ("from_cid", JsonValue::str(from.cid.clone())),
-            ("refs", strs(refs.into_iter())),
-            ("diagnostics", diagnostics_json(&chk.diagnostics, &out, &oix)),
-        ])
-        .js_stringified(),
+        Some(c) => {
+            let mut fields = vec![
+                ("ok", JsonValue::Bool(true)),
+                ("text", JsonValue::str(out.clone())),
+                ("canonical", JsonValue::str(c.text.clone())),
+                ("cid", JsonValue::str(c.cid.clone())),
+                ("from_cid", JsonValue::str(from.cid.clone())),
+                ("refs", strs(refs.into_iter())),
+                ("diagnostics", diagnostics_json(&chk.diagnostics, &out, &oix)),
+            ];
+            if !imports.is_empty() {
+                fields.push(("imports", crate::resolution::imports_json(&imports, text)));
+            }
+            JsonValue::Object(JsonObject::from_pairs(fields)).js_stringified()
+        }
         // (it cannot fail when the program it came from checked; if it ever does, say where, in the written-out text)
         None => obj([("ok", JsonValue::Bool(false)), ("text", JsonValue::str(out.clone())), ("refs", strs(refs.into_iter())), ("diagnostics", diagnostics_json(&chk.diagnostics, &out, &oix))]).js_stringified(),
     }

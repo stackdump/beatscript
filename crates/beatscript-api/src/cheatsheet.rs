@@ -57,6 +57,7 @@ const PLAN: &[(&str, &[Keep])] = &[
     ("### Pattern transforms", &[Keep::Table, Keep::Para("Marks touch")]),
     ("### Arrange mutations", &[Keep::FirstCode, Keep::Table, Keep::Para("Try [arrange-in-eight-lines]")]),
     ("### Start from a seed", &[Keep::FirstCode]),
+    // (`use SOURCE as NAME` is in the grammar above, `use` and `use_source`; its section in BEATSCRIPT.md would take the sheet past 30 KB)
     ("### Sung lyrics", &[Keep::Para("**Found phrases:**")]),
     // (the four trims above made room for this and for the grammar's `station` productions under the 30 KB cap)
     ("## Radio: stations", &[Keep::Para("**Radio:**")]),

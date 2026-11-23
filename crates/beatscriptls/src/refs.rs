@@ -53,6 +53,8 @@ pub fn may_have(a: &Analysis) -> bool {
         let Tok::Word(w) = &tok.tok else { return false };
         let next = t.get(i + 1).map(|n| &n.tok);
         ((djlive::seed::head_version(w).is_some() || w == "template") && next == Some(&Tok::LParen)) || (is_gen_head(w) && matches!(next, Some(Tok::Word(_)))) || djlive::stored::is_ref_word(w)
+            // a `use SOURCE as NAME` line (not `use restricted`)
+            || (w == "use" && matches!(next, Some(Tok::Word(x)) if x != "restricted"))
     })
 }
 
@@ -112,6 +114,7 @@ fn kind_doc(s: &Site) -> String {
         }
         "stored" => "a stored program's section or part, by its CID".into(),
         "template" => "a template, written out as a whole program".into(),
+        "use" => "a name for a source (`use SOURCE as NAME`), written out where the name is used".into(),
         _ => "a reference".into(),
     }
 }
@@ -137,6 +140,7 @@ fn place_doc(s: &Site) -> String {
         "let" => format!("the `let {name}`"),
         "section" => format!("the section `{name}`"),
         "arrange" => "the whole track (`arrange from`)".to_string(),
+        "use" => format!("the name `{name}` (a source for a role, or a phrase)"),
         _ if !name.is_empty() => format!("a `{name}` part"),
         _ => "a part".to_string(),
     }

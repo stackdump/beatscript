@@ -28,6 +28,9 @@ pub const EXPANDED_CID_DOC: &str = "expanded_cid is the CID of the program with 
 /// What `resolution` is.
 pub const RESOLUTION_DOC: &str = "resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it (seeded@2), and for a gen call the key and bpm it was generated in";
 
+/// What `imports` is.
+pub const IMPORTS_DOC: &str = "imports lists each `use SOURCE as NAME` line of the program: its name, what the name is (is: a section, a line, a source for a role or a phrase), from (the source, in canonical spelling), source (its kind: stored, gen, template, form, theme, phrase or genre), resolved (what it is pinned to: a CID, or the library's CID for a theme or a phrase), line and col, and what (a sentence)";
+
 /// A program's references, resolved: what the three fields are made of.
 #[derive(Clone, Debug, Default)]
 pub struct References {
@@ -40,11 +43,13 @@ pub struct References {
     /// Every reference written out, in the order the stages wrote them (templates, seeds, gen calls, stored programs): the
     /// program's own and those inside another's expansion.
     pub written: Vec<String>,
+    /// Its `use SOURCE as NAME` lines, resolved (djlive::uses).
+    pub imports: Vec<djlive::uses::Import>,
 }
 
 impl References {
     pub fn is_empty(&self) -> bool {
-        self.sites.is_empty() && self.written.is_empty()
+        self.sites.is_empty() && self.written.is_empty() && self.imports.is_empty()
     }
 }
 
@@ -65,13 +70,37 @@ pub fn of_with(text: &str, cid: &str, env: &Env) -> References {
         None => cid.to_string(),
     };
     let sites = if expanded.is_some() { djlive::refs::sites(text, env).unwrap_or_default() } else { Vec::new() };
-    References { sites, expanded, expanded_cid, written }
+    let imports = if expanded.is_some() { djlive::uses::imports(text, env).unwrap_or_default() } else { Vec::new() };
+    References { sites, expanded, expanded_cid, written, imports }
+}
+
+/// `imports`: each `use` line of `text`, its name and its source (see [`IMPORTS_DOC`]).
+pub fn imports_json(imports: &[djlive::uses::Import], text: &str) -> JsonValue {
+    JsonValue::Array(
+        imports
+            .iter()
+            .map(|i| {
+                let (line, col) = djlive::diag::line_col(text, i.line.start);
+                let mut o = JsonObject::new();
+                o.set("name", JsonValue::str(i.name.clone()));
+                o.set("is", JsonValue::str(i.makes.name()));
+                o.set("from", JsonValue::str(i.call.clone()));
+                o.set("source", JsonValue::str(i.source.kind()));
+                o.set("resolved", opt_str(i.resolved.clone()));
+                o.set("generator", opt_str(i.generator.clone()));
+                o.set("line", int(line));
+                o.set("col", int(col));
+                o.set("what", JsonValue::str(i.what.clone()));
+                JsonValue::Object(o)
+            })
+            .collect(),
+    )
 }
 
 /// The generator a reference's kind names: a `gen` call's own (`seeded@2`), the beats generator's seeds for a `seed(...)`.
 fn generator_of(s: &Site) -> Option<String> {
     match s.kind {
-        "gen" => s.generator.clone(),
+        "gen" | "use" => s.generator.clone(),
         "seed" => Some(djlive::seed::generator_of(&s.call)),
         _ => None,
     }
@@ -183,6 +212,9 @@ pub fn fields(text: &str, cid: &str, expand: bool) -> Vec<(&'static str, JsonVal
     if !r.is_empty() {
         out.push(("refs", refs_json(&r, text, expand)));
         out.push(("resolution", resolution_json(&r, text)));
+    }
+    if !r.imports.is_empty() {
+        out.push(("imports", imports_json(&r.imports, text)));
     }
     out
 }
