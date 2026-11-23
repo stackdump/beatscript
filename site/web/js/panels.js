@@ -133,9 +133,9 @@ export class Panels {
     return out;
   }
 
-  /** The privacy policy and the delete-account page: plain links, reachable without signing in. */
+  /** The privacy policy, the delete-account page and the source (code MIT, programs CC0): plain links, reachable without signing in. */
   legalLinks() {
-    return h('p', { class: 'note legal' }, h('a', { href: '/privacy', class: 'link' }, 'Privacy policy'), h('a', { href: '/delete-account', class: 'link' }, 'Delete your account and data'));
+    return h('p', { class: 'note legal' }, h('a', { href: '/privacy', class: 'link' }, 'Privacy policy'), h('a', { href: '/delete-account', class: 'link' }, 'Delete your account and data'), h('a', { href: 'https://github.com/stackdump/beatscript', class: 'link', target: '_blank', rel: 'noopener' }, 'Source (code MIT, programs CC0)'));
   }
 
   // ---- compose ----------------------------------------------------------------------------------------------------------

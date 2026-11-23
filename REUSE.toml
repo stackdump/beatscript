@@ -20,6 +20,7 @@ SPDX-License-Identifier = "CC0-1.0"
 [[annotations]]
 path = [
   "README.md",
+  "CONTRIBUTING.md",
   "docs/**",
   "examples/**",
   "site/examples/**",

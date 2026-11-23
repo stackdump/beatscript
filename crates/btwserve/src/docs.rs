@@ -725,7 +725,7 @@ impl Docs {
         parts.push(json!({"@type": "Dataset", "@id": format!("{p}{}", btwserve::themes::PATH), "name": btwserve::themes::TITLE, "description": btwserve::themes::BLURB, "url": format!("{p}{}", btwserve::themes::PATH), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}/themes.txt"), "encodingFormat": "text/plain"}}));
         parts.push(json!({"@type": "Dataset", "@id": format!("{p}{}", btwserve::phrasebook::PATH), "name": btwserve::phrasebook::TITLE, "description": btwserve::phrasebook::BLURB, "url": format!("{p}{}", btwserve::phrasebook::PATH), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}/phrasebook.txt"), "encodingFormat": "text/plain"}}));
         parts.push(json!({"@type": "MediaObject", "@id": format!("{p}/llms.txt"), "name": "llms.txt", "contentUrl": format!("{p}/llms.txt"), "encodingFormat": "text/plain"}));
-        json!({"@context": "https://schema.org", "@type": "CollectionPage", "@id": format!("{p}/docs/"), "name": "BeatScript docs", "url": format!("{p}/docs/"), "isPartOf": {"@type": "WebSite", "name": "BeatScript", "url": format!("{p}/")}, "hasPart": parts})
+        json!({"@context": "https://schema.org", "@type": "CollectionPage", "@id": format!("{p}/docs/"), "name": "BeatScript docs", "url": format!("{p}/docs/"), "isPartOf": {"@type": "WebSite", "name": "BeatScript", "url": format!("{p}/"), "isAccessibleForFree": true, "codeRepository": btwserve::rights::SOURCE_URL, "license": "https://opensource.org/licenses/MIT"}, "hasPart": parts})
     }
 
     fn render_index(&self) -> Bytes {
@@ -906,6 +906,7 @@ impl Docs {
         b.push_str("Key facts:\n");
         b.push_str(&format!("- Everything generated here is public: programs, share links, cards and rendered audio are stored publicly under CC0-1.0, and a compose prompt goes to a third-party model. Never put anything private in a prompt. Terms: {p}/privacy.\n"));
         b.push_str(&format!("- Who authored a program and what rights it has (CC0, prompts and authorship, lineage, private work), in plain language: {p}{AUTHORSHIP_PATH}.\n"));
+        b.push_str(&format!("- Source: {} (MIT); programs CC0. Feature requests welcome as issues; no outside code or pull requests.\n", btwserve::rights::SOURCE_URL));
         b.push_str("- One line per deck (`deck A: kick x ~ x ~ | snare ~ x ~ x`), parts joined with `|`, 16 steps a bar. Mini-notation: `x` hit, `~` rest, `[..]` group, `<..>` per-bar alternation, `c2!` accent, `e2^` slide, `chord(am)`, `e(5,8)` euclid.\n");
         b.push_str("- Structure: `let`, `def` (no recursion), `repeat N`, `section NAME N bars { ... }`, `arrange`, `end after`, `loop`.\n");
         b.push_str("- Control lines: ramps `a -> b over N bars`, `at bar N:`, `every N bars:`, `before <section> N bars:`, `do <noun> <verb>`. Seeded transforms (`rotate`, `transpose`, `degrade`, `humanize`); `evolve every N bars { ... }` with a reported tail and period.\n");
@@ -1448,9 +1449,11 @@ mod tests {
         assert!(r.headers()[header::CONTENT_TYPE].to_str().unwrap().starts_with("text/markdown"));
         // llms.txt, the docs index and its JSON-LD, the sitemap
         assert!(d.llms_txt(&ex).contains("https://beatscript.app/authorship"));
+        assert!(d.llms_txt(&ex).contains("- Source: https://github.com/stackdump/beatscript (MIT); programs CC0."), "llms.txt does not name the source");
         let index = String::from_utf8_lossy(&d.render_index()).to_string();
         assert!(index.contains("<a href=\"/authorship\">Authorship and rights</a>"));
         let parts = d.index_ld(&d.installed());
+        assert_eq!(parts["isPartOf"]["codeRepository"], "https://github.com/stackdump/beatscript", "the docs' WebSite has no codeRepository");
         assert!(parts["hasPart"].as_array().unwrap().iter().any(|p| p["@id"] == "https://beatscript.app/authorship" && p["encoding"]["contentUrl"] == "https://beatscript.app/authorship.md"));
         assert!(btwserve::opendata::sitemap("https://beatscript.app", &[]).contains("<loc>https://beatscript.app/authorship</loc>"));
     }

@@ -67,7 +67,7 @@ dl.classes dd{margin:0;color:var(--dim)}
 footer.rights{margin:2rem auto 1.5rem;padding:0 1rem;max-width:72rem;font-size:.85rem;opacity:.8}"#;
 
 /// Who authored a program and what rights it has: the link every page of the site ends with (beatscript.app/authorship).
-const FOOTER: &str = "<footer class=\"rights\"><a href=\"/authorship\">Authorship and rights</a></footer>\n";
+const FOOTER: &str = "<footer class=\"rights\"><a href=\"/authorship\">Authorship and rights</a> &middot; <a href=\"https://github.com/stackdump/beatscript\">source</a> &middot; Code MIT &middot; programs CC0</footer>\n";
 
 /// Where the served page's stylesheet is ([`stylesheet`]), on the page's own origin.
 pub const STYLESHEET: &str = "/grammar.css";

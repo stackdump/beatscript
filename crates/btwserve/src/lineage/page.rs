@@ -42,7 +42,7 @@ fn head(title: &str, canonical: &str, ld: &Value) -> String {
 }
 
 /// The pages' end: the footer every page has (`crate::rights`), then the document's close.
-const FOOT: &str = "</main>\n<footer class=\"rights\"><a href=\"/authorship\">Authorship and rights</a></footer>\n</body>\n</html>\n";
+const FOOT: &str = "</main>\n<footer class=\"rights\"><a href=\"/authorship\">Authorship and rights</a> &middot; <a href=\"https://github.com/stackdump/beatscript\">source</a> &middot; Code MIT &middot; programs CC0</footer>\n</body>\n</html>\n";
 
 fn meta_line(n: &Node) -> String {
     let mut parts = Vec::new();

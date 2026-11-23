@@ -14,6 +14,7 @@ You write the programs: there is no compose tool. The authoring loop:
 8. To show a program as a page the person can press Play on (a claude.ai Artifact, or any page host), call artifact and publish its html exactly as it is: do not hand-roll a player or rewrite the page. For a stored program it carries the site's render in the page (audio inline, nothing loaded); for a text, or with audio engine, it plays live with the BeatScript player pinned on cdn.jsdelivr.net by version and Subresource Integrity.
 Gotcha: a voice name that starts with a digit, such as 808-bass, cannot be written: inst=808-bass reads as the sum 808 - bass, and quoting it ("808-bass") is refused too. Pick a voice that starts with a letter instead (for a deep bass, inst=sub-bass).
 The full language is %[1]s/docs/BTW.md; everything is indexed at %[1]s/llms.txt.
+Source: https://github.com/stackdump/beatscript (MIT); programs CC0.
 
 Tools that write (eval, load, stop, queue) need a bearer token: sign in on %[1]s and press "Create an MCP token". The rest work without one. A phone paired with the account (devices) is driven by passing its id as device to eval, load, get or stop. queue keeps an "up next" list of stored programs on a tab; it never writes music, and it advances only while someone is listening."####;
 

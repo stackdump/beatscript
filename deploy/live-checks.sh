@@ -66,6 +66,17 @@ curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/authorship</loc>"; echo 'sitemap
 curl -s -m 20 $U/llms.txt | grep -q "$U/authorship"; echo 'llms.txt lists /authorship'
 for p in / /docs/ /grammar /schema /mcp /ontology/ /privacy /delete-account /radio; do curl -s -m 20 $U$p | grep -q 'href="/authorship"' || { echo "$p: no link to /authorship"; exit 1; }; done
 echo 'the footer links /authorship on / /docs/ /grammar /schema /mcp /ontology/ /privacy /delete-account /radio'
+# --- open source: the footer's source link and the site's JSON-LD codeRepository ---
+SRC=https://github.com/stackdump/beatscript
+for p in / /docs/ /authorship /privacy; do curl -s -m 20 $U$p | grep -qF "href=\"$SRC\"" || { echo "$p: no source link to $SRC"; exit 1; }; done
+echo "the footer links $SRC on / /docs/ /authorship /privacy"
+curl -s -m 20 $U/ | python3 -c 'import json,re,sys; h=sys.stdin.read(); src=sys.argv[1]
+ld=[json.loads(m) for m in re.findall(r"<script type=\"application/ld\+json\">(.*?)</script>", h, re.S)]
+nodes=[n for d in ld for n in d.get("@graph", [d])]
+ok=[n["@type"] for n in nodes if n.get("codeRepository") == src and n.get("isAccessibleForFree") is True and "MIT" in n.get("license", "")]
+assert {"WebSite", "SoftwareApplication"} <= set(ok), ("no WebSite/SoftwareApplication JSON-LD with codeRepository", nodes)
+print("/ JSON-LD:", ", ".join(ok), "codeRepository", src)' "$SRC"
+curl -s -m 20 $U/llms.txt | grep -qF "Source: $SRC (MIT); programs CC0"; echo 'llms.txt names the source'
 C=$(curl -s -m 20 $U/sitemap.xml | grep -o '/p/z[1-9A-HJ-NP-Za-km-z]*' | head -1)
 if [ -n "$C" ]; then curl -s -m 20 $U$C.jsonld | grep -q "\"usageInfo\": \"$U/authorship\""; echo "$C.jsonld: usageInfo -> /authorship"; else echo 'no stored public program in the sitemap: usageInfo not checked live'; fi
 mcp() { curl -s -m 30 -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d "$1" $U/mcp; }

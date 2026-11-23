@@ -81,7 +81,7 @@ fn facts(r: &Report) -> String {
     parts.join(" · ")
 }
 
-/// The rights line: the licence (linked to its deed), the author and credits the store keeps, and /authorship.
+/// The rights line: the licence (linked to its deed), the author and credits the store keeps, /authorship and the source.
 fn rights_html(origin: &str, m: &Meta) -> String {
     let id = if m.license.trim().is_empty() { btwserve::gate::DEFAULT_LICENSE } else { m.license.trim() };
     let badge = esc(&lex::license_badge(id));
@@ -98,6 +98,7 @@ fn rights_html(origin: &str, m: &Meta) -> String {
         s.push_str(&format!(" · credits: {}", esc(&credits.join(", "))));
     }
     s.push_str(&format!(" · <a href=\"{}\" target=\"_blank\" rel=\"noopener\">rights</a>", esc_url(&btwserve::rights::url(origin))));
+    s.push_str(&format!(" · <a href=\"{}\" target=\"_blank\" rel=\"noopener\">open source</a>", esc_url(btwserve::rights::SOURCE_URL)));
     s
 }
 
@@ -381,6 +382,7 @@ mod tests {
         assert!(html.contains("<title>night &lt;bus&gt; · BeatScript</title>"), "{html}");
         assert!(html.contains("href=\"https://creativecommons.org/licenses/by/4.0/\""), "{html}");
         assert!(html.contains(" · by ann · credits: bo · "), "{html}");
+        assert!(html.contains("href=\"https://github.com/stackdump/beatscript\" target=\"_blank\" rel=\"noopener\">open source</a>"), "the source link: {html}");
         assert!(html.contains(&format!("href=\"https://beatscript.app/?cid={}\"", p.cid)), "the editor link");
         assert!(html.contains("id=\"bsp-play\"") && html.contains(" disabled>"), "play starts disabled: the script enables it");
         assert!(html.contains("am · 128 BPM · 2 bars"), "{html}");

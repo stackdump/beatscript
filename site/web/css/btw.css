@@ -219,6 +219,7 @@ a.tb { text-decoration: none; color: inherit; }
 .t-legal { display: flex; gap: 4px; font-size: 12px; white-space: nowrap; }
 .t-legal a { color: var(--faint); text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; min-width: 24px; padding: 0 6px; }
 .t-legal a:hover, .t-legal a:focus-visible { color: var(--dim); text-decoration: underline; }
+.t-legal .t-lic { color: var(--faint); display: inline-flex; align-items: center; padding: 0 6px; }
 .t-level { display: inline-flex; align-items: center; gap: 8px; }
 .t-level input { width: 84px; accent-color: var(--accent); }
 .meter { width: 44px; height: 6px; background: #0b0d12; border: 1px solid var(--line-2); border-radius: 3px; overflow: hidden; display: block; }

@@ -231,7 +231,27 @@ pub fn generic_meta_at(origin: &str, path: &str) -> String {
     w(format!(r#"<meta name="twitter:title" content="{}">"#, e(GENERIC_TITLE)));
     w(format!(r#"<meta name="twitter:description" content="{}">"#, e(GENERIC_DESC)));
     w(format!(r#"<meta name="twitter:image" content="{}">"#, e(&img)));
+    w(format!(r#"<script type="application/ld+json">{}</script>"#, site_ld(origin)));
     b
+}
+
+/// The site as linked data (schema.org WebSite and SoftwareApplication): free to use, the code MIT at
+/// [`btwserve::rights::SOURCE_URL`], the programs CC0 (each program's own JSON-LD says so). A data block, never run.
+pub fn site_ld(origin: &str) -> String {
+    let home = format!("{origin}/");
+    let app = serde_json::json!({
+        "@type": "SoftwareApplication", "@id": format!("{origin}/#app"), "name": "BeatScript", "url": home,
+        "applicationCategory": "MultimediaApplication", "operatingSystem": "Web, Android",
+        "isAccessibleForFree": true, "codeRepository": btwserve::rights::SOURCE_URL, "license": "https://opensource.org/licenses/MIT",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    });
+    let site = serde_json::json!({
+        "@type": "WebSite", "@id": format!("{origin}/#site"), "name": "BeatScript", "url": home, "description": GENERIC_DESC,
+        "isAccessibleForFree": true, "codeRepository": btwserve::rights::SOURCE_URL, "license": "https://opensource.org/licenses/MIT",
+        "about": {"@id": format!("{origin}/#app")}, "usageInfo": btwserve::rights::url(origin),
+    });
+    // (no field holds markup; a `</` would still be escaped, so nothing can close the script early)
+    serde_json::json!({"@context": "https://schema.org", "@graph": [site, app]}).to_string().replace("</", "<\\/")
 }
 
 pub fn inject_generic(doc: &[u8], origin: &str, path: &str) -> Vec<u8> {
@@ -525,6 +545,16 @@ mod tests {
         let o = String::from_utf8(inject_generic(d, "https://x.test/", "/p")).unwrap();
         assert!(o.contains(r#"<link rel="canonical" href="https://x.test/p">"#));
         assert!(!o.contains("btw:card-meta"));
+        // the site's linked data: free, its code (MIT) at the repository
+        let at = o.find(r#"<script type="application/ld+json">"#).expect("no site JSON-LD");
+        let json = &o[at + 35..at + o[at..].find("</script>").unwrap()];
+        let v: serde_json::Value = serde_json::from_str(json).unwrap();
+        for n in v["@graph"].as_array().unwrap() {
+            assert_eq!(n["codeRepository"], "https://github.com/stackdump/beatscript", "{n}");
+            assert_eq!(n["license"], "https://opensource.org/licenses/MIT");
+            assert_eq!(n["isAccessibleForFree"], true);
+        }
+        assert_eq!(v["@graph"][1]["@type"], "SoftwareApplication");
     }
 
     #[test]
