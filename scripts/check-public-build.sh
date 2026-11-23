@@ -17,8 +17,8 @@
 # 4. No Apple loop audio (.caf/.aif/.aiff): programs reference loops by hash only.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-targets=(djweb btwserve btwapi btwls djlive djengine btwseal btwd btwround)
-members=(btwapi btwd btwls btwround btwseal btwserve djengine djhost djlive djweb)
+targets=(djweb btwserve btwapi beatscriptls djlive djengine btwseal btwd btwround)
+members=(btwapi btwd beatscriptls btwround btwseal btwserve djengine djhost djlive djweb)
 banned='^(djlexicon-booth|windwheel|djrust-wallet) '
 fail=0
 

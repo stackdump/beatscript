@@ -4,7 +4,7 @@ members = [
   "crates/djengine",
   "crates/djlive",
   "crates/btwapi",
-  "crates/btwls",
+  "crates/beatscriptls",
   "crates/btwseal",
   "crates/btwserve",
   "crates/djweb",

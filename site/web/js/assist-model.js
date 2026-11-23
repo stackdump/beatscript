@@ -1,10 +1,10 @@
 // The language service's pure side for the editor (assist.js is the DOM): LSP positions over the editor's UTF-16 text,
 // snippets, edits, the hover's markdown, the outline. No DOM, so test/unit.mjs pins it.
 //
-// The service is djrust's btwls (crates/btwls), reached through the wasm module's BtwLs class: the same server `btwd lsp`
+// The service is djrust's beatscriptls (crates/beatscriptls), reached through the wasm module's BeatscriptLs class: the same server `btwd lsp`
 // runs for VS Code and IntelliJ, with positions in UTF-16 code units, which is what JS string offsets are.
 
-/** The LSP position {line, character} of UTF-16 offset `at`. A line ends at "\n", "\r\n" or a lone "\r" (as btwls counts). */
+/** The LSP position {line, character} of UTF-16 offset `at`. A line ends at "\n", "\r\n" or a lone "\r" (as beatscriptls counts). */
 export function lspPos(text, at) {
   at = Math.max(0, Math.min(at, text.length));
   let line = 0;

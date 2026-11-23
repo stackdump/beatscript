@@ -16,8 +16,8 @@ audio host), a git dependency pinned in `Cargo.toml`.
 | `crates/djlive` | the language: parse, compile to djrust nets, mutate, evolve, perform; `grammar.ebnf`, the form templates |
 | `crates/djengine` | engine modules on top of djrust: vocals and the lexicon, themes, rights, key, SMF, import (plus booth modules) |
 | `crates/btwapi` | check / fmt / open / share / highlight / marks as JSON, pure; shared by the CLI, the server and the wasm |
-| `crates/btwls` | the language service (diagnostics, completion, hover, refactors), LSP-shaped and pure |
-| `crates/djweb` | the browser module: btwapi + btwls + the djrust engine behind wasm-bindgen |
+| `crates/beatscriptls` | the language service (diagnostics, completion, hover, refactors), LSP-shaped and pure |
+| `crates/djweb` | the browser module: btwapi + beatscriptls + the djrust engine behind wasm-bindgen |
 | `crates/btwserve` | the beatscript.app server: site, docs, render (Ogg Opus), check, sign-in, cards, pairing, MCP, ontology |
 | `crates/btwseal` | sealed private pushes to a paired phone |
 | `crates/btwd` | the CLI: check, fmt, render, cheatsheet, lsp, export |
@@ -34,7 +34,7 @@ audio host), a git dependency pinned in `Cargo.toml`.
 ## Build and test
 
 ```sh
-cargo test --locked -p djlive -p djengine -p btwapi -p btwls -p btwseal -p btwserve -p djweb -p btwd -p btwround
+cargo test --locked -p djlive -p djengine -p btwapi -p beatscriptls -p btwseal -p btwserve -p djweb -p btwd -p btwround
 scripts/check-public-build.sh            # what a default build may contain (below)
 node --test site/test/unit.mjs           # the page's pure-JS tests
 scripts/build-web-wasm.sh site/web/wasm  # the browser module (needs the wasm-bindgen CLI the lockfile pins)

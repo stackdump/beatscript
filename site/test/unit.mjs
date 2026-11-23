@@ -1698,7 +1698,7 @@ test('assist: the outline flattens and filters', () => {
   assert.equal(am.offsetOfVcol('\tab', 0, 3), 2, 'a tab is two columns');
 });
 
-test('assist: the real module answers completion, hover and fixes (BtwLs)', { skip: !realWasm || !facade.ls ? 'no built module with BtwLs' : false }, () => {
+test('assist: the real module answers completion, hover and fixes (BeatscriptLs)', { skip: !realWasm || !facade.ls ? 'no built module with BeatscriptLs' : false }, () => {
   const ls = facade.ls();
   const text = 'tempo 120\nsection intro 8 bars {\n  deck A: kcik x ~ x ~\n}\narrange \n';
   const diags = JSON.parse(ls.open('main', text));
@@ -1842,7 +1842,7 @@ test('scrub: the throttle calls at once, then at most once an interval with the 
   assert.deepEqual(got.at(-1), 'd');
 });
 
-test('scrub: the real module says what each literal is (btw/numberAt), and a scrub of each keeps the program checkable', { skip: !realWasm || !facade.ls ? 'no built module with BtwLs' : false }, () => {
+test('scrub: the real module says what each literal is (btw/numberAt), and a scrub of each keeps the program checkable', { skip: !realWasm || !facade.ls ? 'no built module with BeatscriptLs' : false }, () => {
   const ls = facade.ls();
   const text = 'tempo 124\nswing 0.1\nkey am\ndeck A: kick e(5, 8, 2) vel=90..110 | hihat x*8?0.7 len=2\ndeck B: bass 1 ~ 3 5 oct=2 | melody c4 e4 g4 ~ | harmony i VI III VII\nat bar 16: master: filter lp 2000 -> 8000 over 8 bars\nmaster: delay 0.3\n';
   assert.ok(facade.check(text).ok);

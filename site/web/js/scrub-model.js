@@ -1,5 +1,5 @@
 // Number and range scrubbing, the pure side (scrub.js is the DOM). What a literal is, its limits, step and unit come from
-// the language service's `btw/numberAt` (djrust crates/btwls/src/number.rs): an `info` here is that answer. Everything below
+// the language service's `btw/numberAt` (djrust crates/beatscriptls/src/number.rs): an `info` here is that answer. Everything below
 // is a function of numbers and strings, pinned in test/unit.mjs.
 //
 // The rules: a value never leaves [min, max]; an integer stays whole; the two ends of a range (a..b) or a ramp (a -> b) never

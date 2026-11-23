@@ -698,7 +698,7 @@ try {
     await ready();
     await page.waitFor('!!__app.scrub', 8000).catch(() => null);
     if (!(await page.eval('!!__app.scrub'))) {
-      check('the scrubber is on (a module with the language service)', false, 'no __app.scrub: build the module from djrust feat/btwls');
+      check('the scrubber is on (a module with the language service)', false, 'no __app.scrub: build the module with the language service (crates/beatscriptls)');
     } else {
       const PROG = 'tempo 124\nkey am\ndeck A: kick x ~ x ~ vel=90..110 | hihat x*8\ndeck B: melody c4 ~ e4 ~\nmaster: level 0.8\n';
       await setText(PROG);

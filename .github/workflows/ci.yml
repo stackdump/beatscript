@@ -38,7 +38,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: cargo test
-        run: cargo test --locked -p djlive -p djengine -p btwapi -p btwls -p btwseal -p btwserve -p djweb -p btwd -p btwround
+        run: cargo test --locked -p djlive -p djengine -p btwapi -p beatscriptls -p btwseal -p btwserve -p djweb -p btwd -p btwround
       - name: djhost builds with its optional features
         run: cargo check --locked -p djhost --features windwheel,wallet
       - name: disk left on the runner

@@ -1,5 +1,5 @@
 // The editor's assistant: completion, hover, quick-fixes and refactors (the lightbulb), the outline and go to definition,
-// from the language service in the wasm module (BtwLs: djrust's crates/btwls, the server `btwd lsp` runs for VS Code and
+// from the language service in the wasm module (BeatscriptLs: djrust's crates/beatscriptls, the server `btwd lsp` runs for VS Code and
 // IntelliJ). The editor keeps its own keys; these are added:
 //
 //   Ctrl+Space          complete at the caret (also opens by itself after = : $ . | and ( )
@@ -19,7 +19,7 @@ const URI = 'main';
 const VISIBLE = 10;
 
 export class Assist {
-  /** facade: the wasm facade (its `ls()` makes a BtwLs, or null in the mock). toast(msg, kind): the page's. */
+  /** facade: the wasm facade (its `ls()` makes a BeatscriptLs, or null in the mock). toast(msg, kind): the page's. */
   constructor(editor, facade, toast = () => {}) {
     this.ed = editor;
     this.ls = facade && facade.ls ? facade.ls() : null;
