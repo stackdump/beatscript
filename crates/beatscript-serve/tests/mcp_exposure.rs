@@ -15,10 +15,12 @@
 //!
 //! `cargo test -p beatscript-serve --test mcp_exposure`.
 
+mod common;
+
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
-use std::process::{Child, Command, Stdio};
-use std::time::{Duration, Instant};
+use std::net::TcpStream;
+use std::process::Child;
+use std::time::Duration;
 
 use serde_json::{json, Value};
 
@@ -49,19 +51,7 @@ fn start() -> Server {
     let d = dir.path();
     std::fs::write(d.join("session.secret"), hex::encode([42u8; 32]) + "\n").unwrap();
     std::fs::write(d.join("site.json"), json!({"site_id": "siteSITEsiteSITEsite01", "created": "2026-11-19T00:00:00Z"}).to_string()).unwrap();
-    let port = TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
-    let addr = format!("127.0.0.1:{port}");
-    let child = Command::new(env!("CARGO_BIN_EXE_beatscript-serve"))
-        .args(["-addr", &addr, "-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", "https://beatscript.app", "-web", "", "-docs", ""])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .unwrap();
-    let t0 = Instant::now();
-    while TcpStream::connect(&addr).is_err() {
-        assert!(t0.elapsed() < Duration::from_secs(60), "beatscript-serve did not start");
-        std::thread::sleep(Duration::from_millis(50));
-    }
+    let (child, addr) = common::serve(|_| common::flags(&["-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", "https://beatscript.app", "-web", "", "-docs", ""]), false);
     Server { child, addr, _dir: dir }
 }
 

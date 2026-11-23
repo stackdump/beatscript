@@ -14,10 +14,12 @@
 //!
 //! `cargo test -p beatscript-serve --test storage_gate`.
 
+mod common;
+
 use std::io::{BufRead, BufReader, Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpStream;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
+use std::process::Child;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -236,14 +238,10 @@ fn start() -> Server {
     std::fs::write(d.join("tokens.json"), json!([tok(TOKEN_A, A), tok(TOKEN_B, B)]).to_string()).unwrap();
     let dev = |id: &str, owner: &str, k: &SigningKey| json!({"id": id, "owner": owner, "name": "Pixel 9", "key": B64.encode(k.verifying_key().to_bytes()), "paired": "2026-11-19T00:00:00Z"});
     std::fs::write(d.join("devices.json"), json!([dev(PHONE_A, A, &phone_key(1)), dev(PHONE_B, B, &phone_key(2))]).to_string()).unwrap();
-    let port = TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
-    let addr = format!("127.0.0.1:{port}");
-    let mut child = Command::new(env!("CARGO_BIN_EXE_beatscript-serve"))
-        .args(["-addr", &addr, "-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", &format!("http://{addr}"), "-web", "", "-docs", "", "-sse-ping-ms", "200"])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
+    let (mut child, addr) = common::serve(
+        |addr| common::flags(&["-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", &format!("http://{addr}"), "-web", "", "-docs", "", "-sse-ping-ms", "200"]),
+        true,
+    );
     let out = Arc::new(Mutex::new(String::new()));
     for pipe in [Box::new(child.stdout.take().unwrap()) as Box<dyn Read + Send>, Box::new(child.stderr.take().unwrap())] {
         let out = out.clone();
@@ -252,11 +250,6 @@ fn start() -> Server {
                 out.lock().unwrap().push_str(&(l + "\n"));
             }
         });
-    }
-    let t0 = Instant::now();
-    while TcpStream::connect(&addr).is_err() {
-        assert!(t0.elapsed() < Duration::from_secs(30), "beatscript-serve did not start: {}", out.lock().unwrap());
-        std::thread::sleep(Duration::from_millis(50));
     }
     Server { child, addr, dir, out }
 }

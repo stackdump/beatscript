@@ -11,13 +11,15 @@
 //!
 //! `cargo test -p beatscript-serve --test rename`.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader, Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpStream;
 use std::path::Path;
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD as B64;
 use base64::Engine;
@@ -100,15 +102,8 @@ fn start(examples: Option<&Path>) -> Server {
     let dir = tempfile::tempdir().unwrap();
     let d = dir.path();
     std::fs::write(d.join("session.secret"), hex::encode([42u8; 32]) + "\n").unwrap();
-    let port = TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
-    let addr = format!("127.0.0.1:{port}");
     let ex = examples.map(|p| p.to_string_lossy().into_owned()).unwrap_or_default();
-    let mut child = Command::new(env!("CARGO_BIN_EXE_beatscript-serve"))
-        .args(["-addr", &addr, "-data", &d.to_string_lossy(), "-log-dir", "off", "-public-url", &format!("http://{addr}"), "-web", "", "-docs", "", "-examples", &ex])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
+    let (mut child, addr) = common::serve(|addr| common::flags(&["-data", &d.to_string_lossy(), "-log-dir", "off", "-public-url", &format!("http://{addr}"), "-web", "", "-docs", "", "-examples", &ex]), true);
     let out = Arc::new(Mutex::new(String::new()));
     for pipe in [Box::new(child.stdout.take().unwrap()) as Box<dyn Read + Send>, Box::new(child.stderr.take().unwrap())] {
         let out = out.clone();
@@ -117,11 +112,6 @@ fn start(examples: Option<&Path>) -> Server {
                 out.lock().unwrap().push_str(&(l + "\n"));
             }
         });
-    }
-    let t0 = Instant::now();
-    while TcpStream::connect(&addr).is_err() {
-        assert!(t0.elapsed() < Duration::from_secs(30), "beatscript-serve did not start: {}", out.lock().unwrap());
-        std::thread::sleep(Duration::from_millis(50));
     }
     Server { child, addr, dir, out }
 }

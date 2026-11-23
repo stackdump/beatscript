@@ -3,12 +3,14 @@
 //!
 //! `cargo test -p beatscript-serve --test embed_routes`.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpStream;
 use std::path::Path;
-use std::process::{Child, Command, Stdio};
-use std::time::{Duration, Instant};
+use std::process::Child;
+use std::time::Duration;
 
 use serde_json::{json, Value};
 
@@ -51,46 +53,10 @@ fn start() -> Server {
     // the site's static files: only the element's script matters here (beats site/web/embed.js)
     std::fs::create_dir_all(d.join("web")).unwrap();
     std::fs::write(d.join("web/embed.js"), "/* <beatscript-player> */\n").unwrap();
-    // a port picked here can be taken by another test's server before this one binds it: each server says its own
-    // version, and one that is not ours, or exits, is retried on another port
-    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-    let version = format!("embed-test-{}-{}", std::process::id(), N.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
-    for _ in 0..5 {
-        let port = TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
-        let addr = format!("127.0.0.1:{port}");
-        let mut child = Command::new(env!("CARGO_BIN_EXE_beatscript-serve"))
-            .args(["-addr", &addr, "-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", "https://beatscript.app", "-web", &d.join("web").to_string_lossy(), "-docs", "", "-version", &version])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .unwrap();
-        let t0 = Instant::now();
-        let ours = loop {
-            if child.try_wait().ok().flatten().is_some() {
-                break false;
-            }
-            if let Some(body) = healthz(&addr) {
-                break body.contains(&format!("\"version\":\"{version}\""));
-            }
-            assert!(t0.elapsed() < Duration::from_secs(60), "beatscript-serve did not start");
-            std::thread::sleep(Duration::from_millis(50));
-        };
-        if ours {
-            return Server { child, addr, dir };
-        }
-        let _ = child.kill();
-        let _ = child.wait();
-    }
-    panic!("beatscript-serve did not start on a free port");
-}
-
-fn healthz(addr: &str) -> Option<String> {
-    let mut s = TcpStream::connect(addr).ok()?;
-    s.set_read_timeout(Some(Duration::from_secs(5))).ok()?;
-    s.write_all(format!("GET /healthz HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n\r\n").as_bytes()).ok()?;
-    let mut raw = String::new();
-    let _ = s.read_to_string(&mut raw);
-    Some(raw).filter(|r| r.starts_with("HTTP/1.1 200"))
+    // a server of its own (tests/common: a -version per server, /healthz names it, a dead child retried on another port)
+    let web = d.join("web");
+    let (child, addr) = common::serve(|_| common::flags(&["-data", &d.to_string_lossy(), "-log-dir", &d.join("log-rs").to_string_lossy(), "-public-url", "https://beatscript.app", "-web", &web.to_string_lossy(), "-docs", ""]), false);
+    Server { child, addr, dir }
 }
 
 struct Resp {
