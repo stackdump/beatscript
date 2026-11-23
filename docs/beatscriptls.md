@@ -155,7 +155,9 @@ text with something a reference starts with in its tokens, so a program with non
 - **Completion** in a `gen@2` call: after its head the installed generator's genres (`djlive::gen::generator().genres(v)`),
   then its names (`djlive::gen::PARAMS`, `seed=` first, each once; on a part line the line's own params after them), then a
   name's values: `length=` the lengths, `key=` the keys, `part=` the roles, `section=` the sections of the program the call
-  prints (generated and compiled there, a few ms). `arrange from`, `section NAME from` and `let NAME =` offer `gen@2`.
+  prints (generated and compiled there, a few ms). `arrange from`, `section NAME from` and `let NAME =` offer `gen@2`;
+  `arrange from` also offers `seed(` and `seed@2(` (seeds v2: the track with its genre's swing), and a seed's hover says its
+  version (`seeds v1`, `seeds v2`).
 
 What each client gets:
 

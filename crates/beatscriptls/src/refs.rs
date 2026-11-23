@@ -45,14 +45,14 @@ pub fn is_gen_head(w: &str) -> bool {
     w == "gen" || w.strip_prefix("gen@").is_some_and(|n| !n.is_empty() && n.bytes().all(|c| c.is_ascii_digit()))
 }
 
-/// Does the text have anything a reference starts with: `gen@N genre`, `seed(`, `template(` or a CID? Its own tokens only, so a
+/// Does the text have anything a reference starts with: `gen@N genre`, `seed(` (or `seed@N(`), `template(` or a CID? Its own tokens only, so a
 /// program with none never pays for working them out.
 pub fn may_have(a: &Analysis) -> bool {
     let t = &a.tokens;
     t.iter().enumerate().any(|(i, tok)| {
         let Tok::Word(w) = &tok.tok else { return false };
         let next = t.get(i + 1).map(|n| &n.tok);
-        ((w == "seed" || w == "template") && next == Some(&Tok::LParen)) || (is_gen_head(w) && matches!(next, Some(Tok::Word(_)))) || djlive::stored::is_ref_word(w)
+        ((djlive::seed::head_version(w).is_some() || w == "template") && next == Some(&Tok::LParen)) || (is_gen_head(w) && matches!(next, Some(Tok::Word(_)))) || djlive::stored::is_ref_word(w)
     })
 }
 
@@ -97,10 +97,11 @@ fn short_call(call: &str) -> String {
     }
 }
 
-/// What a kind of reference is, in a phrase.
-fn kind_doc(kind: &str) -> &'static str {
-    match kind {
+/// What a kind of reference is, in a phrase (a seed's says its version: `seed@2(...)` writes its genre's swing).
+fn kind_doc(s: &Site) -> &'static str {
+    match s.kind {
         "gen" => "a call of the seeded generator",
+        "seed" if djlive::seed::generator_of(&s.call) != format!("seeds@{}", djlive::seed::VERSION) => "a track of the beats generator (seeds v2: the track and its genre's swing)",
         "seed" => "a track of the beats generator (seeds v1)",
         "stored" => "a stored program's section or part, by its CID",
         "template" => "a template, written out as a whole program",
@@ -159,7 +160,7 @@ pub fn truncated(text: &str, lines: usize, chars: usize) -> (String, usize) {
 /// The hover of a reference: what it is, what it resolves to, its expansion.
 pub fn hover_markdown(a: &Analysis, s: &Site) -> String {
     let half = if s.half == ENGINE { "**engine call**: the text records the call; its result is pinned by the CID it resolves to" } else { "**structural import**: borrowed as source, written out as BeatScript before the program is lowered" };
-    let mut m = format!("```beatscript\n{}\n```\n\n`{}`: {} · {half}", s.call, s.kind, kind_doc(s.kind));
+    let mut m = format!("```beatscript\n{}\n```\n\n`{}`: {} · {half}", s.call, s.kind, kind_doc(s));
     let mut facts: Vec<String> = Vec::new();
     if let Some(cid) = &s.resolved {
         facts.push(format!("resolves to `{cid}`"));

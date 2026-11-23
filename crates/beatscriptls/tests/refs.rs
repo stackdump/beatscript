@@ -120,6 +120,26 @@ fn hover_on_a_part_lines_call_and_a_seed() {
     assert!(seed.contains(&format!("```beatscript\n{}", refs_expansion(&ss[1]).lines().next().unwrap())), "{seed}");
 }
 
+/// `seed@2(...)` (seeds v2) hovers as a seed of its version: its kind line says v2, and the whole track's expansion has the
+/// genre's swing (docs/beatscript/ext-ffi.md, "seed@2").
+#[test]
+fn hover_on_a_seed_at_2_says_its_version_and_shows_its_swing() {
+    let text = "tempo 104\narrange from seed@2(jazz, 7)\n";
+    let ss = sites(text);
+    assert_eq!((ss.len(), ss[0].kind, ss[0].call.as_str(), ss[0].place), (1, "seed", "seed@2(jazz, 7)", "arrange"));
+    assert_eq!(ss[0].span.start, text.find("seed@2").unwrap(), "the reference starts at its head");
+    assert!(refs_expansion(&ss[0]).contains("\nswing 0.6\n"), "{}", refs_expansion(&ss[0]));
+    let mut s = server(text);
+    let md = hover_text(&mut s, text, text.find("seed@2").unwrap() + 2);
+    assert!(md.contains("```beatscript\nseed@2(jazz, 7)") && md.contains("seeds v2") && md.contains("**engine call**"), "{md}");
+    assert!(md.contains(&format!("resolves to `{}`", ss[0].resolved.as_deref().unwrap())), "{md}");
+    // a bare seed is v1, and says so
+    let v1 = "arrange from seed(jazz, 7)\n";
+    let mut s = server(v1);
+    let md = hover_text(&mut s, v1, v1.find("seed(").unwrap() + 1);
+    assert!(md.contains("(seeds v1)") && !md.contains("swing 0.6"), "{md}");
+}
+
 fn refs_expansion(s: &refs::Site) -> String {
     beatscriptls::refs::expansion(s).to_string()
 }

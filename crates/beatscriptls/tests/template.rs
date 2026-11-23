@@ -20,7 +20,7 @@ fn labels(text: &str) -> Vec<String> {
 #[test]
 fn after_arrange_from_a_template_or_a_seed_is_offered() {
     let l = labels("tempo 122\narrange from |\n");
-    assert_eq!(l, ["template(", "gen@2", "seed("], "{l:?}");
+    assert_eq!(l, ["template(", "gen@2", "seed(", "seed@2("], "{l:?}");
     let items = offered("arrange from |\n");
     assert!(items[0].snippet.as_deref().is_some_and(|s| s.starts_with("template(${1:deep-house}, ")), "{:?}", items[0]);
 }

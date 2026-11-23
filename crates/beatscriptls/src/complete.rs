@@ -438,6 +438,10 @@ fn from_items(toks: &[djlive::lex::Token]) -> Vec<Item> {
                 .snippet("template(${1:deep-house}, ${2:@tempest_such_stuff})"),
             Item::new("seed(", kind::SNIPPET, 1).detail("a track of the beats generator").doc("`arrange from seed(techno, 42)`").snippet("seed(${1:techno}, ${2:42})"),
             gen_item(1, "its whole program", "arrange from gen@2 techno seed=42", ""),
+            Item::new("seed@2(", kind::SNIPPET, 2)
+                .detail("a track of the beats generator, with its genre's swing (seeds v2)")
+                .doc("`arrange from seed@2(jazz, 7)`: the track `seed(jazz, 7)` is, and the `swing` its genre has (jazz 0.6, house 0.2); a bare `seed(...)` is seeds v1 and writes none")
+                .snippet("seed@2(${1:jazz}, ${2:7})"),
         ],
         Some(_) if toks.iter().any(|t| t.tok == Tok::Comma) => {
             let mut v: Vec<Item> = djengine::vocal::phoneme::pd_phrases().iter().map(|p| Item::new(format!("@{}", p.id), kind::VALUE, 0).detail(format!("{}: {}", p.family, p.text)).doc(format!("{}, {}, {}", p.work, p.author, p.year))).collect();

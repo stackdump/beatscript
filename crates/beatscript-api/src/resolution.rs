@@ -72,7 +72,7 @@ pub fn of_with(text: &str, cid: &str, env: &Env) -> References {
 fn generator_of(s: &Site) -> Option<String> {
     match s.kind {
         "gen" => s.generator.clone(),
-        "seed" => Some(format!("seeds@{}", djlive::seed::VERSION)),
+        "seed" => Some(djlive::seed::generator_of(&s.call)),
         _ => None,
     }
 }
@@ -111,7 +111,7 @@ pub fn refs_json(r: &References, text: &str, expand: bool) -> JsonValue {
 fn kind_of_call(call: &str) -> &'static str {
     if call.starts_with("template(") {
         "template"
-    } else if call.starts_with("seed(") {
+    } else if call.starts_with("seed(") || call.starts_with("seed@") {
         "seed"
     } else if djlive::gen::is_call_word(call) {
         "gen"
