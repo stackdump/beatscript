@@ -543,7 +543,7 @@ export class Panels {
     const go = async (format, btn) => {
       btns.forEach((b) => { b.disabled = true; });
       try {
-        await app.ensureStored(report);
+        await app.ensureStored(report, text);
         const url = app.api.exportUrl(report.cid, format);
         if (format === 'midi') {
           status.textContent = 'Downloading the MIDI file…';
@@ -690,7 +690,8 @@ export class Panels {
           const cur = this.lastShare;
           // what the program imports is kept first: the server checks it against what it keeps
           await app.storeClosure(app.report);
-          paintShort(await app.api.putShare(cur.cid, { text: cur.canonical }));
+          // the text as written (same CID): the server keeps its `# from:` lines and doc comments beside the canonical text
+          paintShort(await app.putAsWritten((cid, t) => app.api.putShare(cid, { text: t }), cur.cid, text, cur.canonical));
         } catch (e) {
           mk.disabled = false;
           if (e instanceof ApiError && e.code === 'auth_required') { app.user = null; app.updateUser(); paintShort(); return; }

@@ -795,7 +795,7 @@ export class App {
   }
 
   async playStream(text, report) {
-    await this.ensureStored(report);
+    await this.ensureStored(report, text);
     const player = new StreamPlayer({ context: this.ctx, destination: this.master, url: this.api.renderUrl(report.cid, 'wav', this.ctx && this.ctx.sampleRate), bpm: report.tempo || 120, onChange: () => this.updateTransport() });
     this.pendingPlayer = player;
     try {
@@ -912,10 +912,22 @@ export class App {
     }
   }
 
-  async ensureStored(report) {
+  /**
+   * Store a program as it was written: the server stores its canonical text and keeps what its comments say beside it (its
+   * `# from: <call> -> <cid>` lines as meta.based_on, the first store's meta for good). A text over the server's size limit
+   * goes as its canonical text, which is smaller and has the same CID. `put(cid, text)` is putProgram or a share's put.
+   */
+  async putAsWritten(put, cid, text, canonical) {
+    if (typeof text === 'string' && text !== canonical) {
+      try { return await put(cid, text); } catch (e) { if (!(e instanceof ApiError && e.code === 'too_large')) throw e; }
+    }
+    return put(cid, canonical);
+  }
+
+  async ensureStored(report, text) {
     if (this.stored.has(report.cid)) return;
     await this.storeClosure(report);
-    await this.api.putProgram(report.cid, report.canonical);
+    await this.putAsWritten((cid, t) => this.api.putProgram(cid, t), report.cid, text, report.canonical);
     this.stored.add(report.cid);
     // streaming is the server rendering the program, so the server keeps it: say so once (an example is the server's own)
     if (!this._toldStored && !this.examples.some((e) => e.cid === report.cid)) {
