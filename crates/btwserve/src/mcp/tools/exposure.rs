@@ -37,6 +37,7 @@ fn expect(ans: &Value, e: &Value, saved: &HashMap<String, String>) -> Result<(),
         "=" => got == Some(&e[2]),
         "has" => got.is_some_and(|v| !v.is_null()),
         "~" => got.is_some_and(|v| text(v).contains(&text(&e[2]))),
+        "^" => got.is_some_and(|v| text(v).starts_with(&text(&e[2]))),
         "!~" => !got.is_some_and(|v| text(v).contains(&text(&e[2]))),
         _ => return Err(format!("expect: unknown op {op}")),
     };

@@ -1,5 +1,5 @@
 {
-  "about": "project-datum 6679: every shipped feature is reachable and described through MCP. One row per feature: `say` is text its tool's description or input schema must contain (tools/list, one source with the docs), `calls` are real tools/call requests and what their answers must carry. Run by mcp::tools::exposure (cargo test -p btwserve, the real Tools) and by crates/btwserve/deploy/mcp-exposure.py (live, MCP over HTTPS, in every beatscript.app deploy script). expect: [pointer, op, value]: = equal, has present and not null, ~ the value (as JSON text) contains, !~ it does not. save: {name: pointer} keeps a value for ${name} in later args. auth: needs a signed-in caller (and for eval, load and queue a tab); stores: stores a program on the site; live, both run only with a token (and a call whose ${name} was not saved is skipped). Every page in docs/btw/*.md is a row's `docs` or a `not_features` entry with its reason: a new page fails the test until it has one.",
+  "about": "project-datum 6679: every shipped feature is reachable and described through MCP. One row per feature: `say` is text its tool's description or input schema must contain (tools/list, one source with the docs), `calls` are real tools/call requests and what their answers must carry. Run by mcp::tools::exposure (cargo test -p btwserve, the real Tools) and by crates/btwserve/deploy/mcp-exposure.py (live, MCP over HTTPS, in every beatscript.app deploy script). expect: [pointer, op, value]: = equal, has present and not null, ~ the value (as JSON text) contains, !~ it does not, ^ it starts with. save: {name: pointer} keeps a value for ${name} in later args. auth: needs a signed-in caller (and for eval, load and queue a tab); stores: stores a program on the site; live, both run only with a token (and a call whose ${name} was not saved is skipped). Every page in docs/btw/*.md is a row's `docs` or a `not_features` entry with its reason: a new page fails the test until it has one.",
   "not_features": {
     "ext-algebra.md": "the language (stack, then, silence): check compiles it; BTW.md and the cheat sheet teach it",
     "ext-answer.md": "the language (call and response): check compiles it",
@@ -164,6 +164,34 @@
       "say": [["genre_template", "each role is bound to a source"], ["genre_template", "cross (a quodlibet of two sources, roles a and b)"], ["genre_template", "roles"]],
       "calls": [
         {"tool": "genre_template", "args": {"genre": "techno", "form": "cross", "roles": {"a": "gen@1 dubstep seed=54876", "b": "gen@2 trap seed=54877"}}, "expect": [["/form", "has"], ["/resolution", "~", "gen@1 dubstep seed=54876"], ["/resolution", "~", "gen@2 trap seed=54877"]]}
+      ]
+    },
+    {
+      "id": "station",
+      "datum": 6700,
+      "docs": ["radio.md"],
+      "say": [
+        ["station", "endless and deterministic"], ["station", "position N of a station is always the same track"],
+        ["station", "seed=+N counts on"], ["station", "seed=~ draws each seed from the CID of the track before"],
+        ["station", "forms rotation"], ["station", "with its own CID"], ["station", "retune keeps N"], ["station", "locks"],
+        ["station", "neighbours"], ["station", "/docs/radio.md"], ["check", "the answer gains station"]
+      ],
+      "calls": [
+        {
+          "tool": "station",
+          "args": {"station": "tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n", "n": 3, "count": 1, "segue": true, "check": true},
+          "save": {"track": "/tracks/0/cid", "station": "/station/cid"},
+          "expect": [
+            ["/ok", "=", true], ["/n", "=", 3], ["/tracks/0/n", "=", 3], ["/tracks/0/cid", "^", "z"], ["/tracks/0/check/ok", "=", true],
+            ["/segues/0/cid", "^", "z"], ["/segues/0/cid", "!~", "${track}"], ["/segues/0/check/ok", "=", true], ["/station/cid", "^", "z"]
+          ]
+        },
+        {
+          "tool": "station",
+          "args": {"station": "tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n", "n": 3, "retune": {"tempo": "+1"}},
+          "expect": [["/ok", "=", true], ["/n", "=", 3], ["/tracks/0/n", "=", 3], ["/retuned/0", "=", "tempo"], ["/station/tempo", "=", 130], ["/station/cid", "^", "z"], ["/station/cid", "!~", "${station}"]]
+        },
+        {"tool": "check", "args": {"text": "tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n"}, "expect": [["/ok", "=", true], ["/station/cid", "^", "z"], ["/station/start_cid", "^", "z"], ["/station/forms", "=", ["seeded", "passacaglia"]]]}
       ]
     }
   ]

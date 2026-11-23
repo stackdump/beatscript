@@ -26,6 +26,8 @@ use serde_json::{json, Value};
 const GEN_PROG: &str = "tempo 124\nkey am\nsection drop 4 bars {\n  deck A: kick x ~ x ~\n  deck B: bass gen@2 techno seed=42 section=drop\n}\narrange drop\n";
 /// A program with no reference.
 const PLAIN: &str = "tempo 120\ndeck A: kick x ~ x ~\n";
+/// A station (radio, docs/btw/radio.md): its tempo, its key and the block; a walk drawn from each track's CID, two forms in turn.
+const STATION: &str = "tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n";
 /// The docs the descriptions say the same thing as.
 const BTW_MD: &str = include_str!("../../../docs/BTW.md");
 
@@ -91,6 +93,21 @@ impl Server {
         let b = if head.to_ascii_lowercase().contains("transfer-encoding: chunked") { dechunk(b) } else { b.to_string() };
         let v: Value = serde_json::from_str(b.trim()).unwrap_or_else(|e| panic!("{method}: not JSON ({e}): {head}\n{b}"));
         v["result"].clone()
+    }
+
+    /// One JSON `POST` to a site route: the status and the body as JSON.
+    fn post(&self, path: &str, body: &Value) -> (u16, Value) {
+        let body = body.to_string();
+        let mut s = TcpStream::connect(&self.addr).unwrap();
+        s.set_read_timeout(Some(Duration::from_secs(300))).unwrap();
+        s.write_all(format!("POST {path} HTTP/1.1\r\nHost: {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", self.addr, body.len()).as_bytes()).unwrap();
+        let mut raw = Vec::new();
+        let _ = s.read_to_end(&mut raw);
+        let raw = String::from_utf8_lossy(&raw).to_string();
+        let (head, b) = raw.split_once("\r\n\r\n").unwrap_or((&raw, ""));
+        let code = head.split_whitespace().nth(1).and_then(|c| c.parse().ok()).unwrap_or(0);
+        let b = if head.to_ascii_lowercase().contains("transfer-encoding: chunked") { dechunk(b) } else { b.to_string() };
+        (code, serde_json::from_str(b.trim()).unwrap_or(Value::Null))
     }
 
     /// `tools/call`: the tool's answer, as the JSON its text is (an error answer is `{"error": ...}`).
@@ -267,6 +284,41 @@ fn genre_template_refs(s: &Server) -> Result<(), String> {
     ensure(is_cid(&f["expanded_cid"]) && f["expanded_cid"] != f["cid"] && f["resolution"].as_array().is_some_and(|a| a.iter().any(|x| x["kind"] == "template")), format!("a form: {}", json!({"cid": f["cid"], "expanded_cid": f["expanded_cid"], "resolution": f["resolution"], "error": f["error"]})))
 }
 
+/// Radio (6681-6684, 6700): track N of a station and the segue to N+1, each with a CID and checked; the same track every time;
+/// retune keeps N and moves to another station; a lock holds; neighbours turn only what is unlocked; check of a station program
+/// reports it (its CID the program's); `POST /api/station` is the tool's answer.
+fn station_walk(s: &Server) -> Result<(), String> {
+    let r = s.call("station", json!({"station": STATION, "n": 3, "count": 1, "segue": true, "check": true}));
+    ensure(r["ok"] == true, format!("the station does not answer: {r}"))?;
+    let t = &r["tracks"][0];
+    ensure(t["n"] == 3 && is_cid(&t["cid"]) && is_cid(&t["parent"]), format!("track 3: {t}"))?;
+    ensure(t["check"]["ok"] == true && is_cid(&t["check"]["expanded_cid"]), format!("track 3 does not check: {}", t["check"]))?;
+    let sg = &r["segues"][0];
+    ensure(is_cid(&sg["cid"]) && sg["cid"] != t["cid"] && sg["from"] == 3 && sg["to"] == 4, format!("the segue 3 to 4: {sg}"))?;
+    ensure(sg["check"]["ok"] == true, format!("the segue does not check: {}", sg["check"]))?;
+    ensure(is_cid(&r["station"]["cid"]), format!("station: {}", r["station"]))?;
+    // position N is always the same track
+    let again = s.call("station", json!({"station": STATION, "n": 3}));
+    ensure(again["tracks"][0]["cid"] == t["cid"] && again["tracks"][0]["text"] == t["text"], "track 3 is another track the second time")?;
+    // retune keeps N, at another station
+    let re = s.call("station", json!({"station": STATION, "n": 3, "retune": {"tempo": "+1"}}));
+    ensure(re["ok"] == true && re["n"] == 3 && re["tracks"][0]["n"] == 3 && re["retuned"] == json!(["tempo"]), format!("retune: {re}"))?;
+    ensure(is_cid(&re["station"]["cid"]) && re["station"]["cid"] != r["station"]["cid"] && re["tracks"][0]["cid"] != t["cid"], "a retuned station is the same station")?;
+    // a lock holds: turning it is refused, and no neighbour turns it
+    let locked = s.call("station", json!({"station": STATION, "retune": {"tempo": "+1"}, "locks": ["tempo"]}));
+    ensure(locked["ok"] == false, format!("a locked knob turned: {locked}"))?;
+    let ns = s.call("station", json!({"station": STATION, "n": 3, "locks": ["tempo"], "neighbours": true}));
+    let list = ns["neighbours"].as_array().ok_or(format!("no neighbours: {ns}"))?;
+    ensure(!list.is_empty() && list.iter().all(|x| x["knob"] != "tempo" && x["track"]["n"] == 3 && is_cid(&x["cid"])), format!("neighbours: {list:?}"))?;
+    // check of a station program reports the station, whose CID is the program's
+    let c = s.call("check", json!({"text": STATION}));
+    ensure(c["ok"] == true && is_cid(&c["station"]["start_cid"]) && c["station"]["tracks"].as_array().is_some_and(|a| a.len() == 2), format!("check of a station: {}", c["station"]))?;
+    ensure(c["station"]["cid"] == c["cid"] && c["cid"] == r["station"]["cid"], format!("the station's CID {} is not its program's {} (the tool says {})", c["station"]["cid"], c["cid"], r["station"]["cid"]))?;
+    // the same answer over HTTP
+    let (code, http) = s.post("/api/station", &json!({"station": STATION, "n": 3}));
+    ensure(code == 200 && http == again, format!("POST /api/station ({code}) is not the station tool's answer: {http}"))
+}
+
 // placeholders: other branches' features
 
 fn control_deck(s: &Server) -> Result<(), String> {
@@ -314,6 +366,16 @@ fn rows() -> Vec<Row> {
         Row { feature: "generate's structured parts: {role, let, text, voice or kit, gen} (6676)", covers: &[], tool: "generate", desc: &["{role, section, sections, voice or kit, text, let, gen}"], doc: &[], inputs: &[], call: generate_parts, pending: None },
         Row { feature: "generate's seeds: a compact summary a seed, at most 16 (6676)", covers: &[], tool: "generate", desc: &["seeds (a list, or {count, start}, at most 16) answers a compact summary a seed"], doc: &[], inputs: &["seeds"], call: generate_seeds, pending: None },
         Row { feature: "expand of a gen program (6668)", covers: &[], tool: "expand", desc: &["A gen@N call (gen@2 techno seed=42 section=drop part=bass"], doc: &[], inputs: &["text"], call: expand_gen, pending: None },
+        Row {
+            feature: "radio: a station's track at N and its segue, retune keeping N, locks and neighbours (6681-6684, 6700)",
+            covers: &["station"],
+            tool: "station",
+            desc: &["Stations are endless and deterministic", "position N of a station is always the same track", "seed=+N counts on", "seed=~ draws each seed from the CID of the track before", "the forms rotation", "with its own CID", "retune keeps N", "locks are knobs held fixed", "neighbours (true) lists", "/docs/radio.md"],
+            doc: &[],
+            inputs: &["station", "n", "count", "segue", "check", "retune", "locks", "neighbours"],
+            call: station_walk,
+            pending: None,
+        },
         Row { feature: "genre_template's expanded_cid and resolution (6680)", covers: &[], tool: "genre_template", desc: &["The answer also has expanded_cid"], doc: &[], inputs: &["genre", "form"], call: genre_template_refs, pending: None },
         // ---- placeholders: other branches' features, expected to fail until they land
         Row { feature: "the control deck: `control:` lines, engine calls only (6671)", covers: &["control:"], tool: "check", desc: &["A `control:` line is the control deck"], doc: &["### The control deck"], inputs: &[], call: control_deck, pending: None },

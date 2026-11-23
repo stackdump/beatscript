@@ -76,6 +76,8 @@ def expect(ans, e, saved):
         ok = found and as_text(want) in as_text(got)
     elif op == "!~":
         ok = not (found and as_text(want) in as_text(got))
+    elif op == "^":
+        ok = found and as_text(got).startswith(as_text(want))
     else:
         return "unknown op %s" % op
     if ok:
