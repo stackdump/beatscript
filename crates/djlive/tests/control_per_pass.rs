@@ -132,6 +132,26 @@ fn a_call_switches_its_own_lines() {
 
 /// `swap` (the `swap pairs` call) and `voice` (a sugar noun) are also mutation operators: before `on` or `off` at the end of the
 /// line they are the switch's calls, as the line would be refused as a mutation. An operator that takes a pattern stays a mutation.
+/// A macro line's call is `macro`, whatever its version and wherever the line is read from (a section's own line, a def's body
+/// still in tokens): `~ control macro off` holds both back, and the play's table names it once.
+#[test]
+fn a_macro_line_is_switched_as_macro() {
+    let src = "tempo 120\nkey am\n\
+               def lift(dk) {\n  at bar 1: control: macro@1 cathedral on $dk over 1 bar\n}\n\
+               section drop 2 bars {\n  deck A: kick x ~ x ~\n  control: macro riser on A over 2 bars\n  lift(B)\n}\n\
+               arrange {\n  drop\n  ~ control macro off\n  drop\n}\n";
+    let t = table(src);
+    assert_eq!(plays(&t), [p("drop", &[]), p("drop@2", &["macro"])]);
+    let c = ok(src);
+    let first = controls_at(&c, "[drop@0] ");
+    assert!(first.iter().any(|k| k.contains("macro riser")) && first.iter().any(|k| k.contains("macro cathedral")), "{first:?}");
+    assert!(controls_at(&c, "[drop@2@2] ").is_empty(), "{:?}", c.controls.iter().map(|k| &k.key).collect::<Vec<_>>());
+    // `macro@1` is no call name of its own: the switch names the call, and its help names `macro`
+    let wrong = src.replace("~ control macro off", "~ control macro@1 off");
+    let d = has(&diags(&wrong), Severity::Error, "the control deck has no `macro@1` line");
+    assert!(d.as_ref().is_some_and(|d| d.help.as_deref().is_some_and(|h| h.contains("macro"))), "{d:?}");
+}
+
 #[test]
 fn a_call_that_is_also_an_operator_is_switched() {
     let src = "tempo 120\nsection drop 2 bars {\n  deck A: kick x ~ x ~\n  at bar 1: control: swap pairs with filter_exit\n  control: voice robot\n}\n\

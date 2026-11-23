@@ -1422,7 +1422,8 @@ fn token_calls(toks: &[Token], defs: &BTreeMap<String, &[Token]>, seen: &mut BTr
                 _ => None,
             };
             if let Some(c) = word(i + 2).and_then(|c| if c == "do" { word(i + 3) } else { Some(c) }) {
-                out.insert(c);
+                // a macro line's call is `macro` whatever its version (`macro@1 riser`), as Body::call_name says
+                out.insert(if crate::macros::is_head(&c) { "macro".to_string() } else { c });
             }
         } else if next == Some(&Tok::LParen) {
             if let Some(body) = defs.get(w.as_str()) {

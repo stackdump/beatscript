@@ -171,7 +171,7 @@ The marks mean what they mean for a pattern, and so does the count:
 | `~3 control off`, `@4 control on` | the same, on passes 3, 6, 9 ... (and 4, 8 ...) only, as `~3 acid rev` |
 
 `NAME` is the call the lines make: the first word of the line as it writes it (`move`, `swap`, `load`, `queue`, `crossfader`,
-`tempo`, `duck`, `mix`), or the registry noun of a `do` and of its sugar (`do freeze phrase bars=2` and `freeze phrase bars=2` are
+`tempo`, `duck`, `mix`, `macro`: `macro@1 riser` too), or the registry noun of a `do` and of its sugar (`do freeze phrase bars=2` and `freeze phrase bars=2` are
 both `freeze`). A call that is also a mutation operator (`swap`, `voice`) is the switch's when its `on` or `off` ends the line
 (`~ control swap off`); one that takes a pattern (`xfer`, `mask`, `morph`) is not a call there, so `~ control xfer off` stays a
 mutation of a `let control`.
@@ -229,7 +229,8 @@ does for the patterns.
   naming it in the arrange would write the line twice, and any edit of it (a bar number, a value) would leave the switch naming
   nothing. Labels on lines would be a naming scheme for this one use. A call is the name a line already has; a section usually
   holds one line of a call, so the call is the line, and two `move` lines in one section switch together. A noun is matched as
-  the line writes it (a `do` through an alias of the noun is its own name).
+  the line writes it (a `do` through an alias of the noun is its own name). A macro line's call is `macro`, whatever its version
+  and its id: `~ control macro off` holds back every macro of the deck (one id is no call of its own, as one `move` kind is not).
 - **A line of its own.** The switch has no operator chain and no glob; a line that is either a switch or a mutation prints and
   reads plainly, so the two are never joined by a comma.
 - **The marks mean what they mean.** `~` from here on, `@` the next section only. A one-shot is kept as the switch it is and
@@ -431,5 +432,5 @@ pass, needs a value per pass. Three ways to it:
   `arrange`.
 
 The recommendation, if per-pass values are wanted: the pass number, because it is one rule that reaches parts and controls
-alike and adds no operator set; built behind a `#! btw 1` reading that keeps every stored text and CID (no program names
-`$pass` today, and `$` is refused outside a body, so nothing that reads now reads otherwise).
+alike and adds no operator set; built so that every stored text keeps its reading and its CID (no program names `$pass`
+today, and `$` is refused outside a body, so nothing that reads now reads otherwise).

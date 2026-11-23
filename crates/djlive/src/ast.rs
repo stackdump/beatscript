@@ -504,9 +504,9 @@ pub enum Body {
 
 impl Body {
     /// The name an `arrange { }` switch gives a control-deck line by (`~ control freeze off`, docs/beatscript/ext-control.md): the
-    /// call's first word as the line writes it (`move`, `swap`, `load`, `queue`, `crossfader`, `tempo`, `duck`, `mix`), or the
-    /// registry noun of a `do` and of its sugar (`do vocoder ...` and `vocoder ...` are both `vocoder`). None for a body that
-    /// is no engine call (parts, a def's call, a `sing`).
+    /// call's first word as the line writes it (`move`, `swap`, `load`, `queue`, `crossfader`, `tempo`, `duck`, `mix`, `macro`:
+    /// `macro@1 riser` too), or the registry noun of a `do` and of its sugar (`do vocoder ...` and `vocoder ...` are both
+    /// `vocoder`). None for a body that is no engine call (parts, a def's call, a `sing`).
     pub fn call_name(&self) -> Option<&str> {
         match self {
             Body::Action(a) => Some(match a {
@@ -517,6 +517,7 @@ impl Body {
                 Action::Tempo(_) => "tempo",
                 Action::Transport(w) => w.text.as_str(),
                 Action::Change { name, .. } | Action::Shaped { name, .. } => name.text.as_str(),
+                Action::Macro { .. } => "macro",
             }),
             Body::Do(d) => Some(d.noun.text.as_str()),
             Body::Duck(_) => Some("duck"),
