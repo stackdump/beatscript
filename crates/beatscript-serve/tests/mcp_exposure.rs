@@ -226,7 +226,7 @@ fn generate_generator(s: &Server) -> Result<(), String> {
 fn generate_part(s: &Server) -> Result<(), String> {
     let r = s.call("generate", json!({"genre": "techno", "seed": 42, "part": "bass"}));
     let p = &r["part"];
-    ensure(p["role"] == "bass" && p["gen"] == "gen@2 techno seed=42 section=drop part=bass", format!("part: {p}"))?;
+    ensure(p["role"] == "bass" && p["gen"] == "gen@3 techno seed=42 section=drop part=bass", format!("part: {p}"))?;
     let l = r["let"].as_str().ok_or(format!("no let: {r}"))?;
     ensure(l.contains("let drop_bass_1 = ") && l.contains("let drop_bass = <"), format!("let: {l}"))?;
     ensure(r["parts"].as_array().is_some_and(|a| a.len() == 1), "with part, parts is that part alone")?;
@@ -242,7 +242,7 @@ fn generate_parts(s: &Server) -> Result<(), String> {
     ensure(parts.len() >= 3, format!("parts: {parts:?}"))?;
     for p in parts {
         let role = p["role"].as_str().unwrap_or("?");
-        ensure(p["gen"].as_str().is_some_and(|g| g.starts_with("gen@2 techno seed=42 section=") && g.ends_with(&format!(" part={role}"))), format!("gen: {p}"))?;
+        ensure(p["gen"].as_str().is_some_and(|g| g.starts_with("gen@3 techno seed=42 section=") && g.ends_with(&format!(" part={role}"))), format!("gen: {p}"))?;
         ensure(p.get("voice").is_some() || p.get("kit").is_some() || matches!(role, "snare" | "hihat" | "clap"), format!("voice or kit: {p}"))?;
         ensure(p["let"].is_string() || p["let_error"].is_string(), format!("let: {p}"))?;
         ensure(p["text"].as_str().is_some_and(|t| !t.is_empty()), format!("text: {p}"))?;
