@@ -78,6 +78,16 @@
 	skos:definition "A rhythm made by the Bjorklund algorithm. Many traditional patterns around the world are Euclidean rhythms. In the engine it becomes a rhythm ring with a note binding on each pulse step."@en ;
 	skos:prefLabel "Euclidean rhythm"@en ;
 	prov:wasDerivedFrom <https://ontology.bitwrap.io/concept/euclidean-rhythm> .
+<https://beatscript.app/ontology/concept/evolve-fast> a skos:Concept , ns:EvolveOperator ;
+	skos:definition "The evolve operator fast: applied to a part once a generation."@en ;
+	skos:prefLabel "fast"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "fast" .
+<https://beatscript.app/ontology/concept/evolve-fill> a skos:Concept , ns:EvolveOperator ;
+	skos:definition "The evolve operator fill: applied to a part once a generation."@en ;
+	skos:prefLabel "fill"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "fill" .
 <https://beatscript.app/ontology/concept/evolve-invert> a skos:Concept , ns:EvolveOperator ;
 	skos:definition "The evolve operator invert: applied to a part once a generation."@en ;
 	skos:prefLabel "invert"@en ;
@@ -98,6 +108,11 @@
 	skos:prefLabel "rotate"@en ;
 	ns:status "stable" ;
 	ns:writtenAs "rotate" .
+<https://beatscript.app/ontology/concept/evolve-slow> a skos:Concept , ns:EvolveOperator ;
+	skos:definition "The evolve operator slow: applied to a part once a generation."@en ;
+	skos:prefLabel "slow"@en ;
+	ns:status "stable" ;
+	ns:writtenAs "slow" .
 <https://beatscript.app/ontology/concept/evolve-thin> a skos:Concept , ns:EvolveOperator ;
 	skos:definition "The evolve operator thin: applied to a part once a generation."@en ;
 	skos:prefLabel "thin"@en ;
@@ -1050,12 +1065,12 @@
 	ns:usesProduction <https://beatscript.app/ontology/concept/grammar-pattern> ;
 	ns:writtenAs "notes" .
 <https://beatscript.app/ontology/concept/grammar-op> a skos:Concept , ns:GrammarProduction ;
-	skos:definition "The op production of BeatScript's grammar."@en ;
+	skos:definition "The op production of BeatScript's grammar (seed= on thin and fill)."@en ;
 	skos:prefLabel "op"@en ;
-	ns:ebnf "( \"rotate\" | \"transpose\" | \"octave\" | \"invert\" | \"reverse\" | \"thin\" ) { NUMBER | \"<\" NUMBER { NUMBER } \">\" } [ \"seed=\" INT ]" ;
+	ns:ebnf "( \"rotate\" | \"transpose\" | \"octave\" | \"invert\" | \"reverse\" | \"thin\" | \"fill\" | \"slow\" | \"fast\" ) { NUMBER | \"<\" NUMBER { NUMBER } \">\" } [ \"seed=\" INT ]" ;
 	ns:grammarSection "Evolving"@en ;
 	ns:status "stable" ;
-	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-invert> , <https://beatscript.app/ontology/concept/keyword-octave> , <https://beatscript.app/ontology/concept/keyword-reverse> , <https://beatscript.app/ontology/concept/keyword-rotate> , <https://beatscript.app/ontology/concept/keyword-seed-param> , <https://beatscript.app/ontology/concept/keyword-symbol-gt> , <https://beatscript.app/ontology/concept/keyword-symbol-lt> , <https://beatscript.app/ontology/concept/keyword-thin> , <https://beatscript.app/ontology/concept/keyword-transpose> ;
+	ns:usesKeyword <https://beatscript.app/ontology/concept/keyword-fast> , <https://beatscript.app/ontology/concept/keyword-fill> , <https://beatscript.app/ontology/concept/keyword-invert> , <https://beatscript.app/ontology/concept/keyword-octave> , <https://beatscript.app/ontology/concept/keyword-reverse> , <https://beatscript.app/ontology/concept/keyword-rotate> , <https://beatscript.app/ontology/concept/keyword-seed-param> , <https://beatscript.app/ontology/concept/keyword-slow> , <https://beatscript.app/ontology/concept/keyword-symbol-gt> , <https://beatscript.app/ontology/concept/keyword-symbol-lt> , <https://beatscript.app/ontology/concept/keyword-thin> , <https://beatscript.app/ontology/concept/keyword-transpose> ;
 	ns:usesToken <https://beatscript.app/ontology/concept/token-int> , <https://beatscript.app/ontology/concept/token-number> ;
 	ns:writtenAs "op" .
 <https://beatscript.app/ontology/concept/grammar-operand> a skos:Concept , ns:GrammarProduction ;
@@ -1952,6 +1967,16 @@
 	skos:prefLabel "fader"@en ;
 	ns:keywordText "fader" ;
 	ns:status "stable" .
+<https://beatscript.app/ontology/concept/keyword-fast> a skos:Concept , ns:Keyword ;
+	skos:definition "The keyword fast of BeatScript, written in: op."@en ;
+	skos:prefLabel "fast"@en ;
+	ns:keywordText "fast" ;
+	ns:status "stable" .
+<https://beatscript.app/ontology/concept/keyword-fill> a skos:Concept , ns:Keyword ;
+	skos:definition "The keyword fill of BeatScript, written in: op."@en ;
+	skos:prefLabel "fill"@en ;
+	ns:keywordText "fill" ;
+	ns:status "stable" .
 <https://beatscript.app/ontology/concept/keyword-filter-exit> a skos:Concept , ns:Keyword ;
 	skos:definition "The keyword filter_exit of BeatScript, written in: MOVE, TRANSITION."@en ;
 	skos:prefLabel "filter_exit"@en ;
@@ -2436,6 +2461,11 @@
 	skos:definition "The keyword sing of BeatScript, written in: sing, subject."@en ;
 	skos:prefLabel "sing"@en ;
 	ns:keywordText "sing" ;
+	ns:status "stable" .
+<https://beatscript.app/ontology/concept/keyword-slow> a skos:Concept , ns:Keyword ;
+	skos:definition "The keyword slow of BeatScript, written in: op."@en ;
+	skos:prefLabel "slow"@en ;
+	ns:keywordText "slow" ;
 	ns:status "stable" .
 <https://beatscript.app/ontology/concept/keyword-snare> a skos:Concept , ns:Keyword ;
 	skos:definition "The keyword snare of BeatScript, written in: role."@en ;

@@ -82,6 +82,18 @@
 <https://beatscript.app/ontology/concept/euclidean-rhythm>	<http://www.w3.org/2004/02/skos/core#definition>	"A rhythm made by the Bjorklund algorithm. Many traditional patterns around the world are Euclidean rhythms. In the engine it becomes a rhythm ring with a note binding on each pulse step."@en
 <https://beatscript.app/ontology/concept/euclidean-rhythm>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"Euclidean rhythm"@en
 <https://beatscript.app/ontology/concept/euclidean-rhythm>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/concept/euclidean-rhythm>
+<https://beatscript.app/ontology/concept/evolve-fast>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/evolve-fast>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#EvolveOperator>
+<https://beatscript.app/ontology/concept/evolve-fast>	<http://www.w3.org/2004/02/skos/core#definition>	"The evolve operator fast: applied to a part once a generation."@en
+<https://beatscript.app/ontology/concept/evolve-fast>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"fast"@en
+<https://beatscript.app/ontology/concept/evolve-fast>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/evolve-fast>	<https://beatscript.app/ontology/ns#writtenAs>	"fast"
+<https://beatscript.app/ontology/concept/evolve-fill>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/evolve-fill>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#EvolveOperator>
+<https://beatscript.app/ontology/concept/evolve-fill>	<http://www.w3.org/2004/02/skos/core#definition>	"The evolve operator fill: applied to a part once a generation."@en
+<https://beatscript.app/ontology/concept/evolve-fill>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"fill"@en
+<https://beatscript.app/ontology/concept/evolve-fill>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/evolve-fill>	<https://beatscript.app/ontology/ns#writtenAs>	"fill"
 <https://beatscript.app/ontology/concept/evolve-invert>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
 <https://beatscript.app/ontology/concept/evolve-invert>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#EvolveOperator>
 <https://beatscript.app/ontology/concept/evolve-invert>	<http://www.w3.org/2004/02/skos/core#definition>	"The evolve operator invert: applied to a part once a generation."@en
@@ -106,6 +118,12 @@
 <https://beatscript.app/ontology/concept/evolve-rotate>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"rotate"@en
 <https://beatscript.app/ontology/concept/evolve-rotate>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/concept/evolve-rotate>	<https://beatscript.app/ontology/ns#writtenAs>	"rotate"
+<https://beatscript.app/ontology/concept/evolve-slow>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/evolve-slow>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#EvolveOperator>
+<https://beatscript.app/ontology/concept/evolve-slow>	<http://www.w3.org/2004/02/skos/core#definition>	"The evolve operator slow: applied to a part once a generation."@en
+<https://beatscript.app/ontology/concept/evolve-slow>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"slow"@en
+<https://beatscript.app/ontology/concept/evolve-slow>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/evolve-slow>	<https://beatscript.app/ontology/ns#writtenAs>	"slow"
 <https://beatscript.app/ontology/concept/evolve-thin>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
 <https://beatscript.app/ontology/concept/evolve-thin>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#EvolveOperator>
 <https://beatscript.app/ontology/concept/evolve-thin>	<http://www.w3.org/2004/02/skos/core#definition>	"The evolve operator thin: applied to a part once a generation."@en
@@ -1543,16 +1561,19 @@
 <https://beatscript.app/ontology/concept/grammar-notes>	<https://beatscript.app/ontology/ns#writtenAs>	"notes"
 <https://beatscript.app/ontology/concept/grammar-op>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
 <https://beatscript.app/ontology/concept/grammar-op>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#GrammarProduction>
-<https://beatscript.app/ontology/concept/grammar-op>	<http://www.w3.org/2004/02/skos/core#definition>	"The op production of BeatScript's grammar."@en
+<https://beatscript.app/ontology/concept/grammar-op>	<http://www.w3.org/2004/02/skos/core#definition>	"The op production of BeatScript's grammar (seed= on thin and fill)."@en
 <https://beatscript.app/ontology/concept/grammar-op>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"op"@en
-<https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#ebnf>	"( \"rotate\" | \"transpose\" | \"octave\" | \"invert\" | \"reverse\" | \"thin\" ) { NUMBER | \"<\" NUMBER { NUMBER } \">\" } [ \"seed=\" INT ]"
+<https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#ebnf>	"( \"rotate\" | \"transpose\" | \"octave\" | \"invert\" | \"reverse\" | \"thin\" | \"fill\" | \"slow\" | \"fast\" ) { NUMBER | \"<\" NUMBER { NUMBER } \">\" } [ \"seed=\" INT ]"
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#grammarSection>	"Evolving"@en
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-fast>
+<https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-fill>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-invert>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-octave>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-reverse>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-rotate>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-seed-param>
+<https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-slow>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-symbol-gt>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-symbol-lt>
 <https://beatscript.app/ontology/concept/grammar-op>	<https://beatscript.app/ontology/ns#usesKeyword>	<https://beatscript.app/ontology/concept/keyword-thin>
@@ -2791,6 +2812,18 @@
 <https://beatscript.app/ontology/concept/keyword-fader>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"fader"@en
 <https://beatscript.app/ontology/concept/keyword-fader>	<https://beatscript.app/ontology/ns#keywordText>	"fader"
 <https://beatscript.app/ontology/concept/keyword-fader>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/keyword-fast>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/keyword-fast>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#Keyword>
+<https://beatscript.app/ontology/concept/keyword-fast>	<http://www.w3.org/2004/02/skos/core#definition>	"The keyword fast of BeatScript, written in: op."@en
+<https://beatscript.app/ontology/concept/keyword-fast>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"fast"@en
+<https://beatscript.app/ontology/concept/keyword-fast>	<https://beatscript.app/ontology/ns#keywordText>	"fast"
+<https://beatscript.app/ontology/concept/keyword-fast>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/keyword-fill>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/keyword-fill>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#Keyword>
+<https://beatscript.app/ontology/concept/keyword-fill>	<http://www.w3.org/2004/02/skos/core#definition>	"The keyword fill of BeatScript, written in: op."@en
+<https://beatscript.app/ontology/concept/keyword-fill>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"fill"@en
+<https://beatscript.app/ontology/concept/keyword-fill>	<https://beatscript.app/ontology/ns#keywordText>	"fill"
+<https://beatscript.app/ontology/concept/keyword-fill>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/concept/keyword-filter-exit>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
 <https://beatscript.app/ontology/concept/keyword-filter-exit>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#Keyword>
 <https://beatscript.app/ontology/concept/keyword-filter-exit>	<http://www.w3.org/2004/02/skos/core#definition>	"The keyword filter_exit of BeatScript, written in: MOVE, TRANSITION."@en
@@ -3373,6 +3406,12 @@
 <https://beatscript.app/ontology/concept/keyword-sing>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"sing"@en
 <https://beatscript.app/ontology/concept/keyword-sing>	<https://beatscript.app/ontology/ns#keywordText>	"sing"
 <https://beatscript.app/ontology/concept/keyword-sing>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/keyword-slow>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/keyword-slow>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#Keyword>
+<https://beatscript.app/ontology/concept/keyword-slow>	<http://www.w3.org/2004/02/skos/core#definition>	"The keyword slow of BeatScript, written in: op."@en
+<https://beatscript.app/ontology/concept/keyword-slow>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"slow"@en
+<https://beatscript.app/ontology/concept/keyword-slow>	<https://beatscript.app/ontology/ns#keywordText>	"slow"
+<https://beatscript.app/ontology/concept/keyword-slow>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/concept/keyword-snare>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
 <https://beatscript.app/ontology/concept/keyword-snare>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#Keyword>
 <https://beatscript.app/ontology/concept/keyword-snare>	<http://www.w3.org/2004/02/skos/core#definition>	"The keyword snare of BeatScript, written in: role."@en
