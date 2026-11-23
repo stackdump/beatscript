@@ -949,7 +949,7 @@ try {
         await page.cdp('Input.dispatchKeyEvent', { type: 'keyUp', key, code: code || `Key${key.toUpperCase()}`, windowsVirtualKeyCode: vk || key.toUpperCase().charCodeAt(0), modifiers });
         await sleep(120);
       };
-      const note = () => page.eval('(()=>{const e=document.querySelector(".as-exps:not([hidden]) .as-exp:not(.as-lens)"); if(!e) return null; const r=e.getBoundingClientRect(); const c=document.querySelector(".ed-code").getBoundingClientRect(); return {text:e.textContent, x:r.left-c.left, y:r.top-c.top, cx:r.left+r.width/2, cy:r.top+r.height/2}})()');
+      const note = () => page.eval('(()=>{const e=document.querySelector(".as-exps:not([hidden]) .as-exp:not(.as-lens)"); if(!e) return null; const r=e.getBoundingClientRect(); const row=e.parentElement.getBoundingClientRect(); const c=document.querySelector(".ed-code").getBoundingClientRect(); return {text:e.textContent, x:row.left-c.left, y:row.top-c.top, cx:r.left+r.width/2, cy:r.top+r.height/2}})()');
       const lineTop = (l) => page.eval(`__app.editor.wrap.lines[${l}].top`);
       const ref = await page.eval('(()=>{const r=JSON.parse(__app.assist.ls.request("beatscript/expand", JSON.stringify({textDocument:{uri:"main"}}))).references[0]; return r})()');
       check('the module answers the program\'s reference (beatscript/expand)', !!ref && ref.kind === 'gen' && /^let bed_1 = /.test(ref.text), JSON.stringify(ref && ref.call));
@@ -960,7 +960,7 @@ try {
       await alt('e');
       const n1 = await note();
       check('Alt+E shows the expansion as a note: its first line, how many more, its CID', !!n1 && n1.text.startsWith('⇒ let bed_1 = ') && /more lines?  \[z…[1-9A-HJ-NP-Za-km-z]{8}\]$/.test(n1.text), JSON.stringify(n1));
-      check('the note sits on the reference\'s line, after its end, and the lens is gone', !!n1 && Math.abs(n1.y - (await lineTop(2))) <= 1 && n1.x > (await page.eval('__app.editor.metrics.padLeft + 52 * __app.editor.metrics.charW')) && (await count('.as-lens')) === 0, JSON.stringify(n1));
+      check('the note sits on the reference\'s line, four columns after its end (53), and the lens is gone', !!n1 && Math.abs(n1.y - (await lineTop(2))) <= 1 && Math.abs(n1.x - (await page.eval('__app.editor.metrics.padLeft + 57 * __app.editor.metrics.charW'))) <= 1 && (await count('.as-lens')) === 0, JSON.stringify(n1));
       check('a screen reader is told', /^Expansion of gen@2 techno seed=42 section=drop part=bass shown: let bed_1 = /.test(await q('.as-live')), await q('.as-live'));
       check('the textarea keeps the text: the note is drawn, not written', (await text()) === PROG);
       // hover: the call, the CID, the expansion under its # from: line
