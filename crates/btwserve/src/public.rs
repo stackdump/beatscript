@@ -387,8 +387,17 @@ pub fn shape_check(v: &Value) -> Value {
     if let Some(a) = v.get("docs").and_then(Value::as_array).filter(|a| !a.is_empty()) {
         m.insert("docs".into(), Value::Array(a.clone()));
     }
+    station(&mut m, v);
     references(&mut m, v);
     Value::Object(m)
+}
+
+/// A station program's report (btwapi's `station`: its knobs, where its walk starts, the first chapter's tracks and the first
+/// segue), as btwapi wrote it; absent for any other program. The MCP check's shape keeps it too.
+pub fn station(m: &mut Map<String, Value>, v: &Value) {
+    if let Some(s) = v.get("station").filter(|s| s.is_object()) {
+        m.insert("station".into(), s.clone());
+    }
 }
 
 /// What the recipe makes (btwapi::resolution), as btwapi wrote it: `expanded_cid` (a program that checks has one), and `refs`

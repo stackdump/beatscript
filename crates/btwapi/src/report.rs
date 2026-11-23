@@ -378,6 +378,11 @@ pub fn check_report_with(text: &str, expand: bool) -> JsonValue {
     if !c.plays.is_empty() {
         fields.push(("uses", strs(c.plays.iter().map(|(cid, _)| cid.clone()))));
     }
+    // a station (radio, djlive::station): its knobs, where its walk starts, the first chapter's tracks and the first segue;
+    // said only for a station program, so no other report changes
+    if let Some(s) = &c.station {
+        fields.push(("station", s.to_json()));
+    }
     // what the recipe makes (crate::resolution): `expanded_cid` always (the CID itself for a program with no references), and
     // `refs` and `resolution` when it has references
     fields.extend(crate::resolution::fields(text, &c.cid, expand));

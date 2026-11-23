@@ -148,6 +148,8 @@ pub fn go_check_report(r: &Value) -> Value {
     m.insert("uses_assets".into(), b(&r["uses_assets"]));
     m.insert("restricted".into(), b(&r["restricted"]));
     m.insert("seconds".into(), opt_float(&r["seconds"]));
+    // a station program's report (radio), as /api/check keeps it
+    crate::public::station(&mut m, r);
     // what the recipe makes: expanded_cid, refs, resolution (btwapi::resolution), as /api/check keeps them
     crate::public::references(&mut m, r);
     Value::Object(m)
