@@ -1,0 +1,69 @@
+key e
+# from template(canon, @mgm_pease_porridge_hot, subject=ode_to_joy, ground=mars_ostinato): a canon at 90 in D, the phrase sung over it (templates v1)
+# phrase: @mgm_pease_porridge_hot, "Pease Porridge hot, / Pease Porridge cold," ('Pease Porridge hot' (riddle: 'Spell me that in four Letters? I will. T-H-A-T.'), Anonymous, 1780)
+# vocal: 8 syllables, free, straight feel, stress xx~xxx~x: a vocal line of 2 bars, sung over sections of 8 bars
+# subject: ode_to_joy; the line chased by copies of itself, a bar and a beat behind
+# ground: mars_ostinato; the bass under the chase
+tempo 90
+
+# the drums: the drm_* parts are what the arrangement changes; the kick and the shaker stay put
+let kick4 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let drm_rim = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ x ~ ~ x ~
+let shk = x ~ x x ~ x x ~
+# ground, bound: mars_ostinato
+let ground_1 = e2 e2 e2 ~ e2 ~ e2 ~ e2 ~ ~ ~ e2 ~ ~ ~ e2 ~ e2 ~
+let ground = <ground_1>
+# subject, bound: ode_to_joy
+let subject_1 = g#4 ~ ~ ~ g#4 ~ ~ ~ a4 ~ ~ ~ b4 ~ ~ ~
+let subject_2 = b4 ~ ~ ~ a4 ~ ~ ~ g#4 ~ ~ ~ f#4 ~ ~ ~
+let subject_3 = e4 ~ ~ ~ e4 ~ ~ ~ f#4 ~ ~ ~ g#4 ~ ~ ~
+let subject_4 = g#4 ~ ~ ~ ~ ~ f#4 ~ f#4 ~ ~ ~ ~ ~ ~ ~
+let subject = <subject_1 subject_2 subject_3 subject_4>
+# the copies: a bar behind, and a beat behind; they are made of the theme's own bars, so a change to it moves them too
+let follow = <subject_4 subject_1 subject_2 subject_3>
+let close = rotate(subject, 4)
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+let vox_a = 1! ~ 1! 2 3! ~ 3! ~
+let vox_b = 5! 6 8! ~ ~ ~ ~ ~
+
+# lead: the theme alone over the ground
+section lead 8 bars {
+  deck A: kick kick4 kit=drums vel=75..90 | bass/20 ground inst=bass vel=70..85
+  deck B: melody subject inst=flute vel=60..80
+}
+
+# chase: the copy a bar behind, an octave down
+section chase 8 bars {
+  deck A: kick kick4 kit=drums vel=70..84 | hihat drm_hat kit=drums vel=36..54 | bass/20 ground inst=bass vel=60..74
+  deck B: melody subject inst=flute vel=52..70 | arp octave(follow, -1) inst=harpsichord vel=40..56
+}
+
+# round: three voices, the last a beat behind the first
+section round 8 bars {
+  deck A: kick kick4 kit=drums vel=72..86 | hihat drm_hat kit=drums vel=40..58 | snare drm_rim kit=drums-lofi vel=26..44 | bass/20 ground inst=bass vel=60..74
+  deck B: melody subject inst=flute vel=50..68 | arp octave(follow, -1) inst=harpsichord vel=38..55 | harmony close inst=strings vel=32..45
+}
+
+# sung: the phrase over the ground, the copies buried
+section sung 8 bars {
+  deck A: kick kick4 kit=drums vel=75..90 | hihat shk kit=drums vel=30..45 | bass/20 ground inst=bass vel=65..80 | arp octave(follow, -1) inst=harpsichord vel=25..40
+  deck B: harmony close inst=strings vel=25..40 | melody <vox_a vox_b> inst=kalimba oct=3 vel=24..38
+  deck B: sing "/p ee z - p aw r ii j - h aa t/ / /p ee z - p aw r ii j - k oh l d/" on melody voice=robot-choir
+}
+
+# the theme chases itself: whatever is done to it, its copies follow
+arrange {
+  lead
+  chase
+  ~ subject_* rot 2
+  round
+  ~ drm_* grow
+  sung
+  ~ subject_* rev | accent 0.25
+  round
+  @ vox_* xfer shk
+  sung
+  ~ subject_* rev
+  ~ drm_* decay
+} loop 3 then end

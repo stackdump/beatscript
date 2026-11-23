@@ -1,0 +1,57 @@
+# from template(theme-and-variations, @dickinson_chariot_death, theme=pachelbel_violin): a theme and variations at 84 in D-flat, the phrase sung in it (templates v1)
+# phrase: @dickinson_chariot_death, "Because I could not stop for Death, / He kindly stopped for me;" (The Chariot ('Because I could not stop for Death'), Emily Dickinson, 1890)
+# vocal: 14 syllables, iambic, straight feel, stress ~x~x~x~x~x~x~x: a vocal line of 4 bars, sung over sections of 8 bars
+# theme: pachelbel_violin; the one source every variation changes
+tempo 84
+key db
+
+# the drums: the drm_* parts are what the arrangement changes; the kick and the shaker stay put
+let kick4 = x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+let shk = x ~ x x ~ x x ~
+# theme, bound: pachelbel_violin
+let air_1 = f5 ~ ~ ~ d#5 ~ ~ ~ c#5 ~ ~ ~ c5 ~ ~ ~
+let air_2 = a#4 ~ ~ ~ g#4 ~ ~ ~ a#4 ~ ~ ~ c5 ~ ~ ~
+let air = <air_1 air_2>
+let chords = <[db3, f3, ab3] [db3, f3, ab3] [db3, f3, ab3] [ab2, c3, eb3]>
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+let vox_a = ~ 2 1! 4 5! 7 5! 4
+let vox_b = 1! 2 1! 4 5! 7 5! ~
+
+# theme: the tune as it is
+section theme 8 bars {
+  deck A: kick kick4 kit=drums vel=70..85 | bass <db2 db2 db2 ab1> inst=bass vel=65..80
+  deck B: harmony chords inst=strings vel=40..55 len=16 | melody air inst=sax vel=60..80
+}
+
+# variation: the same section, and each time a different change to the tune (a one-shot @, so it comes back each time)
+section variation 8 bars {
+  master: reverb 0.2
+  deck A: kick kick4 kit=drums vel=75..90 | hihat drm_hat kit=drums vel=40..60 | bass <db2 db2 db2 ab1> inst=bass vel=65..80
+  deck B: harmony chords inst=strings vel=40..55 len=16 | melody air inst=vibes vel=60..80
+}
+
+# sung: the phrase, the tune under it
+section sung 8 bars {
+  master: reverb 0.2
+  deck A: kick kick4 kit=drums vel=70..85 | hihat shk kit=drums vel=30..45 | bass <db2 db2 db2 ab1> inst=bass vel=60..75
+  deck B: harmony chords inst=warm-pad vel=30..42 len=16 | arp air inst=sax vel=25..40 | melody <vox_a vox_b ~ ~> inst=kalimba oct=3 vel=24..38
+  deck B: sing "because i could not stop for /d eh th/ / he /k ie n d l ee - s t aa p t/ for me" on melody voice=robot-choir
+}
+
+# one source, a different transform for each section, never two themes morphed together
+arrange {
+  theme
+  @ air_* rev
+  variation
+  @ air_* invert
+  variation
+  @ air_* stutter 2
+  variation
+  @ air_* oct -1
+  sung
+  @ air_* half | accent 0.3
+  variation
+  ~ drm_* grow
+  theme
+} loop 2 then end

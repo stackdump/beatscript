@@ -167,6 +167,37 @@ fn a_bound_source_is_the_templates_reference() {
     assert_eq!(nets(&clean(&e)), nets(&clean(src)));
 }
 
+/// The bound forms that need no generator, written out, are pinned (tests/fixtures/roles/): blessed before the form extensions
+/// (sets in a role, a section as a line, sub-roles, the canon's `delay=` and `interval=`, the quodlibet's roles), so a reference
+/// that says none of them is written out exactly as it was. `BEATSCRIPT_BLESS=1` rewrites the goldens.
+#[test]
+fn bound_forms_are_pinned() {
+    for (name, src) in [
+        ("passacaglia-upper-theme", "arrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n"),
+        ("passacaglia-ground-notes", "arrange from template(passacaglia, @eccl3_season, ground=<[g1 ~ ~ ~ d2 ~ ~ ~] [bb1 ~ ~ ~ c2 ~ ~ ~]>)\n"),
+        ("canon-subject-one-bar", "arrange from template(canon, @mgm_pease_porridge_hot, subject=[d5 c#5 b4 a4])\n"),
+        ("canon-subject-three-bars", "arrange from template(canon, @mgm_pease_porridge_hot, subject=<[d5 c#5] [b4 a4] [b4 c#5]>)\n"),
+        ("canon-subject-theme-in-e", "key e\narrange from template(canon, @mgm_pease_porridge_hot, subject=ode_to_joy, ground=mars_ostinato)\n"),
+        ("rondo-of-a-passacaglia", "arrange from template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, upper=ode_to_joy))\n"),
+        ("rondo-three-deep", "arrange from template(rondo, @shanty_drunken_sailor, episodes=template(rondo, episodes=template(canon, subject=ode_to_joy)))\n"),
+        ("rondo-refrain-and-figure", "arrange from template(rondo, @shanty_drunken_sailor, refrain=bach_prelude_c, episodes=<[c4 e4 g4 c5] [b3 d4 g4 b4]>)\n"),
+        ("fugue-both-roles", "arrange from template(fugue, @tyger_burning_bright, subject=ode_to_joy, counter=pachelbel_violin)\n"),
+        ("variations-theme", "arrange from template(theme-and-variations, @dickinson_chariot_death, theme=pachelbel_violin)\n"),
+        ("cross-lines", "arrange from template(cross, @psalm42_deep_calleth, a=badinerie, b=[b4 a4 g4 f#4])\n"),
+    ] {
+        let path = format!("{}/tests/fixtures/roles/{name}.txt", env!("CARGO_MANIFEST_DIR"));
+        let got = expanded(src);
+        if std::env::var("BEATSCRIPT_BLESS").is_ok() {
+            std::fs::create_dir_all(std::path::Path::new(&path).parent().unwrap()).unwrap();
+            std::fs::write(&path, &got).unwrap();
+            continue;
+        }
+        let want = std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("no golden {path} (BEATSCRIPT_BLESS=1 writes it)"));
+        assert_eq!(got, want, "{name}: a bound form that says no extension is written out as it was (BEATSCRIPT_BLESS=1 rewrites the golden)");
+        clean(src);
+    }
+}
+
 /// Every role of every form is said in the table the docs read (name, what it is, its default, the let it is written as),
 /// and the default it names is in the form's text.
 #[test]

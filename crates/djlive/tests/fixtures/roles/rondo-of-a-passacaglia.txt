@@ -1,0 +1,107 @@
+# from template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, upper=ode_to_joy)): a rondo at 116 in C, the phrase sung in it (templates v1)
+# phrase: @shanty_drunken_sailor, "What shall we do with a drunken sailor? / Way-ay and up she rises" (Drunken Sailor (No. 7, 'Capstan Chanteys'), sung by Mr. James Tucker at Bristol, Anonymous (traditional), 1914)
+# vocal: 17 syllables, free, straight feel, stress x~~x~~x~x~x~~x~x~: a vocal line of 4 bars, sung over sections of 8 bars
+# refrain: Joplin's Entertainer, the_entertainer; the tune that comes back, changed on each return
+# episodes: template(passacaglia, upper=ode_to_joy); what plays between the refrains: a line, the episodes' figure, or sections: a seed's, a stored program's, another form's
+tempo 116
+key c
+swing 0.18
+
+# the drums: the drm_* parts are what the arrangement changes; the kick and the shaker stay put
+let kick4 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let drm_snr = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x x
+let shk = x ~ x x ~ x x ~
+let the_entertainer_1 = e4 c5 ~ e4 c5 ~ e4 c5 ~ ~ ~ ~ c5 d5 d#5 e5
+let the_entertainer_2 = c5 d5 e5 ~ b4 d5 ~ c5 ~ ~ ~ ~ ~ ~ d4 d#4
+let the_entertainer = <the_entertainer_1 the_entertainer_2>
+let bach_prelude_c_1 = c4 e4 g4 c5 e5 g4 c5 e5 c4 e4 g4 c5 e5 g4 c5 e5
+let bach_prelude_c_2 = c4 d4 a4 d5 f5 a4 d5 f5 c4 d4 a4 d5 f5 a4 d5 f5
+let bach_prelude_c_3 = b3 d4 g4 d5 f5 g4 d5 f5 b3 d4 g4 d5 f5 g4 d5 f5
+let bach_prelude_c_4 = c4 e4 g4 c5 e5 g4 c5 e5 c4 e4 g4 c5 e5 g4 c5 e5
+let bach_prelude_c = <bach_prelude_c_1 bach_prelude_c_2 bach_prelude_c_3 bach_prelude_c_4>
+# the stride: the bass on the beat, the chord after it
+let bass_c = c2 ~ ~ ~ ~ ~ ~ ~ g1 ~ ~ ~ ~ ~ ~ ~
+let bass_g = g1 ~ ~ ~ ~ ~ ~ ~ d2 ~ ~ ~ ~ ~ ~ ~
+let stride_c = ~ ~ ~ ~ [e3, g3, c4] ~ ~ ~ ~ ~ ~ ~ [e3, g3, c4] ~ ~ ~
+let stride_g = ~ ~ ~ ~ [f3, g3, b3] ~ ~ ~ ~ ~ ~ ~ [f3, g3, b3] ~ ~ ~
+# the vocal line: a degree of the key for each syllable, ! on the stressed ones
+let vox_a = 1! 2 4 ~ 3! 4 2 ~
+let vox_b = 5! 6 8! 6 5! 4 2 ~
+let vox_c = 3! 2 1! 1 ~ ~ ~ ~
+
+# refrain (A): the tune that comes back
+section refrain 8 bars {
+  deck A: kick kick4 kit=drums vel=80..95 | clap drm_snr kit=drums vel=60..80 | hihat drm_hat kit=drums vel=40..65 | bass <bass_c bass_g> inst=bass vel=70..85
+  deck B: harmony <stride_c stride_g> inst=piano vel=50..65 | melody the_entertainer inst=piano vel=55..75
+}
+
+# episodes, bound: template(passacaglia, upper=ode_to_joy)
+# the passacaglia written out, its names starting ep_, in its own key: each of its sections says `key gm`
+let ep_kick4 = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~
+let ep_drm_clap = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+let ep_drm_hat = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~
+# the ground: five beats against the four of the bar, so it comes round every five bars
+let ep_mars_ostinato_1 = g2 g2 g2 ~ g2 ~ g2 ~ g2 ~ ~ ~ g2 ~ ~ ~ g2 ~ g2 ~
+let ep_mars_ostinato = <ep_mars_ostinato_1>
+# what the variations are made of: the chords, and a line above the ground that every pass changes a little more
+let ep_chords_1 = [g3, bb3, d4] ~ ~ ~ ~ ~ ~ ~ [eb3, g3, bb3] ~ ~ ~ ~ ~ ~ ~
+let ep_chords_2 = [c3, eb3, g3] ~ ~ ~ ~ ~ ~ ~ [d3, f#3, a3] ~ ~ ~ ~ ~ ~ ~
+let ep_chords = <ep_chords_1 ep_chords_2>
+# upper, bound: ode_to_joy
+let ep_upper_1 = d4 ~ ~ ~ d4 ~ ~ ~ d#4 ~ ~ ~ f4 ~ ~ ~
+let ep_upper_2 = f4 ~ ~ ~ d#4 ~ ~ ~ d4 ~ ~ ~ c4 ~ ~ ~
+let ep_upper_3 = a#3 ~ ~ ~ a#3 ~ ~ ~ c4 ~ ~ ~ d4 ~ ~ ~
+let ep_upper_4 = d4 ~ ~ ~ ~ ~ c4 ~ c4 ~ ~ ~ ~ ~ ~ ~
+let ep_upper = <ep_upper_1 ep_upper_2 ep_upper_3 ep_upper_4>
+
+# ep_ground: the ostinato and the chords alone
+section ep_ground 8 bars {
+  key gm
+  deck A: kick ep_kick4 kit=drums vel=80..95 | bass/20 ep_mars_ostinato inst=bass vel=75..90
+  deck B: harmony ep_chords inst=strings vel=40..55 len=8
+}
+
+# ep_variation: the line above the ground, and the drums
+section ep_variation 8 bars {
+  key gm
+  master: reverb 0.15
+  deck A: kick ep_kick4 kit=drums vel=85..100 | clap ep_drm_clap kit=drums vel=60..80 | hihat ep_drm_hat kit=drums vel=45..70 | bass/20 ep_mars_ostinato inst=bass vel=75..90
+  deck B: harmony ep_chords inst=strings vel=40..55 len=8 | arp ep_upper inst=marimba vel=50..75
+}
+
+# sung (C): the phrase, the episode's figure under it
+section sung 8 bars {
+  master: reverb 0.15
+  deck A: kick kick4 kit=drums vel=75..90 | hihat shk kit=drums vel=30..45 | bass <bass_c bass_g> inst=bass vel=65..80
+  deck B: arp bach_prelude_c inst=electric-piano vel=25..40 | melody <vox_a vox_b vox_c ~> inst=kalimba oct=3 vel=24..38
+  deck B: sing "what /sh ae l/ we do with a /d r uh ng k uh n - s ay l er/ / way /ay/ and up she /r ie z ii z/" on melody voice=robot-choir
+}
+
+# A B A C A ...: the refrain mutated on each return, the episodes between
+arrange {
+  refrain
+  ep_ground
+  ep_variation
+  ~ ep_upper_* rot 2 | accent 0.25
+  ~ ep_drm_hat thin 0.15
+  ~ ep_upper_* rev | drift 0.1
+  ~ ep_drm_* grow
+  ~ the_entertainer_* rot 2 | accent 0.3
+  refrain
+  sung
+  @ the_entertainer_* mirror | vel 2
+  refrain
+  ~ bach_prelude_c_* morph the_entertainer_1 0.2
+  ep_variation
+  ~ ep_upper_* up 1
+  ep_variation
+  ~ ep_upper_* down 1
+  ~ ep_drm_* decay
+  ~ the_entertainer_* up 1
+  refrain
+  @ vox_* xfer shk
+  sung
+  ~ the_entertainer_* down 1
+  refrain
+} loop 2 then end
