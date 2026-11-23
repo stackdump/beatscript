@@ -237,9 +237,9 @@ The document below is shown with its `@context` spelled out (`btw jsonld --inlin
     "uses": "djrust:uses",
     "visibility": "djrust:visibility"
   },
-  "@id": "https://beats.bitwrap.io/p#z4EBG9izNokfFdqBAy6yt9PGkxhcGj2tjMKcp28N3dtwJMeS1ui",
+  "@id": "https://beats.bitwrap.io/p#z4EBG9j4u6fpnAHQStTXMchz4DxYovWLf9RAfPH2f157ESLSwxg",
   "@type": "djrust:Program",
-  "cid": "z4EBG9izNokfFdqBAy6yt9PGkxhcGj2tjMKcp28N3dtwJMeS1ui",
+  "cid": "z4EBG9j4u6fpnAHQStTXMchz4DxYovWLf9RAfPH2f157ESLSwxg",
   "euclid": [
     {
       "@type": "bw:EuclideanRhythm",

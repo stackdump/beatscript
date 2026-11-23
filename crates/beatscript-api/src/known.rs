@@ -49,6 +49,19 @@ pub fn know(cid: &str, text: &str) -> Result<(), String> {
         return Err(format!("{} programs are already known here, as many as a page keeps: reload to start again", k.len()));
     }
     k.insert(cid.to_string(), text.to_string());
+    // and the same program under its CID in the other language version (djlive::version), with that version's own text, so a
+    // reference by either CID finds it and every re-hash still agrees: `beatscript fmt` reports a BeatScript 1 file's
+    // BeatScript 2 CID, and `--with` the file still answers an `import` of it
+    let other = djlive::compile::renamed_cid(text);
+    if !k.contains_key(&other) {
+        let twin = match djlive::version::of_canonical(text) {
+            djlive::version::Version::V1 => djlive::version::upgrade_canonical(text),
+            djlive::version::Version::V2 => djlive::version::legacy_canonical(text).to_string(),
+        };
+        if program_cid(&twin) == other && k.values().map(String::len).sum::<usize>() + twin.len() <= MAX_KNOWN_BYTES && k.len() < MAX_KNOWN {
+            k.insert(other, twin);
+        }
+    }
     Ok(())
 }
 

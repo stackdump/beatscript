@@ -7,7 +7,7 @@ use djlive::compile::check;
 use djlive::mutate::generations;
 
 /// The program as the example file has it, comments included (they are the teaching).
-const PROGRAM: &str = r#"#! btw 1
+const PROGRAM: &str = r#"#! beatscript 2
 #! name: arrange-in-eight-lines
 #! license: CC0-1.0
 # One section, played eight times. The arrange does the rest.
@@ -144,7 +144,7 @@ fn the_formatter_the_server_runs_on_arrival_leaves_it_as_it_is() {
     let f = djlive::format::format(PROGRAM, &djlive::env::Env::none()).expect("it reads");
     assert_eq!(f, PROGRAM);
     for line in [
-        "#! btw 1",
+        "#! beatscript 2",
         "#! name: arrange-in-eight-lines",
         "#! license: CC0-1.0",
         "# One section, played eight times. The arrange does the rest.",
@@ -158,7 +158,7 @@ fn the_formatter_the_server_runs_on_arrival_leaves_it_as_it_is() {
     // formats to a fixed point
     let loose = PROGRAM.replace("tempo 124\n", "tempo   124   # a tempo\n\n\n").replace("  ~ drm_hat euclid 7", "  ~   drm_hat   euclid 7");
     let f = djlive::format::format(&loose, &djlive::env::Env::none()).expect("it reads");
-    for line in ["#! btw 1", "#! name: arrange-in-eight-lines", "#! license: CC0-1.0", "# @ changes it for the next section only, then it snaps back."] {
+    for line in ["#! beatscript 2", "#! name: arrange-in-eight-lines", "#! license: CC0-1.0", "# @ changes it for the next section only, then it snaps back."] {
         assert!(f.lines().any(|l| l == line), "{line:?} in {f}");
     }
     assert!(f.contains("tempo 124  # a tempo\n") && f.contains("  ~ drm_hat euclid 7\n"), "{f}");

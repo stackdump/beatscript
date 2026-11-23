@@ -125,8 +125,8 @@ Two whole tracks use the technique. Both are CC0-1.0 and carry their source in a
 
 | program | the line | meter, groove | CID |
 |---|---|---|---|
-| `such-stuff-as-dreams-122` | Prospero, *The Tempest* 4.1 (1623): "we are such stuff as dreams are made on / and our little life is rounded with a sleep" | iambic pentameter; deep house at 122, the lilt on the offbeat | `z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK` |
-| `tyger-tyger-128` | Blake, *The Tyger* (1794): "Tyger! Tyger! burning bright / In the forests of the night" | catalectic trochaic tetrameter; four on the floor at 128, the chant on the kick | `z4EBG9jB6T7bKvVFQ6ZW6UPPCYh2RQbAHx86rZ8EKczfdupgqnn` |
+| `such-stuff-as-dreams-122` | Prospero, *The Tempest* 4.1 (1623): "we are such stuff as dreams are made on / and our little life is rounded with a sleep" | iambic pentameter; deep house at 122, the lilt on the offbeat | `z4EBG9j94aGDk5revau2rGjEE46x9bebqNtKwiUyPqGZy7TRHCj` |
+| `tyger-tyger-128` | Blake, *The Tyger* (1794): "Tyger! Tyger! burning bright / In the forests of the night" | catalectic trochaic tetrameter; four on the floor at 128, the chant on the kick | `z4EBG9jDkEcovjGFiHHNsiTGLk6jskJRAKn6MvUTyvTJSojtRa5` |
 
 The programs are `examples/beatscript/such-stuff-as-dreams-122-reference.beatscript` and `examples/beatscript/tyger-tyger-128.beatscript`, each with its
 source in a comment and in a `.jsonld` beside it. `check` warns of a few words the lexicon lacks (`such`, `stuff`, `dreams`,

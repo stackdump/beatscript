@@ -546,7 +546,7 @@ fn the_example_does_what_its_comments_say() {
     let hat = seg.decks.values().flat_map(|d| d.parts.iter()).find(|p| p.role == "hihat").unwrap();
     assert_eq!(hat.vel_range, Some((84, 100)));
     assert_eq!(hat.cycles[0].len(), 4, "x*(4 + (1 + 1) % 2 * 4) is x*4");
-    assert!(c.text.starts_with("tempo 128\nkey am\nswing 0.125\nlet total = 16\nlet base = 72\n"), "{}", c.text);
+    assert!(c.text.starts_with("#! beatscript 2\ntempo 128\nkey am\nswing 0.125\nlet total = 16\nlet base = 72\n"), "{}", c.text);
 }
 
 #[test]

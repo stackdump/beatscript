@@ -254,9 +254,9 @@ its CID.
 
 | form | program | after | CID |
 |---|---|---|---|
-| quodlibet | **Canon of Fate** (`canon-of-fate`) | Pachelbel, Canon in D (composed about 1680-1706, first printed 1919); Beethoven, Symphony No. 9 (1824), Ode to Joy; Beethoven, Symphony No. 5 (1808), the fate motif | `z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx` |
-| passacaglia | **Full fathom five** (`full-fathom-five`) | Shakespeare, The Tempest (1623), Ariel's song, sung | `z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1` |
-| rondo | **Rag Rondo** (`rag-rondo`) | Joplin, The Entertainer (1902) and Maple Leaf Rag (1899; its figure approximated in C, not transcribed) | `z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw` |
+| quodlibet | **Canon of Fate** (`canon-of-fate`) | Pachelbel, Canon in D (composed about 1680-1706, first printed 1919); Beethoven, Symphony No. 9 (1824), Ode to Joy; Beethoven, Symphony No. 5 (1808), the fate motif | `z4EBG9j86dPTC9HH6EjtBJFAWZsJLiPum4np9zoJQC9PzWm9SoC` |
+| passacaglia | **Full fathom five** (`full-fathom-five`) | Shakespeare, The Tempest (1623), Ariel's song, sung | `z4EBG9j3xZiLH5Sa8EnFW5sg2WuSPRuMbBaTr3JHeQjfWWE7Ug9` |
+| rondo | **Rag Rondo** (`rag-rondo`) | Joplin, The Entertainer (1902) and Maple Leaf Rag (1899; its figure approximated in C, not transcribed) | `z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW` |
 
 ## For an agent
 

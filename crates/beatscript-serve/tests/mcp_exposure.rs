@@ -217,7 +217,7 @@ fn generate_generator(s: &Server) -> Result<(), String> {
     let r = s.call("generate", json!({"genre": "techno", "seed": 42, "generator": 1}));
     ensure(r["generator"] == "seeded@1" && r["gen"] == "gen@1 techno seed=42", format!("{}", json!({"generator": r["generator"], "gen": r["gen"]})))?;
     let now = s.call("generate", json!({"genre": "techno", "seed": 42}));
-    ensure(now["generator"] == "seeded@2" && now["gen"] == "gen@2 techno seed=42" && now["cid"] != r["cid"], "the default is seeded@2, another program")?;
+    ensure(now["generator"] == "seeded@3" && now["gen"] == "gen@3 techno seed=42" && now["cid"] != r["cid"], "the default is seeded@3 (seeded@2's program in BeatScript 2), another program")?;
     // the call is the program: checking `arrange from <gen>` resolves to its CID
     let c = s.call("check", json!({"text": format!("arrange from {}\n", now["gen"].as_str().unwrap_or(""))}));
     ensure(c["refs"][0]["resolved"] == now["cid"], format!("arrange from {} resolves to {}, not {}", now["gen"], c["refs"][0]["resolved"], now["cid"]))

@@ -650,7 +650,7 @@ fn an_import_brings_its_wires_and_a_second_wire_to_the_same_input_is_an_error() 
 fn the_import_example_compiles_against_the_snippet_it_describes() {
     let lib = "def harmony_changes() out: chords {\n  emit <dm7 g7 cmaj7 fmaj7>\n}\ndef harmony_key() out: key {\n  emit am\n}\n";
     let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/ports-import.beatscript")).unwrap();
-    assert!(src.starts_with("#! skip-test:"));
+    assert!(src.lines().take_while(|l| l.starts_with("#!")).any(|l| l.starts_with("#! skip-test:")), "the header block says skip-test");
     // the snippet is in the example's own comment, as saved
     for l in lib.lines() {
         assert!(src.contains(&format!("#   {l}")) || src.contains(&format!("#{l}")) || l.is_empty(), "{l}");

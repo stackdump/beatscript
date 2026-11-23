@@ -102,14 +102,28 @@ pub fn of_source(src: &str) -> Version {
     }
 }
 
-/// The header block's lines: the leading run of lines that start with `#!` (`linked::header_end`), each with its span.
+/// The `#!` lines a version line may be: every one before the program's first statement, wherever it stands among the
+/// leading blank and comment lines, indented or not (a version line is as whitespace-free as the rest of the language: the
+/// text respaced is the same program). Each with the span of the line as written, its indentation left out.
 fn header_block(src: &str) -> impl Iterator<Item = (Span, &str)> {
     let mut at = 0;
-    src.split_inclusive('\n').map_while(move |raw| {
+    let mut done = false;
+    src.split_inclusive('\n').filter_map(move |raw| {
         let start = at;
         at += raw.len();
-        let t = raw.trim_end();
-        t.starts_with("#!").then(|| (Span::new(start, start + t.len()), t))
+        if done {
+            return None;
+        }
+        let t = raw.trim();
+        if t.is_empty() || (t.starts_with('#') && !t.starts_with("#!")) {
+            return None;
+        }
+        if !t.starts_with("#!") {
+            done = true;
+            return None;
+        }
+        let lead = raw.len() - raw.trim_start().len();
+        Some((Span::new(start + lead, start + lead + t.len()), t))
     })
 }
 
@@ -197,8 +211,10 @@ pub fn legacy_canonical(canonical: &str) -> &str {
 pub fn without_version_line(src: &str) -> String {
     match find(src) {
         Ok(Some(l)) => {
-            let end = if src[l.span.end..].starts_with('\n') { l.span.end + 1 } else { l.span.end };
-            format!("{}{}", &src[..l.span.start], &src[end..])
+            // the whole line: its indentation, the line, the rest of it and its newline
+            let start = src[..l.span.start].rfind('\n').map_or(0, |i| i + 1);
+            let end = src[l.span.end..].find('\n').map_or(src.len(), |i| l.span.end + i + 1);
+            format!("{}{}", &src[..start], &src[end..])
         }
         _ => src.to_string(),
     }
@@ -214,8 +230,10 @@ mod tests {
         assert_eq!(of_source("#! btw 1\ntempo 120\n"), Version::V1);
         assert_eq!(of_source("#! beatscript 2\ntempo 120\n"), Version::V2);
         assert_eq!(of_source("#! name: a\n#! beatscript 2\ntempo 120\n"), Version::V2);
-        // only the header block counts
+        // only before the first statement; blank lines, comments and indentation before it do not matter
         assert_eq!(of_source("tempo 120\n#! beatscript 2\n"), Version::V1);
+        assert_eq!(of_source("\n  # a song\n\t#! beatscript 2  \ntempo 120\n"), Version::V2);
+        assert_eq!(upgrade_source("\n# a song\n   #! btw 1\ntempo 1\n"), "\n# a song\n   #! beatscript 2\ntempo 1\n");
         // a `key:` line is not a version line
         assert_eq!(of_source("#! beatscript: 2\ntempo 120\n"), Version::V1);
     }

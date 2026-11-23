@@ -45,10 +45,10 @@ mod tests {
         let text = include_str!("../../../examples/beatscript/arrange-in-eight-lines.beatscript");
         let f = autoformat(text, 16384);
         assert_eq!(f, text);
-        assert_eq!(f.lines().filter(|l| l.starts_with("#!")).count(), 3);
+        assert_eq!(f.lines().filter(|l| l.starts_with("#!")).count(), 3, "the version line, the name and the licence");
         assert_eq!(f.lines().filter(|l| l.starts_with("# ")).count(), 3);
         let cid = |t: &str| serde_json::from_str::<serde_json::Value>(&beatscript_api::check_json(t)).unwrap()["cid"].clone();
-        assert_eq!(cid(&f), "z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz");
+        assert_eq!(cid(&f), "z4EBG9jHEKgonTqe3ucsjCSx1dMpeceWXr68HEfZrw2n6Yd62sj");
     }
 
     #[test]

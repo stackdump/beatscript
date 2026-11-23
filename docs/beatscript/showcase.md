@@ -13,7 +13,7 @@ mix in intro: A level 0.45, B level 0.3, master level 0.85 -> mixer {...}; reads
 duck B under A.kick 6db attack=5ms release=120ms in groove: trick {"action":"on","amount":0.499,"deck":"B","div":16,"kind":"pump","source":"A"} ...
 ...
 length: 2m04s with the tempo curve, 64 bars
-ok  cid z4EBG9j1X64xRSJ82YLsNTSV8Vruf1icVF7tBXxJ2jt9KW6VZuo  228 lines  64 bars
+ok  cid z4EBG9j37QBGtpgBbGG2nLFDQ3nvwq1FdePDEjcZDiSLtHVbRVy  228 lines  64 bars
 assertions: 4 hold, 2 pending (`djctl btw test` measures them on a render)
 
 $ djctl btw test examples/beatscript/showcase.beatscript
@@ -27,7 +27,7 @@ note: this program is performed: levels are measured with every input at 1/2 (th
 6 assertions pass
 ```
 
-Program CID `z4EBG9j1X64xRSJ82YLsNTSV8Vruf1icVF7tBXxJ2jt9KW6VZuo`; canonical text 6418 bytes, 228 lines (the source is 253 lines of text
+Program CID `z4EBG9j37QBGtpgBbGG2nLFDQ3nvwq1FdePDEjcZDiSLtHVbRVy`; canonical text 6418 bytes, 228 lines (the source is 253 lines of text
 and comments); a fixed point of `btw fmt`; 240 random reformattings (see "How it was checked") keep the CID.
 
 ## The form
@@ -242,7 +242,7 @@ Merging the second review's fixes (fixer b) into the integration branch changed 
   hi-hat has twelve steps, but the bass and the hats of the build have chance, and `assert period == 24` now says "the program has no period: hihat on deck A, bass on deck A have chance,
   which differs every bar (the rest comes round in 24 bars (hihat/12 against the bar))". The assertion was meaningless for this program, so it was removed. The `period:` note of `check` ("24 bars = 384 steps
   (hihat/12 against the bar), in section intro", and 12 bars in the outro) is the polymeter's own and stays. Six assertions pass, not seven.
-* **The CID moved, for two reasons that are not the music.** `z4EBG9j8Niv8GBhjXeAK2wtNMG39kqgNCb16sfND1Azj7Trp1qw` became `z4EBG9j1X64xRSJ82YLsNTSV8Vruf1icVF7tBXxJ2jt9KW6VZuo`: the dropped assertion
+* **The CID moved, for two reasons that are not the music.** `z4EBG9j8Niv8GBhjXeAK2wtNMG39kqgNCb16sfND1Azj7Trp1qw` became `z4EBG9j37QBGtpgBbGG2nLFDQ3nvwq1FdePDEjcZDiSLtHVbRVy`: the dropped assertion
   is a line of the canonical text, and arithmetic with no input now folds to its number wherever it stands (L-08). Checked by running the program without the dropped line through the build
   before and after the fix: the canonical texts differ in exactly nine lines, each a fold. Eight are tempos: `tempo 122 - 8` is `tempo 114`, `tempo 122 + 8` is `tempo 130`, `tempo 122 + 10` is `tempo 132`, and the five ramps
   (`tempo 122 - 8 -> 122` is `tempo 114 -> 122`, `122 -> 122 + 8` is `122 -> 130`, `122 + 8 -> 122 - 18` is `130 -> 104`, `122 - 18 -> 122 + 10` is `104 -> 132`, `122 + 10 -> 122 - 10` is `132 -> 112`). The ninth is `master: delay 1 / 10 + knob(2) * (3 / 10)`, now `master: delay 0.1 + knob(2) * 0.3`. The numbers are the same, so the render plays

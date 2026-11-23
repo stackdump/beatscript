@@ -2496,7 +2496,7 @@ timeline, a rest bar wherever a section does not have a part, velocity hashes ta
 
 ```text
 $ djctl btw nets examples/trance-138.beatscript
-program z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ
+program z4EBG9j5MMozvDkT1gTck6ZKTsqXctuNA25bzD86dkhc6buYuuB
 deck A  z4EBG9jG8nT2p449McscV7ZSCfmUJDiFxFU26JpZhJ9hfBFgeLD  (the song written out longhand)
 deck B  z4EBG9j8hbXoGqrw8qMseuz7BhibdkMiee4USmUaSyPRgJjiiLJ  (the song written out longhand)
 
