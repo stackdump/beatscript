@@ -23,7 +23,7 @@ const rejecting = (fn) => (...a) => {
 };
 
 export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
-  async function req(method, path, { json, text, headers, signal } = {}) {
+  async function req(method, path, { json, text, headers, signal, answer = false } = {}) {
     const init = { method, headers: { ...(headers || {}) }, signal, credentials: 'same-origin' };
     if (json !== undefined) {
       init.body = JSON.stringify(json);
@@ -45,7 +45,8 @@ export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
     } else {
       try { body = await res.text(); } catch { body = null; }
     }
-    if (!res.ok) throw apiErrorFrom(res.status, typeof body === 'object' ? body : null, res.headers.get('Retry-After'));
+    // an endpoint whose refusal is an answer of its own ({ok: false, error: "...", diagnostics}) gives it back as it is
+    if (!res.ok && !(answer && body && typeof body === 'object' && body.ok === false && typeof body.error === 'string')) throw apiErrorFrom(res.status, typeof body === 'object' ? body : null, res.headers.get('Retry-After'));
     return body;
   }
   return {
@@ -74,6 +75,8 @@ export function makeApi({ base = '', fetchFn = (...a) => fetch(...a) } = {}) {
     compose: (body, signal) => req('POST', '/api/compose', { json: body, signal }),
     // the seeded generator on the server (no sign-in, no model): the fallback when the wasm has no btw_generate
     generate: (body) => req('POST', '/api/generate', { json: body }),
+    // a radio station's answer (station-model.js; the same JSON as the wasm's btw_station): the fallback when the wasm has none
+    station: (body) => req('POST', '/api/station', { json: body, answer: true }),
     challenge: () => req('GET', '/api/auth/challenge'),
     login: (body) => req('POST', '/api/auth/login', { json: body }),
     logout: () => req('POST', '/api/auth/logout', { json: {} }),

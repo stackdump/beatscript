@@ -4,6 +4,8 @@
 // timed lines, an evolve block) and nothing more: the CIDs are fake ("zMock..."), the grammar check is a
 // line-shape check. It is only ever loaded on request; the real page runs on the real module.
 
+import * as station from './station-model.js';
+
 const WORDS = ['tempo', 'swing', 'key', 'let', 'def', 'repeat', 'section', 'arrange', 'import', 'end', 'loop', 'evolve', 'deck', 'master', 'every', 'on', 'at', 'after', 'before', 'for', 'do', 'crossfader', 'swap', 'move', 'load', 'queue', 'play', 'stop', 'sync', 'mute', 'unmute', 'filter', 'delay', 'reverb', 'crush', 'level', 'low', 'mid', 'high', 'resonance'];
 const ROLES = ['kick', 'snare', 'hihat', 'clap', 'bass', 'melody', 'harmony', 'arp'];
 const KEYWORDS = ['deck', 'master', 'every', 'on', 'at', 'bar', 'bars', 'phrase', 'over', 'tempo', 'key', 'swing', 'with', 'pairs', 'pair', 'group', 'section', 'arrange', 'let', 'def', 'repeat', 'end', 'loop', 'evolve', 'before', 'after', 'for', 'from', 'when', 'gen', 'stop', 'import', 'next'];
@@ -82,6 +84,7 @@ export function parseProgram(text) {
   const defs = {};
   const sections = [];
   let arrange = null;
+  let generated = null;
   let tempo = null;
   let key = '';
   let swing = null;
@@ -132,6 +135,16 @@ export function parseProgram(text) {
       const sec = { name, bars: Number.isNaN(bars) ? 0 : bars, line: line.n, start: 0, endLine: line.n, headerStart: line.start + col0, headerEnd: line.start + line.code.trimEnd().length };
       sections.push(sec);
       if (opens) stack.push({ kind: 'section', sec });
+    } else if (w0 === 'station') {
+      // a station program (station-model.js reads it; the mock only checks its shape)
+      if (opens) stack.push({ kind: 'station' });
+      else problem(line, col0, line.code.trimEnd().length, 'a station is `station {`', ['station {'], t, null);
+    } else if (ctx && ctx.kind === 'station') {
+      if (!['from', 'next', 'forms'].includes(w0)) problem(line, col0, col0 + w0.length, `a station's block holds \`from\`, \`next\` and \`forms\` lines: found \`${w0}\``, ['from', 'next', 'forms'], w0, null);
+    } else if (w0 === 'arrange' && ws[1] && ws[1].w === 'from') {
+      // a generated arrangement (`arrange from gen@2 techno seed=42`, `arrange from template(...)`): the real module expands
+      // it; the mock plays it as one section of a fixed length (8 bars short or a cross, 32 long, else 16)
+      generated = { line, col0 };
     } else if (w0 === 'arrange') arrange = ws.slice(1).map((x) => x.w);
     else if (w0 === 'import') {
       // an import of a CID the module was not told: the real module's words (djlive env::not_here)
@@ -188,6 +201,12 @@ export function parseProgram(text) {
   for (const b of stack) {
     const line = lines[(b.sec || b.ev || b.def || { line: 0 }).line];
     problem(line, line.indent, line.code.trimEnd().length, 'this block is never closed: add a `}`', ['}'], 'the end of the text', '}');
+  }
+  if (generated && !arrange && !sections.length) {
+    const { line, col0 } = generated;
+    const t = line.trimmed;
+    const bars = /\btemplate\(\s*cross\b/.test(t) || /\blength=short\b/.test(t) ? 8 : /\blength=long\b/.test(t) ? 32 : 16;
+    sections.push({ name: 'track', bars, line: line.n, start: 0, endLine: line.n, headerStart: line.start + col0, headerEnd: line.start + line.code.trimEnd().length });
   }
   // the timeline
   let order = sections.slice();
@@ -592,6 +611,108 @@ export async function createMockEngine({ context, destination }) {
   };
 }
 
+// ---- stations (BeatScript radio): the answer of btw_station / POST /api/station, with the mock's fake CIDs ----------------
+
+/** The from call's own tempo and key, as the mock pretends the generator prints them (the real ones are the genre tables'). */
+const MOCK_GENRE_DEFAULTS = { techno: [128, 'am'], house: [124, 'c'], jazz: [110, 'dm'], ambient: [80, 'c'], dnb: [174, 'am'], edm: [128, 'fm'], speedcore: [220, 'em'], dubstep: [140, 'fm'], country: [110, 'g'], blues: [96, 'e'], synthwave: [100, 'am'], trance: [138, 'am'], lofi: [85, 'dm'], reggae: [80, 'g'], funk: [105, 'em'], bossa: [120, 'dm'], trap: [140, 'cm'], garage: [132, 'fm'], metal: [160, 'em'] };
+/** A stand-in phrase id for phrasebook line k (stations v1 pins 47 real ids; the mock does not know them). */
+export const mockPhrase = (k) => `@pd_${String(k).padStart(2, '0')}`;
+const mockCidOf = (text) => mockCheck(text).cid;
+const numOrWord = (s) => (/^\d+$/.test(String(s)) ? Number(s) : String(s));
+
+function stationFail(error, diagnostics = []) {
+  return { ok: false, error, diagnostics: diagnostics.map((d) => ({ severity: d.severity || 'error', message: d.message, line: d.line || 1, col: d.col || 1 })) };
+}
+
+function mockTrackCheck(text) {
+  const c = mockCheck(text);
+  return { ok: c.ok, expanded_cid: c.ok ? mockCid(`expanded\n${c.canonical}`) : null, bars: c.song_bars || 0, seconds: c.seconds || 0, errors: c.diagnostics.filter((d) => d.severity === 'error').map((d) => d.message) };
+}
+
+/**
+ * The station answer (site radio spec, "JSON"): the request is {station, n, count, segue, check, retune, locks, neighbours};
+ * the answer {ok, version, station, n, tracks, segues, neighbours, retuned, locks, diagnostics}, or {ok: false, error,
+ * diagnostics}. The rules are station-model.js's (the walk, the forms, the notches); the CIDs, the phrase ids and the from
+ * call's own tempo and key are the mock's.
+ */
+export function mockStation(input) {
+  let req;
+  try { req = typeof input === 'string' ? JSON.parse(input || '{}') : (input || {}); } catch (e) { return stationFail(`the request is not JSON: ${e.message}`); }
+  if (!req || typeof req !== 'object') return stationFail('the request is a JSON object');
+  const p = station.parseStation(typeof req.station === 'string' ? req.station : '');
+  if (!p.ok) return stationFail(p.errors[0].message, p.errors);
+  const n = req.n ?? 0;
+  if (!Number.isInteger(n) || n < 0) return stationFail('`n` is a whole number, 0 or more');
+  const count = req.count ?? 1;
+  if (!Number.isInteger(count) || count < 1 || count > 16) return stationFail('`count` is 1 to 16');
+  const locks = req.locks ?? [];
+  if (!Array.isArray(locks) || locks.some((k) => !station.KNOBS.includes(k))) return stationFail(`\`locks\` lists knobs: ${station.KNOBS.join(', ')}`);
+  const resolve = (k) => {
+    const [t, key] = MOCK_GENRE_DEFAULTS[k.genre] || [120, 'am'];
+    return { ...k, tempo: k.tempo ?? t, key: k.key ?? key };
+  };
+  // what the text says: a retuned knob is written, an unsaid tempo or key stays the from call's own
+  const said = { ...p.knobs, forms: [...p.knobs.forms] };
+  let retuned = [];
+  if (req.retune != null) {
+    if (typeof req.retune !== 'object' || Array.isArray(req.retune)) return stationFail('`retune` is {knob: value | "+1" | "-1"}');
+    const r = station.retune(resolve(said), req.retune, locks);
+    if (!r.ok) return stationFail(r.error);
+    for (const k of r.retuned) said[k] = r.knobs[k];
+    retuned = r.retuned;
+  }
+  if (n + count > station.maxN(said.step) + 1) return stationFail(`a \`next seed=~\` station reaches position ${station.MAX_N_WALK} at most`);
+  const gen = p.generator;
+  const built = (k) => {
+    const text = station.stationText(k, { generator: gen, header: p.header });
+    const cid = mockCidOf(text);
+    const r = resolve(k);
+    const env = { generator: gen, cidOf: mockCidOf, phraseId: mockPhrase, tempo: r.tempo, key: r.key, stationCid: cid, memo: [] };
+    const track = (N) => {
+      const parent = N > 0 ? mockCidOf(station.trackOf(k, N - 1, env).text) : null;
+      const t = station.trackOf(k, N, { ...env, parentCid: parent });
+      t.cid = mockCidOf(t.text);
+      if (parent) t.parent = parent;
+      if (req.check) t.check = mockTrackCheck(t.text);
+      return t;
+    };
+    return { text, cid, r, env, track };
+  };
+  const b = built(said);
+  const tracks = [];
+  const segues = [];
+  for (let i = n; i < n + count; i++) {
+    tracks.push(b.track(i));
+    if (req.segue) {
+      const s = station.segueOf(said, i, b.env);
+      s.cid = mockCidOf(s.text);
+      if (req.check) s.check = mockTrackCheck(s.text);
+      segues.push(s);
+    }
+  }
+  const neighbours = [];
+  if (req.neighbours) {
+    for (const o of station.neighbourOptions(b.r, locks)) {
+      const k2 = { ...said, [o.knob]: o.value };
+      const b2 = built(k2);
+      const t = b2.track(n);
+      neighbours.push({ knob: o.knob, dir: o.dir, value: o.knob === 'seed' ? Number(o.value) : o.value, text: b2.text, cid: b2.cid, track: { n: t.n, cid: t.cid, seed: t.seed, theme: t.theme, form: t.form, phrase: t.phrase } });
+    }
+  }
+  return {
+    ok: true,
+    version: station.VERSION,
+    station: { text: b.text, cid: b.cid, version: station.VERSION, genre: said.genre, generator: gen, seed: numOrWord(said.seed), step: said.step, forms: said.forms, tempo: b.r.tempo, key: b.r.key, length: said.length, start_cid: mockCidOf(`arrange from ${station.genCall(gen, said.genre, said.seed, said.length)}\n`) },
+    n,
+    tracks,
+    segues,
+    neighbours,
+    retuned,
+    locks: station.KNOBS.filter((k) => locks.includes(k)),
+    diagnostics: [],
+  };
+}
+
 // ---- the module's surface ----------------------------------------------------------------------------
 
 export function mockModule() {
@@ -607,6 +728,7 @@ export function mockModule() {
     btw_instruments: j(mockInstruments),
     btw_generation: () => JSON.stringify({ ok: true, cid: 'zMockGen', scope: 'drop', n: 1 }),
     btw_cheatsheet: () => '# btw cheat sheet (mock)\n',
+    btw_station: (req) => JSON.stringify(mockStation(req)),
     BtwRun: class {
       constructor() { this.r = new MockRun(); }
       eval(t) { return JSON.stringify(this.r.eval(t)); }

@@ -4,7 +4,8 @@
 // static files, /api/info, examples, check/fmt/share/open (through the REAL wasm when site/web/wasm is
 // built, else the page's JS mock), programs (PUT verifies the CID), a render stream (a synthesised click
 // track as a streaming WAV: a kick on every beat, a hat on the off-beat, a bass note a bar), auth (any
-// signature is accepted), compose (canned programs), sessions (SSE + reports) and two test-only routes
+// signature is accepted), compose (canned programs), the radio's station answer (wasm-mock.js mockStation, unless the
+// built wasm has btw_station), sessions (SSE + reports) and two test-only routes
 // (/__push/<id>, /__state/<id>).
 //
 //   node site/test/mock-server.mjs [--port 18197] [--web site/web] [--examples site/examples] [--mock-wasm] [--csp strict|<policy>]
@@ -45,10 +46,13 @@ async function loadChecker() {
     m.initSync({ module: fs.readFileSync(path.join(WEB, 'wasm', 'btw_bg.wasm')) });
     realWasm = true;
     M = { check: (t) => JSON.parse(m.btw_check(t)), fmt: (t) => JSON.parse(m.btw_fmt(t)), open: (s) => JSON.parse(m.btw_open(s)), share: (t) => JSON.parse(m.btw_share(t, null, false, 'https://btw.bitwrap.io')), instruments: () => JSON.parse(m.btw_instruments()) };
+    if (typeof m.btw_station === 'function') M.station = (req) => JSON.parse(m.btw_station(JSON.stringify(req)));
   } else {
     const w = await import(pathToFileURL(path.join(WEB, 'js', 'wasm-mock.js')).href);
     M = { check: w.mockCheck, fmt: w.mockFmt, open: w.mockOpen, share: (t) => w.mockShare(t), instruments: w.mockInstruments };
   }
+  // the radio's station answer: the module's when it has btw_station, else the JS mock's (fake CIDs, the spec's rules)
+  if (!M.station) M.station = (await import(pathToFileURL(path.join(WEB, 'js', 'wasm-mock.js')).href)).mockStation;
 }
 
 // ---- state --------------------------------------------------------------------------------------------------------
@@ -239,6 +243,8 @@ async function route(req, res) {
     if (m === 'POST') { const t = `btw_${crypto.randomBytes(32).toString('base64url').slice(0, 43)}`; tokens.set(t, { ...u, via: 'token' }); return send(res, 200, { token: t }); }
     if (m === 'DELETE') { for (const [k, v] of tokens) if (v.id === u.id) tokens.delete(k); return send(res, 200, { ok: true }); }
   }
+  // the radio (station-model.js): a station's answer, or {ok: false, error, diagnostics} with 422
+  if (m === 'POST' && p === '/api/station') { const a = M.station(await readJson(req)); return send(res, a && a.ok ? 200 : 422, a); }
   if (m === 'POST' && p === '/api/compose') { const [st, body, hd] = compose(await readJson(req), userOf(req)); return send(res, st, body, hd || {}); }
   // sessions
   if (m === 'POST' && p === '/api/session') {

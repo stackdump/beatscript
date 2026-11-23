@@ -6,9 +6,9 @@ import { describeError, ApiError } from './errors.js';
 import { qrChoice } from './qr-model.js';
 import { SHARE_RIGHTS } from './rights.js';
 import { signIn, hasWallet, localKeyInfo, resetLocalKey } from './auth.js';
+// the seeded generator's genres (btwapi::generate::genres, beats' catalogue): one list, shared with the radio's genre knob
+import { SEEDED_GENRES } from './station-model.js';
 
-// the seeded generator's genres (btwapi::generate::genres, beats' catalogue)
-const SEEDED_GENRES = ['techno', 'house', 'jazz', 'ambient', 'dnb', 'edm', 'speedcore', 'dubstep', 'country', 'blues', 'synthwave', 'trance', 'lofi', 'reggae', 'funk', 'bossa', 'trap', 'garage', 'metal'];
 const GENRES = ['ambient', 'dnb', 'dubstep', 'house', 'techno', 'trance', 'lofi', 'jazz', 'bossa', 'funk', 'hardcore', 'breakbeat', 'synthwave', 'garage'];
 
 export class Panels {

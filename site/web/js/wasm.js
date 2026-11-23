@@ -36,6 +36,8 @@ export function makeFacade(mod, wasmUrl = null) {
     cheatsheet: () => mod.btw_cheatsheet(),
     /** The seeded generator ({genre,bpm,key,length,seed} -> {ok,text,cid,check,...}); null when the module predates it. */
     generate: mod.btw_generate ? (req) => j(mod.btw_generate(JSON.stringify(req || {}))) : null,
+    /** A radio station's answer (station-model.js: {station, n, count, segue, ...} -> {ok, station, tracks, segues, ...}); null when the module predates it (the page asks POST /api/station). */
+    station: typeof mod.btw_station === 'function' ? (req) => j(mod.btw_station(JSON.stringify(req || {}))) : null,
     /** [[start16, end16, class], ...] */
     highlight(text) {
       if (text === lastText) return lastSpans;

@@ -2241,3 +2241,283 @@ test('embed: the doc line is the playing section\'s doc comment, from the progra
     assert.equal(api.origin, 'https://beatscript.app', 'the frame comes from where the script came from');
   });
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// the radio: station-model.js (pure) and the mock's station answer (wasm-mock.js mockStation, the stand-in for
+// btw_station and POST /api/station)
+// ---------------------------------------------------------------------------------------------------------------
+
+{
+  const sm = await J('station-model.js');
+  const { mockStation, mockCheck } = await J('wasm-mock.js');
+  const cidOf = (t) => mockCheck(t).cid;
+  const answered = (req) => {
+    const a = mockStation(req);
+    assert.equal(a.ok, true, a.error);
+    return a;
+  };
+  const tuned = (text = sm.DEFAULT_STATION, n = 0, extra = {}) => sm.applyAnswer({ ...sm.initialState({ text, n }), ...extra }, answered(sm.stationRequest({ ...sm.initialState({ text, n }), ...extra }))).state;
+
+  test('radio: a station program reads into its knobs, with the defaults filled in and the refusals at their line', () => {
+    const p = sm.parseStation(sm.DEFAULT_STATION);
+    assert.equal(p.ok, true, JSON.stringify(p.errors));
+    assert.deepEqual(p.knobs, { genre: 'techno', seed: '42', step: '~', forms: ['seeded', 'passacaglia', 'rondo', 'fugue'], tempo: 128, key: 'am', length: 'standard' });
+    assert.equal(p.generator, 'gen@2');
+    assert.deepEqual(p.header, ['#! name: techno radio', '#! license: CC0-1.0']);
+    const bare = sm.parseStation('station {\n  from gen@2 house seed=sunrise length=long\n}\n');
+    assert.deepEqual(bare.knobs, { genre: 'house', seed: 'sunrise', step: '+1', forms: ['seeded'], tempo: null, key: null, length: 'long' }, 'step +1, forms seeded; tempo and key are the from call\'s own');
+    const refused = (text, re, line) => {
+      const r = sm.parseStation(text);
+      assert.equal(r.ok, false, text);
+      assert.match(r.errors[0].message, re);
+      if (line) assert.equal(r.errors[0].line, line);
+    };
+    for (const k of ['bpm=128', 'key=am', 'section=drop', 'part=bass']) refused(`station {\n  from gen@2 techno seed=1 ${k}\n}\n`, /takes no/, 2);
+    refused('#! stations: v2\nstation {\n  from gen@2 techno seed=1\n}\n', /v1 is the only version/, 1);
+    refused('station {\n  next seed=+2\n}\n', /needs a `from`/);
+    refused('station {\n  from gen@2 techno seed=1\n  forms gen rondo\n}\n', /`gen` is not a form/, 3);
+    refused('station {\n  from gen@2 techno seed=1\n  next seed=+0\n}\n', /next seed=\+N/, 3);
+    refused('tempo 128\ndeck A: kick x\nstation {\n  from gen@2 techno seed=1\n}\n', /nothing else/, 2);
+    refused('station {\n  from gen@2 techno seed=1\n', /never closed/);
+    // what it prints back is the same station (the #! header kept; it is not in the CID)
+    const again = sm.parseStation(sm.stationText(p.knobs, { header: p.header }));
+    assert.deepEqual(again.knobs, p.knobs);
+    assert.equal(cidOf(sm.stationText(p.knobs)), cidOf(sm.stationText(p.knobs, { header: ['#! name: another name'] })), 'the header is not in the CID');
+  });
+
+  test('radio: the notch rules: seed +-1, tempo +-2 in 40..300, key round the circle of fifths, step +1 <-> ~, forms rotated, length a step, genre never', () => {
+    assert.equal(sm.notch('seed', '42', 1), '43');
+    assert.equal(sm.notch('seed', '42', -1), '41');
+    assert.equal(sm.notch('seed', '0', -1), '4294967295', 'the seed wraps round 2^32');
+    assert.equal(sm.notch('seed', '4294967295', 1), '0');
+    assert.equal(sm.notch('seed', 'sunrise', 1), String(sm.seedValue('sunrise') + 1), 'a word seed counts from its hash');
+    assert.equal(sm.seedValue('Sunrise'), sm.fnv1a32('sunrise'), 'a word is hashed lower-cased');
+    assert.equal(sm.seedValue('4294967297'), 1, 'a number is itself mod 2^32');
+    assert.equal(sm.notch('tempo', 128, 1), 130);
+    assert.equal(sm.notch('tempo', 128, -1), 126);
+    assert.equal(sm.notch('tempo', 300, 1), null, 'no neighbour past 300');
+    assert.equal(sm.notch('tempo', 40, -1), null, 'none below 40');
+    assert.equal(sm.notch('tempo', 299, 1), null, 'a notch is exactly 2');
+    assert.equal(sm.notch('key', 'am', 1), 'em');
+    assert.equal(sm.notch('key', 'am', -1), 'dm');
+    assert.equal(sm.notch('key', 'c', 1), 'g');
+    assert.equal(sm.notch('key', 'c', -1), 'f');
+    assert.equal(sm.notch('key', 'f', -1), 'bb');
+    assert.equal(sm.notch('key', 'bm', 1), 'f#m');
+    assert.equal(sm.notch('key', 'd:dorian', 1), 'a:dorian', 'in its mode');
+    assert.equal(sm.notch('key', 'd:dorian', -1), 'g:dorian');
+    let k = 'am';
+    for (let i = 0; i < 12; i++) k = sm.notch('key', k, 1);
+    assert.equal(k, 'am', 'twelve fifths are the way round');
+    assert.equal(sm.notch('step', '+1', 1), '~');
+    assert.equal(sm.notch('step', '~', -1), '+1');
+    assert.deepEqual(sm.notch('forms', ['seeded', 'rondo', 'fugue'], 1), ['rondo', 'fugue', 'seeded']);
+    assert.deepEqual(sm.notch('forms', ['seeded', 'rondo', 'fugue'], -1), ['fugue', 'seeded', 'rondo']);
+    assert.equal(sm.notch('forms', ['seeded'], 1), null, 'one form does not turn');
+    assert.equal(sm.notch('length', 'standard', 1), 'long');
+    assert.equal(sm.notch('length', 'standard', -1), 'short');
+    assert.equal(sm.notch('length', 'long', 1), null);
+    assert.equal(sm.notch('genre', 'techno', 1), null, 'genre is never a notch in phase 1');
+    const knobs = sm.parseStation(sm.DEFAULT_STATION).knobs;
+    const opts = sm.neighbourOptions(knobs);
+    assert.deepEqual(opts.map((o) => `${o.knob}${o.dir}`), ['seed+1', 'seed-1', 'step+1', 'forms+1', 'forms-1', 'tempo+1', 'tempo-1', 'key+1', 'key-1', 'length+1', 'length-1']);
+    const two = sm.neighbourOptions({ ...knobs, forms: ['seeded', 'cross'], length: 'long' });
+    assert.equal(two.filter((o) => o.knob === 'forms').length, 1, 'two forms rotate the same way either way: one neighbour');
+    assert.deepEqual(two.filter((o) => o.knob === 'length').map((o) => o.value), ['standard'], 'long has one neighbour');
+  });
+
+  test('radio: a lock holds a knob: retuning it is refused, here and in the answer, and no neighbour or scan turns it', () => {
+    const knobs = sm.parseStation(sm.DEFAULT_STATION).knobs;
+    const r = sm.retune(knobs, { tempo: '+1' }, ['tempo']);
+    assert.equal(r.ok, false);
+    assert.match(r.error, /tempo is locked/);
+    assert.equal(sm.retune(knobs, { tempo: 140 }, ['tempo']).ok, false, 'a value too');
+    assert.deepEqual(sm.retune(knobs, { tempo: '+1' }, ['key']).knobs.tempo, 130, 'another knob\'s lock does not hold it');
+    assert.equal(sm.retune(knobs, { genre: '+1' }).ok, false, 'genre by a notch is refused');
+    assert.equal(sm.retune(knobs, { genre: 'house' }).knobs.genre, 'house', 'genre by a value is a retune');
+    assert.equal(sm.retune(knobs, { tempo: 301 }).ok, false);
+    assert.equal(sm.retune(knobs, { forms: ['seeded', 'gen'] }).ok, false, '`gen` is not a form name (seeded is)');
+    assert.equal(sm.retune(knobs, { wobble: 1 }).ok, false);
+    const opts = sm.neighbourOptions(knobs, ['tempo', 'key', 'seed']);
+    assert.ok(opts.length > 0 && opts.every((o) => !['tempo', 'key', 'seed', 'genre'].includes(o.knob)), JSON.stringify(opts));
+    const st = tuned(sm.DEFAULT_STATION, 5, { locks: ['tempo'] });
+    assert.deepEqual(sm.retuneRequest(st, { tempo: '-1' }).ok, false, 'the page refuses before it asks');
+    const a = mockStation({ station: st.text, n: 5, retune: { tempo: '-1' }, locks: ['tempo'] });
+    assert.equal(a.ok, false, 'and the answer refuses it too');
+    assert.match(a.error, /locked/);
+    const nb = answered({ station: st.text, n: 5, locks: ['tempo', 'key'], neighbours: true }).neighbours;
+    assert.ok(nb.length && nb.every((x) => x.knob !== 'tempo' && x.knob !== 'key' && x.knob !== 'genre'), nb.map((x) => x.knob).join());
+    for (const x of nb) assert.equal(x.track.n, 5, 'each neighbour comes with its track at n');
+    assert.deepEqual(sm.toggleLock(['key'], 'tempo'), ['tempo', 'key'], 'the locks, in the knobs\' order');
+    assert.deepEqual(sm.toggleLock(['tempo', 'key'], 'tempo'), ['key']);
+    let all = { ...st, locks: [] };
+    for (const k of sm.KNOBS) all = { ...all, locks: sm.toggleLock(all.locks, k) };
+    assert.deepEqual(all.locks, sm.KNOBS);
+    assert.equal(sm.scanRequest(all).ok, false, 'with every knob locked there is nothing to scan');
+  });
+
+  test('radio: the request JSON, and applying an answer: now playing is track N, up next N+1, the segue between', () => {
+    const s0 = sm.initialState({ n: 7 });
+    assert.deepEqual(sm.stationRequest(s0), { station: sm.DEFAULT_STATION, n: 7, count: 2, segue: true, check: false });
+    assert.deepEqual(sm.stationRequest({ ...s0, segues: false, locks: ['key'] }, { retune: { tempo: 130 }, neighbours: true, check: true, count: 1 }),
+      { station: sm.DEFAULT_STATION, n: 7, count: 1, segue: false, check: true, retune: { tempo: 130 }, locks: ['key'], neighbours: true });
+    const ans = answered(sm.stationRequest(s0));
+    assert.equal(ans.version, 'stations/1');
+    assert.equal(ans.station.version, 'stations/1');
+    assert.deepEqual(ans.station.forms, ['seeded', 'passacaglia', 'rondo', 'fugue']);
+    assert.ok(sm.validValue('key', ans.station.key) && ans.station.start_cid, 'the station object says its key and where the walk starts');
+    const { state, error } = sm.applyAnswer(s0, ans);
+    assert.equal(error, null);
+    assert.equal(state.n, 7);
+    assert.equal(state.cid, ans.station.cid);
+    assert.equal(state.now.n, 7);
+    assert.equal(state.now.form, 'fugue', 'track 7 plays forms[7 mod 4]');
+    assert.equal(state.next.n, 8);
+    assert.equal(state.next.form, 'seeded');
+    assert.equal(state.next.parent, state.now.cid, 'a track names the one before it');
+    assert.deepEqual([state.segue.from, state.segue.to, state.segue.form], [7, 8, 'cross']);
+    assert.match(state.segue.text, /arrange from template\(cross, @\w+, a=gen@2 techno seed=\d+, b=gen@2 techno seed=\d+\)/);
+    assert.match(state.segue.phrase, /^@/);
+    // an error answer leaves the station as it was, and says why at the line
+    const bad = sm.applyAnswer(state, mockStation({ station: 'station {\n  from gen@2 techno seed=1 bpm=90\n}\n' }));
+    assert.equal(bad.state.cid, state.cid);
+    assert.equal(bad.state.now, state.now);
+    assert.match(bad.error.message, /takes no `bpm=`/);
+    assert.equal(bad.error.diagnostics[0].line, 2);
+    assert.match(sm.applyAnswer(state, null).error.message, /not one/);
+    // stepping: forward, back, never below 0, a `~` station no further than its walk
+    assert.equal(sm.stepBy(state, 1).n, 8);
+    assert.equal(sm.stepBy(state, -1).n, 6);
+    assert.equal(sm.stepTo(state, -3).n, 0);
+    assert.equal(sm.stepTo(state, 10 ** 9).n, sm.MAX_N_WALK);
+    assert.equal(sm.stepTo(state, 7), state, 'the same position is the same state');
+    assert.equal(sm.stepBy(state, 1).now, null, 'a new position is asked for again');
+    const adv = sm.advance(state);
+    assert.equal(adv.n, 8);
+    assert.equal(adv.now, state.next, 'what was up next is now playing');
+  });
+
+  test('radio: a retune keeps N: the new station\'s track N plays, and its text and CID are the new station\'s', () => {
+    const st = tuned(sm.DEFAULT_STATION, 9);
+    for (const [changes, knob, want] of [[{ tempo: '+1' }, 'tempo', 130], [{ key: '-1' }, 'key', 'dm'], [{ genre: 'house' }, 'genre', 'house'], [{ seed: '-1' }, 'seed', '41'], [{ step: '+1' }, 'step', '+1'], [{ forms: '+1' }, 'forms', ['passacaglia', 'rondo', 'fugue', 'seeded']], [{ length: 'short' }, 'length', 'short']]) {
+      const r = sm.retuneRequest(st, changes);
+      assert.equal(r.ok, true, r.error);
+      assert.equal(r.request.n, 9, 'the request asks at the same n');
+      assert.deepEqual(r.request.retune, changes);
+      assert.deepEqual(r.knobs[knob], want, knob);
+      const next = sm.applyAnswer(st, answered(r.request)).state;
+      assert.equal(next.n, 9, `${knob}: N is kept`);
+      assert.equal(next.now.n, 9);
+      assert.deepEqual(next.knobs[knob], want, `${knob}: the answer's station is retuned`);
+      assert.notEqual(next.cid, st.cid, `${knob}: a new station, a new CID`);
+      assert.ok(sm.parseStation(next.text).ok, 'its text is a station');
+    }
+    // tempo and key: the station's, on every track (the from call's own when the text does not say them)
+    const plain = tuned('station {\n  from gen@2 house seed=7\n}\n', 3);
+    assert.equal(plain.knobs.tempo, 124);
+    assert.match(plain.now.text, /\ntempo 124\nkey c\narrange from gen@2 house seed=10\n/);
+    const up = sm.applyAnswer(plain, answered(sm.retuneRequest(plain, { tempo: '+1' }).request)).state;
+    assert.match(up.text, /^tempo 126$/m, 'a notch on an unsaid tempo writes it');
+    assert.doesNotMatch(up.text, /^key /m, 'and leaves the key unsaid');
+  });
+
+  test('radio: the walk: +n counts on in O(1), ~ draws each seed from the CID of the track before\'s generator call', () => {
+    const k = { genre: 'techno', seed: '4294967290', step: '+3', forms: ['seeded'], tempo: null, key: null, length: 'standard' };
+    assert.equal(sm.seedAt(k, 'gen@2', 0, cidOf), '4294967290');
+    assert.equal(sm.seedAt(k, 'gen@2', 2, cidOf), '0', 's_N = (s_0 + n N) mod 2^32');
+    assert.equal(sm.seedAt({ ...k, seed: 'sunrise' }, 'gen@2', 0, cidOf), 'sunrise', 'track 0 keeps the word');
+    assert.equal(sm.seedAt({ ...k, seed: 'sunrise' }, 'gen@2', 1, cidOf), String((sm.seedValue('sunrise') + 3) % 2 ** 32));
+    const w = { ...k, seed: '42', step: '~' };
+    const s1 = sm.seedAt(w, 'gen@2', 1, cidOf);
+    assert.equal(s1, String(sm.fnv1a32(cidOf('arrange from gen@2 techno seed=42\n'))));
+    const memo = [];
+    assert.equal(sm.seedAt(w, 'gen@2', 3, cidOf, memo), String(sm.fnv1a32(cidOf(`arrange from gen@2 techno seed=${sm.seedAt(w, 'gen@2', 2, cidOf)}\n`))));
+    assert.equal(memo.length, 4, 'the walk is kept');
+    assert.notEqual(sm.seedAt({ ...w, length: 'long' }, 'gen@2', 1, cidOf), s1, 'the length is in the walk\'s call');
+    assert.equal(sm.seedAt({ ...w, forms: ['cross', 'fugue'] }, 'gen@2', 1, cidOf), s1, 'the forms are not');
+    assert.throws(() => sm.seedAt(w, 'gen@2', sm.MAX_N_WALK + 1, cidOf), /at most/);
+    // the forms in turn; the theme is the chapter's first seed; the sparse genres' bindings say part=melody
+    const st = tuned('station {\n  from gen@2 jazz seed=5\n  forms seeded rondo cross\n}\n', 4, {});
+    assert.equal(st.now.form, 'rondo', 'track 4 plays forms[4 mod 3]');
+    assert.equal(st.now.theme, 8, 'chapter 1 begins at track 3: its theme is s_3');
+    assert.match(st.now.text, /template\(rondo, @\w+, refrain=gen@2 jazz seed=8, episodes=gen@2 jazz seed=9 part=melody\)/);
+    assert.match(st.next.text, /template\(cross, @\w+, a=gen@2 jazz seed=8 part=melody, b=gen@2 jazz seed=10 part=melody\)/);
+    assert.match(st.now.text, /^#! station: z\w+ track 4\n#! from: next\(z\w+\) seed=\+1\n/, 'the provenance header');
+    // what the mock answers plays in the mock: one section, so a track ends
+    for (const t of [st.now, st.next, st.segue]) {
+      const c = mockCheck(t.text);
+      assert.equal(c.ok, true, t.text);
+      assert.ok(c.song_bars > 0 && c.sections.length === 1, JSON.stringify(c.sections));
+    }
+  });
+
+  test('radio: scan is a notch along an unlocked knob, picked from the station\'s CID and N, never Math.random', () => {
+    const st = tuned(sm.DEFAULT_STATION, 11);
+    const rnd = Math.random;
+    Math.random = () => { throw new Error('scan used Math.random'); };
+    try {
+      const a = sm.scanRequest(st);
+      const b = sm.scanRequest(st);
+      assert.equal(a.ok, true, a.error);
+      assert.deepEqual(a, b, 'the same station at the same position scans the same way');
+      assert.equal(a.request.n, 11, 'and keeps N');
+      const opts = sm.neighbourOptions(st.knobs, st.locks);
+      assert.ok(opts.some((o) => o.knob === a.pick.knob && o.dir === a.pick.dir));
+      assert.deepEqual(a.request.retune, { [a.pick.knob]: a.pick.dir });
+      assert.equal(sm.scanPick(st.cid, 11, opts), opts[sm.fnv1a32(`${st.cid}#11`) % opts.length]);
+      const picks = new Set(Array.from({ length: 40 }, (_, n) => JSON.stringify(sm.scanPick(st.cid, n, opts))));
+      assert.ok(picks.size > 3, `N moves the pick about (${picks.size} different)`);
+      const locked = sm.scanRequest({ ...st, locks: ['seed', 'tempo', 'key'] });
+      assert.ok(!['seed', 'tempo', 'key', 'genre'].includes(locked.pick.knob), locked.pick.knob);
+      const next = sm.applyAnswer(st, answered(a.request)).state;
+      assert.equal(next.n, 11);
+      assert.notEqual(next.cid, st.cid);
+    } finally {
+      Math.random = rnd;
+    }
+  });
+
+  test('radio: the share URL /radio?s=<text or CID>&n=N goes round', () => {
+    const st = tuned(sm.DEFAULT_STATION, 12);
+    const u = sm.shareUrl(st);
+    assert.match(u, /^\/radio\?s=[^&]+&n=12$/);
+    const back = sm.parseShare(new URL(u, 'http://127.0.0.1').search);
+    assert.equal(back.text, st.text, 'the text, newlines, `#!`, `+`, `~` and all');
+    assert.equal(back.n, 12);
+    assert.equal(sm.initialState(back).n, 12);
+    const tricky = { ...st, text: '#! name: a+b & c=d # e\nstation {\n  from gen@2 techno seed=1\n  next seed=+2\n}\n', n: 0 };
+    assert.equal(sm.parseShare(new URL(sm.shareUrl(tricky), 'http://x').search).text, tricky.text);
+    const byCid = sm.shareUrl(st, { byCid: true });
+    assert.equal(byCid, `/radio?s=${st.cid}&n=12`);
+    assert.deepEqual(sm.parseShare(byCid.slice('/radio'.length)), { cid: st.cid, n: 12 });
+    assert.deepEqual(sm.parseShare('?n=-4'), { n: 0 }, 'no station: the page plays its default');
+    assert.deepEqual(sm.parseShare('s=&n=x'), { n: 0 });
+    assert.equal(sm.parseShare(new URLSearchParams({ s: 'x'.repeat(40000), n: '1' })).text, undefined, 'a text past the bound is not taken');
+  });
+
+  test('radio: the facade\'s station is the module\'s btw_station (the mock\'s here), and the mock answers the contract', () => {
+    const f = makeFacade(mockMod);
+    assert.equal(typeof f.station, 'function');
+    assert.equal(makeFacade({ ...mockMod, btw_station: undefined }).station, null, 'a module without it: the page asks the server');
+    const req = { station: sm.DEFAULT_STATION, n: 2, count: 3, segue: true, check: true, neighbours: true };
+    const a = f.station(req);
+    assert.deepEqual(a, mockStation(req), 'deterministic');
+    assert.deepEqual(Object.keys(a), ['ok', 'version', 'station', 'n', 'tracks', 'segues', 'neighbours', 'retuned', 'locks', 'diagnostics']);
+    assert.deepEqual(Object.keys(a.station), ['text', 'cid', 'version', 'genre', 'generator', 'seed', 'step', 'forms', 'tempo', 'key', 'length', 'start_cid']);
+    assert.deepEqual(a.tracks.map((t) => t.n), [2, 3, 4]);
+    assert.deepEqual(a.segues.map((s) => [s.from, s.to]), [[2, 3], [3, 4], [4, 5]]);
+    for (const t of a.tracks) {
+      assert.deepEqual(Object.keys(t), ['n', 'seed', 'theme', 'form', 'phrase', 'text', 'cid', 'parent', 'check']);
+      assert.deepEqual(Object.keys(t.check), ['ok', 'expanded_cid', 'bars', 'seconds', 'errors']);
+      assert.equal(t.cid, cidOf(t.text), 'a track\'s CID is its text\'s');
+      assert.equal(t.check.ok, true);
+    }
+    assert.equal(mockStation({ station: sm.DEFAULT_STATION, n: 0 }).tracks[0].parent, undefined, 'track 0 has no parent');
+    for (const bad of [{ station: sm.DEFAULT_STATION, n: -1 }, { station: sm.DEFAULT_STATION, count: 17 }, { station: sm.DEFAULT_STATION, locks: ['wobble'] }, { station: sm.DEFAULT_STATION, n: sm.MAX_N_WALK + 1 }, '{not json']) {
+      const r = mockStation(bad);
+      assert.equal(r.ok, false, JSON.stringify(bad));
+      assert.equal(typeof r.error, 'string');
+      assert.ok(Array.isArray(r.diagnostics));
+    }
+  });
+}
