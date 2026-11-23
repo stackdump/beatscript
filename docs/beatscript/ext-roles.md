@@ -179,7 +179,7 @@ use         = "use" "restricted"
             | "use" use_source "as" NAME ;
 use_source  = stored                 (* <cid>.drop  <cid>.drop.bass  <cid> *)
             | gen                    (* gen@2 techno seed=42 section=drop [part=bass] *)
-            | form [ "." NAME ]      (* template(passacaglia, ground=...)  template(passacaglia).ground *)
+            | "template" "(" NAME { "," binding } ")" [ "." NAME ]   (* template(passacaglia, ground=...)  template(passacaglia).ground *)
             | template "." NAME      (* template(deep-house, @tempest_such_stuff).night *)
             | "theme" NAME
             | "phrase" PHRASE
