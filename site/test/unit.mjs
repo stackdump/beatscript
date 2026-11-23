@@ -2919,6 +2919,7 @@ test('prefs: a preference is read under its BeatScript key, else under its key b
   assert.deepEqual(JSON.parse(JSON.stringify(prefs.PREFS)), {
     follow: ['beatscript-follow', 'btw-follow'], level: ['beatscript-level', 'btw-level'],
     composeMode: ['beatscript.composeMode', 'btw.composeMode'], betaEmail: ['beatscript_beta_email', 'btw_beta_email'],
+    source: ['beatscript-source', 'btw-source'],
   });
   // only the old key (a browser that used the page before the deploy): read, copied to the new key, the old one left
   for (const [name, [key, legacy]] of Object.entries(prefs.PREFS)) {

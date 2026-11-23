@@ -476,7 +476,7 @@ test('export: the .beatscript text, and the WAV in a zip, through downloads.save
   assert.equal(v.getUint32(data.length - 22, true), 0x06054b50);
   assert.deepEqual(zipOne('loop.wav', want), data);
 
-  refused(await s.call('export', { format: 'mp3', text: GOOD }), /btw or wav/);
+  refused(await s.call('export', { format: 'mp3', text: GOOD }), /beatscript or wav/);
   const g = fakes({ saveFail: { code: 'declined', message: 'no' } });
   refused(await createToolSurface({ beatscript: mock, caps: g.caps }).call('export', { format: 'beatscript', text: GOOD }), /^You declined the download\.$/);
 });
