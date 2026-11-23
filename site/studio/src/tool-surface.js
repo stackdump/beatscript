@@ -18,7 +18,7 @@ export const LOCAL_TOOLS = ['check', 'fmt', 'expand', 'generate', 'highlight', '
 export const CAP_TOOLS = ['compose', 'repair', 'store', 'render', 'queue', 'library_list', 'library_save', 'library_get', 'library_delete', 'export', 'jam_send'];
 
 export const PROTOCOL_VERSION = '2025-06-18';
-export const SERVER_INFO = Object.freeze({ name: 'beatscript-studio', version: '0.1.0' });
+export const SERVER_INFO = Object.freeze({ name: 'beatscript-studio', version: '0.2.0' });
 
 const MAX_TEXT = 65536; // the embed config's source.text maxLength
 const ROOM_MAX = 4096; // room.emit carries at most 4 KiB of JSON

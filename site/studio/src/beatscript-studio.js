@@ -1,6 +1,6 @@
 // <beatscript-studio>: the BeatScript editor, its checker and the player in one element, self-contained.
 //
-//   <script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-studio@0.1.0/beatscript-studio.js"></script>
+//   <script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-studio@0.2.0/beatscript-studio.js"></script>
 //   <beatscript-studio>
 //     <script type="text/beatscript">
 //   tempo 120

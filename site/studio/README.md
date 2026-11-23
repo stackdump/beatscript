@@ -9,7 +9,7 @@ The package carries the whole player, `@stackdump/beatscript-player` (`<beatscri
 both elements loads one engine. It depends on nothing.
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-studio@0.1.0/beatscript-studio.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-studio@0.2.0/beatscript-studio.js"></script>
 
 <beatscript-studio>
   <script type="text/beatscript">

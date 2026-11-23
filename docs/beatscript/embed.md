@@ -277,8 +277,8 @@ The page loads `@stackdump/beatscript-studio` from jsDelivr, pinned by version a
 ### Any page: jsDelivr with SRI
 
 ```html
-<script type="importmap">{"integrity": {"https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.2.0/js/engine.js": "sha384-..."}}</script>
-<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.2.0/beatscript-track.js"
+<script type="importmap">{"integrity": {"https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.3.0/js/engine.js": "sha384-..."}}</script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.3.0/beatscript-track.js"
         integrity="sha384-..." crossorigin="anonymous"></script>
 
 <beatscript-track>

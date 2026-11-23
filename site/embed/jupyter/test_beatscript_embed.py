@@ -94,7 +94,7 @@ class Shape(unittest.TestCase):
         page = be.Studio(text=TEXT, audio='render', theme='light', compact=True, capabilities=['mcp']).html()
         t = Tree(page)
         [mod] = [a for (tag, a, _) in t.nodes if tag == 'script' and a.get('type') == 'module']
-        self.assertEqual(mod['src'], 'https://cdn.jsdelivr.net/npm/@stackdump/beatscript-studio@0.1.0/beatscript-studio.js')
+        self.assertEqual(mod['src'], 'https://cdn.jsdelivr.net/npm/@stackdump/beatscript-studio@0.2.0/beatscript-studio.js')
         self.assertEqual(mod['integrity'], be.STUDIO['integrity']['beatscript-studio.js'])
         [(_, a, _)] = t.find('beatscript-studio')
         self.assertEqual(list(a), ['text', 'audio', 'theme', 'compact', 'config'])

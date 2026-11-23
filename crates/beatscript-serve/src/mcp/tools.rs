@@ -31,8 +31,9 @@ mod listen;
 // artifact: a program as a page to publish (artifact.rs, player-cdn.lock.json), a child for the same reasons
 #[path = "artifact.rs"]
 mod artifact;
+#[path = "embed.rs"] pub(crate) mod embed;
 
-pub const TOOL_NAMES: [&str; 23] = ["artifact", "check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "macros", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private", "station"];
+pub const TOOL_NAMES: [&str; 24] = ["artifact", "embed", "check", "fmt", "expand", "generate", "eval", "load", "get", "share", "open", "render", "record", "list_examples", "instruments", "macros", "stop", "devices", "queue", "listen", "lineage", "genre_template", "push_private", "station"];
 
 /// The tools that need a signed-in caller.
 /// The account a `/mcp` bearer token acts as: an OAuth access token bound to `/mcp` (oauth.rs), or a pasted `btw_`
@@ -692,6 +693,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
         ];
         v.push(listen::tool_def(max_prog, render_per_hour));
         v.push(artifact::tool_def(p, max_prog));
+        v.push(embed::tool_def(p, max_prog));
         // the lexicon harvest, said once (text::LEXICON_DESC, also docs/beatscript/lexicon-harvest.md's)
         for t in v.iter_mut() {
             if HARVEST_TOOLS.contains(&t["name"].as_str().unwrap_or("")) {
@@ -888,6 +890,7 @@ impl Tools {
         match name {
             "check" => self.check(c, a).map(Text::Json),
             "artifact" => self.artifact_tool(c, a),
+            "embed" => self.embed_tool(c, a),
             "fmt" => self.fmt_tool(c, a).map(Text::Json),
             "expand" => self.expand_tool(c, a).map(Text::Json),
             "generate" => self.generate_tool(c, a).map(Text::Json),

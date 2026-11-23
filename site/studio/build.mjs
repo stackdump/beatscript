@@ -27,7 +27,7 @@ const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? proces
 const wasmDir = path.resolve(arg('--wasm', path.join(web, 'wasm')));
 const out = path.resolve(arg('--out', path.join(here, 'dist')));
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 /** The studio's own files, at the package's top level. */
 const OWN = ['beatscript-studio.js', 'beatscript-studio.d.ts', 'tool-surface.js', 'studio-css.js'];
 /** The editor's modules the element uses; what they import comes with them. */

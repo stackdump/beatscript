@@ -13,21 +13,21 @@
     "ns.nt": "9b724ffdd5150edc11e8cb278d27a40ac27ecfa58b9d94796192d7c66c5ac14c",
     "conventions.ttl": "9716c2863d08d577213f2fb609c3ebaf50f1835220a2e129f1abc7b1e44a03cc"
   },
-  "pack_content_sha256": "cfd2334fd5f149af6bcb5da69f6fd77a1c47a7f401c457d3b849b264d3d9e9bd",
+  "pack_content_sha256": "ee7c7680b1f040d454f27354f725c09e13b5512367c46789bbde4ac22e81c056",
   "pack_tool_version": "beatscript-serve-ontology-fork/1",
-  "pack_triples": 20018,
+  "pack_triples": 20035,
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "certificate_scope": "RDFS and OWL 2 RL schema rules only (rdfs2, rdfs3, rdfs5, rdfs7, rdfs9, rdfs11, eq-sym, prp-inv1, prp-inv2, prp-symp, prp-trp, scm-dom1, scm-dom2, scm-eqc1, scm-eqp1, scm-rng1, scm-rng2); other OWL axioms are not covered",
   "files": {
-    "cert/asserted.sha256": "8bc83671d3d164ea8bf0cf952b51bf1acc11f456f16716607f29e5bb0e2259f0",
-    "cert/asserted.tsv": "2058f7555d5cee64690c7295ff01687f271f50db68847b309d3ef74651253493",
+    "cert/asserted.sha256": "42527b574c126f02cdd47bde99598c031c3352f8c7308019d721fb3ced066494",
+    "cert/asserted.tsv": "1cfb41ac2aa36730c160d00bb5303b229473a170e86a138202103ba1d9c9120d",
     "cert/derivations.tsv": "29faab711ebf405d995dc37701fde7bb8b464f50c7325727f827b0d07d7476f3",
     "cert/scope.tsv": "2464cd751287051b9afdf7bb23ba05e2177452247a6e29fa155092434f487946",
-    "ns.jsonld": "011f55e510fd834427279cc2a2436abad2f3ac403cb1b34e5bdaf1421eb68ce5",
-    "ns.nt": "e37f2156e692bf65974d5c1e782370852ab7b1c9568c126ebd6c840fa9d3c8a7",
-    "ns.rdf": "0b3b2a72e6b6616af9fd2264b91982ae4e9f6d529daafdb32910032b84295426",
-    "ns.ttl": "3458a9b8c254ce7a312762d81de524c31358212c59c905aed6aa1f1980f016a7",
-    "pack.json": "3d5df514748c52701831b0e3cae0dee7189ba04b11186282cfb924eec9c62f82"
+    "ns.jsonld": "4352a42be9b6bd8df221d68d7506537001d7be4c5de8813519c73e68287f944b",
+    "ns.nt": "6fc894f48493c3f931e179d287e6787f11cb316a972a4e1a2fd547f1b2517188",
+    "ns.rdf": "cf4c02dce3cd5e40e6bf6be64628226e22396471ec503e4235c16ddfce1e2156",
+    "ns.ttl": "0d5337f29ec95ae92f7602ffcbb6d1e851d60b43585c8f2821e74b7859e188a1",
+    "pack.json": "afd9a2112244b9098b6fc1da19a662779a110dc3a639fac5fbef9f3dcd24ba75"
   }
 }

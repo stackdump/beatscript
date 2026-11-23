@@ -567,7 +567,7 @@ test('an absent capability: listed with available false and a why, and call() is
 test('handle: initialize, ping, tools/list, tools/call, errors and notifications', async () => {
   const s = createToolSurface({ beatscript: mock });
   const init = await s.handle({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: 't', version: '0' } } });
-  assert.deepEqual(init, { jsonrpc: '2.0', id: 1, result: { protocolVersion: '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'beatscript-studio', version: '0.1.0' } } });
+  assert.deepEqual(init, { jsonrpc: '2.0', id: 1, result: { protocolVersion: '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'beatscript-studio', version: '0.2.0' } } });
   assert.deepEqual(await s.handle({ jsonrpc: '2.0', id: 'p', method: 'ping' }), { jsonrpc: '2.0', id: 'p', result: {} });
   assert.equal(await s.handle({ jsonrpc: '2.0', method: 'notifications/initialized' }), null);
   assert.equal(await s.handle({ jsonrpc: '2.0', method: 'no/such/notification' }), null);

@@ -24,16 +24,30 @@
   "features": [
     {
       "id": "artifact", "docs": [],
-      "say": [["artifact", "publish the returned html as a page (an Artifact) exactly as it is"], ["artifact", "@stackdump/beatscript-player@0.1.0"], ["artifact", "Subresource Integrity"], ["artifact", "/p/<CID>"], ["artifact", "data: URI"], ["artifact", "audio"], ["artifact", "self-sealing share link"], ["artifact", "store"]],
+      "say": [["artifact", "publish the returned html as a page (an Artifact) exactly as it is"], ["artifact", "@stackdump/beatscript-player@0.3.0"], ["artifact", "Subresource Integrity"], ["artifact", "/p/<CID>"], ["artifact", "data: URI"], ["artifact", "audio"], ["artifact", "self-sealing share link"], ["artifact", "store"]],
       "calls": [
         {"tool": "artifact", "args": {"text": "#! name: exposure check\ntempo 120\ndeck A: kick x ~ x ~ | hihat x*8\n"}, "save": {"cid": "/cid"},
-         "expect": [["/cid", "has"], ["/title", "=", "exposure check"], ["/audio", "=", "engine"], ["/link", "~", "/#${cid}."], ["/short_url", "!~", "/p/"], ["/player/version", "=", "0.1.0"],
-                    ["/html", "~", "<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.1.0/beatscript-track.js\" integrity=\"sha384-"],
+         "expect": [["/cid", "has"], ["/title", "=", "exposure check"], ["/audio", "=", "engine"], ["/link", "~", "/#${cid}."], ["/short_url", "!~", "/p/"], ["/player/version", "=", "0.3.0"],
+                    ["/html", "~", "<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.3.0/beatscript-track.js\" integrity=\"sha384-"],
                     ["/html", "~", "crossorigin=\"anonymous\""], ["/html", "~", "<script type=\"importmap\">"], ["/html", "~", "cid=\"${cid}\""], ["/html", "!~", "/p/${cid}"], ["/html", "~", "CC0-1.0"], ["/html", "!~", "autoplay"]]},
         {"tool": "render", "stores": true, "args": {"text": "#! name: exposure artifact\ntempo 120\nsection groove 2 bars {\n  deck A: kick x ~ x ~ | hihat x*8\n}\narrange groove\n"}, "save": {"stored": "/cid"}, "expect": [["/cid", "has"]]},
         {"tool": "artifact", "stores": true, "args": {"cid": "${stored}"},
          "expect": [["/cid", "=", "${stored}"], ["/audio", "=", "inline"], ["/render/format", "=", "opus"], ["/html", "~", "<audio controls preload=\"metadata\" src=\"data:audio/ogg;base64,T2dnU"], ["/html", "!~", "<script"], ["/html", "~", "/p/${stored}"], ["/short_url", "~", "/p/${stored}"]]},
         {"tool": "artifact", "stores": true, "args": {"cid": "${stored}", "audio": "engine"}, "expect": [["/audio", "=", "engine"], ["/html", "~", "<beatscript-track cid=\"${stored}\""]]}
+      ]
+    },
+    {
+      "id": "embed-tool", "datum": 6702, "docs": ["embed.md"],
+      "say": [["embed", "embed-config.schema.json"], ["embed", "<beatscript-studio>"], ["embed", "capabilities"], ["embed", "Subresource Integrity"], ["embed", "/card/<CID>.svg"], ["embed", "degraded"]],
+      "calls": [
+        {"tool": "embed", "args": {"target": "web", "text": "#! name: exposure check\ntempo 120\ndeck A: kick x ~ x ~ | hihat x*8\n"},
+         "expect": [["/target", "=", "web"], ["/kind", "=", "player"], ["/works", "=", "works"], ["/engine", "=", true], ["/snippet", "~", "<beatscript-track"], ["/snippet", "~", "integrity=\"sha384-"], ["/snippet", "~", "text=\"#! name: exposure check"]]},
+        {"tool": "embed", "args": {"target": "artifact", "config": {"kind": "studio"}, "text": "#! name: exposure check\ntempo 120\ndeck A: kick x ~ x ~ | hihat x*8\n"},
+         "expect": [["/kind", "=", "studio"], ["/capabilities/sample", "has"], ["/capabilities/mcp/servers/0/server", "=", "Beatscript"], ["/html", "~", "@stackdump/beatscript-studio@"], ["/html", "~", "<beatscript-studio"], ["/html", "!~", "autoplay"]]},
+        {"tool": "embed", "args": {"target": "markdown", "text": "#! name: exposure check\ntempo 120\ndeck A: kick x ~ x ~ | hihat x*8\n"},
+         "expect": [["/target", "=", "markdown"], ["/engine", "=", false], ["/works", "=", "degraded"]]},
+        {"tool": "embed", "args": {"target": "json", "config": {"kind": "card"}, "text": "#! name: exposure check\ntempo 120\ndeck A: kick x ~ x ~ | hihat x*8\n"},
+         "expect": [["/config/kind", "=", "card"], ["/config/audio", "=", "url"]]}
       ]
     },
     {

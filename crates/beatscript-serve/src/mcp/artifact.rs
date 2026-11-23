@@ -221,7 +221,7 @@ impl Tools {
     /// The Opus render of a stored program (the cached file, the same bytes every time, as /api/render/<CID>?format=opus
     /// answers it), rendering it first when it is not cached: a new render is limited as the render tool's are. Err says
     /// why there is none.
-    fn inline_opus(&self, c: &Caller, cid: &str) -> Result<Vec<u8>, String> {
+    pub(super) fn inline_opus(&self, c: &Caller, cid: &str) -> Result<Vec<u8>, String> {
         use crate::service::{Acquired, Fmt, Key};
         let (p, _) = self.app.renderable(cid).map_err(|e| e.message.clone())?;
         let key = Key { cid: cid.to_string(), format: Fmt::Opus, sr: 44_100 };
