@@ -112,6 +112,11 @@ it does and names `acid` among the voices with a sound of their own.
   instruments that are voices, and `acid` was only a family word when they were pinned, so neither picks it now
   (`beatscript-api::generate::VOICES_AFTER_V2`): every gen call resolves to the program it always did (`tests/gen.rs`). A later
   version may pick it; that is a new version.
+- **The genre templates keep the voices they had, too.** The bitwrap ontology names `acid` as the bass of techno, edm and
+  speedcore. `genre_template` writes a genre's voice only when it is a voice, so it now would write `inst=acid` there,
+  and `genre@1` (djengine `data/genre-templates.txt`, what `use genre@1 techno.drop as drop` borrows) froze those bass
+  lines without it. `genre_template` leaves the same two voices out, so it still writes what `genre@1` froze
+  (beatscript-serve's `genre_templates_v1_are_frozen`). Naming the 303 there is a `genre@2` (Proposals).
 - **The knobs are fixed defaults.** The language has no per-part cutoff, resonance or envelope today (Proposals); the
   deck's filter insert (`deck B: filter lp 400 -> 3k over 8 bars`, `resonance`) is the sweep a set already has.
 
@@ -134,5 +139,8 @@ For Matt's yes or no; none is built.
   and a warning on a voice that has no filter of its own. The engine already reads them from an `"acid"` overlay object
   (`AcidParams::from_json`); the cost is the language's surface (grammar, `check`, beatscriptls, the ontology), not the sound.
 - **`accent=` (0 to 1)**, the accent knob, the same way.
+- **`genre@2`, the genre templates with the 303**: techno, edm and speedcore written with `inst=acid` on their bass, as
+  the ontology names it, in a second file beside `genre@1` (djengine `genre_templates::VERSIONS`). It is the same
+  question as the composed acid basses under Not done: whether a genre whose bass is acid plays the 303 now.
 - **A cutoff that moves with the song** (`deck B: acid cutoff 300 -> 2k over 8 bars`): the gesture acid is made of,
   which per-part params cannot give. It would be a control noun on the deck's voice, as `resonance` is on its insert.

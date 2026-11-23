@@ -443,7 +443,10 @@ pub fn template(g: &dyn Graph, genre: &Genre, voices: &BTreeSet<String>, kits: &
     }
     let key = Key { tonic: (genre.root_note.unwrap_or(0) % 12) as u8, mode: genre.scale.as_deref().and_then(mode_of).unwrap_or(1) };
     s.push_str(&format!("key {}\n\n", key.text()));
-    let voice = |role: &str| genre.voices.get(role).map(|i| i.voice.clone()).filter(|v| voices.contains(v));
+    // a voice the genre names, when it is one of this build's and genre@1 had it: the acid voice came after the genre
+    // templates v1 froze (djengine data/genre-templates.txt), when `acid` was a family word, so techno's, edm's and speedcore's
+    // bass line stays the plain one and `genre@1` stays what this writes (a later version may name the 303)
+    let voice = |role: &str| genre.voices.get(role).map(|i| i.voice.clone()).filter(|v| voices.contains(v) && !beatscript_api::generate::VOICES_AFTER_V2.contains(&v.as_str()));
     let kit = genre.kit.as_ref().map(|i| i.voice.clone()).filter(|k| kits.contains(k));
     // the chords, one a bar: the first progression (else the tonic), as Roman numerals. A numeral says the degree and the
     // colour, never the pitch: a `key` line (the program's, or a section's) moves the chords, the bass, the arp and the
