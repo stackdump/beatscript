@@ -283,7 +283,16 @@ fn parse_depth(src: &str, env: &Env, depth: usize) -> Parsed {
     }
     diagnostics.sort_by_key(|d| d.span.start);
     name_lets(&mut diagnostics, &scalar_lets, src);
-    Parsed { program: Program { stmts }, diagnostics, comments: lexed.comments, imports, scalar_lets, plays }
+    // the version line (version.rs): a text says it is BeatScript 2, or it is BeatScript 1 as it always was
+    let version = match crate::version::find(src) {
+        Ok(v) => v.map_or(crate::version::Version::V1, |l| l.version),
+        Err(d) => {
+            let at = diagnostics.partition_point(|x| x.span.start <= d.span.start);
+            diagnostics.insert(at, d);
+            crate::version::Version::V1
+        }
+    };
+    Parsed { program: Program { stmts, version }, diagnostics, comments: lexed.comments, imports, scalar_lets, plays }
 }
 
 /// A scalar `let` put in place of one use of its name: what an error at that place may say about it.

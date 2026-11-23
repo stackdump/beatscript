@@ -9,6 +9,9 @@ use crate::lex::Token;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Program {
     pub stmts: Vec<Stmt>,
+    /// The language version the text says it is in (its version line, version.rs): BeatScript 2's canonical text keeps the
+    /// line, BeatScript 1's (the old spelling, and a text with no version line) does not.
+    pub version: crate::version::Version,
 }
 
 #[derive(Clone, Debug, PartialEq)]

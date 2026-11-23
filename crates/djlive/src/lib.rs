@@ -57,6 +57,7 @@ pub mod station;
 pub mod stored;
 pub mod sugar;
 pub mod tempo;
+pub mod version;
 pub mod template;
 
 pub use compile::{check, program_cid, Check, Compiled};

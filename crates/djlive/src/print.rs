@@ -1,12 +1,14 @@
 //! Canonical text: the parse, printed again. One statement per line, one space between tokens,
 //! no comments, a deck's parts on one line, numbers in their shortest form. Two texts that differ
-//! only in spacing or comments print the same, so they are one program with one CID.
+//! only in spacing or comments print the same, so they are one program with one CID. The one `#!`
+//! line it keeps is BeatScript 2's version line, first (version.rs); BeatScript 1 text has none.
 
 use crate::ast::*;
 use crate::lex::{Tok, Token};
 
 pub fn canonical(p: &Program) -> String {
-    let mut s = String::new();
+    // BeatScript 2 keeps its version line, first (version.rs); BeatScript 1 has none, as it never had
+    let mut s = String::from(p.version.canonical_head());
     for st in &p.stmts {
         s.push_str(&stmt_block(st, 0));
         s.push('\n');

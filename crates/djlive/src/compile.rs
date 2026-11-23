@@ -795,17 +795,30 @@ fn settle(diags: &mut Vec<Diagnostic>, lowered: &expand::Lowered, src: &str) {
     }
 }
 
-/// The CID of a program's canonical text.
+/// The CID of a program's canonical text. The text says its version (version.rs): a BeatScript 2 canonical text (it starts
+/// `#! beatscript 2`) is hashed as `{"format":2,"text":...,"type":"beatscript"}`, and any other as BeatScript 1 always was,
+/// `{"format":1,"text":...,"type":"djrust.live"}`, so every CID made before the rename is the same CID.
 pub fn program_cid(canonical: &str) -> String {
     cid::share_cid(&program_doc(canonical))
 }
 
+/// The document a program's CID is of (see [`program_cid`]).
 pub fn program_doc(canonical: &str) -> JsonValue {
+    let v = crate::version::of_canonical(canonical);
     JsonValue::Object(JsonObject::from_pairs([
-        ("format", JsonValue::int(1)),
+        ("format", JsonValue::int(v.format())),
         ("text", JsonValue::str(canonical)),
-        ("type", JsonValue::str("djrust.live")),
+        ("type", JsonValue::str(v.doc_type())),
     ]))
+}
+
+/// The CID a program has in the other version: for a BeatScript 2 canonical text its legacy CID (BeatScript 1, the old
+/// spelling), and for a BeatScript 1 canonical text the CID it is renamed to. The store's `renamed` lineage is this pair.
+pub fn renamed_cid(canonical: &str) -> String {
+    match crate::version::of_canonical(canonical) {
+        crate::version::Version::V2 => program_cid(crate::version::legacy_canonical(canonical)),
+        crate::version::Version::V1 => program_cid(&crate::version::upgrade_canonical(canonical)),
+    }
 }
 
 /// Parse, lower and compile `src` with nothing to check names against (no registry, no instrument

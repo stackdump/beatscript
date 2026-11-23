@@ -1,8 +1,9 @@
 //! The formatter: a program printed the canonical way (print.rs: one statement a line, one space between tokens, blocks
 //! indented two spaces, every number and note spelled one way) with what the canonical form leaves out put back where it was:
 //! the `#!` header lines and every comment, and the blank lines between blocks (a run of them is one). The CID is of the
-//! canonical text, which has none of these, so the formatted program has the CID of the program it was made from; and a
-//! formatted program formats to itself.
+//! canonical text, which has none of these but BeatScript 2's version line, so the formatted program has the CID of the
+//! program it was made from; and a formatted program formats to itself. [`format`] also upgrades a BeatScript 1 text (the old
+//! spelling, `#! btw 1` or no version line) to `#! beatscript 2`, a new CID by design (version.rs); [`format_as_is`] does not.
 //!
 //! How a comment finds its place. The canonical printer says, for every line it prints, where in the text the line came from
 //! ([`print::PrintedLine`]). A comment on a line of its own goes above the first line printed from after it, indented as
@@ -19,9 +20,26 @@ use crate::diag::{Diagnostic, Span};
 use crate::env::Env;
 use crate::print::{self, LineRole, PrintedLine};
 
-/// `src` formatted, or its diagnostics when it does not read. Also an error, with a diagnostic that says so, in the case that
-/// should not happen: the text it made does not read back as the same program (then it is not used).
+/// `src` formatted and in BeatScript 2 spelling (version.rs): a BeatScript 1 text (`#! btw 1`, or no version line) comes out
+/// with `#! beatscript 2` as its version line, which is a new CID for the same program, by design; a BeatScript 2 text formats
+/// to its own CID. Its diagnostics when it does not read, spans in `src` as given. [`format_as_is`] formats without the upgrade.
 pub fn format(src: &str, env: &Env) -> Result<String, Vec<Diagnostic>> {
+    let up = crate::version::upgrade_source(src);
+    if up == src {
+        return format_as_is(src, env);
+    }
+    // the text as given reads first, so a diagnostic points into it and not into the upgraded text
+    let parsed = crate::parse::parse_with(src, env);
+    if parsed.diagnostics.iter().any(Diagnostic::is_error) {
+        return Err(parsed.diagnostics);
+    }
+    format_as_is(&up, env)
+}
+
+/// `src` formatted in the version it is in: the formatted program has the CID of the program it was made from (a BeatScript 1
+/// text stays BeatScript 1). Its diagnostics when it does not read. Also an error, with a diagnostic that says so, in the case
+/// that should not happen: the text it made does not read back as the same program (then it is not used).
+pub fn format_as_is(src: &str, env: &Env) -> Result<String, Vec<Diagnostic>> {
     let (text, canon) = layout(src, env)?;
     // the guard: what is made is the program it was made from, or nothing is made
     let again = crate::parse::parse_with(&text, env);
