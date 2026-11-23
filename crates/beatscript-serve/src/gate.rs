@@ -238,10 +238,13 @@ pub fn twin_meta(x_meta: &Value, x_cid: &str, renamed_at: &str) -> Value {
 /// twin's CID, Some(bytes) when this call stored it, None when it was already there)); Err when `x_canonical` is not a
 /// BeatScript 1 program with that CID, or the gate refuses the twin.
 pub fn write_twin(dir: &Path, x_cid: &str, x_canonical: &str, x_meta: &Value, renamed_at: &str, encode: impl Fn(&Value) -> String) -> Result<(String, Option<usize>), Refusal> {
-    let y = admit_twin(x_cid, x_canonical, x_meta)?;
+    let mut y = admit_twin(x_cid, x_canonical, x_meta)?;
     if dir.join(format!("{}.json", y.cid)).exists() {
         return Ok((y.cid, None));
     }
+    // the twin is the same program: what the old one vendored (its stored `based_on`, which the gate wrote from the text
+    // as sent) is the twin's too, as the rest of its meta is (the canonical text it is admitted from has no `# from:` lines)
+    y.based_on = x_meta["based_on"].as_array().map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
     let n = write_file(dir, &y, twin_meta(x_meta, x_cid, renamed_at), &encode).map_err(|e| Refusal::new(500, "internal", e.to_string()))?;
     Ok((y.cid, n))
 }
@@ -437,5 +440,10 @@ mod tests {
         let v = read(plain.cid());
         assert!(v["meta"].get("based_on").is_none(), "{v}");
         assert_eq!(v["meta"]["name"], "plain");
+        // a BeatScript 1 text is stored with its twin, and the twin vendored what it did
+        assert_eq!(djlive::version::of_canonical(a.canonical()), djlive::version::Version::V1);
+        let twin = read(&djlive::compile::renamed_cid(a.canonical()));
+        assert_eq!(twin["meta"]["based_on"], json!([line]), "{twin}");
+        assert!(read(&djlive::compile::renamed_cid(plain.canonical()))["meta"].get("based_on").is_none());
     }
 }
