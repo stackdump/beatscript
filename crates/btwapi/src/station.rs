@@ -157,7 +157,13 @@ pub fn station_answer(ask: &StationAsk) -> JsonValue {
         retuned.push(JsonValue::str(k.clone()));
     }
     let filled = station.clone();
-    let tracks = match filled.tracks(ask.n, ask.count) {
+    // (the walk is worked out once, for the tracks, the segues and the neighbours on the same walk)
+    let last = ask.n.saturating_add(ask.count.saturating_sub(1));
+    let walk = match filled.walk_to(last) {
+        Ok(w) => w,
+        Err(e) => return err(e, Vec::new()),
+    };
+    let tracks = match filled.tracks_on(ask.n, ask.count, &walk) {
         Ok(t) => t,
         Err(e) => return err(e, Vec::new()),
     };
@@ -178,7 +184,7 @@ pub fn station_answer(ask: &StationAsk) -> JsonValue {
     let mut segues = Vec::new();
     if ask.segue {
         for t in &tracks {
-            match filled.segue(t.n) {
+            match filled.segue_on(t.n, &walk) {
                 Ok(sg) => {
                     let mut j = sg.to_json();
                     if ask.check {
@@ -203,7 +209,8 @@ pub fn station_answer(ask: &StationAsk) -> JsonValue {
             o.set("value", j.get(&knob).cloned().unwrap_or(JsonValue::Null));
             o.set("text", JsonValue::str(s.text()));
             o.set("cid", JsonValue::str(s.cid()));
-            if let Ok(t) = s.track(ask.n) {
+            let t = if filled.same_walk(&s) { s.tracks_on(ask.n, 1, &walk).map(|mut v| v.remove(0)) } else { s.track(ask.n) };
+            if let Ok(t) = t {
                 o.set("track", t.to_json());
             }
             ns.push(JsonValue::Object(o));

@@ -1375,7 +1375,8 @@ impl Tools {
             req.insert("locks".into(), l.clone());
         }
         let segue = a.present("segue").is_none() || a.boolean("segue")?;
-        let checked = if a.boolean("check")? { count.and_then(|k| k.as_u64()).unwrap_or(1) * if segue { 2 } else { 1 } } else { 1 };
+        // (one charge for the walk; with check, one for each program checked: a count past MAX_CHECKED is refused unchecked)
+        let checked = if a.boolean("check")? { count.and_then(|k| k.as_u64()).unwrap_or(1).min(btwapi::station::MAX_CHECKED) * if segue { 2 } else { 1 } } else { 1 };
         for _ in 0..checked {
             self.limit_cpu(c)?;
         }

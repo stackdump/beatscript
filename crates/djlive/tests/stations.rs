@@ -148,6 +148,10 @@ fn retuning_a_knob_keeps_position_n_and_a_small_turn_keeps_the_walk() {
     // a genre is named, never notched (its neighbourhoods are phase 2)
     assert_eq!(s.retune("genre", "house").unwrap().genre, "house");
     assert!(s.retune("genre", "+1").is_err());
+    // a genre is a word: nothing else can write itself into the tracks' calls
+    for bad in ["techno section=drop", "techno\narrange from z", "", "Techno!", "9am"] {
+        assert!(s.retune("genre", bad).is_err(), "{bad:?}");
+    }
     assert!(s.retune("tempo", "400").is_err());
     assert!(s.retune("volume", "+1").is_err());
     // retuning back is the station it was

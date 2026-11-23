@@ -223,6 +223,17 @@ fn the_example_station_checks_clean() {
 }
 
 #[test]
+fn the_last_position_of_a_hashed_walk_answers_with_its_segue_and_neighbours() {
+    let at = djlive::station::MAX_WALK;
+    let a = ask(&req(RADIO, &format!(", \"n\": {at}, \"segue\": true, \"neighbours\": true")));
+    assert_eq!(a.get("tracks").unwrap().as_array().unwrap()[0].get("n").and_then(JsonValue::as_f64), Some(at as f64));
+    assert_eq!(a.get("segues").unwrap().as_array().unwrap().len(), 1);
+    // a neighbour on the same walk (tempo) has the same seed there, worked out once
+    let nb = a.get("neighbours").unwrap().as_array().unwrap().iter().find(|x| x.get("knob").and_then(JsonValue::as_str) == Some("tempo")).unwrap();
+    assert_eq!(nb.get("track").unwrap().get("seed").and_then(JsonValue::as_f64), a.get("tracks").unwrap().as_array().unwrap()[0].get("seed").and_then(JsonValue::as_f64));
+}
+
+#[test]
 fn a_bad_request_says_what_is_wrong() {
     for (r, says) in [
         ("{}".to_string(), "`station`"),
@@ -231,6 +242,8 @@ fn a_bad_request_says_what_is_wrong() {
         (req(RADIO, ", \"nn\": 1"), "`nn` is no field"),
         (req(RADIO, ", \"retune\": {\"genre\": \"+1\"}"), "no notch"),
         (req(RADIO, ", \"locks\": [\"volume\"]"), "`volume` is no knob"),
+        (req(RADIO, ", \"retune\": {\"genre\": \"technoo\"}"), "no genre of gen@2"),
+        (req(RADIO, ", \"retune\": {\"genre\": \"techno section=drop\"}"), "no genre"),
         (req("station {\n  from gen@2 techno seed=42\n  forms seeded nope\n}\n", ""), "`nope` is no form"),
         (req(RADIO, ", \"n\": 20000"), "10000"),
     ] {

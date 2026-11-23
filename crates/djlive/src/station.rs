@@ -82,8 +82,10 @@ pub struct Station {
     pub own_key: Option<String>,
 }
 
-/// A walk as a run of tracks reads it.
-enum Walk {
+/// A walk as a run of tracks reads it: worked out once ([`Station::walk_to`]) and shared by the tracks, the segues and the
+/// neighbours on the same walk ([`Station::same_walk`]).
+#[derive(Clone, Debug)]
+pub enum Walk {
     /// `seed=+n`: s_0 + n*i, on demand.
     Counted(u32),
     /// `seed=~`: s_0 ..= s_last, worked out.
@@ -274,6 +276,20 @@ impl Station {
         SPARSE.contains(&self.genre.as_str())
     }
 
+    /// Whether `other` walks the same seeds (the same call and step: only its tempo, key or forms differ).
+    pub fn same_walk(&self, other: &Station) -> bool {
+        self.version == other.version && self.genre == other.genre && self.seed == other.seed && self.step == other.step && self.length == other.length
+    }
+
+    /// The walk to position `last` (and the segue after it), to share between [`Station::tracks_on`] and
+    /// [`Station::segue_on`].
+    pub fn walk_to(&self, last: u64) -> Result<Walk, String> {
+        if self.step == SeedStep::Hash && last > MAX_WALK {
+            return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {last} is past it"));
+        }
+        self.walk(last.saturating_add(1))
+    }
+
     /// The walk at the positions a run of tracks from `from` to `last` reads (the first chapter's theme, the parent): the
     /// seeds of a `seed=~` walk from 0, or the counted ones on demand.
     fn walk(&self, last: u64) -> Result<Walk, String> {
@@ -338,10 +354,19 @@ impl Station {
     /// The tracks at n .. n+count.
     pub fn tracks(&self, n: u64, count: u64) -> Result<Vec<Track>, String> {
         let last = n.checked_add(count.saturating_sub(1)).ok_or("past the end of the walk")?;
-        if self.step == SeedStep::Hash && last > MAX_WALK {
-            return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {last} is past it"));
+        let w = self.walk_to(last)?;
+        self.tracks_on(n, count, &w)
+    }
+
+    /// The tracks at n .. n+count on a walk worked out to at least the last of them.
+    pub fn tracks_on(&self, n: u64, count: u64, seeds: &Walk) -> Result<Vec<Track>, String> {
+        let last = n.checked_add(count.saturating_sub(1)).ok_or("past the end of the walk")?;
+        if let Walk::Listed(v) = seeds {
+            if last as usize >= v.len() {
+                return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {last} is past it"));
+            }
         }
-        let seeds = self.walk(last)?;
+        let seeds = seeds.clone();
         let station = self.cid();
         let mut parent = (n > 0).then(|| {
             let (rf, ..) = self.reference(n - 1, &seeds);
@@ -370,12 +395,19 @@ impl Station {
 
     /// The segue from track n to n+1: the cross of their seeds.
     pub fn segue(&self, n: u64) -> Result<Segue, String> {
-        if self.step == SeedStep::Hash && n > MAX_WALK {
-            return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {n} is past it"));
-        }
+        let w = self.walk_to(n)?;
+        self.segue_on(n, &w)
+    }
+
+    /// The segue from track n to n+1 on a walk worked out to at least n+1.
+    pub fn segue_on(&self, n: u64, seeds: &Walk) -> Result<Segue, String> {
         let last = n.checked_add(1).ok_or("past the end of the walk")?;
-        let seeds = self.walk(last)?;
-        let (a, b) = (self.seed_in(&seeds, n), self.seed_in(&seeds, last));
+        if let Walk::Listed(v) = seeds {
+            if last as usize >= v.len() {
+                return Err(format!("a `seed=~` station is worked out to position {MAX_WALK}: {n} is past it"));
+            }
+        }
+        let (a, b) = (self.seed_in(seeds, n), self.seed_in(seeds, last));
         let melody = if self.sparse() { " part=melody" } else { "" };
         let phrase = PHRASES[((u64::from(a) + u64::from(b)) % PHRASES.len() as u64) as usize];
         let rf = format!("template(cross, @{phrase}, a={}{melody}, b={}{melody})", self.call(&self.seed_word(n, a)), self.call(&b.to_string()));
@@ -398,7 +430,18 @@ impl Station {
                 if notch.is_some() {
                     return Err("a genre has no notch yet (its neighbourhoods are phase 2): name the genre".into());
                 }
-                s.genre = value.trim().to_lowercase();
+                let g = value.trim().to_lowercase();
+                // (a genre is a word: anything else would write itself into every track's call)
+                if g.is_empty() || !g.starts_with(|c: char| c.is_ascii_lowercase()) || !g.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+                    return Err(format!("`{}` is no genre", value.trim()));
+                }
+                if let Some(gen) = crate::gen::generator() {
+                    let genres = gen.genres(self.version);
+                    if !genres.is_empty() && !genres.contains(&g) {
+                        return Err(format!("`{g}` is no genre of gen@{}: {}", self.version, genres.join(" ")));
+                    }
+                }
+                s.genre = g;
             }
             "seed" => match notch {
                 Some(d) => s.seed = (i64::from(seed_value(&self.seed)) + d).rem_euclid(1 << 32).to_string(),
@@ -753,7 +796,13 @@ pub fn check(parsed: &Parsed, src: &str, env: &Env, diags: &mut Vec<Diagnostic>)
     };
     let mut first: Option<Compiled> = None;
     let mut checked = Vec::new();
+    let mut seen: Vec<&str> = Vec::new();
     for t in tracks.iter().take(r as usize) {
+        // (a form twice in the rotation is checked once: the first chapter's tracks of it differ only in their seed)
+        if seen.contains(&t.form.as_str()) {
+            continue;
+        }
+        seen.push(t.form.as_str());
         let c = crate::compile::check_with(&t.text, env);
         match c.compiled {
             Some(comp) => {

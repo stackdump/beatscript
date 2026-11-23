@@ -268,7 +268,7 @@ before they turned to it.
 
 Here 878718783 = fold32(CID of `arrange from gen@2 techno seed=42`), each next seed the same hash of the call before, and each
 phrase line s_N mod 46 of the pinned list. Seed 42 is the ground, the refrain and the subject of the first chapter; 2771245628 is
-all three in the second. The station's answer gives every number (`"count": 8, "check": true`).
+all three in the second. The station's answer gives every number (`"count": 8`; with `"check": true` at most 4 a request).
 
 Track 0 and track 1 in full:
 

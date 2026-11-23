@@ -1055,10 +1055,19 @@ async fn station_route(State(st): St, req: Request) -> Response<Body> {
         if b.len() > MAX_CHECK_BODY {
             return Err(ApiError::new(413, "too_large", format!("request body is over {MAX_CHECK_BODY} bytes")).response());
         }
-        let body = match std::str::from_utf8(&b) {
-            Ok(s) if serde_json::from_str::<Value>(s).is_ok_and(|v| v.is_object()) => s.to_string(),
-            _ => return Err(ApiError::new(400, "bad_request", "send a JSON object: {station, n, count, segue, check, retune, locks, neighbours}").response()),
+        let (body, v) = match std::str::from_utf8(&b).ok().and_then(|s| serde_json::from_str::<Value>(s).ok().filter(Value::is_object).map(|v| (s.to_string(), v))) {
+            Some(x) => x,
+            None => return Err(ApiError::new(400, "bad_request", "send a JSON object: {station, n, count, segue, check, retune, locks, neighbours}").response()),
         };
+        // (as the MCP tool charges: with check, one more call of the checker for each program checked)
+        if v.get("check").and_then(Value::as_bool) == Some(true) {
+            let count = v.get("count").and_then(Value::as_u64).unwrap_or(1).clamp(1, btwapi::station::MAX_CHECKED);
+            let segue = v.get("segue").and_then(Value::as_bool) != Some(false);
+            for _ in 1..count * if segue { 2 } else { 1 } {
+                let (ok, retry) = st.allow_check(&ip);
+                limited(ok, retry, "station")?;
+            }
+        }
         let rep = st.checker.station(&ip, &body).await.map_err(|e| e.response())?;
         Ok(json_resp(200, &rep))
     }
