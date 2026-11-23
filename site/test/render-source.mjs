@@ -60,7 +60,7 @@ try {
 
   // ---- the switch, remembered
   await b.click('#src-render');
-  check((await pressed('src-render')) === 'true' && (await b.eval(`localStorage.getItem('btw-source')`)) === 'render', 'render chosen, and remembered in localStorage');
+  check((await pressed('src-render')) === 'true' && (await b.eval(`localStorage.getItem('beatscript-source')`)) === 'render', 'render chosen, and remembered in localStorage');
 
   // ---- render, with progress, then play
   await setProgram(song(120));
@@ -162,7 +162,7 @@ try {
   await ready();
   check((await pressed('src-render')) === 'true', 'after a reload the page remembers render');
   await b.click('#src-render');
-  check((await b.eval(`localStorage.getItem('btw-source')`)) === 'auto' && (await pressed('src-render')) === 'false', 'clicking it again goes back to auto, remembered');
+  check((await b.eval(`localStorage.getItem('beatscript-source')`)) === 'auto' && (await pressed('src-render')) === 'false', 'clicking it again goes back to auto, remembered');
 
   const v = await b.eval('window.__violations');
   check(Array.isArray(v) && v.length === 0, `no CSP violation (${JSON.stringify(v)})`);

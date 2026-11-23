@@ -15,6 +15,7 @@ export const PREFS = Object.freeze({
   level: ['beatscript-level', 'btw-level'],
   composeMode: ['beatscript.composeMode', 'btw.composeMode'],
   betaEmail: ['beatscript_beta_email', 'btw_beta_email'],
+  source: ['beatscript-source', 'btw-source'],
 });
 
 const local = () => { try { return globalThis.localStorage || null; } catch { return null; } };

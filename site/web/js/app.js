@@ -48,7 +48,7 @@ export class App {
     this.follow.on = prefGet('follow', '1') !== '0';
     this.ctx = null; this.master = null; this.analyser = null;
     this.engine = null; this.engineSrc = null; this.engineState = 'idle'; this.engineError = '';
-    this.sourcePref = storedSource(store.get('btw-source', 'auto')); // the person's choice, kept per browser
+    this.sourcePref = storedSource(prefGet('source', 'auto')); // the person's choice, kept per browser
     this.renderCache = new RenderCache(); // renders by CID: a program plays again without rendering until its CID changes
     this.wasmModule = null; // the compiled beatscript_bg.wasm the render worker is handed (compiled on the first render)
     this._renderEpoch = 0;
@@ -955,7 +955,7 @@ export class App {
 
   setSourcePref(src) {
     this.sourcePref = this.sourcePref === src ? 'auto' : src;
-    store.set('btw-source', this.sourcePref);
+    prefSet('source', this.sourcePref);
     this.updateTransport();
     if (this.isPlaying()) this.play('switch');
   }
