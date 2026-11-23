@@ -10,7 +10,7 @@ use djlive::share;
 
 /// hand-dubstep-140 v2: a whole track (CC0, pinned: tests/cid-pins.json).
 const V2: &str = include_str!("../../../docs/beatscript/hand-dubstep-140-v2.beatscript");
-const V2_CID: &str = "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi";
+const V2_CID: &str = "z4EBG9jEj3ephVYiwBA3bmUnp5GmMQ8hjtdgFSbrfgKHp3cJfef";
 /// The net CIDs of its `drop` (cid-pins.json: `drop@16:A`, `drop@16:B`).
 const V2_DROP_A: &str = "z4EBG9j8BDvgUEjm15dXsf4xLcYpZ15bpPh1xk49t59eL5kwm92";
 const V2_DROP_B: &str = "z4EBG9j6xC7XhPsRu89PCeg1kDJ36o19QZ4Jk6cQNa6CKK5hokY";

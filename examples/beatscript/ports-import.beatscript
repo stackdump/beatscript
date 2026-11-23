@@ -1,3 +1,4 @@
+#! beatscript 2
 #! skip-test: imports the saved snippet "harmony" (its text is below, in the comment); tested in crates/djlive/tests/ext_ports.rs with a fake snippet store
 # Ports across an import (F11). A saved snippet keeps its defs WITH their ports, and the program that
 # imports it wires them to its own: `import "harmony"` brings harmony_changes (out: chords) and

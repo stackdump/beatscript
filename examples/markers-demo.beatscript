@@ -1,3 +1,4 @@
+#! beatscript 2
 # markers demo: the lines that are playing light up as they sound
 tempo 124
 key am

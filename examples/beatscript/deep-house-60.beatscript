@@ -1,3 +1,4 @@
+#! beatscript 2
 #! skip-test: its `wheel level db=-8` line needs the host's registry (checked clean by `djctl btw check`)
 # deep-house-60: one hour of deep house at 122 BPM, hand-written (no generator).
 # A minor / C major. 1824 bars = 59:48. Eight movements and two breakdowns; every section

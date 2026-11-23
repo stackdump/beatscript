@@ -1365,7 +1365,7 @@ mod tests {
         for (family, groove, _) in beatscript_serve::found::FAMILY_GROOVES.iter() {
             assert!(!groove.is_empty() && beatscript_serve::found::groove(family) == Some(*groove));
         }
-        for cid in ["z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK", "z4EBG9jB6T7bKvVFQ6ZW6UPPCYh2RQbAHx86rZ8EKczfdupgqnn"] {
+        for cid in ["z4EBG9j94aGDk5revau2rGjEE46x9bebqNtKwiUyPqGZy7TRHCj", "z4EBG9jDkEcovjGFiHHNsiTGLk6jskJRAKn6MvUTyvTJSojtRa5"] {
             assert!(FOUND_MD.contains(cid), "the page does not name the reference program {cid}");
         }
         // every `word_word` the page writes in backticks is a line of the book (the `drm_*` parts aside)

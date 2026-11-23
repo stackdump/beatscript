@@ -1,11 +1,11 @@
-#! btw 1
+#! beatscript 2
 #! name: tyger-tyger-128
 #! license: CC0-1.0
 # Lyric: William Blake, "The Tyger" (Songs of Experience, 1794). Public domain.
 # Trochaic: the stress falls on the beat, so the words chant with the kick.
 # Known: `check` warns, once per line that sings it, that `burning` is not in the lexicon (sounded out by the rules as /b er n ii ng/).
 # The program is pinned as it is, warnings included: an escape would change its code and so its CID. Linked data:
-# tyger-tyger-128.jsonld (isBasedOn The Tyger). CID z4EBG9jB6T7bKvVFQ6ZW6UPPCYh2RQbAHx86rZ8EKczfdupgqnn (comment lines are not part of it).
+# tyger-tyger-128.jsonld (isBasedOn The Tyger). CID z4EBG9jDkEcovjGFiHHNsiTGLk6jskJRAKn6MvUTyvTJSojtRa5 (comment lines are not part of it).
 tempo 128
 key em
 

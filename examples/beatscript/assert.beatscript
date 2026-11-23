@@ -1,3 +1,4 @@
+#! beatscript 2
 # assert.beatscript: a track that checks itself (F12). Original, CC0-1.0.
 # A line that begins `assert` says what must be true of the program. `check` proves the ones about the
 # program as written (that it ends, how long it is, the key in a section, how its parts come round) and

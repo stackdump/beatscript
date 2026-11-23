@@ -1,3 +1,4 @@
+#! beatscript 2
 # sugar.beatscript: pattern sugar (CC0). Original.
 # Short ways to write patterns BeatScript already has: x~4 is x ~ ~ ~, x? is x?0.5, ply doubles each step in its slot,
 # poly walks a pattern of 3 or 5 steps 8 a bar so it drifts against the kick, off stacks a copy a step later an octave

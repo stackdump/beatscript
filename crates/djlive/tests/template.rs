@@ -734,11 +734,11 @@ fn a_forms_reference_is_the_program_it_names() {
 fn the_found_phrases_reference_programs_are_the_programs_the_page_names() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript");
     let found: &[(&str, &str, &[&str])] = &[
-        ("such-stuff-as-dreams-122-reference", "z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK", &[
+        ("such-stuff-as-dreams-122-reference", "z4EBG9j94aGDk5revau2rGjEE46x9bebqNtKwiUyPqGZy7TRHCj", &[
             "not in the BeatScript lexicon, sounded out by the rules: `such` /s uh ch/, `stuff` /s t uh f/, `dreams` /d r ee m s/",
             "not in the BeatScript lexicon, sounded out by the rules: `little` /l ii t l/, `rounded` /r ow n d ii d/",
         ]),
-        ("tyger-tyger-128", "z4EBG9jB6T7bKvVFQ6ZW6UPPCYh2RQbAHx86rZ8EKczfdupgqnn", &[
+        ("tyger-tyger-128", "z4EBG9jDkEcovjGFiHHNsiTGLk6jskJRAKn6MvUTyvTJSojtRa5", &[
             "not in the BeatScript lexicon, sounded out by the rules: `burning` /b er n ii ng/",
             "not in the BeatScript lexicon, sounded out by the rules: `burning` /b er n ii ng/",
         ]),

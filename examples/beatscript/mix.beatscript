@@ -1,3 +1,4 @@
+#! beatscript 2
 # mix.beatscript: a duck and a mix snapshot in one small song (CC0-1.0, original).
 #
 # `duck B under A.kick 6db attack=5ms release=120ms` lowers deck B by 6 dB on every kick of deck A: the engine's

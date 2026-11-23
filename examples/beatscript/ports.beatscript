@@ -1,3 +1,4 @@
+#! beatscript 2
 # Typed ports (F11). A def may declare what it needs (`in:`) and what it makes (`out:`), each port a
 # type. `emit` makes an out port's value; `$chords` (or `$in`, when it is the only input) is the value
 # wired to an input. `wire a.out -> b.chords` glues an output to an input, and the wiring is checked:

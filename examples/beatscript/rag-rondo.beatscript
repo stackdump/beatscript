@@ -1,3 +1,4 @@
+#! beatscript 2
 #! name: Rag Rondo
 #! themes after Scott Joplin, The Entertainer (1902) and Maple Leaf Rag (1899), public domain
 #! license: CC0-1.0
@@ -9,7 +10,7 @@
 # Known (the program's own record): the master clips about 0.1 ms in the rag sections, and `up 1` / `down 1` flatten the
 # Entertainer's d# passing tones to d (degrees of the key have no sharps).
 # Hand-written 2026-11-22; the program below is its canonical text unchanged, CID
-# z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw (these comment lines are not part of it).
+# z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW (these comment lines are not part of it).
 tempo 122
 key c
 swing 0.18

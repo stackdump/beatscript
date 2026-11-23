@@ -1,8 +1,9 @@
 {
   "@context": "https://schema.org",
   "@type": "MusicComposition",
-  "@id": "https://beats.bitwrap.io/p#z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx",
-  "identifier": "z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx",
+  "@id": "https://beatscript.app/p/z4EBG9j86dPTC9HH6EjtBJFAWZsJLiPum4np9zoJQC9PzWm9SoC",
+  "identifier": "z4EBG9j86dPTC9HH6EjtBJFAWZsJLiPum4np9zoJQC9PzWm9SoC",
+  "sameAs": "https://beats.bitwrap.io/p#z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx",
   "name": "Canon of Fate",
   "description": "The reference program of the quodlibet form: themes after Pachelbel's Canon in D, Beethoven's Ode to Joy and his fate motif take turns by section and cross-morph toward each other and away.",
   "license": "https://creativecommons.org/publicdomain/zero/1.0/",

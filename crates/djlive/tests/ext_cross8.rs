@@ -166,7 +166,7 @@ fn the_extensions_programs_keep_their_canonical_text_and_cid_through_the_merge()
     // the showcase is every extension at once: its CID is the one the extensions branch had
     let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/showcase.beatscript")).unwrap();
     let c = djlive::check(&src).compiled.expect("the showcase compiles");
-    assert_eq!(c.cid, "z4EBG9j1X64xRSJ82YLsNTSV8Vruf1icVF7tBXxJ2jt9KW6VZuo");
+    assert_eq!(c.cid, "z4EBG9j37QBGtpgBbGG2nLFDQ3nvwq1FdePDEjcZDiSLtHVbRVy");
     // and a program with no `set` in it is not touched by the set's path (one compile, same canonical text twice)
     assert_eq!(djlive::check(&c.text).compiled.unwrap().text, c.text);
     // the set's canonical text is a fixed point too, tracks pinned by CID

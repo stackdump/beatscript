@@ -1,4 +1,4 @@
-#! btw 1
+#! beatscript 2
 #! name: such-stuff-as-dreams-122
 #! license: CC0-1.0
 # such-stuff-as-dreams-122 (the reference program of docs/beatscript/found-phrases.md): deep house at 122 in D minor whose vocal is
@@ -10,7 +10,7 @@
 # Known: `check` warns that `such`, `stuff`, `dreams`, `little` and `rounded` are not in the lexicon (sounded out by the rules). The
 # program is pinned as it is, warnings included: an escape would change its code and so its CID.
 # Not the template-based such-stuff-as-dreams-122.beatscript (that one is `template(deep-house, @tempest_such_stuff)`); this is the
-# hand-written program, its canonical text unchanged, CID z4EBG9jAv9C8XQ55DMd9iGXybFcMbX93mrXjwrNLVLuKUe5p1QK (comment lines are not part of it).
+# hand-written program, its canonical text unchanged, CID z4EBG9j94aGDk5revau2rGjEE46x9bebqNtKwiUyPqGZy7TRHCj (comment lines are not part of it).
 tempo 122
 key dm
 swing 0.15

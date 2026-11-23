@@ -703,9 +703,9 @@ fn existing_programs_keep_their_cids() {
         ("hand-dubstep-140", include_str!("fixtures/hand-dubstep-140.beatscript"), "z4EBG9jD5z7Kk3J1PeAG7PmE1hTNikEv1rNXWTdpYux1EDAEmMR"),
         ("hand-proghouse-124", include_str!("fixtures/hand-proghouse-124.beatscript"), "z4EBG9jCfiLnPMeYSVLsEYac76udGyYPwuJ5iy5xgd3GRncvasZ"),
         ("acid-rave-138", include_str!("fixtures/acid-rave-138.beatscript"), "z4EBG9jDqdJiCPANzF2EYvMTjnh6k4g66cMwwxtSKAYhaZLMUb2"),
-        ("hand-dubstep-140-v2", include_str!("../../../docs/beatscript/hand-dubstep-140-v2.beatscript"), "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi"),
-        ("trance-138", include_str!("../../../examples/trance-138.beatscript"), "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ"),
-        ("markers-demo", include_str!("../../../examples/markers-demo.beatscript"), "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE"),
+        ("hand-dubstep-140-v2", include_str!("../../../docs/beatscript/hand-dubstep-140-v2.beatscript"), "z4EBG9jEj3ephVYiwBA3bmUnp5GmMQ8hjtdgFSbrfgKHp3cJfef"),
+        ("trance-138", include_str!("../../../examples/trance-138.beatscript"), "z4EBG9j5MMozvDkT1gTck6ZKTsqXctuNA25bzD86dkhc6buYuuB"),
+        ("markers-demo", include_str!("../../../examples/markers-demo.beatscript"), "z4EBG9jETvW85s1uQCB4t3z6xFfsgiAPmpJm6Gg9R8DuTd3rZZy"),
     ] {
         assert_eq!(ok(src).cid, cid, "{name}");
     }

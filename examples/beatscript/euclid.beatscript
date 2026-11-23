@@ -1,3 +1,4 @@
+#! beatscript 2
 # euclid.beatscript: Euclidean rhythms and polymeter (CC0). Original.
 # e(k, n) spreads k hits as evenly as it can over n steps; e(k, n, rot) turns it. A part's `/N` gives it a cycle of
 # N sixteenths instead of the bar's 16, so it drifts across the barlines and comes round on its own: here the hihat

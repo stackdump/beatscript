@@ -53,7 +53,7 @@ mod tests {
         assert_eq!(names().len(), 7);
         let (t, f) = find("rondo").unwrap();
         let j = form_json("https://beatscript.app/", t, f);
-        assert_eq!(j["reference"]["cid"], "z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw");
+        assert_eq!(j["reference"]["cid"], "z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW");
         assert_eq!(default_phrase(t), "@shanty_drunken_sailor");
         assert!(find("canon").map(|(t, f)| form_json("x", t, f)["reference"].is_null()).unwrap());
     }

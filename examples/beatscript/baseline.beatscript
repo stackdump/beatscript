@@ -1,3 +1,4 @@
+#! beatscript 2
 # The language before the extensions: a small song, here so the harness always has something to check.
 tempo 124
 key am

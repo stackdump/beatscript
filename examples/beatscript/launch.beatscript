@@ -1,3 +1,4 @@
+#! beatscript 2
 # launch: three scenes on three pads. A scene is a section (it loops until the next launch) or a named arrangement; `launch NAME on pad(N)`
 # says which pad brings which scene in, and the song as written is what you hear until a hand comes to the pads. A hit lands on the next
 # phrase line (8 bars from the song's first bar), or the line it says: `next phrase 16`, `next bar`. A host with no controller (the page, a

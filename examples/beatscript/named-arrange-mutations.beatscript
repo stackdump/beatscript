@@ -1,3 +1,4 @@
+#! beatscript 2
 # named-arrange-mutations: named arrangements with an `arrange { }` mutation inside one of them. `open` plays the drop as
 # written, `set` rotates the acid line between its two drops (twice through), and `close` plays the drop as written again.
 tempo 128

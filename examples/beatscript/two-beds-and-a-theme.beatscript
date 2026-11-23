@@ -1,3 +1,4 @@
+#! beatscript 2
 #! skip-test: its gen calls need the seeded generator, which beatscript-api installs; checked clean in crates/beatscript-api/tests/gen.rs
 #! name: two beds and a theme
 #! license: CC0-1.0

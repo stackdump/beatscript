@@ -1,3 +1,4 @@
+#! beatscript 2
 #! name: Full fathom five
 #! license: CC0-1.0
 # full-fathom-five: the reference program of the PASSACAGLIA form (docs/beatscript/forms.md; `template(passacaglia, ...)` is its skeleton).
@@ -9,7 +10,7 @@
 # Known: `check` warns that `full` and `five` are not in the lexicon (sounded out by the rules as /f uh l/ and /f ie v/). The
 # program is pinned as it is, warning included: an escape would change its code and so its CID.
 # Hand-written 2026-11-22; the program below is its canonical text unchanged, CID
-# z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1 (these comment lines are not part of it).
+# z4EBG9j3xZiLH5Sa8EnFW5sg2WuSPRuMbBaTr3JHeQjfWWE7Ug9 (these comment lines are not part of it).
 tempo 112
 key g
 swing 0.12

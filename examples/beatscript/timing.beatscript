@@ -1,3 +1,4 @@
+#! beatscript 2
 # timing: time words finer than a bar. A beat is a quarter of a bar, and beats count from 0 like bars do:
 # `at bar 3 beat 2` is the third quarter of the bar the line calls bar 3. (An original example, CC0-1.0.)
 tempo 128

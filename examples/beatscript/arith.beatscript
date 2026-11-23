@@ -1,3 +1,4 @@
+#! beatscript 2
 # arith: every number is an expression, worked out once when the program is read.
 # (An original example, CC0-1.0.)
 tempo 120 + 4 * 2            # 128

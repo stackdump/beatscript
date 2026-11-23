@@ -1,3 +1,4 @@
+#! beatscript 2
 # perform: a track you play. knob(3), pad(5), fader(A), held(key) and held(c4) read the controllers while the program runs, at the
 # bar lines, and stand in control values and in a control line's `when` (never in a pattern: a net is compiled once). Everything
 # read is logged into a performance with its own CID, so the same program replays the same moves. (An original example, CC0-1.0.)

@@ -45,7 +45,7 @@ arrange {
 "#;
 
 /// Its CID, which the comments and the header lines do not move.
-const CID: &str = "z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz";
+const CID: &str = "z4EBG9jHEKgonTqe3ucsjCSx1dMpeceWXr68HEfZrw2n6Yd62sj";
 
 /// What each of the eight plays reads: (play, [(pattern, generation, one-shot, text)]), the let patterns in name order.
 #[rustfmt::skip]

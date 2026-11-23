@@ -1,3 +1,4 @@
+#! beatscript 2
 # answer.beatscript: call and response between decks (CC0). Original.
 # The kick is the call, written once as a let and given to both decks. rests(call) is a hit on every step the call leaves
 # empty, and rests(call, reply) is the reply, kept only on those steps: the clap and the hat answer the kick, and editing

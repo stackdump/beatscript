@@ -66,7 +66,7 @@ outside this folder; `docs/beatscript/hand-dubstep-140-v2.beatscript` is the who
 ## deep-house-60.beatscript
 
 One hour of hand-written deep house (no generator): 122 BPM, A minor / C major, 1824 bars = 59:48,
-CC0. Program CID `z4EBG9j7s8mUb6MhSafDsTQoxtoBUr4HHTQrF1RakkN5AvDT6o7`. `djctl btw check` is clean.
+CC0. Program CID `z4EBG9j6BYUoMCVxaNenSpDHnPaYZ1JaBgTy6g5TpvbUVjuMpWa`. `djctl btw check` is clean.
 A section is at most 256 bars, so the long movements are chained nets; every section has its own
 `evolve every 16 bars` block, with coprime clocks on melody (7/11/13), voicing octaves (5/7), bass
 rotate + octave (11/13/17) and hats (`thin` on `gen % 7 == k`).

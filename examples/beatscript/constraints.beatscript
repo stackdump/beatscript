@@ -1,3 +1,4 @@
+#! beatscript 2
 # constraints.beatscript: a track that keeps its own rules (F12). Original, CC0-1.0.
 # `assert never ...` and `assert ... ends on ...` are rules about the notes. `check` asks every step of every bar of the song
 # and refuses the program, saying the bar and the step, when one is broken: it is decided, not sampled. Try moving the bass

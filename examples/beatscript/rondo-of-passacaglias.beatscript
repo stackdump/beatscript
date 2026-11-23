@@ -1,3 +1,4 @@
+#! beatscript 2
 #! skip-test: binds a seed of the generator (gen@1), which tests/examples_beatscript.rs checks without; tested in crates/beatscript-api/tests/forms_roles.rs
 #! name: rondo of passacaglias
 # rondo-of-passacaglias.beatscript: one seed, a rondo whose episodes are a passacaglia (CC0). Original.

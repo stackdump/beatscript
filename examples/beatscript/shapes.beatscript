@@ -1,3 +1,4 @@
+#! beatscript 2
 # shapes: how a ramp goes, and lfo, a value that keeps moving. A ramp is linear unless it says `exp` (slow start, fast end:
 # a riser), `log` (fast start, slow end), `s-curve` (gentle both ends) or `step N` (N values, N - 1 leaps). An lfo is
 # `center + depth * wave`, a wave of a period you give in bars or beats, for `over N bars` or until its section ends.

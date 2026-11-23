@@ -109,8 +109,8 @@ fn programs_without_a_count_keep_their_cid() {
     assert_eq!(ok(OLD_SONG).cid, "z4EBG9j48vaqydR4nYH2fQYmfWqa2GXrJ9dbXGzwsJDzSey5Rey");
     let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/beatscript/");
     let read = |n: &str| std::fs::read_to_string(format!("{dir}{n}")).unwrap();
-    assert_eq!(ok(&read("arrange-mutations.beatscript")).cid, "z4EBG9jCtKY4ioQ3TEJCQQmTTJZjugJRihCNbBxNJrBaWr1adMi");
-    assert_eq!(ok(&read("named-arrange-mutations.beatscript")).cid, "z4EBG9jBgVnH5y3CBC2U72LiZ6FVxEuPVMtaGpoa2QcZesBzWFr");
+    assert_eq!(ok(&read("arrange-mutations.beatscript")).cid, "z4EBG9jGgmxN7Nk9BuV8pKFtH2ivh2HFMC4rw1MwxjkD9YmkJFa");
+    assert_eq!(ok(&read("named-arrange-mutations.beatscript")).cid, "z4EBG9jCEkKD3De1g523rLe8MFiBwQ3VMpM2C1HHpdGfUhfsXmd");
 }
 
 #[test]

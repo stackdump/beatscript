@@ -1,3 +1,4 @@
+#! beatscript 2
 #! skip-test: borrows from a saved program, hand-dubstep-140 v2 (z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi); tested in crates/djlive/tests/stored_ref.rs with that program as the snippet
 #! name: borrow a drop
 # borrow-a-drop.beatscript: take the drop of a track that is already saved, by its CID, and put your own intro in front of it (CC0). Original.

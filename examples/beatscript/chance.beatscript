@@ -1,3 +1,4 @@
+#! beatscript 2
 # chance.beatscript: seeded chance (CC0). Original.
 # A chance is decided by a hash of (seed, bar, step, note): the same text is the same notes on every run, and every bar can differ.
 #   x*8?0.7                                  each of the eight hits is kept with chance 0.7 (30% says the same)

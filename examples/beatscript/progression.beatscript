@@ -1,3 +1,4 @@
+#! beatscript 2
 # progression.beatscript: write the chords once, as Roman numerals, and a `key` moves the whole song. Original, CC0-1.0.
 # `i VI III VII` is Am F C G in A minor. The pad (`harmony`), the bass, the arp (`arp(VI, up, 8)`: a numeral is a chord
 # wherever a chord symbol goes) and the melody are all read in the key in force, so the lift, which says `key cm`,

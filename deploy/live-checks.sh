@@ -112,7 +112,7 @@ curl -s -m 20 $U/docs/cheatsheet.md | grep -q 'rests('; echo 'cheat sheet teache
 PB=$(curl -s -m 20 $U/phrasebook.jsonld | grep -o '"@id": *"z4EBG9j[^"]*"' | head -1 | grep -o 'z4EBG9j[^"]*')
 if [ -n "$PB" ]; then c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U/phrasebook/$PB.jsonld); echo "/phrasebook/$PB.jsonld $c"; test "$c" = 200; else echo 'no corpus CID found in /phrasebook.jsonld (not checked)'; fi
 curl -s -m 20 $U/llms.txt | grep -q "$U/phrasebook"; echo 'llms.txt lists /phrasebook'
-curl -s -m 20 $U/api/examples | python3 -c 'import json,sys; d=json.load(sys.stdin); d=d.get("examples",d) if isinstance(d,dict) else d; assert d[0]["name"]=="arrange-in-eight-lines", d[0]["name"]; assert d[0].get("cid","z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz")=="z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz"'; echo 'api/examples: arrange-in-eight-lines first, CID as pinned'
+curl -s -m 20 $U/api/examples | python3 -c 'import json,sys; d=json.load(sys.stdin); d=d.get("examples",d) if isinstance(d,dict) else d; assert d[0]["name"]=="arrange-in-eight-lines", d[0]["name"]; assert d[0].get("cid","z4EBG9jHEKgonTqe3ucsjCSx1dMpeceWXr68HEfZrw2n6Yd62sj")=="z4EBG9jHEKgonTqe3ucsjCSx1dMpeceWXr68HEfZrw2n6Yd62sj"'; echo 'api/examples: arrange-in-eight-lines first, CID as pinned'
 curl -s -m 20 $U/examples/arrange-in-eight-lines.beatscript | grep -q 'One section, played eight times'; echo 'arrange-in-eight-lines.beatscript keeps its teaching comments'
 # the old names answer with the same bytes (the rename's compatibility promise: every old link keeps working)
 same() { # same OLD NEW: both 200, NEW not empty, the same body
@@ -167,7 +167,7 @@ P=$(mcp '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"genre_t
 printf '%s' "$P" | grep -q 'sing @tyger_burning_bright on melody'; echo 'mcp genre_template techno phrase=tyger_burning_bright sings it'
 # --- wave 3b, forms and themes (from form-templates-deploy-beatscript.sh) ---
 curl -s -m 20 $U/docs/forms.md | grep -q '^# Forms: arrange shapes from classical music'; echo '/docs/forms.md is the forms doc'
-for c in z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx z4EBG9j7BJKjYPfs6QQBQCdjieviWbSwbJqEPm9idg79wTYNLW1 z4EBG9izUsbisU2JZtPHUo4hcQpYd8FLyZXLqKUmbtftjj3Lirw; do curl -s -m 20 $U/docs/forms.md | grep -q $c; done; echo '/docs/forms.md names the three reference programs'
+for c in z4EBG9j86dPTC9HH6EjtBJFAWZsJLiPum4np9zoJQC9PzWm9SoC z4EBG9j3xZiLH5Sa8EnFW5sg2WuSPRuMbBaTr3JHeQjfWWE7Ug9 z4EBG9izzm3asNWWapjXtPFSZoPzgyj4cKjPELrw4jvrhdjPxrW; do curl -s -m 20 $U/docs/forms.md | grep -q $c; done; echo '/docs/forms.md names the three reference programs'
 curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/docs/forms</loc>"; curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/themes</loc>"; echo 'sitemap lists /docs/forms and /themes'
 curl -s -m 20 $U/llms.txt | grep -q "$U/docs/forms.md"; curl -s -m 20 $U/llms.txt | grep -q "$U/themes.txt"; echo 'llms.txt lists forms and themes'
 curl -s -m 20 $U/docs/ | grep -q 'href="/docs/forms"'; curl -s -m 20 $U/docs/ | grep -q 'href="/themes"'; echo 'the docs index lists forms and themes'
@@ -246,7 +246,7 @@ printf '%s' "$TM" | grep -q 'genre/trap'; if printf '%s' "$TM" | grep -q 'is unu
 GTT=$(mcp '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"genre_template","arguments":{"genre":"trap"}}}')
 printf '%s' "$GTT" | grep -q 'kit=drums-808'; echo 'mcp genre_template trap uses kit=drums-808'
 # --- 6664: the embed player ---
-EC=z4EBG9jELuNXCvY9tz2z1dCY3JwD13P9cRb1D9nKUjAE58MWVTz   # arrange-in-eight-lines, the first example (pinned above)
+EC=z4EBG9jHEKgonTqe3ucsjCSx1dMpeceWXr68HEfZrw2n6Yd62sj   # arrange-in-eight-lines, the first example (pinned above)
 EH=$(curl -s -D - -o /dev/null -m 20 $U/embed/$EC)
 printf '%s' "$EH" | head -1 | grep -q ' 200'; echo "/embed/$EC 200"
 printf '%s' "$EH" | grep -i '^content-security-policy:' | grep -q 'frame-ancestors \*'; echo '/embed/: frame-ancestors *'

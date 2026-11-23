@@ -1,3 +1,4 @@
+#! beatscript 2
 # render-controls: the control lines an offline render plays (`djctl btw render`, `btw test`). A fade, an lfo and a crossfader
 # move on the mixer are in the render, at the same values the live runtime sends at the same beats; a filter is an insert, which
 # the arrangement format has no op for, so `djctl btw render` says it is not in the render (`not in this render: 1 control line`).

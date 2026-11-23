@@ -1,3 +1,4 @@
+#! beatscript 2
 # sing: typed lyrics sung on a part's own notes (CC0-1.0, an original line).
 # `sing "words" on melody` gives each syllable one note of the melody, in order, timed to the melody (no rhythm of its own).
 # The lyric wraps when it is shorter than the notes and stops when it is longer. A hyphen splits a word into syllables

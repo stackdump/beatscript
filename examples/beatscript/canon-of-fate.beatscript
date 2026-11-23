@@ -1,3 +1,4 @@
+#! beatscript 2
 #! name: Canon of Fate
 #! license: CC0-1.0
 # canon-of-fate: the reference program of the QUODLIBET form (docs/beatscript/forms.md; `template(quodlibet, ...)` is its skeleton).
@@ -8,7 +9,7 @@
 # away: `~ syn_ode morph syn_canon` paired later with `~ syn_canon morph syn_ode`, pulled toward a third line (syn_arp2, syn_fate),
 # one-shot `@` borrowings (the canon on the shaker's rhythm, the fate motif mirrored); `~` persists and compounds every loop.
 # Hand-written 2026-11-22; the program below is its canonical text unchanged, CID
-# z4EBG9j9Z3mPn1vKYrEVc93WXEjYyL7bCGdBM7jX4h8ZWMEuYZx (these comment lines are not part of it).
+# z4EBG9j86dPTC9HH6EjtBJFAWZsJLiPum4np9zoJQC9PzWm9SoC (these comment lines are not part of it).
 tempo 96
 key d
 let timp = x ~ ~ ~ ~ ~ ~ ~ x ~ ~ x ~ ~ ~ ~

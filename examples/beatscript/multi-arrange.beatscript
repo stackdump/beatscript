@@ -1,3 +1,4 @@
+#! beatscript 2
 # multi-arrange: three named arrangements. `open` plays once and goes to `set`, which loops its drop twice and falls
 # through to `close`.
 tempo 124

@@ -1,3 +1,4 @@
+#! beatscript 2
 #! skip-test: binds seeds of the generator (gen@1), which tests/examples_beatscript.rs checks without; tested in crates/beatscript-api/tests/forms_roles.rs
 #! name: cross two seeds
 # cross-two-seeds.beatscript: two seeds of the generator, a dubstep one and a house one, crossed in the cross form (CC0). Original.

@@ -1,3 +1,4 @@
+#! beatscript 2
 # tempo: a song whose tempo moves. The tempo is linear in BEATS, so a bar is always four beats and every time word
 # below (`at bar 6 beat 2`, `before drop 2 beats`) means what it always meant: only the seconds change.
 # `djctl btw check` says how long the song is through the curve. (An original example, CC0-1.0.)

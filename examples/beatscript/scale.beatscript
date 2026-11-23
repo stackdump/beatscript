@@ -1,3 +1,4 @@
+#! beatscript 2
 # scale.beatscript: degrees, Roman numerals, a key per section and voice leading (F5). Original, CC0-1.0.
 # The song is i VI III VII in A minor (Am F C G): chords that move as little as they can, the
 # roots in the bass, a melody written as degrees of the key. The second section says `key cm`

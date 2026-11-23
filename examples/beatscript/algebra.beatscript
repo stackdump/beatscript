@@ -1,3 +1,4 @@
+#! beatscript 2
 # F10, composition made literal: stack(a, b) plays sections at once, then(a, b) one after the other,
 # `arrange a b c` is then(a, b, c), `silence` is the unit of both, and a `let` names a composition.
 # Original, CC0-1.0.
