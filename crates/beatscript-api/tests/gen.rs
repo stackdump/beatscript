@@ -313,3 +313,27 @@ fn provenance_is_carried_in_the_json_ld() {
     assert!(dj.contains(&format!(r#""name":"gen@2 techno seed=42 section=drop part=bass","resolves":"{pin}","pinnedGenerator":"seeded@2","derivation":"vendored""#)), "{dj}");
     assert!(!dj.contains("expandsTo"), "{dj}");
 }
+
+/// The recipe `examples/beatscript/vendored-beds.beatscript` was ejected from: two beds of one generated drop, called by their parameters.
+const VENDORED_RECIPE: &str = "tempo 124\nkey am\nlet drop_kick = gen@2 techno seed=42 section=drop part=kick\nlet drop_bass = gen@2 techno seed=42 section=drop part=bass\nsection intro 4 bars {\n  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x\n}\nsection drop 8 bars {\n  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x\n  deck B: bass drop_bass inst=drop-bass\n}\narrange intro drop\n";
+
+/// `examples/beatscript/vendored-beds.beatscript` is what eject writes for that recipe, both lets written out: its notes (one CID with the
+/// eject's text), and its `# from:` lines the calls and the CIDs they resolve to. It plays as the recipe does, and a save of
+/// it keeps those lines as `meta.based_on` (`refs::from_lines`, what the storage gate reads).
+#[test]
+fn the_vendored_example_is_what_eject_writes() {
+    beatscript_api::generate::install();
+    let mut t = VENDORED_RECIPE.to_string();
+    while let Some(s) = refs::sites(&t, &env()).unwrap().first().cloned() {
+        t = refs::eject(&t, &env(), s.span.start).unwrap().unwrap();
+    }
+    let file = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/beatscript/vendored-beds.beatscript")).unwrap_or_default();
+    let lines = refs::from_lines(&t);
+    assert_eq!(lines.len(), 2, "{t}");
+    assert!(lines.iter().all(|l| l.starts_with("gen@2 techno seed=42 section=drop part=")), "{lines:?}");
+    assert_eq!(refs::from_lines(&file), lines, "the example's `# from:` lines are not the eject's; it writes:\n{t}");
+    let (cf, ct) = (compiled(&file), compiled(&t));
+    assert_eq!(cf.cid, ct.cid, "the example is not the eject's notes; it writes:\n{t}");
+    assert_eq!(nets(&cf), nets(&compiled(VENDORED_RECIPE)), "the written-out program plays as the recipe");
+    assert!(refs::sites(&file, &env()).unwrap().is_empty(), "the example still calls the generator");
+}

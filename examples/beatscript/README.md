@@ -12,6 +12,7 @@ reformattings keep its CID. All of them are original and CC0-1.0. A file that ne
 |---|---|---|---|
 | `baseline.beatscript` | the language before the extensions: a small song of a Euclid kick, a snare, hi-hats, a bass and a chord | Patterns | |
 | `two-beds-and-a-theme.beatscript` | two seeds of the seeded generator (`gen@2 ... section=drop part=bass`) fitted to one key and tempo, layered on the two decks, crossed with `morph` and `xfer`, and Beethoven's Ode to Joy (a public-domain theme) over them | Call the generator | `ext-ffi.md` |
+| `vendored-beds.beatscript` | the same kind of beds ejected: two `gen@2` lets written out as notes, each under its `# from: <call> -> <cid>` line (a comment: the CID is the notes'); saved on the site, the lines are kept as `meta.based_on`, its JSON-LD's `isBasedOn` lists them as `vendored` and lineage counts it in `vendoredFrom` | Call the generator (Eject) | `ext-ffi.md` |
 | `arith.beatscript` | arithmetic in every number, `let` folding, a def's arithmetic argument, `when` guards in a `repeat` and a def | Arithmetic and guards | `ext-arith.md` |
 | `timing.beatscript` | `at bar 1 beat 2`, `over 2 beats`, `for 3 beats`, `every 1/2 bar from 1`, `before drop 1/2 bar` | Time finer than a bar | `ext-timing.md` |
 | `tempo.beatscript` | a tempo that ramps (`100 -> 128 over 8 bars s-curve`), a tempo in a section, a timed `at bar 12: tempo ...` | Tempo curves | `ext-tempo.md` |

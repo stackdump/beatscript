@@ -1,0 +1,31 @@
+#! name: vendored beds
+#! license: CC0-1.0
+# vendored-beds.beatscript: two generated beds written out (ejected) as notes, each under the line that says where it came from (CC0).
+# Original. It was `let drop_kick = gen@2 techno seed=42 section=drop part=kick` and the same call for the bass (the recipe is in
+# crates/beatscript-api/tests/gen.rs); eject wrote each call out in place, a let a bar, under its provenance line: the call, then the CID
+# of the program the generator prints for it (both beds come from one generated program, so both lines name the same pin). The
+# lines are comments: the CID is the notes' alone, and the program plays with no generator. Saved on the site, the lines are kept
+# beside its canonical text (meta.based_on): its linked data lists both in isBasedOn as vendored, and lineage counts it once in
+# vendoredFrom of each call and of the pin. A line that says `from:` with no CID after its arrow is a plain comment.
+tempo 124
+key am
+# from: gen@2 techno seed=42 section=drop part=kick -> z4EBG9j3TyMkkaviG3QH56b2RLeQR17ow1Fd2mP1oz6J8Bh4jt7
+let drop_kick_1 = x x x x
+let drop_kick = <drop_kick_1>
+# from: gen@2 techno seed=42 section=drop part=bass -> z4EBG9j3TyMkkaviG3QH56b2RLeQR17ow1Fd2mP1oz6J8Bh4jt7
+let drop_bass_1 = g3 g3 g3 g3
+let drop_bass_2 = a2 e3 a2 a3
+let drop_bass_3 = g3 g3 d3 g4
+let drop_bass_4 = a2 a3 e3 a2
+let drop_bass = <drop_bass_1 drop_bass_2 drop_bass_3 drop_bass_4>
+
+# intro: the kick alone, with an offbeat hat
+section intro 4 bars {
+  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x
+}
+# drop: the bass comes in
+section drop 8 bars {
+  deck A: kick drop_kick kit=drums-v8 | hihat ~ x ~ x
+  deck B: bass drop_bass inst=drop-bass
+}
+arrange intro drop
