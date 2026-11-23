@@ -25,7 +25,7 @@ fn main() -> ExitCode {
                 return v.to_string();
             }
         }
-        std::env::var(format!("BEATSCRIPT_{}", k.to_uppercase().replace('-', "_"))).unwrap_or_else(|_| d.to_string())
+        beatscript_serve::flag_env(k).unwrap_or_else(|| d.to_string())
     };
     if args.iter().any(|a| a == "-h" || a == "--help") {
         eprintln!("usage: beatscript-dump -programs DIR -out DIR [-public-url URL]");

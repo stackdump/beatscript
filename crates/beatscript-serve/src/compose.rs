@@ -451,7 +451,7 @@ impl Composer {
     fn kill_reason(&self, k: limits::KillState) -> String {
         let mut parts = Vec::new();
         if k.env {
-            parts.push(format!("{}=0 is set in the service's environment (unset it and restart)", limits::ENV_ENABLED));
+            parts.push(format!("{}=0 (or {}=0) is set in the service's environment (unset it and restart)", limits::ENV_ENABLED, limits::ENV_ENABLED_OLD));
         }
         if k.file {
             let where_ = match &self.opt.limits.data_dir {
@@ -1334,7 +1334,7 @@ pub fn routes(app: &AppState) -> Router {
         let c = composer.clone();
         std::thread::Builder::new().name("compose warm".into()).spawn(move || drop(c.system_prompt())).ok();
     }
-    let st = Arc::new(Http { app: app.clone(), composer, admin_token: std::env::var("BEATSCRIPT_ADMIN_TOKEN").unwrap_or_default().trim().to_string() });
+    let st = Arc::new(Http { app: app.clone(), composer, admin_token: beatscript_serve::env_var("ADMIN_TOKEN").unwrap_or_default().trim().to_string() });
     Router::new()
         .route("/api/compose", any(compose_or_site))
         .route("/api/admin", any(admin_redirect))

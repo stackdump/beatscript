@@ -168,10 +168,10 @@ fn day_of(t: SystemTime) -> String {
 }
 
 /// The secret the log key is made from, as the Go server finds its session secret (`auth.LoadSecret`):
-/// `BEATSCRIPT_SESSION_SECRET` (raw, 16+ characters), else the hex file (`<data>/session.secret`), else a key for this
+/// `BEATSCRIPT_SESSION_SECRET` (or the older `BTW_SESSION_SECRET`; raw, 16+ characters), else the hex file (`<data>/session.secret`), else a key for this
 /// process only. Never created here: this process does not own the Go server's secret.
 pub fn load_secret(file: &Path) -> Vec<u8> {
-    if let Ok(s) = std::env::var("BEATSCRIPT_SESSION_SECRET") {
+    if let Some(s) = beatscript_serve::env_var("SESSION_SECRET") {
         if s.len() >= 16 {
             return s.into_bytes();
         }

@@ -486,7 +486,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                     ("key", sprop("Key: am, c, f#m, d:dorian ...; default the genre's.", &[("maxLength", json!(16))])),
                     ("length", json!({"type": "string", "enum": ["short", "standard", "long"], "description": "Song length (default standard)."})),
                     ("seed", json!({"type": ["string", "integer"], "description": "A number or a word (default 1). Same inputs, same program text and CID."})),
-                    ("generator", json!({"type": "integer", "enum": beatscript_api::generate::VERSIONS, "description": format!("The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen) or 2 (seeded@2, the chords and arps as Roman numerals); default {}. A version always prints the same program for the same inputs.", beatscript_api::generate::GENERATOR_VERSION)})),
+                    ("generator", json!({"type": "integer", "enum": beatscript_api::generate::VERSIONS, "description": format!("The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen), 2 (seeded@2, the chords and arps as Roman numerals) or 3 (seeded@3: seeded@2's music written in BeatScript 2, `#! beatscript 2` first); default {}. A version always prints the same program for the same inputs.", beatscript_api::generate::GENERATOR_VERSION)})),
                     ("part", json!({"type": "string", "enum": djlive::parse::ROLES, "description": "One part (a role): the answer gains part (that role's entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = <drop_bass_1 ...>), to paste into a program of your own."})),
                     ("section", sprop("With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).", &[("maxLength", json!(32))])),
                     ("seeds", json!({
@@ -724,6 +724,35 @@ impl Tools {
 }
 
 /// The landing page's HTML for `public` (the site's origin) and the tools of tools/list.
+/// A description's markdown code spans (`#! beatscript 2`, `control:`) as `<code>` on the landing page, as a client
+/// renders them; an unpaired backtick stays as it is. `s` is already HTML-escaped.
+fn code_spans(s: &str) -> String {
+    let parts: Vec<&str> = s.split('`').collect();
+    let mut o = String::with_capacity(s.len() + 16);
+    // an odd count of backticks leaves the last one unpaired: its part is text
+    let unpaired = parts.len() % 2 == 0;
+    for (i, p) in parts.iter().enumerate() {
+        if i % 2 == 0 {
+            o.push_str(p);
+        } else if unpaired && i == parts.len() - 1 {
+            o.push('`');
+            o.push_str(p);
+        } else {
+            o.push_str("<code>");
+            o.push_str(p);
+            o.push_str("</code>");
+        }
+    }
+    o
+}
+
+#[cfg(test)]
+#[test]
+fn code_spans_are_code_on_the_landing_page() {
+    assert_eq!(code_spans("a `#! beatscript 2` line, `x` and `y"), "a <code>#! beatscript 2</code> line, <code>x</code> and `y");
+    assert_eq!(code_spans("no code"), "no code");
+}
+
 pub(crate) fn landing_html(public: &str, list: &[Value]) -> String {
     let e = crate::site::html_escape;
     let p = e(public);
@@ -763,7 +792,7 @@ eval, load, get, stop, devices and queue need a token. There is no compose tool 
         }
         let d = t["description"].as_str().unwrap_or("");
         if !d.is_empty() {
-            b.push_str(&format!(r#"<div class="desc">{}</div>"#, e(d)));
+            b.push_str(&format!(r#"<div class="desc">{}</div>"#, code_spans(&e(d))));
         }
         let props = t["inputSchema"]["properties"].as_object().cloned().unwrap_or_default();
         if !props.is_empty() {
@@ -773,7 +802,7 @@ eval, load, get, stop, devices and queue need a token. There is no compose tool 
             b.push_str(r#"<div class="params">"#);
             for pn in names {
                 let tag = if req.contains(&pn.as_str()) { r#"<span class="req">required</span>"# } else { "" };
-                let desc = props[pn]["description"].as_str().filter(|d| !d.is_empty()).map(|d| format!(" - {}", e(d))).unwrap_or_default();
+                let desc = props[pn]["description"].as_str().filter(|d| !d.is_empty()).map(|d| format!(" - {}", code_spans(&e(d)))).unwrap_or_default();
                 b.push_str(&format!(r#"<span class="param">{}</span>{tag}{desc}<br>"#, e(pn)));
             }
             b.push_str("</div>");
@@ -2018,8 +2047,9 @@ mod tests {
     #[test]
     fn tools_list_matches_go_fixture() {
         let got = json!({"tools": tool_list("https://beatscript.app", 16384, 60, 30, (50, 20, 30, 8, 30))});
-        // BEATSCRIPT_UPDATE_TOOLS_LIST=1: rewrite the fixture from the list (a tool added or reworded on purpose: listen, get's mixer)
-        if std::env::var_os("BEATSCRIPT_UPDATE_TOOLS_LIST").is_some() {
+        // BEATSCRIPT_UPDATE_TOOLS_LIST=1 (or the older BTW_UPDATE_TOOLS_LIST=1): rewrite the fixture from the list (a tool added
+        // or reworded on purpose: listen, get's mixer)
+        if beatscript_serve::env_var("UPDATE_TOOLS_LIST").is_some() {
             let path = concat!(env!("CARGO_MANIFEST_DIR"), "/src/mcp/testdata/tools-list.json");
             std::fs::write(path, serde_json::to_string_pretty(&gojson::sorted_deep(got.clone())).unwrap() + "\n").unwrap();
         }

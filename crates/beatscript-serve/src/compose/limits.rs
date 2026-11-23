@@ -66,6 +66,8 @@ impl Config {
 }
 
 pub const ENV_ENABLED: &str = "BEATSCRIPT_COMPOSE_ENABLED";
+/// Its name before the rename, still read (second).
+pub const ENV_ENABLED_OLD: &str = "BTW_COMPOSE_ENABLED";
 pub const FLAG_FILE: &str = "compose.off";
 
 #[derive(Clone, Debug, Default)]
@@ -335,7 +337,7 @@ impl Limiter {
             mem_off: false,
             log: None,
         };
-        let l = Arc::new(Limiter { cfg, now, env_enabled: Mutex::new(Box::new(|| std::env::var(ENV_ENABLED).ok())), salt, st: Mutex::new(st) });
+        let l = Arc::new(Limiter { cfg, now, env_enabled: Mutex::new(Box::new(|| std::env::var(ENV_ENABLED).or_else(|_| std::env::var(ENV_ENABLED_OLD)).ok())), salt, st: Mutex::new(st) });
         {
             let mut st = l.st.lock().unwrap();
             if let Err(e) = l.roll(&mut st, true) {

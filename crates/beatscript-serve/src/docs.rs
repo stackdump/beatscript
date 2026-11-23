@@ -73,6 +73,7 @@ const AUTHORSHIP_BLURB: &str = "Who authored a program on BeatScript and what ri
 
 /// The schema page's terms as fragments: each `<a id="T"></a>**T**:` paragraph of SCHEMA.md (its raw anchor is dropped
 /// by the renderer, as all raw HTML is) gets `id="T"`, so `https://beatscript.app/schema#T` lands on its definition.
+/// The terms are the block's context's and the BeatScript context's (`/context/beatscript-v1.jsonld`: one vocabulary).
 fn term_anchors(html: &str) -> String {
     let mut out = html.to_string();
     let ctx = djlive::progld::schema_context();
@@ -80,6 +81,12 @@ fn term_anchors(html: &str) -> String {
         Some(djengine::json::JsonValue::Object(o)) => o.iter().map(|(k, _)| k.to_string()).filter(|k| !k.starts_with('@')).collect(),
         _ => Vec::new(),
     };
+    let bs: serde_json::Value = serde_json::from_slice(crate::public::CONTEXT_BEATSCRIPT_V1).unwrap_or_default();
+    for k in bs["@context"].as_object().into_iter().flat_map(|o| o.keys()) {
+        if !k.starts_with('@') && !terms.contains(k) {
+            terms.push(k.clone());
+        }
+    }
     terms.push("ProgramDump".into());
     for t in terms {
         // `<a id="T"></a>` is two pieces of inline HTML, each omitted
@@ -207,7 +214,8 @@ fn heading_id(text: &str, seen: &mut HashMap<String, ()>) -> String {
     }
 }
 
-/// `^(?:https?://[^/#?]+)?/docs/(BeatScript|cheatsheet|api)\.md(#[^\s]*)?$` → `/docs/<slug><#frag>`.
+/// `^(?:https?://[^/#?]+)?/docs/(BEATSCRIPT|BTW|cheatsheet|api|arrange)\.md(#[^\s]*)?$` → `/docs/<slug><#frag>` (BTW.md is the
+/// language reference's name before the rename).
 fn rewrite_doc_link(dest: &str) -> Option<String> {
     let mut rest = dest;
     for scheme in ["https://", "http://"] {
@@ -223,7 +231,7 @@ fn rewrite_doc_link(dest: &str) -> Option<String> {
     let r = rest.strip_prefix("/docs/")?;
     let (file, tail) = r.split_once(".md")?;
     let slug = match file {
-        "BeatScript" => "language",
+        "BEATSCRIPT" | "BTW" => "language",
         "cheatsheet" => "cheatsheet",
         "api" => "api",
         "arrange" => "arrange",
@@ -769,7 +777,8 @@ impl Docs {
         match path {
             "/llms.txt" => body(TXT, Some(self.llms_txt(ex))),
             "/llms-full.txt" => body(TXT, Some(self.llms_full(ex))),
-            "/docs/BEATSCRIPT.md" => body(MD, self.read_doc("BEATSCRIPT.md")),
+            // the language reference, and under its name before the rename (the MCP instructions and old llms.txt copies link it)
+            "/docs/BEATSCRIPT.md" | "/docs/BTW.md" => body(MD, self.read_doc("BEATSCRIPT.md")),
             "/docs/arrange.md" => body(MD, self.read_doc("arrange.md")),
             "/schema.jsonld" => Some(Answer::Body("application/ld+json; charset=utf-8", Bytes::from(djlive::progld::schema_context().js_stringified()), None, true)),
             "/schema.md" => body(MD, Some(SCHEMA_MD.to_string())),
@@ -906,7 +915,7 @@ impl Docs {
     pub fn is_route(&self, path: &str) -> bool {
         matches!(
             path,
-            "/llms.txt" | "/llms-full.txt" | "/docs/BEATSCRIPT.md" | "/docs/cheatsheet.md" | "/docs/api.md" | "/docs/assets/docs.css" | "/docs/assets/docs.js" | "/docs/" | "/docs/cheatsheet" | "/docs/language" | "/docs/api" | "/docs/arrange.md" | "/docs/arrange" | "/schema" | "/schema.jsonld" | "/schema.md" | "/docs/open-data" | "/docs/open-data.md" | "/grammar" | "/grammar.ebnf" | "/grammar.css" | "/lineage.css" | "/mcp.css" | "/authorship" | "/authorship.md" | "/phrasebook" | "/docs/found-phrases" | "/docs/found-phrases.md" | "/docs/forms" | "/docs/forms.md" | "/themes"
+            "/llms.txt" | "/llms-full.txt" | "/docs/BEATSCRIPT.md" | "/docs/BTW.md" | "/docs/cheatsheet.md" | "/docs/api.md" | "/docs/assets/docs.css" | "/docs/assets/docs.js" | "/docs/" | "/docs/cheatsheet" | "/docs/language" | "/docs/api" | "/docs/arrange.md" | "/docs/arrange" | "/schema" | "/schema.jsonld" | "/schema.md" | "/docs/open-data" | "/docs/open-data.md" | "/grammar" | "/grammar.ebnf" | "/grammar.css" | "/lineage.css" | "/mcp.css" | "/authorship" | "/authorship.md" | "/phrasebook" | "/docs/found-phrases" | "/docs/found-phrases.md" | "/docs/forms" | "/docs/forms.md" | "/themes"
                 | "/docs/embed" | "/docs/embed.md" | "/docs/radio" | "/docs/radio.md"
         )
     }
@@ -946,7 +955,7 @@ impl Docs {
         b.push_str(&format!("- [Authorship and rights]({p}{AUTHORSHIP_PATH}): who authored a program and what rights it has, in plain language ([markdown]({p}{AUTHORSHIP_PATH}.md))\n\n"));
         b.push_str("## Open data\n");
         b.push_str("Every public CC0 program, in every format, free to fetch (GET, CORS open, no sign-in):\n");
-        b.push_str(&format!("- A program by CID: {p}/p/<CID> (its page), {p}/p/<CID>.beatscript (its canonical text, which hashes to the CID), {p}/p/<CID>.jsonld (its linked data), {p}/api/render/<CID>?format=opus (its audio); {p}/p/<CID> also answers by Accept (text/plain, application/ld+json, audio/*)\n"));
+        b.push_str(&format!("- A program by CID: {p}/p/<CID> (its page), {p}/p/<CID>.beatscript (its canonical text, which hashes to the CID), {p}/p/<CID>.jsonld (its linked data), {p}/api/render/<CID>?format=opus (its audio); {p}/p/<CID> also answers by Accept (text/beatscript or text/plain, application/ld+json, audio/*)\n"));
         b.push_str(&format!("- [JSON Feed]({p}/feed.json) and [Atom]({p}/feed.atom): the newest public CC0 programs, each with its .beatscript, .jsonld and render\n"));
         b.push_str(&format!("- [Sitemap]({p}/sitemap.xml): every public CC0 program's page\n"));
         b.push_str(&format!("- [Dumps]({p}/dumps/): content-addressed archives of all of them (programs/<CID>.beatscript, programs/<CID>.jsonld, a manifest of CIDs); [the newest]({p}/dumps/latest.json)\n"));
@@ -984,7 +993,7 @@ impl Docs {
         b.push_str(&format!("- [MCP server]({p}/mcp): streamable HTTP; tools check, fmt, eval, load, get, share, open, render, record, list_examples, instruments, stop, devices, queue (an up-next list that never composes); writes need a bearer token. There is no compose tool: write the program yourself (cheat-sheet, list_examples, instruments, then check until ok)\n"));
         b.push_str(&format!("- [Compose]({p}/docs/api.md#compose): POST {p}/api/compose writes a program from a prompt for the web app (signed in, rate limited, capped; not an MCP tool)\n"));
         b.push_str(&format!("- [Render]({p}/docs/api.md#render): GET {p}/api/render/<CID>?format=opus|wav streams the offline render as it renders\n"));
-        b.push_str(&format!("- [Linked data]({p}/docs/api.md#linked-data-json-ld): the versioned JSON-LD @context ({p}/context/v1.jsonld) and a program's JSON-LD document ({p}/c/<CID>.jsonld)\n"));
+        b.push_str(&format!("- [Linked data]({p}/docs/api.md#linked-data-json-ld): the versioned JSON-LD @context ({p}/context/beatscript-v1.jsonld, the BeatScript vocabulary under {p}/schema#; BeatScript 1 documents name the first one, {p}/context/v1.jsonld) and a program's JSON-LD document ({p}/c/<CID>.jsonld)\n"));
         b.push_str(&format!("- [Share links]({p}/docs/api.md#share-links): the link format, and how to open one safely\n"));
         b.push_str(&format!("- [Sign-in and tokens]({p}/docs/api.md#sign-in-and-tokens): wallet or browser-key challenge, cookie, bearer tokens for MCP\n\n"));
         b.push_str("## Optional\n");
@@ -1088,6 +1097,7 @@ mod tests {
     #[test]
     fn links() {
         assert_eq!(rewrite_doc_link("/docs/BEATSCRIPT.md#x").as_deref(), Some("/docs/language#x"));
+        assert_eq!(rewrite_doc_link("https://beatscript.app/docs/BTW.md#x").as_deref(), Some("/docs/language#x"), "the old name of the reference");
         assert_eq!(rewrite_doc_link("https://beatscript.app/docs/api.md").as_deref(), Some("/docs/api"));
         assert_eq!(rewrite_doc_link("/docs/other.md"), None);
         assert_eq!(rewrite_doc_link("/docs/arrange.md#the-block").as_deref(), Some("/docs/arrange#the-block"));
@@ -1634,6 +1644,35 @@ mod tests {
         // the check sees what it should, and leaves code and identifiers alone
         assert_eq!(standalone_btw("t", &visible_html("<title>btw</title><p>a <code>#! btw 1</code> line in <a href=\"/css/btw.css\">btw.css</a>, BTW.</p>")).len(), 2);
         assert!(standalone_btw("t", &visible_md("the `btw` command, [a link](https://btw.bitwrap.io/x), data-btw\n```\nbtw jsonld\n```\n")).is_empty());
+    }
+
+    /// The language reference answers under its name before the rename, /docs/BTW.md, with the same bytes: the MCP
+    /// instructions and copies of llms.txt from before link it.
+    #[test]
+    fn the_reference_answers_under_its_old_name_too() {
+        let dir = std::env::temp_dir().join(format!("bs-docs-btw-md-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("BEATSCRIPT.md"), "# BeatScript\n\nThe language reference.\n").unwrap();
+        let d = Docs::new(Some(dir.clone()), None, "https://beatscript.app");
+        let ex = Examples { list: Vec::new(), text: HashMap::new() };
+        let (Some(Answer::Body(ct_new, new, ..)), Some(Answer::Body(ct_old, old, ..))) = (d.answer("/docs/BEATSCRIPT.md", &ex), d.answer("/docs/BTW.md", &ex)) else { panic!("both are served") };
+        assert_eq!((ct_new, &new), (ct_old, &old));
+        assert!(ct_new.starts_with("text/markdown"));
+        let (a, b) = (d.respond(&Method::GET, &HeaderMap::new(), "/docs/BEATSCRIPT.md", &ex).unwrap(), d.respond(&Method::GET, &HeaderMap::new(), "/docs/BTW.md", &ex).unwrap());
+        assert_eq!((a.status(), b.status()), (axum::http::StatusCode::OK, axum::http::StatusCode::OK));
+        assert_eq!(a.headers()[header::ETAG], b.headers()[header::ETAG]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A fence tagged ```beatscript or ```btw (its tag before the rename) is BeatScript code: highlighted (data-beatscript,
+    /// which docs.js reads) and tried.
+    #[test]
+    fn both_fence_tags_are_beatscript() {
+        for tag in ["beatscript", "btw", "BeatScript"] {
+            let html = render_markdown(&format!("```{tag}\ntempo 120\ndeck A: kick x ~ x ~\n```\n")).body;
+            assert!(html.contains("<figure class=\"code\" data-beatscript=\"1\" data-try=\"1\">") && html.contains("<span class=\"lang\">BeatScript</span>"), "{tag}: {html}");
+        }
+        assert!(!render_markdown("```sh\nbeatscript fmt x.beatscript\n```\n").body.contains("data-beatscript"));
     }
 
     #[test]

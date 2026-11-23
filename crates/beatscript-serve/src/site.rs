@@ -132,12 +132,15 @@ pub fn examples_json(ex: &Examples) -> Response<Body> {
 }
 
 /// `GET /examples/{name}`: `<name>.beatscript`, the file as written.
-pub fn example_file(ex: &Examples, raw: &str) -> Response<Body> {
+/// `<name>.btw`, the suffix before the rename, answers the same bytes. text/plain (a browser shows it), unless `Accept`
+/// asks for text/beatscript.
+pub fn example_file(ex: &Examples, raw: &str, headers: &HeaderMap) -> Response<Body> {
     let name = percent_decode(raw);
-    match name.strip_suffix(".beatscript").and_then(|n| ex.text.get(n)) {
+    match crate::content::strip_program_suffix(&name).and_then(|n| ex.text.get(n)) {
         Some(t) => Response::builder()
             .header(header::CACHE_CONTROL, "no-cache")
-            .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
+            .header(header::CONTENT_TYPE, crate::content::program_text_type(headers))
+            .header(header::VARY, "Accept")
             .body(crate::go_body(t.clone()))
             .unwrap(),
         None => ApiError::new(404, "not_found", format!("no example named {}", go_quote(&name))).response(),
@@ -462,6 +465,31 @@ fn precompressed(full: &Path, mtime: SystemTime, accept_encoding: &str) -> Sidec
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// `/examples/<name>.beatscript` and `/examples/<name>.btw` (its name before the rename) are the same file: text/plain
+    /// for a browser, text/beatscript when Accept asks for it.
+    #[test]
+    fn an_example_answers_under_both_suffixes() {
+        let text = "tempo 120\ndeck A: kick x ~ x ~\n".to_string();
+        let ex = Examples { list: Vec::new(), text: [("techno".to_string(), text.clone())].into() };
+        let body = |r: Response<Body>| {
+            let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
+            rt.block_on(axum::body::to_bytes(r.into_body(), 1 << 20)).unwrap()
+        };
+        let mut types = Vec::new();
+        for (name, accept) in [("techno.beatscript", ""), ("techno.btw", ""), ("techno.beatscript", "text/beatscript"), ("techno.btw", "text/x-beatscript")] {
+            let mut h = HeaderMap::new();
+            if !accept.is_empty() {
+                h.insert(header::ACCEPT, accept.parse().unwrap());
+            }
+            let r = example_file(&ex, name, &h);
+            assert_eq!(r.status(), 200, "{name}");
+            types.push(r.headers()[header::CONTENT_TYPE].to_str().unwrap().to_string());
+            assert_eq!(body(r), text.as_bytes(), "{name}");
+        }
+        assert_eq!(types, ["text/plain; charset=utf-8", "text/plain; charset=utf-8", "text/beatscript; charset=utf-8", "text/beatscript; charset=utf-8"]);
+        assert_eq!(example_file(&ex, "techno.txt", &HeaderMap::new()).status(), 404);
+    }
 
     #[test]
     fn clean_is_go_path_clean() {

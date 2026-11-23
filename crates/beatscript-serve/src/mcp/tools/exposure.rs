@@ -11,7 +11,7 @@ use super::*;
 use std::collections::HashMap;
 
 const TABLE: &str = include_str!("../testdata/exposure.json");
-const DOCS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/btw");
+const DOCS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/beatscript");
 
 /// `${name}` in a string replaced by what an earlier call saved, in every string of `v`.
 fn fill(v: &Value, saved: &HashMap<String, String>) -> Value {
@@ -72,15 +72,15 @@ fn every_shipped_feature_is_described_and_reachable_through_mcp() {
         .map(|t| (t["name"].as_str().unwrap().to_string(), format!("{}\n{}", t["description"].as_str().unwrap(), t["inputSchema"])))
         .collect();
 
-    // a documented feature has a row: every docs/BeatScript page is claimed by one, or said not to be an MCP feature
+    // a documented feature has a row: every docs/beatscript page is claimed by one, or said not to be an MCP feature
     let mut claimed: Vec<String> = features.iter().flat_map(|f| f["docs"].as_array().unwrap().iter().map(|d| d.as_str().unwrap().to_string())).collect();
     claimed.extend(table["not_features"].as_object().unwrap().keys().cloned());
     let mut pages: Vec<String> = std::fs::read_dir(DOCS_DIR).unwrap().filter_map(|e| e.ok()?.file_name().into_string().ok()).filter(|n| n.ends_with(".md")).collect();
     pages.sort();
     let missing: Vec<&String> = pages.iter().filter(|p| !claimed.contains(p)).collect();
-    assert!(missing.is_empty(), "docs/BeatScript pages with no row in mcp/testdata/exposure.json (add a feature row, or a not_features entry saying why it is not one): {missing:?}");
+    assert!(missing.is_empty(), "docs/beatscript pages with no row in mcp/testdata/exposure.json (add a feature row, or a not_features entry saying why it is not one): {missing:?}");
     let stale: Vec<&String> = claimed.iter().filter(|c| !pages.contains(c)).collect();
-    assert!(stale.is_empty(), "exposure.json names docs/BeatScript pages that do not exist: {stale:?}");
+    assert!(stale.is_empty(), "exposure.json names docs/beatscript pages that do not exist: {stale:?}");
 
     let dir = std::env::temp_dir().join(format!("btw-mcp-exposure-{}", std::process::id()));
     std::fs::remove_dir_all(&dir).ok();

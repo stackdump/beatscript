@@ -6,7 +6,7 @@
 Reads crates/beatscript-serve/src/mcp/testdata/exposure.json (the same rows mcp::tools::exposure checks against the real
 Tools in `cargo test`): each feature's tools/list text must say what the row says, and each call's answer must carry
 what it expects. Calls marked auth (a signed-in caller; eval, load and queue also need a tab) or stores (they store a
-program on the site) run only with --token (or BEATSCRIPT_TOKEN); without one they are listed as skipped, as is a call whose
+program on the site) run only with --token (or BEATSCRIPT_TOKEN, else BTW_TOKEN); without one they are listed as skipped, as is a call whose
 ${name} an earlier call did not save. Exits 1 on any failure, printing each one.
 """
 import json
@@ -87,7 +87,8 @@ def expect(ans, e, saved):
 
 def main(argv):
     args = [a for a in argv if not a.startswith("--token")]
-    token = os.environ.get("BEATSCRIPT_TOKEN", "")
+    # BEATSCRIPT_TOKEN, else BTW_TOKEN (its name before the rename)
+    token = os.environ.get("BEATSCRIPT_TOKEN") or os.environ.get("BTW_TOKEN", "")
     for i, a in enumerate(argv):
         if a == "--token" and i + 1 < len(argv):
             token = argv[i + 1]

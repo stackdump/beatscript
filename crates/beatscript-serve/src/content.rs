@@ -197,6 +197,39 @@ pub fn text_error(status: u16, msg: &str) -> Response<Body> {
         .unwrap()
 }
 
+/// BeatScript's media type, as the API answers a program's text (`/api/programs/<cid>.beatscript`) and as `Accept` may ask
+/// for it on a person's URL.
+pub const BEATSCRIPT_TYPE: &str = "text/beatscript; charset=utf-8";
+
+/// The media types that name a BeatScript text: `text/beatscript`, and `text/x-beatscript` and `text/btw`, read as the same.
+pub const BEATSCRIPT_TYPES: [&str; 3] = ["text/beatscript", "text/x-beatscript", "text/btw"];
+
+/// `<x>.beatscript`, or `<x>.btw` (the suffix before the rename, still answered with the same bytes): `<x>`.
+pub fn strip_program_suffix(name: &str) -> Option<&str> {
+    name.strip_suffix(".beatscript").or_else(|| name.strip_suffix(".btw"))
+}
+
+/// `Accept` names one of [`BEATSCRIPT_TYPES`] with a q above 0 (`*/*` and `text/*` do not count: they ask for nothing).
+pub fn accepts_beatscript(h: &HeaderMap) -> bool {
+    let a = h.get(header::ACCEPT).and_then(|v| v.to_str().ok()).unwrap_or("");
+    a.split(',').any(|part| {
+        let mut it = part.split(';');
+        let ty = it.next().unwrap_or("").trim().to_ascii_lowercase();
+        let q = it.filter_map(|p| p.trim().strip_prefix("q=")).find_map(|q| q.trim().parse::<f32>().ok()).unwrap_or(1.0);
+        q > 0.0 && BEATSCRIPT_TYPES.contains(&ty.as_str())
+    })
+}
+
+/// The type a person's URL of a program's text answers with (`/p/<cid>.beatscript`, `/examples/<name>.beatscript`):
+/// text/plain, so a browser shows it, unless `Accept` asks for BeatScript's own type.
+pub fn program_text_type(h: &HeaderMap) -> &'static str {
+    if accepts_beatscript(h) {
+        BEATSCRIPT_TYPE
+    } else {
+        "text/plain; charset=utf-8"
+    }
+}
+
 /// The hex of the first `n` bytes of sha256(b).
 pub fn sha_hex(b: &[u8], n: usize) -> String {
     use sha2::Digest;
@@ -237,7 +270,7 @@ fn mime_table() -> HashMap<String, &'static str> {
     ];
     const SERVER: &[(&str, &str)] = &[
         ("js", "text/javascript; charset=utf-8"), ("mjs", "text/javascript; charset=utf-8"), ("wasm", "application/wasm"), ("css", "text/css; charset=utf-8"),
-        ("json", "application/json; charset=utf-8"), ("svg", "image/svg+xml"), ("btw", "text/plain; charset=utf-8"), ("wav", "audio/wav"),
+        ("json", "application/json; charset=utf-8"), ("svg", "image/svg+xml"), ("btw", "text/plain; charset=utf-8"), ("beatscript", "text/plain; charset=utf-8"), ("wav", "audio/wav"),
         ("md", "text/markdown; charset=utf-8"), ("txt", "text/plain; charset=utf-8"), ("html", "text/html; charset=utf-8"), ("webmanifest", "application/manifest+json"),
     ];
     fn with_charset(t: &str) -> &'static str {
@@ -310,4 +343,35 @@ pub fn sniff(b: &[u8]) -> &'static str {
     }
     let binary = b.iter().any(|c| matches!(c, 0x00..=0x08 | 0x0b | 0x0e..=0x1a | 0x1c..=0x1f));
     if binary { "application/octet-stream" } else { "text/plain; charset=utf-8" }
+}
+
+#[cfg(test)]
+mod program_type_tests {
+    use super::*;
+
+    fn accept(a: &str) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        h.insert(header::ACCEPT, a.parse().unwrap());
+        h
+    }
+
+    #[test]
+    fn a_persons_url_is_plain_text_unless_beatscript_is_asked_for() {
+        assert_eq!(program_text_type(&HeaderMap::new()), "text/plain; charset=utf-8");
+        assert_eq!(program_text_type(&accept("text/html,*/*;q=0.8")), "text/plain; charset=utf-8");
+        assert_eq!(program_text_type(&accept("text/*")), "text/plain; charset=utf-8");
+        for a in ["text/beatscript", "text/x-beatscript", "TEXT/BTW", "text/plain;q=0.5, text/beatscript;q=0.9"] {
+            assert_eq!(program_text_type(&accept(a)), BEATSCRIPT_TYPE, "{a}");
+        }
+        assert_eq!(program_text_type(&accept("text/beatscript;q=0")), "text/plain; charset=utf-8");
+    }
+
+    #[test]
+    fn both_suffixes_name_the_program() {
+        assert_eq!(strip_program_suffix("zABC.beatscript"), Some("zABC"));
+        assert_eq!(strip_program_suffix("zABC.btw"), Some("zABC"));
+        assert_eq!(strip_program_suffix("zABC.jsonld"), None);
+        assert_eq!(type_by_ext("beatscript"), Some("text/plain; charset=utf-8"));
+        assert_eq!(type_by_ext("btw"), Some("text/plain; charset=utf-8"));
+    }
 }

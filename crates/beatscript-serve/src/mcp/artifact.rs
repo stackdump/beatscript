@@ -526,7 +526,7 @@ mod tests {
     /// bytes are the ones its lock integrity names.
     #[test]
     fn the_lock_is_the_published_package() {
-        let Some(d) = std::env::var_os("BEATSCRIPT_PLAYER_DIR") else {
+        let Some(d) = beatscript_serve::env_var("PLAYER_DIR") else {
             eprintln!("BEATSCRIPT_PLAYER_DIR not set: the package's bytes are not checked");
             return;
         };

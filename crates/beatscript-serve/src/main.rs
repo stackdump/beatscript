@@ -6,14 +6,15 @@
 //!   GET|HEAD /api/render/<cid>[.<packed>]?format=midi|stems|stems-opus   for a DAW (export_route.rs)
 //!   GET      /api/render/<cid>/status[?sr=]
 //!   GET      /healthz
-//!   GET      /api/examples, /examples/<name>.beatscript
+//!   GET      /api/examples, /examples/<name>.beatscript (and .btw, its name before the rename)
 //!   GET      /llms.txt, /llms-full.txt, /docs/BEATSCRIPT.md, /docs/cheatsheet.md, /docs/api.md       (docs.rs)
 //!   GET      /docs/, /docs/cheatsheet, /docs/language, /docs/api, /docs/assets/docs.{css,js}  (docs.rs, HTML)
 //!   GET      everything else no Go route takes: the static site `-web`                         (site.rs)
 //! A Go route (`proxy::go_owned`) is passed to `-fallback` when it is set (the strangler: one front for nginx), and
 //! is a JSON 404 when it is not (nginx then sends only the moved locations here).
 //!
-//! Flags (Go's names; `-flag value`, `-flag=value` or `--flag`; each also `BEATSCRIPT_<NAME>` in the environment):
+//! Flags (Go's names; `-flag value`, `-flag=value` or `--flag`; each also `BEATSCRIPT_<NAME>` in the environment, else
+//! `BTW_<NAME>`, the name before the rename):
 //!   -addr 127.0.0.1:18098 -data ./data -examples btwsite/examples -public-url https://beatscript.app
 //!   -render-concurrency 2 -render-ip-hour 30 -render-max-bars 2400 -render-max-seconds 3600 -render-cache-mb 2048
 //!   -put-ip-hour 60 -max-program-bytes 16384
@@ -25,7 +26,8 @@
 //!   -render-workers <cpus>      engine threads computing at once (the CPU pool, earliest deadline first)
 //!   -render-admit-lag-ms 0      refuse new renders (429 busy) while a running one is this far behind real time
 //!   -log-dir <data>/log         access log (JSONL, redacted); `off` for none
-//!   -session-secret-file <data>/session.secret   the IP-hash key's source, read only (BEATSCRIPT_SESSION_SECRET first)
+//!   -session-secret-file <data>/session.secret   the IP-hash key's source, read only (BEATSCRIPT_SESSION_SECRET, or
+//!                               BTW_SESSION_SECRET, first)
 //!   -web btwsite/web            the static site (Go's -web); empty: no static site
 //!   -docs site/web/docs      the generated BEATSCRIPT.md and cheatsheet.md (Go's -docs)
 //!   -docs-src <dir>             the Go docs package (internal/btwsite/docs): api.md, assets/docs.css, assets/docs.js
@@ -56,7 +58,7 @@ mod store;
 mod beta; // the Android beta sign-up (off unless -android-beta-url)
 mod public; // P2 + P3: info, site doc, assetlinks, instruments, context, programs, check, fmt, share, open, qr
 mod authsvc; // P4: /api/auth/*
-mod caps; // capabilities: caps.json, the signed grant (/.well-known/btw-capabilities.json)
+mod caps; // capabilities: caps.json, the signed grant (/.well-known/btw-capabilities.json, beatscript-capabilities.json)
 mod oauth; // MCP authorization: OAuth 2.1 (/.well-known/oauth-*, /oauth/*)
 mod cards; // P5: PUT /api/shares, /p/<cid>, /c/*, /card/*
 mod hub; // P6: pairing, devices, sessions (SSE), the up-next queue
@@ -196,9 +198,9 @@ struct Config {
 }
 
 impl Config {
-    /// A flag by Go's name, else `BEATSCRIPT_<NAME>` from the environment, else the default.
+    /// A flag by Go's name, else `BEATSCRIPT_<NAME>` (or the older `BTW_<NAME>`) from the environment, else the default.
     pub fn flag(&self, k: &str, d: &str) -> String {
-        self.raw.get(k).cloned().or_else(|| std::env::var(format!("BEATSCRIPT_{}", k.to_uppercase().replace('-', "_"))).ok()).unwrap_or_else(|| d.to_string())
+        self.raw.get(k).cloned().or_else(|| beatscript_serve::flag_env(k)).unwrap_or_else(|| d.to_string())
     }
     pub fn flag_num(&self, k: &str, d: i64) -> i64 {
         self.flag(k, &d.to_string()).trim().parse().unwrap_or(d)
@@ -220,9 +222,10 @@ fn parse_config() -> Result<Config, String> {
     config_from(std::env::args().skip(1).collect())
 }
 
-/// The configuration these flags (`-name value`, as on the command line) give, with `BEATSCRIPT_*` and the defaults.
+/// The configuration these flags (`-name value`, as on the command line) give, with `BEATSCRIPT_*` (else `BTW_*`) and the
+/// defaults.
 fn config_from(args: Vec<String>) -> Result<Config, String> {
-    let env = |k: &str| std::env::var(format!("BEATSCRIPT_{}", k.to_uppercase().replace('-', "_"))).ok();
+    let env = beatscript_serve::flag_env;
     let mut flags: HashMap<String, String> = HashMap::new();
     let mut i = 0;
     while i < args.len() {
@@ -723,10 +726,22 @@ async fn site_headers(State(app): State<AppState>, req: Request, next: Next) -> 
     let h = r.headers_mut();
     if cors && (method == Method::GET || method == Method::HEAD) {
         h.insert("access-control-allow-origin", HeaderValue::from_static("*"));
-        h.insert("access-control-expose-headers", HeaderValue::from_static("X-Btw-Cid, X-Btw-Seconds, X-Btw-Cache, Content-Length, Content-Range, Accept-Ranges, ETag, Retry-After"));
+        h.insert("access-control-expose-headers", HeaderValue::from_static("X-Btw-Cid, X-Btw-Seconds, X-Btw-Cache, X-Beatscript-Cid, X-Beatscript-Seconds, X-Beatscript-Cache, Content-Length, Content-Range, Accept-Ranges, ETag, Retry-After"));
     }
     add_site(h, &app, &path);
+    beatscript_headers(h);
     sorted(r)
+}
+
+/// Every `X-Btw-*` header a handler set is also sent as `X-Beatscript-*`, the same value: new clients read the new name,
+/// old ones keep theirs.
+fn beatscript_headers(h: &mut HeaderMap) {
+    let old: Vec<(HeaderName, HeaderValue)> = h.iter().filter(|(n, _)| n.as_str().starts_with("x-btw-")).map(|(n, v)| (n.clone(), v.clone())).collect();
+    for (n, v) in old {
+        if let Ok(new) = HeaderName::from_bytes(format!("x-beatscript-{}", &n.as_str()["x-btw-".len()..]).as_bytes()) {
+            h.append(new, v);
+        }
+    }
 }
 
 /// `publicRead`: the read-only GETs that may be fetched cross-origin.
@@ -734,7 +749,7 @@ fn public_read(path: &str) -> bool {
     matches!(
         path,
         "/healthz" | "/api/info" | "/api/examples" | "/api/instruments" | "/llms.txt" | "/llms-full.txt" | "/sitemap.xml" | "/feed.json" | "/feed.atom" | "/robots.txt" | "/schema" | "/schema.jsonld" | "/schema.md" | "/grammar" | "/grammar.ebnf"
-            | "/authorship" | "/authorship.md" | "/phrasebook" | "/phrasebook.txt" | "/phrasebook.jsonld" | "/context" | "/context.jsonld" | "/context/v1.jsonld" | "/.well-known/btw-site"
+            | "/authorship" | "/authorship.md" | "/phrasebook" | "/phrasebook.txt" | "/phrasebook.jsonld" | "/context" | "/context.jsonld" | "/context/v1.jsonld" | "/context/beatscript-v1.jsonld" | "/.well-known/btw-site" | "/.well-known/beatscript-site"
             | "/embed.js" | "/oembed"
     ) || ["/examples/", "/docs/", "/card/", "/api/programs/", "/api/render/", "/p/", "/c/", "/dumps/", "/phrasebook/"].iter().any(|p| path.starts_with(p))
 }
@@ -803,7 +818,7 @@ async fn dispatch(State(app): State<AppState>, req: Request) -> Response<Body> {
     }
     if let Some(name) = path.strip_prefix("/examples/").filter(|n| !n.is_empty() && !n.contains('/')) {
         if get {
-            return site::example_file(&app.examples, name);
+            return site::example_file(&app.examples, name, req.headers());
         }
     }
     if proxy::go_owned(&path) && !(get && (path == "/healthz" || path.starts_with("/api/render/") || path == "/api/examples")) {
@@ -969,7 +984,7 @@ async fn main() {
     let rs = Arc::new(Service::new(&cfg.render_dir, limits).expect("render dir"));
     // Go's auth.LoadSecret runs before the log is opened: a fresh data dir gets its session.secret first, so the
     // access log's address key is the lasting one (and a corrupt secret stops the start, as in Go)
-    let secret_env = std::env::var("BEATSCRIPT_SESSION_SECRET").ok().map(|s| s.trim().to_string()).unwrap_or_default();
+    let secret_env = beatscript_serve::env_var("SESSION_SECRET").map(|s| s.trim().to_string()).unwrap_or_default();
     if let Err(e) = authsvc::load_secret(&cfg.data, &secret_env) {
         eprintln!("beatscript-serve: {e}");
         std::process::exit(1);
@@ -1037,7 +1052,7 @@ async fn main() {
             })
             .expect("sweep thread");
     }
-    let secret_env = std::env::var("BEATSCRIPT_SESSION_SECRET").ok().map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    let secret_env = beatscript_serve::env_var("SESSION_SECRET").map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
     let pl_cfg = beatscript_serve::playlists::Config {
         data: cfg.data.clone(),
         secret_env,
@@ -1109,4 +1124,208 @@ async fn main() {
         });
     }
     eprintln!("beatscript-serve: shutting down");
+}
+
+/// The public surface through the router as `main` builds it (the site's header layer included): the JSON-LD contexts,
+/// the `.beatscript` and `.btw` suffixes, BeatScript's media type, the well-known aliases and the `X-Beatscript-*` headers.
+#[cfg(test)]
+mod surface_tests {
+    use super::*;
+
+    const V1: &str = "tempo 128\nkey am\ndeck A: kick x ~ x ~\n";
+
+    fn router(app: &AppState) -> Router {
+        Router::new()
+            .route("/healthz", get(healthz).fallback(dispatch))
+            .fallback(dispatch)
+            .with_state(app.clone())
+            .merge(public::routes(app))
+            .merge(cards::routes(app))
+            .merge(oauth::routes(app))
+            .layer(middleware::from_fn_with_state(app.clone(), site_headers))
+    }
+
+    async fn call(r: &Router, method: &str, path: &str, headers: &[(&str, &str)], body: &str) -> (u16, HeaderMap, Bytes) {
+        let mut req = axum::http::Request::builder().method(method).uri(path);
+        for (k, v) in headers {
+            req = req.header(*k, *v);
+        }
+        let mut req = req.body(Body::from(body.to_string())).unwrap();
+        req.extensions_mut().insert(Peer("127.0.0.1:1".parse().unwrap()));
+        let res = tower::ServiceExt::oneshot(r.clone(), req).await.unwrap();
+        let (parts, b) = res.into_parts();
+        (parts.status.as_u16(), parts.headers, axum::body::to_bytes(b, 1 << 22).await.unwrap())
+    }
+
+    /// An app whose store holds `texts` (public, CC0), and the router over it.
+    fn with_programs(texts: &[&str]) -> (tempfile::TempDir, Router, Vec<String>) {
+        let dir = tempfile::tempdir().unwrap();
+        let programs = dir.path().join("programs");
+        std::fs::create_dir_all(&programs).unwrap();
+        let cids = texts
+            .iter()
+            .map(|t| {
+                let cid = djlive::compile::program_cid(t);
+                let meta = json!({"license": "CC0-1.0", "visibility": "public", "name": "night bus"});
+                std::fs::write(programs.join(format!("{cid}.json")), serde_json::to_vec(&json!({"cid": cid, "text": t, "meta": meta})).unwrap()).unwrap();
+                cid
+            })
+            .collect();
+        let app = test_app(dir.path());
+        let r = router(&app);
+        (dir, r, cids)
+    }
+
+    fn h<'a>(m: &'a HeaderMap, k: &str) -> &'a str {
+        m.get(k).and_then(|v| v.to_str().ok()).unwrap_or("")
+    }
+
+    #[tokio::test]
+    async fn the_beatscript_context_is_the_newest_and_v1_stays_as_it_was() {
+        let (_d, r, _) = with_programs(&[]);
+        let (s, hs, b) = call(&r, "GET", "/context/beatscript-v1.jsonld", &[], "").await;
+        assert_eq!((s, h(&hs, "etag"), h(&hs, "cache-control")), (200, "\"beatscript-context-v1\"", "public, max-age=31536000, immutable"));
+        assert_eq!(&b[..], public::CONTEXT_BEATSCRIPT_V1);
+        assert!(h(&hs, "content-type").starts_with("application/ld+json"));
+        for p in ["/context.jsonld", "/context"] {
+            let (s, hs, b2) = call(&r, "GET", p, &[], "").await;
+            assert_eq!((s, h(&hs, "etag"), &b2), (200, "\"beatscript-context-v1\"", &b), "{p} answers the BeatScript context");
+            let (s, ..) = call(&r, "GET", p, &[("if-none-match", "\"beatscript-context-v1\"")], "").await;
+            assert_eq!(s, 304, "{p}");
+            let (s, ..) = call(&r, "GET", p, &[("if-none-match", "\"btw-context-v1\"")], "").await;
+            assert_eq!(s, 200, "{p}: the old ETag is not this file's");
+        }
+        // the alias: the first context, byte for byte, with its own ETag
+        let (s, hs, b) = call(&r, "GET", "/context/v1.jsonld", &[], "").await;
+        assert_eq!((s, h(&hs, "etag"), h(&hs, "cache-control")), (200, "\"btw-context-v1\"", "public, max-age=31536000, immutable"));
+        assert_eq!(&b[..], include_bytes!("../../../docs/btw-context-v1.jsonld"));
+        let (s, ..) = call(&r, "GET", "/context/v1.jsonld", &[("if-none-match", "\"btw-context-v1\"")], "").await;
+        assert_eq!(s, 304);
+        let (s, hs, _) = call(&r, "OPTIONS", "/context/beatscript-v1.jsonld", &[], "").await;
+        assert_eq!((s, h(&hs, "access-control-allow-origin")), (204, "*"));
+    }
+
+    /// The served copies are the published files, and the BeatScript context is one vocabulary with `/schema`'s.
+    #[test]
+    fn the_contexts_are_the_published_files_and_one_vocabulary() {
+        assert_eq!(public::CONTEXT_BEATSCRIPT_V1, include_bytes!("../../../docs/beatscript-context-v1.jsonld"), "src/public/ is a byte copy of docs/");
+        assert_eq!(&include_bytes!("public/btw-context-v1.jsonld")[..], &include_bytes!("../../../docs/btw-context-v1.jsonld")[..]);
+        let bs: Value = serde_json::from_slice(public::CONTEXT_BEATSCRIPT_V1).unwrap();
+        let bs = bs["@context"].as_object().unwrap();
+        let v1: Value = serde_json::from_slice(include_bytes!("../../../docs/btw-context-v1.jsonld")).unwrap();
+        let schema: Value = serde_json::from_str(&djlive::progld::schema_context().js_stringified()).unwrap();
+        let schema = schema["@context"].as_object().unwrap();
+        // a term's IRI, its prefix expanded with its own context's prefixes
+        let iri = |ctx: &serde_json::Map<String, Value>, term: &str| -> String {
+            let d = &ctx[term];
+            let id = d.as_str().or_else(|| d["@id"].as_str()).unwrap().to_string();
+            match id.split_once(':') {
+                Some((p, local)) if !id.contains("://") => format!("{}{local}", ctx[p].as_str().unwrap()),
+                _ => id,
+            }
+        };
+        assert_eq!(bs["@vocab"], schema["@vocab"], "the vocabulary /schema names");
+        assert_eq!(bs["bs"], "https://beatscript.app/schema#");
+        for term in v1["@context"].as_object().unwrap().keys().filter(|k| !["bw", "djrust", "dct"].contains(&k.as_str())) {
+            assert!(bs.contains_key(term), "the v1 term {term} has no BeatScript IRI");
+            let got = iri(bs, term);
+            assert!(got.starts_with("https://beatscript.app/schema#") || got.starts_with("https://schema.org/"), "{term}: {got}");
+        }
+        for term in schema.keys().filter(|k| !k.starts_with('@') && !["bs", "bw", "schema"].contains(&k.as_str())) {
+            assert_eq!(iri(bs, term), iri(schema, term), "{term} means one thing in both contexts");
+        }
+        assert!(!String::from_utf8_lossy(public::CONTEXT_BEATSCRIPT_V1).contains("djrust"), "no djrust: IRI in the new vocabulary");
+    }
+
+    #[tokio::test]
+    async fn both_suffixes_answer_the_same_program() {
+        let (_d, r, cids) = with_programs(&[V1]);
+        let cid = &cids[0];
+        // the API: BeatScript's own type, a .beatscript download, under either suffix
+        let (s, ha, a) = call(&r, "GET", &format!("/api/programs/{cid}.beatscript"), &[], "").await;
+        let (s2, hb, b) = call(&r, "GET", &format!("/api/programs/{cid}.btw"), &[], "").await;
+        assert_eq!((s, s2), (200, 200));
+        assert_eq!(a, b);
+        for hh in [&ha, &hb] {
+            assert_eq!(h(hh, "content-type"), "text/beatscript; charset=utf-8");
+            assert_eq!(h(hh, "content-disposition"), format!("inline; filename=\"{cid}.beatscript\""));
+        }
+        assert!(String::from_utf8_lossy(&a).ends_with(V1));
+        // a person's URL: text/plain, so a browser shows it, unless Accept asks for text/beatscript
+        let (s, hp, p) = call(&r, "GET", &format!("/p/{cid}.beatscript"), &[], "").await;
+        let (s2, _, q) = call(&r, "GET", &format!("/p/{cid}.btw"), &[], "").await;
+        assert_eq!((s, s2, &p[..]), (200, 200, V1.as_bytes()));
+        assert_eq!(p, q);
+        assert_eq!(h(&hp, "content-type"), "text/plain; charset=utf-8");
+        let (_, hp, _) = call(&r, "GET", &format!("/p/{cid}.beatscript"), &[("accept", "text/beatscript")], "").await;
+        assert_eq!(h(&hp, "content-type"), "text/beatscript; charset=utf-8");
+        // and /p/<cid> by Accept: BeatScript's type and its two older names all ask for the text
+        for a in ["text/beatscript", "text/x-beatscript", "text/btw"] {
+            let (s, hs, b) = call(&r, "GET", &format!("/p/{cid}"), &[("accept", a)], "").await;
+            assert_eq!((s, &b[..], h(&hs, "content-type")), (200, V1.as_bytes(), "text/beatscript; charset=utf-8"), "{a}");
+            assert!(h(&hs, "vary").contains("Accept"));
+        }
+        let (_, hs, _) = call(&r, "GET", &format!("/p/{cid}"), &[("accept", "text/plain")], "").await;
+        assert_eq!(h(&hs, "content-type"), "text/plain; charset=utf-8");
+        assert!(h(&hs, "link").contains(&format!("<https://beatscript.app/p/{cid}.beatscript>; rel=\"alternate\"; type=\"text/beatscript\"")));
+    }
+
+    #[tokio::test]
+    async fn every_x_btw_header_is_also_x_beatscript() {
+        let (_d, r, cids) = with_programs(&[V1]);
+        let cid = &cids[0];
+        let (_, hs, _) = call(&r, "GET", &format!("/p/{cid}.beatscript"), &[("origin", "https://elsewhere.example")], "").await;
+        assert_eq!(h(&hs, "x-btw-cid"), cid.as_str());
+        assert_eq!(h(&hs, "x-beatscript-cid"), cid.as_str());
+        let expose = h(&hs, "access-control-expose-headers");
+        for n in ["X-Btw-Cid", "X-Beatscript-Cid", "X-Btw-Seconds", "X-Beatscript-Seconds", "X-Btw-Cache", "X-Beatscript-Cache"] {
+            assert!(expose.contains(n), "{n} not exposed: {expose}");
+        }
+        let (_, hs, _) = call(&r, "GET", &format!("/p/{cid}"), &[("accept", "text/html")], "").await;
+        assert_eq!((h(&hs, "x-btw-card"), h(&hs, "x-beatscript-card")), ("ok", "ok"));
+        // the same at the header layer, for any handler's
+        let mut m = HeaderMap::new();
+        m.insert("x-btw-seconds", HeaderValue::from_static("12.50"));
+        m.insert("x-other", HeaderValue::from_static("1"));
+        beatscript_headers(&mut m);
+        assert_eq!((h(&m, "x-beatscript-seconds"), m.len()), ("12.50", 3));
+    }
+
+    #[tokio::test]
+    async fn the_well_known_documents_answer_under_both_names() {
+        let (_d, r, _) = with_programs(&[]);
+        let (s, ha, a) = call(&r, "GET", "/.well-known/btw-site", &[], "").await;
+        let (s2, hb, b) = call(&r, "GET", "/.well-known/beatscript-site", &[], "").await;
+        assert_eq!((s, s2), (200, 200));
+        assert_eq!(a, b);
+        assert_eq!(h(&ha, "content-type"), h(&hb, "content-type"));
+        let v: Value = serde_json::from_slice(&a).unwrap();
+        assert_eq!((v["proto"].as_str(), v["pair"][0].as_str()), (Some("btw-site/1"), Some("btw-pair/2")), "the wire strings are kept");
+        let (_, hs, _) = call(&r, "GET", "/.well-known/beatscript-site", &[("origin", "https://elsewhere.example")], "").await;
+        assert_eq!(h(&hs, "access-control-allow-origin"), "*");
+        let (s, _, a) = call(&r, "GET", "/.well-known/btw-capabilities.json", &[], "").await;
+        let (s2, _, b) = call(&r, "GET", "/.well-known/beatscript-capabilities.json", &[], "").await;
+        assert_eq!((s, &a), (s2, &b));
+        assert_ne!(s, 404);
+        // the name is beatscript
+        let (_, _, b) = call(&r, "GET", "/healthz", &[], "").await;
+        assert_eq!(serde_json::from_slice::<Value>(&b).unwrap()["name"], "beatscript");
+        let (_, _, b) = call(&r, "GET", "/api/info", &[], "").await;
+        let info: Value = serde_json::from_slice(&b).unwrap();
+        assert_eq!((info["name"].as_str(), info["auth"]["cookie"].as_str(), info["auth"]["token_prefix"].as_str()), (Some("beatscript"), Some("btw_session"), Some("btw_")));
+    }
+
+    #[tokio::test]
+    async fn a_program_is_put_as_text_beatscript() {
+        let (_d, r, _) = with_programs(&[]);
+        let text = "tempo 126\ndeck A: kick x ~ x ~\n";
+        let cid = djlive::compile::program_cid(text);
+        let (s, _, b) = call(&r, "PUT", &format!("/api/programs/{cid}"), &[("content-type", "text/beatscript; charset=utf-8")], text).await;
+        assert!(s == 200 || s == 201, "{s}: {}", String::from_utf8_lossy(&b));
+        let (s, _, b) = call(&r, "GET", &format!("/api/programs/{cid}.btw"), &[], "").await;
+        assert_eq!(s, 200);
+        assert!(String::from_utf8_lossy(&b).ends_with(text));
+        let (s, ..) = call(&r, "PUT", &format!("/api/programs/{cid}"), &[("content-type", "application/json")], "{}").await;
+        assert_eq!(s, 415);
+    }
 }

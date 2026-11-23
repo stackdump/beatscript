@@ -849,15 +849,28 @@ fn generic_content(site: &str) -> Content {
 
 // ---------- JSON-LD (ld.Document) ----------
 
+/// A BeatScript 1 program's document is what it always was, byte for byte (it is cached immutable and in the dumps): the
+/// first context and the djrust: types, its IRI under beats.bitwrap.io. A BeatScript 2 program's names the BeatScript
+/// context (`/context/beatscript-v1.jsonld`, which has the rights terms too), its types in that vocabulary, its IRI
+/// `https://beatscript.app/p/<cid>`, and its parent by CID (`forkedFrom`, as the program block says it) and by IRI
+/// (`isBasedOn`).
 fn ld_document(origin: &str, p: &Prog) -> Value {
     let r = p.report.clone().unwrap();
+    let v2 = djlive::version::of_canonical(&p.canonical) == djlive::version::Version::V2;
     // keys in sorted order: encoding/json writes a map sorted
     let mut d: std::collections::BTreeMap<&str, Value> = std::collections::BTreeMap::new();
-    // v1 is published immutable (a new term is v2, never an edit of v1), so the rights terms it lacks are a local context
-    // beside it: schema.org's usageInfo (who authored a program and what rights it has: /authorship) and isBasedOn
-    d.insert("@context", json!([format!("{origin}/context/v1.jsonld"), RIGHTS_CONTEXT.clone()]));
-    d.insert("@id", json!(program_iri(&p.cid)));
-    d.insert("@type", json!("djrust:Program"));
+    if v2 {
+        d.insert("@context", json!(format!("{origin}/context/beatscript-v1.jsonld")));
+        d.insert("@id", json!(program_iri_v2(&p.cid)));
+        d.insert("@type", json!("Program"));
+    } else {
+        // v1 is published immutable (a new term is v2, never an edit of v1), so the rights terms it lacks are a local
+        // context beside it: schema.org's usageInfo (who authored a program and what rights it has: /authorship) and
+        // isBasedOn
+        d.insert("@context", json!([format!("{origin}/context/v1.jsonld"), RIGHTS_CONTEXT.clone()]));
+        d.insert("@id", json!(program_iri(&p.cid)));
+        d.insert("@type", json!("djrust:Program"));
+    }
     d.insert("cid", json!(p.cid));
     d.insert("name", json!(p.label()));
     if !r.key.is_empty() {
@@ -874,7 +887,7 @@ fn ld_document(origin: &str, p: &Prog) -> Value {
                 r.sections
                     .iter()
                     .map(|s| {
-                        let mut o = json!({"@type": "djrust:Section", "bars": s.bars, "name": s.name, "start": s.start});
+                        let mut o = json!({"@type": if v2 { "Section" } else { "djrust:Section" }, "bars": s.bars, "name": s.name, "start": s.start});
                         if let Some(doc) = p.meta.section_doc(&s.name) {
                             o["description"] = json!(doc);
                         }
@@ -900,7 +913,10 @@ fn ld_document(origin: &str, p: &Prog) -> Value {
     if !credits.is_empty() {
         d.insert("credit", json!(credits));
     }
-    if !p.meta.forked_from.is_empty() {
+    if !p.meta.forked_from.is_empty() && v2 {
+        d.insert("forkedFrom", json!(p.meta.forked_from));
+        d.insert("isBasedOn", json!(program_iri_v2(&p.meta.forked_from)));
+    } else if !p.meta.forked_from.is_empty() {
         let parent = program_iri(&p.meta.forked_from);
         d.insert("forkedFrom", json!(parent));
         d.insert("isBasedOn", json!(parent));
@@ -912,6 +928,11 @@ fn ld_document(origin: &str, p: &Prog) -> Value {
 /// A program's IRI in its JSON-LD document (`@id`, and `forkedFrom` / `isBasedOn` of its forks).
 fn program_iri(cid: &str) -> String {
     format!("https://beats.bitwrap.io/p#{cid}")
+}
+
+/// A program's IRI in a BeatScript 2 document: its page, the same name the program block gives it (djlive progld).
+fn program_iri_v2(cid: &str) -> String {
+    format!("{}{cid}", djlive::progld::IRI_PREFIX)
 }
 
 /// The terms a program's document uses that the published v1 context does not define (schema.org's).
@@ -974,7 +995,7 @@ fn negotiate(h: &HeaderMap) -> Want {
         let q = it.filter_map(|p| p.trim().strip_prefix("q=")).find_map(|q| q.trim().parse::<f32>().ok()).unwrap_or(1.0);
         let w = match ty.as_str() {
             "text/html" | "application/xhtml+xml" => Want::Html,
-            "text/plain" | "text/x-beatscript" => Want::Text,
+            "text/plain" | "text/beatscript" | "text/x-beatscript" | "text/btw" => Want::Text,
             "application/ld+json" | "application/json" => Want::Ld,
             t if t.starts_with("audio/") => Want::Audio,
             _ => continue,
@@ -993,7 +1014,7 @@ fn negotiate(h: &HeaderMap) -> Want {
 fn alternates_html(origin: &str, cid: &str, license: &str) -> String {
     let u = beatscript_serve::opendata::urls(origin, cid);
     let mut s = format!(
-        "<link rel=\"alternate\" type=\"text/plain\" href=\"{}\" title=\"BeatScript program (.beatscript)\">\n<link rel=\"alternate\" type=\"application/ld+json\" href=\"{}\">\n<link rel=\"alternate\" type=\"audio/ogg\" href=\"{}\">\n",
+        "<link rel=\"alternate\" type=\"text/beatscript\" href=\"{}\" title=\"BeatScript program (.beatscript)\">\n<link rel=\"alternate\" type=\"application/ld+json\" href=\"{}\">\n<link rel=\"alternate\" type=\"audio/ogg\" href=\"{}\">\n",
         esc_url(&u.beatscript),
         esc_url(&u.jsonld),
         esc_url(&u.render)
@@ -1009,7 +1030,7 @@ fn alternates_html(origin: &str, cid: &str, license: &str) -> String {
 /// The same as a `Link` header value.
 fn alternates_link(origin: &str, cid: &str) -> String {
     let u = beatscript_serve::opendata::urls(origin, cid);
-    format!("<{}>; rel=\"alternate\"; type=\"text/plain\", <{}>; rel=\"alternate\"; type=\"application/ld+json\", <{}>; rel=\"alternate\"; type=\"audio/ogg\"", u.beatscript, u.jsonld, u.render)
+    format!("<{}>; rel=\"alternate\"; type=\"text/beatscript\", <{}>; rel=\"alternate\"; type=\"application/ld+json\", <{}>; rel=\"alternate\"; type=\"audio/ogg\"", u.beatscript, u.jsonld, u.render)
 }
 
 /// json.MarshalIndent(d, "", "  ").
@@ -1262,8 +1283,8 @@ async fn serve_page(State(c): State<Arc<Cards>>, req: Request) -> Response<Body>
         Some(n) => (n, true),
         None => (name, false),
     };
-    // `/p/<cid>.beatscript`: the canonical text itself
-    let (name, mut want_beatscript) = match name.strip_suffix(".beatscript") {
+    // `/p/<cid>.beatscript`: the canonical text itself (`/p/<cid>.btw`, its name before the rename, the same)
+    let (name, mut want_beatscript) = match crate::content::strip_program_suffix(name) {
         Some(n) if short => (n, true),
         _ => (name, false),
     };
@@ -1373,7 +1394,9 @@ async fn serve_page(State(c): State<Arc<Cards>>, req: Request) -> Response<Body>
         if doc.is_none() {
             return not_found(h);
         }
-        h.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
+        // text/plain, so a browser shows it, unless Accept asks for text/beatscript (so the type varies by Accept)
+        h.insert(header::CONTENT_TYPE, HeaderValue::from_static(crate::content::program_text_type(req.headers())));
+        h.insert(header::VARY, HeaderValue::from_static("Accept"));
         h.insert(header::CACHE_CONTROL, HeaderValue::from_static(cache));
         h.insert("x-content-type-options", HeaderValue::from_static("nosniff"));
         h.insert("x-btw-cid", HeaderValue::from_str(&p.cid).unwrap());
@@ -1928,6 +1951,55 @@ mod tests {
         assert!(v1["@context"].get("usageInfo").is_none() && v1["@context"].get("isBasedOn").is_none());
     }
 
+    /// A BeatScript 1 program's JSON-LD is what it was, key for key (it is cached immutable and in the dumps); a BeatScript 2
+    /// program's names the BeatScript context, its IRI under beatscript.app/p/, its types in the BeatScript vocabulary, and
+    /// its parent by CID and by IRI.
+    #[test]
+    fn a_beatscript_2_programs_json_ld_names_the_beatscript_context() {
+        let doc = |text: &str, meta: Value| {
+            let cid = djlive::compile::program_cid(text);
+            let secs = vec![Section { name: "drop".into(), start: 0, bars: 4 }];
+            let p = Prog { canonical: text.into(), report: Some(Arc::new(Report { ok: true, cid: cid.clone(), sections: secs, ..Report::default() })), meta: Meta::from_json(&meta), ..Prog::bare(&cid, St::Ok) };
+            (cid, ld_document("https://beatscript.app", &p))
+        };
+        let meta = json!({"license": "CC0-1.0", "visibility": "public", "name": "night bus", "forked_from": "z4EBG9parent"});
+        let (c1, v1) = doc("tempo 128\nkey am\ndeck A: kick x ~ x ~\n", meta.clone());
+        let parent = "https://beats.bitwrap.io/p#z4EBG9parent";
+        assert_eq!(
+            v1,
+            json!({
+                "@context": ["https://beatscript.app/context/v1.jsonld", {"schema": "https://schema.org/", "usageInfo": {"@id": "schema:usageInfo", "@type": "@id"}, "isBasedOn": {"@id": "schema:isBasedOn", "@type": "@id"}, "description": "schema:description"}],
+                "@id": format!("https://beats.bitwrap.io/p#{c1}"), "@type": "djrust:Program", "cid": c1, "forkedFrom": parent, "isBasedOn": parent,
+                "license": "https://creativecommons.org/publicdomain/zero/1.0/", "licenseId": "CC0-1.0", "name": "night bus",
+                "sections": [{"@type": "djrust:Section", "bars": 4, "name": "drop", "start": 0}], "usageInfo": "https://beatscript.app/authorship",
+            })
+        );
+        let (c2, v2) = doc("#! beatscript 2\ntempo 128\nkey am\ndeck A: kick x ~ x ~\n", meta);
+        assert_ne!(c1, c2);
+        assert_eq!(
+            v2,
+            json!({
+                "@context": "https://beatscript.app/context/beatscript-v1.jsonld",
+                "@id": format!("https://beatscript.app/p/{c2}"), "@type": "Program", "cid": c2, "forkedFrom": "z4EBG9parent", "isBasedOn": "https://beatscript.app/p/z4EBG9parent",
+                "license": "https://creativecommons.org/publicdomain/zero/1.0/", "licenseId": "CC0-1.0", "name": "night bus",
+                "sections": [{"@type": "Section", "bars": 4, "name": "drop", "start": 0}], "usageInfo": "https://beatscript.app/authorship",
+            })
+        );
+        // every term the BeatScript 2 document uses is the BeatScript context's (it needs no local context)
+        let ctx: Value = serde_json::from_slice(crate::public::CONTEXT_BEATSCRIPT_V1).unwrap();
+        for k in v2.as_object().unwrap().keys().chain(v2["sections"][0].as_object().unwrap().keys()).filter(|k| !k.starts_with('@')) {
+            assert!(ctx["@context"].get(k).is_some(), "{k} is not in the BeatScript context");
+        }
+        for t in ["Program", "Section"] {
+            assert_eq!(ctx["@context"][t], format!("bs:{t}"));
+        }
+        // the block says the same IRI
+        let v = program_view_of(&c2, "#! beatscript 2\ntempo 128\nkey am\ndeck A: kick x ~ x ~\n", "night bus", "CC0-1.0", "", "", None, &[]).expect("a block");
+        let r = djlive::progld::read_view(&v, true).unwrap();
+        assert_eq!(r.cid, c2);
+        assert_eq!(r.doc.get("@id").and_then(djengine::json::JsonValue::as_str), Some(v2["@id"].as_str().unwrap()));
+    }
+
     /// Doc comments (project-datum 6662): the share keeps the doc comments of the text as sent beside its canonical text
     /// (`meta.docs`), and the program's JSON-LD gives each documented section its `description`; the CID is the text's.
     #[test]
@@ -2005,12 +2077,17 @@ mod tests {
         assert_eq!(h("audio/ogg"), Want::Audio);
         assert_eq!(h("audio/*;q=0, text/plain"), Want::Text);
         assert_eq!(h("*/*"), Want::Html);
+        // BeatScript's own type, and the two older names of it
+        for t in ["text/beatscript", "text/x-beatscript", "text/btw", "text/beatscript;q=0.9, text/html;q=0.5"] {
+            assert_eq!(h(t), Want::Text, "{t}");
+        }
     }
 
     #[test]
     fn alternates_name_every_format_and_the_programs_own_licence() {
         let a = alternates_html("https://beatscript.app", "zX", "CC-BY-4.0");
-        assert!(a.contains(r#"<link rel="alternate" type="text/plain" href="https://beatscript.app/p/zX.beatscript""#), "{a}");
+        assert!(a.contains(r#"<link rel="alternate" type="text/beatscript" href="https://beatscript.app/p/zX.beatscript""#), "{a}");
+        assert!(alternates_link("https://beatscript.app", "zX").starts_with(r#"<https://beatscript.app/p/zX.beatscript>; rel="alternate"; type="text/beatscript", "#));
         assert!(a.contains(r#"<link rel="alternate" type="application/ld+json" href="https://beatscript.app/p/zX.jsonld">"#));
         assert!(a.contains(r#"<link rel="alternate" type="audio/ogg" href="https://beatscript.app/api/render/zX?format=opus">"#));
         assert!(a.contains(r#"<link rel="license" href="https://creativecommons.org/licenses/by/4.0/">"#));

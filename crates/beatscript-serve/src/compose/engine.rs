@@ -100,6 +100,8 @@ pub fn go_check_report(r: &Value) -> Value {
     m.insert("diagnostics".into(), diagnostics(&r["diagnostics"]));
     m.insert("cid".into(), json!(s(&r["cid"])));
     m.insert("canonical".into(), json!(s(&r["canonical"])));
+    // the language version and the other version's CID, as /api/check keeps them
+    crate::public::versions(&mut m, r);
     if let Some(n) = str_map(&r["nets"]) {
         m.insert("nets".into(), n);
     }
@@ -211,6 +213,7 @@ impl Engine {
         m.insert("ok".into(), b(&r["ok"]));
         m.insert("canonical".into(), json!(s(&r["canonical"])));
         m.insert("cid".into(), json!(s(&r["cid"])));
+        crate::public::versions(&mut m, &r);
         // the program formatted, its header lines and comments kept (what eval, load, share, queue and push_private send)
         if let Some(t) = r["text"].as_str() {
             m.insert("text".into(), json!(t));

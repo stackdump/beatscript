@@ -13,7 +13,7 @@
 //!   a client (the Android app, the page) what to show; it is never what the server checks.
 //! - The signing key: `<data>/cap-signing.key` (hex seed, 0600, made at start when missing), separate from
 //!   session.secret. `<data>/cap-signing.prev.key`, when present, is published too (not used to sign), so a rotated
-//!   key's grants verify until they expire. Published at `GET /.well-known/btw-capabilities.json`.
+//!   key's grants verify until they expire. Published at `GET /.well-known/btw-capabilities.json` (and the same at `/.well-known/beatscript-capabilities.json`).
 
 use std::collections::BTreeMap;
 use std::io::Write as _;
@@ -445,7 +445,7 @@ mod tests {
         });
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/caps/vectors.json");
         let text = serde_json::to_string_pretty(&v).unwrap() + "\n";
-        if std::env::var("BEATSCRIPT_REGEN_VECTORS").is_ok() {
+        if beatscript_serve::env_var("REGEN_VECTORS").is_some() {
             std::fs::create_dir_all(path.parent().unwrap()).unwrap();
             std::fs::write(&path, &text).unwrap();
         }

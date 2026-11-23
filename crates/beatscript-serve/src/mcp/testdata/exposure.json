@@ -145,7 +145,7 @@
       "docs": [],
       "say": [["generate", "generator picks the version"], ["generate", "With part (a role) the answer gains that part and its let alone"], ["generate", "seeds (a list, or {count, start}, at most 16)"]],
       "calls": [
-        {"tool": "generate", "stores": true, "args": {"genre": "techno", "seed": 42, "part": "bass"}, "expect": [["/generator", "=", "seeded@2"], ["/part/gen", "=", "gen@2 techno seed=42 section=drop part=bass"], ["/expanded_cid", "has"]]}
+        {"tool": "generate", "stores": true, "args": {"genre": "techno", "seed": 42, "part": "bass"}, "expect": [["/generator", "=", "seeded@3"], ["/part/gen", "=", "gen@3 techno seed=42 section=drop part=bass"], ["/text", "~", "#! beatscript 2\n"], ["/expanded_cid", "has"]]}
       ]
     },
     {
@@ -192,6 +192,39 @@
           "expect": [["/ok", "=", true], ["/n", "=", 3], ["/tracks/0/n", "=", 3], ["/retuned/0", "=", "tempo"], ["/station/tempo", "=", 130], ["/station/cid", "^", "z"], ["/station/cid", "!~", "${station}"]]
         },
         {"tool": "check", "args": {"text": "tempo 128\nkey am\nstation {\n  from gen@2 techno seed=42\n  next seed=~\n  forms seeded passacaglia\n}\n"}, "expect": [["/ok", "=", true], ["/station/cid", "^", "z"], ["/station/start_cid", "^", "z"], ["/station/forms", "=", ["seeded", "passacaglia"]]]}
+      ]
+    },
+    {
+      "id": "beatscript-2-version",
+      "datum": 6703,
+      "docs": [],
+      "say": [["check", "version is the language version: 2 for a text whose header has `#! beatscript 2`"], ["check", "`#! btw 1` or no version line (BeatScript 1"], ["check", "renamed_cid is the CID of the same program in the other version"], ["check", "its first line `#! beatscript 2`"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "tempo 120\ndeck A: kick x ~ x ~\n"}, "save": {"v1": "/cid", "v2": "/renamed_cid"}, "expect": [["/ok", "=", true], ["/version", "=", 1], ["/renamed_cid", "has"], ["/canonical", "!~", "#!"]]},
+        {"tool": "check", "args": {"text": "#! btw 1\ntempo 120\ndeck A: kick x ~ x ~\n"}, "expect": [["/ok", "=", true], ["/version", "=", 1], ["/cid", "=", "${v1}"], ["/renamed_cid", "=", "${v2}"]]},
+        {"tool": "check", "args": {"text": "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n"}, "expect": [["/ok", "=", true], ["/version", "=", 2], ["/cid", "=", "${v2}"], ["/renamed_cid", "=", "${v1}"], ["/canonical", "~", "#! beatscript 2\n"]]}
+      ]
+    },
+    {
+      "id": "beatscript-2-fmt-upgrades",
+      "datum": 6703,
+      "docs": [],
+      "say": [["fmt", "the version line `#! beatscript 2` first"], ["fmt", "A BeatScript 1 text (`#! btw 1`, or no version line) is upgraded"], ["fmt", "from_cid"], ["fmt", "never upgrade it"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "tempo 120\ndeck A: kick x ~ x ~\n"}, "save": {"v1": "/cid", "v2": "/renamed_cid"}, "expect": [["/version", "=", 1]]},
+        {"tool": "fmt", "args": {"text": "tempo   120\n# the groove\ndeck A: kick x ~ x ~\n"}, "expect": [["/ok", "=", true], ["/version", "=", 2], ["/text", "~", "#! beatscript 2\n"], ["/text", "~", "# the groove"], ["/canonical", "~", "#! beatscript 2\n"], ["/cid", "=", "${v2}"], ["/from_cid", "=", "${v1}"]]},
+        {"tool": "fmt", "args": {"text": "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n"}, "expect": [["/ok", "=", true], ["/version", "=", 2], ["/cid", "=", "${v2}"], ["/from_cid", "!~", "z"]]}
+      ]
+    },
+    {
+      "id": "beatscript-2-old-cid-redirect",
+      "datum": 6703,
+      "docs": [],
+      "note": "What MCP says and computes of the redirect: share's description says /p/<old CID> redirects to the BeatScript 2 upgrade, and check's renamed_cid is the CID fmt writes, the twin the store keeps and /p/<old CID> answers 308 to. The 308 itself is an HTTP route of the store's (rename/store, cards serve_page), tested there.",
+      "say": [["share", "/p/<old CID>) redirects to its BeatScript 2 upgrade"], ["check", "renamed_cid"]],
+      "calls": [
+        {"tool": "fmt", "args": {"text": "tempo 118\nkey am\ndeck A: kick x ~ x ~ | bass a1 ~ c2 ~\n"}, "save": {"old": "/from_cid", "new": "/cid"}, "expect": [["/from_cid", "has"], ["/version", "=", 2]]},
+        {"tool": "check", "args": {"text": "tempo 118\nkey am\ndeck A: kick x ~ x ~ | bass a1 ~ c2 ~\n"}, "expect": [["/cid", "=", "${old}"], ["/renamed_cid", "=", "${new}"]]}
       ]
     }
   ]

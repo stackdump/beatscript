@@ -1,9 +1,9 @@
 //! P2 + P3 of docs/RUST-SERVER.md: the site's public, stateless routes and the checker routes, as the Go server
 //! answers them (internal/btwsite/server/handlers.go, site.go, assetlinks.go, qr.go, store.go, ld/):
 //!
-//!   GET      /api/info, /.well-known/btw-site, /.well-known/assetlinks.json, /api/instruments
-//!   GET      /context/v1.jsonld, /context.jsonld, /context   (+ OPTIONS on the first two)
-//!   GET      /api/programs/{cid}[.beatscript]                        (examples first, ETag, 304)
+//!   GET      /api/info, /.well-known/btw-site (= /.well-known/beatscript-site), /.well-known/assetlinks.json, /api/instruments
+//!   GET      /context/beatscript-v1.jsonld, /context/v1.jsonld, /context.jsonld, /context   (+ OPTIONS on all but the last)
+//!   GET      /api/programs/{cid}[.beatscript|.btw]                   (examples first, ETag, 304)
 //!   PUT      /api/programs/{cid}                              (put-ip-hour, store-max-mb, first meta wins, link(2))
 //!   POST     /api/check, /api/fmt, /api/share, /api/open, /api/qr   (check-ip-min, 128 KiB / 4 KiB bodies)
 //!
@@ -351,6 +351,7 @@ pub fn shape_check(v: &Value) -> Value {
     m.insert("diagnostics".into(), Value::Array(diags(v)));
     m.insert("cid".into(), json!(s_of(v, "cid")));
     m.insert("canonical".into(), json!(s_of(v, "canonical")));
+    versions(&mut m, v);
     put_map(&mut m, "nets", v.get("nets"));
     put_map(&mut m, "song_nets", v.get("song_nets"));
     m.insert("tempo".into(), fptr(v, "tempo"));
@@ -423,12 +424,28 @@ pub fn references(m: &mut Map<String, Value>, v: &Value) {
     }
 }
 
+/// The language version a check or fmt answer says (beatscript-api's report): `version` (1 or 2: `#! beatscript 2` is 2, a
+/// text with `#! btw 1` or no version line is 1), `renamed_cid` (check: the CID of the same program in the other version)
+/// and `from_cid` (fmt: the CID of the text as given, when fmt upgraded it to a new one). Each only when the answer has it.
+/// The MCP check's shape (compose::engine::go_check_report) keeps the same.
+pub fn versions(m: &mut Map<String, Value>, v: &Value) {
+    if let Some(n) = v.get("version").and_then(Value::as_u64) {
+        m.insert("version".into(), json!(n));
+    }
+    for k in ["renamed_cid", "from_cid"] {
+        if let Some(c) = v.get(k).and_then(Value::as_str).filter(|c| !c.is_empty()) {
+            m.insert(k.into(), json!(c));
+        }
+    }
+}
+
 /// `api.FmtReport`.
 pub fn shape_fmt(v: &Value) -> Value {
     let mut m = Map::new();
     m.insert("ok".into(), json!(b_of(v, "ok")));
     m.insert("canonical".into(), json!(s_of(v, "canonical")));
     m.insert("cid".into(), json!(s_of(v, "cid")));
+    versions(&mut m, v);
     // the program formatted, its header lines and comments kept: the editor's fmt button and what arrives from a client
     if let Some(t) = v["text"].as_str() {
         m.insert("text".into(), json!(t));
@@ -745,30 +762,44 @@ async fn instruments(State(st): St, req: Request) -> Response<Body> {
         .unwrap()
 }
 
-// the linked-data context (ld/)
+// the linked-data contexts (ld/)
+/// The first context (`/context/v1.jsonld`, the djrust: terms), published immutable: served byte for byte, with its ETag,
+/// for the documents that name it (every BeatScript 1 program's).
 const CONTEXT_V1: &[u8] = include_bytes!("public/btw-context-v1.jsonld");
+const CONTEXT_V1_ETAG: &str = "\"btw-context-v1\"";
+/// The BeatScript context (`/context/beatscript-v1.jsonld`): the v1 terms and the program block's in the BeatScript
+/// vocabulary (`https://beatscript.app/schema#`, the one `/schema` defines), named by every BeatScript 2 program's
+/// documents. Immutable too: a change to its terms is a new file and URL. `/context.jsonld` and `/context` answer it.
+pub const CONTEXT_BEATSCRIPT_V1: &[u8] = include_bytes!("public/beatscript-context-v1.jsonld");
+const CONTEXT_BEATSCRIPT_V1_ETAG: &str = "\"beatscript-context-v1\"";
 const ONTOLOGY_LINK: &str = "<https://ontology.bitwrap.io/ns.ttl>; rel=\"describedby\"; type=\"text/turtle\"";
 
-fn ld_serve(req: &Request, cache: &'static str) -> Response<Body> {
+fn ld_serve(req: &Request, cache: &'static str, body: &'static [u8], etag: &'static str) -> Response<Body> {
     let mut b = Response::builder()
         .header("access-control-allow-origin", "*")
         .header(header::CACHE_CONTROL, cache)
         .header(header::LINK, ONTOLOGY_LINK)
         .header("x-content-type-options", "nosniff")
-        .header(header::ETAG, "\"btw-context-v1\"");
-    if req.headers().get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()) == Some("\"btw-context-v1\"") {
+        .header(header::ETAG, etag);
+    if req.headers().get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()) == Some(etag) {
         // a 304 drops Content-Type (net/http's suppressed headers)
         return b.status(304).body(crate::content::nothing()).unwrap();
     }
-    b = b.header(header::CONTENT_TYPE, "application/ld+json; charset=utf-8").header(header::CONTENT_LENGTH, CONTEXT_V1.len());
-    b.body(Body::from(CONTEXT_V1)).unwrap()
+    b = b.header(header::CONTENT_TYPE, "application/ld+json; charset=utf-8").header(header::CONTENT_LENGTH, body.len());
+    b.body(Body::from(body)).unwrap()
 }
 
+/// `/context/v1.jsonld`: the first context, as it always was.
 async fn ld_v1(req: Request) -> Response<Body> {
-    ld_serve(&req, "public, max-age=31536000, immutable")
+    ld_serve(&req, "public, max-age=31536000, immutable", CONTEXT_V1, CONTEXT_V1_ETAG)
 }
+/// `/context/beatscript-v1.jsonld`: the BeatScript context, immutable.
+async fn ld_beatscript_v1(req: Request) -> Response<Body> {
+    ld_serve(&req, "public, max-age=31536000, immutable", CONTEXT_BEATSCRIPT_V1, CONTEXT_BEATSCRIPT_V1_ETAG)
+}
+/// `/context.jsonld`, `/context`: the newest context (the BeatScript one), cached briefly since it moves with a version.
 async fn ld_latest(req: Request) -> Response<Body> {
-    ld_serve(&req, "public, max-age=300")
+    ld_serve(&req, "public, max-age=300", CONTEXT_BEATSCRIPT_V1, CONTEXT_BEATSCRIPT_V1_ETAG)
 }
 async fn ld_preflight() -> Response<Body> {
     Response::builder()
@@ -821,7 +852,8 @@ impl Pub {
 
 async fn get_program(State(st): St, req: Request) -> Response<Body> {
     let raw = cid_of(&req);
-    let (cid, as_text) = match raw.strip_suffix(".beatscript") {
+    // `.beatscript`, or `.btw` (its name before the rename, still answered: the same response)
+    let (cid, as_text) = match crate::content::strip_program_suffix(&raw) {
         Some(c) => (c.to_string(), true),
         None => (raw.clone(), false),
     };
@@ -838,8 +870,9 @@ async fn get_program(State(st): St, req: Request) -> Response<Body> {
         return b.status(304).body(crate::content::nothing()).unwrap();
     }
     if as_text {
+        // the API's program text is BeatScript's own type (a person's URL, /p/<cid>.beatscript, stays text/plain)
         return b
-            .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
+            .header(header::CONTENT_TYPE, crate::content::BEATSCRIPT_TYPE)
             .header(header::CONTENT_DISPOSITION, format!("inline; filename=\"{cid}.beatscript\""))
             .body(go_body(beatscript_file(&cid, &text, &meta)))
             .unwrap();
@@ -895,7 +928,7 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
         return ApiError::new(413, "too_large", format!("program is over {max} bytes")).response();
     }
     if ct.contains("json") {
-        return ApiError::new(415, "bad_request", "send the program text itself as the body (Content-Type: text/plain), not JSON").response();
+        return ApiError::new(415, "bad_request", "send the program text itself as the body (Content-Type: text/beatscript or text/plain), not JSON").response();
     }
     // programStore.put
     if body.len() > max {
@@ -1273,9 +1306,11 @@ pub fn routes(app: &AppState) -> Router {
     Router::new()
         .route("/api/info", by_method!(GET => |s, _r| info(s)))
         .route("/.well-known/btw-site", by_method!(GET => |s, _r| site_route(s)))
+        .route("/.well-known/beatscript-site", by_method!(GET => |s, _r| site_route(s)))
         .route("/.well-known/assetlinks.json", by_method!(GET => |s, _r| assetlinks(s)))
         .route("/api/instruments", by_method!(GET => instruments))
         .route("/context/v1.jsonld", by_method!(GET => |_s, r| ld_v1(r), OPTIONS => |_s, _r| ld_preflight()))
+        .route("/context/beatscript-v1.jsonld", by_method!(GET => |_s, r| ld_beatscript_v1(r), OPTIONS => |_s, _r| ld_preflight()))
         .route("/context.jsonld", by_method!(GET => |_s, r| ld_latest(r), OPTIONS => |_s, _r| ld_preflight()))
         .route("/context", by_method!(GET => |_s, r| ld_latest(r)))
         .route("/api/programs/{cid}", by_method!(GET => get_program, PUT => put_program))

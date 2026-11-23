@@ -193,7 +193,7 @@ pub fn json_feed(origin: &str, entries: &[Entry]) -> Value {
                 "content_text": e.text,
                 "date_published": e.created,
                 "attachments": [
-                    {"url": u.beatscript, "mime_type": "text/plain", "title": "the program (.beatscript, canonical text)"},
+                    {"url": u.beatscript, "mime_type": "text/beatscript", "title": "the program (.beatscript, canonical text)"},
                     {"url": u.jsonld, "mime_type": "application/ld+json", "title": "the program as linked data"},
                     {"url": u.render, "mime_type": "audio/ogg", "title": "the program rendered (Ogg Opus)"},
                 ],
@@ -235,7 +235,7 @@ pub fn atom_feed(origin: &str, entries: &[Entry]) -> String {
         if !e.author.is_empty() {
             s.push_str(&format!("<author><name>{}</name></author>\n", xml(&e.author)));
         }
-        s.push_str(&format!("<link rel=\"alternate\" type=\"text/html\" href=\"{}\"/>\n<link rel=\"enclosure\" type=\"text/plain\" href=\"{}\"/>\n<link rel=\"describedby\" type=\"application/ld+json\" href=\"{}\"/>\n<link rel=\"enclosure\" type=\"audio/ogg\" href=\"{}\"/>\n", xml(&u.page), xml(&u.beatscript), xml(&u.jsonld), xml(&u.render)));
+        s.push_str(&format!("<link rel=\"alternate\" type=\"text/html\" href=\"{}\"/>\n<link rel=\"enclosure\" type=\"text/beatscript\" href=\"{}\"/>\n<link rel=\"describedby\" type=\"application/ld+json\" href=\"{}\"/>\n<link rel=\"enclosure\" type=\"audio/ogg\" href=\"{}\"/>\n", xml(&u.page), xml(&u.beatscript), xml(&u.jsonld), xml(&u.render)));
         s.push_str(&format!("<rights>CC0-1.0</rights>\n<content type=\"text\">{}</content>\n</entry>\n", xml(&e.text)));
     }
     s.push_str("</feed>\n");
@@ -310,14 +310,16 @@ pub fn build_dump(origin: &str, entries: &[Entry], ontology: Option<&dyn djlive:
 }
 
 /// A POSIX ustar archive of regular files, every header the same but for name and size (mode 0644, uid/gid 0, mtime 0,
-/// no user names): the bytes are a function of the files alone.
+/// no user names): the bytes are a function of the files alone. A name over the 100 bytes of the name field is split at a
+/// `/` into ustar's prefix field (155 bytes) and the name: `programs/<cid>.beatscript` with the longest CID the store takes
+/// (81 characters) is 101 bytes.
 pub fn tar(files: &[(String, Vec<u8>)]) -> Vec<u8> {
     let mut out = Vec::new();
     for (name, data) in files {
         let mut h = [0u8; 512];
-        let nb = name.as_bytes();
-        assert!(nb.len() <= 100, "tar name too long: {name}");
-        h[..nb.len()].copy_from_slice(nb);
+        let (prefix, rest) = tar_split(name);
+        h[..rest.len()].copy_from_slice(rest.as_bytes());
+        h[345..345 + prefix.len()].copy_from_slice(prefix.as_bytes());
         let octal = |h: &mut [u8; 512], at: usize, len: usize, v: u64| {
             let s = format!("{:0w$o}\0", v, w = len - 1);
             h[at..at + len].copy_from_slice(s.as_bytes());
@@ -340,6 +342,19 @@ pub fn tar(files: &[(String, Vec<u8>)]) -> Vec<u8> {
     }
     out.resize(out.len() + 1024, 0);
     out
+}
+
+/// A path as ustar's (prefix, name): the name alone when it fits the 100-byte field, else split at the last `/` that leaves
+/// a name of at most 100 bytes and a prefix of at most 155.
+fn tar_split(path: &str) -> (&str, &str) {
+    if path.len() <= 100 {
+        return ("", path);
+    }
+    let at = path.char_indices().filter(|&(i, c)| c == '/' && i <= 155 && path.len() - i - 1 <= 100).map(|(i, _)| i).last();
+    match at {
+        Some(i) if i > 0 => (&path[..i], &path[i + 1..]),
+        _ => panic!("tar name too long for ustar: {path}"),
+    }
 }
 
 /// gzip (RFC 1952) around raw DEFLATE: no name, mtime 0, OS 255, so the bytes depend on the input alone.
@@ -435,7 +450,8 @@ mod tests {
         assert_eq!(jf["items"][0]["title"], format!("BeatScript {}", &b[b.len() - 6..]));
         let at = atom_feed("https://beatscript.app", &es);
         assert_eq!(at.matches("<entry>").count(), 2);
-        assert!(at.contains(&format!("<link rel=\"enclosure\" type=\"text/plain\" href=\"https://beatscript.app/p/{a}.beatscript\"/>")));
+        assert!(at.contains(&format!("<link rel=\"enclosure\" type=\"text/beatscript\" href=\"https://beatscript.app/p/{a}.beatscript\"/>")));
+        assert_eq!(jf["items"][1]["attachments"][0]["mime_type"], "text/beatscript");
         assert!(at.contains("<updated>2026-11-21T10:00:00Z</updated>"));
     }
 
@@ -462,7 +478,7 @@ mod tests {
         let mut at = 0;
         while at + 512 <= raw.len() && raw[at] != 0 {
             let h = &raw[at..at + 512];
-            let name = String::from_utf8(h[..100].iter().take_while(|c| **c != 0).copied().collect()).unwrap();
+            let name = tar_name(h);
             let size = usize::from_str_radix(std::str::from_utf8(&h[124..135]).unwrap(), 8).unwrap();
             let body = &raw[at + 512..at + 512 + size];
             if let Some(cid) = name.strip_prefix("programs/").and_then(|n| n.strip_suffix(".beatscript")) {
@@ -489,6 +505,37 @@ mod tests {
         put(d.path(), "tempo 140\ndeck A: kick x x x x\n", json!({}));
         let two = build_dump("https://beatscript.app", &scan(d.path()), None);
         assert_ne!(two.name, one.name);
+    }
+
+    /// A ustar header's path: its prefix field, a `/`, its name field (the name alone when there is no prefix).
+    fn tar_name(h: &[u8]) -> String {
+        let field = |b: &[u8]| String::from_utf8(b.iter().take_while(|c| **c != 0).copied().collect()).unwrap();
+        let (prefix, name) = (field(&h[345..500]), field(&h[..100]));
+        if prefix.is_empty() {
+            name
+        } else {
+            format!("{prefix}/{name}")
+        }
+    }
+
+    /// The longest CID the store takes (`z` and 80 characters) names a 101-byte entry, `programs/<cid>.beatscript`: it goes
+    /// into ustar's prefix and name fields and reads back whole; a name that fits stays in the name field alone.
+    #[test]
+    fn the_longest_cid_fits_the_archive() {
+        let cid = format!("z{}", "a".repeat(80));
+        assert!(is_cid(&cid));
+        let long = format!("programs/{cid}.beatscript");
+        assert_eq!(long.len(), 101);
+        let short = "programs/zShort.beatscript".to_string();
+        let t = tar(&[(long.clone(), b"tempo 120\n".to_vec()), (short.clone(), b"x".to_vec())]);
+        assert_eq!(tar_name(&t[..512]), long);
+        assert_eq!(&t[345..353], b"programs");
+        assert_eq!(tar_name(&t[1024..1536]), short);
+        assert!(t[1024 + 345..1024 + 500].iter().all(|b| *b == 0), "a name that fits has no prefix");
+        // the checksum still covers the header (prefix included), as a reader checks it
+        let h = &t[..512];
+        let sum: u32 = h.iter().enumerate().map(|(i, b)| if (148..156).contains(&i) { 32 } else { u32::from(*b) }).sum();
+        assert_eq!(u32::from_str_radix(std::str::from_utf8(&h[148..154]).unwrap(), 8).unwrap(), sum);
     }
 
     #[test]

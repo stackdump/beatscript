@@ -297,7 +297,7 @@ impl AuthSvc {
         let cfg = &app.cfg;
         let o = Options {
             data: cfg.data.clone(),
-            secret_env: std::env::var("BEATSCRIPT_SESSION_SECRET").map(|s| s.trim().to_string()).unwrap_or_default(),
+            secret_env: beatscript_serve::env_var("SESSION_SECRET").map(|s| s.trim().to_string()).unwrap_or_default(),
             public_url: cfg.public_url.clone(),
             alt_origins: cfg.alt_origins.clone(),
             legacy_hosts: cfg.legacy_hosts.clone(),

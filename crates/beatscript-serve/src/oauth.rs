@@ -826,7 +826,8 @@ async fn handle(State((app, o)): State<(AppState, Arc<OAuth>)>, req: Request) ->
     match path.as_str() {
         "/.well-known/oauth-protected-resource" | "/.well-known/oauth-protected-resource/mcp" if get => json_resp(200, &o.protected_resource(), true),
         "/.well-known/oauth-authorization-server" if get => json_resp(200, &o.server_metadata(), true),
-        "/.well-known/btw-capabilities.json" if get => match crate::caps::get() {
+        // the capabilities' keys, under the old name and the new one (the same document)
+        "/.well-known/btw-capabilities.json" | "/.well-known/beatscript-capabilities.json" if get => match crate::caps::get() {
             Some(c) => {
                 let mut r = json_resp(200, &c.jwks(), true);
                 r.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=300"));
@@ -895,7 +896,7 @@ async fn clients(app: &AppState, o: &OAuth, req: Request) -> Response<Body> {
 }
 
 pub fn routes(app: &AppState) -> Router {
-    let env = std::env::var("BEATSCRIPT_SESSION_SECRET").map(|s| s.trim().to_string()).unwrap_or_default();
+    let env = beatscript_serve::env_var("SESSION_SECRET").map(|s| s.trim().to_string()).unwrap_or_default();
     let secret = crate::authsvc::load_secret(&app.cfg.data, &env).unwrap_or_else(|e| {
         eprintln!("beatscript-serve: oauth: {e}");
         std::process::exit(1);
@@ -908,6 +909,7 @@ pub fn routes(app: &AppState) -> Router {
         "/.well-known/oauth-protected-resource/mcp",
         "/.well-known/oauth-authorization-server",
         "/.well-known/btw-capabilities.json",
+        "/.well-known/beatscript-capabilities.json",
         "/oauth/authorize",
         "/oauth/authorize.js",
         "/oauth/authorize.css",
