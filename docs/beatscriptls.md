@@ -101,7 +101,9 @@ Not done: semantic tokens (the editors colour from the TextMate grammar, `editor
 
 A program's references are what `djlive::refs::sites` lists: a call of the seeded generator (`gen@2 techno seed=42
 section=drop part=bass`, an engine call), a seed (`seed(techno, 42).bass[1..8]`, an engine call), a stored program's section
-or part (`<cid>.drop.bass`, a structural import) and a template (`arrange from template(...)`, a structural import). They are
+or part (`<cid>.drop.bass`, a structural import), a template (`arrange from template(...)`, a structural import) and a `use`
+line (`use theme ode_to_joy as tune`: a name for a source, of the source's half; eject writes the line out as its definition, and a
+name a role or a phrase reads as its source there). They are
 worked out once per text (`Analysis::refs`: a generator call is generated and its program compiled, a few ms), and only for a
 text with something a reference starts with in its tokens, so a program with none never pays.
 

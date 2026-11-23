@@ -1,0 +1,28 @@
+#! name: named sources
+# named-sources.beatscript: a track put together from sources named with `use` (CC0). Original.
+# Four sources from the repo, each named on a line of its own and then used as the program's own: the passacaglia template's
+# ground (Holst's five-beat Mars ostinato under its chords, in G minor), the techno genre template's drop, Beethoven's Ode to Joy
+# (moved from D into A minor's relative C major, as a role would move it), and Blake's "Tyger! Tyger! burning bright" from the
+# phrasebook, sung on the tune. `expand` writes every line out; `check` says what each name is.
+tempo 110
+key am
+
+use template(passacaglia).ground as ground
+use genre@1 techno.drop as drop
+use theme ode_to_joy as tune
+use phrase @tyger_burning_bright as tyger
+
+# verse: the tune on a piano over a four-on-the-floor kick, the tyger line sung on it
+section verse 8 bars {
+  deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | hihat ~ x ~ x
+  deck B: melody tune inst=piano
+  deck B: sing tyger on melody voice=robot-choir
+}
+
+arrange {
+  ground verse
+  ~ tune_* rot 2
+  drop verse
+  @ tune_* oct 1
+  verse ground
+}

@@ -414,6 +414,21 @@ arrange from template(quodlibet, @psalm42_deep_calleth, a=badinerie, b=new_world
 - A delay for the round's third voice (`stretto=`), if a canon of four voices is wanted.
 - `.N` for a set's track, if the lexer is taught a `.` before a digit after a CID.
 
+A source can be named first, on a line of its own, and the name bound to the role (`use`, docs/BEATSCRIPT.md "Name a source"), so a
+nested reference reads in lines:
+
+```text
+use gen@1 dubstep seed=54876 section=drop part=bass as walk
+use theme the_entertainer as tune
+use template(passacaglia, ground=walk) as episode_form
+arrange from template(rondo, @shanty_drunken_sailor, refrain=tune, episodes=episode_form)
+```
+
+In a role the name is its source, exactly as if written there (the theme is moved into the role's key by the role). And a form's
+sections can be borrowed one at a time into a program of your own, as **canned sections**: `use template(passacaglia).ground as
+ground` is the passacaglia's ground (the Mars ostinato under its chords, written with the form's own example phrase), and
+`arrange intro ground` places it like a section of yours (`list_examples` with `imports` lists every template's sections).
+
 ## The theme library
 
 The forms' material is the [public-domain theme library](/themes) (`crates/djengine/data/themes-pd.txt`, CC0), the
@@ -425,6 +440,9 @@ twenty (`bass/20`); two bars of 2/4 are one 16-step bar.
 - Paste a theme's lets into a program and play it with its part (`melody ode_to_joy`); move it with `transpose(ode_to_joy, 2)`
   or `~ ode_to_joy_* up 1`.
 - `genre_template` with `theme` puts one into a genre's program, in the genre's key, on the part of its role.
+- `use theme ode_to_joy as tune` names one in a program of your own: its lets named for the name (`tune_1 ... tune`), moved into the program's
+  `key` (to the relative key when the theme's mode is the other one), so `deck B: melody tune` plays it and `~ tune_* rot 2`
+  changes it.
 - `list_examples` with `themes` lists them (by `key`, `role` or `composer`), each with its lets and its part.
 - Every entry is written from the melody as the composer wrote it, never from a modern arrangement, edition, transcription or
   recording; its `note` says where a bar is simplified (the Mars triplet is three sixteenths; Danse macabre's entry is the

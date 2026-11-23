@@ -130,7 +130,8 @@ A program has two halves: its **structure** is the track's own source, and its *
 | doc comments: the `#` lines above a `section`, `let`, `def` or `arrange` | `sing "words" on melody`, `duck`, `mix`: the voice and the mix |
 | `arrange from template(rondo, @hands_up)`: a template is BeatScript with slots | `load`, `queue`, `play`, `stop`, `sync`, `mute`: the decks' transport |
 | `section hook from <cid>.drop`, `<cid>.drop.bass`, `import`: another program's source, by its hash | `gen@2 techno seed=42 section=drop part=bass`: the seeded generator called with its own parameters, the result pinned by its CID ("Call the generator") |
-| a form's roles, `template(rondo, @hands_up, episodes=template(passacaglia, ground=ode_to_joy))`: themes, notes, other programs' parts and sections, other forms, written in as text (a seed in a role stays an engine call); *coming:* `use <source> as NAME` | *coming:* `macro riser over 8 bars on A`, the DJ macro catalogue by name (designed: docs/beatscript/ext-control.md) |
+| a form's roles, `template(rondo, @hands_up, episodes=template(passacaglia, ground=ode_to_joy))`: themes, notes, other programs' parts and sections, other forms, written in as text (a seed in a role stays an engine call) | *coming:* `macro riser over 8 bars on A`, the DJ macro catalogue by name (designed: docs/beatscript/ext-control.md) |
+| `use theme ode_to_joy as tune`, `use <cid>.drop as hook`, `use template(passacaglia).ground as ground`: a name for a source, on a line of its own, written out where the name is used ("Name a source: `use`") | `use gen@2 house seed=7 section=drop part=bass as walk`: a name for an engine call, still pinned and resolved as one |
 | | `control: move echo_out on B`, `at bar 12: control: swap pairs with filter_exit`: the control deck, beside `deck A:`, `deck B:` and `master:`, holds only engine calls, sequenced by sections like any deck ("The control deck") |
 
 One program that uses both:
@@ -162,7 +163,13 @@ A program's CID is of its text as written: the recipe, with its references in it
 - refs lists each reference of the program (a gen@N call, a seed(...), a template(...), a <cid>.section borrowed from a stored
   program): its kind, half (engine or structure), call, place (part, let, section or arrange), name, line and col, resolved
   (the CID it is pinned to), generator, fitted (what a gen call took from the program: key, bpm) and track. With `expand`
-  (`beatscript check --expand`, `"expand": true` on `/api/check` and the MCP check) each one also carries its `expansion`.
+  (`beatscript check --expand`, `"expand": true` on `/api/check` and the MCP check) each one also carries its `expansion`. A `use`
+  line is a reference of kind `use`: its call is the source, its name the name it gives, its place what the name is (section,
+  let, or use for a source of a role or a phrase).
+- imports lists each `use SOURCE as NAME` line of the program: its name, what the name is (is: a section, a line, a source for
+  a role or a phrase), from (the source, in canonical spelling), source (its kind: stored, gen, template, form, theme, phrase or
+  genre), resolved (what it is pinned to: a CID, or the library's CID for a theme or a phrase), line and col, and what (a
+  sentence). `check`, `expand` and `listen` answer it.
 - expanded_cid is the CID of the program with every reference written out as plain BeatScript: cid addresses the recipe,
   expanded_cid the result; the same recipe always gives the same expanded_cid, and a program with no references has
   expanded_cid equal to cid.
@@ -171,8 +178,9 @@ A program's CID is of its text as written: the recipe, with its references in it
   (a template's) is listed with `nested: true`; its own pin is not reported yet (the template expansion does not expose its
   nodes).
 
-`listen` marks each part a reference made with `from` (its call, kind, resolved CID, place and the sections it made it in), and
-a gen call that was fitted to the program's key or tempo says so in its `notes`, in check's words.
+`listen` marks each part a reference made with `from` (its call, kind, resolved CID, place and the sections it made it in; a
+`use` line's also its `name`), and a gen call that was fitted to the program's key or tempo says so in its `notes`, in check's
+words.
 
 ## Grammar (EBNF)
 
@@ -371,7 +379,7 @@ gen_param   = "bpm" "=" NUMBER | "key" "=" KEY | "length" "=" ( "short" | "stand
 structure   = "standard" | "loop" | "minimal" | "extended" ;  (* the generator's song structures; standard is the default *)
 
 (* == Phrase templates == *)
-template    = "template" "(" NAME "," ( PHRASE | STRING ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes: the phrase is the vocal line of a track; then a form's roles *)
+template    = "template" "(" NAME "," ( PHRASE | STRING | NAME ) { "," binding } ")" ;   (* a template's name and a phrase, a phrasebook id or words in quotes (NAME: one a `use phrase` line named): the phrase is the vocal line of a track; then a form's roles *)
 binding     = NAME [ "." role ] "=" ( source | [ "-" ] INT ) ;   (* a role of the form and what fills it: ground=gen@1 dubstep seed=54876 part=bass; one part of a seed role: a.bass=[d2 ~ a1 ~]; a form's number: delay=6 interval=-12 *)
 source      = gen | NAME | notes | form | stored | track ;    (* an engine call; a public-domain theme by id (ode_to_joy); notes; another template, or one section of it; a stored program's part or sections; a stored set's track *)
 notes       = "[" pattern "]" | "<" "[" pattern "]" { "[" pattern "]" } ">" ;   (* a bar, or bars one after another *)
@@ -397,7 +405,7 @@ mixitem     = deck "level" arith | deck "eq" band arith [ "db" ] | "master" "lev
 band        = "low" | "mid" | "high" ;
 db          = DECIMAL "db" ;                                  (* glued: 6db *)
 time        = DECIMAL ( "ms" | "s" ) ;                        (* glued: 5ms *)
-sing        = "sing" ( lyric | PHRASE ) "on" role { "bars=" INT | "key=" KEY | "voice=" NAME } ;   (* a tonal role; PHRASE: a phrasebook id, @hands_up *)
+sing        = "sing" ( lyric | PHRASE | NAME ) "on" role { "bars=" INT | "key=" KEY | "voice=" NAME } ;   (* a tonal role; PHRASE: a phrasebook id, @hands_up; NAME: a phrase a `use phrase` line named *)
 lyric       = STRING ;   (* its text is lyric_text; docs/beatscript/phonemes.md *)
 lyric_text  = { TEXT | "/" SPACE | escape } [ "/" { TEXT } ] ;   (* "/" and a space is a phrase break; "/" and a phoneme opens an escape, to the next "/" (with none, a break too); a word touching "=" before an escape is its label, kept and not sung: jingle=/j ii ng g uh l/ *)
 escape      = "/" PHONES "/" ;   (* PHONES (beatscript-v1): aa ae uh aw eh er ii ee uu oo ay ie oy ow oh p b t d k g f v s z sh zh th dh h m n ng l r w y ch j, "_" a rest, "-" cuts a word, ":" holds a vowel one more note, "!" accents it *)
@@ -436,7 +444,15 @@ import      = "import" ( NAME | STRING ) ;                    (* a snippet's nam
 sample      = "sample" NAME "from" STRING [ "license" license ] [ "else" NAME ]
             | "loop" STRING "as" NAME [ "else" NAME ] ;       (* restricted sounds: a local file, an Apple Loop by its hash *)
 license     = "cc0" | "cc-by" | "all-rights-reserved" | "restricted-private" ;
-use         = "use" "restricted" ;
+use         = "use" "restricted"                                (* the program is private: it may use restricted assets *)
+            | "use" use_source "as" NAME ;                        (* a name for a source, written out where it is used (docs/beatscript/ext-roles.md) *)
+use_source  = stored                                            (* <cid>.drop: a section; <cid>.drop.bass: a line; <cid>: a source for a role *)
+            | gen                                               (* gen@2 techno seed=42 section=drop, part=bass: a section or a line; with neither, a source for a role *)
+            | form [ "." NAME ]                                 (* template(passacaglia, ground=...): a form, for a role; .ground: a canned section of it *)
+            | template "." NAME                                 (* template(deep-house, @tempest_such_stuff).night: a canned section, sung with that phrase *)
+            | "theme" NAME                                      (* a theme of the public-domain library: a line, in the program's key *)
+            | "phrase" PHRASE                                   (* a phrasebook line: a phrase, for sing and template *)
+            | GENRE NAME "." NAME ;                             (* genre@1 techno.drop: a section of a genre template, frozen *)
 ```
 <!-- /grammar.ebnf -->
 
@@ -1404,6 +1420,53 @@ Three phrases, three tracks (`examples/beatscript/`): `such-stuff-as-dreams-122.
 made on", iambic, 20 syllables, a four-bar line in the bar; `assyrian-122.beatscript`, Byron's anapestic "The Assyrian came down like
 the wolf on the fold", 12 syllables, the 12-step cycle; `commit-message-122.beatscript`, "make the drop deeper and move the
 kick", a commit message whose stress is worked out. Long note: `docs/beatscript/ext-template.md`.
+
+### Name a source: `use`
+
+`use SOURCE as NAME` gives a source a name, on a line of its own at the top of the program, and the name is then used where a
+section, a `let` or a phrase of the program's own would be. A long reference reads in lines, and a source used twice is named
+once:
+
+```text
+use z4EBG9j9....drop as hook                             a stored program's section: arrange intro hook
+use z4EBG9j9....drop.bass as riff                        one of its parts, a line: deck A: bass riff inst=sub-bass
+use gen@2 house seed=7 section=drop part=bass as walk    a seed's part, a let a bar: ~ walk_* rot 2
+use template(passacaglia).ground as ground               a canned section: a section of a template, written out
+use template(deep-house, @tempest_such_stuff).night as night    the same, sung with that phrase
+use genre@1 techno.drop as drop                          a genre template's section (genre_template's starter, frozen)
+use theme ode_to_joy as tune                             a theme, in the program's key: deck B: melody tune inst=piano
+use phrase @tyger_burning_bright as tyger                a phrasebook line: deck B: sing tyger on melody
+use template(passacaglia, ground=walk) as episode_form   a form, for a role: template(rondo, @hands_up, episodes=episode_form)
+```
+
+| source | the name is | written out (first, before templates, seeds and calls) |
+|---|---|---|
+| `<cid>.drop`, `gen@2 ... section=drop` | a section | `section NAME from <cid>.drop`, which the stored stage writes out ("Borrow from a stored program") |
+| `<cid>.drop.bass`, `<cid>.bass`, `gen@2 ... part=bass` | a line | `let NAME = <cid>.drop.bass` (its pattern), `let NAME = gen@2 ...` (a let a bar) |
+| `template(passacaglia).ground`, `template(deep-house, @id).night` | a section | the template written out (with the form's own example phrase when it names none), then that section borrowed by its CID |
+| `genre@1 techno.drop` | a section | the genre's starting program as `genre_template` writes it, frozen in genre templates v1, then that section borrowed by its CID |
+| `theme ode_to_joy` | a line | its bars as lets named for the name, `NAME_1` ... `NAME = <NAME_1 ...>`, moved into the program's `key` (to its relative key when the theme's mode is the other one), as a role moves one |
+| `phrase @tyger_burning_bright` | a phrase | nothing: `sing NAME on ROLE` and `template(T, NAME)` sing `@id` |
+| `<cid>`, `gen@2 ...` (no section or part), `template(passacaglia, ground=...)` | a source for a role | nothing: `ROLE=NAME` in a template reads the source |
+
+- **In a role the name is its source.** `episodes=episode_form` is the form itself, nested as if written there; `subject=tune` is
+  the theme, moved into the role's key by the role. A theme or a section whose name only roles read writes nothing at its line.
+- **Pinned**: a CID names its text, `gen@N` its version, a canned section templates v1, a genre template `genre@N` (a bare
+  `genre` is `genre@1`, and the canonical text writes it), a theme and a phrase their library (the file's CID). What is in the
+  repo resolves offline, everywhere the language runs; a CID goes through the host's programs as any stored reference does.
+- **The canonical text keeps the line** (`use theme ode_to_joy as tune`) and the name where it is used, so a program with a
+  `use` is its own program, and no existing CID moves.
+- **Rules**: a `use` is at the top; a name is given once and is not a `let`, section or def the program has (nor, for a line,
+  one of its bars `NAME_1` ...); it is used after its `use` only, so no `use` reaches itself; it goes only where its kind goes
+  (a section where `arrange` places one, a line where a part or a mutation reads one, a phrase where `sing` or a template's
+  phrase is, a source after a role's `=`). Each is an error at the place, with the line that would work. A name never used is a
+  warning.
+- `check` says what each name is, in a note at its line (`` `tune` is a line: ode_to_joy (Symphony No. 9, Beethoven, 1824), 4
+  bars of 16 steps, moved -2 semitones from d into am; play it as `melody tune` ``); `refs` lists the line (kind `use`), and
+  `imports` each name with its source; `listen` marks the parts a `use` made with `from`, and its `name`. Eject (`beatscript expand`,
+  the MCP `expand`, the editor) writes the line out under `# from: <source> -> <CID>`, and a name in a role or a phrase's place
+  as its source. A program's JSON-LD and lineage say it is based on what it uses (`isBasedOn`: a stored program's CID, the
+  call, the library). Long note: `docs/beatscript/ext-roles.md`, "Name a source".
 
 ## The language extensions
 

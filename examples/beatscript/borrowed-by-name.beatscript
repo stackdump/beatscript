@@ -1,0 +1,22 @@
+#! skip-test: names a saved program, hand-dubstep-140 v2 (z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi), and a seed of the generator, which tests/examples_beatscript.rs checks without; tested in crates/beatscript-api/tests/uses.rs with that program as a snippet
+#! name: borrowed by name
+# borrowed-by-name.beatscript: the drop of a saved track and the bass of a seed, each named once with `use` and used by name (CC0). Original.
+# `hook` is the drop of hand-dubstep-140 v2 by its CID: a section, so `arrange` places it (its filter sweeps stay behind, and
+# `check` says so). `walk` is the bass of the drop of the generator's dubstep seed 54876 (seeded@1), generated in this program's
+# key and at its tempo: a line, a let a bar, so a part plays it and `~ walk_* rot 2` turns it. `expand` writes both out.
+tempo 140
+key fm
+
+use z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi.drop as hook
+use gen@1 dubstep seed=54876 section=drop part=bass as walk
+
+# intro: a kick and the seed's bass, before the borrowed drop
+section intro 8 bars {
+  deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ vel=100 | bass walk inst=sub-bass
+}
+
+arrange {
+  intro hook
+  ~ walk_* rot 2
+  intro hook
+}

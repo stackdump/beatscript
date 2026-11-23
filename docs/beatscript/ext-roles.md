@@ -1,9 +1,11 @@
 # Roles: a form's parts bound to sources
 
-Long note for docs/BEATSCRIPT.md "Phrase templates", the roles paragraph (roadmap 6673, 6674, 6678). Code: `crates/djlive/src/roles.rs`
-(the role tables, the reader of a binding, the writing out), `crates/djlive/src/template.rs` (the reference and its canonical
-spelling), `crates/djlive/templates/cross.beatscript` (the cross form). Tests: `crates/djlive/tests/roles.rs` (no generator: themes,
-notes, forms in a role) and `crates/beatscript-api/tests/forms_roles.rs` (seeds in a role, stored programs, eject).
+Long note for docs/BEATSCRIPT.md "Phrase templates", the roles paragraph (roadmap 6673, 6674, 6678), and "Name a source: `use`"
+(roadmap 6668's canned and stock sections; the last section below). Code: `crates/djlive/src/roles.rs` (the role tables, the
+reader of a binding, the writing out), `crates/djlive/src/template.rs` (the reference and its canonical spelling),
+`crates/djlive/templates/cross.beatscript` (the cross form), `crates/djlive/src/uses.rs` (`use`). Tests: `crates/djlive/tests/roles.rs`
+(no generator: themes, notes, forms in a role), `crates/beatscript-api/tests/forms_roles.rs` (seeds in a role, stored programs, eject),
+`crates/djlive/tests/uses.rs` and `crates/beatscript-api/tests/uses.rs` (`use`).
 
 ## What it is
 
@@ -148,13 +150,6 @@ ground=gen@1 dubstep seed=54876 part=bass, ...)) -> z4EBG9...`. The seed calls l
 their turn, each ejected under its own `# from: gen@1 ... -> <CID>` line. Every level plays the same (the nets are equal), and
 `forms_roles.rs` holds it.
 
-## Designed, not built
-
-- **`use SOURCE as NAME`**: a standalone structural import, so a long nested reference reads in lines:
-  `use template(passacaglia, ground=gen@1 dubstep seed=54876) as episode_form` then `episodes=episode_form`. `use` exists only as
-  `use restricted` today (grammar.ebnf `use`, parse.rs); `use <source> as NAME` would be its second form, a name for a source,
-  written out where it is used.
-
 ## Built since (docs/beatscript/forms.md "Extensions")
 
 - **Sets in a role**: a stored set's tracks as a role of sections, each track's sections in turn (`episodes=<set cid>`), and one
@@ -165,3 +160,135 @@ their turn, each ejected under its own `# from: gen@1 ... -> <CID>` line. Every 
 - **Sub-roles**: `a.bass=...` binds one part of a seed role, beside the whole role or alone.
 - **The canon's `delay=` and `interval=`**: the chase's copy N beats behind, N semitones from the leader.
 - **Quodlibet roles**: `a`, `b`, `ground`, `third`.
+
+## Name a source: `use` (built)
+
+`use SOURCE as NAME` is `use`'s second form (the first is `use restricted`): a standalone structural import, so a long nested
+reference reads in lines, and a source used twice is named once.
+
+```text
+use gen@1 dubstep seed=54876 section=drop part=bass as walk
+use template(passacaglia, ground=walk) as episode_form
+arrange from template(rondo, @shanty_drunken_sailor, episodes=episode_form)
+```
+
+### Grammar
+
+```ebnf
+use         = "use" "restricted"
+            | "use" use_source "as" NAME ;
+use_source  = stored                 (* <cid>.drop  <cid>.drop.bass  <cid> *)
+            | gen                    (* gen@2 techno seed=42 section=drop [part=bass] *)
+            | form [ "." NAME ]      (* template(passacaglia, ground=...)  template(passacaglia).ground *)
+            | template "." NAME      (* template(deep-house, @tempest_such_stuff).night *)
+            | "theme" NAME
+            | "phrase" PHRASE
+            | GENRE NAME "." NAME ;  (* genre@1 techno.drop; GENRE is genre@N or a bare genre *)
+sing        = "sing" ( lyric | PHRASE | NAME ) "on" role ... ;        (* NAME: a phrase a `use phrase` line named *)
+template    = "template" "(" NAME "," ( PHRASE | STRING | NAME ) ... ; (* the same *)
+```
+
+A source is one word to the parser (`uses::collapse`, as a template reference is: `template::collapse`), in its canonical
+spelling: a `gen` call as gen.rs writes it, a template reference with its roles in the form's order, `genre@1` with its version.
+`use   theme  ode_to_joy as tune` and `use theme ode_to_joy as tune` are one program. A kind is a word where the source has none
+of its own (`theme`, `phrase`, `genre`); a CID, a `gen@N` call and a `template(` speak for themselves. A bare name is no
+source: `use ode_to_joy as tune` is refused with "did you mean `use theme ode_to_joy as NAME`?".
+
+### What it lowers to
+
+The `use` stage runs first (compile.rs: use, template, seed, gen, stored), and writes each line out in place:
+
+| source | the name is | the line is written as |
+|---|---|---|
+| `<cid>.drop`, `gen@N ... section=drop` | a section | `section NAME from <source>`; the stored (and gen) stages write it out |
+| `<cid>.drop.bass`, `<cid>.bass`, `gen@N ... part=bass` | a line | `let NAME = <source>`: a stored part's pattern, read in the key it lands in; a seed's part a let a bar (`NAME_*`) |
+| `template(F[, PHRASE][, roles]).S` | a section | the template written out alone (`arrange from template(...)`, with the form's own example phrase when it names none), its canonical text known by its CID to the stages after this one (as a `gen` call's program is: `gen::with_generated`), and `section NAME from <cid>.S` |
+| `genre@N G.S` | a section | the genre template, from the frozen file `crates/djengine/data/genre-templates.txt`, known by its CID the same way, and `section NAME from <cid>.S` |
+| `theme ID` | a line | its bars, `let NAME_1 = ...` ... `let NAME = <NAME_1 ...>`, moved into the program's top-level `key` (`roles::theme_shift`: to its tonic, or its relative key when the theme's mode is the other one; the nearest way) |
+| `phrase @ID` | a phrase | nothing; `sing NAME on ROLE` and `template(T, NAME)` are written `@ID` |
+| `<cid>`, `gen@N ...` (whole), `template(F, roles)` | a source for a role | nothing; `ROLE=NAME` is written `ROLE=<source>` |
+
+In a role binding the name always stands for its source (a theme's name is the theme id, which the role moves into its own key;
+a section's is `<cid>.S`), and a `use` whose name only roles and phrases read writes nothing at its line. A role inside another
+`use` line's source takes the names above it the same way (`use template(passacaglia, ground=walk) as episode_form`).
+
+### What it refuses
+
+| it finds | it says, with what would work |
+|---|---|
+| a source of no kind | `` `foo` is no source for `use` `` (a theme's id: did you mean `use theme foo as NAME`?; a near kind word: did you mean `theme`?) |
+| notes, `seed(...)`, a bare `@id` | notes need no `use` (`let riff = d2 ~ a1 ~`); `seed(...)` is no source (`use gen@2 techno seed=42 section=drop as drop`); a phrasebook line is named with `phrase` |
+| an unknown theme, phrase, template, template section, genre or genre section | the nearest names and the ones there are |
+| `genre@7` | this BeatScript has genre@1, not `genre@7` |
+| a stored CID no host has, a section it lacks; a `gen` call that does not resolve | the stored and gen stages' own errors, at the line |
+| a name given twice, or the program's own `let`, section or def (or a line's bar `NAME_2`) | `` `tune` is named already, by the `use` on line 1 ``, `` `tune` is bound already: a let `tune` on line 1 `` |
+| a name used before its line, or in its own line | `` `tune` is used before its `use` (line 4) ``: move the line above |
+| the wrong kind for the place | a section where a part plays a line (name one part of it), a line where `arrange` places a section (play it in a section), a phrase in a role, a source for a role anywhere but after a role's `=`, a name `sing` takes that no `use phrase` line gave |
+| a `use` in a block | a `use` goes at the top of the program |
+| a template with a phrase and no section | it makes a whole track: name one of its sections |
+
+A name never used is a warning (its definition is not written).
+
+### Reports
+
+`check` gives a note at each line saying what the name is; `refs` lists the line as a reference of kind `use` (half `engine` for a
+`gen` source, else `structure`; its call the source; its place `section`, `let` or `use`; its name; its pin in `resolved`; for a
+`gen` source its generator and what it was fitted to), and `imports` each name with its source (beatscript-api `IMPORTS_DOC`). The MCP
+`check`, `expand` and `listen` answer `imports`; `listen` marks a part a `use` made with `from`, and its `name`. Eject writes a line
+out under `# from: <source> -> <pin>` (a section through every stage, as its music; a theme as its lets), and a name in a role or a
+phrase's place as its source (a line nobody else reads goes). `refs::based_on` adds each theme, phrase and genre template (with its
+library's or its program's CID) to what a program is based on (its JSON-LD `isBasedOn`, lineage); a stored CID on a `use` line is
+credited as any borrow is (`stored::cids_of`), a `gen` call as any call.
+
+### Decisions
+
+- **Written out at the line, as a definition, not substituted at every use.** `arrange intro hook` and `~ tune_* rot 2` need a
+  section and lets of those names; substituting a source where a section name goes means nothing. So a section or a line is
+  defined once where the `use` stands, and the stages after it see the same `section NAME from <cid>.drop` or `let NAME = ...` a
+  person would have typed. In a role the name is the source (a role reads sources, not lets: a theme bound to a role is moved
+  into the role's key, which a let of the program's key would not be). This is the design's "written out where it is used", read
+  for each place.
+- **What the name is follows from the source, and is checked at every use.** The source says section, line, source for a role
+  or phrase; a use in the wrong place is an error at it naming what the name is. The places are read from the tokens (an
+  `arrange` line or a section line of `arrange { }`, a part line or a mutation, a role's `=`, `sing NAME on`, a template's
+  phrase); anywhere else the checker decides as for any name.
+- **A theme is moved into the program's key**, as a role moves one (`theme_shift`), and kept as the library has it when the
+  program says no key; check says which. A form keeps its own themes in its own key; a `use` is the program's, so it plays in the
+  program's.
+- **A canned section is a section of a template's written-out program, borrowed by its CID**, the way a `gen` call's section is
+  (`gen::with_generated`), so the stored stage writes it out with no second copy of that code: its parts as they play, its `key`
+  when it differs, never its control lines (its `sing` and `mix` stay behind, and the stored stage warns). With no phrase it is
+  written with the form's own example phrase (`template(passacaglia).ground` is `template(passacaglia, @eccl3_season)`'s ground):
+  templates v1 fixes both. These are 6668's "canned/stock sections reachable the same way".
+- **The genre templates are frozen as a file, `genre@N`.** `genre_template` builds a genre's starting program from the ontology
+  and the instrument catalogue, both of which move; a reference must mean the same music for ever, offline, on every host (beatscript,
+  the page's wasm, the editor). So the starters are written once into `crates/djengine/data/genre-templates.txt` (CC0, version 1)
+  and compiled in; beatscript-serve's `genre_templates_v1_are_frozen` fails when `genre_template` would now write a genre differently, and
+  the answer then is a version 2 beside it, never an edit. The version is in the text (`genre@1`; a bare `genre` is 1 and the
+  canonical text writes it), as `gen@N`'s is.
+- **A phrase is a name for an `@id`**, read by `sing` and by a template's phrase; the parser resolves `sing NAME on` against the
+  `use phrase` lines (a name none gave is an error there, as a `let` gives a name a value only below it), and the canonical text
+  keeps the name.
+- **Pins**: a stored CID, a `gen` call's program, a canned section's or genre template's program CID; a theme and a phrase are
+  pinned by their library (the CID of `themes-pd.txt`, of `phrasebook-pd.txt`; a stock phrase has none); a form by nothing of its
+  own (what it writes depends on the role it fills).
+- **No new MCP tool.** What can be named is listed by `list_examples` (`imports`: the kinds, the templates and their sections,
+  the genre templates and theirs) and `genre_template` (its answer's `use`: each of the genre's sections as a `use` line).
+- **One more kind is one more arm** of `uses::Source` (and a word for it in `read_source`): a bar slice of a stored program, a
+  render, a set's track would each be one.
+
+### Not done
+
+- **A bar slice of a CID** (`use <cid>[17..24] as NAME`, as `seed(...)[17..24]`): asked for in this run and set aside for Matt's
+  yes or no; it would build a `seed::Track` from the compiled program and reuse seed.rs's writer.
+- A `use` in an imported snippet is not written out (an `import` brings lets and defs); a `use` names nothing across programs.
+- A stored part as a line is its pattern only (as `let riff = <cid>.drop.bass` is); its params stay behind: write them on the
+  part line, or borrow the part on the line (`deck A: bass <cid>.drop.bass`).
+- A section is not renamed by a `use` (`section verse from hook` is not read); a name is not a parameter of a `def`.
+- The editor's highlighting does not mark `theme`, `phrase` and `genre` as words of a `use` line.
+- A form named by `use` has no pin of its own (what it writes depends on the role it fills; 6680 item 2 gives nested nodes CIDs).
+
+### Proposals
+
+- `use set <cid>.k as NAME`: a set's k-th track, as a source for a role (sets in a role are built: "Built since" above).
+- `use <cid>[a..b] as NAME`, if Matt says yes (above).
