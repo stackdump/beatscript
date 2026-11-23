@@ -277,7 +277,7 @@ net macros (`cut double-drop beat-repeat tempo-anchor drop breakdown`), 13 maste
 phaser-drone octave-up octave-down pitch-bend feel-chill feel-drive feel-ambient feel-euphoric feel-build feel-wind-down
 feel-reset`) and 9 pan / shape / aux macros (`cathedral ping-pong auto-pan mono hard-left hard-right tighten loosen pulse`).
 
-`macro@1` (`djlive::macros::V1`) is a copy of the catalogue's ids as of the engine this repo pins (djrust `7420204`), each with its
+`macro@1` (`djlive::macros::V1`) is a copy of the catalogue's ids as of the engine this repo pinned then (djrust `7420204`), each with its
 category, its family, whether it is a transition, whether it needs a net deck, and its length, compiled into djlive and never
 edited: a stored program's `macro riser` means what it meant when it was stored. `tests/macros.rs` pins the table's CID and holds
 it to the engine's catalogue entry by entry, so moving the pin to an engine whose catalogue changed fails until the new catalogue is
