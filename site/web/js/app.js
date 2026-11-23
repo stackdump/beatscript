@@ -923,7 +923,8 @@ export class App {
     if (typeof text !== 'string' || !this.beatscript) return report.canonical;
     let f;
     try { f = this.beatscript.fmt(text); } catch { return report.canonical; }
-    if (!f || !f.ok || f.cid !== report.cid) return report.canonical;
+    // fmt upgrades a BeatScript 1 text (its cid is then the BeatScript 2 one, from_cid the text's own): the comments are the same
+    if (!f || !f.ok || (f.cid !== report.cid && f.from_cid !== report.cid)) return report.canonical;
     return storedText(report.canonical, f.comments);
   }
 
