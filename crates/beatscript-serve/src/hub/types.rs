@@ -294,12 +294,15 @@ impl QueueView {
     }
 }
 
-/// `api.QueueOp`: list | add | remove | clear | skip.
+/// `api.QueueOp`: list | add | remove | move | clear | skip.
 #[derive(Clone, Debug, Default)]
 pub struct QueueOp {
     pub action: String,
     pub items: Vec<QueueItem>,
+    /// the item key (an id, q1 ..., or a CID) for remove, move and skip (skip: empty is the next item)
     pub remove: String,
+    /// move: the index the item goes to (0 is first; past the end is last)
+    pub to: usize,
 }
 
 /// `api.SessionInfo`.

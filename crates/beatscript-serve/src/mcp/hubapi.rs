@@ -43,12 +43,15 @@ pub struct QueueItem {
 }
 
 /// `api.QueueOp`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct QueueOp {
-    /// list | add | remove | clear | skip
+    /// list | add | remove | move | clear | skip
     pub action: String,
     pub items: Vec<QueueItem>,
+    /// the item key (an id or a CID) of remove, move and skip (skip: empty is the next item)
     pub remove: String,
+    /// move: the index the item goes to
+    pub to: usize,
 }
 
 /// A private push (`push_private`): text the server seals for the phone, or an envelope a client sealed itself.

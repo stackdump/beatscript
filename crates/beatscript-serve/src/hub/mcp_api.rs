@@ -48,7 +48,7 @@ impl HubApi for Hub {
             .into_iter()
             .map(|i| QueueItem { cid: i.cid, title: i.title, source: i.source, example: i.example, bars: i.bars, minutes: i.minutes, text: i.text, ..Default::default() })
             .collect();
-        Hub::queue(self, user(uid).as_ref(), session, QueueOp { action: op.action, items, remove: op.remove }).map(|(v, sent)| (val(v.to_json()), sent)).map_err(Fail::from)
+        Hub::queue(self, user(uid).as_ref(), session, QueueOp { action: op.action, items, remove: op.remove, to: op.to }).map(|(v, sent)| (val(v.to_json()), sent)).map_err(Fail::from)
     }
 
     fn push_private(&self, uid: &str, device: &str, what: hubapi::PrivatePush, max_program_bytes: usize) -> Result<Value, Fail> {
