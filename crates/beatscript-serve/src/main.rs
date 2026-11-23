@@ -1242,6 +1242,12 @@ mod surface_tests {
             assert!(got.starts_with("https://beatscript.app/schema#") || got.starts_with("https://schema.org/"), "{term}: {got}");
         }
         for term in schema.keys().filter(|k| !k.starts_with('@') && !["bs", "bw", "schema"].contains(&k.as_str())) {
+            // a schema.org term /schema names that the published context (never edited: a change is a new context) does not, as
+            // `hasPart` (6680's nested parts): a BeatScript 2 document lists schema.org after its context, so the term means the
+            // same there
+            if !bs.contains_key(term) && iri(schema, term).starts_with("https://schema.org/") {
+                continue;
+            }
             assert_eq!(iri(bs, term), iri(schema, term), "{term} means one thing in both contexts");
         }
         assert!(!String::from_utf8_lossy(public::CONTEXT_BEATSCRIPT_V1).contains("djrust"), "no djrust: IRI in the new vocabulary");

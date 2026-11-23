@@ -674,8 +674,8 @@ fn a_recipe_is_stored_with_its_expansion_beside_it() {
     let expanded_of = |t: &str| serde_json::from_str::<Value>(&beatscript_api::check_json(t)).unwrap()["expanded_cid"].as_str().unwrap().to_string();
     let file = |cid: &str| -> Value { serde_json::from_str(&std::fs::read_to_string(programs.join(format!("{cid}.json"))).unwrap_or_else(|e| panic!("{cid}: {e}"))).unwrap() };
 
-    // MCP share, signed in
-    let recipe = "#! name: Season\narrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n";
+    // MCP share, signed in (BeatScript 2: its expansion is BeatScript 2 too, served at its own CID)
+    let recipe = "#! beatscript 2\n#! name: Season\narrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n";
     let (cid, x) = (cid_of(recipe), expanded_of(recipe));
     assert_ne!(cid, x);
     let (err, v) = s.mcp(TOKEN_A, "share", json!({"text": recipe, "license": "CC-BY-4.0", "credits": ["ann"]}));
@@ -721,8 +721,14 @@ fn a_recipe_is_stored_with_its_expansion_beside_it() {
     // a template with nothing to write out after it: its written-out program is the expansion, which is never based on itself
     let based: Vec<String> = file(&x)["meta"]["based_on"].as_array().unwrap().iter().map(|l| l.as_str().unwrap().to_string()).collect();
     assert!(based.iter().any(|l| l.starts_with("template(canon")) && based.iter().all(|l| !l.contains(&x)), "{based:?}");
+    // (a BeatScript 1 recipe: its expansion is BeatScript 1, stored with its twin as every BeatScript 1 program is, so its page
+    // redirects there; the twin keeps where it came from and what it was written out from, never itself)
+    let twin = djlive::compile::renamed_cid(file(&x)["text"].as_str().unwrap());
     let page = s.call("GET", &format!("/p/{x}"), &[("Accept", "text/html".into())], b"");
-    assert!(page.body.contains(r#""derivation":"expanded""#) && !page.body.contains(&format!(r#""resolves":"{x}""#)), "{}", page.body);
+    assert!(page.status == 308 && page.body.contains(&format!("/p/{twin}")), "{} {}", page.status, page.body);
+    assert_eq!(file(&twin)["meta"]["expanded_from"].as_str(), Some(cid.as_str()));
+    let page = s.call("GET", &format!("/p/{twin}"), &[("Accept", "text/html".into())], b"");
+    assert!(page.body.contains(r#""derivation":"expanded""#) && !page.body.contains(&format!(r#""resolves":"{x}""#)) && !page.body.contains(&format!(r#""resolves":"{twin}""#)), "{}", page.body);
 
     // PUT /api/shares/<cid> (signed in)
     let recipe = "arrange from template(passacaglia, @eccl3_season, ground=[g1 ~ d2 ~])\n";
@@ -764,9 +770,10 @@ fn a_recipe_is_stored_with_its_expansion_beside_it() {
     assert_eq!(r.status, 201, "{}", r.body);
     assert!(r.json().get("expanded_cid").is_none() && r.json()["meta"].get("expands_to").is_none(), "{}", r.body);
     // everything stored is admitted (this process cannot read the program the borrowing recipe draws on, which the server can:
-    // that one recipe is the audit's only complaint here)
+    // that one recipe, and its BeatScript 2 twin, which draws on it too, are the audit's only complaints here)
+    let borrower_twin = djlive::compile::renamed_cid(file(&borrower)["text"].as_str().unwrap());
     let bad = beatscript_serve::gate::audit_dir(&programs);
-    assert!(bad.iter().all(|(f, _)| *f == format!("{borrower}.json")), "{bad:?}");
+    assert!(bad.iter().all(|(f, _)| *f == format!("{borrower}.json") || *f == format!("{borrower_twin}.json")), "{bad:?}");
 }
 
 fn link_of(s: &Server, text: &str) -> String {
