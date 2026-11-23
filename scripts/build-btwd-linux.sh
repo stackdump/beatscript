@@ -272,7 +272,7 @@ if [ "$SMOKE" = 1 ] && [ "$PKG" = btwserve ]; then
     /b/btwserve -addr 127.0.0.1:18098 -data /d -log-dir off >/tmp/log 2>&1 &
     sleep 1; cat /tmp/log
     echo "(no curl in a bare image: the HTTP smoke is the listen line above; renders are checked by parity.py)"
-    kill %1' < smoke.btw
+    kill $!' < smoke.btw
 elif [ "$SMOKE" = 1 ]; then
   echo "-- render smoke.btw in ubuntu:24.04"
   docker run --rm -i -v "$PWD/target/release:/b:ro" ubuntu:24.04 sh -c '
