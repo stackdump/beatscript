@@ -586,9 +586,9 @@ pub fn cli_with(args: &[String], programs: &dyn Snippets) -> Result<String, Stri
     let rec = RecordedSet::from_json(&json)?;
     let author = recording_author(&json);
     let sp = set_program(&rec, &Options { author: author.as_deref(), programs: Some(programs) })?;
-    let btw = out.join(format!("{}.beatscript", file_stem(&rec.name)));
+    let file = out.join(format!("{}.beatscript", file_stem(&rec.name)));
     let take = out.join(format!("{}.take.json", sp.take_cid));
-    write(&btw, sp.text.as_bytes())?;
+    write(&file, sp.text.as_bytes())?;
     write(&take, pretty_sorted(&sp.take).as_bytes())?;
     let mut tracks = Vec::new();
     for (cid, text) in &sp.tracks {
@@ -601,7 +601,7 @@ pub fn cli_with(args: &[String], programs: &dyn Snippets) -> Result<String, Stri
     let mut o = JsonObject::from_pairs([
         ("program_cid", JsonValue::str(sp.program_cid.clone())),
         ("take_cid", JsonValue::str(sp.take_cid.clone())),
-        ("program", JsonValue::str(beatscript.display().to_string())),
+        ("program", JsonValue::str(file.display().to_string())),
         ("take", JsonValue::str(take.display().to_string())),
     ]);
     if !tracks.is_empty() {
