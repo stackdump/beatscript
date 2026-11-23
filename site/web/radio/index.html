@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16213e">
+<meta name="color-scheme" content="dark">
+<title>Radio · BeatScript</title>
+<meta name="description" content="BeatScript radio: endless stations that are always the same. A station is a BeatScript program, position N of a station is always the same track, and a knob turned a notch takes you to the station next door at the same position.">
+<link rel="canonical" href="https://beatscript.app/radio">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BeatScript">
+<meta property="og:title" content="BeatScript radio">
+<meta property="og:description" content="Endless, deterministic stations: position N of a station is always the same track. Tune a knob, lock the ones you like.">
+<meta property="og:url" content="https://beatscript.app/radio">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/legal.css">
+<link rel="stylesheet" href="/css/station.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/" aria-label="BeatScript home"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">BeatScript</span></a>
+  <span class="spacer"></span>
+  <nav aria-label="Site"><a href="/">Editor</a><a href="/radio" aria-current="page">Radio</a><a href="/docs/">Docs</a></nav>
+</header>
+
+<main class="radio">
+<h1>Radio</h1>
+<p class="lede">Endless stations that are always the same. A station is a BeatScript program, and position N of a station is always the same track. Turn a knob a notch to go to the station next door, at the same position; lock the knobs you want to keep.</p>
+
+<section class="player" aria-label="Player">
+  <div class="transport">
+    <button type="button" class="r-play" id="r-play" aria-pressed="false" disabled><span class="r-play-ic" aria-hidden="true"></span><span id="r-play-lbl">Play</span></button>
+    <span class="r-state" id="r-state" role="status">Tuning in…</span>
+  </div>
+  <div class="pos" role="group" aria-label="Position">
+    <button type="button" class="tb" id="r-prev" aria-label="The track before">‹ prev</button>
+    <label class="pos-n">Position <input type="number" id="r-n" min="0" step="1" value="0" inputmode="numeric"></label>
+    <button type="button" class="tb" id="r-next" aria-label="The track after">next ›</button>
+    <label class="check"><input type="checkbox" id="r-segues" checked> <span>segues between tracks</span></label>
+  </div>
+  <div class="cards">
+    <article class="card" id="r-now" aria-labelledby="r-now-h">
+      <h2 id="r-now-h">Now playing</h2>
+      <dl class="facts" id="r-now-dl"></dl>
+    </article>
+    <article class="card" id="r-up" aria-labelledby="r-up-h">
+      <h2 id="r-up-h">Up next</h2>
+      <dl class="facts" id="r-up-dl"></dl>
+      <p class="segue" id="r-segue"></p>
+    </article>
+  </div>
+</section>
+
+<section class="tuner" aria-labelledby="r-tune-h">
+  <h2 id="r-tune-h">Tune</h2>
+  <p class="note">Set a knob and press Tune, or turn one a notch with − and +. A lock holds a knob where it is: Scan and the notches leave it alone. Whatever you turn, the position stays.</p>
+  <div class="knobs" id="r-knobs"></div>
+  <div class="row">
+    <button type="button" class="tb primary" id="r-tune" disabled>Tune</button>
+    <button type="button" class="tb" id="r-scan" disabled title="A notch along a knob that is not locked, the same one every time for this station at this position">Scan</button>
+  </div>
+  <div class="msg" id="r-msg" role="status" aria-live="polite"></div>
+</section>
+
+<section class="program" aria-labelledby="r-prog-h">
+  <h2 id="r-prog-h">The station's program</h2>
+  <p class="meta">CID <code id="r-cid">not answered yet</code> · CC0-1.0</p>
+  <pre class="src" id="r-text" tabindex="0" aria-label="The station's program text, read-only"></pre>
+  <p class="row"><a id="r-link" href="/radio">A link to this station at this position</a> <button type="button" class="tb" id="r-copy">Copy link</button></p>
+</section>
+
+<noscript><p class="note">The radio needs JavaScript: the station is asked for and played in your browser.</p></noscript>
+</main>
+
+<footer class="site">
+  <a href="/">BeatScript</a> · <a href="/radio">Radio</a> · <a href="/privacy">Privacy</a> · <a href="/delete-account">Delete account</a> · <a href="/authorship">Authorship and rights</a> · <a href="mailto:myork@stackdump.com">Contact</a>
+</footer>
+<script type="module" src="/js/station.js"></script>
+</body>
+</html>

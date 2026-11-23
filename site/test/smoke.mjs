@@ -873,6 +873,60 @@ try {
     await shot(15, 'import-by-cid');
   }
 
+  // ---- 16. the radio: a station tuned, stepped, locked, scanned, linked and played (/radio) ------------------------------------------------------------
+  step = 16;
+  if (want()) {
+    const R = (expr) => page.eval(`(()=>{ const r = window.__radio; return ${expr}; })()`);
+    const settled = () => page.waitFor('window.__radio && window.__radio.state.cid && !window.__radio.waiting && window.__radio.state.now && true', 15000);
+    const tap = async (sel) => { await page.eval(`document.querySelector(${JSON.stringify(sel)}).scrollIntoView({block: "center"})`); await sleep(50); await page.click(sel); };
+    const radio = (search = '') => `${T('radio')}?${withQ(search)}`;
+    await fresh(radio());
+    await settled();
+    check('/radio answers the default station: its text and CID on the page', (await R('r.state.cid')) === (await q('#r-cid')) && (await q('#r-text')) === (await R('r.state.text')) && /station \{/.test(await q('#r-text')));
+    check('now playing is track 0, up next track 1, and the segue between them is shown', (await R('r.state.now.n')) === 0 && (await R('r.state.next.n')) === 1 && /segue/.test(await q('#r-segue')) && /seeded/.test(await q('#r-now-dl')));
+    await tap('#r-next');
+    await page.waitFor('window.__radio.state.n === 1 && window.__radio.state.now && window.__radio.state.now.n === 1 && !window.__radio.waiting');
+    check('next moves to position 1, and the URL says so', /[?&]n=1(&|$)/.test(await page.eval('location.search')) && (await page.eval('document.getElementById("r-n").value')) === '1');
+    const cid0 = await R('r.state.cid');
+    await tap('.knob[data-knob="tempo"] .nudge[data-dir="+1"]');
+    await page.waitFor(`window.__radio.state.cid !== ${JSON.stringify(cid0)} && !window.__radio.waiting`);
+    check('tempo + is one notch (128 -> 130): a new station, still at position 1', (await R('r.state.knobs.tempo')) === 130 && (await R('r.state.n')) === 1 && /^tempo 130$/m.test(await q('#r-text')), JSON.stringify(await R('r.state.knobs')));
+    await tap('.knob[data-knob="tempo"] .lock');
+    check('a locked knob\'s notches are off', (await page.eval('[...document.querySelectorAll(".knob[data-knob=tempo] .nudge")].every((b) => b.disabled)')) === true && (await R('r.state.locks.join()')) === 'tempo');
+    const cid1 = await R('r.state.cid');
+    await tap('#r-scan');
+    await page.waitFor(`window.__radio.state.cid !== ${JSON.stringify(cid1)} && !window.__radio.waiting`);
+    check('scan turns another knob a notch, keeps position 1, and leaves the locked tempo at 130', (await R('r.state.n')) === 1 && (await R('r.state.knobs.tempo')) === 130 && /Scanned/.test(await q('#r-msg')), await q('#r-msg'));
+    const link = await page.eval('document.getElementById("r-link").getAttribute("href")');
+    const at = { cid: await R('r.state.cid'), n: await R('r.state.n') };
+    await fresh(new URL(link, T('')).href);
+    await settled();
+    check('its link opens the same station at the same position', (await R('r.state.cid')) === at.cid && (await R('r.state.n')) === at.n, link);
+    // by CID: a stored station program is fetched and its answer is that CID
+    const st = await R('({ text: r.state.text, cid: r.state.cid })');
+    const canon = await (await fetch(T('api/fmt'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: st.text }) })).json();
+    await fetch(T(`api/programs/${canon.cid}`), { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: canon.canonical });
+    await fresh(radio(`s=${canon.cid}&n=3`));
+    await settled();
+    check('a link by CID fetches the stored station: the same CID, at its position', (await R('r.state.cid')) === canon.cid && (await R('r.state.n')) === 3, `${await R('r.state.cid')} ${canon.cid}`);
+    // play: a short, fast station (8 bars at 300) plays track 0, the segue, then track 1, and N moves on by itself
+    const fast = '#! name: smoke radio\ntempo 300\nkey am\nstation {\n  from gen@2 techno seed=7 length=short\n  forms seeded cross\n}\n';
+    await fresh(radio(`s=${encodeURIComponent(fast)}&n=0`));
+    await settled();
+    await tap('#r-play');
+    await page.waitFor('window.__radio.playing && window.__radio.item && window.__radio.item.kind === "track"', 15000);
+    check('play: track 0 sounds, and the transport says so', /Track 0/.test(await q('#r-state')) && (await page.eval('document.getElementById("r-play").getAttribute("aria-pressed")')) === 'true', await q('#r-state'));
+    let segued = true;
+    try { await page.waitFor('window.__radio.item && window.__radio.item.kind === "segue"', 20000); } catch { segued = false; }
+    check('when track 0 ends, the segue plays', segued, await q('#r-state'));
+    let moved = true;
+    try { await page.waitFor('window.__radio.state.n === 1 && window.__radio.item && window.__radio.item.kind === "track" && window.__radio.item.n === 1', 20000); } catch { moved = false; }
+    check('then track 1: N moved on by itself, and the URL followed', moved && /[?&]n=1(&|$)/.test(await page.eval('location.search')), JSON.stringify(await R('({ n: r.state.n, item: r.item && r.item.kind })')));
+    await shot(16, 'radio');
+    await tap('#r-play');
+    check('stop stops it', (await R('r.playing')) === false);
+  }
+
   // ---- 10. no console errors anywhere ----------------------------------------------------------------------------------------------------------------
   step = 10;
   const errors = page.errors().filter((e) => !/wasm=off|switched off by/.test(e.text) && !/Failed to load resource.*\/api\/compose/.test(e.text) && !/Failed to load resource.*\/api\/programs\/z2222/.test(e.text)); // the compose error cases above answer 422/429/503 on purpose, and step 15 asks for a program that is not there

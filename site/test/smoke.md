@@ -89,6 +89,12 @@ browser. Exit code 1 if any check fails or the page logs a console error.
    lines 1, 20 and 50, at 1280 px and again after a load at 700 px and a widen to 1280 px. (editor.js set the measured `--lh`
    on `.ed-code` only, so the gutter kept the stylesheet's; across the 760 px breakpoint the two were 20 and 21 px and the
    gutter, with its run and playing markers, drifted a row low by line ~20.)
+16. **The radio** (`/radio`, station-model.js and station.js). The default station's answer (the module's `btw_station`
+   when it has one, else `POST /api/station`; the mock server's is wasm-mock.js `mockStation`): its text and CID on the page,
+   now playing track 0, up next track 1 and the segue between. Next moves to position 1 and the URL follows; tempo + is one
+   notch (128 to 130) and keeps position 1; a locked tempo's notches are off and Scan turns another knob, still at 1; the
+   page's link opens the same station at the same position, and a stored station opens by CID. A short, fast station plays:
+   track 0, its segue, then track 1, with N moved on by itself; Stop stops it.
 
 ## What it does not cover
 

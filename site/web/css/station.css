@@ -1,0 +1,84 @@
+/* The radio page (/radio): legal.css gives the shell (palette, header, footer); this is the player, the tuner and the
+   station's program. No inline styles: everything is a class here (the page's CSP is style-src 'self'). */
+
+:root {
+  --btn: #0f3460;
+  --btn-hover: #1a4a7a;
+  --faint: #5d6585;
+  --ok: #4cd06a;
+  --err: #ff6b81;
+}
+
+main.radio { max-width: 980px; }
+.radio h2 { border-top: 0; padding-top: 0; margin: 0 0 8px; }
+.radio section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin: 16px 0; }
+.note { color: var(--dim); font-size: 14px; margin: 0 0 12px; }
+.dim { color: var(--dim); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 0; }
+
+button { font: inherit; color: var(--ink); cursor: pointer; }
+input, select { font: inherit; color: var(--ink); background: #12192f; border: 1px solid var(--line-2); border-radius: 4px; padding: 5px 8px; min-width: 0; }
+input:disabled, select:disabled { opacity: .55; }
+input[type="checkbox"] { padding: 0; accent-color: var(--accent); }
+.tb { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--btn); border: 1px solid transparent; border-radius: 4px; padding: 6px 10px; line-height: 1.1; white-space: nowrap; min-height: 32px; }
+.tb:hover:not(:disabled) { background: var(--btn-hover); }
+.tb:disabled { opacity: .45; cursor: default; }
+.tb.primary { background: var(--accent); color: #fff; }
+.tb.primary:hover:not(:disabled) { filter: brightness(1.12); background: var(--accent); }
+.tb-sm { padding: 4px 8px; font-size: 13px; min-height: 28px; min-width: 28px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+
+/* the player */
+.transport { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.r-play { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px 0 12px; border: 0; border-radius: 22px; background: var(--accent); color: #fff; font-weight: 600; }
+.r-play:hover:not(:disabled) { filter: brightness(1.12); }
+.r-play:disabled { opacity: .5; cursor: default; }
+.r-play-ic { width: 0; height: 0; border-left: 12px solid currentColor; border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
+.r-play.on .r-play-ic { width: 12px; height: 12px; border: 0; background: currentColor; border-radius: 2px; }
+.r-state { color: var(--dim); font-size: 14px; font-variant-numeric: tabular-nums; }
+.pos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.pos-n { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--dim); }
+.pos-n input { width: 8.5em; }
+.pos .check { margin-left: auto; }
+
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.card { background: var(--bg); border: 1px solid var(--line-2); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.card.live { border-color: var(--accent); }
+.card h2 { font-size: 1rem; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; font-size: 14px; }
+.facts dt { color: var(--dim); }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.facts dd.wide { grid-column: 1 / -1; }
+.segue { font-size: 14px; color: var(--dim); margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed var(--line-2); }
+details summary { cursor: pointer; color: var(--link); font-size: 13px; }
+
+/* the tuner: one row a knob */
+.knobs { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content max-content; gap: 6px 10px; align-items: center; }
+.knob { display: contents; }
+.k-name { font-weight: 600; font-size: 14px; }
+.k-ctl input, .k-ctl select { width: 100%; }
+.k-nudge { display: flex; gap: 4px; }
+.k-help { grid-column: 2 / -1; margin: -4px 0 6px; color: var(--faint); font-size: 12px; }
+.forms { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.forms .check { white-space: nowrap; }
+.k-note { color: var(--faint); font-size: 12px; }
+.lock .lock-ic { width: 9px; height: 8px; border: 2px solid currentColor; border-radius: 2px; position: relative; margin-top: 4px; }
+.lock .lock-ic::before { content: ""; position: absolute; left: 0; top: -7px; width: 5px; height: 6px; border: 2px solid currentColor; border-bottom: 0; border-radius: 4px 4px 0 0; }
+.lock[aria-pressed="true"] { background: var(--btn-hover); border-color: var(--warn, #e5c07b); color: var(--warn, #e5c07b); }
+.msg { margin-top: 10px; font-size: 14px; min-height: 1.4em; }
+.msg.err { color: var(--err); }
+.msg pre { margin: 6px 0 0; white-space: pre-wrap; }
+
+/* the station's program */
+pre.src { font-family: var(--mono); font-size: 13px; background: #12192f; border: 1px solid var(--line-2); border-radius: 4px; padding: 10px 12px; margin: 8px 0 0; overflow-x: auto; white-space: pre; }
+.program .meta { margin: 0; }
+
+@media (max-width: 640px) {
+  .cards { grid-template-columns: 1fr; }
+  .knobs { grid-template-columns: max-content minmax(0, 1fr); }
+  .k-nudge, .lock { justify-self: start; }
+  .k-help { grid-column: 1 / -1; }
+  .pos .check { margin-left: 0; }
+  .tb, .tb-sm, .r-play { min-height: 44px; min-width: 44px; }
+}
