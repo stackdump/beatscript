@@ -321,7 +321,8 @@ impl Lineage {
                 if !en.forked_from.is_empty() && en.forked_from != cid && !en.renamed {
                     ix.children.entry(en.forked_from.clone()).or_default().insert(cid.to_string());
                 }
-                for (call, resolves, how) in &en.bases {
+                // nor is it another program drawing on what the old one draws on: the same music counts once, as the old CID
+                for (call, resolves, how) in en.bases.iter().filter(|_| !en.renamed) {
                     for k in std::iter::once(call.clone()).chain(resolves.clone()) {
                         let e = ix.referenced.entry(k).or_default();
                         if *how == "vendored" { e.1.insert(cid.to_string()) } else { e.0.insert(cid.to_string()) };

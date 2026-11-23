@@ -741,8 +741,10 @@ fn write_paths_keep_the_from_lines() {
     let r = s.call("PUT", &format!("/api/programs/{cid1}"), &[text_plain.clone()], canonical.as_bytes());
     assert_eq!(r.status, 200, "{}", r.body);
     assert_eq!(r.json()["meta"]["based_on"], want, "{}", r.body);
-    // the page's linked data says what it vendored, from the kept lines
-    let page = s.call("GET", &format!("/p/{cid1}"), &[("Accept", "text/html".into())], b"").body;
+    // the page's linked data says what it vendored, from the kept lines (a BeatScript 1 program's page is its twin's: /p/<old CID>
+    // redirects there, and the twin keeps the lines too)
+    let twin = djlive::compile::renamed_cid(&canonical);
+    let page = s.call("GET", &format!("/p/{twin}"), &[("Accept", "text/html".into())], b"").body;
     assert!(page.contains(&format!(r#""name":"{src}.drop","resolves":"{src}","derivation":"vendored""#)), "no vendored isBasedOn in the page");
     // and lineage counts the three as vendoring the source (none of them calls or borrows it in its text)
     let t = s.call("GET", &format!("/api/lineage/{src}"), &[], b"").json();
