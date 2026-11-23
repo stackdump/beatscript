@@ -341,8 +341,8 @@ pub(crate) fn read_ref(toks: &[Token], i: usize) -> (usize, Result<TemplateRef, 
     let (phrase, phrase_span) = match at(j).cloned() {
         Some(Tok::Word(w)) if w.starts_with('@') && w.len() > 1 => (PhraseRef::Id(w[1..].to_string()), toks[j].span),
         Some(Tok::Str(s)) => (PhraseRef::Text(s), toks[j].span),
-        // a phrase a `use phrase` line named (a word that is no role's: no `=` after it)
-        Some(Tok::Word(w)) if crate::roles::is_name(&w) && at(j + 1) != Some(&Tok::Eq) => (PhraseRef::Name(w), toks[j].span),
+        // a phrase a `use phrase` line named (a word that is no role's: no `=` after it, nor the `.` of a role's part, `a.bass=`)
+        Some(Tok::Word(w)) if crate::roles::is_name(&w) && !matches!(at(j + 1), Some(Tok::Eq | Tok::Dot)) => (PhraseRef::Name(w), toks[j].span),
         _ => {
             let d = fail(j + 1, "the phrase of a template is a phrasebook id (@tempest_such_stuff) or words in quotes (\"robots on the road\")".into());
             return (close(j), Err(d));

@@ -308,3 +308,19 @@ fn a_name_and_another_lines_bars_clash() {
     assert_eq!(e[0].0, "tune");
     assert!(e[0].1.starts_with("`tune` is bound already: `tune_1` is a bar of the line `tune`"), "{e:?}");
 }
+
+/// A role's notes inside a `use` line's form are read where the roles are (the use stage), not by the parser: the parser refuses
+/// nothing the grammar writes (tests/grammar.rs), and the check still says what is wrong with a bar, once, at the line. A form's
+/// sub-role binding (`a.bass=`) is no phrase name, in a `use` line and in a template reference.
+#[test]
+fn a_role_notes_mistake_in_a_use_line_is_the_checks_to_say() {
+    let src = "use template(passacaglia, ground=<[d2 ~ 0.5 ~]>) as ep\narrange from template(rondo, @shanty_drunken_sailor, episodes=ep)\n";
+    let p = djlive::parse::parse(src);
+    assert!(!p.diagnostics.iter().any(|d| d.is_error()), "the parser reads it: {:?}", p.diagnostics.iter().map(|d| &d.message).collect::<Vec<_>>());
+    let e = errors(src);
+    assert_eq!(e.len(), 1, "{e:?}");
+    assert!(e[0].1.contains("scale degree"), "{e:?}");
+    // `cross` with its `a` role's bass bound alone is a form (no phrase), so `.both` is a canned section of it
+    let p = djlive::parse::parse("use template(cross, a.bass=[d2 ~ a1 ~]).both as both\narrange both\n");
+    assert!(!p.diagnostics.iter().any(|d| d.is_error()), "{:?}", p.diagnostics.iter().map(|d| &d.message).collect::<Vec<_>>());
+}

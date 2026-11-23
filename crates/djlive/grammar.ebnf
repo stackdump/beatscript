@@ -263,7 +263,7 @@ use         = "use" "restricted"                                (* the program i
             | "use" use_source "as" NAME ;                        (* a name for a source, written out where it is used (docs/beatscript/ext-roles.md) *)
 use_source  = stored                                            (* <cid>.drop: a section; <cid>.drop.bass: a line; <cid>: a source for a role *)
             | gen                                               (* gen@2 techno seed=42 section=drop, part=bass: a section or a line; with neither, a source for a role *)
-            | form [ "." NAME ]                                 (* template(passacaglia, ground=...): a form, for a role; .ground: a canned section of it *)
+            | "template" "(" NAME { "," binding } ")" [ "." NAME ]   (* template(passacaglia, ground=...): a form, for a role; .ground: a canned section of it *)
             | template "." NAME                                 (* template(deep-house, @tempest_such_stuff).night: a canned section, sung with that phrase *)
             | "theme" NAME                                      (* a theme of the public-domain library: a line, in the program's key *)
             | "phrase" PHRASE                                   (* a phrasebook line: a phrase, for sing and template *)

@@ -295,7 +295,8 @@ fn read_source(toks: &[Token], j: usize, end: usize) -> Result<(usize, Source), 
                 && at(j + 3) == Some(&Tok::Comma)
                 && match at(j + 4) {
                     Some(Tok::Str(_)) => true,
-                    Some(Tok::Word(p)) => p.starts_with('@') || (crate::roles::is_name(p) && at(j + 5) != Some(&Tok::Eq)),
+                    // (a role is followed by `=`, one part of a seed role by `.`: `a.bass=`)
+                    Some(Tok::Word(p)) => p.starts_with('@') || (crate::roles::is_name(p) && !matches!(at(j + 5), Some(Tok::Eq | Tok::Dot))),
                     _ => false,
                 };
             if phrase {
@@ -370,7 +371,9 @@ fn read_source(toks: &[Token], j: usize, end: usize) -> Result<(usize, Source), 
 /// Each `use` line's source made one word (its canonical spelling) for the parser, what is wrong with any of them (that line's
 /// tokens are left out, so one mistake is one error), and the phrases the lines name: (name, phrasebook id).
 pub(crate) fn collapse(toks: Vec<Token>) -> (Vec<Token>, Vec<Diagnostic>, Vec<(String, String)>) {
-    let rs = runs(&toks);
+    // (a role's notes are read where the roles are, by the use stage: here a bar that does not read is kept as written, so the
+    // parser refuses nothing the grammar writes; the check says what is wrong with it)
+    let rs = crate::roles::with_notes_deferred(|| runs(&toks));
     if rs.is_empty() {
         return (toks, Vec::new(), Vec::new());
     }

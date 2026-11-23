@@ -230,6 +230,20 @@ pub(crate) fn word_call(w: &str, at: Span) -> Result<GenCall, Diagnostic> {
 }
 
 /// The canonical text of one bar of notes (what is inside its `[ ]`), or why it is not one.
+thread_local! {
+    /// Set while the parser collapses `use` lines (uses::collapse): a role's notes that do not read stay as written there, and
+    /// the check says what is wrong with them where the roles are read (the use stage), as it does for any `template(...)`.
+    static NOTES_DEFERRED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Run `f` (the parser's collapse of `use` lines) with a role's notes taken as written when they do not read.
+pub(crate) fn with_notes_deferred<T>(f: impl FnOnce() -> T) -> T {
+    let old = NOTES_DEFERRED.with(|c| c.replace(true));
+    let out = f();
+    NOTES_DEFERRED.with(|c| c.set(old));
+    out
+}
+
 fn canon_bar(inner: &str, at: Span) -> Result<String, Diagnostic> {
     use crate::ast::{Atom, Body, StmtKind};
     let p = crate::parse::parse(&format!("deck B: melody [{inner}]\n"));
@@ -362,7 +376,11 @@ impl<'t> Reader<'t> {
         if inner.trim().is_empty() {
             return Err(Diagnostic::error(self.span(j).to(self.span(end - 1)), "a bar of notes has a step in it at least").help("[d2 ~ a1 ~]"));
         }
-        Ok((end, canon_bar(&inner, self.span(j).to(self.span(end - 1)))?))
+        match canon_bar(&inner, self.span(j).to(self.span(end - 1))) {
+            Ok(bar) => Ok((end, bar)),
+            Err(_) if NOTES_DEFERRED.with(|c| c.get()) => Ok((end, inner.trim().to_string())),
+            Err(e) => Err(e),
+        }
     }
 
     /// A source at `toks[j]`, and where it ends.
