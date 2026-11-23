@@ -97,7 +97,9 @@ The program's JSON-LD (progld.rs, the `<beatscript-view>` block) says what it is
 or borrow its text makes and per part it vendored (read from its `# from:` lines), each with `resolves` (the pin),
 `pinnedGenerator` (`seeded@2`) and `derivation` (`called`, `borrowed`, `vendored`); a recipe also says `expandsTo`, the CID of
 its fully written-out program (`refs::expanded`: the same recipe, the same expanded CID; it plays the same). The terms are on
-/schema (docs/SCHEMA.md).
+/schema (docs/SCHEMA.md). A template's roles are the recipe's nested parts (`hasPart`, each by the CID of what it is written out
+as), and a stored recipe has its expansion stored beside it (`/p/<expandsTo>`, `expandedFrom`, `derivation: expanded`): docs/beatscript/
+ext-template.md, "Nested parts" and "The stored expansion" (roadmap 6680).
 
 **Curation (6670 item 4).** beatscript-serve's lineage index counts, per CID and per call, the public programs that call or borrow it
 (`referencedBy`) and that vendored it (`vendoredFrom`), on each node's JSON-LD (the MCP `lineage` tool, `/api/lineage/<cid>`,

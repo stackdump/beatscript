@@ -119,6 +119,58 @@ and the `sing` line (robot-choir) on deck B.
 
 `check` reports the generations of the arrangement as for any `arrange { }`.
 
+## Nested parts: each role a CID of its own
+
+`template::expand` writes a reference out as one text, but inside it every role the reference binds (docs/beatscript/ext-roles.md) was
+written in by a binding: a gen call's part, a stored program's sections, a theme, notes, or another form whose own roles are
+bindings in turn. Each of those is a **part** of the expansion (`crates/djlive/src/nested.rs`, roadmap 6680 item 2), and each
+part has a CID of its own:
+
+```text
+arrange from template(rondo, @shanty_drunken_sailor, episodes=template(passacaglia, ground=gen@1 dubstep seed=54876))
+
+path              kind      call                                                     cid         resolves    generator
+episodes          template  template(passacaglia, ground=gen@1 dubstep seed=54876)  z4EBG9...   -           -
+episodes/ground   gen       gen@1 dubstep seed=54876                                 z4EBG9...   z4EBG9...   seeded@1
+```
+
+- **path** is where it stands: the role, after the roles of the forms it is inside (`episodes/ground` is the `ground` of the form
+  bound to `episodes`). A program has one template reference, so a path names one part.
+- **text** (with check's `expand`) is a program of its own: the `tempo` and `key` at the top of the program it was written into,
+  then the lines its binding wrote, every reference in them written out (a gen call fitted and written out as its lets, a stored
+  program's or a seed's sections written in), printed canonical. **cid** is that text's CID, so it names exactly what plays there.
+  The lines are the expansion's own: what a part's text says after its key and tempo, the whole expansion says too.
+- **resolves** is the pin of its source: the program a gen call prints (fitted to the key it plays in), a stored program's CID.
+  A theme, notes and a form have none (a form's sources are its own parts).
+- The parts are in the order the form names its roles, each with its own (`parts`), at any depth.
+
+Where they are: `check`'s `resolution` (and `listen`'s, `expand`'s and `genre_template`'s) gives the template's entry `parts`, as
+`{path, role, kind, call, cid, resolves, generator, parts}`, with `text` when `expand` is asked; the gen call a role wrote is listed
+`nested` with its own pin, resolved in the key and tempo of the written-out program. The program's JSON-LD block (docs/SCHEMA.md)
+has them as `hasPart`: each a CreativeWork whose `@id` is the part's CID, named by its path, `isBasedOn` its source (`resolves`,
+`pinnedGenerator`, `derivation` `called` or `borrowed`), with its own `hasPart`.
+
+## The stored expansion
+
+A program with references (a template, a gen call, a seed, a borrowed section) stored on beatscript.app is stored with its
+**expansion** beside it (`crates/beatscript-serve/src/store.rs`, `put_expansion`, roadmap 6680 item 3): the program with every reference
+written out as plain BeatScript, canonical, as a program of its own under its CID (check's `expanded_cid`), through the storage
+gate like any other. `/p/<expanded_cid>` loads it, and it plays as the recipe does. Every write path does it: the MCP `share` (signed
+in; also `render`, `artifact` with `store` and compose, through `compose::put`), `PUT /api/programs/<cid>` and `PUT
+/api/shares/<cid>`; each answers `expanded_cid` (the share routes also `expanded_url`).
+
+| | the recipe's meta | the expansion's meta |
+|---|---|---|
+| names the other | `expands_to: <expanded_cid>` | `expanded_from: <recipe CID>` |
+| licence, credits, name, author | its own | the recipe's |
+| `source` | as stored (`put`, `share`, ...) | `expansion` |
+| what it is based on | its text (its calls and borrows) | `based_on`: each reference the recipe wrote out into it, `"<call> -> <cid>"`, once (a theme, notes: the call alone) |
+
+Lineage (`/p/<cid>/tree`, the MCP `lineage` tool) reads both: the recipe's node `expandsTo` its expansion (the CID `check` gives, so
+a recipe stored before this has one too), the expansion's is `expandedFrom` each recipe that writes out to it and `isBasedOn` each
+source (`derivation: expanded`, with `resolves`), and a tree shows the other among its programs. The two program pages' blocks say
+the same (`expandsTo`; `expandedFrom` and `isBasedOn`).
+
 ## What check says
 
 | it finds | it says |
@@ -161,6 +213,32 @@ change to it fails `templates_v1_are_pinned`; a change to a template that change
   in the template to change.
 - **A straight line is at most four bars**, because the voice is crossed onto the shaker, which has five hits a bar: a longer
   line would have syllables the crossed section has no note for (the `sing` warning "the last N are not sung").
+- **A part is a binding, and its CID is of what it plays.** The tree is the roles a reference binds (a form in a role has its
+  own), because those are the places another program can be put; a part's text is its binding's lines written out all the way,
+  so its CID is the same notes wherever they come from, as the expanded CID is for a whole program. The pin of its source is
+  beside it (`resolves`), as `resolved` is beside a reference. (The other way, a part's text with its gen calls left in, would
+  be a second recipe CID per part: one CID a part keeps the answer small.)
+- **A part's text opens with the key and tempo it was written into.** A gen call is fitted to them and a theme is moved into
+  them, so the same binding in a program at another tempo or key is other notes, and its CID says so; a part's text is then a
+  program that plays as that part does. The written-out template's own CID is the template reference's `resolved`, as before.
+- **The parts come from the binding itself, not from reading the text back.** roles.rs records what each binding wrote (a
+  thread-local recorder, as gen.rs keeps the programs a check generated), and nested.rs writes each one out; the written-out
+  program is the same text as before, and no part is found by parsing comments.
+- **`hasPart` on the recipe's block, by bare CID**, as the block's own `@id` is: the parts are what the recipe makes, so they are
+  said where the recipe is read; schema.org's `hasPart` is the term (a set), and each part `isBasedOn` its source with the
+  provenance terms the block already has. A new term in the vocabulary, not a new version of the block's shape.
+- **The expansion is stored with the recipe's licence**: CC0 when the recipe is (the default, and the roadmap's case), CC BY with
+  the same credits when it is CC BY, because the expansion holds the recipe's own text. It is the same track, so it keeps the
+  recipe's name; `source: expansion` and `expanded_from` say what it is.
+- **Each side names the other in its meta, and lineage also computes it.** The recipe's `expands_to` and the expansion's
+  `expanded_from` let the index know the pair without compiling; first write wins, so a recipe stored before this has no
+  `expands_to`, and its `expandsTo` comes from its check (the expanded CID is of its text). Several recipes can write out to one
+  program (`expandedFrom` is a list).
+- **An expansion's sources are not counted twice.** Its `based_on` lines are its recipe's references, which the recipe already
+  counts for curation (roadmap 6670): an expansion stored by the site is not a second program that chose to vendor them.
+- **Each document is written out in the host's environment.** The block's `expandsTo` and `hasPart` are computed with the
+  checker's environment (its voices count a template's syllables as `check` does), so they are the CIDs `check` gives and the
+  store keeps; with no environment (a plain host) only what resolves without one is said.
 
 ## Not done
 
@@ -171,3 +249,9 @@ change to it fails `templates_v1_are_pinned`; a change to a template that change
 - A phrase longer than one line (about 30 syllables) is an error; there is no multi-line verse.
 - The stress of any words is a plain rule, not a dictionary's: a word of the lexicon is not stressed on its dictionary
   syllable. A phrasebook line has its stress curated.
+- A part is not stored on its own: a role can borrow a section of the stored expansion (`<expanded_cid>.<section>`, which holds
+  every part's sections), but not a part by its CID until parts are stored too. A borrowed stored program's own references are
+  not parts of the borrower (its sections arrive compiled).
+- The expansion is stored when a program is stored; programs stored before this get theirs when they are stored again (a
+  share of the same text), not by a sweep of the store.
+- The `djrust:` document (`/p/<cid>.jsonld`, context v1, immutable) does not say `expandsTo` or `hasPart`; the block does.

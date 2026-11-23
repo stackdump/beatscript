@@ -175,12 +175,24 @@ A program's CID is of its text as written: the recipe, with its references in it
   expanded_cid equal to cid.
 - resolution is the manifest: each reference once, with the CID it is pinned to and the generator and version that made it
   (seeded@2), and for a gen call the key and bpm it was generated in. A reference written out inside another one's expansion
-  (a template's) is listed with `nested: true`; its own pin is not reported yet (the template expansion does not expose its
-  nodes).
+  (a template's) is listed with `nested: true`, and its own pin: a gen call a role wrote is resolved in the key and tempo of the
+  written-out program. And a template's entry in resolution has parts: each role its reference binds, at any depth (a role of a
+  form bound to a role is a part of that part), as {path, role, kind, call, cid, resolves, generator, parts}: path is where it
+  stands (episodes/ground), kind what it was bound to (gen, stored, theme, notes or template), call the source as bound, cid the
+  CID of what it is written out as (a program of its own: the key and tempo it plays in and the lines its binding wrote, every
+  reference in them written out), resolves the CID its source is pinned to; the same recipe always gives the same parts and part
+  CIDs. Asked to expand, each part also carries its text (docs/beatscript/ext-template.md, "Nested parts").
 
 `listen` marks each part a reference made with `from` (its call, kind, resolved CID, place and the sections it made it in; a
 `use` line's also its `name`), and a gen call that was fitted to the program's key or tempo says so in its `notes`, in check's
 words.
+
+A program with references that is stored on beatscript.app is stored with its **expansion** beside it: the program written out
+(its `expanded_cid`), canonical, as a program of its own under the same storage gate, with the recipe's licence, credits and name.
+`/p/<expanded_cid>` loads it and it plays as the recipe does. The two name each other (the recipe's meta `expands_to`, the
+expansion's `expanded_from`, and the expansion's `based_on`: each reference the recipe wrote out into it, with its pin), and so do
+their JSON-LD (`expandsTo`; `expandedFrom` and `isBasedOn`) and lineage. The share answers say `expanded_cid` and `expanded_url`
+(docs/beatscript/ext-template.md, "The stored expansion").
 
 ## Grammar (EBNF)
 
@@ -3366,6 +3378,17 @@ logs are the "Decisions" of each `docs/beatscript/ext-*.md`.)
   `transpose` does. The quodlibet's tunes are written `tune_a` and `tune_b` (a let named `a` reads as a note).
 - *No reference that says none of them moves*: its written-out text is pinned (`roles.rs` `bound_forms_are_pinned`, blessed before
   the change, and `templates_v1_are_pinned`), and the examples keep their CIDs (`cid_pins.rs`).
+
+**A recipe's nested parts and its stored expansion (roadmap 6680)**
+
+- A part of an expansion is a role its template reference binds (a form in a role has its own), and its CID is of what it plays:
+  its binding's lines written out all the way under the key and tempo it was written into, canonical. The parts are beside the
+  CID: every program keeps its canonical text and CID, and its written-out text is the one it was. *One CID a part, of the notes,
+  as the expanded CID is of a whole program; roles.rs records each binding as it writes it, so no part is read back from text.*
+- A program with references is stored with its expansion beside it, a program of its own with the recipe's licence (CC0 by
+  default), and each names the other in its meta; lineage and the JSON-LD say `expandsTo`, `expandedFrom` and `isBasedOn`. *The
+  result a recipe makes is then a CID anyone can load and play without the generator or the templates, and its provenance is
+  the recipe's.* The long note is docs/beatscript/ext-template.md, "Nested parts" and "The stored expansion".
 
 ## Not done
 

@@ -46,8 +46,10 @@ gets the context below. A browser gets this page. `https://beatscript.app/schema
 | `text` | the **canonical program text** |
 | `author` | the author's address or DID, when the program is signed in to an account |
 | `forkedFrom` | the CID of the program this one was forked from, when it was |
-| `isBasedOn` | what it is based on: each generator call, borrow and vendored part, with the CID it `resolves` to |
+| `isBasedOn` | what it is based on: each generator call, borrow and vendored part, with the CID it `resolves` to; on a stored expansion, each reference its recipe wrote out into it |
+| `hasPart` | for a program with a template whose roles are bound, the nested parts of its expansion: each a CreativeWork whose `@id` is the CID of what it is written out as, named by its path (`episodes/ground`), based on its source, with its own `hasPart` |
 | `expandsTo` | for a program with references, the CID of the program they write out to |
+| `expandedFrom` | on a stored expansion, the CID of the recipe it was written out from |
 | `signature` | the author's signature over the CID, when the share is signed |
 
 ### The CID is `@id`, and `text` is canonical
@@ -145,13 +147,24 @@ prints for it (its pin); for a borrow, the stored program's CID.
 same program for the same inputs.
 
 <a id="derivation"></a>**derivation**: how a source came in: `called` (an engine call the text makes), `borrowed` (a structural
-reference the text makes), `vendored` (written out by an eject; the text has the notes, and the `# from:` line the call) or
-`renamed` (the same program in BeatScript 1, the old spelling: the same music, under its old CID).
+reference the text makes), `vendored` (written out by an eject; the text has the notes, and the `# from:` line the call),
+`renamed` (the same program in BeatScript 1, the old spelling: the same music, under its old CID) or
+`expanded` (on a stored expansion: written out with the rest of its recipe, which the store says in the expansion's
+`based_on`).
 
 <a id="expandsTo"></a>**expandsTo**: a recipe's written-out program (every reference written out as BeatScript): its CID. The
 same recipe always expands to the same program, and the two play the same.
 
-<a id="expandedFrom"></a>**expandedFrom**: on a written-out program, the CID of the recipe it was written out from.
+<a id="expandedFrom"></a>**expandedFrom**: on a written-out program, the CID of the recipe it was written out from. A program with
+references stored on beatscript.app is stored with its expansion beside it, so `/p/<expandsTo>` loads it; in the lineage
+document `expandedFrom` is a list (several recipes can write out to one program).
+
+<a id="hasPart"></a>**hasPart**: the nested parts of a recipe's expansion, schema.org's term (a set): each role its template
+reference binds, at any depth, as a CreativeWork whose `@id` is the CID of what it is written out as (a program of its own: the
+key and tempo it plays in and the lines its binding wrote, every reference in them written out, canonical), whose `name` is its
+path (`episodes/ground`: the `ground` of the form bound to `episodes`), which `isBasedOn` its source (`resolves`,
+`pinnedGenerator`, `derivation` `called` for a gen call and `borrowed` for structure), and which has its own `hasPart`. The same
+recipe always has the same parts; like `isBasedOn`, they are outside the CID.
 
 <a id="signature"></a>**signature**: the author's signature over the CID, opaque to everything but the wallet that
 checks it.
