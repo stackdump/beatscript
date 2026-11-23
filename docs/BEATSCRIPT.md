@@ -567,7 +567,7 @@ hihat x*8?              a bare ? is ?0.5
 | `len=3` | 1..16 | note length in steps (drums 1, tonal 2). |
 | `inst=sub-bass` | a name | the instrument. |
 | `seed=7` | a whole number | the seed of the part's generators (and of its chance terms, unless they say their own). |
-| `glide=70` `decay=900` `pitch-drop=7` | ms, ms, semitones | tonal: `^` bends into the next note; each note's tail; starts 7 semitones high. |
+| `glide=70` `decay=900` `pitch-drop=7` | ms, ms, semitones | tonal: `^` bends into the next note; each note's tail; starts 7 semitones high. On `inst=acid` a `^` slides without `glide=` (60 ms) and `decay=` is its filter's sweep. |
 | `voice-lead` / `voice-lead=off` | on or off | a `harmony` (or `arp`) part of chords: each chord after the first is voiced for the least motion from the one before; bare, it is on. |
 
 Every number of a param may be arithmetic (`vel=(60 + $i * 4)..100`, `oct=3 - 1`).
@@ -1092,11 +1092,20 @@ program that uses none of them is the program it was: same canonical text, same 
 - **Glide** `glide=N` (ms, 1 to 2000) on a tonal part: a slide `^` no longer only holds its note, the voice sounding
   it bends to the next note over N ms instead of striking again (legato, a 303 or an 808 slide). The next note is
   the next step that has one; the last step's slide glides into the first when the net comes round. Without
-  `glide=`, `^` holds as it always has.
+  `glide=`, `^` holds as it always has, except on the acid voice (below), which slides by itself in 60 ms.
 - **Decay** `decay=N` (ms, 10 to 10000) on a tonal part: each note's tail is N ms whatever `len=` says (the time
-  its level takes to fall to about a third), so a one-step 808 rings on.
+  its level takes to fall to about a third), so a one-step 808 rings on. On the acid voice it is the 303's decay
+  knob instead: how long the filter's sweep takes to fall; the note's length gates its level.
 - **Pitch drop** `pitch-drop=N` (semitones, 1 to 24) on a tonal part: each note starts N semitones high and falls
   onto its pitch in 50 ms, an 808's punch. A gliding note glides instead.
+
+**The acid voice** (`inst=acid`, a saw; `inst=acid-square`, a square) is a 303-style voice made in the engine (no
+samples): an oscillator into a resonant four-pole lowpass that an envelope sweeps on each note. It plays the marks as a
+303 does. An accent `!` is louder, opens the filter further and sweeps it shorter, and accents in a row build on each
+other (the engine reads the accent from the velocity, so a `vel=` near 127 is accented too). A slide `^` carries the
+voice into the next note without striking it again: in 60 ms, or in `glide=` ms. A note that does not slide lets the one
+before go (one note at a time, as a 303; a chord's notes each sound). Long note, with its decisions:
+`docs/beatscript/ext-acid.md`. Example: `examples/beatscript/acid-303.beatscript`.
 
 `glide=`, `decay=` and `pitch-drop=` on a drum part are errors. Marks work on drums and tonal parts alike, in groups
 (`[x x]&` flams both), alternations and `deg( )`. The net carries them on each note's binding (`glide`, `decay`,
@@ -2592,13 +2601,13 @@ deck A: bass riff inst=harp
 ## Sounds
 
 `btw instruments` (and `describe btw`) lists every **voice** the engine voices by itself (`wobble-lead`,
-`hoover`, `detuned-saw`, `pwm-lead`, the `voice-*` singers, the stingers), the **family words** (`bass`, `reese`,
-`acid`, `sub`, `pad` ...: a name that contains one plays that family's generic voice), the drum **kits**
-and the sound **palettes**. In a part:
+`hoover`, `detuned-saw`, `pwm-lead`, `acid` and `acid-square` (a 303's), the `voice-*` singers, the stingers), the
+**family words** (`bass`, `reese`, `sub`, `pad` ...: a name that contains one plays that family's generic voice; `acid`
+is a voice of its own, so `acid-bass` is the generic saw bass), the drum **kits** and the sound **palettes**. In a part:
 
 | param | takes | does |
 |---|---|---|
-| `inst=wobble-lead` | a voice | the part's instrument. An unknown name is an **error with the nearest names**; a family word (`inst=reese`) is accepted with a **warning** that it plays the generic saw bass, and which voices have a sound of their own |
+| `inst=wobble-lead` | a voice | the part's instrument. An unknown name is an **error with the nearest names**; a family word (`inst=reese`) is accepted with a **warning** that it plays the generic saw bass, and which voices have a sound of their own. `inst=acid` is a 303: `!` accents, `^` slides |
 | `kit=drums-808` | a kit | a drum part's kit (set once the net has landed) |
 | `sound=synth:wobble-lead` | `own`, `synth`, `synth:NAME`, `inst:NAME` | the role's sound option on the deck, set once the net has landed (`DeckAction::SetRoleVoice`) |
 | `route=td3` | `td3` | a tonal part also fills the TD-3 editor's sixteen steps (note, octave shift, accent, slide, rest) once its net lands; `do td3 write confirm=true` sends it (a dry run unless confirmed) |

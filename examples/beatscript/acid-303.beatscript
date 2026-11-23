@@ -1,0 +1,16 @@
+#! btw 1
+#! name: acid-303
+#! license: CC0-1.0
+#! visibility: public
+# acid-303.beatscript: two acid lines on the acid voice, a 303 made in the engine (CC0). Original.
+# `inst=acid` is a saw into a resonant four-pole filter that an envelope sweeps on every note. The accents (`!`,
+# velocity +27) are louder and open the filter further, and the two in a row at the end of the bass's bar build on
+# each other. The slides (`^`) carry the voice into the next note without striking it again: in 60 ms on their own,
+# in `glide=` ms where the part says so (the melody, 110). `decay=` is the 303's decay knob: how long the filter's
+# sweep takes to fall (a snappy 180 on the bass, a long 600 on the melody), not the note's level, which its length
+# gates. The melody is `acid-square`, the square wave, two octaves up.
+tempo 126
+key am
+
+deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ | hihat ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x x. | clap ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~
+deck B: bass a1 a1 a2^ a1 ~ c2! a1 g1^ a1 a1 ~ e2^ d2 a1 c2! a2! decay=180 inst=acid | melody ~ ~ ~ ~ a3! ~ ~ e3^ g3 ~ ~ ~ c4!^ b3 ~ ~ decay=600 glide=110 inst=acid-square

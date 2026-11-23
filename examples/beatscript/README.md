@@ -56,6 +56,7 @@ reformattings keep its CID. All of them are original and CC0-1.0. A file that ne
 | `such-stuff-as-dreams-122-reference.beatscript` | the found-phrases reference program (deep house, 122): Prospero's lines from The Tempest sung buried in `night` and forward in `spot`, crossed onto the shaker and hats; the hand-written twin of `such-stuff-as-dreams-122.beatscript` | Found phrases | `found-phrases.md` |
 | `tyger-tyger-128.beatscript` | the found-phrases reference program (EDM, 128): Blake's trochaic Tyger chanted on the kick (`@ vox xfer kick4`), pronunciation fixed with phoneme escapes | Found phrases | `found-phrases.md` |
 | `techno-radio.beatscript` | a station, `station { }` with `from gen@2 techno seed=42`, `next seed=~` and `forms seeded passacaglia rondo fugue`: an endless program whose track N is always the same, each chapter's first seed its theme (`skip-test`: needs the generator; tested in `crates/beatscript-api/tests/station.rs`) | Radio: stations | `radio.md` |
+| `acid-303.beatscript` | the acid voice (`inst=acid`, `inst=acid-square`), a 303 made in the engine: accents `!` louder and brighter and building in a row, slides `^` that glide without striking again (60 ms, or `glide=110`), `decay=` as its filter's sweep | Expression marks | `ext-acid.md` |
 | `showcase.beatscript` | a whole track that uses the features together (written beside these) | | |
 
 Try one from a shell, with no app running:
