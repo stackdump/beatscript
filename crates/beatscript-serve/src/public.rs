@@ -819,7 +819,8 @@ async fn ld_preflight() -> Response<Body> {
 // programs
 
 /// `beatscriptFile`: the `.beatscript` download, the `#!` header lines (rights, provenance) in front of the text, then the `# from:`
-/// lines its save kept (`meta.based_on`), so the file says what it vendored and a save of it keeps them again.
+/// lines its save kept (`meta.based_on`), so the file says what it vendored and a save of it keeps them again. The text's own
+/// leading `#!` lines (a BeatScript 2 text's version line) stay in the header block, before the `# from:` lines.
 fn beatscript_file(cid: &str, text: &str, meta: &Value) -> String {
     let mut b = String::new();
     let one = |s: String| s.replace(['\n', '\r'], " ");
@@ -827,6 +828,15 @@ fn beatscript_file(cid: &str, text: &str, meta: &Value) -> String {
         if !v.is_empty() {
             b.push_str(&format!("#! {k}: {}\n", one(v)));
         }
+    }
+    let mut text = text;
+    while text.starts_with("#!") {
+        let n = text.find('\n').map_or(text.len(), |i| i + 1);
+        b.push_str(&text[..n]);
+        if !text[..n].ends_with('\n') {
+            b.push('\n');
+        }
+        text = &text[n..];
     }
     for l in strs_of(meta, "based_on") {
         b.push_str(&format!("# from: {}\n", one(l)));
@@ -1369,6 +1379,23 @@ pub fn routes(app: &AppState) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The download: the meta's `#!` lines, the text's own (a BeatScript 2 text's version line), then the kept `# from:` lines,
+    /// then the program; the same CID as the text.
+    #[test]
+    fn the_download_keeps_the_version_line_before_the_from_lines() {
+        let pin = "z4EBG9jBATRr9XWGL7beKXF7dm5Je1rPzaSymt6pvg12kd1nqHf";
+        let text = "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n";
+        let cid = djlive::compile::program_cid(text);
+        let meta = json!({"name": "kept", "based_on": [format!("{pin}.drop -> {pin}")]});
+        let f = beatscript_file(&cid, text, &meta);
+        assert_eq!(f, format!("#! name: kept\n#! cid: {cid}\n#! beatscript 2\n# from: {pin}.drop -> {pin}\ntempo 120\ndeck A: kick x ~ x ~\n"));
+        let rep: Value = serde_json::from_str(&beatscript_api::check_json(&f)).unwrap();
+        assert_eq!((rep["cid"].as_str(), rep["version"].as_i64()), (Some(cid.as_str()), Some(2)), "{rep}");
+        // a BeatScript 1 text has no version line: the lines go before it as they did
+        let v1 = "tempo 120\ndeck A: kick x ~ x ~\n";
+        assert_eq!(beatscript_file("zX", v1, &meta), format!("#! name: kept\n#! cid: zX\n# from: {pin}.drop -> {pin}\n{v1}"));
+    }
 
     #[test]
     fn qr_allow_list() {
