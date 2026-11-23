@@ -3101,6 +3101,14 @@ render has the song's notes, sounds, sections, tempo and mix, not its riser swee
 filter sweep measures a render without it. A program that has no end renders 16 bars unless `--beats` says; a
 performed program renders with every input at 1/2.
 
+`beatscript render` and `beatscript listen` (the site's render) play more: the program's control net (its inserts and ramps, and
+`filter_exit` and `echo_out`, which the net holds), and the other **moves**. Those are armed on the booth's own move
+scheduler (docs/PERFORM.md), on the render's clock and never the wall clock: a `loop_roll` (on a net deck, the beat
+repeat), a `bass_swap`, a `phrase_sync` with `do=cut`, a move with `for N bars`. Each lands as it does in the booth, on
+the next bar or phrase line after its line (the song's lines, counted from its first bar), and a strip it muted is put
+back on the first phrase line after it. Two moves cannot act in a render, and its notes say why: `vocoder_handoff` (a
+render has no vocoder) and a `phrase_sync` that steps a seed (a program's deck plays its own nets, not a seed).
+
 ## Tests
 
 `crates/djlive` has 122 unit tests (in the modules: `rat`, `expr`, `dur`, `lex`, `scale`, `meter`, `chance`,
@@ -3478,10 +3486,13 @@ What the language does not do, as honestly as the long notes say it. (Each featu
 - On the web (beats-bitwrap-io `/p`): the page decodes a link and checks its CID; playing it needs BeatScript compiled to
   wasm, which `djlive` is ready for (pure, no I/O) but nothing has built yet.
 
-**The offline render** carries the nets, the tempo curve, `duck`, `mix` and a performance's mixer calls, and nothing
-else of the control lines: no filter, insert, `do` call, ramp, lfo, `move`, `load`, `queue` or `sing` (the arrangement
-format has no op for a registry call). A render holds a tempo ramp inside one net at ±50 % of the net's own tempo, and
-a program that has no end renders 16 bars unless told. A level assertion about a filter sweep therefore measures a
+**The offline render** of `djctl btw render` and `btw test` carries the nets, the tempo curve, `duck`, `mix` and a
+performance's mixer calls, and nothing else of the control lines: no filter, insert, `do` call, ramp, lfo, `move`, `load`,
+`queue` or `sing` (the arrangement format has no op for a registry call). `beatscript render` and `beatscript listen` play the moves
+too, all but a `vocoder_handoff` and a seed step, and in two readings: the control net starts `filter_exit` and `echo_out`
+on the bar line their line fires on, the booth's scheduler starts the other moves on the next line after it, as the
+booth does. A render holds a tempo ramp inside one net at ±50 % of the net's own tempo, and a program that has no end
+renders 16 bars unless told. A level assertion about a filter sweep therefore measures a
 render without the sweep, and a performed level, filter or `do` line is not in it whatever the inputs read. A deck
 that comes in at a section starts on the section's bar line (it was started a beat ahead, so its notes fell a beat early).
 The mix snapshot has no mixer to read there and goes back to the engine's starting positions.

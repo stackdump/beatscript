@@ -1,0 +1,36 @@
+#! beatscript 2
+# perform-moves.beatscript: the booth's DJ moves written on the control deck, in a short arranged track (CC0-1.0, original).
+#
+# A `move` line is an engine call. `control: move bass_swap on B over 8 bars` arms the move where its line fires, and the
+# move lands on its deck's next bar or phrase line, as it does when a DJ presses the button. The offline render plays
+# them too: the roll repeats deck A's beat through the build and lets go on the drop, the bass swap hands the low end
+# from A to B, the filter exit and the echo out take a deck away, and a strip a move muted is put back on the first
+# phrase line after it.
+tempo 126
+key am
+
+section intro 8 bars {
+  deck A: kick x ~ x ~ | hihat ~ x ~ x vel=50..80 | bass a1 ~ a1 ~
+  deck B: harmony chord(am7) inst=warm-pad
+  at bar 7: control: move loop_roll on A over 1 bars   # 1, 1/2, 1/4 and 1/8 of a beat, a bar each
+}
+
+section build 4 bars {
+  deck A: kick x x x x | snare ~ x ~ x | hihat x*8 vel=60..90 | bass a1 ~ a1 ~
+  deck B: harmony chord(am7) inst=warm-pad
+}
+
+section drop 16 bars {
+  deck A: kick x ~ x ~ | snare ~ x ~ x | hihat x*8 vel=60..90 | bass a1 ~ a1 ~
+  deck B: harmony chord(am7) inst=warm-pad | bass <c2 ~ e2 ~>
+  control: move bass_swap on B over 8 bars              # B's lows cut now, swapped with A's on the phrase line
+  at bar 12: control: move filter_exit on A over 4 bars # a high-pass ride, then deck A cut
+}
+
+section outro 8 bars {
+  deck A: kick x ~ x ~ | hihat ~ x ~ x vel=40..60
+  deck B: harmony chord(am7) inst=warm-pad
+  control: move echo_out on B over 4 bars               # the pad thrown into the room, then its channel cut
+}
+
+arrange intro build drop outro

@@ -30,10 +30,13 @@ nothing on stdout. No disk, no network.
   (`level 0.3 -> 1 over 8 bars`, every shape) and lfos, sampled and thinned the way the live runtime sends them
   (`beatscript_render::control_events`); and inserts (`master: filter lp 400 -> 4000 over 1 bars`, `filter off`, `reverb`,
   delay, crush) from the program's control net (`djlive::nets`, as `beatscript_render::render` plays it, a sixteenth of a
-  bar at a time). Timing is honoured: a section's lines fire on its bar line, `at` / `every` / `for N bars` on
-  theirs. A line neither carries (a `do` call to another noun, a vocal, most moves) is named in the start event's
-  `notes` (`not in this render: ...`). The whole program's control timeline is built before the first chunk, so
-  `--from-bar` and `--max-bars` hear exactly what the full render does up to there. Not followed: a tempo curve
+  bar at a time), with the two moves it holds (`filter_exit`, `echo_out`); the other moves (`loop_roll`, `bass_swap`,
+  a `phrase_sync` cut, a move with `for N bars`) on the booth's scheduler, serviced every block on the render's clock
+  (`djhost::offline_moves`). Timing is honoured: a section's lines fire on its bar line, `at` / `every` / `for N bars` on
+  theirs. A line none of them carries (a `do` call to another noun, a vocal, a vocoder handoff, a phrase sync's seed
+  step) is named in the start event's `notes` (`not in this render: ...`, a move with why). The whole program's control
+  timeline is built before the first chunk, so `--from-bar` and `--max-bars` hear exactly what the full render does up
+  to there. Not followed: a tempo curve
   (the render runs at the program's first tempo).
 - **Sound**: the engine djapp plays on (`EngineConfig::extended`), deterministic (composes inline, no
   background threads), at `--sr`.

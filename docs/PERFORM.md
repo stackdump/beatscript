@@ -37,6 +37,7 @@ filter and the wash open, the roll released).
 |---|---|
 | the window | **Perform** in the top bar: one button per move (click arms, click again cancels), its deck and `bars` beside it, a light (amber armed, green running), its last word |
 | the socket / MCP | `moves` / `djapp_moves`: `action` status (default), arm, cancel, toggle, cancel_all; `kind`, `deck`, `bars`, `do` (seed / cut). Also `state section=moves`. (`perform` was already the deck-action method.) |
+| a program | `move bass_swap on B over 8 bars` (or `control: move ...`) calls `moves arm` where its line fires. The offline render (`beatscript render`, `beatscript listen`) arms the same `Moves` on its own engine and services it every block on the render's clock (`djhost::offline_moves`); `filter_exit` and `echo_out` are played by the program's control net there, and a vocoder handoff and a seed step cannot act (the notes say why) |
 
 ## Auto-DJ
 
