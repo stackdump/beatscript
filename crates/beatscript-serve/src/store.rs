@@ -249,81 +249,164 @@ fn hold_twin(l: &mut HashMap<String, Program>, cid: &str, canonical: &str, meta:
     }
 }
 
-/// A stored recipe's expansion (roadmap 6680 item 3, docs/beatscript/ext-template.md "The stored expansion"): what `put_expansion`
-/// stored, or found stored.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Expansion {
+/// A recipe's expansion, written out and admitted (roadmap 6680 item 3, docs/beatscript/ext-template.md "The stored expansion"): what
+/// [`Store::put_expansion`] stores. [`plan_expansion`] makes it, the costly half (the references written out, the expansion checked
+/// by the gate, the programs it copies found), so a caller runs it under the checker's budget and timeout.
+pub struct Plan {
     /// Its CID: the recipe's `expanded_cid`.
     pub cid: String,
-    /// This call stored it (false: it was there already; first write wins, as for any program).
-    pub created: bool,
-    /// The bytes it took (0 when it was there, or is only held in memory).
-    pub bytes: usize,
+    canonical: String,
+    /// The gate's verdict on the expansion: admitted, or why not.
+    admitted: Result<beatscript_serve::gate::Admitted, String>,
+    /// Each reference it wrote out, `"<call> -> <cid>"` (beatscript_api::resolution::sources).
+    based_on: Vec<String>,
+    /// The programs it copies from: every stored program a reference borrowed from, and what those borrowed in turn (the recipe's
+    /// `uses`; a generated program is the generator's, CC0, and not among them).
+    copies: Vec<String>,
 }
 
-/// The recipe's meta with what it expands to (`expands_to`) when that is another program: so the store says which program is
-/// its expansion without writing it out again.
-pub fn with_expands_to(meta: &mut Value, recipe_cid: &str, rep: &Value) {
-    if let Some(x) = rep["expanded_cid"].as_str().filter(|x| *x != recipe_cid && is_cid(x)) {
-        if let Value::Object(m) = meta {
-            m.insert("expands_to".into(), json!(x));
-        }
+/// What became of a recipe's expansion: stored (by this call, or by an earlier one: first write wins), or not, and why.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Outcome {
+    pub cid: String,
+    /// It is stored now (`/p/<cid>` serves it).
+    pub stored: bool,
+    /// This call stored it.
+    pub created: bool,
+    /// The bytes this call wrote.
+    pub bytes: usize,
+    /// The stored program's licence: the recipe's when this call stored it, its first sharer's when it was there already.
+    pub license: String,
+    /// Why it is not stored.
+    pub why: Option<String>,
+}
+
+impl Outcome {
+    pub fn skipped(cid: &str, why: impl Into<String>) -> Outcome {
+        Outcome { cid: cid.to_string(), stored: false, created: false, bytes: 0, license: String::new(), why: Some(why.into()) }
     }
 }
 
+/// The costly half of storing an expansion: `recipe` (canonical, CID `recipe_cid`) written out in the checker's environment,
+/// canonical, checked by the storage gate under `license`, with its sources and the programs it copies. None for a program with
+/// no references.
+pub fn plan_expansion(recipe_cid: &str, recipe: &str, license: &str) -> Option<Plan> {
+    let env = beatscript_api::web_env().env();
+    let refs = beatscript_api::resolution::of_with(recipe, recipe_cid, &env);
+    let body = refs.expanded.as_ref()?;
+    if refs.expanded_cid == recipe_cid || !is_cid(&refs.expanded_cid) {
+        return None;
+    }
+    let canonical = djlive::print::canonical(&djlive::parse::parse_with(body, &env).program);
+    let admitted = beatscript_serve::gate::admit(&canonical, license, "").map_err(|r| r.message).and_then(|a| if a.cid() == refs.expanded_cid { Ok(a) } else { Err(format!("it wrote out as {}, not {}", a.cid(), refs.expanded_cid)) });
+    let copies = djlive::compile::check_with(recipe, &env).compiled.map(|c| c.plays.into_iter().map(|(c, _)| c).collect()).unwrap_or_default();
+    let based_on = beatscript_api::resolution::sources(&refs, recipe);
+    // (what it was written out from is the store's own provenance, kept by the gate beside the canonical text, as `# from:` lines
+    // are for a text as sent)
+    let admitted = admitted.map(|a| a.with_based_on(based_on.clone()));
+    Some(Plan { cid: refs.expanded_cid.clone(), canonical, admitted, based_on, copies })
+}
+
 impl Store {
-    /// Store a recipe's expansion beside it: the program with every reference written out as plain BeatScript (as `check`'s
-    /// `expanded_cid` names it: djlive::refs::expanded in the checker's environment), canonical, under its own CID, through the
-    /// storage gate. Its meta: the recipe's licence, credits, name and author (the expansion is the same track, and holds the
-    /// recipe's own text), `source: "expansion"`, `expanded_from` the recipe, and `based_on` every reference it wrote out with the
-    /// CID it is pinned to (beatscript_api::resolution::sources). None for a program with no references.
-    pub fn put_expansion(&self, recipe_cid: &str, recipe: &str, recipe_meta: &Value) -> std::io::Result<Option<Expansion>> {
-        let env = beatscript_api::web_env().env();
-        let Ok(Some((canonical, cid))) = djlive::refs::expanded(recipe, &env) else { return Ok(None) };
-        if cid == recipe_cid || !is_cid(&cid) {
-            return Ok(None);
+    /// The bytes the store's files take (what its cap is against).
+    pub fn bytes(&self) -> u64 {
+        std::fs::read_dir(&self.dir).map(|rd| rd.flatten().filter_map(|e| e.metadata().ok()).map(|m| m.len()).sum()).unwrap_or(0)
+    }
+
+    /// The expansion `cid` when it is stored already (by anyone: first write wins), with the licence it is stored under.
+    pub fn stored_expansion(&self, cid: &str) -> Option<Outcome> {
+        self.get(cid)?;
+        let license = self.file_meta(cid).and_then(|m| m["license"].as_str().map(str::to_string)).filter(|l| !l.is_empty()).unwrap_or_else(|| "CC0-1.0".into());
+        Some(Outcome { cid: cid.to_string(), stored: true, created: false, bytes: 0, license, why: None })
+    }
+
+    /// The licence and author of a program this store has: a stored file's meta; an example or a link held in memory is CC0 by no
+    /// one in particular. None: the store does not have it.
+    fn rights_of(&self, cid: &str) -> Option<(String, String)> {
+        if self.examples.contains_key(cid) || self.links.lock().unwrap().contains_key(cid) {
+            return Some(("CC0-1.0".into(), String::new()));
+        }
+        let m = self.file_meta(cid)?;
+        let s = |k: &str| m[k].as_str().unwrap_or("").trim().to_string();
+        let l = s("license");
+        Some((if l.is_empty() { "CC0-1.0".into() } else { l }, s("author")))
+    }
+
+    /// Store a recipe's expansion beside it, as a program of its own under its CID, through the storage gate ([`plan_expansion`]
+    /// made it and the gate's verdict). Its meta: the recipe's licence, credits, name and author (the expansion is the same track,
+    /// and holds the recipe's own text), `source: "expansion"`, `expanded_from` the recipe, and `based_on` every reference it wrote
+    /// out with the CID it is pinned to. It is stored only when
+    ///
+    /// - every program it copies is CC0, or is the recipe author's own under the recipe's licence: an expansion is a copy, and the
+    ///   site does not publish another author's work under rights that author did not give;
+    /// - it is at most `max_bytes` (a program's limit) and fits the store's `room`;
+    ///
+    /// else the outcome says why and nothing is written. One that is stored already (first write wins) is the outcome as it is.
+    pub fn put_expansion(&self, plan: Plan, recipe_cid: &str, recipe_meta: &Value, max_bytes: usize, room: Option<u64>) -> std::io::Result<Outcome> {
+        if let Some(o) = self.stored_expansion(&plan.cid) {
+            return Ok(o);
+        }
+        let cid = plan.cid.clone();
+        let a = match plan.admitted {
+            Ok(a) => a,
+            Err(why) => return Ok(Outcome::skipped(&cid, format!("the storage gate refused it: {why}"))),
+        };
+        if plan.canonical.len() > max_bytes {
+            return Ok(Outcome::skipped(&cid, format!("it is {} bytes written out, and a program is at most {max_bytes}", plan.canonical.len())));
         }
         let s = |k: &str| recipe_meta[k].as_str().unwrap_or("").trim().to_string();
-        let license = s("license");
-        let refs = beatscript_api::resolution::of_with(recipe, recipe_cid, &env);
-        let based_on = beatscript_api::resolution::sources(&refs, recipe);
-        // (what it was written out from is the store's own provenance, kept by the gate beside the canonical text, as `# from:`
-        // lines are for a text as sent)
-        let a = admit_as(&cid, &canonical, &license, "")?.with_based_on(based_on.clone());
-        let mut meta = serde_json::Map::new();
-        meta.insert("license".into(), json!(a.license()));
-        meta.insert("visibility".into(), json!("public"));
-        for k in ["name"] {
-            if !s(k).is_empty() {
-                meta.insert(k.into(), json!(s(k)));
+        let (license, author) = (a.license().to_string(), s("author"));
+        for c in &plan.copies {
+            let ok = match self.rights_of(c) {
+                Some((l, by)) => l == "CC0-1.0" || (l == license && !author.is_empty() && by == author),
+                None => false,
+            };
+            if !ok {
+                let what = match self.rights_of(c) {
+                    Some((l, by)) if l == license => format!("{l}, {}", if by.is_empty() { "by no one named" } else { "by another author" }),
+                    Some((l, _)) => l,
+                    None => "rights this store does not have".into(),
+                };
+                return Ok(Outcome::skipped(
+                    &cid,
+                    format!("it copies {} ({what}), and an expansion is stored only when every program it copies is CC0 or the recipe's own (its licence and its author)", djengine::rights::short_cid(c)),
+                ));
             }
+        }
+        let mut meta = serde_json::Map::new();
+        meta.insert("license".into(), json!(license));
+        meta.insert("visibility".into(), json!("public"));
+        if !s("name").is_empty() {
+            meta.insert("name".into(), json!(s("name")));
         }
         if let Some(c) = recipe_meta["credits"].as_array().filter(|c| !c.is_empty()) {
             meta.insert("credits".into(), Value::Array(c.clone()));
         }
-        if !s("author").is_empty() {
-            meta.insert("author".into(), json!(s("author")));
+        if !author.is_empty() {
+            meta.insert("author".into(), json!(author));
         }
         meta.insert("created".into(), json!(rfc3339_now()));
         meta.insert("source".into(), json!("expansion"));
         meta.insert("expanded_from".into(), json!(recipe_cid));
-        if !based_on.is_empty() {
-            meta.insert("based_on".into(), json!(based_on));
+        if !plan.based_on.is_empty() {
+            meta.insert("based_on".into(), json!(plan.based_on));
+        }
+        let size = go_json(&json!({"cid": cid, "text": plan.canonical, "meta": meta})).len();
+        if room.is_some_and(|r| size as u64 > r) {
+            return Ok(Outcome::skipped(&cid, "the programs store is full"));
         }
         if self.readonly {
             let mut l = self.links.lock().unwrap();
-            if l.contains_key(&cid) {
-                return Ok(Some(Expansion { cid, created: false, bytes: 0 }));
-            }
             if l.len() >= MAX_LINKS {
                 l.clear();
             }
-            l.insert(cid.clone(), Program { cid: cid.clone(), text: canonical.clone() });
-            hold_twin(&mut l, &cid, &canonical, &Value::Object(meta));
-            return Ok(Some(Expansion { cid, created: true, bytes: 0 }));
+            hold_twin(&mut l, &cid, &plan.canonical, &Value::Object(meta));
+            l.insert(cid.clone(), Program { cid: cid.clone(), text: plan.canonical });
+            return Ok(Outcome { cid, stored: true, created: true, bytes: 0, license, why: None });
         }
         let n = beatscript_serve::gate::write_program(&self.dir, &a, Value::Object(meta), go_json)?;
-        Ok(Some(Expansion { cid, created: n.is_some(), bytes: n.unwrap_or(0) }))
+        let license = if n.is_some() { license } else { self.stored_expansion(&cid).map_or(license, |o| o.license) };
+        Ok(Outcome { cid, stored: true, created: n.is_some(), bytes: n.unwrap_or(0), license, why: None })
     }
 }
 
@@ -422,5 +505,38 @@ mod tests {
         let y = djlive::compile::renamed_cid(&xt);
         assert_eq!(st.renamed_to(&x).as_deref(), Some(y.as_str()));
         assert!(!d.path().join("programs").exists(), "nothing written");
+    }
+}
+
+#[cfg(test)]
+mod expansion_tests {
+    use super::*;
+
+    /// A recipe's expansion is stored within a program's size and the store's room, once (a second store finds it), naming its
+    /// recipe and never based on itself; a program with no references has nothing to store.
+    #[test]
+    fn an_expansion_is_stored_within_its_limits_once() {
+        let d = tempfile::tempdir().unwrap();
+        let (s, _) = Store::open(d.path(), None, false).unwrap();
+        let rep = check("arrange from template(canon, @mgm_pease_porridge_hot, subject=[d5 c#5 b4 a4])\n");
+        let (cid, canonical) = (rep["cid"].as_str().unwrap().to_string(), rep["canonical"].as_str().unwrap().to_string());
+        let meta = json!({"license": "CC0-1.0", "visibility": "public", "name": "round"});
+        let plan = || plan_expansion(&cid, &canonical, "CC0-1.0").expect("a recipe has a plan");
+        let o = s.put_expansion(plan(), &cid, &meta, 100, None).unwrap();
+        assert!(!o.stored && o.why.as_deref().is_some_and(|w| w.contains("bytes written out")), "{o:?}");
+        let o = s.put_expansion(plan(), &cid, &meta, 1 << 20, Some(10)).unwrap();
+        assert_eq!((o.stored, o.why.as_deref()), (false, Some("the programs store is full")));
+        assert_eq!(std::fs::read_dir(d.path()).unwrap().count(), 0, "nothing written");
+        let o = s.put_expansion(plan(), &cid, &meta, 1 << 20, None).unwrap();
+        assert!(o.stored && o.created && o.bytes > 0 && o.license == "CC0-1.0", "{o:?}");
+        assert_eq!(o.cid, rep["expanded_cid"].as_str().unwrap());
+        let again = s.put_expansion(plan(), &cid, &meta, 1 << 20, None).unwrap();
+        assert!(again.stored && !again.created && again.bytes == 0);
+        assert_eq!(s.stored_expansion(&o.cid).map(|x| x.license), Some("CC0-1.0".to_string()));
+        let f: Value = serde_json::from_slice(&std::fs::read(d.path().join(format!("{}.json", o.cid))).unwrap()).unwrap();
+        assert_eq!((f["meta"]["expanded_from"].as_str(), f["meta"]["source"].as_str(), f["meta"]["name"].as_str()), (Some(cid.as_str()), Some("expansion"), Some("round")));
+        assert!(f["meta"]["based_on"].as_array().unwrap().iter().all(|l| !l.as_str().unwrap().contains(&o.cid)), "{}", f["meta"]);
+        let plain = check("tempo 120\ndeck A: kick x ~ x ~\n");
+        assert!(plan_expansion(plain["cid"].as_str().unwrap(), plain["canonical"].as_str().unwrap(), "").is_none());
     }
 }

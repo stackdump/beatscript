@@ -130,7 +130,7 @@ pub fn go_meta(m: &Value) -> Value {
             o.insert(k.into(), json!(s(k)));
         }
     }
-    // a recipe and its stored expansion name each other (roadmap 6680), and the expansion keeps what it was written out from
+    // a recipe and its stored expansion name each other, and the expansion keeps what it was written out from (roadmap 6680)
     for k in ["expands_to", "expanded_from"] {
         if !s(k).is_empty() {
             o.insert(k.into(), json!(s(k)));
@@ -142,17 +142,57 @@ pub fn go_meta(m: &Value) -> Value {
     Value::Object(o)
 }
 
-/// Store a recipe's expansion beside it (store.rs `put_expansion`) and say so in the stored program's answer: `expanded_cid`, when
-/// the program has references and its expansion is stored (or was already). A failure to store it leaves the recipe stored and
-/// the answer without `expanded_cid` (it is logged).
-fn beside(app: &crate::App, mut prog: Value) -> Value {
-    let (Some(cid), Some(text)) = (prog["cid"].as_str().map(str::to_string), prog["text"].as_str().map(str::to_string)) else { return prog };
-    match app.store.put_expansion(&cid, &text, &prog["meta"]) {
-        Ok(Some(x)) => prog["expanded_cid"] = json!(x.cid),
-        Ok(None) => {}
-        Err(e) => eprintln!("beatscript-serve: the expansion of {cid} was not stored: {e}"),
+/// Store the expansion of the recipe `cid` (its canonical text, its meta, its check report `rep`) beside it (store.rs
+/// `put_expansion`): the one path every program write takes (compose::put for the MCP and compose, `PUT /api/programs`, `PUT
+/// /api/shares`). Nothing for a program with no references. One stored already (first write wins) is answered at once; else
+/// it is written out under the checker's budget and timeout, charged to `owner`, and stored when its rights, its size and the
+/// store's room allow. A panic is caught: the recipe stays stored, and the outcome says the expansion is not.
+pub fn expansion_beside(app: &crate::App, eng: &Engine, owner: &str, cid: &str, canonical: &str, meta: &Value, rep: &Value) -> Option<crate::store::Outcome> {
+    let x = rep["expanded_cid"].as_str().filter(|x| *x != cid && crate::store::is_cid(x))?.to_string();
+    if let Some(o) = app.store.stored_expansion(&x) {
+        return Some(o);
+    }
+    let (c, t, lic) = (cid.to_string(), canonical.to_string(), meta["license"].as_str().unwrap_or("").to_string());
+    let plan = match eng.budgeted(owner, "expand", move || crate::store::plan_expansion(&c, &t, &lic)) {
+        Ok(Some(p)) => p,
+        Ok(None) => return None,
+        Err(e) => return Some(crate::store::Outcome::skipped(&x, format!("it was not written out: {}", e.message))),
+    };
+    let cap = (app.cfg.flag_num("store-max-mb", 256).max(0) as u64) << 20;
+    let room = cap.saturating_sub(app.store.bytes());
+    let put = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| app.store.put_expansion(plan, cid, meta, app.cfg.max_program_bytes, Some(room))));
+    Some(match put {
+        Ok(Ok(o)) => o,
+        Ok(Err(e)) => {
+            eprintln!("beatscript-serve: the expansion of {cid} was not stored: {e}");
+            crate::store::Outcome::skipped(&x, format!("it could not be stored: {e}"))
+        }
+        Err(_) => {
+            eprintln!("beatscript-serve: storing the expansion of {cid} panicked");
+            crate::store::Outcome::skipped(&x, "it could not be stored")
+        }
+    })
+}
+
+/// A stored program's answer (`{cid, text, meta}`) with what became of its expansion: `expanded_cid` and `expansion_license` when
+/// it is stored (the licence is its first sharer's when it was stored already), `expanded_cid` and `expansion_note` (why) when not.
+pub fn with_expansion(mut prog: Value, o: Option<&crate::store::Outcome>) -> Value {
+    if let Some(o) = o {
+        prog["expanded_cid"] = json!(o.cid);
+        if o.stored {
+            prog["expansion_license"] = json!(o.license);
+        } else if let Some(w) = &o.why {
+            prog["expansion_note"] = json!(format!("its expansion is not stored: {w}"));
+        }
     }
     prog
+}
+
+/// [`expansion_beside`] for a program [`put`] stored.
+fn beside(app: &crate::App, eng: &Engine, owner: &str, prog: Value, rep: &Value) -> Value {
+    let (Some(cid), Some(text)) = (prog["cid"].as_str().map(str::to_string), prog["text"].as_str().map(str::to_string)) else { return prog };
+    let o = expansion_beside(app, eng, owner, &cid, &text, &prog["meta"], rep);
+    with_expansion(prog, o.as_ref())
 }
 
 /// A program the site has: (canonical text, meta, "store"). Examples first, as `Server.Get`.
@@ -224,7 +264,8 @@ pub fn put(app: &crate::App, eng: &Engine, owner: &str, text: &str, meta: Value)
         if let Ok(v) = serde_json::from_slice::<Value>(&b) {
             if v["cid"].as_str() == Some(&cid) && v["text"].as_str() == Some(&canonical) {
                 // (a recipe stored before its expansion was kept gets it now)
-                return Ok((beside(app, json!({"cid": cid, "text": canonical, "meta": go_meta(&v["meta"])})), rep));
+                let prog = beside(app, eng, owner, json!({"cid": cid, "text": canonical, "meta": go_meta(&v["meta"])}), &rep);
+                return Ok((prog, rep));
             }
         }
     }
@@ -254,17 +295,20 @@ pub fn put(app: &crate::App, eng: &Engine, owner: &str, text: &str, meta: Value)
     if !adm.based_on().is_empty() {
         meta["based_on"] = json!(adm.based_on());
     }
-    // what it expands to, when it has references: its expansion is stored beside it (below)
-    crate::store::with_expands_to(&mut meta, &cid, &rep);
+    // its expansion, when it has references, is stored first, and the recipe names it (`expands_to`) only once it is stored
+    let x = expansion_beside(app, eng, owner, &cid, &canonical, &go_meta(&meta), &rep);
+    if let Some(o) = x.as_ref().filter(|o| o.stored) {
+        meta["expands_to"] = json!(o.cid);
+    }
     let prog = json!({"cid": cid, "text": canonical, "meta": go_meta(&meta)});
     if app.cfg.programs_readonly {
         let _ = app.store.put_canonical(&cid, &canonical);
-        return Ok((beside(app, prog), rep));
+        return Ok((with_expansion(prog, x.as_ref()), rep));
     }
     match beatscript_serve::gate::write_program(&app.cfg.programs, &adm, prog["meta"].clone(), gojson::to_string) {
-        Ok(Some(_)) => Ok((beside(app, prog), rep)),
+        Ok(Some(_)) => Ok((with_expansion(prog, x.as_ref()), rep)),
         Ok(None) => match stored(app, &cid) {
-            Some((t, m)) => Ok((beside(app, json!({"cid": cid, "text": t, "meta": go_meta(&m)})), rep)),
+            Some((t, m)) => Ok((with_expansion(json!({"cid": cid, "text": t, "meta": go_meta(&m)}), x.as_ref()), rep)),
             None => Err(fail(500, "internal", "the program could not be stored")),
         },
         Err(_) => Err(fail(500, "internal", "the program could not be stored")),

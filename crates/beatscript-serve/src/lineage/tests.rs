@@ -418,9 +418,10 @@ fn a_use_line_is_what_a_program_is_based_on() {
     assert!(l.node(&a).is_some());
 }
 
-/// A recipe and its expansion stored beside it (roadmap 6680): the recipe's node `expandsTo` the expansion (check's expanded_cid),
-/// the expansion's is `expandedFrom` the recipe and `isBasedOn` each reference it wrote out (`derivation: expanded`), each tree
-/// shows the other among its programs, and the expansion's sources are not counted twice for curation.
+/// A recipe and its expansion stored beside it (roadmap 6680): the recipe's node `expandsTo` the expansion (check's expanded_cid,
+/// from its text), the expansion's is `expandedFrom` the recipe (its meta) and `isBasedOn` each reference it wrote out
+/// (`derivation: expanded`), never itself; each tree shows the other among its programs; the expansion's sources are not
+/// counted twice for curation; and past MAX_SIBLINGS recipes the list is cut and the tree says so.
 #[test]
 fn a_recipe_expands_to_its_stored_expansion_and_it_is_based_on_each_source() {
     beatscript_api::generate::install();
@@ -432,35 +433,44 @@ fn a_recipe_expands_to_its_stored_expansion_and_it_is_based_on_each_source() {
     let x = rep["expanded_cid"].as_str().unwrap().to_string();
     let (text, xc) = djlive::refs::expanded(&recipe, &beatscript_api::web_env().env()).unwrap().unwrap();
     assert_eq!(xc, x, "the expansion stored is check's expanded_cid");
-    let r = put(p, &recipe, json!({"visibility": "public", "name": "bed", "expands_to": x}));
+    let r = put(p, &recipe, json!({"visibility": "public", "name": "bed"}));
     let pin = djlive::refs::sites(&recipe, &beatscript_api::web_env().env()).unwrap()[0].resolved.clone().unwrap();
-    assert_eq!(put(p, &text, json!({"visibility": "public", "name": "bed", "source": "expansion", "expanded_from": r, "based_on": [format!("{call} -> {pin}")]})), x);
+    // (a based_on line that resolves to the expansion itself says its call alone)
+    let based = json!([format!("{call} -> {pin}"), format!("template(deep-house, @tempest_such_stuff) -> {x}")]);
+    assert_eq!(put(p, &text, json!({"visibility": "public", "name": "bed", "source": "expansion", "expanded_from": r, "based_on": based})), x);
     let l = Lineage::new(p, Vec::new());
     l.refresh(true);
     let rn = l.node(&r).unwrap();
-    assert_eq!(rn.expands_to.as_deref(), Some(x.as_str()));
+    assert_eq!(rn.expands_to.as_deref(), Some(x.as_str()), "computed from the recipe's text");
     assert!(rn.expanded_from.is_empty() && rn.based_on.is_empty());
     let xn = l.node(&x).unwrap();
     assert_eq!(xn.expanded_from, vec![r.clone()]);
-    assert_eq!(xn.based_on, vec![(call.to_string(), Some(pin.clone()))]);
-    assert!(xn.expands_to.is_none(), "a program with no references is its own expansion");
+    assert_eq!(xn.based_on, vec![(call.to_string(), Some(pin.clone())), ("template(deep-house, @tempest_such_stuff)".to_string(), None)]);
+    assert!(xn.expands_to.is_none() && !xn.expanded_from_cut, "a program with no references is its own expansion");
     let j = xn.json_ld("https://beatscript.app");
     assert_eq!(j["expandedFrom"], json!([r]));
-    assert_eq!(j["isBasedOn"], json!([{"@type": "CreativeWork", "name": call, "derivation": "expanded", "resolves": pin}]));
+    assert_eq!(j["isBasedOn"][0], json!({"@type": "CreativeWork", "name": call, "derivation": "expanded", "resolves": pin}));
+    assert!(!j.to_string().contains(&format!(r#""resolves":"{x}""#)), "never based on itself: {j}");
     assert_eq!(rn.json_ld("https://beatscript.app")["expandsTo"], json!(x));
     // each tree shows the other
     let t = l.tree(&r).unwrap().json_ld("https://beatscript.app");
     assert!(t["programs"].as_array().unwrap().iter().any(|n| n["@id"] == json!(x)), "{t}");
     let t = l.tree(&x).unwrap().json_ld("https://beatscript.app");
-    assert!(t["programs"].as_array().unwrap().iter().any(|n| n["@id"] == json!(r)), "{t}");
+    assert!(t["programs"].as_array().unwrap().iter().any(|n| n["@id"] == json!(r)) && t.get("truncated").is_none(), "{t}");
     // the call is drawn on once: by the recipe (the expansion is the recipe's own, not a second program that vendored it)
     assert_eq!(l.curation(call), Curation { referenced_by: 1, vendored_from: 0 });
-    // the expansion's meta alone, with no `expands_to` on its recipe, still names the recipe
-    let d2 = tempfile::tempdir().unwrap();
-    let r2 = put(d2.path(), &recipe, json!({"visibility": "public"}));
-    put(d2.path(), &text, json!({"visibility": "public", "source": "expansion", "expanded_from": r2}));
-    let l2 = Lineage::new(d2.path(), Vec::new());
-    l2.refresh(true);
-    assert_eq!(l2.node(&x).unwrap().expanded_from, vec![r2.clone()]);
-    assert_eq!(l2.node(&r2).unwrap().expands_to.as_deref(), Some(x.as_str()), "computed from the recipe's text when its meta does not say");
+    // many recipes writing out to one program (each recipe's meta names it): the first MAX_SIBLINGS are listed, and the tree says
+    // it is cut
+    let many = tempfile::tempdir().unwrap();
+    let target = put(many.path(), "tempo 99\ndeck A: kick x x x x\n", json!({"visibility": "public", "source": "expansion"}));
+    for k in 0..MAX_SIBLINGS + 3 {
+        put(many.path(), &format!("tempo {}\ndeck A: kick x ~ ~ ~\n", 70 + k), json!({"visibility": "public", "expands_to": target}));
+    }
+    let lm = Lineage::new(many.path(), Vec::new());
+    lm.refresh(true);
+    let n = lm.node(&target).unwrap();
+    assert_eq!((n.expanded_from.len(), n.expanded_from_cut), (MAX_SIBLINGS, true));
+    assert_eq!(n.json_ld("https://beatscript.app")["expandedFromTruncated"], json!(true));
+    let t = lm.tree(&target).unwrap();
+    assert!(t.truncated && t.expansions.len() == MAX_SIBLINGS);
 }

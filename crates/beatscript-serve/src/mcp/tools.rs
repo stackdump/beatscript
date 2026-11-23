@@ -1578,11 +1578,15 @@ impl Tools {
                 out["meta"] = prog["meta"].clone();
                 out["fetch_url"] = json!(format!("{}/api/programs/{cid}", self.public));
                 out["note"] = json!(format!("url is the self-sealing link (the program is in the link; opening it checks the CID). short_url is the CID-only link: the program is stored on the site (public, {}; the first share's rights stay), and opening it fetches the text and checks it against the CID. Post social_url or short_social_url where a link preview is wanted.", prog["meta"]["license"].as_str().unwrap_or("")));
-                // its expansion, stored beside it (compose::put): a program of its own, at expanded_url
-                if let Some(x) = prog["expanded_cid"].as_str() {
+                // its expansion, stored beside it (compose::put): a program of its own, at expanded_url, under the licence its first
+                // sharer gave it; or why it is not stored
+                if let (Some(x), Some(l)) = (prog["expanded_cid"].as_str(), prog["expansion_license"].as_str()) {
                     out["expanded_cid"] = json!(x);
                     out["expanded_url"] = json!(format!("{}/p/{x}", self.public));
-                    out["note"] = json!(format!("{} expanded_url is the same track with every reference written out as plain BeatScript, stored beside it as a program of its own (expanded_cid; it plays the same).", out["note"].as_str().unwrap_or("")));
+                    out["expansion_license"] = json!(l);
+                    out["note"] = json!(format!("{} expanded_url is the same track with every reference written out as plain BeatScript, stored beside it as a program of its own (expanded_cid; it plays the same), under expansion_license: the first sharer's rights stay, as for any program.", out["note"].as_str().unwrap_or("")));
+                } else if let Some(n) = prog["expansion_note"].as_str() {
+                    out["expansion_note"] = json!(n);
                 }
             }
             Ok(_) => none(&mut out, "the program could not be stored. The self-sealing link above still works.".into()),

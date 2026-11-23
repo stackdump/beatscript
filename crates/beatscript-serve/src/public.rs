@@ -187,6 +187,21 @@ impl Checker {
         })
     }
 
+    /// Any work of the checker's kind (a recipe's expansion written out and checked, store.rs `plan_expansion`) under its rules:
+    /// the owner's budget and slot, a process slot, the timeout, a panic caught.
+    pub async fn budgeted<T: Send + 'static>(&self, owner: &str, what: &str, f: impl FnOnce() -> T + Send + 'static) -> Result<T, ApiError> {
+        let slot: Arc<Mutex<Option<T>>> = Arc::new(Mutex::new(None));
+        let put = slot.clone();
+        self.run(owner, what, 0, move || {
+            let v = f();
+            *put.lock().unwrap() = Some(v);
+            String::new()
+        })
+        .await?;
+        let v = slot.lock().unwrap().take();
+        v.ok_or_else(|| ApiError::new(502, "checker_error", "the checker failed; try again"))
+    }
+
     /// `Checker.Check`: the `api.CheckReport` as Go writes it.
     pub async fn check(&self, owner: &str, text: &str) -> Result<Value, ApiError> {
         self.check_with(owner, text, false).await
@@ -1012,30 +1027,22 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
         return ApiError::new(422, "cid_mismatch", format!("that text is program {got}, not {cid}")).response();
     }
     let warnings = i_of(&rep, "warnings");
-    // a recipe's expansion is stored beside it (store.rs `put_expansion`): the answer says its CID
+    // a recipe's expansion is stored beside it (compose::expansion_beside, under the checker's budget): the answer says what
+    // became of it
     let expansion = |meta: Value| {
-        let (ps, cid, canonical) = (st.clone(), cid.clone(), canonical.clone());
+        let (ps, cid, canonical, ip, rep) = (st.clone(), cid.clone(), canonical.clone(), ip.clone(), rep.clone());
         async move {
             let p2 = ps.clone();
-            let x = tokio::task::spawn_blocking(move || p2.app.store.put_expansion(&cid, &canonical, &meta)).await;
-            match x {
-                Ok(Ok(Some(x))) => {
-                    ps.store_total.fetch_add(x.bytes as i64, Ordering::Relaxed);
-                    Some(x.cid)
-                }
-                Ok(Err(e)) => {
-                    eprintln!("beatscript-serve: an expansion was not stored: {e}");
-                    None
-                }
-                _ => None,
+            let eng = crate::compose::engine::Engine::over(Some(ps.checker.clone()));
+            let x = tokio::task::spawn_blocking(move || crate::compose::expansion_beside(&p2.app, &eng, &ip, &cid, &canonical, &meta, &rep)).await.ok().flatten();
+            if let Some(o) = &x {
+                ps.store_total.fetch_add(o.bytes as i64, Ordering::Relaxed);
             }
+            x
         }
     };
-    let reply = |status: u16, created: bool, meta: Value, expanded: Option<String>| {
-        let mut v = json!({"cid": got, "created": created, "meta": meta, "warnings": warnings});
-        if let Some(x) = expanded {
-            v["expanded_cid"] = json!(x);
-        }
+    let reply = |status: u16, created: bool, meta: Value, expanded: Option<crate::store::Outcome>| {
+        let v = crate::compose::with_expansion(json!({"cid": got, "created": created, "meta": meta, "warnings": warnings}), expanded.as_ref());
         json_resp(status, &v)
     };
     if let Some(m) = st.app.store.file_meta(&cid) {
@@ -1060,22 +1067,22 @@ async fn put_program(State(st): St, req: Request) -> Response<Body> {
         meta.insert("based_on".into(), json!(based_on));
     }
     let mut meta = Value::Object(meta);
-    store::with_expands_to(&mut meta, &cid, &rep);
     let size = go_encode(&json!({"cid": cid, "text": canonical, "meta": meta})).len() as i64;
     if st.store_total.load(Ordering::Relaxed) + size > st.store_cap {
         return ApiError::new(507, "store_full", "the programs store is full").retry(3600).response();
     }
+    // its expansion first, and the recipe names it (`expands_to`) only once it is stored
+    let x = expansion(meta.clone()).await;
+    if let Some(o) = x.as_ref().filter(|o| o.stored) {
+        meta["expands_to"] = json!(o.cid);
+    }
     match st.app.store.put_new(&cid, &text, meta.clone(), go_encode) {
         Ok(Some(n)) => {
             st.store_total.fetch_add(n as i64, Ordering::Relaxed);
-            let x = expansion(meta.clone()).await;
             reply(201, true, meta, x)
         }
         Ok(None) => match st.program(&cid) {
-            Some((_, m)) => {
-                let x = expansion(m.clone()).await;
-                reply(200, false, m, x)
-            }
+            Some((_, m)) => reply(200, false, m, x),
             None => ApiError::internal("the stored program cannot be read back".into()).response(),
         },
         Err(e) => ApiError::internal(e.to_string()).response(),

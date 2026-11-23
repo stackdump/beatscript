@@ -664,7 +664,9 @@ fn share_stores_the_canonical_text_and_names_it_from_the_header() {
 /// A recipe's expansion is stored beside it (roadmap 6680 item 3): on each program write path (MCP share signed in, PUT
 /// /api/programs, PUT /api/shares) a program with references gets its written-out program stored as a program of its own under
 /// check's `expanded_cid`, through the gate, with the recipe's licence; `/p/<expanded_cid>` serves it; the two name each other
-/// (the recipe's meta `expands_to`, the expansion's `expanded_from` and `based_on`), and both pages' blocks say so.
+/// (the recipe's meta `expands_to`, the expansion's `expanded_from` and `based_on`, never itself), and both pages' blocks say so.
+/// One that copies another's work under other rights is not stored, and the answer says why; one stored first by someone else
+/// is answered with the rights its first sharer gave.
 #[test]
 fn a_recipe_is_stored_with_its_expansion_beside_it() {
     let s = start();
@@ -687,7 +689,8 @@ fn a_recipe_is_stored_with_its_expansion_beside_it() {
     assert_eq!((m["license"].as_str(), m["source"].as_str(), m["expanded_from"].as_str(), m["name"].as_str()), (Some("CC-BY-4.0"), Some("expansion"), Some(cid.as_str()), Some("Season")));
     assert_eq!(m["credits"], json!(["ann"]));
     let based = m["based_on"].as_array().unwrap();
-    assert!(based.iter().any(|l| l.as_str().is_some_and(|l| l.starts_with("template(passacaglia, @eccl3_season, upper=ode_to_joy) -> z"))), "{m}");
+    // (a template with nothing to write out after it: its written-out program is this expansion, so the line is its call alone)
+    assert!(based.iter().any(|l| l == "template(passacaglia, @eccl3_season, upper=ode_to_joy)") && based.iter().all(|l| !l.as_str().unwrap().contains(&x)), "{m}");
     assert!(based.iter().any(|l| l == "ode_to_joy"), "{m}");
     // /p/<expanded_cid> serves it: its canonical text, and its page's block says where it came from
     let t = s.call("GET", &format!("/p/{x}.beatscript"), &[], b"");
@@ -698,6 +701,7 @@ fn a_recipe_is_stored_with_its_expansion_beside_it() {
     // and the recipe's says what it expands to, and its nested part (the theme in its role) by CID
     let page = s.call("GET", &format!("/p/{cid}"), &[("Accept", "text/html".into())], b"");
     assert!(page.body.contains(&format!(r#""expandsTo":"{x}""#)) && page.body.contains(r#""hasPart":[{"@type":"CreativeWork","@id":"z"#), "{}", page.body);
+    assert_eq!(v["expansion_license"], "CC-BY-4.0");
     // the store's own audit: everything stored is admitted
     assert!(beatscript_serve::gate::audit_dir(&programs).is_empty());
     // sharing it again changes nothing (first write wins) and still answers the expansion
@@ -714,6 +718,11 @@ fn a_recipe_is_stored_with_its_expansion_beside_it() {
     assert_eq!((file(&x)["meta"]["license"].as_str(), file(&x)["meta"]["expanded_from"].as_str()), (Some("CC0-1.0"), Some(cid.as_str())));
     let a = s.call("GET", &format!("/api/programs/{x}"), &[], b"");
     assert_eq!(a.status, 200, "{}", a.body);
+    // a template with nothing to write out after it: its written-out program is the expansion, which is never based on itself
+    let based: Vec<String> = file(&x)["meta"]["based_on"].as_array().unwrap().iter().map(|l| l.as_str().unwrap().to_string()).collect();
+    assert!(based.iter().any(|l| l.starts_with("template(canon")) && based.iter().all(|l| !l.contains(&x)), "{based:?}");
+    let page = s.call("GET", &format!("/p/{x}"), &[("Accept", "text/html".into())], b"");
+    assert!(page.body.contains(r#""derivation":"expanded""#) && !page.body.contains(&format!(r#""resolves":"{x}""#)), "{}", page.body);
 
     // PUT /api/shares/<cid> (signed in)
     let recipe = "arrange from template(passacaglia, @eccl3_season, ground=[g1 ~ d2 ~])\n";
@@ -726,11 +735,38 @@ fn a_recipe_is_stored_with_its_expansion_beside_it() {
     assert_eq!(file(&cid)["meta"]["expands_to"], x);
     assert_eq!(file(&x)["meta"]["source"], "expansion");
 
+    // a recipe that copies another's section under other rights (CC BY-NC-ND, someone else's credits): its expansion is not
+    // stored, the answer says why, and the recipe does not name one
+    let theirs = "tempo 120\nsection drop 2 bars {\n  deck A: bass c2 ~ c2 ~\n}\narrange drop\n";
+    let body = json!({"text": theirs, "license": "CC-BY-NC-ND-4.0", "credits": ["owner b"]}).to_string();
+    let r = s.call("PUT", &format!("/api/shares/{}", cid_of(theirs)), &[Server::bearer(TOKEN_B), ("Content-Type", "application/json".into())], body.as_bytes());
+    assert_eq!(r.status, 201, "{}", r.body);
+    let recipe = format!("tempo 120\nsection hook from {}.drop\narrange hook\n", cid_of(theirs));
+    let (err, v) = s.mcp(TOKEN_A, "share", json!({"text": recipe}));
+    assert!(!err && v["stored"] == true, "{v}");
+    let (cid, x) = (v["cid"].as_str().unwrap().to_string(), v["expanded_cid"].as_str().unwrap().to_string());
+    let borrower = cid.clone();
+    assert!(v["expanded_url"].is_null() && v["expansion_note"].as_str().is_some_and(|n| n.contains("it copies") && n.contains("CC-BY-NC-ND-4.0")), "{v}");
+    assert!(!programs.join(format!("{x}.json")).exists(), "a relicensed copy was stored");
+    assert!(file(&cid)["meta"].get("expands_to").is_none());
+    // an expansion someone stored first is the one: its rights are its first sharer's, and the answer says them
+    let recipe = "arrange from template(canon, @mgm_pease_porridge_hot, subject=[d5 c#5])\n";
+    let text = serde_json::from_str::<Value>(&beatscript_api::expand_json(recipe, false)).unwrap()["canonical"].as_str().unwrap().to_string();
+    let body = json!({"text": text, "license": "CC-BY-SA-4.0", "credits": ["zed"]}).to_string();
+    let r = s.call("PUT", &format!("/api/shares/{}", cid_of(&text)), &[Server::bearer(TOKEN_B), ("Content-Type", "application/json".into())], body.as_bytes());
+    assert_eq!(r.status, 201, "{}", r.body);
+    let (_, v) = s.mcp(TOKEN_A, "share", json!({"text": recipe}));
+    assert_eq!((v["expanded_cid"].as_str(), v["expansion_license"].as_str()), (Some(cid_of(&text).as_str()), Some("CC-BY-SA-4.0")), "{v}");
+    assert_eq!(file(&cid_of(&text))["meta"]["credits"], json!(["zed"]), "first write wins");
+
     // a program with no references has nothing beside it
     let r = s.call("PUT", &format!("/api/programs/{}", cid_of(PLAIN)), &[("Content-Type", "text/plain".into())], PLAIN.as_bytes());
     assert_eq!(r.status, 201, "{}", r.body);
     assert!(r.json().get("expanded_cid").is_none() && r.json()["meta"].get("expands_to").is_none(), "{}", r.body);
-    assert!(beatscript_serve::gate::audit_dir(&programs).is_empty());
+    // everything stored is admitted (this process cannot read the program the borrowing recipe draws on, which the server can:
+    // that one recipe is the audit's only complaint here)
+    let bad = beatscript_serve::gate::audit_dir(&programs);
+    assert!(bad.iter().all(|(f, _)| *f == format!("{borrower}.json")), "{bad:?}");
 }
 
 fn link_of(s: &Server, text: &str) -> String {

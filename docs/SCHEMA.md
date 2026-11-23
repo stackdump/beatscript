@@ -138,7 +138,8 @@ borrow its text makes (`gen@2 techno seed=42 section=drop part=bass`, a seed, a 
 program a BeatScript 2 one was renamed from, and for each
 part an eject wrote out into it (its `# from: <call> -> <cid>` line; for a stored program, whose text is canonical, the lines its
 save kept as `meta.based_on`), each named by its call (`name`), with `resolves`, `pinnedGenerator` and `derivation`. Like the doc
-comments, it is outside the CID.
+comments, it is outside the CID. A program is never based on itself: a source
+that resolves to the block's own `@id` is named by its call alone.
 
 <a id="resolves"></a>**resolves**: the CID a reference resolves to: for a generator call, the CID of the program the generator
 prints for it (its pin); for a borrow, the stored program's CID.

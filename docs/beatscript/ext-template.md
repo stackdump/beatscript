@@ -142,7 +142,9 @@ episodes/ground   gen       gen@1 dubstep seed=54876                            
   The lines are the expansion's own: what a part's text says after its key and tempo, the whole expansion says too.
 - **resolves** is the pin of its source: the program a gen call prints (fitted to the key it plays in), a stored program's CID.
   A theme, notes and a form have none (a form's sources are its own parts).
-- The parts are in the order the form names its roles, each with its own (`parts`), at any depth.
+- The parts are in the order the form names its roles, each with its own (`parts`), at any depth. A role bound to a stored program
+  (`episodes=<cid>.ground`) is one part, of kind `stored`, whatever that program is: a stored template recipe's own roles are its
+  own, not parts of the program that borrows from it.
 
 Where they are: `check`'s `resolution` (and `listen`'s, `expand`'s and `genre_template`'s) gives the template's entry `parts`, as
 `{path, role, kind, call, cid, resolves, generator, parts}`, with `text` when `expand` is asked; the gen call a role wrote is listed
@@ -155,20 +157,33 @@ has them as `hasPart`: each a CreativeWork whose `@id` is the part's CID, named 
 A program with references (a template, a gen call, a seed, a borrowed section) stored on beatscript.app is stored with its
 **expansion** beside it (`crates/beatscript-serve/src/store.rs`, `put_expansion`, roadmap 6680 item 3): the program with every reference
 written out as plain BeatScript, canonical, as a program of its own under its CID (check's `expanded_cid`), through the storage
-gate like any other. `/p/<expanded_cid>` loads it, and it plays as the recipe does. Every write path does it: the MCP `share` (signed
-in; also `render`, `artifact` with `store` and compose, through `compose::put`), `PUT /api/programs/<cid>` and `PUT
-/api/shares/<cid>`; each answers `expanded_cid` (the share routes also `expanded_url`).
+gate like any other. `/p/<expanded_cid>` loads it, and it plays as the recipe does. Every write path does it, through one function
+(`compose::expansion_beside`): the MCP `share` (signed in; also `render`, `artifact` with `store` and compose, through
+`compose::put`), `PUT /api/programs/<cid>` and `PUT /api/shares/<cid>`.
+
+- **It is written out first, under the checker's rules.** The expansion is written out, checked by the gate and its copies found
+  (`store::plan_expansion`) under the checker's per-address budget, slots and timeout, before the recipe is written; the recipe's
+  meta names it (`expands_to`) only once it is stored. One already stored is answered at once, with no work.
+- **First write wins**, as for any program: an expansion someone stored first (the same text shared on its own) is the one, with
+  the licence and credits they gave it, and the answer says that licence (`expansion_license`).
+- **It is stored only when its rights, its size and the store's room allow.** Every program it copies (the stored programs its
+  references borrow from, and what those borrow in turn: the recipe's `uses`) must be CC0, or the recipe author's own under the
+  recipe's licence; it must be at most a program's size (`-max-program-bytes`) and fit the store's cap. Else nothing is written,
+  and the answer's `expansion_note` says why ("it copies z4EBG9…xy (CC-BY-NC-ND-4.0), and an expansion is stored only when ...").
+- The answers: `expanded_cid` (a program with references), with `expanded_url` (the share routes) and `expansion_license` when it
+  is stored, `expansion_note` when it is not.
 
 | | the recipe's meta | the expansion's meta |
 |---|---|---|
-| names the other | `expands_to: <expanded_cid>` | `expanded_from: <recipe CID>` |
+| names the other | `expands_to: <expanded_cid>`, once the expansion is stored | `expanded_from: <recipe CID>` |
 | licence, credits, name, author | its own | the recipe's |
 | `source` | as stored (`put`, `share`, ...) | `expansion` |
-| what it is based on | its text (its calls and borrows) | `based_on`: each reference the recipe wrote out into it, `"<call> -> <cid>"`, once (a theme, notes: the call alone) |
+| what it is based on | its text (its calls and borrows) | `based_on`: each reference the recipe wrote out into it, `"<call> -> <cid>"`, once (a theme, notes: the call alone; a template whose written-out program is the expansion itself: the call alone) |
 
 Lineage (`/p/<cid>/tree`, the MCP `lineage` tool) reads both: the recipe's node `expandsTo` its expansion (the CID `check` gives, so
-a recipe stored before this has one too), the expansion's is `expandedFrom` each recipe that writes out to it and `isBasedOn` each
-source (`derivation: expanded`, with `resolves`), and a tree shows the other among its programs. The two program pages' blocks say
+a recipe stored before this has one too), the expansion's is `expandedFrom` each recipe that writes out to it (at most 50, then
+`expandedFromTruncated` and the tree's `truncated`) and `isBasedOn` each source (`derivation: expanded`, with `resolves`, never
+itself), and a tree shows the other among its programs. The two program pages' blocks say
 the same (`expandsTo`; `expandedFrom` and `isBasedOn`).
 
 ## What check says
@@ -230,10 +245,25 @@ change to it fails `templates_v1_are_pinned`; a change to a template that change
 - **The expansion is stored with the recipe's licence**: CC0 when the recipe is (the default, and the roadmap's case), CC BY with
   the same credits when it is CC BY, because the expansion holds the recipe's own text. It is the same track, so it keeps the
   recipe's name; `source: expansion` and `expanded_from` say what it is.
-- **Each side names the other in its meta, and lineage also computes it.** The recipe's `expands_to` and the expansion's
-  `expanded_from` let the index know the pair without compiling; first write wins, so a recipe stored before this has no
-  `expands_to`, and its `expandsTo` comes from its check (the expanded CID is of its text). Several recipes can write out to one
-  program (`expandedFrom` is a list).
+- **An expansion that copies another's work under other rights is not stored.** A recipe only names what it borrows; its
+  expansion is a copy, written by the site. So it is stored only when every program it copies is CC0 or the recipe author's own
+  under the recipe's licence, and otherwise the answer says why and the recipe stays a recipe. (Storing it under the most
+  restrictive licence with the union of credits was the other way; refusing is the one that never publishes a licence someone
+  did not choose.) The store keeps no author for a shared program today, so in practice an expansion copies CC0 programs only.
+- **A program is never based on itself.** A template with nothing to write out after it has a written-out program that is the
+  expansion itself; its `based_on` line says the call alone, and the block and lineage drop any source that resolves to the
+  document's own CID.
+- **The expansion is the costly half, so it runs as a check does**: under the checker's budget and timeout, charged to the
+  caller's address, at most a program's size and within the store's cap; a panic in it leaves the recipe stored and says the
+  expansion is not; one already stored costs nothing.
+- **Each side names the other in its meta, and lineage also computes it.** The recipe's `expands_to` (written only once the
+  expansion is stored, which is why the expansion is stored first) and the expansion's `expanded_from` let the index know the pair
+  without compiling; first write wins, so a recipe stored before this has no `expands_to`, and its `expandsTo` comes from its
+  check (the expanded CID is of its text). Several recipes can write out to one program (`expandedFrom` is a list, cut at 50 as
+  siblings are).
+- **The recorder pauses inside a binding's own compiles.** A stored source, a generated program and a gen call's probe are
+  compiled whole inside a binding; the recorder is paused there, so their bindings are never parts of this one, and it is put
+  back by a drop guard, so a panic leaves no thread recording.
 - **An expansion's sources are not counted twice.** Its `based_on` lines are its recipe's references, which the recipe already
   counts for curation (roadmap 6670): an expansion stored by the site is not a second program that chose to vendor them.
 - **Each document is written out in the host's environment.** The block's `expandsTo` and `hasPart` are computed with the
@@ -254,4 +284,6 @@ change to it fails `templates_v1_are_pinned`; a change to a template that change
   not parts of the borrower (its sections arrive compiled).
 - The expansion is stored when a program is stored; programs stored before this get theirs when they are stored again (a
   share of the same text), not by a sweep of the store.
+- An expansion that copies a CC BY program (even the sharer's own) is not stored, because the store keeps no author to match;
+  the answer says so. A share that records its author would let the recipe author's own work through.
 - The `djrust:` document (`/p/<cid>.jsonld`, context v1, immutable) does not say `expandsTo` or `hasPart`; the block does.

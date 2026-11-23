@@ -168,6 +168,15 @@ impl Engine {
         self.rt.as_ref().expect("a tokio runtime").block_on(f)
     }
 
+    /// Work of the checker's kind run under its budget and timeout (Checker::budgeted), charged to `owner`; in process with
+    /// no checker, a panic caught.
+    pub fn budgeted<T: Send + 'static>(&self, owner: &str, what: &str, f: impl FnOnce() -> T + Send + 'static) -> Result<T, ApiError> {
+        match &self.checker {
+            Some(c) => self.block(c.budgeted(owner, what, f)),
+            None => std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).map_err(|_| ApiError::new(502, "checker_error", "the checker failed; try again")),
+        }
+    }
+
     /// `Check`, charged to `owner` (the caller's address; "" for unbilled work).
     pub fn check(&self, owner: &str, text: &str) -> Result<Value, ApiError> {
         self.check_with(owner, text, false)

@@ -189,10 +189,13 @@ words.
 
 A program with references that is stored on beatscript.app is stored with its **expansion** beside it: the program written out
 (its `expanded_cid`), canonical, as a program of its own under the same storage gate, with the recipe's licence, credits and name.
-`/p/<expanded_cid>` loads it and it plays as the recipe does. The two name each other (the recipe's meta `expands_to`, the
-expansion's `expanded_from`, and the expansion's `based_on`: each reference the recipe wrote out into it, with its pin), and so do
-their JSON-LD (`expandsTo`; `expandedFrom` and `isBasedOn`) and lineage. The share answers say `expanded_cid` and `expanded_url`
-(docs/beatscript/ext-template.md, "The stored expansion").
+`/p/<expanded_cid>` loads it and it plays as the recipe does. The two name each other (the recipe's meta `expands_to`, written once
+the expansion is stored; the expansion's `expanded_from`, and its `based_on`: each reference the recipe wrote out into it, with its
+pin, never the expansion itself), and so do their JSON-LD (`expandsTo`; `expandedFrom` and `isBasedOn`) and lineage. First write
+wins: an expansion someone stored first is the one, with the rights they gave it. An expansion is a copy, so it is stored only
+when every program it copies is CC0 or the recipe author's own under the recipe's licence, and when it is within a program's size
+and the store's room; else the answer says why. The answers say `expanded_cid`, and `expanded_url` and `expansion_license`, or
+`expansion_note` (docs/beatscript/ext-template.md, "The stored expansion").
 
 ## Grammar (EBNF)
 
@@ -3388,7 +3391,9 @@ logs are the "Decisions" of each `docs/beatscript/ext-*.md`.)
 - A program with references is stored with its expansion beside it, a program of its own with the recipe's licence (CC0 by
   default), and each names the other in its meta; lineage and the JSON-LD say `expandsTo`, `expandedFrom` and `isBasedOn`. *The
   result a recipe makes is then a CID anyone can load and play without the generator or the templates, and its provenance is
-  the recipe's.* The long note is docs/beatscript/ext-template.md, "Nested parts" and "The stored expansion".
+  the recipe's.* It is a copy, so it is stored only when everything it copies is CC0 or the recipe author's own: *the site never
+  publishes another author's work under rights that author did not give.* The long note is docs/beatscript/ext-template.md, "Nested
+  parts" and "The stored expansion".
 
 ## Not done
 

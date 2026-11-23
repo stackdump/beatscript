@@ -153,7 +153,7 @@ struct Meta {
     /// text, as `name` is from its `#! name:`: the canonical text the store keeps has no comments, so they are kept
     /// beside it. The program's JSON-LD gives each documented section its `description` from them.
     docs: Vec<(String, String, String)>,
-    /// A recipe's expansion, stored beside it (roadmap 6680): its CID, on the recipe.
+    /// A recipe's stored expansion (roadmap 6680), named once it is stored.
     expands_to: String,
     /// On a stored expansion: the recipe it was written out from.
     expanded_from: String,
@@ -1670,8 +1670,20 @@ impl Cards {
         *t.get_or_insert_with(|| std::fs::read_dir(dir).map(|rd| rd.flatten().filter_map(|e| e.metadata().ok()).map(|m| m.len()).sum()).unwrap_or(0))
     }
 
-    /// `programStore.put` with an expected CID: (stored meta, check report, created).
-    async fn store_put(&self, text: &str, mut meta: Meta, expect: &str) -> Result<(Meta, Value, bool, String), PutErr> {
+    /// A recipe's expansion, stored beside it (compose::expansion_beside: the checker's budget, the store's rights, size and room).
+    async fn expansion(self: &Arc<Self>, cid: &str, canonical: &str, meta: &Value, rep: &Value, ip: &str) -> Option<crate::store::Outcome> {
+        let (cc, cid, canonical, mj, ip, rp) = (self.clone(), cid.to_string(), canonical.to_string(), meta.clone(), ip.to_string(), rep.clone());
+        let eng = crate::compose::engine::Engine::over(self.app.checker.get().cloned());
+        let x = tokio::task::spawn_blocking(move || crate::compose::expansion_beside(&cc.app, &eng, &ip, &cid, &canonical, &mj, &rp)).await.ok().flatten();
+        if let (Some(o), Some(t)) = (&x, self.store_total.lock().unwrap().as_mut()) {
+            *t += o.bytes as u64;
+        }
+        x
+    }
+
+    /// `programStore.put` with an expected CID: (stored meta, check report, created, CID, what became of its expansion). `ip` is
+    /// what the expansion's work is charged to, as a check is.
+    async fn store_put(self: &Arc<Self>, text: &str, mut meta: Meta, expect: &str, ip: &str) -> Result<(Meta, Value, bool, String, Option<crate::store::Outcome>), PutErr> {
         let max = self.app.cfg.max_program_bytes;
         let api = |s, c, m: String| Err(PutErr::Api(errf(s, c, m), None));
         if text.len() > max {
@@ -1706,7 +1718,8 @@ impl Cards {
         }
         let dir = self.app.cfg.programs.clone();
         if let Some((_, m)) = stored(&dir, &cid) {
-            return Ok((m, rep, false, cid));
+            let x = self.expansion(&cid, &canonical, &m.to_json(), &rep, ip).await;
+            return Ok((m, rep, false, cid, x));
         }
         if meta.created.is_empty() {
             meta.created = rfc3339_now();
@@ -1726,9 +1739,10 @@ impl Cards {
         meta.based_on = adm.based_on().to_vec();
         meta.license = adm.license().to_string();
         meta.visibility = "public".into();
-        // what it expands to, when it has references: its expansion is stored beside it (put_share)
-        if let Some(x) = rep["expanded_cid"].as_str().filter(|x| *x != cid && crate::store::is_cid(x)) {
-            meta.expands_to = x.to_string();
+        // its expansion first, and the recipe names it (`expands_to`) only once it is stored
+        let x = self.expansion(&cid, &canonical, &meta.to_json(), &rep, ip).await;
+        if let Some(o) = x.as_ref().filter(|o| o.stored) {
+            meta.expands_to = o.cid.clone();
         }
         let body = go_json(&json!({"cid": cid, "text": canonical, "meta": meta.to_json()}));
         let cap = (self.app.cfg.flag_num("store-max-mb", 256).max(0) as u64) << 20;
@@ -1741,10 +1755,10 @@ impl Cards {
                 if let Some(t) = self.store_total.lock().unwrap().as_mut() {
                     *t += body.len() as u64;
                 }
-                Ok((meta, rep, true, cid))
+                Ok((meta, rep, true, cid, x))
             }
             Ok(false) => match stored(&dir, &cid) {
-                Some((_, m)) => Ok((m, rep, false, cid)),
+                Some((_, m)) => Ok((m, rep, false, cid, x)),
                 None => api(500, "internal", "the stored program does not read back".into()),
             },
             Err(e) => api(500, "internal", e.to_string()),
@@ -1805,39 +1819,22 @@ async fn put_share(State(c): State<Arc<Cards>>, req: Request) -> Response<Body> 
         Ok(m) => m,
         Err(e) => return write_error(e.status, e.code, &e.message, 0, None),
     };
-    match c.store_put(&sb.text, meta, &cid).await {
+    match c.store_put(&sb.text, meta, &cid, &ip).await {
         Err(PutErr::Api(e, details)) => write_error(e.status, e.code, &e.message, e.retry, details),
-        Ok((meta, rep, created, cid)) => {
+        Ok((meta, rep, created, cid, expanded)) => {
             let site = c.app.cfg.public_url.trim_end_matches('/');
-            // a recipe's expansion, stored beside it (store.rs `put_expansion`)
-            let expanded = {
-                let (cc, cid, canonical, mj) = (c.clone(), cid.clone(), rep["canonical"].as_str().unwrap_or("").to_string(), meta.to_json());
-                match tokio::task::spawn_blocking(move || {
-                    let x = cc.app.store.put_expansion(&cid, &canonical, &mj);
-                    if let Ok(Some(x)) = &x {
-                        if let Some(t) = cc.store_total.lock().unwrap().as_mut() {
-                            *t += x.bytes as u64;
-                        }
-                    }
-                    x
-                })
-                .await
-                {
-                    Ok(Ok(Some(x))) => Some(x.cid),
-                    Ok(Err(e)) => {
-                        eprintln!("beatscript-serve: an expansion was not stored: {e}");
-                        None
-                    }
-                    _ => None,
-                }
-            };
             let mut m = Map::new();
             m.insert("cid".into(), json!(cid));
             m.insert("created".into(), json!(created));
-            // (the keys in Go's order, sorted)
-            if let Some(x) = &expanded {
-                m.insert("expanded_cid".into(), json!(x));
-                m.insert("expanded_url".into(), json!(format!("{site}/p/{x}")));
+            // (the keys in Go's order, sorted): its expansion, stored or why not
+            if let Some(o) = &expanded {
+                m.insert("expanded_cid".into(), json!(o.cid));
+                if o.stored {
+                    m.insert("expanded_url".into(), json!(format!("{site}/p/{}", o.cid)));
+                    m.insert("expansion_license".into(), json!(o.license));
+                } else if let Some(w) = &o.why {
+                    m.insert("expansion_note".into(), json!(format!("its expansion is not stored: {w}")));
+                }
             }
             m.insert("fetch_url".into(), json!(format!("{}/api/programs/{cid}", c.app.cfg.public_url)));
             m.insert("meta".into(), meta.to_json());

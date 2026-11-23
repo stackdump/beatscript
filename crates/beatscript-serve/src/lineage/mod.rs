@@ -16,9 +16,10 @@
 //!
 //! **A recipe and its expansion** (roadmap 6680): a program with references is stored with its expansion beside it (store.rs
 //! `put_expansion`). The recipe's node says the CID it `expandsTo` (what `check` gives as its `expanded_cid`); the expansion's says
-//! the recipes it was `expandedFrom` (its own meta, and every recipe whose meta names it) and `isBasedOn` each reference they wrote
-//! out into it, with its pin. A tree shows the root's expansion, or its recipes, among its programs. An expansion's sources are
-//! its recipe's, which counts them already: they are not counted again for curation.
+//! the recipes it was `expandedFrom` (its meta's `expanded_from`, and every recipe whose meta names it as its `expands_to`: at most
+//! [`MAX_SIBLINGS`] are listed, and a tree says `truncated` past that) and `isBasedOn` each reference they wrote out into it, with its pin, never itself. A tree shows the root's
+//! expansion, or its recipes, among its programs. An expansion's sources are its recipe's, which counts them already: they are
+//! not counted again for curation.
 //!
 //! The store is append-only (first write wins), so the index grows by reading only the files it has not seen, at most
 //! every [`RESCAN`], and a pair's diff, once computed, is kept.
@@ -86,7 +87,7 @@ struct Entry {
     /// `vendored`). Vendored parts come from `meta.based_on` (`["<call> -> <cid>"]`, the `# from:` lines its text had when it
     /// was saved, gate::write_program: the canonical text has no comments).
     bases: Vec<(String, Option<String>, &'static str)>,
-    /// A recipe's stored expansion, as its meta names it (`expands_to`).
+    /// A recipe's stored expansion, as its meta names it (`expands_to`, written once the expansion is stored).
     expands_to: String,
     /// A stored expansion's recipe (`expanded_from`): its bases are what the recipe wrote out into it.
     expanded_from: String,
@@ -129,8 +130,10 @@ pub struct Node {
     pub renamed_from: String,
     /// A recipe's expansion: the CID of the program its references write out to (check's `expanded_cid`), when that is another.
     pub expands_to: Option<String>,
-    /// A stored expansion's recipes that may be shown, by CID (sorted).
+    /// A stored expansion's recipes that may be shown, by CID (sorted, at most [`MAX_SIBLINGS`]).
     pub expanded_from: Vec<String>,
+    /// More recipes expand to it than `expanded_from` lists.
+    pub expanded_from_cut: bool,
     /// A stored expansion's sources: each reference its recipe wrote out into it, and the CID it is pinned to.
     pub based_on: Vec<(String, Option<String>)>,
 }
@@ -439,8 +442,9 @@ impl Lineage {
             djlive::version::Version::V1 => (twin, String::new()),
             djlive::version::Version::V2 => (String::new(), twin),
         };
-        let expanded_from = self.recipes_of(cid);
-        let based_on = if ent.expanded_from.is_empty() { Vec::new() } else { ent.bases.iter().map(|(c, r, _)| (c.clone(), r.clone())).collect() };
+        let (expanded_from, expanded_from_cut) = self.recipes_of(cid);
+        // (a source that resolves to this very program is its call alone: a program is never based on itself)
+        let based_on = if ent.expanded_from.is_empty() { Vec::new() } else { ent.bases.iter().map(|(c, r, _)| (c.clone(), r.clone().filter(|r| r != cid))).collect() };
         Some(Node {
             cid: cid.to_string(),
             name: ent.name,
@@ -460,14 +464,25 @@ impl Lineage {
             renamed_from,
             expands_to: Some(f.expanded.clone()).filter(|x| is_cid(x) && x != cid),
             expanded_from,
+            expanded_from_cut,
             based_on,
         })
     }
 
-    /// The recipes that expand to `cid` and may be shown (sorted).
-    fn recipes_of(&self, cid: &str) -> Vec<String> {
+    /// The recipes that expand to `cid` and may be shown (sorted), at most [`MAX_SIBLINGS`], and whether there are more.
+    fn recipes_of(&self, cid: &str) -> (Vec<String>, bool) {
         let rs: Vec<String> = self.index.lock().unwrap().recipes.get(cid).map(|s| s.iter().cloned().collect()).unwrap_or_default();
-        rs.into_iter().filter(|r| r != cid && self.shown(r)).collect()
+        let mut out = Vec::new();
+        for r in rs {
+            if r == cid || !self.shown(&r) {
+                continue;
+            }
+            if out.len() >= MAX_SIBLINGS {
+                return (out, true);
+            }
+            out.push(r);
+        }
+        (out, false)
     }
 
     /// The canonical text of a program that may be shown.
@@ -675,6 +690,7 @@ impl Lineage {
                 }
             }
         }
+        truncated |= root.expanded_from_cut;
         Some(Tree { root, ancestors, siblings, forks, edges, expansions, ancestors_cut, truncated })
     }
 
@@ -771,6 +787,9 @@ impl Node {
         }
         if !self.expanded_from.is_empty() {
             m.insert("expandedFrom".into(), json!(self.expanded_from));
+        }
+        if self.expanded_from_cut {
+            m.insert("expandedFromTruncated".into(), json!(true));
         }
         if !self.based_on.is_empty() {
             let items: Vec<Value> = self
