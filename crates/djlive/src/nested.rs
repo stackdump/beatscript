@@ -108,6 +108,8 @@ fn part(b: &Bound, env: &Env) -> Part {
         Source::Theme(_) => ("theme", None, None),
         Source::Notes(_) => ("notes", None, None),
         Source::Form(_) => ("template", None, None),
+        // (a form's number, `delay=6`, writes no lines of its own: forms reads it into the parts it moves, and records none)
+        Source::Number(_) => ("number", None, None),
     };
     Part { path: b.path.clone(), role: b.role.clone(), kind, call: b.source.text(), text, cid, resolves, generator, parts: Vec::new() }
 }
