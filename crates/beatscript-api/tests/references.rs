@@ -219,7 +219,38 @@ fn an_expansion_is_based_on_each_reference_its_recipe_wrote_out() {
     let mut seen = lines.clone();
     seen.dedup();
     assert_eq!(seen.len(), lines.len());
+    // a template with nothing to write out after it: its written-out program is the expansion, which is never based on itself
+    let canon = "arrange from template(canon, @mgm_pease_porridge_hot, subject=[d5 c#5 b4 a4])\n";
+    let r = beatscript_api::resolution::of(canon, s(&report(canon, false), "cid"));
+    assert_eq!(r.sites[0].resolved.as_deref(), Some(r.expanded_cid.as_str()), "the template's pin is the expansion here");
+    let lines = beatscript_api::resolution::sources(&r, canon);
+    assert!(lines.iter().any(|l| l.starts_with("template(canon")) && lines.iter().all(|l| !l.contains(&r.expanded_cid)), "{lines:?}");
     // a program with no references is based on nothing it wrote out
     let plain = "tempo 120\ndeck A: kick x ~ x ~\n";
     assert!(beatscript_api::resolution::sources(&beatscript_api::resolution::of(plain, s(&report(plain, false), "cid")), plain).is_empty());
+}
+
+/// A role bound to a section of a stored program that is itself a template recipe: the stored program is compiled whole, and its
+/// own bindings are not parts of the borrower; the role is one part, the stored program its pin.
+#[test]
+fn a_role_bound_to_a_stored_template_recipe_is_one_part() {
+    let stored = "arrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n";
+    let rep = report(stored, false);
+    let (c1, canon) = (s(&rep, "cid").to_string(), s(&rep, "canonical").to_string());
+    beatscript_api::known::know(&c1, &canon).unwrap();
+    let src = format!("arrange from template(rondo, @shanty_drunken_sailor, episodes={c1}.ground)\n");
+    let r = report(&src, false);
+    assert_eq!(r.get("ok").and_then(JsonValue::as_bool), Some(true), "{}", r.js_stringified());
+    let t = arr(&r, "resolution").iter().find(|x| s(x, "kind") == "template").cloned().unwrap();
+    let parts = arr(&t, "parts");
+    assert_eq!(parts.len(), 1, "the stored recipe's own roles leaked in: {}", t.js_stringified());
+    assert_eq!((s(&parts[0], "path"), s(&parts[0], "kind"), s(&parts[0], "resolves")), ("episodes", "stored", c1.as_str()));
+    assert!(arr(&parts[0], "parts").is_empty());
+    // and so in the block
+    let env = env();
+    let c = djlive::compile::check_with(&src, &env).compiled.unwrap();
+    let d = djlive::progld::document(&c, &djlive::progld::Facts { env: Some(&env), ..Default::default() });
+    let hp = d.get("hasPart").and_then(JsonValue::as_array).unwrap();
+    assert_eq!(hp.len(), 1);
+    assert_eq!(s(&hp[0], "name"), "episodes");
 }

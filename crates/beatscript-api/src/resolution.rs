@@ -265,10 +265,14 @@ pub fn resolution_json_with(r: &References, text: &str, with_text: bool) -> Json
 
 /// What an expansion is based on: each reference the recipe wrote out into it, once, with its pin where it has one, as the
 /// `"<call> -> <cid>"` lines a store keeps beside a program (`meta.based_on`, read back as `# from:` lines): the manifest's
-/// entries, then the parts of a template that are no reference of their own (a theme, notes, a form).
+/// entries, then the parts of a template that are no reference of their own (a theme, notes, a form). A pin that is the
+/// expansion itself (a template with nothing to write out after it: its written-out program is the whole expansion) is left
+/// off: a program is never based on itself.
 pub fn sources(r: &References, text: &str) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
+    let own = r.expanded_cid.clone();
     let mut add = |call: &str, cid: Option<&str>| {
+        let cid = cid.filter(|c| *c != own);
         let line = match cid {
             Some(c) => format!("{call} -> {c}"),
             None => call.to_string(),
