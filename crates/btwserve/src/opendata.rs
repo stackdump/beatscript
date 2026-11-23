@@ -165,7 +165,7 @@ pub fn dump_latest(origin: &str) -> String {
 /// `/sitemap.xml`: the site's pages and every public CC0 program's page (at most 50,000, the protocol's cap).
 pub fn sitemap(origin: &str, entries: &[Entry]) -> String {
     let mut s = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
-    for p in ["/", "/docs/", "/docs/found-phrases", "/docs/forms", "/docs/embed", "/grammar", "/schema", "/authorship", "/phrasebook", "/themes"] {
+    for p in ["/", "/docs/", "/docs/found-phrases", "/docs/forms", "/docs/radio", "/docs/embed", "/grammar", "/schema", "/authorship", "/phrasebook", "/themes"] {
         s.push_str(&format!("<url><loc>{}{p}</loc></url>\n", xml(origin)));
     }
     for e in entries.iter().take(49_000) {
@@ -422,7 +422,7 @@ mod tests {
         let es = scan(d.path());
         let sm = sitemap("https://beatscript.app", &es);
         assert!(sm.contains(&format!("<loc>https://beatscript.app/p/{a}</loc><lastmod>2026-11-20T10:00:00Z</lastmod>")));
-        assert_eq!(sm.matches("<url>").count(), 10 + 2);
+        assert_eq!(sm.matches("<url>").count(), 11 + 2);
         assert!(sm.contains("<url><loc>https://beatscript.app/docs/forms</loc></url>") && sm.contains("<url><loc>https://beatscript.app/themes</loc></url>"));
         assert!(sm.contains("<url><loc>https://beatscript.app/docs/found-phrases</loc></url>"));
         assert!(sm.contains("<url><loc>https://beatscript.app/phrasebook</loc></url>"));

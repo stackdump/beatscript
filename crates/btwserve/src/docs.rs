@@ -58,6 +58,12 @@ const EMBED_MD: &str = include_str!("../../../docs/btw/embed.md");
 const EMBED_PATH: &str = "/docs/embed";
 const EMBED_TITLE: &str = "Embed a program";
 const EMBED_BLURB: &str = "Put a stored program's player on another page: an iframe, the <beatscript-player> element, oEmbed for a pasted link, link previews that play, and the plain rendered audio.";
+/// Radio: stations (docs/btw/radio.md, `djlive::station`, the MCP `station` tool and `POST /api/station`): `/docs/radio` and its
+/// markdown, listed in the docs index, its JSON-LD, llms.txt and the sitemap. Built in, like the forms.
+const RADIO_MD: &str = include_str!("../../../docs/btw/radio.md");
+const RADIO_PATH: &str = "/docs/radio";
+const RADIO_TITLE: &str = "Radio: stations";
+const RADIO_BLURB: &str = "Stations: endless, deterministic runs of tracks, each station one small program. Position N is always the same track; turn a knob (genre, seed, step, forms, tempo, key, length) and you move to a neighbouring station, at the same position.";
 
 /// Who authored a program and what rights it has (docs/AUTHORSHIP.md, `btwserve::rights`): `/authorship` and
 /// `/authorship.md`, listed in the docs index, its JSON-LD and llms.txt.
@@ -720,6 +726,7 @@ impl Docs {
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}/docs/open-data"), "name": "Open data", "url": format!("{p}/docs/open-data"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}/docs/open-data.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{FOUND_PATH}"), "name": FOUND_TITLE, "description": FOUND_BLURB, "url": format!("{p}{FOUND_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{FOUND_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{FORMS_PATH}"), "name": FORMS_TITLE, "description": FORMS_BLURB, "url": format!("{p}{FORMS_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{FORMS_PATH}.md"), "encodingFormat": "text/markdown"}}));
+        parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{RADIO_PATH}"), "name": RADIO_TITLE, "description": RADIO_BLURB, "url": format!("{p}{RADIO_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{RADIO_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{EMBED_PATH}"), "name": EMBED_TITLE, "description": EMBED_BLURB, "url": format!("{p}{EMBED_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{EMBED_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{AUTHORSHIP_PATH}"), "name": AUTHORSHIP_TITLE, "description": AUTHORSHIP_BLURB, "url": format!("{p}{AUTHORSHIP_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{AUTHORSHIP_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "Dataset", "@id": format!("{p}{}", btwserve::themes::PATH), "name": btwserve::themes::TITLE, "description": btwserve::themes::BLURB, "url": format!("{p}{}", btwserve::themes::PATH), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}/themes.txt"), "encodingFormat": "text/plain"}}));
@@ -741,6 +748,7 @@ impl Docs {
         b.push_str("<li><a href=\"/docs/forms\">Forms</a>: arrange shapes from classical music (quodlibet, passacaglia, canon, rondo, fugue, theme and variations), each a template built from public-domain themes</li>\n");
         b.push_str("<li><a href=\"/themes\">Theme library</a>: melodies, basses and figures composed and published before 1929, CC0, as BeatScript bars in a stated key, to borrow and morph</li>\n");
         b.push_str("<li><a href=\"/docs/found-phrases\">Found phrases</a>: borrowing public-domain text for its shape: a line chosen for its meter, matched to the groove, buried and spotlit. The technique behind the phrasebook and the phrase templates</li>\n");
+        b.push_str("<li><a href=\"/docs/radio\">Radio: stations</a>: endless, deterministic stations, each one small program: position N is always the same track, and a knob turned moves you to a neighbouring station at the same position</li>\n");
         b.push_str("<li><a href=\"/docs/embed\">Embed a program</a>: a stored program's player on another page: iframe, the &lt;beatscript-player&gt; element, oEmbed, link previews that play, plain audio</li>\n");
         b.push_str("<li><a href=\"/authorship\">Authorship and rights</a>: who authored a program and what rights it has, in plain language</li>\n");
         b.push_str("<li><a href=\"/phrasebook\">Phrasebook</a>: lines of verse, scripture, speech and work song first published before 1929, CC0, each with its meter as a step pattern, to sing by id</li>\n");
@@ -785,6 +793,13 @@ impl Docs {
                 let r = render_markdown(FOUND_MD);
                 let nav = self.installed();
                 let html = shell(FOUND_TITLE, FOUND_BLURB, &format!("{}{FOUND_PATH}", self.public), "/docs/found-phrases.md", "found-phrases", &nav, &r.toc, &r.body);
+                Some(Answer::Body(HTML, Bytes::from(html), None, true))
+            }
+            "/docs/radio.md" => body(MD, Some(RADIO_MD.to_string())),
+            "/docs/radio" => {
+                let r = render_markdown(RADIO_MD);
+                let nav = self.installed();
+                let html = shell(RADIO_TITLE, RADIO_BLURB, &format!("{}{RADIO_PATH}", self.public), "/docs/radio.md", "radio", &nav, &r.toc, &r.body);
                 Some(Answer::Body(HTML, Bytes::from(html), None, true))
             }
             "/docs/embed.md" => body(MD, Some(EMBED_MD.to_string())),
@@ -892,7 +907,7 @@ impl Docs {
         matches!(
             path,
             "/llms.txt" | "/llms-full.txt" | "/docs/BTW.md" | "/docs/cheatsheet.md" | "/docs/api.md" | "/docs/assets/docs.css" | "/docs/assets/docs.js" | "/docs/" | "/docs/cheatsheet" | "/docs/language" | "/docs/api" | "/docs/arrange.md" | "/docs/arrange" | "/schema" | "/schema.jsonld" | "/schema.md" | "/docs/open-data" | "/docs/open-data.md" | "/grammar" | "/grammar.ebnf" | "/grammar.css" | "/lineage.css" | "/mcp.css" | "/authorship" | "/authorship.md" | "/phrasebook" | "/docs/found-phrases" | "/docs/found-phrases.md" | "/docs/forms" | "/docs/forms.md" | "/themes"
-                | "/docs/embed" | "/docs/embed.md"
+                | "/docs/embed" | "/docs/embed.md" | "/docs/radio" | "/docs/radio.md"
         )
     }
 
@@ -921,6 +936,7 @@ impl Docs {
         }
         b.push_str(&format!("- [Found phrases]({p}{FOUND_PATH}.md): the technique for sung lines: borrow public-domain text for its shape, pick a line for its meter (trochees chant on the kick, iambs lilt on the offbeat, anapests and dactyls want a triplet feel, shanties call and respond), keep the vocal low, cycle it buried and spotlit, cross it onto the drums with xfer, fix pronunciation with phoneme escapes ([page]({p}{FOUND_PATH}))\n"));
         b.push_str(&format!("- [Forms]({p}{FORMS_PATH}.md): arrange shapes from classical music: quodlibet (themes take turns and cross-morph), passacaglia (a fixed ground under cumulative variations), canon (a theme chasing its own copy), rondo (a refrain returning mutated), fugue (a subject re-entering transposed), theme and variations (one source, a transform a section); each a template built from public-domain themes, `arrange from template(quodlibet, @psalm42_deep_calleth)` ([page]({p}{FORMS_PATH}))\n"));
+        b.push_str(&format!("- [Radio: stations]({p}{RADIO_PATH}.md): a station is one small program (`station {{ from gen@2 techno seed=42; next seed=~; forms seeded passacaglia }}`) naming an endless, deterministic run of tracks: position N is always the same track (the same CID), the walk steps the seed (`seed=+N` counts on, `seed=~` draws from the CID of the track before), the forms take turns, and the segue from N to N+1 is the cross form of their seeds; a listener turns knobs (genre, seed, step, forms, tempo, key, length) and keeps N; the MCP `station` tool and POST {p}/api/station answer it ([page]({p}{RADIO_PATH}))\n"));
         b.push_str(&format!("- [Embed a program]({p}{EMBED_PATH}.md): a stored Creative Commons program's player on another page: an iframe of {p}/embed/<CID> (?compact=1, ?theme=light), the <beatscript-player cid=…> element ({p}/embed.js), oEmbed ({p}/oembed?url=<a /p/ or /c/ link>&format=json), /c/<CID> cards that play (twitter:player, og:audio), and the rendered audio ({p}/api/render/<CID>?format=opus) ([page]({p}{EMBED_PATH}))\n"));
         b.push_str(&format!("- [Instruments]({p}/api/instruments): the voices, families, drum kits and palettes a program may name (JSON)\n"));
         b.push_str(&format!("- [API reference]({p}/docs/api.md): every HTTP route, sign-in and tokens, compose, render streaming, sessions, the MCP tools with examples\n"));
@@ -1205,7 +1221,7 @@ mod tests {
         std::fs::write(src.join("assets/docs.css"), "body{}").unwrap();
         let d = Docs::new(Some(dir.clone()), Some(src), "https://beatscript.app");
         let ex = Examples { list: Vec::new(), text: HashMap::new() };
-        let routes = ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", "/authorship", "/phrasebook", FOUND_PATH, FORMS_PATH, "/themes"];
+        let routes = ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", "/authorship", "/phrasebook", FOUND_PATH, FORMS_PATH, RADIO_PATH, "/themes"];
         let mut sheets = std::collections::BTreeSet::new();
         for path in routes {
             assert!(d.is_route(path), "{path}");
@@ -1372,6 +1388,33 @@ mod tests {
         for said in ["/embed/<CID>", "<beatscript-player", "embed.js", "/oembed?url=", "twitter:player", "og:audio", "/api/render/<CID>?format=opus", "?compact=1", "?theme=light", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"] {
             assert!(EMBED_MD.contains(said), "the page does not say {said}");
         }
+    }
+
+    /// One doc (docs/btw/radio.md), many views: the page and its markdown, the docs index and its JSON-LD, llms.txt and the
+    /// sitemap, with no inline style. (What the page says of stations is the docs' own; the MCP exposure table holds the
+    /// station tool to it.)
+    #[test]
+    fn the_radio_page_is_one_doc_in_many_views() {
+        let d = Docs::new(None, None, "https://beatscript.app");
+        let ex = Examples { list: Vec::new(), text: HashMap::new() };
+        let Some(Answer::Body(ct, b, _, _)) = d.answer(RADIO_PATH, &ex) else { panic!("{RADIO_PATH} is not served") };
+        assert!(ct.starts_with("text/html"));
+        let html = String::from_utf8_lossy(&b);
+        assert!(inline_styles(&html).is_empty(), "{:?}", inline_styles(&html));
+        assert!(html.contains("<link rel=\"canonical\" href=\"https://beatscript.app/docs/radio\">"));
+        assert!(d.is_route("/docs/radio") && d.is_route("/docs/radio.md"));
+        let md = d.respond(&Method::GET, &HeaderMap::new(), "/docs/radio.md", &ex).expect("the markdown is a route");
+        assert_eq!(md.status(), 200);
+        assert!(btwserve::opendata::sitemap("https://beatscript.app", &[]).contains("<loc>https://beatscript.app/docs/radio</loc>"));
+        let l = d.llms_txt(&ex);
+        assert!(l.contains("https://beatscript.app/docs/radio.md") && l.contains("https://beatscript.app/docs/radio)"), "llms.txt lacks the radio page");
+        let index = String::from_utf8_lossy(&d.render_index()).to_string();
+        assert!(index.contains("<a href=\"/docs/radio\">Radio: stations</a>"));
+        assert!(index.contains("\"@id\":\"https://beatscript.app/docs/radio\""), "the index's JSON-LD");
+        // the MCP tool points at this page
+        let tools = crate::mcp::tools::tool_list("https://beatscript.app", 16384, 60, 30, (50, 20, 30, 8, 30));
+        let st = tools.iter().find(|t| t["name"] == "station").expect("the station tool");
+        assert!(st["description"].as_str().unwrap_or("").contains("https://beatscript.app/docs/radio.md"));
     }
 
     /// One doc (docs/btw/forms.md), many views: the page and its markdown, the docs index and its JSON-LD, llms.txt and the
@@ -1566,7 +1609,7 @@ mod tests {
         let d = Docs::new(Some(dir.clone()), src.is_dir().then_some(src.clone()), "https://beatscript.app");
         let ex = Examples { list: Vec::new(), text: HashMap::new() };
         let mut hits = Vec::new();
-        for path in ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", AUTHORSHIP_PATH, "/phrasebook", FOUND_PATH, FORMS_PATH, "/themes"] {
+        for path in ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", AUTHORSHIP_PATH, "/phrasebook", FOUND_PATH, FORMS_PATH, RADIO_PATH, "/themes"] {
             match d.answer(path, &ex) {
                 Some(Answer::Body(_, b, _, _)) => hits.extend(standalone_btw(path, &visible_html(&String::from_utf8_lossy(&b)))),
                 _ => assert!(path == "/docs/api" && !src.is_dir(), "{path} is not served"),
