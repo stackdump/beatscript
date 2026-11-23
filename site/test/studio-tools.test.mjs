@@ -120,7 +120,8 @@ test('real wasm: check, fmt and expand', { skip: noWasm }, async () => {
   assert.equal(bad.diagnostics.find((d) => d.severity === 'error').line, 1);
   const f = ok(await s.call('fmt', { text: 'tempo   124\nkey am\ndeck A:  kick x ~ x ~ | hihat ~ x ~ x  # hi\n' }));
   assert.equal(f.ok, true);
-  assert.equal(f.cid, c.cid);
+  // fmt upgrades a BeatScript 1 text: a new CID, and the CID it came from
+  assert.equal(f.from_cid, c.cid);
   assert.match(f.text, /hihat ~ x ~ x {2}# hi\n$/);
   const e = ok(await s.call('expand', { text: 'tempo 128\narrange from seed(techno, 42)\n', lineage: true }));
   assert.equal(e.ok, true);
@@ -140,8 +141,8 @@ test('real wasm: share then open is a round trip on the configured site', { skip
   assert.equal(sh.chars, sh.url.length);
   // only the origin moved: the module's own links, byte for byte after it
   const raw = real.share(GOOD);
+  // (the module's own default is beatscript.app since share links moved there; whatever it is, only it is replaced)
   const from = new URL(raw.url).origin;
-  assert.notEqual(from, 'https://beatscript.app');
   assert.equal(sh.url, `https://beatscript.app${raw.url.slice(from.length)}`);
   assert.equal(sh.social_url, `https://beatscript.app${raw.social_url.slice(from.length)}`);
   assert.equal(sh.beats_url, raw.beats_url);
@@ -212,7 +213,9 @@ test('mock: check, fmt, share, open, highlight, station', async () => {
   const c = ok(await s.call('check', { text: GOOD }));
   assert.equal(c.ok, true);
   assert.equal(ok(await s.call('check', { text: BAD })).ok, false);
-  assert.equal(ok(await s.call('fmt', { text: GOOD })).cid, c.cid);
+  // fmt upgrades a BeatScript 1 text to BeatScript 2 (a new CID) and names the CID it came from
+  const f = ok(await s.call('fmt', { text: GOOD }));
+  assert.equal(f.from_cid ?? f.cid, c.cid);
   const sh = ok(await s.call('share', { text: GOOD }));
   assert.ok(sh.url.startsWith(`https://example.test/#${c.cid}.`), sh.url);
   const o = ok(await s.call('open', { url: sh.url }));

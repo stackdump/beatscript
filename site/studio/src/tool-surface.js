@@ -73,12 +73,12 @@ function baseName(filename, t) {
 }
 
 /**
- * The program in a fenced block of an answer: the last one marked BeatScript or beatscript, else the last of any kind
+ * The program in a fenced block of an answer: the last one marked beatscript (or btw, its tag before the rename), else the last of any kind
  * (with tools the answer is every round's text, so the program comes last). null when there is no closed fence.
  */
 function fenced(reply) {
   const blocks = [...String(reply).matchAll(/```([^\n`]*)\r?\n([\s\S]*?)```/g)];
-  const marked = blocks.filter((b) => /^\s*(beatscript|beatscript)\s*$/i.test(b[1]));
+  const marked = blocks.filter((b) => /^\s*(beatscript|btw)\s*$/i.test(b[1]));
   return (marked.length ? marked : blocks).at(-1)?.[2] ?? null;
 }
 

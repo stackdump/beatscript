@@ -2818,13 +2818,13 @@ test('wasm facade: every feature the page looks for is found in the module djweb
   const names = djwebExports();
   const stub = Object.fromEntries(names.map((n) => [n, n.startsWith('Beatscript') ? class {} : () => '{}']));
   const f = featuresOf(stub);
-  // djweb has no beatscript_station: the radio asks POST /api/station. Anything else missing is a feature turned off
-  assert.deepEqual(f.missing, ['station']);
+  // every feature, the radio's station too (djweb exports beatscript_station): anything missing is a feature turned off
+  assert.deepEqual(f.missing, []);
   assert.deepEqual(f.missingRequired, []);
-  for (const [feature, [name]] of Object.entries(FEATURES)) if (feature !== 'station') assert.ok(names.includes(name), `${feature}: djweb exports ${name}`);
+  for (const [feature, [name]] of Object.entries(FEATURES)) assert.ok(names.includes(name), `${feature}: djweb exports ${name}`);
   const facade2 = makeFacade(stub);
   for (const k of ['know', 'generate', 'ls']) assert.equal(typeof facade2[k], 'function', `${k} is on`);
-  assert.equal(facade2.station, null);
+  assert.equal(typeof facade2.station, 'function');
   // the module of the release before, under its old names: the same features
   const old = Object.fromEntries(names.map((n) => [LEGACY[n], stub[n]]));
   assert.deepEqual(featuresOf(old).found, f.found);
@@ -2834,9 +2834,9 @@ test('wasm facade: every feature the page looks for is found in the module djweb
   assert.throws(() => makeFacade({}), /lacks check \(beatscript_check\), fmt/);
 });
 
-test('real wasm: the built module has every feature the page looks for but the station (which djweb does not have)', { skip: !realWasm }, () => {
+test('real wasm: the built module has every feature the page looks for', { skip: !realWasm }, () => {
   const f = featuresOf(realMod);
-  assert.deepEqual(f.missing, ['station']);
+  assert.deepEqual(f.missing, []);
   for (const old of OLD_EXPORTS) assert.equal(realMod[old], undefined, `the module itself has no ${old} (the shim has)`);
 });
 
@@ -2850,7 +2850,8 @@ test('the build host must test the real module: BEATSCRIPT_REQUIRE_WASM=1 and no
 
 /** site/web/wasm-legacy/btw.js beside a stand-in beatscript.js that exports djweb's names (and the engine's), in a scratch dir. */
 async function legacyShim() {
-  const dir = fs.mkdtempSync(path.join((await import('node:os')).tmpdir(), 'beatscript-shim-'));
+  // (the real path: on macOS the temp dir is a symlink, /var -> /private/var, and a module URL is resolved through it)
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join((await import('node:os')).tmpdir(), 'beatscript-shim-')));
   const names = djwebExports();
   const lines = [
     'export const calls = [];',
