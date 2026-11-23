@@ -1,6 +1,7 @@
 // The "up next" queue, page side (DESIGN.md "Up next"). The queue lives on the server with this tab's session and is
-// written only over MCP (there is no button that adds to it); the page shows it read-only and, when the playing
-// program is over, asks the server for the next item: POST /api/session/<id>/queue/next {reason, presence}.
+// written over MCP, and on the radio page (/radio) by its playlist too (POST /api/session/<id>/queue); the editor shows it
+// read-only and, when the playing program is over, asks the server for the next item: POST /api/session/<id>/queue/next
+// {reason, presence, item?}.
 //
 // The server decides that answer under the presence rules (it is the one place they are enforced). The page applies the
 // same rules first, so it never asks when it knows the answer, and it is what shows "Still listening? Press play to
@@ -172,18 +173,19 @@ export class UpNext {
    * Ask for the next item and play it. reason: ended | length | skip | resume. Always asked of the server, even when
    * verdict() already says pause: the server records the pause, and MCP's list and get report it.
    */
-  advance(reason) {
+  advance(reason, pick) {
     if (this.pending) return true;
     if (this.track) this.track.asked = true;
-    this.pending = this.ask(reason).finally(() => { this.pending = null; });
+    this.pending = this.ask(reason, pick).finally(() => { this.pending = null; });
     return true;
   }
 
-  async ask(reason) {
+  /** `pick`: an MCP skip to that item (its id): the server plays it rather than the first. */
+  async ask(reason, pick) {
     const presence = this.presence ? this.presence.snapshot() : null;
     let res;
     try {
-      res = await this.requestFn({ reason, presence });
+      res = await this.requestFn(pick ? { reason, presence, item: pick } : { reason, presence });
     } catch (e) {
       if (this.pausedFn) this.pausedFn('', e);
       return null;

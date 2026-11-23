@@ -16,6 +16,8 @@ export const PREFS = Object.freeze({
   composeMode: ['beatscript.composeMode', 'btw.composeMode'],
   betaEmail: ['beatscript_beta_email', 'btw_beta_email'],
   source: ['beatscript-source', 'btw-source'],
+  // the radio player's "Play from" (auto, render, live): new with the player, so its old key was never written
+  radioMode: ['beatscript.radioMode', 'btw.radioMode'],
 });
 
 const local = () => { try { return globalThis.localStorage || null; } catch { return null; } };

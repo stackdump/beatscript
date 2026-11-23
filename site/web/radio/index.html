@@ -16,6 +16,7 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/css/legal.css">
 <link rel="stylesheet" href="/css/station.css">
+<link rel="stylesheet" href="/css/player.css">
 </head>
 <body>
 <header class="top">
@@ -25,50 +26,89 @@
 </header>
 
 <main class="radio">
-<h1>Radio</h1>
-<p class="lede">Endless stations that are always the same. A station is a BeatScript program, and position N of a station is always the same track. Turn a knob a notch to go to the station next door, at the same position; lock the knobs you want to keep.</p>
+<h1 class="sr">Radio</h1>
 
-<section class="player" aria-label="Player">
-  <div class="transport">
-    <button type="button" class="r-play" id="r-play" aria-pressed="false" disabled><span class="r-play-ic" aria-hidden="true"></span><span id="r-play-lbl">Play</span></button>
-    <span class="r-state" id="r-state" role="status">Tuning in…</span>
+<section class="deck" id="deck" aria-label="Player">
+  <div class="chrome-bar"><span class="chrome-title">BEATSCRIPT · RADIO</span><span class="chrome-led" id="p-led" aria-hidden="true"></span></div>
+  <div class="deck-body">
+    <div class="lcd" id="p-lcd">
+      <div class="lcd-row lcd-top">
+        <span class="lcd-state" id="p-state-ic" aria-hidden="true"></span>
+        <span class="lcd-time"><span id="p-elapsed">0:00</span><span class="lcd-of">/</span><span id="p-total">--:--</span></span>
+        <span class="lcd-flags"><span class="flag" id="p-flag-src">LIVE</span><span class="flag" id="p-flag-mode">AUTO</span></span>
+      </div>
+      <div class="lcd-title" id="p-title-box"><span id="p-title">Tuning in…</span></div>
+      <div class="lcd-row lcd-pos" id="p-pos"><span id="p-section">—</span><span id="p-bar"></span><span id="p-bpm"></span><span id="p-key"></span></div>
+    </div>
+    <div class="vis-box"><canvas class="vis" id="p-vis" width="160" height="56" aria-hidden="true"></canvas><div class="roles" id="p-roles" aria-hidden="true"></div></div>
   </div>
-  <div class="pos" role="group" aria-label="Position">
-    <button type="button" class="tb" id="r-prev" aria-label="The track before">‹ prev</button>
-    <label class="pos-n">Position <input type="number" id="r-n" min="0" step="1" value="0" inputmode="numeric"></label>
-    <button type="button" class="tb" id="r-next" aria-label="The track after">next ›</button>
-    <label class="check"><input type="checkbox" id="r-segues" checked> <span>segues between tracks</span></label>
+  <div class="seek" aria-hidden="true"><div class="seek-fill" id="p-seek"></div></div>
+  <div class="transport" role="group" aria-label="Transport">
+    <button type="button" class="tbtn" id="p-prev" aria-label="Previous track" title="Previous track"><span class="ic ic-prev" aria-hidden="true"></span></button>
+    <button type="button" class="tbtn tbtn-play" id="p-play" aria-label="Play" aria-pressed="false" title="Play / pause (space)"><span class="ic ic-play" aria-hidden="true"></span></button>
+    <button type="button" class="tbtn" id="p-next" aria-label="Next track" title="Next track"><span class="ic ic-next" aria-hidden="true"></span></button>
+    <button type="button" class="tbtn" id="p-stop" aria-label="Stop" title="Stop (Esc)"><span class="ic ic-stop" aria-hidden="true"></span></button>
+    <span class="t-spacer"></span>
+    <label class="t-mode" title="auto: a row plays from its render when the render is ready, else live in this tab. render: wait for the render (a bridge plays meanwhile). live: always this tab's engine.">Play from <select id="p-mode"><option value="auto">auto</option><option value="render">render</option><option value="live">live</option></select></label>
+    <button type="button" class="tbtn tbtn-wide" id="p-peek" aria-expanded="false" aria-controls="peek" title="Peek at the playing program; playback goes on"><span aria-hidden="true">{ }</span> code</button>
   </div>
-  <div class="cards">
-    <article class="card" id="r-now" aria-labelledby="r-now-h">
-      <h2 id="r-now-h">Now playing</h2>
-      <dl class="facts" id="r-now-dl"></dl>
-    </article>
-    <article class="card" id="r-up" aria-labelledby="r-up-h">
-      <h2 id="r-up-h">Up next</h2>
-      <dl class="facts" id="r-up-dl"></dl>
-      <p class="segue" id="r-segue"></p>
-    </article>
+  <div class="banner" id="p-banner" role="status" aria-live="polite" hidden></div>
+</section>
+
+<section class="peek" id="peek" aria-label="The playing program" hidden>
+  <div class="chrome-bar"><span class="chrome-title">PEEK</span><span class="peek-what" id="peek-what"></span><button type="button" class="xbtn" id="peek-close" aria-label="Close the peek (playback goes on)">×</button></div>
+  <div class="peek-body">
+    <textarea id="peek-text" spellcheck="false" autocomplete="off" aria-label="The playing program's text: edit it and apply to hear the change on the next bar"></textarea>
+    <div class="peek-row">
+      <button type="button" class="pbtn primary" id="peek-apply" title="Apply on the next bar (Ctrl/Cmd+Enter)">apply</button>
+      <button type="button" class="pbtn" id="peek-revert" title="Back to the track as the station or the queue has it">back to station</button>
+      <button type="button" class="pbtn" id="peek-keep" title="Keep your version: a link to it, and it goes on playing">keep my version</button>
+      <a class="pbtn" id="peek-open" href="/" target="_blank" rel="noopener">open in editor</a>
+      <span class="peek-msg" id="peek-msg" role="status" aria-live="polite"></span>
+    </div>
   </div>
 </section>
 
-<section class="tuner" aria-labelledby="r-tune-h">
-  <h2 id="r-tune-h">Tune</h2>
+<section class="plist" aria-label="Playlist">
+  <div class="chrome-bar"><span class="chrome-title">PLAYLIST</span><span class="family" id="pl-family" title="The station: its genre, seed, step and forms"></span></div>
+  <div class="plist-tools" role="group" aria-label="The station">
+    <button type="button" class="pbtn" id="pl-like" title="More like this: the station one seed along, every other knob as it is">more like this</button>
+    <button type="button" class="pbtn" id="pl-scan" title="A notch along a knob that is not locked">scan</button>
+    <span class="locks" id="pl-locks" role="group" aria-label="Locks"></span>
+  </div>
+  <div class="plist-head" aria-hidden="true"><span class="c-n">#</span><span class="c-t">title</span><span class="c-g">genre</span><span class="c-b">bpm</span><span class="c-d">time</span><span class="c-r">render</span><span class="c-s">from</span></div>
+  <ol class="rows" id="pl-rows" role="listbox" aria-label="Playlist: up next, then the station" aria-describedby="pl-help" tabindex="0"></ol>
+  <p class="sr" id="pl-help">Arrow keys choose a row, Enter plays it, Delete removes a queued row, Alt with an arrow moves it.</p>
+  <div class="plist-foot">
+    <form class="add" id="pl-add"><input type="text" id="pl-add-in" placeholder="add a CID, a share link or an example" autocomplete="off" spellcheck="false" aria-label="Add to the queue: a CID, a share link or an example name"><button type="submit" class="pbtn">+ add</button></form>
+    <span class="foot-btns"><button type="button" class="pbtn" id="pl-up" aria-label="Move the chosen row up">▲</button><button type="button" class="pbtn" id="pl-down" aria-label="Move the chosen row down">▼</button><button type="button" class="pbtn" id="pl-rm" aria-label="Remove the chosen row">− rem</button><button type="button" class="pbtn" id="pl-clear">clear queue</button></span>
+    <span class="pl-total" id="pl-total"></span>
+  </div>
+  <div class="msg" id="pl-msg" role="status" aria-live="polite"></div>
+</section>
+
+<details class="tuner fold">
+  <summary><span id="r-tune-h">Tune the station</span></summary>
   <p class="note">Set a knob and press Tune, or turn one a notch with − and +. A lock holds a knob where it is: Scan and the notches leave it alone. Whatever you turn, the position stays.</p>
+  <div class="pos" role="group" aria-label="Position">
+    <label class="pos-n">Position <input type="number" id="r-n" min="0" step="1" value="0" inputmode="numeric"></label>
+    <label class="check"><input type="checkbox" id="r-segues" checked> <span>segues between tracks</span></label>
+  </div>
   <div class="knobs" id="r-knobs"></div>
   <div class="row">
     <button type="button" class="tb primary" id="r-tune" disabled>Tune</button>
     <button type="button" class="tb" id="r-scan" disabled title="A notch along a knob that is not locked, the same one every time for this station at this position">Scan</button>
   </div>
   <div class="msg" id="r-msg" role="status" aria-live="polite"></div>
-</section>
+</details>
 
-<section class="program" aria-labelledby="r-prog-h">
-  <h2 id="r-prog-h">The station's program</h2>
+<details class="program fold">
+  <summary><span id="r-prog-h">The station's program</span></summary>
   <p class="meta">CID <code id="r-cid">not answered yet</code> · CC0-1.0</p>
   <pre class="src" id="r-text" tabindex="0" aria-label="The station's program text, read-only"></pre>
   <p class="row"><a id="r-link" href="/radio">A link to this station at this position</a> <button type="button" class="tb" id="r-copy">Copy link</button></p>
-</section>
+  <p class="note">Endless stations that are always the same: a station is a BeatScript program, and position N of a station is always the same track. Turn a knob a notch to go to the station next door, at the same position; lock the knobs you want to keep.</p>
+</details>
 
 <noscript><p class="note">The radio needs JavaScript: the station is asked for and played in your browser.</p></noscript>
 </main>

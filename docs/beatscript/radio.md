@@ -250,6 +250,29 @@ the station's knobs: a turn is a retune, so the next track is the new station's 
 still. Nothing a listener does is written into the station they were on: a tuned station is another text, which was there
 before they turned to it.
 
+While it plays the page is a player: a transport (previous, play/pause, next, stop), a readout (the title, elapsed and total
+time, the section and bar, the tempo and key), a level meter and the decks' roles lit as they fire. Under it, a playlist: the
+tab's "up next" queue first (MCP's `queue` tool and the playlist itself write it: add by CID, share link or example name,
+remove, reorder; double-click or Enter plays a row), then the station's next tracks, N+1, N+2, ... Each row says its render
+status (none, queued, rendering, ready with the Opus link, failed) and whether it plays from the render or live in the tab
+("Play from": auto, the default, plays a row from its render when the render is ready; render waits for it; live never). The
+statuses are asked for sparingly (once when a row shows, again only while it renders, never more than two at once or 30 a
+minute, nothing while the tab is hidden), and the page starts one render only, the next row's, only while someone is listening.
+
+**Never dead air.** What is next is resolved while the current item plays: its text fetched and compiled into a run of its own,
+or its render found ready, so the change is a swap at the boundary. When it is not ready in time (a render pending or failed, a
+program that does not compile, a slow network, a queue that answers late), the page plays a bridge: a small CC0 loop at the
+outgoing track's tempo and key (`handoff-model.js` `BRIDGES`), hot-reloaded into the running program so it lands on the next bar
+line, looping until the next item is ready, which then comes in on a bar line. The row says "bridging". A next item that fails
+is passed over for the one after it while the bridge plays on; after ten minutes of bridging with nothing ready the page stops
+and says why. The one intended stop is the queue's presence pause (nobody listening). A swap from one compiled run to the next
+starts the engine afresh, which costs the time it takes to install the new program's nets; a gapless swap needs the engine to
+land a new program at its own bar 0 on a bar line (as a scene does), which is not built yet.
+
+**Peek.** The `{ } code` key opens the playing program's text in a drawer, without stopping it. An edit applies on the next bar
+(a hot reload, as Cmd+Enter in the editor), the row says "edited" with the edit's CID, "back to station" puts the track back, and
+"keep my version" puts a link to the edit in the clipboard.
+
 ## An example station: techno radio
 
 `examples/beatscript/techno-radio.beatscript` is the station at the top of this note: techno from the seeded generator v2, seed 42,

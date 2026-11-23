@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### The radio page is a player (2026-11-23)
+
+- `/radio` plays as a player: a transport (previous, play/pause, next, stop), an LED readout (title, elapsed/total, section
+  and bar, tempo and key), a level meter and the decks' roles lit as they fire, in a beveled dark chrome. The tuner and the
+  station's program fold away under it.
+- A playlist: the tab's "up next" queue, then the station's upcoming tracks, numbered, with title, genre, BPM, duration and
+  each row's render status (none, queued, rendering, ready with the Opus link, failed) and where it plays from (render or
+  live). Rows are added by CID, share link or example name, removed, reordered (drag, the arrow keys with Alt, or the
+  buttons) and played by double-click or Enter. The header names the station's family and has more like this, scan and locks.
+- "Play from": auto (the default: a row's render when it is ready, else live), render, live. Render statuses are asked for
+  sparingly; a render is started only for the next row and only while someone is listening.
+- Never dead air: the next item is fetched and compiled while one plays; when it is late or fails a bridge loop (CC0, the
+  outgoing tempo and key) is hot-reloaded on the bar grid until it is ready. The order is documented in
+  docs/beatscript/radio.md.
+- Peek: the playing program in a drawer; an edit applies on the next bar, "back to station" puts it back.
+- The queue: `POST /api/session/<id>/queue` (the page's add, remove, move, clear), `queue/next` takes `item` (and the reason
+  `pick`), and the MCP `queue` tool has `move` (`item`, `to`) and `skip` to an `item`. The editor's "Up next" strip links to
+  the player.
+
 ## v0.1.0 (2026-11-22): the first public release, and BeatScript 2
 
 The first release of stackdump/beatscript as the single upstream of BeatScript and beatscript.app.

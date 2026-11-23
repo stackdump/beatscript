@@ -886,11 +886,32 @@ try {
     await fresh(radio());
     await settled();
     check('/radio answers the default station: its text and CID on the page', (await R('r.state.cid')) === (await q('#r-cid')) && (await q('#r-text')) === (await R('r.state.text')) && /station \{/.test(await q('#r-text')));
-    check('now playing is track 0, up next track 1, and the segue between them is shown', (await R('r.state.now.n')) === 0 && (await R('r.state.next.n')) === 1 && /segue/.test(await q('#r-segue')) && /seeded/.test(await q('#r-now-dl')));
-    await tap('#r-next');
+    check('the playlist shows the station ahead: track 0 first, then 1, 2, ... (seed-derived), with their render status', (await R('r.rows.length')) >= 3 && (await R('r.rows[0].key')) === 's:0' && (await R('r.rows[1].key')) === 's:1' && (await page.eval('document.querySelectorAll("#pl-rows li .c-r").length')) >= 3, JSON.stringify(await R('r.rows.map((x) => x.key)')));
+    check('the playlist header names the station\'s family (genre, seed, step, forms)', /seed .* step .*seeded/.test(await q('#pl-family')), await q('#pl-family'));
+    await tap('#p-next');
     await page.waitFor('window.__radio.state.n === 1 && window.__radio.state.now && window.__radio.state.now.n === 1 && !window.__radio.waiting');
     check('next moves to position 1, and the URL says so', /[?&]n=1(&|$)/.test(await page.eval('location.search')) && (await page.eval('document.getElementById("r-n").value')) === '1');
+    // the queue: added from the playlist by example name, moved, removed (POST /api/session/<id>/queue), shown first
+    await page.waitFor('window.__radio.session && window.__radio.session.id', 10000);
+    await page.eval('document.getElementById("pl-add-in").value = "first-beat"');
+    await tap('#pl-add button');
+    await page.waitFor('window.__radio.queue && window.__radio.queue.up_next.length === 1', 10000);
+    await page.eval('document.getElementById("pl-add-in").value = "trance-138"');
+    await tap('#pl-add button');
+    await page.waitFor('window.__radio.queue && window.__radio.queue.up_next.length === 2', 10000);
+    check('queued rows come before the station\'s, marked Q, in the order added', (await R('r.rows.filter((x) => x.kind === "queue").map((x) => x.item && x.item.example).join()')) === 'first-beat,trance-138' && (await R('r.rows[1].kind')) === 'queue', JSON.stringify(await R('r.rows.map((x) => x.key)')));
+    await page.eval('window.__radio.selected = window.__radio.rows.find((x) => x.kind === "queue" && x.item.example === "trance-138").key; window.__radio.renderList()');
+    await tap('#pl-up');
+    await page.waitFor('window.__radio.queue.up_next[0].example === "trance-138"', 10000);
+    check('a queued row moves up (the server\'s queue moved too)', (await (await fetch(T(`api/session/${await R('r.session.id')}/queue`))).json()).queue.up_next[0].example === 'trance-138');
+    await tap('#pl-rm');
+    await page.waitFor('window.__radio.queue.up_next.length === 1', 10000);
+    check('and is removed', (await R('r.queue.up_next[0].example')) === 'first-beat');
+    await tap('#pl-clear');
+    await page.waitFor('window.__radio.queue.up_next.length === 0', 10000);
     const cid0 = await R('r.state.cid');
+    // the tuner and the program fold under the player
+    await page.eval('document.querySelectorAll("details.fold").forEach((d) => { d.open = true; })');
     await tap('.knob[data-knob="tempo"] .nudge[data-dir="+1"]');
     await page.waitFor(`window.__radio.state.cid !== ${JSON.stringify(cid0)} && !window.__radio.waiting`);
     check('tempo + is one notch (128 -> 130): a new station, still at position 1', (await R('r.state.knobs.tempo')) === 130 && (await R('r.state.n')) === 1 && /^tempo 130$/m.test(await q('#r-text')), JSON.stringify(await R('r.state.knobs')));
@@ -916,17 +937,17 @@ try {
     const fast = '#! name: smoke radio\ntempo 300\nkey am\nstation {\n  from gen@2 techno seed=7 length=short\n  forms seeded cross\n}\n';
     await fresh(radio(`s=${encodeURIComponent(fast)}&n=0`));
     await settled();
-    await tap('#r-play');
+    await tap('#p-play');
     await page.waitFor('window.__radio.playing && window.__radio.item && window.__radio.item.kind === "track"', 15000);
-    check('play: track 0 sounds, and the transport says so', /Track 0/.test(await q('#r-state')) && (await page.eval('document.getElementById("r-play").getAttribute("aria-pressed")')) === 'true', await q('#r-state'));
+    check('play: track 0 sounds, and the transport and the readout say so', /#0/.test(await q('#p-title')) && (await page.eval('document.getElementById("p-play").getAttribute("aria-pressed")')) === 'true', await q('#p-title'));
     let segued = true;
     try { await page.waitFor('window.__radio.item && window.__radio.item.kind === "segue"', 20000); } catch { segued = false; }
-    check('when track 0 ends, the segue plays', segued, await q('#r-state'));
+    check('when track 0 ends, the segue plays', segued, await q('#p-title'));
     let moved = true;
     try { await page.waitFor('window.__radio.state.n === 1 && window.__radio.item && window.__radio.item.kind === "track" && window.__radio.item.n === 1', 20000); } catch { moved = false; }
     check('then track 1: N moved on by itself, and the URL followed', moved && /[?&]n=1(&|$)/.test(await page.eval('location.search')), JSON.stringify(await R('({ n: r.state.n, item: r.item && r.item.kind })')));
     await shot(16, 'radio');
-    await tap('#r-play');
+    await tap('#p-play');
     check('stop stops it', (await R('r.playing')) === false);
   }
 

@@ -117,11 +117,11 @@ export class SessionLink {
         const rid = str(ev.request_id);
         if (rid && rid.length <= 128) await this.api.reply(this.id, rid, app.reportState());
       } else if (type === 'queue') {
-        // the queue changed (MCP add/remove/clear, or an advance), or MCP asked to skip: the page only shows the list,
-        // and a skip is an ordinary advance, under the same presence rules as the end of a track
+        // the queue changed (MCP add/remove/move/clear, the radio's playlist, or an advance), or MCP asked to skip (to an
+        // item, when it names one): a skip is an ordinary advance, under the same presence rules as the end of a track
         const extra = ev.extra && typeof ev.extra === 'object' ? ev.extra : {};
         if (app.upNext && extra.queue && typeof extra.queue === 'object') app.upNext.setView(extra.queue);
-        if (app.upNext && extra.action === 'skip') app.upNext.advance('skip');
+        if (app.upNext && extra.action === 'skip') app.upNext.advance('skip', typeof extra.item === 'string' && extra.item.length <= 100 ? extra.item : undefined);
         return;
       } else if (type === 'stop') {
         app.stop();
