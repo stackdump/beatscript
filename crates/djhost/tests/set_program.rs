@@ -141,6 +141,9 @@ fn a_recorded_set_is_written_as_a_set_of_its_programs() {
 "
     );
     assert_eq!(body(&sp.text), want, "{}", sp.text);
+    // BeatScript 2: the version line first, so the set is a new program's (its CID of the `beatscript` type)
+    assert!(sp.text.starts_with("#! beatscript 2\n"), "{}", sp.text);
+    assert_eq!(djlive::version::of_source(&sp.text), djlive::version::Version::V2);
     // the header: the live store's, so `btw import` reads the file back as it is
     for h in ["#! name: friday\n", "#! license: CC0-1.0\n", "#! visibility: public\n", &format!("#! author: {AUTHOR}\n")] {
         assert!(sp.text.contains(h), "{h:?} in {}", sp.text);

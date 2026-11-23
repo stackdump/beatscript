@@ -149,7 +149,7 @@ fn seed_program(arr: Option<&Arrangement>, cid: &str) -> Option<(String, String)
         return None;
     }
     let expr = if structure == djlive::seed::STRUCTURES[0] { format!("seed({}, {})", spec.genre, n as u32) } else { format!("seed({}, {}, {structure})", spec.genre, n as u32) };
-    let c = djlive::check(&format!("arrange from {expr}\n")).compiled?;
+    let c = djlive::check(&format!("{}\narrange from {expr}\n", djlive::version::LINE)).compiled?;
     Some((expr, c.text))
 }
 
@@ -379,7 +379,8 @@ pub fn set_program(rec: &RecordedSet, opts: &Options) -> Result<SetProgram, Stri
     }
 
     // the text, line by line in the order things happened
-    let mut body = String::from("set {\n");
+    // written in BeatScript 2 (the version line first, kept by `to_file`), as every new program is
+    let mut body = format!("{}\nset {{\n", djlive::version::LINE);
     let mut line = |s: &str| {
         body.push_str("  ");
         body.push_str(s);
