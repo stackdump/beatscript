@@ -150,6 +150,29 @@ fn a_loop_roll_on_a_net_deck_loops_four_two_one_half_and_lets_go_on_the_drop() {
     assert!(bar_rms(&x, 120.0, 5.0) > 0.5 * bar_rms(&y, 120.0, 5.0), "released on the drop");
 }
 
+/// A macro and a move in one program: the macro (the control net's `effects fire`, on B) and the roll (the moves' scheduler,
+/// on A) share the render's timeline, and the step it takes is limited by both.
+const MACRO_AND_ROLL: &str = "tempo 120\nsection main 6 bars {\n  deck A: melody c4 e4 g4 c5 len=4\n  deck B: kick x ~ x ~ | bass c2 ~ c2 ~\n  at bar 1: control: macro filter on B over 2 bars\n  control: move loop_roll on A over 1 bars\n}\narrange main\n";
+
+#[test]
+fn a_program_with_a_macro_and_a_move_renders_the_same_twice_and_plays_both() {
+    let run = |text: &str| {
+        let o = Options { sr: SR, format: Format::S16le, ..Options::default() };
+        let (mut pcm, mut err) = (Vec::new(), Vec::new());
+        let s = render::render_to(text, &o, &mut pcm, &mut Events::new(&mut err), Instant::now()).unwrap_or_else(|e| panic!("{}", e.message));
+        (pcm, s)
+    };
+    let ((a, s), (b, _)) = (run(MACRO_AND_ROLL), run(MACRO_AND_ROLL));
+    assert_eq!(hex(&a), hex(&b), "two renders of a macro and a move differ");
+    assert_eq!(s.macros.len(), 1, "{:?}", s.macros);
+    assert!(s.macros[0].refused.is_none(), "{:?}", s.macros[0]);
+    let (no_roll, _) = run(&MACRO_AND_ROLL.replace("  control: move loop_roll on A over 1 bars\n", ""));
+    let (no_macro, _) = run(&MACRO_AND_ROLL.replace("  at bar 1: control: macro filter on B over 2 bars\n", ""));
+    assert!(a != no_roll && a != no_macro, "both lines are heard");
+    // the roll is the roll beside the macro: its 1-beat stage (bar 3) plays the bar's first beat four times
+    assert_eq!(notes_of(&mono(&a), 3, 1), [0, 0, 0, 0]);
+}
+
 /// Two decks with a low note each (A: a1, 55 Hz; B: e2, 82.4 Hz): the bass swap cuts B's lows as it is armed and swaps the
 /// lows on the line (a 2-bar "phrase": bar 2), A's cut and B's back.
 const SWAP: &str = "tempo 120\nsection main 4 bars {\n  deck A: bass a1 a1 a1 a1 len=4\n  deck B: bass e2 e2 e2 e2 len=4\n  control: move bass_swap on B over 2 bars\n}\narrange main\n";
