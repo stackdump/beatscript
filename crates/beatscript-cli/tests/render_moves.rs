@@ -1,7 +1,8 @@
-//! The DJ moves in the streaming render (`djhost::offline_moves`): a `move` line the control net does not play is armed on
-//! the booth's own scheduler (`djhost::perform::Moves`) and serviced on the render's clock, so `beatscript render` and `beatscript listen`
-//! hear it. `filter_exit` and `echo_out` stay on the control net, which played them before: a program with one renders
-//! byte for byte as it did, and so does a program with no move at all (the pins below were taken before the change).
+//! The DJ moves in the streaming render (`djhost::offline_moves`): every `move` line is armed on the booth's own scheduler
+//! (`djhost::perform::Moves`, which the page's `MoveScheduler` ports) and serviced on the render's clock, so `beatscript render`
+//! and `beatscript listen` hear it as the page plays it. Since render version r3 that is `filter_exit` and `echo_out` too (the
+//! control net played them a bar earlier than the booth and the page), and a `vocoder_handoff` (the render plays the vocoder).
+//! The pins below are r3's.
 //!
 //! The render and listen are included by path, as in `render_inproc.rs`.
 
@@ -76,13 +77,15 @@ fn tone(x: &[f64], a: usize, b: usize, hz: f64) -> f64 {
     (s1 * s1 + s2 * s2 - c * s1 * s2).max(0.0).sqrt() / (b - a) as f64
 }
 
-// ---- pins: taken before the moves were played, so the change is proved to leave these renders alone
+// ---- pins (render version r3)
 
 /// `examples/beatscript/render-controls.beatscript` (no move: a fade, an lfo, a crossfader move, a mute hold, a filter sweep), `beatscript render`
-/// at 22.05 kHz s16le.
-const PIN_NO_MOVE: &str = "899ffd161733aa5d79d58691c75c96c6b8ca22c69af269cdc4ef3fabc76b2eec";
-/// A program whose `filter_exit` the control net plays (it played it before the change, and still does).
-const PIN_NET_FILTER_EXIT: &str = "fcbb6f097ef253fad42dfc561c7091b90ab14d776e8cbd544ddf0f4be74ab131";
+/// at 22.05 kHz s16le. Re-pinned at r3: the filter sweep is sampled as the runtime sends it (`beatscript_render::control_calls`,
+/// as the page plays it), not on the control net's sixteenths (r2: 899ffd161733aa5d79d58691c75c96c6b8ca22c69af269cdc4ef3fabc76b2eec).
+const PIN_NO_MOVE: &str = "779bae8f7a1ad6374832e9717fdacca8d94b520137eff6e94fc57b7aafc79ebf";
+/// A program with a `filter_exit`: the booth's scheduler starts it on the bar line after the one that armed it, as the page does (r2,
+/// the control net's, a bar earlier: fcbb6f097ef253fad42dfc561c7091b90ab14d776e8cbd544ddf0f4be74ab131).
+const PIN_NET_FILTER_EXIT: &str = "8b0ffe290b31fa83350d38f58335db6909e54e908cf3c4912dd6aa202a46569c";
 const NET_FILTER_EXIT: &str = "tempo 120\nsection main 10 bars {\n  deck A: hihat x*16 | bass c2 c2 c2 c2 | kick x ~ x ~\n  at bar 2: control: move filter_exit on A over 2 bars\n}\narrange main\n";
 
 fn example(name: &str) -> String {
@@ -96,13 +99,13 @@ fn pin_a_program_with_no_move_renders_as_it_did() {
 }
 
 #[test]
-fn pin_a_filter_exit_the_net_plays_renders_as_it_did() {
+fn pin_a_filter_exit_renders_on_the_booths_lines() {
     let r = render(NET_FILTER_EXIT);
-    assert_eq!(hex(&r.pcm), PIN_NET_FILTER_EXIT, "the net's filter exit renders differently");
-    // and it is the move: cut on bar 2, back on the phrase line (bar 8)
+    assert_eq!(hex(&r.pcm), PIN_NET_FILTER_EXIT, "the filter exit renders differently");
+    // and it is the move: armed on bar 2 (which plays on), it rides from bar 3 and cuts on bar 5, back on the phrase line (bar 8)
     let x = mono(&r.pcm);
-    let (before, cut, back) = (bar_rms(&x, 120.0, 1.0), bar_rms(&x, 120.0, 5.0), bar_rms(&x, 120.0, 9.0));
-    assert!(before > 0.01 && cut < before * 0.05 && back > before * 0.5, "{before} {cut} {back}");
+    let (before, armed, cut, back) = (bar_rms(&x, 120.0, 1.0), bar_rms(&x, 120.0, 2.0), bar_rms(&x, 120.0, 5.0), bar_rms(&x, 120.0, 9.0));
+    assert!(before > 0.01 && armed > before * 0.5 && cut < before * 0.05 && back > before * 0.5, "{before} {armed} {cut} {back}");
 }
 
 // ---- the moves the scheduler plays
@@ -240,13 +243,14 @@ fn an_echo_out_is_put_back_on_the_phrase_line_after_it() {
     assert!(r[9] > r[0] * 0.5, "back on bar 8: {r:?}");
 }
 
-/// The moves that cannot act offline are not armed, and the render's notes say which and why.
+/// The move that cannot act offline (a phrase sync that steps a seed) is not armed, and the render's notes say which and why.
+/// A vocoder handoff acts (the render plays the vocoder): with no vocoder line it has nothing to swap.
 #[test]
 fn a_move_that_cannot_act_offline_is_named_with_why() {
     let text = "tempo 120\nsection main 2 bars {\n  deck A: kick x ~ x ~\n  deck B: bass c2\n  control: move vocoder_handoff on A\n  control: move phrase_sync on B\n}\narrange main\n";
     let r = render(text);
-    assert!(r.notes.contains("not in this render: 2 control lines"), "{}", r.notes);
-    assert!(r.notes.contains("no vocoder") && r.notes.contains("not a seed"), "{}", r.notes);
+    assert!(r.notes.contains("not in this render: 1 control line"), "{}", r.notes);
+    assert!(r.notes.contains("not a seed") && !r.notes.contains("no vocoder"), "{}", r.notes);
     let plain = render("tempo 120\nsection main 2 bars {\n  deck A: kick x ~ x ~\n  deck B: bass c2\n}\narrange main\n");
     assert!(r.pcm == plain.pcm, "nothing is faked: the render is the program without them");
 }
@@ -266,11 +270,10 @@ fn curve(v: &JsonValue) -> Vec<Option<f64>> {
     v.get("bar_lufs").and_then(JsonValue::as_array).unwrap().iter().map(JsonValue::as_f64).collect()
 }
 
-/// `examples/beatscript/render-controls.beatscript` (no move): listen's answer (less its timings), pinned before the change.
-/// Re-pinned after the rename for the program's CID alone: with the old CID put back, the answer is the old pin's
-/// (2e42b7cdcd8cf5ea4a35c9ccef307279a5bbbf295f8e7780119b8cd3675ff74f). Since listen/2 the pin is of the answer as listen/1
-/// said it ([`as_listen1`]): the mix it added is new fields and new warnings, and every number listen/1 gave is the same.
-const PIN_LISTEN_NO_MOVE: &str = "bb45e0083745e3d0c3446c4331ba4b80672b47c47321e69625a420c35601a73f";
+/// `examples/beatscript/render-controls.beatscript` (no move): listen's answer (less its timings), as listen/1 said it
+/// ([`as_listen1`]: the mix listen/2 added is new fields and new warnings, and every number listen/1 gave is the same). Re-pinned
+/// at render r3 for the filter sweep sampled as the runtime sends it (r2: bb45e0083745e3d0c3446c4331ba4b80672b47c47321e69625a420c35601a73f).
+const PIN_LISTEN_NO_MOVE: &str = "ea0eac6cf00cb04669773e9b49ea7d0947f5697689464b49feeafc368dc3c39a";
 
 /// listen/2's answer as listen/1 gave it: without the mix (mix.rs: bands, stereo, true peak, loudness range, clashes,
 /// targets) and the warnings it added (kept: the ones whose id is a silence, the clipping or a macro).
@@ -308,7 +311,7 @@ fn as_listen1(v: &JsonValue) -> JsonValue {
 }
 
 #[test]
-fn pin_listen_of_a_program_with_no_move_is_as_it_was() {
+fn pin_listen_of_a_program_with_no_move() {
     let v = as_listen1(&listen_of(&example("render-controls.beatscript")));
     assert_eq!(hex(v.canonical_js().as_bytes()), PIN_LISTEN_NO_MOVE, "{}", v.canonical_js());
 }

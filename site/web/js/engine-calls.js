@@ -47,7 +47,9 @@
  *   `deck load|sync`, mixer pfl / aux / headphone_*, and any other noun
  *   effects fire / release (a `macro` line, docs/beatscript/ext-control.md): noted by its id, `macro riser`, as the line says it; the
  *   offline render and `listen` play it, this engine plays none of the DJ catalogue yet
- * The desktop's offline render ignores control lines altogether; the stream the server renders does the same.
+ * The server's render (`beatscript render`: the stream, `listen`, the stems) reads every call through a port of this file
+ * (crates/beatscript-cli/src/browser.rs, held to it op for op by tests/browser_calls.rs) on the same djrust engine, so it plays
+ * what this engine plays; what is IGNORED here it plays the booth's way.
  */
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);

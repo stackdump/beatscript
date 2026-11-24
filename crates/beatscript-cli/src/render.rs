@@ -29,6 +29,10 @@ use djhost::deck::offline::{arrangement_conductor, stand_on_start, ArrangeRender
 use djlive::ast::Deck;
 use djlive::compile::{Compiled, DeckIr};
 
+/// The browser engine's reading of the control calls (site/web/js/engine-calls.js `mapCall`), on this render's engine.
+#[path = "browser.rs"]
+pub mod browser;
+
 /// Frames the engine renders in one step (`OfflineConductor::BLOCK_FRAMES`).
 const BLOCK: usize = djhost::deck::offline::OfflineConductor::BLOCK_FRAMES;
 /// Samples (both channels) of one block.
@@ -208,6 +212,9 @@ struct Sections<'a> {
     /// The next section to emit events for (>= 1).
     k: usize,
     pending: std::collections::VecDeque<ArrangeEvent>,
+    /// The parts' `kit=` / `sound=` (deck, role, option) of each `Load` in `pending`, in the same order: the page sets them once the
+    /// net has landed (engine.js `sound` ops), the render right after the load.
+    sounds: std::collections::VecDeque<Vec<(String, String, String)>>,
     /// Beat of the last move (the song's end).
     beats: f64,
     done: bool,
@@ -216,7 +223,7 @@ struct Sections<'a> {
 impl<'a> Sections<'a> {
     fn new(c: &'a Compiled, bars: u32) -> Sections<'a> {
         let sets: Vec<(u32, &BTreeMap<Deck, DeckIr>)> = if c.arranged && !c.segments.is_empty() { c.segments.iter().map(|s| (s.start, &s.decks)).collect() } else { vec![(0, &c.decks)] };
-        Sections { sets, bpm: c.tempo.unwrap_or(120.0), k: 1, pending: Default::default(), beats: f64::from(bars) * 4.0, done: false }
+        Sections { sets, bpm: c.tempo.unwrap_or(120.0), k: 1, pending: Default::default(), sounds: Default::default(), beats: f64::from(bars) * 4.0, done: false }
     }
 
     /// The decks of the first section: the arrangement's start.
@@ -241,6 +248,7 @@ impl<'a> Sections<'a> {
             for (d, ir) in nets.iter() {
                 let src = DeckSource::RawNets(ir.envelope(0));
                 self.pending.push_back(ArrangeEvent { at: f64::from(start) * 4.0 - 2.0, bpm, op: ArrangeOp::Deck(DeckAction::Load { deck: d.name().to_string(), source: src }), via: "btw".into(), text: format!("section at bar {start}: deck {}", d.name()) });
+                self.sounds.push_back(sounds_of(d, ir));
                 // (on the section's bar line, as djhost::beatscript_render's: a deck that is not playing starts its net when it plays)
                 if !prev.contains_key(d) {
                     self.pending.push_back(ArrangeEvent { at: f64::from(start) * 4.0, bpm, op: ArrangeOp::Deck(DeckAction::Play { deck: d.name().to_string(), on: true }), via: "btw".into(), text: format!("deck {} in", d.name()) });
@@ -264,6 +272,16 @@ impl<'a> Sections<'a> {
         }
         self.pending.pop_front()
     }
+
+    /// The first section's `kit=` / `sound=`, deck by deck.
+    fn start_sounds(&self) -> Vec<(String, String, String)> {
+        self.sets[0].1.iter().flat_map(|(d, ir)| sounds_of(d, ir)).collect()
+    }
+}
+
+/// A deck's parts' `kit=` / `sound=` as the runtime hands them to the page (`{op:'sound', deck, role, option}`).
+fn sounds_of(d: &Deck, ir: &DeckIr) -> Vec<(String, String, String)> {
+    ir.sounds().into_iter().map(|(role, opt)| (d.name().to_string(), role, opt)).collect()
 }
 
 /// The whole arrangement `Sections` makes, as `djhost::beatscript_render::arrangement` would (for the test that
@@ -293,9 +311,12 @@ enum Move {
     /// A mixer, transport, duck or mix move, as `djhost::beatscript_render::control_events` makes it for the desktop's render: a
     /// strip's level, EQ and mute, the master level, the crossfader, ramps and lfos sampled the way the runtime sends them.
     Arrange(ArrangeEvent),
-    /// What the program's control net fires (`djlive::nets`, as `djhost::beatscript_render::render` plays it): inserts (filter,
-    /// reverb, delay, crush) set and switched, their ramps a sixteenth of a bar at a time, the two moves the net holds, and a
-    /// `macro` line's `effects fire` / `release`. With the beat it is on and the line (its control's key) it is of.
+    /// A registry call the arrangement has no op for (an insert, the FX unit's drive, the vocoder, the Wheel), as the runtime makes
+    /// it (`djhost::beatscript_render::control_calls`), played as the browser's engine plays it ([`browser::Browser`]); what the
+    /// page has no op for, the booth's way.
+    Call(djhost::beatscript_render::TimedCall),
+    /// What the program's control net fires (`djlive::nets`): a `macro` line's `effects fire` / `release` (the net's other events
+    /// are the calls' and the moves' here). With the beat it is on and the line (its control's key) it is of.
     Net(djlive::nets::Event, f64, Option<String>),
 }
 
@@ -380,8 +401,57 @@ pub struct Controls {
     /// frame of that bar, and the move. Made just before the deck starts (the engine starts an engagement on a deck that does not
     /// play at once, so it starts with the deck), or at that bar if the deck never comes.
     deferred: Vec<(i64, usize)>,
-    /// The `move` lines the net does not hold, armed on the render's engine (None: the program has none).
+    /// The program's `move` lines, armed on the render's engine with the booth's scheduler (None: the program has none).
     perform: Option<djhost::offline_moves::ProgramMoves>,
+    /// The page's engine around this one: the calls' ops, and the Wheel beside the decks.
+    pub browser: browser::Browser,
+    /// Whether the Wheel is added to the master (the stems' passes leave it out of a deck's or a part's stem).
+    pub wheel: bool,
+}
+
+/// The calls a render plays as calls ([`Move::Call`]): the nouns the arrangement format has no op for, which the browser's
+/// engine (and, for what it does not have, the booth's registry) plays; and a `mixer` call with a field the arrangement does not
+/// carry (a strip's `gain` or `filter` knob).
+fn taken_as_call(x: &djlive::compile::Call) -> bool {
+    match x.noun.as_str() {
+        "inserts" | "fx" | "vocoder" | "wheel" => true,
+        "mixer" => x.params.get("gain").is_some() || x.params.get("filter").is_some(),
+        _ => false,
+    }
+}
+
+/// Whether a render plays every call of a control line: the arrangement's (the mixer, a deck's play and stop, `duck`, `mix`), a
+/// call the browser's engine plays or the booth's chain takes (an insert), the vocoder and the Wheel, a move the booth's scheduler
+/// plays, or a `macro` line (the net). A line with a call none of them has is named in the start event's notes.
+fn heard(ctl: &djlive::compile::Control, moves: &djhost::offline_moves::ProgramMoves) -> bool {
+    use djlive::compile::Effect;
+    let e = match &ctl.effect {
+        Effect::Performed(p) => match p.at_half() {
+            Some(e) => e,
+            None => return true,
+        },
+        e => e.clone(),
+    };
+    let calls: Vec<djlive::compile::Call> = match &e {
+        Effect::Calls(cs) => cs.clone(),
+        Effect::Ramp(r) => r.prelude.iter().cloned().chain([r.at(0.0)]).collect(),
+        Effect::Lfo(l) => l.prelude.iter().cloned().chain([l.call_at(0.0)]).collect(),
+        Effect::Duck(_) | Effect::Mix(_) | Effect::Performed(_) => return true,
+    };
+    calls.iter().all(|x| {
+        let p = &x.params;
+        let action = p.get("action").and_then(JsonValue::as_str);
+        match x.noun.as_str() {
+            "mixer" => ["volume", "low", "mid", "high", "mute", "master", "crossfader", "gain", "filter"].iter().any(|k| p.get(k).is_some()),
+            "deck" => matches!(action, Some("play" | "stop" | "pause")),
+            "inserts" | "wheel" => true,
+            "fx" => browser::map_call("fx", p).ignored.is_none(),
+            "vocoder" => browser::map_call("vocoder", p).ignored.is_none(),
+            "moves" => moves.plays(&ctl.key),
+            "effects" => matches!(action, Some("fire" | "release")),
+            _ => false,
+        }
+    })
 }
 
 /// The program's next bar line after `beat`, in beats (a bar line itself: the next one).
@@ -397,42 +467,52 @@ impl Controls {
         let bpm = c.tempo.unwrap_or(120.0);
         let frame_of = |beat: f64| -> i64 { (beat * 60.0 / bpm * sr).round() as i64 };
         let mut moves: Vec<(i64, u8, usize, Move)> = Vec::new();
+        let browser = browser::Browser::new(sr);
         if c.controls.is_empty() {
-            return Controls { moves, next: 0, unheard: Vec::new(), macro_lines: BTreeMap::new(), bpm, sr, macros: Vec::new(), deferred: Vec::new(), perform: None };
+            return Controls { moves, next: 0, unheard: Vec::new(), macro_lines: BTreeMap::new(), bpm, sr, macros: Vec::new(), deferred: Vec::new(), perform: None, browser, wheel: true };
         }
+        // the mixer and the transport, `duck` and `mix`: the arrangement's events, as the desktop's render makes them
         let (arr, left_out) = djhost::beatscript_render::control_events(c, bpm, beats, true);
         for (i, e) in arr.into_iter().enumerate() {
             moves.push((frame_of(e.at), 0, i, Move::Arrange(e)));
         }
+        // the calls the arrangement has no op for, as the runtime makes them, for the browser's engine to play
+        for (i, call) in djhost::beatscript_render::control_calls(c, beats, &taken_as_call).into_iter().enumerate() {
+            moves.push((frame_of(call.beat), 1, i, Move::Call(call)));
+        }
+        // the control net's macro lines (`effects fire` / `release`): the booth's DJ catalogue (the page has none yet)
         let net = djlive::nets::control_net(c, program_bars);
         for (i, (tick, key, e)) in net.events_keyed(None).into_iter().enumerate() {
-            // the mixer's fields are the arrangement's (sampled and thinned as the runtime sends them): not set twice
-            if let djlive::nets::Event::Set { param, .. } = &e {
-                if matches!(param.as_str(), "volume" | "low" | "mid" | "high" | "master" | "crossfader") {
-                    continue;
-                }
+            if !matches!(e, djlive::nets::Event::Fire { .. } | djlive::nets::Event::Release { .. }) {
+                continue;
             }
             let beat = tick as f64 / 4.0;
             if beat >= beats {
                 continue;
             }
-            moves.push((frame_of(beat), 1, i, Move::Net(e, beat, key)));
+            moves.push((frame_of(beat), 2, i, Move::Net(e, beat, key)));
         }
         moves.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
-        // the DJ moves the net leaves beside it, on the booth's scheduler
-        let perform = djhost::offline_moves::ProgramMoves::new(c, beats, &net, djhost::offline_moves::Clock::steady(bpm, sr));
-        // unheard: a line the arrangement leaves out that neither the net nor the moves' scheduler plays (a move that cannot
-        // act offline says why)
-        let residual: BTreeSet<&str> = net.residual.iter().map(|(k, _)| k.as_str()).filter(|k| !perform.plays(k)).collect();
-        let lines: BTreeMap<usize, Option<&str>> = c.controls.iter().filter(|ctl| residual.contains(ctl.key.as_str())).map(|ctl| (djlive::diag::line_col(&c.source, ctl.span.start).0, perform.why_unplayed(&ctl.key))).collect();
+        // every move line on the booth's scheduler (the page's MoveScheduler is its port): a move starts on the line after the one
+        // that armed it, and a vocoder handoff swaps the vocoder this render plays
+        let perform = djhost::offline_moves::ProgramMoves::every(c, beats, djhost::offline_moves::Clock::steady(bpm, sr), true);
+        // unheard: a line with a call none of these plays (a vocal, a `do` to another noun, a move that cannot act offline)
+        let unplayed: BTreeSet<usize> = c
+            .controls
+            .iter()
+            .filter(|ctl| !heard(ctl, &perform))
+            .map(|ctl| djlive::diag::line_col(&c.source, djhost::beatscript_render::place_of(c, ctl).0).0)
+            .collect();
         let unheard = left_out
             .lines
             .iter()
-            .filter_map(|l| {
-                lines.get(&l.line).map(|why| match why {
+            .filter(|l| unplayed.contains(&l.line))
+            .map(|l| {
+                let why = c.controls.iter().find(|ctl| djlive::diag::line_col(&c.source, djhost::beatscript_render::place_of(c, ctl).0).0 == l.line).and_then(|ctl| perform.why_unplayed(&ctl.key));
+                match why {
                     Some(w) => format!("line {} `{}` ({}: {w})", l.line, l.text, l.kind),
                     None => format!("line {} `{}` ({})", l.line, l.text, l.kind),
-                })
+                }
             })
             .collect();
         let perform = (!perform.is_empty()).then_some(perform);
@@ -442,7 +522,7 @@ impl Controls {
             let text = ctl.span.text(&c.source).lines().next().unwrap_or("").trim().to_string();
             macro_lines.insert(ctl.key.clone(), (line, text));
         }
-        Controls { moves, next: 0, unheard, macro_lines, bpm, sr, macros: Vec::new(), deferred: Vec::new(), perform }
+        Controls { moves, next: 0, unheard, macro_lines, bpm, sr, macros: Vec::new(), deferred: Vec::new(), perform, browser, wheel: true }
     }
 
     fn frame_of(&self, beat: f64) -> i64 {
@@ -514,9 +594,19 @@ impl Controls {
                         let _ = engine.apply_live_op(method, params);
                     }
                     op => {
+                        // the page gives the program's master level to the Wheel too
+                        if let ArrangeOp::Deck(DeckAction::Master(v)) = op {
+                            self.browser.master_level(*v);
+                        }
                         let _ = engine.apply_arrange_op(op);
                     }
                 },
+                Move::Call(t) => {
+                    let m = self.browser.call(engine, &t.call.noun, &t.call.params);
+                    if m.ignored.is_some() {
+                        self.browser.booth(engine, &t.call.noun, &t.call.params);
+                    }
+                }
                 Move::Net(e, beat, key) => {
                     // a macro's call is kept, with where the engine starts it and what it said, for `listen`; a held one's release too
                     let start = match e {
@@ -794,11 +884,16 @@ pub fn drive(c: &Compiled, plan: &Plan, sr: f64, want: i64, ctls: &mut Controls,
     let mut cond = arrangement_conductor(&arr, &opts);
     d.built();
     let _refused = stand_on_start(&mut cond, &arr, None, None);
+    // the first section's sounds, once its nets are in (the page's `sound` ops come after the loads they follow)
+    for (deck, role, opt) in secs.start_sounds() {
+        ctls.browser.sound(cond.engine_mut(), &deck, &role, &opt);
+    }
     d.ready(&mut cond)?;
 
     cond.engine_mut().trace_via = "playback".into();
     let mut next_ev: Option<(i64, ArrangeEvent)> = secs.next().map(|e| (frame_of(e.at), e));
     let mut produced: i64 = 0;
+    let (mut wl, mut wr) = (Vec::with_capacity(BLOCK), Vec::with_capacity(BLOCK));
     while produced < want {
         let frame = cond.engine().frame();
         while let Some((f, _)) = &next_ev {
@@ -819,6 +914,12 @@ pub fn drive(c: &Compiled, plan: &Plan, sr: f64, want: i64, ctls: &mut Controls,
                     let _ = cond.engine_mut().apply_arrange_op(op);
                 }
             }
+            // a section's net loaded: its parts' sounds, as the page sets them once the net is in
+            if let ArrangeOp::Deck(DeckAction::Load { .. }) = &e.op {
+                for (deck, role, opt) in secs.sounds.pop_front().unwrap_or_default() {
+                    ctls.browser.sound(cond.engine_mut(), &deck, &role, &opt);
+                }
+            }
             next_ev = secs.next().map(|e| (frame_of(e.at), e));
         }
         // the control lines due on this frame, after the sections' moves (the desktop's order on a tie)
@@ -831,7 +932,18 @@ pub fn drive(c: &Compiled, plan: &Plan, sr: f64, want: i64, ctls: &mut Controls,
             n = n.min((f - frame).max(1) as usize);
         }
         let (l, r) = cond.step_frames(n);
-        d.block(produced, l, r)?;
+        if ctls.wheel && ctls.browser.wheel_used() {
+            // the Wheel, after the decks, into the master (the worklet's `render`, then the voice's `render_add`)
+            wl.clear();
+            wl.extend_from_slice(l);
+            wr.clear();
+            wr.extend_from_slice(r);
+            ctls.browser.render_add(&mut wl, &mut wr);
+            d.block(produced, &wl, &wr)?;
+        } else {
+            ctls.browser.skip(n);
+            d.block(produced, l, r)?;
+        }
         produced += n as i64;
         d.after(&mut cond, produced);
     }

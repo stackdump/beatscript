@@ -2048,9 +2048,11 @@ impl Marks {
 
 /// What a call sets, as far as one line can supersede another: the noun, its target (or deck) and the effect (`inserts` on
 /// Master, `filter`: `filter.sweep` and `filter on/off` are one slot). None for a call that names no such thing.
-type Slot = (String, String, String);
+/// What a call sets: (noun, target, effect), for an insert or an FX knob (a mixer call has none).
+pub type Slot = (String, String, String);
 
-fn slot_of(c: &Call) -> Option<Slot> {
+/// The slot a call sets, if it has one (`inserts` on a target, an effect or a knob of it).
+pub fn slot_of(c: &Call) -> Option<Slot> {
     let p = &c.params;
     let target = p.get("target").or_else(|| p.get("deck")).and_then(JsonValue::as_str)?;
     let effect = p
@@ -2062,7 +2064,7 @@ fn slot_of(c: &Call) -> Option<Slot> {
 }
 
 /// The slots a line's effect sets when it fires (a ramp's: its prelude's and its own).
-fn effect_slots(e: &Effect) -> Vec<Slot> {
+pub fn effect_slots(e: &Effect) -> Vec<Slot> {
     match e {
         Effect::Calls(cs) => cs.iter().filter_map(slot_of).collect(),
         Effect::Ramp(r) => r.prelude.iter().chain(std::iter::once(&r.at(0.0))).filter_map(slot_of).collect(),

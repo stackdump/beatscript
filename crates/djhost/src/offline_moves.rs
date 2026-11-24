@@ -194,15 +194,27 @@ impl ProgramMoves {
     /// The move lines of `c` in a render of `beats` beats (from the song's first bar line) that `net`, the program's control
     /// net, does not play (a line the net holds is left to it), on the render's `clock`.
     pub fn new(c: &Compiled, beats: f64, net: &djlive::nets::ControlNet, clock: Clock) -> ProgramMoves {
-        let total = (beats / 4.0).ceil().max(0.0) as u32;
         let beside: BTreeSet<&str> = net.residual.iter().map(|(k, _)| k.as_str()).collect();
+        Self::build(c, beats, Some(&beside), clock, false)
+    }
+
+    /// Every move line of `c` on the booth's scheduler, the two the control net could hold (`filter_exit`, `echo_out`) too, so
+    /// each starts on the line after the bar line that armed it, as the booth and the browser's port of it (engine-calls.js
+    /// `MoveScheduler`) start it; the render that uses this plays none of the net's move events. `vocoder`: the render plays the
+    /// vocoder (its `vocoder` lines), so a `vocoder_handoff` swaps it on the deck's phrase line; else it is unplayed, as in [`new`](Self::new).
+    pub fn every(c: &Compiled, beats: f64, clock: Clock, vocoder: bool) -> ProgramMoves {
+        Self::build(c, beats, None, clock, vocoder)
+    }
+
+    fn build(c: &Compiled, beats: f64, beside: Option<&BTreeSet<&str>>, clock: Clock, vocoder: bool) -> ProgramMoves {
+        let total = (beats / 4.0).ceil().max(0.0) as u32;
         let mut lines = Vec::new();
         let mut due = Vec::new();
         let mut played = BTreeSet::new();
         let mut unplayed = Vec::new();
         let mut said = BTreeSet::new();
         for ctl in &c.controls {
-            if !beside.contains(ctl.key.as_str()) {
+            if beside.is_some_and(|b| !b.contains(ctl.key.as_str())) {
                 continue;
             }
             // a performed line is read with every input at 1/2, as everywhere in a render
@@ -227,7 +239,7 @@ impl ProgramMoves {
             };
             let Some(op) = op else { continue };
             if let Op::Arm(s) | Op::Toggle(s) = &op {
-                if let Some(why) = why_not_offline(s) {
+                if let Some(why) = why_not_offline(s).filter(|_| !(vocoder && s.kind == MoveKind::VocoderHandoff)) {
                     let (anchor, text) = crate::beatscript_render::place_of(c, ctl);
                     if said.insert(anchor) {
                         let (line, col) = line_col(&c.source, anchor);

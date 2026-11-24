@@ -3126,13 +3126,17 @@ render has the song's notes, sounds, sections, tempo and mix, not its riser swee
 filter sweep measures a render without it. A program that has no end renders 16 bars unless `--beats` says; a
 performed program renders with every input at 1/2.
 
-`beatscript render` and `beatscript listen` (the site's render) play more: the program's control net (its inserts and ramps, and
-`filter_exit` and `echo_out`, which the net holds), and the other **moves**. Those are armed on the booth's own move
-scheduler (docs/PERFORM.md), on the render's clock and never the wall clock: a `loop_roll` (on a net deck, the beat
-repeat), a `bass_swap`, a `phrase_sync` with `do=cut`, a move with `for N bars`. Each lands as it does in the booth, on
-the next bar or phrase line after its line (the song's lines, counted from its first bar), and a strip it muted is put
-back on the first phrase line after it. Two moves cannot act in a render, and its notes say why: `vocoder_handoff` (a
-render has no vocoder) and a `phrase_sync` that steps a seed (a program's deck plays its own nets, not a seed).
+`beatscript render` and `beatscript listen` (the site's render, and the stems) play a program **as the browser's engine plays
+it** (crates/beatscript-cli/RENDER.md): every control line's registry calls are read by a port of the page's own mapping
+(site/web/js/engine-calls.js `mapCall`, held to it op for op) and played on the same djrust engine calls the page's `Dj`
+makes: the mixer and its ramps and lfos, the insert filter and resonance, reverb and the master crush as the page has
+them, the FX unit's drive, the vocoder, **the Wheel** (the page's own voice), `kit=` / `sound=`, and every **move** on the
+booth's move scheduler (docs/PERFORM.md, which the page's `MoveScheduler` ports), on the render's clock and never the wall
+clock: each lands on the next bar or phrase line after its line (the song's lines, counted from its first bar), as on the
+page, and a strip it muted is put back on the first phrase line after it. What the page does not play yet (a delay, a
+crush on a deck, a `macro` line, a `duck`) the render plays the booth's way. A line neither plays is named in its notes
+(a `phrase_sync` that steps a seed: a program's deck plays its own nets, not a seed). A tempo curve is not followed (the
+render runs at the opening tempo).
 
 ## Tests
 

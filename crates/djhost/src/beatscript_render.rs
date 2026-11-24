@@ -307,7 +307,7 @@ impl NotInRender {
 /// Where a control line is in the text that was compiled, and what to call it: the line itself (a line a `def` of the same text
 /// copies is one place, the def's own line); but a line that came from an **import** has no text of its own here (its span is the
 /// `import`), so it is the call that brought it (one place each), named by the call and the canonical line it made.
-pub(crate) fn place_of(c: &Compiled, ctl: &djlive::compile::Control) -> (usize, String) {
+pub fn place_of(c: &Compiled, ctl: &djlive::compile::Control) -> (usize, String) {
     let own = ctl.span.text(&c.source).lines().next().unwrap_or("").trim();
     if !own.is_empty() && !own.starts_with("import") {
         return (ctl.span.start, own.to_string());
@@ -586,6 +586,109 @@ pub fn control_events(c: &Compiled, bpm: f64, beats: f64, own_lines: bool) -> (V
 /// [`control_events`].
 pub fn mix_events(c: &Compiled, bpm: f64, beats: f64) -> Vec<ArrangeEvent> {
     control_events(c, bpm, beats, false).0
+}
+
+/// One registry call a control line makes, on the render's timeline: what the live runtime would hand its host on that beat.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TimedCall {
+    /// Beats from the song's first bar line.
+    pub beat: f64,
+    /// 0: a hold ends and the line is put back; 1: the line fires; 2: a moving value is looked at (the order on one beat).
+    pub phase: u8,
+    /// The control's index in `Compiled::controls`, and its key.
+    pub control: usize,
+    pub key: String,
+    pub call: Call,
+}
+
+/// Every registry call the program's control lines make that `keep` takes, in the order the runtime makes them, on the beats
+/// [`control_events`] puts its own on: a line's calls on each beat it fires (a ramp's or an lfo's setup first), its put-back
+/// where a `for` hold ends, and a ramp's or an lfo's value sampled on the same grid and thinned by the same rule (the runtime's
+/// `RAMP_EPS`, an lfo's own fraction of its depth), the leaps of a step shape and the last value exact. Whatever the noun: this
+/// is how a render plays the lines the arrangement format has no op for (an insert, the FX unit, the vocoder, the Wheel) the
+/// way a host that takes the calls themselves (the browser's engine) hears them. `duck` and `mix` lines are not calls here
+/// (the arrangement carries them). A performed line is read with its inputs at 1/2, as everywhere in a render. Calls at or
+/// after `beats` are left out.
+///
+/// A line that fires on a bar line is the last word on what it sets (the runtime's `fire_bar`): a ramp that began before it on
+/// the same insert or knob ends there, without its last value (the riser's `master: filter hp 100 -> 5000 over 8 bars` that
+/// reaches its end on the very bar line the next section's `master: filter off` is on).
+pub fn control_calls(c: &Compiled, beats: f64, keep: &dyn Fn(&Call) -> bool) -> Vec<TimedCall> {
+    let total = (beats / 4.0).ceil() as u32;
+    let mut out: Vec<TimedCall> = Vec::new();
+    let any = |cs: &[Call]| cs.iter().any(keep);
+    let resolved = |ctl: &djlive::compile::Control| match &ctl.effect {
+        Effect::Performed(p) => p.at_half(),
+        other => Some(other.clone()),
+    };
+    // the slots each bar line's lines set (lines on a bar line only: the runtime's `fire_bar`; a time between bar lines is not
+    // the last word on anything)
+    let mut on_bar: BTreeMap<i64, BTreeSet<djlive::runtime::Slot>> = BTreeMap::new();
+    for ctl in &c.controls {
+        if !matches!(ctl.timing, Timing::Now | Timing::At(_) | Timing::Every(_) | Timing::EveryFrom(..) | Timing::NextMult(_)) {
+            continue;
+        }
+        let Some(e) = resolved(ctl) else { continue };
+        let slots = djlive::runtime::effect_slots(&e);
+        if slots.is_empty() {
+            continue;
+        }
+        for at in fire_pos(ctl.timing, total) {
+            if let Some(l) = at.as_int() {
+                on_bar.entry(l).or_default().extend(slots.iter().cloned());
+            }
+        }
+    }
+    // where a ramp that began at `start` (beats) is ended by a line on its slot: the first such bar line after it
+    let ended_at = |r: &Ramp, start: f64| -> f64 {
+        let Some(slot) = djlive::runtime::slot_of(&r.at(0.0)) else { return f64::INFINITY };
+        on_bar.iter().find(|(l, s)| (**l as f64) * 4.0 > start + 1e-9 && s.contains(&slot)).map_or(f64::INFINITY, |(l, _)| *l as f64 * 4.0)
+    };
+    for (i, ctl) in c.controls.iter().enumerate() {
+        let Some(e) = resolved(ctl) else { continue };
+        let takes = match &e {
+            Effect::Calls(cs) => any(cs),
+            Effect::Ramp(r) => any(&r.prelude) || keep(&r.at(0.0)),
+            Effect::Lfo(l) => any(&l.prelude) || keep(&l.call_at(0.0)),
+            Effect::Duck(_) | Effect::Mix(_) | Effect::Performed(_) => false,
+        } || any(&ctl.undo);
+        if !takes {
+            continue;
+        }
+        let mut push = |beat: f64, phase: u8, call: &Call| {
+            if beat < beats && keep(call) {
+                out.push(TimedCall { beat, phase, control: i, key: ctl.key.clone(), call: call.clone() });
+            }
+        };
+        let fires = fire_pos(ctl.timing, total);
+        let at: Vec<f64> = fires.iter().map(|r| r.to_f64() * 4.0).collect();
+        for (k, &b) in at.iter().enumerate() {
+            match &e {
+                Effect::Calls(cs) => cs.iter().for_each(|x| push(b, Phase::Fire as u8, x)),
+                Effect::Ramp(r) => r.prelude.iter().for_each(|x| push(b, Phase::Fire as u8, x)),
+                Effect::Lfo(l) => l.prelude.iter().for_each(|x| push(b, Phase::Fire as u8, x)),
+                _ => {}
+            }
+            if let Some(h) = ctl.hold {
+                if let Ok(back) = fires[k].add(h.as_bars()) {
+                    let bb = back.to_f64() * 4.0;
+                    ctl.undo.iter().for_each(|x| push(bb, Phase::Back as u8, x));
+                }
+            }
+            let cut = at.get(k + 1).copied().unwrap_or(f64::INFINITY);
+            let moving = match &e {
+                Effect::Ramp(r) => ramp_samples(r, b, cut.min(ended_at(r, b)), beats),
+                Effect::Lfo(l) => lfo_samples(l, ctl.hold, b, cut, beats),
+                _ => Vec::new(),
+            };
+            for (p, call) in moving {
+                push(p, Phase::Sample as u8, &call);
+            }
+        }
+    }
+    // (stable: a line's calls keep their order on a beat)
+    out.sort_by(|a, b| a.beat.total_cmp(&b.beat).then(a.phase.cmp(&b.phase)).then(a.control.cmp(&b.control)));
+    out
 }
 
 // ---- a performance, replayed offline (F13)

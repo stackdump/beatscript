@@ -12,7 +12,8 @@ name = "beatscript"
 path = "src/main.rs"
 
 [dependencies]
-beatscript-api = { path = "../beatscript-api" }
+# with the Wheel (its `wheel` feature): a render plays `wheel` lines on the very voice the page plays them on (src/browser.rs)
+beatscript-api = { path = "../beatscript-api", features = ["wheel"] }
 beatscriptls = { path = "../beatscriptls" }
 djengine.workspace = true
 djhost.workspace = true

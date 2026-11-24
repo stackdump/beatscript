@@ -151,6 +151,9 @@ enum Solo {
     All,
     Part(String, String),
     Deck(String),
+    /// The Wheel alone (`wheel.wav`): every deck's lanes at level 0, the Wheel added as the page adds it to the master. Every
+    /// other stem leaves it out, so the stems still add up to the master.
+    Wheel,
 }
 
 /// The deck's peak limiter in a pass (`djengine::fx::GainTap`): the master pass records the gain it gave the mix,
@@ -233,6 +236,7 @@ impl Pass<'_> {
                         Solo::All => true,
                         Solo::Deck(sd) => sd == d && net != "<live>",
                         Solo::Part(sd, role) => sd == d && ids.get(net).is_some_and(|g| g == role),
+                        Solo::Wheel => false,
                     };
                     let kept: Vec<bool> = p.lanes().iter().map(|l| keep(&l.net_id)).collect();
                     for (lane, k) in p.lanes_mut().iter_mut().zip(kept) {
@@ -335,6 +339,8 @@ impl Job {
         let bpm = self.plan.bpm;
         let sr = self.sr;
         let mut ctls = Controls::new(&self.c, self.plan.program_bars, sr);
+        // the Wheel is in the master and in its own stem, and in no deck's or part's
+        ctls.wheel = matches!(solo, Solo::All | Solo::Wheel);
         let mut p = Pass { decks: self.decks.clone(), solo, curve, io_err: None, collect, spt: sr * 60.0 / (bpm * 4.0), bpm, gens: BTreeMap::new(), played: Vec::new(), out };
         drive(&self.c, &self.plan, sr, self.want, &mut ctls, &mut p)?;
         if let Curve::Record(files) = &mut p.curve {
@@ -515,11 +521,15 @@ pub fn stems(text: &str, o: &ExportOptions, dir: &Path, progress: &mut (dyn FnMu
     // the decks' and the parts' renders: independent of each other, so side by side on `threads`
     let mut jobs: Vec<(String, &'static str, Solo)> = j.decks.iter().map(|d| (format!("deck-{d}.wav"), "deck", Solo::Deck(d.clone()))).collect();
     jobs.extend(e.parts.iter().map(|p| (p.file(), "part", Solo::Part(p.deck.clone(), p.role.clone()))));
+    // a program that plays the Wheel: its own stem (it is no deck's: the page adds it to the master after the decks)
+    if plays_wheel(&j.c) {
+        jobs.push(("wheel.wav".into(), "wheel", Solo::Wheel));
+    }
     let run = |(f, _, solo): &(String, &'static str, Solo)| -> Result<(), RenderError> {
         let mut w = WavOut::create(&dir.join(f), o.sr)?;
         let curve = match solo {
             // the deck's own runner plays its whole mix: its limiter is the master's as it is
-            Solo::Deck(_) | Solo::All => Curve::Off,
+            Solo::Deck(_) | Solo::All | Solo::Wheel => Curve::Off,
             Solo::Part(..) => {
                 let mut rep = BTreeMap::new();
                 for d in &j.decks {
@@ -564,10 +574,14 @@ pub fn stems(text: &str, o: &ExportOptions, dir: &Path, progress: &mut (dyn FnMu
     let mut part_files = Vec::new();
     for (f, kind, _) in &jobs {
         e.files.push((f.clone(), kind));
-        if *kind == "deck" {
-            deck_files.push(dir.join(f));
-        } else {
-            part_files.push(dir.join(f));
+        match *kind {
+            "deck" => deck_files.push(dir.join(f)),
+            // the Wheel is in both sums: the decks and the parts add up to the master with it
+            "wheel" => {
+                deck_files.push(dir.join(f));
+                part_files.push(dir.join(f));
+            }
+            _ => part_files.push(dir.join(f)),
         }
     }
     for d in &j.decks {
@@ -646,7 +660,7 @@ pub fn manifest(e: &Exported) -> String {
         (
             "stems",
             JsonValue::Object(JsonObject::from_pairs(vec![
-                ("method", JsonValue::str("each stem is the render with every other part's lanes at level 0: ducking, modulation and the deck's own effects still run")),
+                ("method", JsonValue::str("each stem is the render with every other part's lanes at level 0: ducking, modulation and the deck's own effects still run; a program's Wheel is in the master and in wheel.wav only")),
                 ("master_fx", JsonValue::str("applied per stem: the master chain (and each deck's output stage) is applied to every stem as to the mix")),
                 ("master_fx_lines", JsonValue::Array(e.master_fx.iter().cloned().map(JsonValue::str).collect())),
                 ("sum_check_on", JsonValue::str("the 32-bit float WAVs, before any encoding")),
@@ -863,6 +877,14 @@ pub fn zip(dir: &Path, files: &[String], wrap: &str, out: &mut dyn Write) -> std
     Ok(off + central.len() as u64 + end.len() as u64)
 }
 
+/// Whether `c` has a `wheel` line: its stems then have the Wheel's own (`wheel.wav`).
+fn plays_wheel(c: &Compiled) -> bool {
+    c.controls.iter().any(|ctl| match ctl.effect.base() {
+        djlive::compile::Effect::Calls(cs) => cs.iter().any(|x| x.noun == "wheel"),
+        _ => false,
+    })
+}
+
 /// The bundle's files in zip order: the manifest and the MIDI first (small: a reader sees what it is at once), then
 /// the master, the decks, the parts.
 pub fn bundle_order(e: &Exported) -> Vec<String> {
@@ -871,7 +893,8 @@ pub fn bundle_order(e: &Exported) -> Vec<String> {
         "midi" => 1,
         "master" => 2,
         "deck" => 3,
-        _ => 4,
+        "wheel" => 4,
+        _ => 5,
     };
     let mut v: Vec<(usize, usize, String)> = e.files.iter().enumerate().map(|(i, (f, k))| (rank(k), i, f.clone())).collect();
     v.sort();

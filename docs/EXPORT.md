@@ -63,6 +63,7 @@ beatscript-<CID12>/song.mid
 beatscript-<CID12>/master.wav
 beatscript-<CID12>/deck-A.wav  deck-B.wav
 beatscript-<CID12>/A-kick.wav  A-hihat.wav  A-bass.wav  B-arp.wav ...
+beatscript-<CID12>/wheel.wav      (a program with `wheel` lines)
 ```
 
 WAV is 32-bit float stereo at the render's rate (44.1 kHz; `stems-opus` is the same bundle with every stem as Ogg Opus
@@ -76,6 +77,10 @@ true-peak limiter, the one nonlinear stage of the path: the master pass records 
 (`djrust::fx::GainTap::Record`) and every part's pass replays that gain (`Replay`). So a stem is its part **as it sat
 in the mix**: the limiter's movement, the deck's strip, and **the master's effects (a `master: filter ...`) are
 applied per stem**, as they are to the mix. The manifest lists the program's master lines.
+
+**The Wheel** (a program's `wheel` lines) is no deck's: the render adds it to the master after the decks, as the page
+does. It is in `master.wav` and in a stem of its own, `wheel.wav` (every deck's lanes at level 0, the Wheel through the
+master's reverb, crush and level as in the mix), and in no deck's or part's stem; both sum checks include it.
 
 **The sum check.** After the passes the exporter adds the stems up, sample by sample, from the files, against the
 master, and writes the result into the manifest (`parts_sum_check`, `decks_sum_check`: peak, largest difference,
@@ -111,5 +116,7 @@ master, decks, parts), the manifest's keys in a fixed order, the MIDI's events s
 
 - **A tempo curve in the audio.** The site's render plays a program at its opening tempo; the MIDI file has the
   curve (the manifest's `tempo_curve` and its notes say so).
-- **Control lines the render does not hear** (see the render's own notes): not in the stems either.
+- **Control lines the render does not hear** (see the render's own notes): not in the stems either. The render plays
+  a program's control lines as the browser's engine plays them (crates/beatscript-cli/RENDER.md), so the stems are what
+  the page plays.
 - **Samples and loops** (`sample` / `loop "..." as`) and restricted programs are not rendered, so not exported.
