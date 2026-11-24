@@ -229,7 +229,7 @@ It answers any window that can post to it. The capability tools still act only a
 
 | target | kinds | engine runs? | what you get | status | how it is tested |
 |---|---|---|---|---|---|
-| Claude artifact | player, studio | yes: artifacts allow `'wasm-unsafe-eval'` | a page with the player, or the whole studio with the viewer's capabilities | works | `site/test/player-csp.mjs` and `site/test/studio-csp.mjs`: under an artifact's CSP in headless Chrome; `site/test/studio-tools.test.mjs`: the tools against fakes of the capabilities |
+| Claude artifact | player, radio, studio | yes: artifacts allow `'wasm-unsafe-eval'` | a page with the player, a station with `<beatscript-radio>`, or the whole studio with the viewer's capabilities | works | `site/test/player-csp.mjs`, `site/test/player-radio.mjs` (the `artifact` tool's station page, its SRI checked, no gap across a track change) and `site/test/studio-csp.mjs`: under an artifact's CSP in headless Chrome; `site/test/studio-tools.test.mjs`: the tools against fakes of the capabilities |
 | any web page (the element) | player, studio | yes | `<beatscript-track>` or `<beatscript-studio>`; `<beatscript-player>` from `embed.js` for a stored program | works | `player-csp.mjs` (beside the page and from a second origin, as from a CDN), `studio-csp.mjs`; `site/test/unit.mjs` runs `embed.js` |
 | iframe | player | yes, in the frame | the site's player, `/embed/<CID>` | works | `crates/beatscript-serve/tests/embed_routes.rs`, `deploy/live-checks.sh` |
 | oEmbed (WordPress, Discourse, Notion, Ghost) | player, card | yes, in the frame | a pasted link becomes the iframe | works | `embed_routes.rs`, `deploy/live-checks.sh` |
@@ -441,13 +441,15 @@ With target `artifact` it gives the page and the `capabilities` to publish it wi
 
 For one program as one page to publish, the `artifact` tool is the short form. It takes `text`, `cid` or `example`, and
 answers a page that plays with the player from jsDelivr, pinned by version and SRI, or with the site's Opus render
-carried inline.
+carried inline. With `station` (a station's text, the CID of a stored one, or the name of an example that is a station)
+and `n`, it answers a radio page instead: `<beatscript-radio>` from the same package, the station's tracks computed in the
+page (docs/beatscript/radio.md, "A station on any page"), pinned by its own lock, `radio-cdn.lock.json`.
 
 ## Not yet
 
 - An iframe of the studio: the site frames only `/embed/`.
 - Knobs and the mixer.
-- A station in the studio: this build's engine has no station answer (`beatscript_station`), so the studio says so and points at /radio. A CID alone in the studio or the player: neither fetches anything, so give the text too.
+- A station in the studio, or in an `embed` config: the studio says so and points at /radio; `<beatscript-radio>` (and the `artifact` tool's `station`) plays one. A CID alone in the studio or the player: neither fetches anything, so give the text too.
 - A set or playlist as one embed on the site (`/embed/set/<id>`). The player plays a set's first item.
 - The `embed` tool's `audio` target with the render inline; it links it by URL. The `artifact` tool carries it inline.
 - The artifact player page with `audio` `render`, `highlight`, `theme` or `compact`.

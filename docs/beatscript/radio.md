@@ -273,6 +273,39 @@ land a new program at its own bar 0 on a bar line (as a scene does), which is no
 (a hot reload, as Cmd+Enter in the editor), the row says "edited" with the edit's CID, "back to station" puts the track back, and
 "keep my version" puts a link to the edit in the clipboard.
 
+## A station on any page: `<beatscript-radio>`
+
+The player package, `@stackdump/beatscript-player` from 0.4.0 (`site/player`), has the radio as an element beside
+`<beatscript-track>`, made for a page with a strict Content Security Policy, such as a Claude artifact:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.4.0/beatscript-radio.js"></script>
+<beatscript-radio station="tempo 128&#10;key am&#10;station {&#10;  from gen@2 techno seed=42&#10;  next seed=~&#10;}&#10;"></beatscript-radio>
+```
+
+- **No server.** A station's tracks are deterministic from its text, so the element computes them in the page with the
+  engine's own station answer (the wasm's `beatscript_station`, the function behind `POST /api/station`). Nothing is fetched
+  from beatscript.app; its links there are plain links. It stores nothing: no cookies, no localStorage.
+- **What it is**: the `/radio` page's player on the same models (`station-model.js` for the knobs, the answer and the play
+  order, `handoff-model.js` for what is next and its CC0 bridges, `playlist-model.js` and `queue-model.js` for the rows and the
+  presence pause, `driver.js`): a transport, now playing, the section and bar, the tempo and key, a level meter, the playlist
+  of the station's next tracks (and the segue after the one playing) with each row's status, and the peek drawer. It has no
+  queue and no renders: it plays every item live in the page.
+- **Never dead air, and no gap.** The next item is compiled while the current one plays and primed on an engine of its own:
+  its nets installed, its decks held. Half a beat before the current item's last bar line (or at once, on Next) the held
+  decks are let go, and the outgoing engine fades out over 120 ms under the incoming one. When the next item is not ready
+  in time, the bridge plays, as on `/radio`. `site/test/player-radio.mjs` measures it: across every track change, no
+  silence on the element's output longer than one 1024-frame buffer.
+- **Attributes**: `station` (the text, or its CID with the text in a child `<script type="text/beatscript">`), `cid` (the CID the
+  text must have), the knobs `genre`, `seed`, `step`, `forms`, `tempo`, `key` and `length` (each a retune before it plays),
+  `locks`, `n` (the position), `segues="off"`, `autoplay` (off by default: a Claude artifact needs a click), `compact`,
+  `theme` and `site`. Its README has them in full.
+
+The MCP `artifact` tool makes the page: `{"station": "<the station's text>"}` (or the CID of a station stored on the site,
+or the name of an example that is one; `n` for the position) answers a whole HTML page with `<beatscript-radio>` from jsDelivr,
+pinned to one exact version with Subresource Integrity on every module, the station's text and the CID it must have. Publish
+it as it is.
+
 ## An example station: techno radio
 
 `examples/beatscript/techno-radio.beatscript` is the station at the top of this note: techno from the seeded generator v2, seed 42,

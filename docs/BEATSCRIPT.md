@@ -2626,7 +2626,7 @@ station {
 
 **Radio:** a station is an endless program, track N always the same: `station { }` holds `from gen@2 techno seed=42` (the
 first call), `next seed=~` (the step) and `forms seeded rondo fugue` (track N's form, in turn); the MCP `station` tool and
-`POST /api/station` give track `n`, its segue and its neighbours: https://beatscript.app/docs/radio.md
+`POST /api/station` give track `n`, its segue and its neighbours; MCP `artifact` with `station` makes a radio page: https://beatscript.app/docs/radio.md
 
 ## Restricted sounds: local samples (design note)
 
