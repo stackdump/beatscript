@@ -1,0 +1,155 @@
+{
+ "_comment": "The MCP artifact tool's station page (src/mcp/artifact.rs StationPage) loads <beatscript-radio> from this package on jsDelivr: the entry as a module script with this integrity and crossorigin=anonymous, and every other module it imports through an import map's integrity, so a changed file anywhere in the graph refuses to run. Pinned to an exact version, never a range, a tag or latest; a lock of its own (player-cdn.lock.json pins <beatscript-track>'s pages, the VS Code preview's and the Jupyter embed's), so the radio can move to a new version without moving them. artifact::tests hold the page to this lock (BEATSCRIPT_RADIO_PLAYER_DIR=<unpacked package> also checks the bytes). To move it: publish a new version, then run crates/beatscript-serve/deploy/player-cdn-lock.py VERSION <unpacked package> --radio --jsdelivr.",
+ "package": "@stackdump/beatscript-player",
+ "version": "0.4.0",
+ "entry": "beatscript-radio.js",
+ "source": "the staged publish tarball stackdump-beatscript-player-0.4.0.tgz (sha256 f1a3f9abe7dff1534563ed2ea4fc566f1506c3342e0e8897f4080bc242cd2c9d, built from 7a286c7): its bytes are what the registry and jsDelivr serve once it is published, so the page's SRI holds then; re-run with --jsdelivr after the publish to confirm byte for byte",
+ "tarball_integrity": "sha512-omgL/LvXwql4WQ0NJV8uJdHcs14IC1uu86M5gzL2ToIfTAaWPbm5hoFvfF4d3mQ97YWCVor64NbMIGETgU4CWQ==",
+ "files": {
+  "beatscript-radio.js": {
+   "integrity": "sha384-FcQTQA6+xImkAwUU64dJh+BaOPsyovqaeQEEEnuhNboZPP8Mh2QlCyP/6N69Vghi",
+   "sha256": "fffdbfa62f6e09ff3ca66af843e324d302bf9d96356b5329fef795bc7337c8ad",
+   "bytes": 44876
+  },
+  "beatscript-render.js": {
+   "integrity": "sha384-DFT911SEgTa1XDEgYZy2U5KMFwbQNSLfCKxCeutt+QSroocDeqaRLf15v1NlJ0vs",
+   "sha256": "38478436008069f459a0ae5b4e395a3e6dd9908f388b734c8d5b7491f80b0cfc",
+   "bytes": 470
+  },
+  "beatscript-track.js": {
+   "integrity": "sha384-BHMaEJj1kAqPcjLbdMENe8+nu6LJYEAocLwmkNlDpJnyPmFZvm4eBIeGYcNydH1T",
+   "sha256": "04d3bb71434f8c92c633904f8afba5d19734519ed77c87f2100aa68228ea08b5",
+   "bytes": 29992
+  },
+  "beatscript-track.umd.js": {
+   "integrity": "sha384-BFmeZkF5eDDEJzIfDCl8jbuvI8dnnNeijcPQFsD800deWrcgwJbiLoI5GZrlzB96",
+   "sha256": "41dc822b0e4b72fa6140a73a0f6ae547b8e1d89403e8f76f414647b4201512cb",
+   "bytes": 1384
+  },
+  "embed-config.js": {
+   "integrity": "sha384-MSWPNqsPS7ku5tU/s5121wdaF7Zz+nsU4e9Cs04v9g9r/Ou8PpQtUMw/Ugk8O/gq",
+   "sha256": "e221a82657181505ff190c2805e857ff633f573b62f98f32a9a8ff96a10d571f",
+   "bytes": 29743
+  },
+  "js/driver.js": {
+   "integrity": "sha384-Id06CywKQrh3HN5NPjY7YHDoqQTQbDH/0tLmePciJA7slcSDEzpEGEsH69hfVZWO",
+   "sha256": "64d152ba8a19af91254408ef1c5f660bf2ccac8873bcb88beb28aee41c76e0f9",
+   "bytes": 6443
+  },
+  "js/embed-model.js": {
+   "integrity": "sha384-2bMFrpO2YPKzlfzdHUR4OD3DKxm49b12NifeekjL4t2fCa5so0si3re5fb+ptBIg",
+   "sha256": "8755fc1bf6bb713d29e767e5b2c786b95c049101e12a8b5075fdf08cdc1e707d",
+   "bytes": 2136
+  },
+  "js/engine-calls.js": {
+   "integrity": "sha384-d3W+6o52Kzjh73Bv04AAUiRi1rKzbl8niG+I2SRcBKZC/7nXw/mYeDFFmTFoBui+",
+   "sha256": "9b9c8ee22564174de6e67b8df4ae1579f31aed3e389d1d298dae51f46ed402bf",
+   "bytes": 13710
+  },
+  "js/engine-composer.js": {
+   "integrity": "sha384-baeA8bwSFJjWBZmOsmk63naQ4GfX34zbGyQedLuQ6evoKyVPGZ5B4ZwbD8HPTpdi",
+   "sha256": "4ea0c0cf656c9dbb76955eeac622a25293ab97e7d963233bb353b259d7062de8",
+   "bytes": 1815
+  },
+  "js/engine-polyfill.js": {
+   "integrity": "sha384-ZDXMDcLeHV5uWZI/7YPKLBt8f86R1Hjb5ksiScaDaf/bmETYAhRC29QVX64EcOm2",
+   "sha256": "535366bbc70a4ec7b777bec2b93be875add30fbad7a6e9c826cf7b97ae65b8ae",
+   "bytes": 5384
+  },
+  "js/engine-worklet.js": {
+   "integrity": "sha384-3O6g7AHJbnYYiSe/OCz+ev29Wk83lHKXVU+6Ns0Lste8ttsZsXAhd1/MG6RAaZ7U",
+   "sha256": "3ae7288ab8c534e66da94627e2758ba38b606747345f0ad7ce1a6fa0d1f2d082",
+   "bytes": 14631
+  },
+  "js/engine.js": {
+   "integrity": "sha384-YvQpqtS1OpdWDPjraaMIf5rQ1AqmOd+0HXZuSgNzep9AwiA+gi90eQWvZ2p+8Wds",
+   "sha256": "a0f8ca543e26821870bb3ce18d82496b2f990c7671749253a713055187505511",
+   "bytes": 25910
+  },
+  "js/handoff-model.js": {
+   "integrity": "sha384-aDX/QwhgVZ+a24P9GWcwx3AkWVSjmCfj3/59FfexzWwiSjqpxkHIWP0NHXJCSP4O",
+   "sha256": "98e45c6df365fbc0f77a4cf39cee1ab045d068c42a3c7fc004146fc90d097972",
+   "bytes": 9752
+  },
+  "js/highlight.js": {
+   "integrity": "sha384-DntO3RkbEUrpuy4ps1tV1uRm3Jixxj7A5SJHTVOHfbDGr4XKU5NGPYN5HvkH1sSG",
+   "sha256": "ec3be015ae3ab4888a972ad38615072b4bbc54e63f4c987ae429ca67494f643f",
+   "bytes": 2398
+  },
+  "js/mixer-model.js": {
+   "integrity": "sha384-3VluHJuwCDuhaotOqq616HSWXpyfHrtrl20e/aeatY4YXKX70sRonCntsCbhvQpk",
+   "sha256": "dafefb4f22c7d32fcb9e461ad399dbf1841fd51f6f9b5fe7f7b93daa2e45f4e5",
+   "bytes": 1176
+  },
+  "js/playlist-model.js": {
+   "integrity": "sha384-NmafUDYeA2oqdJ5LJSb2WrK3lubdBSWd2z8sJ0laPiLhXUziDAubJzQy0G4k9IIz",
+   "sha256": "39e9b9415f5771c47003c419f8cda0722dcdb45bdb74df092b906e388c0e517a",
+   "bytes": 13997
+  },
+  "js/queue-model.js": {
+   "integrity": "sha384-QrWi0YIeynQWr8q11PpOAgFjtuElgNkZtAuD467fHFnhAgwaLq4VOq3gHfgouksZ",
+   "sha256": "fdfb92f354068c3534e03f1857cfb40fd9e947b4cb347dcf99483c71623945af",
+   "bytes": 9908
+  },
+  "js/render-client.js": {
+   "integrity": "sha384-3aD1M2azaXHpzjTg+cgpLon3QyYLPPECT1fQGLr/u6Q1Bx5/u8jaLOuVfvG6A8i9",
+   "sha256": "725586fac8bd81578fa7b4310ae538e5f9d51f193b1da0ce7e95604bb3a3761e",
+   "bytes": 8501
+  },
+  "js/render-model.js": {
+   "integrity": "sha384-hNCprqGhaqYyPyzo6HybZ+Vbo0yEMgQcMmd4xRV3grMJIR/0+NAMtvMzibuPGlVk",
+   "sha256": "4705f2de23ec99adad6a5069ad35a9927e6d73114a5bdec10a701fb0444c16ff",
+   "bytes": 5379
+  },
+  "js/render-worker.js": {
+   "integrity": "sha384-Gi5ura78nXA0dLKcJE2hi1ng1VnoD0BSmEkP89uiCzTb56ai9gHk/Jeu0RsiKKaW",
+   "sha256": "2f59b77f47f37b16a45798b5aac3b9a5bf558ba8fa8157c8644ca2c3b2b12bf3",
+   "bytes": 1313
+  },
+  "js/render.js": {
+   "integrity": "sha384-m/1bRW9Rk172CuaVKcP1zx0vuIkF0wdbhXa2/0Ezw7WpnRBSgqkQnblcUjxxrYKw",
+   "sha256": "26c78bffceedcbddafc00b9173fdab9b8c2cef02864525dbcab37bb20b3aa4e0",
+   "bytes": 11223
+  },
+  "js/station-model.js": {
+   "integrity": "sha384-9uacvuUrA2RZq4KrDuDw73XIXmZkcGBSn+cz4v8cwienrcgyxuM9TxK7mnw+CTAT",
+   "sha256": "2c8d1f0617631c55e6a1c7bf65083ac6df4f0f297a677cb1ee304fdbeada9aed",
+   "bytes": 31959
+  },
+  "js/util.js": {
+   "integrity": "sha384-l7f0LTebsCE9QaQWxS2x5oV6qYQNUc+vpW+guG20CaMNvSmx1y2uBsUd/nY57fRT",
+   "sha256": "008db5d53de44454e995d8fa6091b55c6001b938f85d07151a96bd9c3a27314c",
+   "bytes": 6234
+  },
+  "js/version.js": {
+   "integrity": "sha384-0JtfQGiesnXXRNalVwtZvidCODVWfw5Dk2jXNqT96T3330guC/XwiJcju2oYoUhR",
+   "sha256": "c95a4d731fcf2d760a4479934069197c4454146abe4ecfb164f4330c2c909a1d",
+   "bytes": 2031
+  },
+  "js/wasm-mock.js": {
+   "integrity": "sha384-J28/x6FFiw7upTBQlB9e6Egq3NHNScB9iAl7yzrSlMGyC6w/2BqveVB1YwAANqnX",
+   "sha256": "ec4ab41bd376475777436ec67907d245fd5952a289eef912c5a3c5666ea79e39",
+   "bytes": 39010
+  },
+  "js/wasm.js": {
+   "integrity": "sha384-jlsQ8Dj+qDMfm46HaSIXnh6LU86oRXPBQSOjvpvQc6BhhanJiTwfppwWLAYpZm+P",
+   "sha256": "cd032b515582aaf30130095fcc3d69dda69101faa91fb06ba8f08873582cbf89",
+   "bytes": 7110
+  },
+  "render-model.js": {
+   "integrity": "sha384-39uzNQWa1ST290s+IWHBpwXM0PzPHzpynEm7O896zDanAc7awDzBAY2gnhqu6sNz",
+   "sha256": "216ce3d85f1d14aff99a2c9d472a190a612bf409b5656142df5a6a102ae181aa",
+   "bytes": 254
+  },
+  "wasm/beatscript.js": {
+   "integrity": "sha384-cp/1klCH/CCGzksh4mSZI54zGvbmzdRR6Cqm+BznwolsLtf5asQ9UCdWVxVrtJf0",
+   "sha256": "919a5df5d82c80462d0294acd7ec8a6eef7c78f2afc441103538cb247efafb68",
+   "bytes": 68368
+  },
+  "wasm/beatscript_bg.wasm.b64.js": {
+   "integrity": "sha384-W6oVEouVqgTkqRLEhcpCFsA96IM1CwOVhhn+UdQXVnhum04UqvdVj9U4LFoXFDpT",
+   "sha256": "d9cf778c3600b380d085aed683e7078220a79b9d69512ade1b1a37dfc348ae7a",
+   "bytes": 11608999
+  }
+ }
+}

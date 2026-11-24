@@ -18,6 +18,11 @@ use serde_json::{json, Value};
 use super::{bad, is_cid, name_ok, needs_fixing, private, q, sprop, tool, Args, Caller, Fail, Rep, Text, Tools, CID_PAT, NAME_PAT};
 
 const LOCK: &str = include_str!("player-cdn.lock.json");
+/// The station page's pin (`<beatscript-radio>`, from 0.4.0): a lock of its own, so that the radio moves to a new
+/// version of the package without moving `<beatscript-track>`'s pages (and the VS Code and Jupyter copies of that lock).
+const RADIO_LOCK: &str = include_str!("radio-cdn.lock.json");
+/// The radio element's file in the package: the entry of a station page (radio-cdn.lock.json's).
+pub const RADIO_ENTRY: &str = "beatscript-radio.js";
 const JSDELIVR: &str = "https://cdn.jsdelivr.net/npm/";
 /// audio "inline": the most base64 a page carries (above it, the page plays with the engine instead).
 pub const MAX_INLINE_B64: usize = 6 << 20;
@@ -36,14 +41,23 @@ pub struct PlayerCdn {
 }
 
 impl PlayerCdn {
+    /// `<beatscript-track>`'s pin (player-cdn.lock.json).
     pub fn get() -> &'static PlayerCdn {
         static P: std::sync::OnceLock<PlayerCdn> = std::sync::OnceLock::new();
-        P.get_or_init(|| {
-            let v: Value = serde_json::from_str(LOCK).expect("player-cdn.lock.json");
-            let s = |k: &str| v[k].as_str().unwrap_or_else(|| panic!("player-cdn.lock.json: {k}")).to_string();
-            let files = v["files"].as_object().expect("player-cdn.lock.json: files").iter().map(|(f, x)| (f.clone(), x["integrity"].as_str().expect("integrity").to_string())).collect();
-            PlayerCdn { package: s("package"), version: s("version"), entry: s("entry"), files }
-        })
+        P.get_or_init(|| Self::parse(LOCK, "player-cdn.lock.json"))
+    }
+
+    /// `<beatscript-radio>`'s pin (radio-cdn.lock.json): its entry is [`RADIO_ENTRY`].
+    pub fn radio() -> &'static PlayerCdn {
+        static P: std::sync::OnceLock<PlayerCdn> = std::sync::OnceLock::new();
+        P.get_or_init(|| Self::parse(RADIO_LOCK, "radio-cdn.lock.json"))
+    }
+
+    fn parse(lock: &str, name: &str) -> PlayerCdn {
+        let v: Value = serde_json::from_str(lock).unwrap_or_else(|_| panic!("{name}"));
+        let s = |k: &str| v[k].as_str().unwrap_or_else(|| panic!("{name}: {k}")).to_string();
+        let files = v["files"].as_object().unwrap_or_else(|| panic!("{name}: files")).iter().map(|(f, x)| (f.clone(), x["integrity"].as_str().expect("integrity").to_string())).collect();
+        PlayerCdn { package: s("package"), version: s("version"), entry: s("entry"), files }
     }
 
     /// The jsDelivr URL of one file of the pinned version.
@@ -57,21 +71,32 @@ impl PlayerCdn {
 
     /// The JavaScript modules the entry can import (every `.js` but the entry and the UMD wrapper).
     fn modules(&self) -> impl Iterator<Item = &(String, String)> {
-        self.files.iter().filter(|(f, _)| f.ends_with(".js") && *f != self.entry && !f.ends_with(".umd.js"))
+        self.modules_of(&self.entry)
+    }
+
+    /// The JavaScript modules `entry` can import: every `.js` but it and the UMD wrapper (the radio's entry imports
+    /// beatscript-track.js, for the module loader the two elements share).
+    fn modules_of<'a>(&'a self, entry: &'a str) -> impl Iterator<Item = &'a (String, String)> + 'a {
+        self.files.iter().filter(move |(f, _)| f.ends_with(".js") && f != entry && !f.ends_with(".umd.js"))
     }
 
     /// The import map and the entry's script tag, in that order (an import map must come before any module script).
     pub fn tags(&self) -> String {
+        self.tags_for(&self.entry)
+    }
+
+    /// [`Self::tags`] with another file of the package as the entry (`beatscript-radio.js`, [`RADIO_ENTRY`]).
+    pub fn tags_for(&self, entry: &str) -> String {
         let mut m = serde_json::Map::new();
-        for (f, i) in self.modules() {
+        for (f, i) in self.modules_of(entry) {
             m.insert(self.url(f), json!(i));
         }
         let map = serde_json::to_string(&json!({"integrity": m})).unwrap();
         format!(
             "<script type=\"importmap\">{}</script>\n<script type=\"module\" src=\"{}\" integrity=\"{}\" crossorigin=\"anonymous\"></script>\n",
             map.replace('<', "\\u003c"),
-            self.url(&self.entry),
-            self.integrity(&self.entry)
+            self.url(entry),
+            self.integrity(entry)
         )
     }
 }
@@ -79,16 +104,19 @@ impl PlayerCdn {
 /// tools/list's entry.
 pub fn tool_def(p: &str, max_prog: usize) -> Value {
     let cdn = PlayerCdn::get();
+    let radio = PlayerCdn::radio();
     let desc = format!(
         "One BeatScript program as a self-contained HTML page, for the person to hear and share: publish the returned html as a page (an Artifact) exactly as it is, without rewriting it, and do not hand-roll a player instead. \
 The page embeds the program's text and its CID, starts sound only when the person presses Play, shows the CID and the program's rights (licence, credits, forked from), and links back to the program on {p}: {p}/p/<CID> when the site has it stored, else the self-sealing share link (the program is in the link), never a /p/<CID> that would not answer. Nothing is fetched from {p}. With store true a signed-in caller stores a text first, publicly and under its `#! license:` (default CC0-1.0, a Creative Commons licence only), as share does, so the page gets the /p/<CID> link and inline audio. \
 Two ways to sound, chosen by audio: \"inline\" (the default for a stored program that renders) carries the site's Ogg Opus render of the program in the page as a data: URI in a plain <audio controls>, so the page loads nothing at all (no script, no engine); it is the offline render (notes and sounds, not control lines), at most {inline_mb} MB as base64, and a longer render, a text that is not stored, or a render that does not finish falls back to engine with audio_note saying why. \"engine\" (the default for a text) plays it live with the <beatscript-track> player ({pkg}@{ver}, the same engine as the editor, loaded from cdn.jsdelivr.net at that exact version with a Subresource Integrity hash for every module it loads); the host must allow scripts from cdn.jsdelivr.net and WebAssembly ('wasm-unsafe-eval'), as a claude.ai Artifact does. Ogg Opus does not play in older Safari; there is no AAC render. \
-Give exactly one of text (the program; it must pass check; not stored unless store), cid (a program stored here or an example's CID: the page carries the stored rights) or example (a name from list_examples). title names the page (default the program's `#! name:`, else its stored name). \
+Give exactly one of text (the program; it must pass check; not stored unless store), cid (a program stored here or an example's CID: the page carries the stored rights), example (a name from list_examples) or station. title names the page (default the program's `#! name:`, else its stored name). \
+station makes a radio page instead: a station (docs/beatscript/radio.md; its program text, the CID of a station stored here, or the name of an example that is a station) played endlessly by <beatscript-radio> ({pkg}@{rver}, pinned the same way), from position n (default 0): transport, now playing, section and bar, a level meter, the playlist of the station's next tracks, a CC0 bridge loop when the next track is not ready (never dead air), and a peek drawer with the playing program's text. The station's tracks are computed in the page by the engine (no server, nothing fetched), so the page is the station's text and its CID; sound starts only from Play. Its summary is {{title, station: {{cid, name, genre, tempo, key, step, forms}}, n, player, html_bytes, publish}}; audio, store and the other sources do not go with it. \
 Answers two text blocks: the first a JSON summary {{title, cid, canonical_bytes, stored, rights, link, short_url, audio, player, render, audio_note, store_hint, html_bytes, publish}}, the second the page (a whole HTML document). A program that uses samples or loops, or says `use restricted`, has nothing to play in a page and is refused. \
 No sign-in, and it stores nothing, unless store; billed as a check (a render not cached yet is limited as render's are, a store as share's). Text at most {max_prog} bytes.",
         inline_mb = MAX_INLINE_B64 >> 20,
         pkg = cdn.package,
         ver = cdn.version,
+        rver = radio.version,
     );
     tool(
         "artifact",
@@ -102,9 +130,24 @@ No sign-in, and it stores nothing, unless store; billed as a check (a render not
             ("example", sprop("Name of an example, from list_examples.", &[("maxLength", json!(64)), ("pattern", json!(NAME_PAT))])),
             ("audio", sprop("inline (the site's Opus render in the page, nothing loaded; default for a stored program) or engine (the live player from jsDelivr; default for a text).", &[("enum", json!(["inline", "engine"]))])),
             ("title", sprop("The page's title and the name to publish it under (default the program's `#! name:`, else its stored name, else \"BeatScript\").", &[("maxLength", json!(80))])),
+            ("station", sprop("A radio page instead of one program: the station's program text (a `station { }` block, docs/beatscript/radio.md), the CID of a station stored here, or the name of an example that is a station. Not with text, cid, example, audio or store.", &[("maxLength", json!(max_prog))])),
+            ("n", json!({"type": "integer", "minimum": 0, "description": "With station: the position to start at (default 0)."})),
         ],
         &[],
     )
+}
+
+/// A query value, percent-encoded (RFC 3986 unreserved characters kept).
+fn urlencoding(s: &str) -> String {
+    let mut o = String::with_capacity(s.len() * 3);
+    for b in s.bytes() {
+        if b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'~') {
+            o.push(b as char);
+        } else {
+            o.push_str(&format!("%{b:02X}"));
+        }
+    }
+    o
 }
 
 /// `#! <key>: X` of a text.
@@ -217,7 +260,112 @@ impl Page {
     }
 }
 
+/// The rules a radio page adds to [`STYLE`].
+const RADIO_STYLE: &str = "beatscript-radio{margin:0 0 14px}beatscript-radio:not(:defined){display:block;padding:14px 16px;border:1px solid #243055;border-radius:4px;color:#8d95b0}\
+beatscript-radio:not(:defined)::before{content:\"Loading the radio from cdn.jsdelivr.net\\2026  If this stays, this page's host blocks it: open the station on beatscript.app instead.\"}";
+
+/// A station as a page: `<beatscript-radio>` from jsDelivr, the station's text in its `station` attribute and the CID
+/// the text must have in `cid` (the element refuses a text that is not that station). No child script: the text is an
+/// attribute, escaped, so nothing in it can close a tag.
+pub struct StationPage {
+    pub title: String,
+    pub cid: String,
+    pub text: String,
+    pub n: u64,
+    /// `<site>/radio?s=<text>&n=<n>`: the station on the site (the text is in the link, so it opens whether or not it is stored).
+    pub link: String,
+}
+
+impl StationPage {
+    pub fn html(&self) -> String {
+        let cdn = PlayerCdn::radio();
+        let n = if self.n > 0 { format!(" n=\"{}\"", self.n) } else { String::new() };
+        format!(
+            "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<meta name=\"beatscript:station\" content=\"{cid}\">\n<title>{title}</title>\n{tags}<style>{STYLE}{RADIO_STYLE}</style>\n</head>\n<body>\n<main data-station=\"{cid}\">\n<h1>{title}</h1>\n\
+<beatscript-radio station=\"{text}\" cid=\"{cid}\"{n}></beatscript-radio>\n\
+<dl>\n<dt>Station</dt><dd><a href=\"{link}\" target=\"_blank\" rel=\"noopener\"><code>{cid}</code></a></dd>\n<dt>Rights</dt><dd><a href=\"https://spdx.org/licenses/CC0-1.0.html\" rel=\"license noopener\" target=\"_blank\">CC0-1.0</a> (a station and every track of it)</dd>\n</dl>\n\
+<p><a href=\"{link}\" target=\"_blank\" rel=\"noopener\">Open the station on beatscript.app</a></p>\n\
+<details><summary>The station's program</summary><pre>{pre}</pre></details>\n\
+<p class=\"small\">Position N of a station is always the same track: its tracks are computed in this page by the engine, and played by <a href=\"https://www.npmjs.com/package/{pkg}/v/{ver}\" target=\"_blank\" rel=\"noopener\">{pkg}@{ver}</a> from cdn.jsdelivr.net, pinned with Subresource Integrity. Sound starts only when you press Play.</p>\n</main>\n</body>\n</html>\n",
+            tags = cdn.tags(),
+            title = esc(&self.title),
+            cid = esc(&self.cid),
+            text = esc(&self.text),
+            link = esc(&self.link),
+            pre = esc(&self.text),
+            pkg = esc(&cdn.package),
+            ver = esc(&cdn.version),
+        )
+    }
+}
+
 impl Tools {
+    /// artifact with `station`: a radio page. The station is answered here once (as the `station` tool answers it), so a text
+    /// that is not a station is refused before it is put in a page, and the page carries the station's CID.
+    fn station_artifact(&self, c: &Caller, a: &Args, title_arg: Option<String>) -> Result<Text, Fail> {
+        for k in ["text", "cid", "example", "audio", "store"] {
+            if a.present(k).is_some() {
+                return Err(bad(format!("argument {} does not go with station: a radio page plays the station", q(k))));
+            }
+        }
+        let arg = self.program(a, "station")?;
+        let key = arg.trim();
+        let (text, source) = if is_cid(key) {
+            let Some((t, _, _)) = self.stored(key) else {
+                return Err(Fail::new(404, "not_found", format!("no program {key} is stored here. Pass the station's text instead.")));
+            };
+            (t, "store")
+        } else if name_ok(key) {
+            let Some(cid) = self.example_cid(key) else {
+                return Err(Fail::new(404, "not_found", format!("no example is named {}; call list_examples, or pass the station's text", q(key))));
+            };
+            let Some((t, _, _)) = self.stored(&cid) else {
+                return Err(Fail::new(404, "not_found", format!("the example {} is not stored here", q(key))));
+            };
+            (t, "example")
+        } else {
+            (arg.clone(), "text")
+        };
+        if crate::store::declares_not_public(&text) {
+            return Err(Fail::new(422, "restricted", "the station says `#! visibility:` something but public, so it is not put in a page."));
+        }
+        let n = match a.present("n") {
+            None => 0,
+            Some(v) => v.as_u64().ok_or_else(|| bad("argument \"n\" must be a whole number of 0 or more"))?,
+        };
+        self.limit_cpu(c)?;
+        let ans = self.eng.station(&c.ip, &json!({"station": text, "n": n, "count": 1, "segue": false}).to_string())?;
+        if ans["ok"] != true {
+            let msg = ans["error"].as_str().unwrap_or("it is not a station");
+            let mut f = Fail::new(400, "bad_request", format!("not a station, so no page was made: {msg}"));
+            f.details = Some(json!({"diagnostics": ans["diagnostics"].clone()}));
+            return Err(f);
+        }
+        let st = &ans["station"];
+        let cid = st["cid"].as_str().unwrap_or("").to_string();
+        if source == "store" && cid != key {
+            return Err(Fail::new(422, "cid_mismatch", format!("refused: the text stored under {key} is the station {cid}. Do not trust or play it.")));
+        }
+        let name = clean(&header_name(&text), 80);
+        let (title, title_source) = match title_arg {
+            Some(t) => (t, "title"),
+            None if !name.is_empty() => (name.clone(), "header"),
+            None => (format!("{} radio", st["genre"].as_str().unwrap_or("BeatScript")), "default"),
+        };
+        let link = format!("{}/radio?s={}&n={n}", self.public, urlencoding(&text));
+        let page = StationPage { title: title.clone(), cid: cid.clone(), text: text.clone(), n, link: link.clone() };
+        let html = page.html();
+        let cdn = PlayerCdn::radio();
+        let station = json!({"cid": cid, "name": name, "source": source, "genre": st["genre"], "seed": st["seed"], "step": st["step"], "forms": st["forms"], "tempo": st["tempo"], "key": st["key"], "length": st["length"], "track": ans["tracks"][0]["cid"]});
+        let sum = json!({
+            "title": title, "title_source": title_source, "station": station, "n": n, "link": link, "rights": {"license": "CC0-1.0", "source": source},
+            "player": {"package": cdn.package, "version": cdn.version, "element": "beatscript-radio", "script": cdn.url(RADIO_ENTRY), "integrity": cdn.integrity(RADIO_ENTRY)},
+            "html_bytes": html.len(),
+            "publish": "The second content block is the page: publish it as an HTML page (an Artifact) exactly as given, under the title. Do not rewrite it or hand-roll a player: the radio is pinned by version and Subresource Integrity, it computes the station's tracks in the page, and it refuses a station text that is not the CID the page names.",
+        });
+        Ok(Text::Page(super::sorted(sum), html))
+    }
+
     /// The Opus render of a stored program (the cached file, the same bytes every time, as /api/render/<CID>?format=opus
     /// answers it), rendering it first when it is not cached: a new render is limited as the render tool's are. Err says
     /// why there is none.
@@ -258,7 +406,14 @@ impl Tools {
     }
 
     pub(super) fn artifact_tool(&self, c: &Caller, a: Args) -> Result<Text, Fail> {
-        a.only(&["text", "cid", "example", "title", "audio", "store"])?;
+        a.only(&["text", "cid", "example", "title", "audio", "store", "station", "n"])?;
+        if a.present("station").is_some() {
+            let title_arg = a.str("title", 80)?.map(|t| clean(&t, 80)).filter(|t| !t.is_empty());
+            return self.station_artifact(c, &a, title_arg);
+        }
+        if a.present("n").is_some() {
+            return Err(bad("argument \"n\" is a station's position: it goes with station"));
+        }
         let store = a.boolean("store")?;
         let audio = a.str("audio", 8)?.filter(|s| !s.is_empty());
         if audio.as_deref().is_some_and(|m| m != "inline" && m != "engine") {
@@ -542,6 +697,32 @@ mod tests {
         }
     }
 
+    /// The radio's lock, as the track's: one exact version, SRI sha384 for every file, the radio's own modules pinned. With
+    /// the package at hand (BEATSCRIPT_RADIO_PLAYER_DIR=<the unpacked tarball's package/>), every file's bytes are the
+    /// ones its integrity names.
+    #[test]
+    fn the_radio_lock_pins_one_exact_version_and_is_the_package() {
+        let l = PlayerCdn::radio();
+        assert_eq!(l.package, "@stackdump/beatscript-player");
+        let parts: Vec<&str> = l.version.split('.').collect();
+        assert!(parts.len() == 3 && parts.iter().all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit())), "version {:?}", l.version);
+        for f in [RADIO_ENTRY, "beatscript-track.js", "js/station-model.js", "js/handoff-model.js", "js/driver.js", "js/engine.js", "wasm/beatscript.js", "wasm/beatscript_bg.wasm.b64.js"] {
+            assert!(l.integrity(f).starts_with("sha384-"), "radio-cdn.lock.json has no integrity for {f}");
+        }
+        let Some(d) = beatscript_serve::env_var("RADIO_PLAYER_DIR") else {
+            eprintln!("BEATSCRIPT_RADIO_PLAYER_DIR not set: the package's bytes are not checked");
+            return;
+        };
+        let d = std::path::PathBuf::from(d);
+        let pkg: Value = serde_json::from_slice(&std::fs::read(d.join("package.json")).unwrap()).unwrap();
+        assert_eq!((pkg["name"].as_str().unwrap(), pkg["version"].as_str().unwrap()), (l.package.as_str(), l.version.as_str()));
+        for (f, sri) in &l.files {
+            use sha2::Digest;
+            let b = std::fs::read(d.join(f)).unwrap_or_else(|e| panic!("{f}: {e}"));
+            assert_eq!(&format!("sha384-{}", base64::engine::general_purpose::STANDARD.encode(sha2::Sha384::digest(&b))), sri, "{f}");
+        }
+    }
+
     #[test]
     fn refusals() {
         let (t, dir) = tools();
@@ -639,6 +820,113 @@ mod tests {
         assert_eq!(sum["short_url"], sum["link"]);
         assert_eq!(sum["audio"], "inline", "{sum}");
         assert!(page.contains(&format!("href=\"{}/p/{cid}\"", t.public)) && page.contains("data:audio/ogg;base64,"));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    const STATION: &str = "#! name: short techno radio\n#! license: CC0-1.0\ntempo 140\nkey am\nstation {\n  from gen@2 techno seed=7 length=short\n  next seed=+1\n}\n";
+
+    /// station: a radio page. `<beatscript-radio>` from the pinned package (its own entry, every other module in the import
+    /// map with the lock's integrity), the station's text and CID in its attributes, nothing else loaded, nothing that plays
+    /// by itself. BEATSCRIPT_STATION_PAGE_OUT=<file> writes the page (site/test/player-radio.mjs plays it in a browser).
+    #[test]
+    fn a_station_makes_a_radio_page() {
+        let (t, dir) = tools();
+        let l = PlayerCdn::radio();
+        assert_eq!(l.entry, RADIO_ENTRY);
+        assert!(!l.integrity(RADIO_ENTRY).is_empty(), "radio-cdn.lock.json has no {RADIO_ENTRY}: the pinned package predates <beatscript-radio>");
+        let (sum, page) = call(&t, json!({"station": STATION})).unwrap();
+        let cid = sum["station"]["cid"].as_str().unwrap().to_string();
+        assert!(is_cid(&cid), "{sum}");
+        assert_eq!(sum["title"], "short techno radio");
+        assert_eq!(sum["station"]["genre"], "techno");
+        assert_eq!(sum["station"]["tempo"], 140);
+        assert_eq!(sum["n"], 0);
+        assert_eq!(sum["player"]["element"], "beatscript-radio");
+        assert_eq!(sum["player"]["script"].as_str().unwrap(), l.url(RADIO_ENTRY));
+        assert_eq!(sum["player"]["integrity"].as_str().unwrap(), l.integrity(RADIO_ENTRY));
+        assert_eq!(sum["html_bytes"].as_u64().unwrap() as usize, page.len());
+        // the entry, pinned; the import map before it, with every other module (the track element's loader among them)
+        let want = format!("<script type=\"module\" src=\"{}\" integrity=\"{}\" crossorigin=\"anonymous\"></script>", l.url(RADIO_ENTRY), l.integrity(RADIO_ENTRY));
+        let i = page.find(&want).unwrap_or_else(|| panic!("no pinned radio script; want {want}"));
+        let m0 = page.find("<script type=\"importmap\">").expect("an import map");
+        assert!(m0 < i);
+        let body = &page[m0 + "<script type=\"importmap\">".len()..];
+        let map: Value = serde_json::from_str(&body[..body.find("</script>").unwrap()]).unwrap();
+        let integ = map["integrity"].as_object().unwrap();
+        let mods: Vec<&(String, String)> = l.modules_of(RADIO_ENTRY).collect();
+        assert_eq!(integ.len(), mods.len());
+        for (f, sri) in mods {
+            assert_eq!(integ.get(&l.url(f)).and_then(Value::as_str), Some(sri.as_str()), "{f}");
+        }
+        assert!(integ.contains_key(&l.url("beatscript-track.js")), "the radio imports the track element's module loader");
+        assert!(!integ.contains_key(&l.url(RADIO_ENTRY)), "the entry is not in its own import map");
+        assert_eq!(page.matches("<script").count(), 2, "the import map and the radio, nothing else");
+        assert_eq!(page.matches(" src=").count(), 1);
+        for bad in ["@latest", "@^", "@~", "autoplay", "beatscript.app/js/", "beatscript.app/wasm/", "<iframe", "localStorage", "cookie"] {
+            assert!(!page.contains(bad), "page contains {bad:?}");
+        }
+        // the station: its text (the program the CID names) and the CID the element holds it to
+        assert_eq!(attr(&page, "beatscript-radio", "cid").as_deref(), Some(cid.as_str()));
+        let text = attr(&page, "beatscript-radio", "station").expect("the station is in the page");
+        assert_eq!(text, STATION);
+        let again = t.eng.station("127.0.0.1", &json!({"station": text, "count": 1}).to_string()).unwrap();
+        assert_eq!(again["station"]["cid"].as_str(), Some(cid.as_str()));
+        assert!(attr(&page, "beatscript-radio", "n").is_none(), "position 0 says nothing");
+        assert!(page.contains(&format!("<meta name=\"beatscript:station\" content=\"{cid}\">")));
+        let link = sum["link"].as_str().unwrap();
+        assert!(link.starts_with(&format!("{}/radio?s=", t.public)) && link.ends_with("&n=0"), "{link}");
+        assert!(page.contains(&format!("href=\"{}\"", esc(link))));
+        assert!(page.contains("spdx.org/licenses/CC0-1.0.html"));
+        // the same station, the same page
+        assert_eq!(call(&t, json!({"station": STATION})).unwrap().1, page);
+        if let Some(out) = beatscript_serve::env_var("STATION_PAGE_OUT") {
+            std::fs::write(&out, &page).unwrap();
+            eprintln!("wrote {out}");
+        }
+        // a position and a title
+        let (sum, page) = call(&t, json!({"station": STATION, "n": 7, "title": "Seven"})).unwrap();
+        assert_eq!(sum["n"], 7);
+        assert_eq!(attr(&page, "beatscript-radio", "n").as_deref(), Some("7"));
+        assert!(page.contains("<h1>Seven</h1>") && sum["link"].as_str().unwrap().ends_with("&n=7"));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The techno radio (examples/beatscript/techno-radio.beatscript, docs/beatscript/radio.md's example: its CID is the
+    /// doc's), its text escaped into the attribute so that nothing in it closes a tag. BEATSCRIPT_STATION_DEMO_OUT=<file>
+    /// writes its page.
+    #[test]
+    fn the_techno_radio_and_escaping() {
+        let (t, dir) = tools();
+        let techno = include_str!("../../../../examples/beatscript/techno-radio.beatscript");
+        let (sum, page) = call(&t, json!({"station": techno})).unwrap();
+        assert_eq!(sum["station"]["source"], "text");
+        assert_eq!(sum["station"]["cid"], "z4EBG9j79FsQaBchMGcKHL55KLeH6FjsjLQ7V1AE9oj2PencNUE", "docs/beatscript/radio.md's techno radio");
+        assert_eq!(sum["title"], "techno radio");
+        assert_eq!(attr(&page, "beatscript-radio", "station").as_deref(), Some(techno));
+        if let Some(out) = beatscript_serve::env_var("STATION_DEMO_OUT") {
+            std::fs::write(&out, &page).unwrap();
+            eprintln!("wrote {out}");
+        }
+        let hostile = "#! name: a \"b\" </script><b>x</b>\ntempo 120\nstation {\n  from gen@2 house seed=3\n}\n";
+        let (_, page) = call(&t, json!({"station": hostile})).unwrap();
+        assert!(!page.contains("</script><b>"), "the station's text closed a tag");
+        assert_eq!(attr(&page, "beatscript-radio", "station").as_deref(), Some(hostile));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn station_refusals() {
+        let (t, dir) = tools();
+        let code = |a: Value| call(&t, a).err().map(|e| e.err.code.clone()).unwrap_or_else(|| "ok".into());
+        assert_eq!(code(json!({"station": STATION, "text": PROG})), "bad_request", "station and text");
+        assert_eq!(code(json!({"station": STATION, "audio": "inline"})), "bad_request", "station and audio");
+        assert_eq!(code(json!({"station": STATION, "store": true})), "bad_request", "station and store");
+        assert_eq!(code(json!({"text": PROG, "n": 3})), "bad_request", "n without station");
+        assert_eq!(code(json!({"station": STATION, "n": -1})), "bad_request");
+        assert_eq!(code(json!({"station": "tempo 120\ndeck A: kick x ~ x ~\n"})), "bad_request", "a program that is not a station");
+        assert_eq!(code(json!({"station": "z4EBG9jAWvWyiVNF43gMjU5wYinuLmnAfWLhAVK41gqupdYGvVo"})), "not_found");
+        assert_eq!(code(json!({"station": "no-such-station"})), "not_found");
+        assert_eq!(code(json!({"station": "#! visibility: private\nstation {\n  from gen@2 house seed=3\n}\n"})), "restricted");
         std::fs::remove_dir_all(&dir).ok();
     }
 
