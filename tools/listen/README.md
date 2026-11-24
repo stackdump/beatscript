@@ -20,8 +20,8 @@ so regenerating the goldens cannot hide the bug a fixture exists for.
 ## Running
 
 ```bash
-# against a beatscript you built (the examples are beats-bitwrap-io's btwsite/examples)
-python3 tools/listen/listen_ci.py --beatscript target/release/beatscript --examples ../beats-bitwrap-io/btwsite/examples
+# against a beatscript you built (the site examples are site/examples)
+python3 tools/listen/listen_ci.py --beatscript target/release/beatscript --examples site/examples
 
 # accept a change (an example was edited, the engine changed on purpose): rewrite the goldens, then commit them
 python3 tools/listen/listen_ci.py --beatscript target/release/beatscript --examples site/examples --update
