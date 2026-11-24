@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### The radio in any page: `<beatscript-radio>`, and the artifact tool's `station` (2026-11-23)
+
+- `@stackdump/beatscript-player` 0.4.0 has `<beatscript-radio>` beside `<beatscript-track>`: a station and its player, its
+  tracks and segues computed in the page by the engine's station answer (no server, nothing fetched, nothing stored). It
+  plays on the `/radio` page's models (the play order, now `station-model.js` `playOrder`, the handoff and its CC0 bridges,
+  the playlist's formatting, the presence pause) with a transport, now playing, section and bar, a level meter, the playlist
+  of the station's next tracks and a peek drawer. Attributes: `station` (text or CID), `cid`, the seven knobs, `locks`, `n`,
+  `segues`, `autoplay` (off by default), `compact`, `theme`, `site`.
+- No gap at a track change: the next item is primed on an engine of its own (nets installed, decks held) and let go half a
+  beat before the outgoing item's last bar line, or at once on Next, the outgoing engine fading out under it. The bridge
+  covers a next item that is not ready. `site/test/player-radio.mjs` measures the element's output in headless Chrome.
+- The MCP `artifact` tool takes `station` (a station's text, a stored station's CID or the name of an example that is one) and `n`,
+  and answers a radio page: `<beatscript-radio>` from jsDelivr, pinned to 0.4.0 with an integrity hash on every module.
+- The player instantiates the engine asynchronously: the wasm is over 8 MB, and Chrome refuses a synchronous
+  instantiation of a module that size on the page's thread (`<beatscript-track>` built from today's engine did not load).
+- `handoff-model.js` lets go of a next item that was prepared and then passed over (the order changed), instead of keeping
+  its compiled run.
 ### `up` and `down` keep the key on markov and arp lines (2026-11-24)
 
 - In an `arrange { }`, `up n` / `down n` on a let of `markov(...)` or `arp(...)` now move the notes it picks by `n` degrees

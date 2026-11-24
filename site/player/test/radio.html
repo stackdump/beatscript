@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- what a Claude artifact page allows, plus 'wasm-unsafe-eval', without which no WebAssembly runs: scripts inline, from
+     this page's own files or a CDN; fetches to this page's origin only; nothing else -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' cdn.jsdelivr.net unpkg.com; connect-src 'self'">
+<title>beatscript-radio under an artifact CSP</title>
+<script>
+  // every blocked request or script, for the test (and for a person: the count is printed below)
+  window.__violations = [];
+  document.addEventListener('securitypolicyviolation', function (e) {
+    window.__violations.push({ directive: e.violatedDirective, blocked: e.blockedURI, sample: e.sample });
+    var n = document.getElementById('violations');
+    if (n) n.textContent = window.__violations.length + ' blocked: ' + window.__violations.map(function (v) { return v.directive + ' ' + v.blocked; }).join(', ');
+  });
+</script>
+<script type="module" src="../beatscript-radio.js"></script>
+</head>
+<body>
+<h1>beatscript-radio</h1>
+<p>A short techno station (each track some forty bars, no segues), its tracks computed in this page. Press play; Next
+changes track at once.</p>
+<beatscript-radio id="radio" segues="off">
+  <script type="text/beatscript">
+#! name: short techno radio
+#! license: CC0-1.0
+tempo 140
+key am
+station {
+  from gen@2 techno seed=7 length=short
+  next seed=+1
+}
+  </script>
+</beatscript-radio>
+<p id="violations">0 blocked</p>
+</body>
+</html>

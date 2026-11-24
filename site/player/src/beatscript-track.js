@@ -102,9 +102,12 @@ function styles() {
   return sheet;
 }
 
-/** The module, once per page: compiled from the inlined bytes (a dynamic import, so nothing loads before a click). */
+/**
+ * The module, once per page: compiled from the inlined bytes (a dynamic import, so nothing loads before a click). Exported
+ * for <beatscript-radio> (beatscript-radio.js), so the two elements on one page share one compiled module.
+ */
 let shared = null;
-function loadModule() {
+export function loadModule() {
   if (!shared) {
     shared = (async () => {
       const [{ WASM_BASE64 }, glue] = await Promise.all([import('./wasm/beatscript_bg.wasm.b64.js'), import('./wasm/beatscript.js')]);
@@ -117,7 +120,9 @@ function loadModule() {
       } catch (e) {
         throw new Error(/unsafe-eval|Content Security/i.test(String(e)) ? 'this page does not allow WebAssembly (its CSP needs \'wasm-unsafe-eval\'), so it cannot play here' : String(e.message || e));
       }
-      glue.initSync({ module });
+      // instantiated asynchronously: Chrome refuses a synchronous WebAssembly.Instance on the page's thread for a module over
+      // 8 MB (initSync), and the engine is past that. (The worklet and the composer, off the page's thread, still initSync.)
+      await glue.default({ module_or_path: module });
       return { module, beatscript: makeFacade(glue) };
     })();
     shared.catch(() => { shared = null; });

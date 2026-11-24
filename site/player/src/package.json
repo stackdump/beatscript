@@ -1,7 +1,7 @@
 {
   "name": "@stackdump/beatscript-player",
-  "version": "0.3.0",
-  "description": "<beatscript-track>: a BeatScript program and its player in one self-contained element. The engine (WebAssembly, inlined), its kits, voices and sing tables are bundled; nothing is fetched from beatscript.app. Plays live from a click, or renders the whole track offline first (mode=\"render\") and plays it with a seek bar.",
+  "version": "0.4.0",
+  "description": "<beatscript-track>: a BeatScript program and its player in one self-contained element; <beatscript-radio>: a BeatScript radio station and its player, its tracks computed in the page by the same engine. The engine (WebAssembly, inlined), its kits, voices and sing tables are bundled; nothing is fetched from beatscript.app. Plays live from a click, or renders the whole track offline first (mode=\"render\") and plays it with a seek bar.",
   "type": "module",
   "main": "./beatscript-track.umd.js",
   "module": "./beatscript-track.js",
@@ -14,15 +14,16 @@
       "default": "./beatscript-track.umd.js"
     },
     "./umd": "./beatscript-track.umd.js",
+    "./radio": { "types": "./beatscript-radio.d.ts", "import": "./beatscript-radio.js" },
     "./render": { "types": "./beatscript-track.d.ts", "import": "./beatscript-render.js" },
     "./render-model": "./render-model.js",
     "./package.json": "./package.json"
   },
   "jsdelivr": "./beatscript-track.js",
   "unpkg": "./beatscript-track.umd.js",
-  "files": ["beatscript-track.js", "beatscript-track.umd.js", "beatscript-track.d.ts", "beatscript-render.js", "render-model.js", "embed-config.js", "js/", "wasm/", "test/", "README.md", "LICENSE", "LICENSES/", "hashes.json"],
+  "files": ["beatscript-track.js", "beatscript-track.umd.js", "beatscript-track.d.ts", "beatscript-radio.js", "beatscript-radio.d.ts", "beatscript-render.js", "render-model.js", "embed-config.js", "js/", "wasm/", "test/", "README.md", "LICENSE", "LICENSES/", "hashes.json"],
   "sideEffects": true,
-  "keywords": ["beatscript", "music", "live-coding", "web-component", "webassembly", "audioworklet"],
+  "keywords": ["beatscript", "music", "live-coding", "web-component", "webassembly", "audioworklet", "radio"],
   "homepage": "https://beatscript.app/docs/embed",
   "repository": { "type": "git", "url": "git+https://github.com/stackdump/beatscript.git", "directory": "site/player" },
   "bugs": "https://github.com/stackdump/beatscript/issues",

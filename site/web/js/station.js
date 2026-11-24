@@ -33,8 +33,8 @@ import {
 import { Handoff } from './handoff-model.js';
 import {
   DEFAULT_STATION, KNOBS, FORMS, LENGTHS, SEEDED_GENRES, TEMPO_MIN, TEMPO_MAX,
-  initialState, stationRequest, retuneRequest, applyAnswer, stepTo, advance, notch, toggleLock, stepRetuneValue,
-  scanRequest, shareUrl, parseShare, fmtValue, maxN,
+  initialState, stationRequest, retuneRequest, applyAnswer, stepTo, notch, toggleLock, stepRetuneValue,
+  scanRequest, shareUrl, parseShare, fmtValue, maxN, playOrder, trackStarted,
 } from './station-model.js';
 
 const TICK_MS = 25;
@@ -311,22 +311,11 @@ class Radio {
 
   /** The play order from here: the queue's items, else the segue after a station track, else the station's next track. */
   plan() {
-    const out = [];
+    // station-model.js playOrder: the same order <beatscript-radio> (the player package) plays
     const cur = this.handoff.current && this.handoff.current.desc;
-    const q = this.queue && !this.queue.paused_reason ? this.queue.up_next || [] : [];
-    for (const it of q) out.push(this.queueDesc(it));
-    const seg = this.state.segue;
-    if (!out.length && cur && cur.kind === 'track' && this.state.segues && seg && seg.from === cur.n && cur.n === this.state.n) out.push(this.segueDesc(seg));
-    // the station goes on after the track it is at (or plays track N when nothing of it has played yet)
-    // (a few of them: a track that fails to resolve is passed over for the one after it)
-    const stationPlayed = cur && (cur.kind === 'track' || cur.kind === 'segue');
-    const nextN = stationPlayed || this.stationStarted ? this.state.n + 1 : this.state.n;
-    const pool = [this.state.now, this.state.next, ...this.ahead].filter(Boolean);
-    for (let n = nextN; n < nextN + 3; n++) {
-      const t = pool.find((x) => x.n === n);
-      if (t) out.push(this.stationDesc(t));
-    }
-    return out;
+    const queue = this.queue && !this.queue.paused_reason ? this.queue.up_next || [] : [];
+    return playOrder(this.state, { current: cur, ahead: this.ahead, queue, started: this.stationStarted }).map((e) => (
+      e.kind === 'queue' ? this.queueDesc(e.item) : e.kind === 'segue' ? this.segueDesc(e.segue) : this.stationDesc(e.track)));
   }
 
   upcoming() {
@@ -437,7 +426,7 @@ class Radio {
     if (d.kind === 'track') {
       this.stationStarted = true;
       if (d.n !== this.state.n) {
-        this.state = d.n === this.state.n + 1 ? advance(this.state) : stepTo(this.state, d.n);
+        this.state = trackStarted(this.state, d.n);
         this.updateUrl();
         this.ask();
       }
