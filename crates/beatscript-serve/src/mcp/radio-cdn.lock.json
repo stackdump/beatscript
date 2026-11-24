@@ -3,8 +3,8 @@
  "package": "@stackdump/beatscript-player",
  "version": "0.4.0",
  "entry": "beatscript-radio.js",
- "source": "the staged publish tarball stackdump-beatscript-player-0.4.0.tgz (sha256 f1a3f9abe7dff1534563ed2ea4fc566f1506c3342e0e8897f4080bc242cd2c9d, built from 7a286c7): its bytes are what the registry and jsDelivr serve once it is published, so the page's SRI holds then; re-run with --jsdelivr after the publish to confirm byte for byte",
- "tarball_integrity": "sha512-omgL/LvXwql4WQ0NJV8uJdHcs14IC1uu86M5gzL2ToIfTAaWPbm5hoFvfF4d3mQ97YWCVor64NbMIGETgU4CWQ==",
+ "source": "the staged publish tarball stackdump-beatscript-player-0.4.0.tgz (sha256 2764e7fde0ac7fd9ffc5abdbf63ea2fa0a8eb9701ce55973aeb1beed66e481ca, built from 4731abd): its bytes are what the registry and jsDelivr serve once it is published, so the page's SRI holds then; re-run with --jsdelivr after the publish to confirm byte for byte",
+ "tarball_integrity": "sha512-1epejEPlK/OCAArZwoyB/IKh0jp3hfpJBfTUist0k83kwmNBbel63ywNT8L3+0sCiyTNyfNF6uG6yj4cQCuckw==",
  "files": {
   "beatscript-radio.js": {
    "integrity": "sha384-FcQTQA6+xImkAwUU64dJh+BaOPsyovqaeQEEEnuhNboZPP8Mh2QlCyP/6N69Vghi",
@@ -42,14 +42,14 @@
    "bytes": 2136
   },
   "js/engine-calls.js": {
-   "integrity": "sha384-d3W+6o52Kzjh73Bv04AAUiRi1rKzbl8niG+I2SRcBKZC/7nXw/mYeDFFmTFoBui+",
-   "sha256": "9b9c8ee22564174de6e67b8df4ae1579f31aed3e389d1d298dae51f46ed402bf",
-   "bytes": 13710
+   "integrity": "sha384-zSK/PUTOOPNcv7zGRNOb8T4evnUME07dGnE6yHwP1Hx3/Y1TEIs2+W7fAScP4oub",
+   "sha256": "e10e3e3e3268145b26a5f7ef5ae648a82de2c29b6f93b638f7027d777ccbc420",
+   "bytes": 27967
   },
   "js/engine-composer.js": {
-   "integrity": "sha384-baeA8bwSFJjWBZmOsmk63naQ4GfX34zbGyQedLuQ6evoKyVPGZ5B4ZwbD8HPTpdi",
-   "sha256": "4ea0c0cf656c9dbb76955eeac622a25293ab97e7d963233bb353b259d7062de8",
-   "bytes": 1815
+   "integrity": "sha384-mIm1vj7JVldo3UNg/h5cbq1Z6/JiV2EAoXhisE/WgGUhtUG/W21LSSFQVRQHqZ0E",
+   "sha256": "4a55545cef9f2da3c8fcaa5d3bff9bef41bf02a775198bd056083a34cfb9ce9f",
+   "bytes": 3057
   },
   "js/engine-polyfill.js": {
    "integrity": "sha384-ZDXMDcLeHV5uWZI/7YPKLBt8f86R1Hjb5ksiScaDaf/bmETYAhRC29QVX64EcOm2",
@@ -57,14 +57,14 @@
    "bytes": 5384
   },
   "js/engine-worklet.js": {
-   "integrity": "sha384-3O6g7AHJbnYYiSe/OCz+ev29Wk83lHKXVU+6Ns0Lste8ttsZsXAhd1/MG6RAaZ7U",
-   "sha256": "3ae7288ab8c534e66da94627e2758ba38b606747345f0ad7ce1a6fa0d1f2d082",
-   "bytes": 14631
+   "integrity": "sha384-M++dtgt0comQJVxaWmQQ3ItG921jAehaDffL68itnushtgARp6TK83zapOSxW+sO",
+   "sha256": "b13945bf35cb4daf26f73ee94740c30f3d01309ca259efcb67f973cfec09804b",
+   "bytes": 20351
   },
   "js/engine.js": {
-   "integrity": "sha384-YvQpqtS1OpdWDPjraaMIf5rQ1AqmOd+0HXZuSgNzep9AwiA+gi90eQWvZ2p+8Wds",
-   "sha256": "a0f8ca543e26821870bb3ce18d82496b2f990c7671749253a713055187505511",
-   "bytes": 25910
+   "integrity": "sha384-IyzNdV3FIG8S3cZ4N6upSJRm/o+LNqNaOMRqGRPhdQ8kkaZagF0KwADq2rFvrY8+",
+   "sha256": "9d3051820e9d8db8e1d218578ac887f27e96b87c4877517bf7d7da84b376890d",
+   "bytes": 31580
   },
   "js/handoff-model.js": {
    "integrity": "sha384-aDX/QwhgVZ+a24P9GWcwx3AkWVSjmCfj3/59FfexzWwiSjqpxkHIWP0NHXJCSP4O",
@@ -142,14 +142,14 @@
    "bytes": 254
   },
   "wasm/beatscript.js": {
-   "integrity": "sha384-cp/1klCH/CCGzksh4mSZI54zGvbmzdRR6Cqm+BznwolsLtf5asQ9UCdWVxVrtJf0",
-   "sha256": "919a5df5d82c80462d0294acd7ec8a6eef7c78f2afc441103538cb247efafb68",
-   "bytes": 68368
+   "integrity": "sha384-B/LlMM9L5rZT9NPFkAJrPKS710g3DCoWvHk9n96L5mzZUDpSMcv9f3Ru4yG5HHP1",
+   "sha256": "e8692a7ac107c3185b82b8f1bcdfb30fdd8f55d3f8baa5af0deef52cf138a0ad",
+   "bytes": 74673
   },
   "wasm/beatscript_bg.wasm.b64.js": {
-   "integrity": "sha384-W6oVEouVqgTkqRLEhcpCFsA96IM1CwOVhhn+UdQXVnhum04UqvdVj9U4LFoXFDpT",
-   "sha256": "d9cf778c3600b380d085aed683e7078220a79b9d69512ade1b1a37dfc348ae7a",
-   "bytes": 11608999
+   "integrity": "sha384-T80cvc5gmAY/ygOfvOgAUyepQvkPg1TG7qBEl02oS4Fsi0EPu8G0i91cOeB738XX",
+   "sha256": "6ee9ac477c1140fa366010ecefb02bb6a0f0378a29cf0ffce1d51e4c27392079",
+   "bytes": 12449259
   }
  }
 }
