@@ -591,7 +591,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/grammar-call> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "call"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The call production of BeatScript's grammar (e(5,8) markov(0.6) arp(am7, up) chord(am) maybe(p, 0.5))."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The call production of BeatScript's grammar (e(5,8) markov(0.6, shift=2) arp(am7, up) chord(am) maybe(p, 0.5))."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#ebnf> "NAME \"(\" [ arg { \",\" arg } ] \")\"" ;
     <https://beatscript.app/ontology/ns#writtenAs> "call" ;
