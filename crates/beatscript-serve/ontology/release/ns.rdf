@@ -4956,6 +4956,7 @@
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-file"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-focus"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-hot-cue"/>
+		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-jump"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-load"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-loop"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-macro"/>
@@ -5639,6 +5640,7 @@
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-get"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-list"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-mark"/>
+		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-program"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-replay"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-start"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-status"/>
@@ -8231,8 +8233,9 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-jump">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlVerb"/>
-		<skos:definition xml:lang="en">The control verb jump, accepted by: queue.</skos:definition>
+		<skos:definition xml:lang="en">The control verb jump, accepted by: deck, queue.</skos:definition>
 		<skos:prefLabel xml:lang="en">jump</skos:prefLabel>
+		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-deck"/>
 		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-queue"/>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
@@ -8872,6 +8875,13 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:definition xml:lang="en">The control verb process, accepted by: post.</skos:definition>
 		<skos:prefLabel xml:lang="en">process</skos:prefLabel>
 		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-post"/>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-program">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlVerb"/>
+		<skos:definition xml:lang="en">The control verb program, accepted by: record.</skos:definition>
+		<skos:prefLabel xml:lang="en">program</skos:prefLabel>
+		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-record"/>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-quant">

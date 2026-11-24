@@ -267,7 +267,7 @@ fn length_bars(c: &Compiled) -> Option<u32> {
 }
 
 fn rights_flags(r: &RightsReport) -> (bool, bool) {
-    (!r.assets.is_empty(), r.declared_private || r.private_required)
+    (r.uses_assets(), r.restricted())
 }
 
 /// `check(text)`: the whole report as a value.

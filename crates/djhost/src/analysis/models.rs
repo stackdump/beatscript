@@ -38,6 +38,14 @@ pub const SMALL: ModelFile = ModelFile {
 
 pub const FILES: [ModelFile; 2] = [MEL, SMALL];
 
+/// The analyzer id of Beat This! with these files ([`super::analyzers::neural`]):
+/// `beatgrid@2:<the small model's SHA-256>`. Pinning another model is another analyzer, so no grid
+/// the old one found is answered for it. (The log-mel front end is pinned to the same commit and
+/// checked at load; it is not in the id.)
+pub fn analyzer() -> String {
+    super::analyzers::neural(SMALL.sha256)
+}
+
 /// `$DJRUST_MODELS`, else `<support>/models/beat-this`.
 pub fn default_dir() -> PathBuf {
     crate::stores::env_or_support("DJRUST_MODELS", "models/beat-this")

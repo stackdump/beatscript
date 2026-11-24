@@ -8,6 +8,10 @@
 //! grid stands, and the status says why) until [`retry`](Worker::retry) or
 //! [`set_neural`](Worker::set_neural) turns it on again, so an offline machine is not asked to
 //! download on every capture.
+//!
+//! The cache answers a grid job only with a grid of the analyzer that would make it now
+//! ([`super::analyzers`]): Beat This! when it is wanted (its pinned id, or the loaded backend's), the
+//! DSP detector when it is off or cannot run. A changed detector or model finds nothing and analyses.
 
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -17,7 +21,7 @@ use std::thread::JoinHandle;
 use djengine::beatgrid::{estimate_latency, LatencyEstimate};
 
 use super::cache::Cache;
-use super::{analyze, content_key, Analysis, Backend, Options};
+use super::{analyze, analyzers, content_key, Analysis, Backend, Options};
 
 /// What a job finds.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -102,8 +106,16 @@ pub struct Worker {
 
 impl Worker {
     /// A worker whose backend comes from `factory`, called on the worker's thread the first time
-    /// a job wants it. `cache`: where grids are kept (None: not kept).
+    /// a job wants it. `cache`: where grids are kept (None: not kept). The backend's analyzer is
+    /// known once it is loaded, so before that the cache answers no grid of it.
     pub fn spawn(factory: Factory, cache: Option<Cache>, opts: Options, neural: bool) -> Worker {
+        Worker::spawn_inner(factory, None, cache, opts, neural)
+    }
+
+    /// [`spawn`](Self::spawn), with the analyzer id `factory`'s backend will have when that is known
+    /// before it is loaded (Beat This!'s is pinned): a cached grid of it answers without loading
+    /// the model.
+    fn spawn_inner(factory: Factory, neural_analyzer: Option<String>, cache: Option<Cache>, opts: Options, neural: bool) -> Worker {
         let (tx, jobs) = channel::<Msg>();
         let (events, rx) = channel::<Event>();
         let shared = Arc::new(Shared {
@@ -114,7 +126,7 @@ impl Worker {
         let s = shared.clone();
         let handle = std::thread::Builder::new()
             .name("djapp-analysis".into())
-            .spawn(move || run(jobs, events, s, factory, cache, opts))
+            .spawn(move || run(jobs, events, s, factory, neural_analyzer, cache, opts))
             .expect("spawn the analysis thread");
         Worker { tx: Some(tx), rx, shared, handle: Some(handle), next_id: 1 }
     }
@@ -123,15 +135,18 @@ impl Worker {
     /// detector alone when this build has no `neural` feature.
     pub fn spawn_default(models_dir: std::path::PathBuf, cache: Option<Cache>, neural: bool) -> Worker {
         #[cfg(feature = "neural")]
-        let factory: Factory = Box::new(move || {
-            super::neural::NeuralBackend::fetch_and_load(&models_dir).map(|b| Box::new(b) as Box<dyn Backend>)
-        });
+        let (factory, pinned): (Factory, Option<String>) = (
+            Box::new(move || {
+                super::neural::NeuralBackend::fetch_and_load(&models_dir).map(|b| Box::new(b) as Box<dyn Backend>)
+            }),
+            Some(super::models::analyzer()),
+        );
         #[cfg(not(feature = "neural"))]
-        let factory: Factory = {
+        let (factory, pinned): (Factory, Option<String>) = {
             let _ = models_dir;
-            Box::new(|| Err("this build has no neural beat detection (build with --features neural)".into()))
+            (Box::new(|| Err("this build has no neural beat detection (build with --features neural)".into())), None)
         };
-        Worker::spawn(factory, cache, Options::default(), neural)
+        Worker::spawn_inner(factory, pinned, cache, Options::default(), neural)
     }
 
     /// Queue a job; returns its id.
@@ -219,7 +234,7 @@ fn set_status(shared: &Shared, f: impl FnOnce(&mut Status)) {
     }
 }
 
-fn run(jobs: Receiver<Msg>, events: Sender<Event>, shared: Arc<Shared>, mut factory: Factory, cache: Option<Cache>, opts: Options) {
+fn run(jobs: Receiver<Msg>, events: Sender<Event>, shared: Arc<Shared>, mut factory: Factory, neural_analyzer: Option<String>, cache: Option<Cache>, opts: Options) {
     let mut backing = Backing::NotTried;
     while let Ok(msg) = jobs.recv() {
         let job = match msg {
@@ -244,34 +259,45 @@ fn run(jobs: Receiver<Msg>, events: Sender<Event>, shared: Arc<Shared>, mut fact
                 continue;
             }
         }
-        // the cache: a neural grid always answers; a DSP one only when neural is not wanted
+        // the cache: a grid of the analyzer that would answer now. Beat This! when it is wanted (the
+        // loaded backend's id, else the one it is pinned to), then the DSP detector when Beat This! is
+        // off or cannot run. Never a grid of another analyzer: a changed one finds nothing here.
         let key = content_key(&job.audio, job.sample_rate);
         if job.kind == Kind::Grid && job.use_cache && cache.is_some() {
-            if let Some(hit) = cache.as_ref().and_then(|c| c.get(&key)) {
-                let usable = hit.method == "neural" || !want_neural || matches!(backing, Backing::Failed(_));
-                if usable {
-                    let mut a = Analysis {
-                        method: if hit.method == "neural" { "neural" } else { "dsp" },
-                        dsp: None,
-                        detections: Default::default(),
-                        note: "cached".into(),
-                        seconds: 0.0,
-                        duration: hit.duration,
-                        grid: Some(hit.grid),
-                    };
-                    a.dsp = a.grid.clone().filter(|g| g.source == djengine::beatgrid::GridSource::Dsp);
-                    let _ = events.send(Event::Grid {
-                        id: job.id,
-                        tag: job.tag,
-                        key,
-                        stage: Stage::Final,
-                        cached: true,
-                        analysis: Box::new(a),
-                    });
-                    shared.queued.fetch_sub(1, Ordering::Relaxed);
-                    set_status(&shared, |s| s.done += 1);
-                    continue;
-                }
+            let mut wanted: Vec<String> = Vec::new();
+            if want_neural {
+                let neural_id = match &backing {
+                    Backing::Ready(b) => Some(b.analyzer()),
+                    _ => neural_analyzer.clone(),
+                };
+                wanted.extend(neural_id);
+            }
+            if !want_neural || matches!(backing, Backing::Failed(_)) {
+                wanted.push(analyzers::BEATGRID_DSP.to_string());
+            }
+            if let Some(hit) = cache.as_ref().and_then(|c| wanted.iter().find_map(|id| c.get(&key, id))) {
+                let mut a = Analysis {
+                    method: if hit.method == "neural" { "neural" } else { "dsp" },
+                    analyzer: hit.analyzer,
+                    dsp: None,
+                    detections: Default::default(),
+                    note: "cached".into(),
+                    seconds: 0.0,
+                    duration: hit.duration,
+                    grid: Some(hit.grid),
+                };
+                a.dsp = a.grid.clone().filter(|g| g.source == djengine::beatgrid::GridSource::Dsp);
+                let _ = events.send(Event::Grid {
+                    id: job.id,
+                    tag: job.tag,
+                    key,
+                    stage: Stage::Final,
+                    cached: true,
+                    analysis: Box::new(a),
+                });
+                shared.queued.fetch_sub(1, Ordering::Relaxed);
+                set_status(&shared, |s| s.done += 1);
+                continue;
             }
         }
         // the DSP grid first, so there is something to show while the models load and run
@@ -370,12 +396,43 @@ mod tests {
             fn name(&self) -> &'static str {
                 "oracle"
             }
+            fn analyzer(&self) -> String {
+                "oracle@1".into()
+            }
             fn detect(&mut self, m: &[f32], sr: f64) -> Result<RawBeats, String> {
                 self.1.fetch_add(1, Ordering::SeqCst);
                 self.0.detect(m, sr)
             }
         }
         Box::new(move || Ok(Box::new(Counted(Oracle { bpm, first, jitter: 0.004, calls: 0 }, calls.clone()))))
+    }
+
+    /// A backend like the oracle but with analyzer id `id` (another detector, or another model).
+    fn oracle_as(id: &'static str, calls: Arc<AtomicUsize>, bpm: f64, first: f64) -> Factory {
+        struct As(&'static str, Oracle, Arc<AtomicUsize>);
+        impl Backend for As {
+            fn name(&self) -> &'static str {
+                "oracle"
+            }
+            fn analyzer(&self) -> String {
+                self.0.into()
+            }
+            fn detect(&mut self, m: &[f32], sr: f64) -> Result<RawBeats, String> {
+                self.2.fetch_add(1, Ordering::SeqCst);
+                self.1.detect(m, sr)
+            }
+        }
+        Box::new(move || Ok(Box::new(As(id, Oracle { bpm, first, jitter: 0.004, calls: 0 }, calls.clone()))))
+    }
+
+    /// The final grid event of the next job, skipping the DSP stage.
+    fn final_grid(w: &Worker) -> (bool, Box<Analysis>) {
+        while let Some(e) = w.wait(20_000) {
+            if let Event::Grid { stage: Stage::Final, cached, analysis, .. } = e {
+                return (cached, analysis);
+            }
+        }
+        panic!("no final grid");
     }
 
     fn tmp(name: &str) -> std::path::PathBuf {
@@ -423,6 +480,74 @@ mod tests {
         assert_eq!(analysis.method, "neural");
         assert!((analysis.grid.unwrap().bpm() - 100.0).abs() < 0.05);
         assert_eq!(calls.load(Ordering::SeqCst), 1, "the second was not analysed");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_changed_analyzer_is_never_answered_from_the_old_ones_cache() {
+        let dir = tmp("analyzer");
+        let audio = click_track(118.0, 0.25, 16.0, SR);
+        let old = Arc::new(AtomicUsize::new(0));
+        let mut w = Worker::spawn(oracle_as("oracle@1", old.clone(), 118.0, 0.25), Some(Cache::new(&dir)), Options::default(), true);
+        w.submit(Kind::Grid, "a", audio.clone(), SR, true);
+        let (cached, a) = final_grid(&w);
+        assert_eq!((cached, a.analyzer.as_str()), (false, "oracle@1"));
+        drop(w);
+        // the detector changes (a new version, another model): the same audio is analysed again
+        let new = Arc::new(AtomicUsize::new(0));
+        let mut w = Worker::spawn(oracle_as("oracle@2", new.clone(), 118.0, 0.25), Some(Cache::new(&dir)), Options::default(), true);
+        w.submit(Kind::Grid, "b", audio.clone(), SR, true);
+        let (cached, a) = final_grid(&w);
+        assert_eq!((cached, a.analyzer.as_str(), a.method), (false, "oracle@2", "neural"));
+        assert_eq!(new.load(Ordering::SeqCst), 1, "the new analyzer ran");
+        // and then its own grid is the one kept for it
+        w.submit(Kind::Grid, "c", audio.clone(), SR, true);
+        let (cached, a) = final_grid(&w);
+        assert_eq!((cached, a.analyzer.as_str()), (true, "oracle@2"));
+        assert_eq!(new.load(Ordering::SeqCst), 1);
+        drop(w);
+        // Beat This! off: the DSP grid kept beside them answers, named as the DSP detector's
+        let mut w = Worker::spawn(Box::new(|| Err("should not be asked".into())), Some(Cache::new(&dir)), Options::default(), false);
+        w.submit(Kind::Grid, "d", audio, SR, true);
+        let (cached, a) = final_grid(&w);
+        assert_eq!((cached, a.analyzer.as_str(), a.method), (true, analyzers::BEATGRID_DSP, "dsp"));
+        assert_eq!(a.grid.unwrap().source, djengine::beatgrid::GridSource::Dsp);
+        assert_eq!(old.load(Ordering::SeqCst), 1);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_pinned_analyzer_is_answered_from_the_cache_without_loading_the_model() {
+        let dir = tmp("pinned");
+        let audio = click_track(126.0, 0.1, 16.0, SR);
+        let mut w = Worker::spawn(oracle_as("pinned@1", Arc::new(AtomicUsize::new(0)), 126.0, 0.1), Some(Cache::new(&dir)), Options::default(), true);
+        w.submit(Kind::Grid, "a", audio.clone(), SR, true);
+        let _ = final_grid(&w);
+        drop(w);
+        let counting = |tries: Arc<AtomicUsize>| -> Factory {
+            Box::new(move || {
+                tries.fetch_add(1, Ordering::SeqCst);
+                Err("offline".into())
+            })
+        };
+        // the same pin: answered, nothing loaded
+        let tries = Arc::new(AtomicUsize::new(0));
+        let mut w = Worker::spawn_inner(counting(tries.clone()), Some("pinned@1".into()), Some(Cache::new(&dir)), Options::default(), true);
+        w.submit(Kind::Grid, "b", audio.clone(), SR, true);
+        let (cached, a) = final_grid(&w);
+        assert_eq!((cached, a.analyzer.as_str(), a.method), (true, "pinned@1", "neural"));
+        assert_eq!(tries.load(Ordering::SeqCst), 0);
+        drop(w);
+        // another pin finds nothing of its own; with the model unavailable the DSP grid stands
+        let tries = Arc::new(AtomicUsize::new(0));
+        let mut w = Worker::spawn_inner(counting(tries.clone()), Some("pinned@2".into()), Some(Cache::new(&dir)), Options::default(), true);
+        w.submit(Kind::Grid, "c", audio.clone(), SR, true);
+        let (cached, a) = final_grid(&w);
+        assert_eq!((cached, a.analyzer.as_str()), (false, analyzers::BEATGRID_DSP));
+        assert_eq!(tries.load(Ordering::SeqCst), 1);
+        w.submit(Kind::Grid, "d", audio, SR, true);
+        let (cached, a) = final_grid(&w);
+        assert_eq!((cached, a.analyzer.as_str()), (true, analyzers::BEATGRID_DSP), "the model failed: the DSP detector is what answers");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

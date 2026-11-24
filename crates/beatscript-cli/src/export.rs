@@ -334,8 +334,7 @@ impl Job {
     fn pass(&self, solo: Solo, collect: bool, curve: Curve, out: Option<&mut WavOut>) -> Result<Vec<Played>, RenderError> {
         let bpm = self.plan.bpm;
         let sr = self.sr;
-        let frame_of = |beat: f64| -> i64 { (beat * 60.0 / bpm * sr).round() as i64 };
-        let mut ctls = Controls::new(&self.c, self.plan.program_bars, &frame_of);
+        let mut ctls = Controls::new(&self.c, self.plan.program_bars, sr);
         let mut p = Pass { decks: self.decks.clone(), solo, curve, io_err: None, collect, spt: sr * 60.0 / (bpm * 4.0), bpm, gens: BTreeMap::new(), played: Vec::new(), out };
         drive(&self.c, &self.plan, sr, self.want, &mut ctls, &mut p)?;
         if let Curve::Record(files) = &mut p.curve {

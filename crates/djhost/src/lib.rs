@@ -20,6 +20,7 @@ pub mod beatscript_render;
 pub mod beatscript_tempo;
 pub mod beatscript_test;
 pub mod automix_measure;
+pub mod clip_source;
 pub mod control_registry;
 pub mod control_socket;
 pub mod gear;
@@ -30,8 +31,11 @@ pub mod live_store;
 pub mod loop_collections;
 pub mod mashups;
 pub mod mixxx;
+pub mod offline_moves;
 pub mod ontology;
 pub mod setlist;
+// a recorded set written out as a BeatScript `set` and its take (no wallet: it reads set.json)
+pub mod set_program;
 pub mod setqueue;
 // set recordings sign with the booth identity (djrust-wallet): the `wallet` feature
 #[cfg(feature = "wallet")]

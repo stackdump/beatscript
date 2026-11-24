@@ -16,7 +16,7 @@ const A_DECK: &[Action] = &[
     Action::new("toggle", "play / pause", Effect::Write),
     Action::new("stop", "stop", Effect::Write),
     Action::new("cue", "cue", Effect::Write),
-    Action::new("load", "load a generated track (genre, seed, structure | spec)", Effect::Write),
+    Action::new("load", "load a generated track (genre, seed, structure | spec), or a render of a public CC0 program onto the sample deck (spec render:<cid> or render:<cid>[a..b], bars a to b from 1)", Effect::Write),
     Action::new("demo", "the demo loop", Effect::Write),
     Action::new("file", "an audio file", Effect::Write),
     Action::new("next", "next track", Effect::Write),
@@ -29,7 +29,9 @@ const A_DECK: &[Action] = &[
     Action::new("section", "jump to a section", Effect::Write),
     Action::new("hot_cue", "set / jump to a hot cue", Effect::Write),
     Action::new("clear_cue", "clear a hot cue", Effect::Write),
-    Action::new("loop", "loop in / out / halve / double / exit / beats", Effect::Write),
+    Action::new("loop", "loop in / out / halve / double / exit / beats, on a sample deck's grid or a net deck's steps", Effect::Write),
+    Action::new("jump", "beat jump: the deck `beats` beats along its music, in its place in the beat", Effect::Write)
+        .with(&[Param::new("beats", "number", "how far; negative is back (a net deck: whole steps, a quarter beat each, landing on its next bar line while it plays)").req()]),
     Action::new("seek", "seek in a sample deck", Effect::Write),
     Action::new("role", "switch a role", Effect::Write),
     Action::new("macro", "fire a net macro", Effect::Write),
@@ -375,7 +377,7 @@ const A_SETLIST: &[Action] = &[
     Action::new("visibility", "the working set's visibility (or a saved one's, by id): no value reads it; public | private sets it (private: never shared or uploaded)", Effect::Write)
         .with(&[Param::new("value", "string", "public (the default) | private"), Param::new("id", "string", "read a saved set's instead")])
         .probe(r#"{"value":"__no_such_visibility__"}"#),
-    Action::new("fork", "a remix of a saved set (or of the working one), saved and made the working set: it keeps the license, points at its parent (forkedFrom) and credits a CC BY parent's author; forking an all-rights-reserved set warns", Effect::Write)
+    Action::new("fork", "a remix of a saved set (or of the working one), saved and made the working set: it keeps the license, points at its parent (forkedFrom) and credits the parent with its author whatever its license (marked forked from; once, as the attribution, when it is CC BY); forking an all-rights-reserved set warns", Effect::Write)
         .with(&[
             Param::new("id", "string", "the saved set; none: the working set"),
             Param::new("name", "string", "default: its name + (remix)"),
@@ -410,7 +412,7 @@ const A_TRACK: &[Action] = &[
     Action::new("visibility", "a saved track's visibility: no value reads it; public | private sets it (a new CID; private is never shared or uploaded)", Effect::Write)
         .with(&[Param::new("id", "string", "its cid, a part of it, or its name").req(), Param::new("value", "string", "public | private")])
         .probe(r#"{"id":"__no_such_track__"}"#),
-    Action::new("fork", "save a remix of a saved track: it keeps the license, points at its parent (forkedFrom) and carries every credit, adding the parent's author when it is CC BY; forking an all-rights-reserved track warns", Effect::Write)
+    Action::new("fork", "save a remix of a saved track: it keeps the license, points at its parent (forkedFrom) and carries every credit, adding the parent with its author whatever its license (marked forked from; once, as the attribution, when it is CC BY); forking an all-rights-reserved track warns", Effect::Write)
         .with(&[
             Param::new("id", "string", "the parent: its cid, a part of it, or its name").req(),
             Param::new("name", "string", "default: its name + (remix)"),
@@ -476,7 +478,7 @@ const A_LIVE: &[Action] = &[
             Param::new("eval", "boolean", "stage it too (default false)"),
         ])
         .probe(r#"{"url":"__not_a_link__"}"#),
-    Action::new("fork", "a fork of a saved program: the same program, forkedFrom its CID, its license and credits carried (a CC BY parent is credited), saved", Effect::Write)
+    Action::new("fork", "a fork of a saved program: the same program, forkedFrom its CID, its license and credits carried, the parent credited with its author whatever its license (a #! credit: line marked forked from), saved", Effect::Write)
         .with(&[
             Param::new("id", "string", "the parent: cid, part of one, or name").req(),
             Param::new("name", "string", "default \"<name> (fork)\""),
@@ -829,7 +831,7 @@ const A_ANALYSIS: &[Action] = &[
     Action::new("status", "the analysis worker, Beat This! and its models, the settings, the grids found", Effect::Read),
     Action::new(
         "beats",
-        "find the beats, tempo and bar 1 of a capture, a loop, an input's history, a file or the library (off the audio thread; cached by content hash)",
+        "find the beats, tempo and bar 1 of a capture, a loop, an input's history, a file or the library (off the audio thread; cached by content hash and analyzer); the grid names its analyzer: beatgrid@1 the DSP detector, beatgrid@2:<model SHA-256> Beat This!",
         Effect::Live,
     )
     .with(&[
@@ -842,7 +844,7 @@ const A_ANALYSIS: &[Action] = &[
         Param::new("trim", "boolean", "target capture: also trim it to start on the downbeat and run whole bars (new captures are trimmed by themselves)"),
     ])
     .probe(r#"{"target":"clip","id":"__no_such_clip__"}"#),
-    Action::new("grid", "the grid already found for a target (no analysis started)", Effect::Read).with(&[
+    Action::new("grid", "the grid already found for a target, with the analyzer that found it (no analysis started)", Effect::Read).with(&[
         Param::new("target", "string", "capture | clip | input | file | library").req(),
         Param::new("id", "string", ""),
         Param::new("input", "string", ""),
@@ -856,7 +858,7 @@ const A_ANALYSIS: &[Action] = &[
         Param::new("history_auto", "boolean", "analyse an input's history by itself while it has signal"),
         Param::new("history_seconds", "number", "how many seconds of an input's recording an analysis listens to"),
     ]),
-    Action::new("models", "the model files: where, pinned size and SHA-256, whether they are there", Effect::Read),
+    Action::new("models", "the model files: where, pinned size and SHA-256, whether they are there; Beat This!'s analyzer id is beatgrid@2:<that SHA-256>", Effect::Read),
     Action::new("fetch_models", "download the Beat This! models now (about 11 MB, checksum-verified)", Effect::Live).probe("!"),
     Action::new("retry", "try loading Beat This! again after a failure", Effect::Live).probe("!"),
 ];
@@ -1140,6 +1142,9 @@ const A_RECORD: &[Action] = &[
     Action::new("tracklist", "a set's tracklist as a cue sheet (default: the one recording now, else the newest)", Effect::Read)
         .with(&[Param::new("id", "string", "its cid or name")])
         .probe(r#"{"id":"__no_such_set__"}"#),
+    Action::new("program", "a recorded set written out as a BeatScript set program (play and mix lines), and the take that names it by CID", Effect::Read)
+        .with(&[Param::new("id", "string", "its cid, a part of it, or its name (default: the newest)")])
+        .probe(r#"{"id":"__no_such_set__"}"#),
     Action::new("verify", "check a saved set: the CID, the audio file against its CID, the signature against its did", Effect::Read)
         .with(&[Param::new("id", "string", "its cid or name").req()])
         .probe(r#"{"id":"__no_such_set__"}"#),
@@ -1212,10 +1217,16 @@ pub(super) const NOUNS: &[Noun] = &[
         actions: &A_DECK,
         doc:
         "One deck (A or B; default the focused one). Actions: state, play (on?), pause, toggle, \
-         stop, cue, load (genre, seed?, structure? | spec 'genre:seed:structure'), demo, file \
+         stop, cue, load (genre, seed?, structure? | spec 'genre:seed:structure'; spec \
+         'render:<cid>' or 'render:<cid>[a..b]': the offline render of a public CC0 program, or \
+         its bars a to b counted from 1, on the sample deck with the grid the program says, no \
+         beat detection; a program that is not CC0 and public, or uses samples, is refused), demo, file \
          (path: an audio file), next, seed_step (delta), tempo (bpm), pitch (value), \
          pitch_range (value), nudge (ratio), sync (align beat|bar), section (index), hot_cue / \
-         clear_cue (slot), loop (op in|out|halve|double|exit|beats, beats), seek (seconds), \
+         clear_cue (slot), loop (op in|out|halve|double|exit|beats, beats; a net deck loops its \
+         own steps too), jump (beats: negative is back; a beat jump in the deck's place in the \
+         beat: a sample deck by its grid, a net deck in whole steps on its next bar line while it \
+         plays; refused with why: no grid, past the song's end), seek (seconds), \
          role (role, on), macro (id: a net macro), master_macro (id, bars?), panic, rewind, \
          focus, sound (palette: an id or null = the default | step: ±n along the playable ones; \
          neither lists them: the track's whole sound from a palette, the same song from the next \
@@ -1237,7 +1248,8 @@ pub(super) const NOUNS: &[Noun] = &[
         actions: &[],
         doc:
         "Any DeckAction through the engine's single perform entry, in its session JSON: \
-         {op, deck, ...}. Ops include play, cue, hotCue, clearCue, loop, param (name: volume|\
+         {op, deck, ...}. Ops include play, cue, hotCue, clearCue, loop (loop: in|out|halve|\
+         double|exit), beatJump (beats, negative is back), param (name: volume|\
          filter|gain|eqLow|eqMid|eqHigh|pitch|mute|reverbWet|reverbSize|reverbTone|autoGain, \
          value), crossfader, master, load, queueNext, nextTrack, autoAdvance, section, role, \
          roleDisable, macro, panic, stinger, sync, quantize, follow, grid, loopRecord, \
@@ -1843,8 +1855,8 @@ pub(super) const NOUNS: &[Noun] = &[
               canonical, content-addressed JSON object that carries its own rights: license CC0-1.0 (the default: \
               public domain), CC-BY-4.0 (reuse with credit) or all-rights-reserved; visibility public (the \
               default) or private (never shared by CID, never uploaded); author (a signer identity); forkedFrom \
-              (the parent's CID, for a remix) and credits (every CC BY ancestor's CID and author, kept down the \
-              whole chain of forks). The rights are inside the object, so changing the license changes the CID. \
+              (the parent's CID, for a remix) and credits (every parent's CID and author, marked forked from, kept \
+              down the whole chain of forks). The rights are inside the object, so changing the license changes the CID. \
               list, get {id | deck}, save {deck, name, license, visibility, author}, license {id, value}, \
               visibility {id, value}, fork {id, name, author} (warns on an all-rights-reserved parent), share \
               {id} (refused when private), load {id, deck}, delete {id}. The music's own share CID (music_cid) \
@@ -2426,8 +2438,10 @@ pub(super) const NOUNS: &[Noun] = &[
               or a folder of vocals (target vox, path): the DSP grid at once, then Beat This! \
               (about 11 MB of models fetched on first use, checksum-verified; without them the DSP \
               grid stands) fitted so bar 1 is a downbeat. It runs off the audio thread and is cached \
-              by the audio's content hash; the call answers with the state and any grid already \
-              known, `grid` reads it later. New captures are trimmed to start on the downbeat and run \
+              by the audio's content hash and the analyzer. Every grid names its analyzer, pinned like \
+              gen@N: beatgrid@1 is the DSP detector, beatgrid@2:<SHA-256 of the model> is Beat This!, so \
+              a changed detector or model analyses again and never answers with an old grid. The call \
+              answers with the state and any grid already known, `grid` reads it later. New captures are trimmed to start on the downbeat and run \
               whole bars (capture_trim). `set` changes neural, capture_trim, min_confidence, snap \
               (off|beat|bar: a released history scrub lands on that line of the input's grid), \
               history_auto, history_seconds. status shows the worker, the models and every grid. \
@@ -2470,7 +2484,8 @@ pub(super) const NOUNS: &[Noun] = &[
               parent CIDs; canonical JSON with a CID, signed by the booth's key (EIP-191 over the CID, signer a \
               did:pkh), saved under <support>/recordings/<cid>/. replay plays it again exactly through the action \
               log's player; fork makes an editable copy that points back; verify checks the CID, the audio and \
-              the signature.",
+              the signature. program writes it out as a BeatScript set program (djhost::set_program) and \
+              answers its text, its program CID and the CID of the take that names it.",
         schema: "",
         params: &[],
         aliases: &["recording", "setrec"],

@@ -43,6 +43,11 @@ impl Backend for NeuralBackend {
         "Beat This!"
     }
 
+    /// `beatgrid@2:<SHA-256>` of the small model it loaded (and checked against that pin).
+    fn analyzer(&self) -> String {
+        models::analyzer()
+    }
+
     fn detect(&mut self, mono: &[f32], sample_rate: f64) -> Result<RawBeats, String> {
         let a = self
             .bt
