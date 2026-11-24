@@ -1,5 +1,6 @@
 {
- "cid": "z4EBG9jDR86CFWSz69XKkTX6KWqYV1m6wgnWTzSG6eAYuKEQME4",
+ "cid": "z4EBG9jEiS84ozuZqrzfcgyh5etKRSDm2yn27uwE5xqjd6BdV8M",
+ "clashes": [],
  "decks": {
   "A": {
    "has_notes": true,
@@ -36,14 +37,41 @@
   "tonal": false
  },
  "master": {
+  "bands": {
+   "high": -35.7,
+   "high_mid": -26.7,
+   "low": -19.1,
+   "low_mid": -23.4,
+   "mid": -18.9,
+   "sub": -23.5
+  },
+  "centroid_hz": 700,
   "clipped_ms": 0,
   "clipped_samples": 0,
+  "correlation": 0.95,
+  "crest_db": 12.6,
+  "lra": 1.3,
   "lufs": -12.1,
   "peak_db": -1.8,
-  "rms_db": -14.4
+  "plr_db": 10.4,
+  "rms_db": -14.4,
+  "short_term_max_lufs": -11.3,
+  "true_peak_db": -1.7,
+  "width": 0.03
  },
  "parts": [
   {
+   "bands": {
+    "high": -88,
+    "high_mid": -75.9,
+    "low": -18.3,
+    "low_mid": -31.4,
+    "mid": -51.3,
+    "sub": -23.1
+   },
+   "centroid_hz": 116,
+   "correlation": 1,
+   "crest_db": 10.9,
    "deck": "A",
    "has_notes": true,
    "lufs": -16.2,
@@ -52,9 +80,21 @@
    "peak_db": -6,
    "rms_db": -16.9,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0
   },
   {
+   "bands": {
+    "high": -29.2,
+    "high_mid": -41.4,
+    "low": null,
+    "low_mid": null,
+    "mid": -68,
+    "sub": null
+   },
+   "centroid_hz": 8710,
+   "correlation": 1,
+   "crest_db": 22.9,
    "deck": "A",
    "has_notes": true,
    "lufs": -21.7,
@@ -63,9 +103,21 @@
    "peak_db": -6,
    "rms_db": -28.9,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.08
   },
   {
+   "bands": {
+    "high": -47.6,
+    "high_mid": -26.7,
+    "low": -71.2,
+    "low_mid": -23.9,
+    "mid": -18.9,
+    "sub": null
+   },
+   "centroid_hz": 1126,
+   "correlation": 0.9,
+   "crest_db": 10,
    "deck": "B",
    "has_notes": true,
    "lufs": -13.9,
@@ -74,9 +126,21 @@
    "peak_db": -7.2,
    "rms_db": -17.2,
    "silent": false,
-   "voice": "pwm-lead"
+   "voice": "pwm-lead",
+   "width": 0.05
   },
   {
+   "bands": {
+    "high": null,
+    "high_mid": null,
+    "low": -50.9,
+    "low_mid": -53.4,
+    "mid": -57.3,
+    "sub": null
+   },
+   "centroid_hz": 273,
+   "correlation": 0.87,
+   "crest_db": 19.3,
    "deck": "B",
    "has_notes": true,
    "lufs": -43.5,
@@ -85,78 +149,166 @@
    "peak_db": -29.1,
    "rms_db": -48.3,
    "silent": false,
-   "voice": "warm-pad"
+   "voice": "warm-pad",
+   "width": 0.07
   }
  ],
  "sections": [
   {
+   "bands": {
+    "high": -34.5,
+    "high_mid": -30.6,
+    "low": -19.6,
+    "low_mid": -19,
+    "mid": -23,
+    "sub": -23.7
+   },
    "bars": 4,
    "from_bar": 1,
    "lufs": -12.7,
    "name": "evolve",
    "peak_db": -2.9,
-   "rms_db": -14.7
+   "rms_db": -14.7,
+   "true_peak_db": -2.7
   },
   {
+   "bands": {
+    "high": -35.5,
+    "high_mid": -30.6,
+    "low": -19.3,
+    "low_mid": -19,
+    "mid": -23,
+    "sub": -23.6
+   },
    "bars": 4,
    "from_bar": 5,
    "lufs": -12.7,
    "name": "evolve",
    "peak_db": -2.7,
-   "rms_db": -14.6
+   "rms_db": -14.6,
+   "true_peak_db": -2.7
   },
   {
+   "bands": {
+    "high": -35.8,
+    "high_mid": -28.6,
+    "low": -19.1,
+    "low_mid": -20.7,
+    "mid": -19.9,
+    "sub": -23.4
+   },
    "bars": 4,
    "from_bar": 9,
    "lufs": -12.3,
    "name": "evolve",
    "peak_db": -1.8,
-   "rms_db": -14.3
+   "rms_db": -14.3,
+   "true_peak_db": -1.8
   },
   {
+   "bands": {
+    "high": -35.7,
+    "high_mid": -27.4,
+    "low": -19,
+    "low_mid": -32,
+    "mid": -17.5,
+    "sub": -23.4
+   },
    "bars": 4,
    "from_bar": 13,
    "lufs": -12.1,
    "name": "evolve",
    "peak_db": -1.9,
-   "rms_db": -14.2
+   "rms_db": -14.2,
+   "true_peak_db": -1.9
   },
   {
+   "bands": {
+    "high": -35.5,
+    "high_mid": -24.9,
+    "low": -19,
+    "low_mid": -32.1,
+    "mid": -17.4,
+    "sub": -23.5
+   },
    "bars": 4,
    "from_bar": 17,
    "lufs": -11.7,
    "name": "evolve",
    "peak_db": -1.8,
-   "rms_db": -14
+   "rms_db": -14,
+   "true_peak_db": -1.7
   },
   {
+   "bands": {
+    "high": -35.5,
+    "high_mid": -24.8,
+    "low": -19,
+    "low_mid": -32.6,
+    "mid": -17.5,
+    "sub": -23.4
+   },
    "bars": 4,
    "from_bar": 21,
    "lufs": -11.7,
    "name": "evolve",
    "peak_db": -1.8,
-   "rms_db": -14.1
+   "rms_db": -14.1,
+   "true_peak_db": -1.8
   },
   {
+   "bands": {
+    "high": -35,
+    "high_mid": -25.6,
+    "low": -19,
+    "low_mid": -32.4,
+    "mid": -17.9,
+    "sub": -23.4
+   },
    "bars": 4,
    "from_bar": 25,
    "lufs": -11.7,
    "name": "evolve",
    "peak_db": -2.1,
-   "rms_db": -14.3
+   "rms_db": -14.3,
+   "true_peak_db": -2.1
   },
   {
+   "bands": {
+    "high": -38.5,
+    "high_mid": -25.3,
+    "low": -18.7,
+    "low_mid": -31.8,
+    "mid": -19.2,
+    "sub": -23.3
+   },
    "bars": 4,
    "from_bar": 29,
    "lufs": -11.8,
    "name": "evolve",
    "peak_db": -2,
-   "rms_db": -14.7
+   "rms_db": -14.7,
+   "true_peak_db": -1.9
   }
  ],
  "silent": [],
- "version": "listen/1",
- "warnings": [],
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": 1.9,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": -0.7
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "buried:B.harmony",
+  "loudness:high"
+ ],
+ "warnings": [
+  "deck B harmony is 31 LU under the mix and barely heard: raise its `vel=`",
+  "the master is -12.1 LUFS, 1.9 LU over the streaming target of -14 LUFS, which turns it down by as much: `master: level 0.8` gives the room back to the peaks"
+ ],
  "window": {
   "bars": 32,
   "from_bar": 1,

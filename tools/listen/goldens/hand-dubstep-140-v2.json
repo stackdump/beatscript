@@ -1,5 +1,27 @@
 {
- "cid": "z4EBG9j9cjqaYU5uVNFH6YKAMoiyPfNkof87KEXjPNPpAhJzDhi",
+ "cid": "z4EBG9jEj3ephVYiwBA3bmUnp5GmMQ8hjtdgFSbrfgKHp3cJfef",
+ "clashes": [
+  {
+   "band": "sub",
+   "bars": [
+    [
+     56,
+     57
+    ]
+   ],
+   "gap_db": 1.7,
+   "hz": "20-60 Hz",
+   "overlap": 0.57,
+   "parts": [
+    "A.bass",
+    "A.kick"
+   ],
+   "sections": [
+    "drop2",
+    "outro"
+   ]
+  }
+ ],
  "decks": {
   "A": {
    "has_notes": true,
@@ -38,14 +60,41 @@
   "tonal": false
  },
  "master": {
+  "bands": {
+   "high": -46.2,
+   "high_mid": -39.6,
+   "low": -20.5,
+   "low_mid": -24.1,
+   "mid": -28.4,
+   "sub": -26.4
+  },
+  "centroid_hz": 264,
   "clipped_ms": 0,
   "clipped_samples": 0,
+  "correlation": 0.94,
+  "crest_db": 16.1,
+  "lra": 5.2,
   "lufs": -15.9,
   "peak_db": -1.7,
-  "rms_db": -17.8
+  "plr_db": 14.2,
+  "rms_db": -17.8,
+  "short_term_max_lufs": -13.1,
+  "true_peak_db": -1.7,
+  "width": 0.03
  },
  "parts": [
   {
+   "bands": {
+    "high": -88.3,
+    "high_mid": -76.2,
+    "low": -20.1,
+    "low_mid": -33.5,
+    "mid": -52.5,
+    "sub": -23.9
+   },
+   "centroid_hz": 108,
+   "correlation": 1,
+   "crest_db": 12.4,
    "deck": "A",
    "has_notes": true,
    "lufs": -16.1,
@@ -54,9 +103,21 @@
    "peak_db": -6,
    "rms_db": -18.4,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0
   },
   {
+   "bands": {
+    "high": -28.2,
+    "high_mid": -40.5,
+    "low": null,
+    "low_mid": null,
+    "mid": -67,
+    "sub": null
+   },
+   "centroid_hz": 8735,
+   "correlation": 1,
+   "crest_db": 22,
    "deck": "A",
    "has_notes": true,
    "lufs": -21.3,
@@ -65,9 +126,21 @@
    "peak_db": -6,
    "rms_db": -28,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.08
   },
   {
+   "bands": {
+    "high": -42.1,
+    "high_mid": -32.5,
+    "low": -30.5,
+    "low_mid": -52.1,
+    "mid": -40.8,
+    "sub": -59.4
+   },
+   "centroid_hz": 1699,
+   "correlation": 0.95,
+   "crest_db": 21.9,
    "deck": "A",
    "has_notes": true,
    "lufs": -19.1,
@@ -76,9 +149,21 @@
    "peak_db": -6,
    "rms_db": -27.9,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.03
   },
   {
+   "bands": {
+    "high": null,
+    "high_mid": null,
+    "low": -22.7,
+    "low_mid": -32.6,
+    "mid": -79.1,
+    "sub": -19.6
+   },
+   "centroid_hz": 73,
+   "correlation": 1,
+   "crest_db": 11.7,
    "deck": "A",
    "has_notes": true,
    "lufs": -18.8,
@@ -87,9 +172,21 @@
    "peak_db": -6,
    "rms_db": -17.7,
    "silent": false,
-   "voice": "wobble-lead"
+   "voice": "wobble-lead",
+   "width": 0
   },
   {
+   "bands": {
+    "high": null,
+    "high_mid": null,
+    "low": -32.4,
+    "low_mid": -35.3,
+    "mid": -38.8,
+    "sub": null
+   },
+   "centroid_hz": 285,
+   "correlation": 0.85,
+   "crest_db": 17.9,
    "deck": "B",
    "has_notes": true,
    "lufs": -25.8,
@@ -98,9 +195,21 @@
    "peak_db": -12.1,
    "rms_db": -30,
    "silent": false,
-   "voice": "warm-pad"
+   "voice": "warm-pad",
+   "width": 0.08
   },
   {
+   "bands": {
+    "high": -60.1,
+    "high_mid": -35.5,
+    "low": -22.5,
+    "low_mid": -23.1,
+    "mid": -26.8,
+    "sub": -79.1
+   },
+   "centroid_hz": 411,
+   "correlation": 0.95,
+   "crest_db": 9.5,
    "deck": "B",
    "has_notes": true,
    "lufs": -16.5,
@@ -109,62 +218,132 @@
    "peak_db": -9.4,
    "rms_db": -18.9,
    "silent": false,
-   "voice": "pwm-lead"
+   "voice": "pwm-lead",
+   "width": 0.02
   }
  ],
  "sections": [
   {
+   "bands": {
+    "high": -51.6,
+    "high_mid": -49.5,
+    "low": -20.3,
+    "low_mid": -31,
+    "mid": -37.2,
+    "sub": -24.4
+   },
    "bars": 8,
    "from_bar": 1,
    "lufs": -17,
    "name": "intro",
    "peak_db": -4.2,
-   "rms_db": -18.5
+   "rms_db": -18.5,
+   "true_peak_db": -4.2
   },
   {
+   "bands": {
+    "high": -37.7,
+    "high_mid": -32.6,
+    "low": -23.7,
+    "low_mid": -26,
+    "mid": -28.2,
+    "sub": -46.3
+   },
    "bars": 8,
    "from_bar": 9,
    "lufs": -17.5,
    "name": "build",
    "peak_db": -1.7,
-   "rms_db": -20.4
+   "rms_db": -20.4,
+   "true_peak_db": -1.7
   },
   {
+   "bands": {
+    "high": -69.1,
+    "high_mid": -45.3,
+    "low": -19.2,
+    "low_mid": -22.1,
+    "mid": -27,
+    "sub": -25.2
+   },
    "bars": 16,
    "from_bar": 17,
    "lufs": -14.7,
    "name": "drop",
    "peak_db": -2.6,
-   "rms_db": -16.3
+   "rms_db": -16.3,
+   "true_peak_db": -2.6
   },
   {
+   "bands": {
+    "high": -57.6,
+    "high_mid": -37.1,
+    "low": -25.5,
+    "low_mid": -26.6,
+    "mid": -27.9,
+    "sub": -49.1
+   },
    "bars": 8,
    "from_bar": 33,
    "lufs": -19.2,
    "name": "breakdown",
    "peak_db": -6.9,
-   "rms_db": -21.6
+   "rms_db": -21.6,
+   "true_peak_db": -6.9
   },
   {
+   "bands": {
+    "high": -73.5,
+    "high_mid": -45.3,
+    "low": -19.2,
+    "low_mid": -22.1,
+    "mid": -27,
+    "sub": -25.2
+   },
    "bars": 16,
    "from_bar": 41,
    "lufs": -14.8,
    "name": "drop2",
    "peak_db": -2.7,
-   "rms_db": -16.4
+   "rms_db": -16.4,
+   "true_peak_db": -2.7
   },
   {
+   "bands": {
+    "high": -48.4,
+    "high_mid": -50.7,
+    "low": -21.6,
+    "low_mid": -32.6,
+    "mid": -38.4,
+    "sub": -26
+   },
    "bars": 8,
    "from_bar": 57,
    "lufs": -18.5,
    "name": "outro",
    "peak_db": -5.8,
-   "rms_db": -19.9
+   "rms_db": -19.9,
+   "true_peak_db": -5.8
   }
  ],
  "silent": [],
- "version": "listen/1",
- "warnings": [],
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": -1.9,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": -0.7
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "clash:A.bass/A.kick:sub",
+  "loudness:low"
+ ],
+ "warnings": [
+  "deck A bass and deck A kick clash at 20-60 Hz (sub) in bars 56-57: they share deck A, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the bass on a deck of its own and `duck` it under A.kick",
+  "the master is -15.9 LUFS, 1.9 LU under the streaming target of -14 LUFS: its true peak leaves 0.7 dB of room under -1 dBTP, so a level alone would pass it: round the peaks with `master: drive` (BeatScript has no limiter), then raise the level"
+ ],
  "window": {
   "bars": 64,
   "from_bar": 1,

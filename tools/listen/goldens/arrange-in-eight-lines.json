@@ -1,0 +1,295 @@
+{
+ "cid": "z4EBG9jHEKgonTqe3ucsjCSx1dMpeceWXr68HEfZrw2n6Yd62sj",
+ "clashes": [],
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -16.1,
+   "parts": [
+    "kick",
+    "hihat"
+   ],
+   "peak_db": -6,
+   "rms_db": -17.1,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -15.3,
+   "parts": [
+    "arp"
+   ],
+   "peak_db": -6,
+   "rms_db": -19.7,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 124,
+  "bpm_confidence": 369.642,
+  "bpm_match": "same",
+  "declared_bpm": 124,
+  "declared_key": "am",
+  "key": "A minor",
+  "key_confidence": 0.243,
+  "key_match": "same",
+  "tonal": false
+ },
+ "master": {
+  "bands": {
+   "high": -28.2,
+   "high_mid": -24.5,
+   "low": -18.5,
+   "low_mid": -27.9,
+   "mid": -23.6,
+   "sub": -23.4
+  },
+  "centroid_hz": 1094,
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "correlation": 0.95,
+  "crest_db": 14.9,
+  "lra": 1,
+  "lufs": -12.6,
+  "peak_db": -0.3,
+  "plr_db": 12.6,
+  "rms_db": -15.2,
+  "short_term_max_lufs": -12.1,
+  "true_peak_db": 0,
+  "width": 0.03
+ },
+ "parts": [
+  {
+   "bands": {
+    "high": -86.2,
+    "high_mid": -75.9,
+    "low": -17.9,
+    "low_mid": -30.7,
+    "mid": -51.6,
+    "sub": -23.1
+   },
+   "centroid_hz": 120,
+   "correlation": 1,
+   "crest_db": 10.6,
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -15.8,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -16.6,
+   "silent": false,
+   "voice": "drums-v8",
+   "width": 0
+  },
+  {
+   "bands": {
+    "high": -27.3,
+    "high_mid": -39.5,
+    "low": null,
+    "low_mid": null,
+    "mid": -66.1,
+    "sub": null
+   },
+   "centroid_hz": 8737,
+   "correlation": 1,
+   "crest_db": 21,
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -20.6,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -27,
+   "silent": false,
+   "voice": "drums-v8",
+   "width": 0.08
+  },
+  {
+   "bands": {
+    "high": -29.8,
+    "high_mid": -24.6,
+    "low": -35.7,
+    "low_mid": -30.1,
+    "mid": -23.6,
+    "sub": -46.4
+   },
+   "centroid_hz": 2569,
+   "correlation": 0.86,
+   "crest_db": 13.7,
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -15.3,
+   "measured": true,
+   "part": "arp",
+   "peak_db": -6,
+   "rms_db": -19.7,
+   "silent": false,
+   "voice": "bright-pluck",
+   "width": 0.07
+  }
+ ],
+ "sections": [
+  {
+   "bands": {
+    "high": -28.2,
+    "high_mid": -24.5,
+    "low": -18.1,
+    "low_mid": -27.1,
+    "mid": -23.4,
+    "sub": -23.1
+   },
+   "bars": 4,
+   "from_bar": 1,
+   "lufs": -12.4,
+   "name": "groove",
+   "peak_db": -0.4,
+   "rms_db": -14.9,
+   "true_peak_db": -0.2
+  },
+  {
+   "bands": {
+    "high": -27.7,
+    "high_mid": -24.5,
+    "low": -19,
+    "low_mid": -27.6,
+    "mid": -23.5,
+    "sub": -23.5
+   },
+   "bars": 4,
+   "from_bar": 5,
+   "lufs": -12.7,
+   "name": "groove@2",
+   "peak_db": -1,
+   "rms_db": -15.4,
+   "true_peak_db": -0.6
+  },
+  {
+   "bands": {
+    "high": -27.8,
+    "high_mid": -24.4,
+    "low": -19,
+    "low_mid": -29.2,
+    "mid": -23.7,
+    "sub": -23.5
+   },
+   "bars": 4,
+   "from_bar": 9,
+   "lufs": -12.7,
+   "name": "groove@3",
+   "peak_db": -0.3,
+   "rms_db": -15.4,
+   "true_peak_db": -0.3
+  },
+  {
+   "bands": {
+    "high": -28.5,
+    "high_mid": -24.4,
+    "low": -17.4,
+    "low_mid": -27.9,
+    "mid": -23.7,
+    "sub": -23.1
+   },
+   "bars": 4,
+   "from_bar": 13,
+   "lufs": -12.2,
+   "name": "groove@4",
+   "peak_db": -0.9,
+   "rms_db": -14.6,
+   "true_peak_db": -0.7
+  },
+  {
+   "bands": {
+    "high": -28,
+    "high_mid": -24.3,
+    "low": -18.9,
+    "low_mid": -27.8,
+    "mid": -23.4,
+    "sub": -23.4
+   },
+   "bars": 4,
+   "from_bar": 17,
+   "lufs": -12.6,
+   "name": "groove@5",
+   "peak_db": -0.6,
+   "rms_db": -15.3,
+   "true_peak_db": -0.4
+  },
+  {
+   "bands": {
+    "high": -28.2,
+    "high_mid": -24.3,
+    "low": -18.4,
+    "low_mid": -27.6,
+    "mid": -23.4,
+    "sub": -23.9
+   },
+   "bars": 4,
+   "from_bar": 21,
+   "lufs": -12.5,
+   "name": "groove@6",
+   "peak_db": -0.3,
+   "rms_db": -15.1,
+   "true_peak_db": -0.2
+  },
+  {
+   "bands": {
+    "high": -29.9,
+    "high_mid": -26.1,
+    "low": -18.5,
+    "low_mid": -28.3,
+    "mid": -24.6,
+    "sub": -23.8
+   },
+   "bars": 4,
+   "from_bar": 25,
+   "lufs": -13.3,
+   "name": "groove@7",
+   "peak_db": -0.6,
+   "rms_db": -15.7,
+   "true_peak_db": 0
+  },
+  {
+   "bands": {
+    "high": -27.8,
+    "high_mid": -24.2,
+    "low": -18.8,
+    "low_mid": -27.8,
+    "mid": -23.3,
+    "sub": -23.4
+   },
+   "bars": 4,
+   "from_bar": 29,
+   "lufs": -12.5,
+   "name": "groove@8",
+   "peak_db": -0.6,
+   "rms_db": -15.2,
+   "true_peak_db": -0.4
+  }
+ ],
+ "silent": [],
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": 1.4,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": 1
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "true_peak",
+  "loudness:high"
+ ],
+ "warnings": [
+  "the master's true peak is 0.0 dBTP, over the streaming ceiling of -1 dBTP: take 1.4 dB off (`master: level 0.86`), which also brings it to the target",
+  "the master is -12.6 LUFS, 1.4 LU over the streaming target of -14 LUFS, which turns it down by as much: the true peak's `master: level 0.86` fixes both"
+ ],
+ "window": {
+  "bars": 32,
+  "from_bar": 1,
+  "program_bars": 32,
+  "seconds": 61.935,
+  "section": null
+ }
+}

@@ -1,5 +1,6 @@
 {
  "cid": "z4EBG9jBTCoCNLdbLnNM29MjsU2e6ou4ZK4AN2oc9nLCwcMayWa",
+ "clashes": [],
  "decks": {
   "A": {
    "has_notes": true,
@@ -35,14 +36,41 @@
   "tonal": false
  },
  "master": {
+  "bands": {
+   "high": -32.5,
+   "high_mid": -45.1,
+   "low": -18.2,
+   "low_mid": -31.2,
+   "mid": -51.4,
+   "sub": -23.1
+  },
+  "centroid_hz": 357,
   "clipped_ms": 0,
   "clipped_samples": 0,
+  "correlation": 1,
+  "crest_db": 10.7,
+  "lra": 0.5,
   "lufs": -15.6,
   "peak_db": -6,
-  "rms_db": -16.7
+  "plr_db": 9.6,
+  "rms_db": -16.7,
+  "short_term_max_lufs": -15.2,
+  "true_peak_db": -6,
+  "width": 0
  },
  "parts": [
   {
+   "bands": {
+    "high": -88.1,
+    "high_mid": -76.1,
+    "low": -18.2,
+    "low_mid": -31.2,
+    "mid": -51.4,
+    "sub": -23
+   },
+   "centroid_hz": 117,
+   "correlation": 1,
+   "crest_db": 10.8,
    "deck": "A",
    "has_notes": true,
    "lufs": -16,
@@ -51,9 +79,21 @@
    "peak_db": -6,
    "rms_db": -16.8,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0
   },
   {
+   "bands": {
+    "high": -29,
+    "high_mid": -41.5,
+    "low": null,
+    "low_mid": null,
+    "mid": -67.6,
+    "sub": null
+   },
+   "centroid_hz": 8739,
+   "correlation": 1,
+   "crest_db": 22.8,
    "deck": "A",
    "has_notes": true,
    "lufs": -22,
@@ -62,9 +102,13 @@
    "peak_db": -6,
    "rms_db": -28.8,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.08
   },
   {
+   "centroid_hz": null,
+   "correlation": null,
+   "crest_db": null,
    "deck": "B",
    "has_notes": true,
    "lufs": null,
@@ -73,17 +117,27 @@
    "peak_db": null,
    "rms_db": null,
    "silent": true,
-   "voice": "sub-bass"
+   "voice": "sub-bass",
+   "width": null
   }
  ],
  "sections": [
   {
+   "bands": {
+    "high": -32.5,
+    "high_mid": -45.1,
+    "low": -18.2,
+    "low_mid": -31.2,
+    "mid": -51.4,
+    "sub": -23.1
+   },
    "bars": 8,
    "from_bar": 1,
    "lufs": -15.6,
    "name": null,
    "peak_db": -6,
-   "rms_db": -16.7
+   "rms_db": -16.7,
+   "true_peak_db": -6
   }
  ],
  "silent": [
@@ -97,9 +151,22 @@
    "why": "deck B is muted"
   }
  ],
- "version": "listen/1",
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": -1.6,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": -5
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "silent:B:mute",
+  "loudness:low"
+ ],
  "warnings": [
-  "deck B is muted"
+  "deck B is muted",
+  "the master is -15.6 LUFS, 1.6 LU under the streaming target of -14 LUFS: the master is at level 1 and goes to 1 at most: raise the decks' `level` or the loudest parts' `vel=`"
  ],
  "window": {
   "bars": 8,

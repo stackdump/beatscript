@@ -1,0 +1,901 @@
+{
+ "cid": "z4EBG9jAPRSVxviGmnENfUnn32wdsRWVq8XC11AkWvyukoLVeY8",
+ "clashes": [
+  {
+   "band": "low_mid",
+   "bars": [
+    [
+     10,
+     11
+    ],
+    [
+     14,
+     15
+    ],
+    [
+     26,
+     32
+    ],
+    [
+     39,
+     40
+    ],
+    [
+     42,
+     44
+    ],
+    [
+     46,
+     47
+    ],
+    [
+     59,
+     62
+    ],
+    [
+     74,
+     79
+    ],
+    [
+     103,
+     104
+    ],
+    [
+     106,
+     108
+    ],
+    [
+     110,
+     111
+    ],
+    [
+     124,
+     125
+    ]
+   ],
+   "gap_db": 7.9,
+   "hz": "250-500 Hz",
+   "overlap": 0.72,
+   "parts": [
+    "B.vox",
+    "B.melody"
+   ],
+   "sections": [
+    "spot",
+    "spot@2",
+    "night@3",
+    "spot@3",
+    "spot@4",
+    "spot@5",
+    "night@7",
+    "spot@7",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "low_mid",
+   "bars": [
+    [
+     3,
+     4
+    ],
+    [
+     19,
+     20
+    ],
+    [
+     24,
+     27
+    ],
+    [
+     35,
+     36
+    ],
+    [
+     51,
+     52
+    ],
+    [
+     56,
+     57
+    ],
+    [
+     67,
+     68
+    ],
+    [
+     83,
+     84
+    ],
+    [
+     88,
+     91
+    ],
+    [
+     99,
+     100
+    ],
+    [
+     109,
+     111
+    ],
+    [
+     115,
+     116
+    ],
+    [
+     120,
+     123
+    ]
+   ],
+   "gap_db": 3.3,
+   "hz": "250-500 Hz",
+   "overlap": 0.66,
+   "parts": [
+    "B.vox",
+    "B.harmony"
+   ],
+   "sections": [
+    "night",
+    "night@2",
+    "spot@2",
+    "night@3",
+    "night@4",
+    "spot@4",
+    "night@5",
+    "night@6",
+    "spot@6",
+    "night@7",
+    "spot@7",
+    "night@8",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "low_mid",
+   "bars": [
+    [
+     25,
+     26
+    ],
+    [
+     39,
+     40
+    ],
+    [
+     57,
+     59
+    ],
+    [
+     62,
+     65
+    ],
+    [
+     89,
+     91
+    ],
+    [
+     93,
+     95
+    ],
+    [
+     103,
+     104
+    ],
+    [
+     121,
+     123
+    ],
+    [
+     125,
+     127
+    ]
+   ],
+   "gap_db": 0.3,
+   "hz": "250-500 Hz",
+   "overlap": 0.66,
+   "parts": [
+    "B.melody",
+    "B.harmony"
+   ],
+   "sections": [
+    "spot@2",
+    "night@3",
+    "spot@4",
+    "night@5",
+    "spot@6",
+    "night@7",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "mid",
+   "bars": [
+    [
+     31,
+     33
+    ],
+    [
+     64,
+     65
+    ],
+    [
+     91,
+     92
+    ],
+    [
+     94,
+     95
+    ],
+    [
+     123,
+     124
+    ],
+    [
+     126,
+     127
+    ]
+   ],
+   "gap_db": 5.7,
+   "hz": "500-2k Hz",
+   "overlap": 0.74,
+   "parts": [
+    "B.vox",
+    "B.harmony"
+   ],
+   "sections": [
+    "spot@2",
+    "night@3",
+    "spot@4",
+    "night@5",
+    "spot@6",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "mid",
+   "bars": [
+    [
+     25,
+     26
+    ],
+    [
+     28,
+     29
+    ]
+   ],
+   "gap_db": 7,
+   "hz": "500-2k Hz",
+   "overlap": 0.56,
+   "parts": [
+    "B.vox",
+    "A.clap"
+   ],
+   "sections": [
+    "spot@2"
+   ]
+  },
+  {
+   "band": "low",
+   "bars": [
+    [
+     61,
+     63
+    ]
+   ],
+   "gap_db": 7.5,
+   "hz": "60-250 Hz",
+   "overlap": 0.6,
+   "parts": [
+    "A.kick",
+    "B.melody"
+   ],
+   "sections": [
+    "spot@4"
+   ]
+  }
+ ],
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -16.2,
+   "parts": [
+    "kick",
+    "clap",
+    "hihat",
+    "bass",
+    "snare"
+   ],
+   "peak_db": -6,
+   "rms_db": -17.9,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -16.1,
+   "parts": [
+    "harmony",
+    "melody",
+    "vox",
+    "voxc"
+   ],
+   "peak_db": -4.5,
+   "rms_db": -18.5,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 122,
+  "bpm_confidence": 1008.898,
+  "bpm_match": "same",
+  "declared_bpm": 122,
+  "declared_key": "am",
+  "key": "A minor",
+  "key_confidence": 0.559,
+  "key_match": "same",
+  "tonal": false
+ },
+ "master": {
+  "bands": {
+   "high": -35.8,
+   "high_mid": -33.4,
+   "low": -18.8,
+   "low_mid": -20.6,
+   "mid": -22.3,
+   "sub": -26.9
+  },
+  "centroid_hz": 447,
+  "clipped_ms": 0.023,
+  "clipped_samples": 1,
+  "correlation": 0.9,
+  "crest_db": 15.2,
+  "lra": 3.3,
+  "lufs": -13.1,
+  "peak_db": 0,
+  "plr_db": 13.2,
+  "rms_db": -15.2,
+  "short_term_max_lufs": -10.7,
+  "true_peak_db": 0,
+  "width": 0.05
+ },
+ "parts": [
+  {
+   "bands": {
+    "high": -87.9,
+    "high_mid": -75.8,
+    "low": -18.2,
+    "low_mid": -31.2,
+    "mid": -51.3,
+    "sub": -23.1
+   },
+   "centroid_hz": 117,
+   "correlation": 1,
+   "crest_db": 10.8,
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -16.1,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -16.8,
+   "silent": false,
+   "voice": null,
+   "width": 0
+  },
+  {
+   "bands": {
+    "high": -43.2,
+    "high_mid": -30.8,
+    "low": -55.7,
+    "low_mid": -47,
+    "mid": -27.9,
+    "sub": -74
+   },
+   "centroid_hz": 2030,
+   "correlation": 0.8,
+   "crest_db": 20,
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -19.5,
+   "measured": true,
+   "part": "clap",
+   "peak_db": -6,
+   "rms_db": -26,
+   "silent": false,
+   "voice": null,
+   "width": 0.1
+  },
+  {
+   "bands": {
+    "high": -26.8,
+    "high_mid": -39.1,
+    "low": null,
+    "low_mid": null,
+    "mid": -65.7,
+    "sub": null
+   },
+   "centroid_hz": 8732,
+   "correlation": 1,
+   "crest_db": 20.6,
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -20.1,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -26.6,
+   "silent": false,
+   "voice": null,
+   "width": 0.08
+  },
+  {
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "measured": false,
+   "part": "bass",
+   "voice": "sub-bass"
+  },
+  {
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "measured": false,
+   "part": "snare",
+   "voice": null
+  },
+  {
+   "bands": {
+    "high": null,
+    "high_mid": -47.1,
+    "low": -36.2,
+    "low_mid": -26,
+    "mid": -25.8,
+    "sub": -80.3
+   },
+   "centroid_hz": 578,
+   "correlation": 0.52,
+   "crest_db": 18.2,
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -20.2,
+   "measured": true,
+   "part": "harmony",
+   "peak_db": -4.5,
+   "rms_db": -22.7,
+   "silent": false,
+   "voice": "warm-pad",
+   "width": 0.24
+  },
+  {
+   "bands": {
+    "high": null,
+    "high_mid": -87.4,
+    "low": -30,
+    "low_mid": -28,
+    "mid": -31.8,
+    "sub": -66.2
+   },
+   "centroid_hz": 342,
+   "correlation": 0.92,
+   "crest_db": 14.6,
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -22,
+   "measured": true,
+   "part": "melody",
+   "peak_db": -10.3,
+   "rms_db": -24.9,
+   "silent": false,
+   "voice": "kalimba",
+   "width": 0.04
+  },
+  {
+   "bands": {
+    "high": -54.3,
+    "high_mid": -37.1,
+    "low": -27.2,
+    "low_mid": -21.4,
+    "mid": -22.7,
+    "sub": -69.2
+   },
+   "centroid_hz": 535,
+   "correlation": 0.9,
+   "crest_db": 13.9,
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -15.6,
+   "measured": true,
+   "part": "vox",
+   "peak_db": -4.5,
+   "rms_db": -18.4,
+   "silent": false,
+   "voice": "voice-robot-choir",
+   "width": 0.05
+  },
+  {
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, \"make the drop deeper and move the kick\")",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j9VWbgtHhtcSD2r72Rzmf7nHfQTbULSyNvMEhv9uFeFRg",
+    "sections": null
+   },
+   "has_notes": true,
+   "measured": false,
+   "part": "voxc",
+   "voice": "voice-robot-choir"
+  }
+ ],
+ "sections": [
+  {
+   "bands": {
+    "high": -36.8,
+    "high_mid": -35.8,
+    "low": -18.7,
+    "low_mid": -22.8,
+    "mid": -25.7,
+    "sub": -27.5
+   },
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -14.3,
+   "name": "night",
+   "peak_db": -3.1,
+   "rms_db": -16.2,
+   "true_peak_db": -3.1
+  },
+  {
+   "bands": {
+    "high": -36.3,
+    "high_mid": -32.1,
+    "low": -18.8,
+    "low_mid": -19.1,
+    "mid": -19.8,
+    "sub": -27.5
+   },
+   "bars": 8,
+   "from_bar": 9,
+   "lufs": -12,
+   "name": "spot",
+   "peak_db": 0,
+   "rms_db": -14.1,
+   "true_peak_db": 0
+  },
+  {
+   "bands": {
+    "high": -36.4,
+    "high_mid": -35.4,
+    "low": -18.9,
+    "low_mid": -22.9,
+    "mid": -25.6,
+    "sub": -27.7
+   },
+   "bars": 8,
+   "from_bar": 17,
+   "lufs": -14.5,
+   "name": "night@2",
+   "peak_db": -3.2,
+   "rms_db": -16.4,
+   "true_peak_db": -3.2
+  },
+  {
+   "bands": {
+    "high": -35.9,
+    "high_mid": -32.4,
+    "low": -17.8,
+    "low_mid": -18.7,
+    "mid": -21.2,
+    "sub": -27.1
+   },
+   "bars": 8,
+   "from_bar": 25,
+   "lufs": -11.8,
+   "name": "spot@2",
+   "peak_db": -1.3,
+   "rms_db": -13.9,
+   "true_peak_db": -1.2
+  },
+  {
+   "bands": {
+    "high": -36.2,
+    "high_mid": -35.3,
+    "low": -19.2,
+    "low_mid": -23.1,
+    "mid": -25.6,
+    "sub": -27.5
+   },
+   "bars": 8,
+   "from_bar": 33,
+   "lufs": -14.6,
+   "name": "night@3",
+   "peak_db": -3.2,
+   "rms_db": -16.6,
+   "true_peak_db": -3.2
+  },
+  {
+   "bands": {
+    "high": -35.5,
+    "high_mid": -31.7,
+    "low": -19.2,
+    "low_mid": -19.3,
+    "mid": -19.8,
+    "sub": -26.6
+   },
+   "bars": 8,
+   "from_bar": 41,
+   "lufs": -12.2,
+   "name": "spot@3",
+   "peak_db": -0.4,
+   "rms_db": -14.3,
+   "true_peak_db": -0.3
+  },
+  {
+   "bands": {
+    "high": -36.2,
+    "high_mid": -35.3,
+    "low": -19.1,
+    "low_mid": -23.1,
+    "mid": -25.6,
+    "sub": -27.5
+   },
+   "bars": 8,
+   "from_bar": 49,
+   "lufs": -14.6,
+   "name": "night@4",
+   "peak_db": -3.1,
+   "rms_db": -16.5,
+   "true_peak_db": -3.1
+  },
+  {
+   "bands": {
+    "high": -35.4,
+    "high_mid": -32.1,
+    "low": -17.6,
+    "low_mid": -19.1,
+    "mid": -20.6,
+    "sub": -26.6
+   },
+   "bars": 8,
+   "from_bar": 57,
+   "lufs": -11.7,
+   "name": "spot@4",
+   "peak_db": -1.1,
+   "rms_db": -13.8,
+   "true_peak_db": -1.1
+  },
+  {
+   "bands": {
+    "high": -36.2,
+    "high_mid": -35.3,
+    "low": -19.4,
+    "low_mid": -23.2,
+    "mid": -25.6,
+    "sub": -27.2
+   },
+   "bars": 8,
+   "from_bar": 65,
+   "lufs": -14.8,
+   "name": "night@5",
+   "peak_db": -3.4,
+   "rms_db": -16.7,
+   "true_peak_db": -3.3
+  },
+  {
+   "bands": {
+    "high": -35.1,
+    "high_mid": -31.6,
+    "low": -19.3,
+    "low_mid": -19.4,
+    "mid": -19.8,
+    "sub": -26.3
+   },
+   "bars": 8,
+   "from_bar": 73,
+   "lufs": -12.2,
+   "name": "spot@5",
+   "peak_db": -0.1,
+   "rms_db": -14.3,
+   "true_peak_db": 0
+  },
+  {
+   "bands": {
+    "high": -36.2,
+    "high_mid": -35.3,
+    "low": -19.4,
+    "low_mid": -23.2,
+    "mid": -25.6,
+    "sub": -27.2
+   },
+   "bars": 8,
+   "from_bar": 81,
+   "lufs": -14.8,
+   "name": "night@6",
+   "peak_db": -3.1,
+   "rms_db": -16.7,
+   "true_peak_db": -3.1
+  },
+  {
+   "bands": {
+    "high": -34.9,
+    "high_mid": -32.2,
+    "low": -17.6,
+    "low_mid": -19,
+    "mid": -21.8,
+    "sub": -26.2
+   },
+   "bars": 8,
+   "from_bar": 89,
+   "lufs": -11.9,
+   "name": "spot@6",
+   "peak_db": -1,
+   "rms_db": -14,
+   "true_peak_db": -0.9
+  },
+  {
+   "bands": {
+    "high": -36.1,
+    "high_mid": -35.7,
+    "low": -19.5,
+    "low_mid": -23.3,
+    "mid": -25.7,
+    "sub": -26.9
+   },
+   "bars": 8,
+   "from_bar": 97,
+   "lufs": -14.8,
+   "name": "night@7",
+   "peak_db": -3.2,
+   "rms_db": -16.7,
+   "true_peak_db": -3.2
+  },
+  {
+   "bands": {
+    "high": -34.9,
+    "high_mid": -31.5,
+    "low": -19.6,
+    "low_mid": -19.4,
+    "mid": -19.8,
+    "sub": -26
+   },
+   "bars": 8,
+   "from_bar": 105,
+   "lufs": -12.3,
+   "name": "spot@7",
+   "peak_db": -0.8,
+   "rms_db": -14.4,
+   "true_peak_db": -0.7
+  },
+  {
+   "bands": {
+    "high": -36.1,
+    "high_mid": -35.7,
+    "low": -19.4,
+    "low_mid": -23.3,
+    "mid": -25.7,
+    "sub": -26.9
+   },
+   "bars": 8,
+   "from_bar": 113,
+   "lufs": -14.8,
+   "name": "night@8",
+   "peak_db": -3.2,
+   "rms_db": -16.7,
+   "true_peak_db": -3.2
+  },
+  {
+   "bands": {
+    "high": -34.8,
+    "high_mid": -32.1,
+    "low": -17.7,
+    "low_mid": -19,
+    "mid": -21.7,
+    "sub": -26
+   },
+   "bars": 8,
+   "from_bar": 121,
+   "lufs": -11.9,
+   "name": "spot@8",
+   "peak_db": -0.7,
+   "rms_db": -14,
+   "true_peak_db": -0.2
+  }
+ ],
+ "silent": [],
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": 0.9,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": 1
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "clip",
+  "true_peak",
+  "clash:B.melody/B.vox:low_mid",
+  "clash:B.harmony/B.vox:low_mid",
+  "clash:B.harmony/B.melody:low_mid",
+  "clash:A.clap/B.vox:mid"
+ ],
+ "warnings": [
+  "the master clips: 1 samples over full scale",
+  "the master's true peak is 0.0 dBTP, over the streaming ceiling of -1 dBTP: take 1.0 dB off (`master: level 0.89`), or round the peaks with `master: drive`",
+  "deck B vox and deck B melody clash at 250-500 Hz (low_mid) in bars 10-11, 14-15, 26-32, 39-40, 42-44, 46-47, 59-62, 74-79, 103-104, 106-108, 110-111 and 124-125: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the melody on a deck of its own",
+  "deck B vox and deck B harmony clash at 250-500 Hz (low_mid) in bars 3-4, 19-20, 24-27, 35-36, 51-52, 56-57, 67-68, 83-84, 88-91, 99-100, 109-111, 115-116 and 120-123: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the harmony on a deck of its own",
+  "deck B melody and deck B harmony clash at 250-500 Hz (low_mid) in bars 25-26, 39-40, 57-59, 62-65, 89-91, 93-95, 103-104, 121-123 and 125-127: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the harmony on a deck of its own",
+  "deck B vox and deck A clap clash at 500-2k Hz (mid) in bars 25-26 and 28-29: `mix { B eq mid -4 }` (on all of deck B), or lower the vox's `vel=`"
+ ],
+ "window": {
+  "bars": 128,
+  "from_bar": 1,
+  "program_bars": 128,
+  "seconds": 251.803,
+  "section": null
+ }
+}

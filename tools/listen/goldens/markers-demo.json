@@ -1,5 +1,6 @@
 {
- "cid": "z4EBG9jFNsEJ8p6Gr2mmuGvfG3qX58bFUf42LqTYh9Nw4BtrSaE",
+ "cid": "z4EBG9jETvW85s1uQCB4t3z6xFfsgiAPmpJm6Gg9R8DuTd3rZZy",
+ "clashes": [],
  "decks": {
   "A": {
    "has_notes": true,
@@ -26,24 +27,51 @@
  },
  "detected": {
   "bpm": 124,
-  "bpm_confidence": 33.514,
+  "bpm_confidence": 29.606,
   "bpm_match": "same",
   "declared_bpm": 124,
   "declared_key": "am",
   "key": "A minor",
-  "key_confidence": 0.504,
+  "key_confidence": 0.625,
   "key_match": "same",
   "tonal": false
  },
  "master": {
-  "clipped_ms": 0.249,
-  "clipped_samples": 11,
-  "lufs": -15.2,
-  "peak_db": 0.6,
-  "rms_db": -17.8
+  "bands": {
+   "high": -38.7,
+   "high_mid": -40.6,
+   "low": -21.1,
+   "low_mid": -28.5,
+   "mid": -22.7,
+   "sub": -28.1
+  },
+  "centroid_hz": 442,
+  "clipped_ms": 0.136,
+  "clipped_samples": 6,
+  "correlation": 0.85,
+  "crest_db": 18.2,
+  "lra": 13.7,
+  "lufs": -15.4,
+  "peak_db": 0.3,
+  "plr_db": 15.7,
+  "rms_db": -17.9,
+  "short_term_max_lufs": -12.4,
+  "true_peak_db": 0.3,
+  "width": 0.08
  },
  "parts": [
   {
+   "bands": {
+    "high": -88.2,
+    "high_mid": -76.1,
+    "low": -18.2,
+    "low_mid": -31.2,
+    "mid": -51.4,
+    "sub": -23
+   },
+   "centroid_hz": 117,
+   "correlation": 1,
+   "crest_db": 10.8,
    "deck": "A",
    "has_notes": true,
    "lufs": -16,
@@ -52,9 +80,21 @@
    "peak_db": -6,
    "rms_db": -16.8,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0
   },
   {
+   "bands": {
+    "high": -29.6,
+    "high_mid": -41.9,
+    "low": null,
+    "low_mid": null,
+    "mid": -68.3,
+    "sub": null
+   },
+   "centroid_hz": 8744,
+   "correlation": 1,
+   "crest_db": 23.3,
    "deck": "A",
    "has_notes": true,
    "lufs": -22.5,
@@ -63,9 +103,21 @@
    "peak_db": -6,
    "rms_db": -29.3,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.08
   },
   {
+   "bands": {
+    "high": -86.5,
+    "high_mid": -81.7,
+    "low": -17.4,
+    "low_mid": -25.3,
+    "mid": -28.1,
+    "sub": -48.5
+   },
+   "centroid_hz": 187,
+   "correlation": 0.98,
+   "crest_db": 10.4,
    "deck": "A",
    "has_notes": true,
    "lufs": -14.9,
@@ -74,9 +126,21 @@
    "peak_db": -6,
    "rms_db": -16.4,
    "silent": false,
-   "voice": "wobble-lead"
+   "voice": "wobble-lead",
+   "width": 0.01
   },
   {
+   "bands": {
+    "high": -48,
+    "high_mid": -30.4,
+    "low": -84.8,
+    "low_mid": -29.6,
+    "mid": -20.5,
+    "sub": null
+   },
+   "centroid_hz": 1012,
+   "correlation": 0.87,
+   "crest_db": 12.7,
    "deck": "B",
    "has_notes": true,
    "lufs": -16.2,
@@ -85,55 +149,116 @@
    "peak_db": -6.9,
    "rms_db": -19.6,
    "silent": false,
-   "voice": "pwm-lead"
+   "voice": "pwm-lead",
+   "width": 0.07
   }
  ],
  "sections": [
   {
+   "bands": {
+    "high": -34,
+    "high_mid": -44.4,
+    "low": -23.5,
+    "low_mid": -32.9,
+    "mid": -47.9,
+    "sub": -42.8
+   },
    "bars": 8,
    "from_bar": 1,
    "lufs": -20.2,
    "name": "build",
-   "peak_db": 0.6,
-   "rms_db": -22.6
+   "peak_db": 0.3,
+   "rms_db": -22.6,
+   "true_peak_db": 0.3
   },
   {
+   "bands": {
+    "high": -75.8,
+    "high_mid": -43.7,
+    "low": -19.1,
+    "low_mid": -24,
+    "mid": -20.3,
+    "sub": -24.8
+   },
    "bars": 4,
    "from_bar": 9,
-   "lufs": -14.1,
+   "lufs": -13.8,
    "name": "drop",
-   "peak_db": -1.2,
-   "rms_db": -15.6
+   "peak_db": -1.5,
+   "rms_db": -15.4,
+   "true_peak_db": -1.4
   },
   {
+   "bands": {
+    "high": -78.1,
+    "high_mid": -41.3,
+    "low": -20.7,
+    "low_mid": -26.3,
+    "mid": -21.6,
+    "sub": -27.1
+   },
    "bars": 4,
    "from_bar": 13,
-   "lufs": -14.9,
+   "lufs": -15.4,
    "name": "drop",
-   "peak_db": -3.3,
-   "rms_db": -16.7
+   "peak_db": -4,
+   "rms_db": -17,
+   "true_peak_db": -4
   },
   {
+   "bands": {
+    "high": -78.1,
+    "high_mid": -35.8,
+    "low": -20.9,
+    "low_mid": -32.1,
+    "mid": -22.6,
+    "sub": -27
+   },
    "bars": 4,
    "from_bar": 17,
-   "lufs": -15.5,
+   "lufs": -16.1,
    "name": "drop",
-   "peak_db": -4.3,
-   "rms_db": -17.2
+   "peak_db": -3.6,
+   "rms_db": -17.8,
+   "true_peak_db": -3.6
   },
   {
+   "bands": {
+    "high": -76.3,
+    "high_mid": -41,
+    "low": -20.8,
+    "low_mid": -32,
+    "mid": -19.8,
+    "sub": -27
+   },
    "bars": 4,
    "from_bar": 21,
-   "lufs": -14.8,
+   "lufs": -14.7,
    "name": "drop",
-   "peak_db": -3.9,
-   "rms_db": -16.7
+   "peak_db": -2.3,
+   "rms_db": -16.7,
+   "true_peak_db": -2.3
   }
  ],
  "silent": [],
- "version": "listen/1",
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": -1.4,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": 1.3
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "clip",
+  "true_peak",
+  "loudness:low"
+ ],
  "warnings": [
-  "the master clips: 11 samples over full scale"
+  "the master clips: 6 samples over full scale",
+  "the master's true peak is 0.3 dBTP, over the streaming ceiling of -1 dBTP: its peaks stand 15.7 dB over its loudness, so the level that meets the ceiling (`master: level 0.86`) would leave it 2.7 LU under the target: round the peaks first with `master: drive` or a lower `vel=` on the loudest hits (BeatScript has no limiter), then set the level",
+  "the master is -15.4 LUFS, 1.4 LU under the streaming target of -14 LUFS: its true peak leaves 0.0 dB of room under -1 dBTP, so a level alone would pass it: round the peaks with `master: drive` (BeatScript has no limiter), then raise the level"
  ],
  "window": {
   "bars": 24,

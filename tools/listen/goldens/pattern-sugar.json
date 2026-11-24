@@ -1,0 +1,302 @@
+{
+ "cid": "z4EBG9jBv8oGG5a1FNEpVpF9sbfRN4xjo4JkFyi2S3KxWSHtWNp",
+ "clashes": [
+  {
+   "band": "low",
+   "bars": [
+    [
+     9,
+     16
+    ]
+   ],
+   "gap_db": 0.7,
+   "hz": "60-250 Hz",
+   "overlap": 0.83,
+   "parts": [
+    "B.bass",
+    "A.kick"
+   ],
+   "sections": [
+    "turn"
+   ]
+  }
+ ],
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -16.8,
+   "parts": [
+    "kick",
+    "hihat",
+    "clap",
+    "snare"
+   ],
+   "peak_db": -6,
+   "rms_db": -17.9,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -17.8,
+   "parts": [
+    "bass",
+    "melody"
+   ],
+   "peak_db": -6,
+   "rms_db": -18.6,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 126,
+  "bpm_confidence": 0,
+  "bpm_match": "same",
+  "declared_bpm": 126,
+  "declared_key": "am",
+  "key": "A minor",
+  "key_confidence": 0.533,
+  "key_match": "same",
+  "tonal": false
+ },
+ "master": {
+  "bands": {
+   "high": -35.5,
+   "high_mid": -32.3,
+   "low": -17.4,
+   "low_mid": -32.1,
+   "mid": -29.5,
+   "sub": -20.5
+  },
+  "centroid_hz": 280,
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "correlation": 0.98,
+  "crest_db": 15.2,
+  "lra": 0.8,
+  "lufs": -14.5,
+  "peak_db": -0.1,
+  "plr_db": 14.4,
+  "rms_db": -15.2,
+  "short_term_max_lufs": -13.7,
+  "true_peak_db": -0.1,
+  "width": 0.01
+ },
+ "parts": [
+  {
+   "bands": {
+    "high": -87.9,
+    "high_mid": -75.8,
+    "low": -18.1,
+    "low_mid": -31.1,
+    "mid": -51.3,
+    "sub": -23
+   },
+   "centroid_hz": 117,
+   "correlation": 1,
+   "crest_db": 10.7,
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -16,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -16.7,
+   "silent": false,
+   "voice": null,
+   "width": 0
+  },
+  {
+   "bands": {
+    "high": -30.8,
+    "high_mid": -43.1,
+    "low": null,
+    "low_mid": null,
+    "mid": -69.7,
+    "sub": null
+   },
+   "centroid_hz": 8754,
+   "correlation": 1,
+   "crest_db": 24.5,
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -22.7,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -30.5,
+   "silent": false,
+   "voice": null,
+   "width": 0.08
+  },
+  {
+   "bands": {
+    "high": -43.1,
+    "high_mid": -30.8,
+    "low": -55.5,
+    "low_mid": -46.4,
+    "mid": -28,
+    "sub": -73.6
+   },
+   "centroid_hz": 2031,
+   "correlation": 0.85,
+   "crest_db": 20.1,
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -20.4,
+   "measured": true,
+   "part": "clap",
+   "peak_db": -6,
+   "rms_db": -26.1,
+   "silent": false,
+   "voice": null,
+   "width": 0.07
+  },
+  {
+   "bands": {
+    "high": -39.6,
+    "high_mid": -30,
+    "low": -27.9,
+    "low_mid": -49.6,
+    "mid": -38.2,
+    "sub": -56.8
+   },
+   "centroid_hz": 1700,
+   "correlation": 0.95,
+   "crest_db": 19.4,
+   "deck": "A",
+   "has_notes": true,
+   "lufs": -18.9,
+   "measured": true,
+   "part": "snare",
+   "peak_db": -6,
+   "rms_db": -25.4,
+   "silent": false,
+   "voice": null,
+   "width": 0.03
+  },
+  {
+   "bands": {
+    "high": null,
+    "high_mid": -84,
+    "low": -18.3,
+    "low_mid": -55.4,
+    "mid": -65.7,
+    "sub": -19.4
+   },
+   "centroid_hz": 66,
+   "correlation": 1,
+   "crest_db": 9.8,
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -15.5,
+   "measured": true,
+   "part": "bass",
+   "peak_db": -6,
+   "rms_db": -15.8,
+   "silent": false,
+   "voice": null,
+   "width": 0
+  },
+  {
+   "bands": {
+    "high": -39.3,
+    "high_mid": -33.7,
+    "low": -49.5,
+    "low_mid": -38.3,
+    "mid": -28.6,
+    "sub": -41.8
+   },
+   "centroid_hz": 1801,
+   "correlation": 0.77,
+   "crest_db": 18.8,
+   "deck": "B",
+   "has_notes": true,
+   "lufs": -22.3,
+   "measured": true,
+   "part": "melody",
+   "peak_db": -6,
+   "rms_db": -24.8,
+   "silent": false,
+   "voice": "pluck",
+   "width": 0.11
+  }
+ ],
+ "sections": [
+  {
+   "bands": {
+    "high": -36.6,
+    "high_mid": -32.5,
+    "low": -17.4,
+    "low_mid": -31.8,
+    "mid": -29.3,
+    "sub": -19.8
+   },
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -14.4,
+   "name": "groove",
+   "peak_db": -0.3,
+   "rms_db": -15,
+   "true_peak_db": -0.2
+  },
+  {
+   "bands": {
+    "high": -33.8,
+    "high_mid": -31.9,
+    "low": -17.4,
+    "low_mid": -32.7,
+    "mid": -29.9,
+    "sub": -22.4
+   },
+   "bars": 8,
+   "from_bar": 9,
+   "lufs": -14.7,
+   "name": "turn",
+   "peak_db": -0.1,
+   "rms_db": -15.7,
+   "true_peak_db": -0.1
+  },
+  {
+   "bands": {
+    "high": -36.6,
+    "high_mid": -32.5,
+    "low": -17.5,
+    "low_mid": -31.9,
+    "mid": -29.3,
+    "sub": -19.8
+   },
+   "bars": 8,
+   "from_bar": 17,
+   "lufs": -14.4,
+   "name": "groove",
+   "peak_db": -0.3,
+   "rms_db": -15,
+   "true_peak_db": -0.2
+  }
+ ],
+ "silent": [],
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": -0.5,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": 0.9
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "clash:A.kick/B.bass:low",
+  "true_peak"
+ ],
+ "warnings": [
+  "deck B bass and deck A kick clash at 60-250 Hz (low) in bars 9-16: `duck B under A.kick 6db`, or `mix { B eq low -6 }` (on all of deck B)",
+  "the master's true peak is -0.1 dBTP, over the streaming ceiling of -1 dBTP: its peaks stand 14.4 dB over its loudness, so the level that meets the ceiling (`master: level 0.9`) would leave it 1.4 LU under the target: round the peaks first with `master: drive` or a lower `vel=` on the loudest hits (BeatScript has no limiter), then set the level"
+ ],
+ "window": {
+  "bars": 24,
+  "from_bar": 1,
+  "program_bars": 24,
+  "seconds": 45.714,
+  "section": null
+ }
+}

@@ -1,5 +1,6 @@
 {
- "cid": "z4EBG9jH3mZDLFMgrNAyFRs3LSUjWpaJKMh2ZiJn724F1QsEDNq",
+ "cid": "z4EBG9j1BqsAo2x1wWJ8ruvX9ZS5oo6P791496n7RZd4F6m41oR",
+ "clashes": [],
  "decks": {
   "A": {
    "has_notes": true,
@@ -36,14 +37,41 @@
   "tonal": false
  },
  "master": {
+  "bands": {
+   "high": -32.6,
+   "high_mid": -32.8,
+   "low": -17.5,
+   "low_mid": -33.2,
+   "mid": -41,
+   "sub": -13.1
+  },
+  "centroid_hz": 160,
   "clipped_ms": 0,
   "clipped_samples": 0,
+  "correlation": 1,
+  "crest_db": 11.5,
+  "lra": 0.7,
   "lufs": -12.8,
   "peak_db": -0.1,
-  "rms_db": -11.6
+  "plr_db": 12.7,
+  "rms_db": -11.6,
+  "short_term_max_lufs": -12.3,
+  "true_peak_db": -0.1,
+  "width": 0
  },
  "parts": [
   {
+   "bands": {
+    "high": -88,
+    "high_mid": -76,
+    "low": -18.7,
+    "low_mid": -31.9,
+    "mid": -51.6,
+    "sub": -23.3
+   },
+   "centroid_hz": 114,
+   "correlation": 1,
+   "crest_db": 11.2,
    "deck": "A",
    "has_notes": true,
    "lufs": -15.7,
@@ -52,9 +80,21 @@
    "peak_db": -6,
    "rms_db": -17.3,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0
   },
   {
+   "bands": {
+    "high": -40,
+    "high_mid": -30.3,
+    "low": -28.3,
+    "low_mid": -49.9,
+    "mid": -38.4,
+    "sub": -57.1
+   },
+   "centroid_hz": 1699,
+   "correlation": 0.95,
+   "crest_db": 19.8,
    "deck": "A",
    "has_notes": true,
    "lufs": -18.6,
@@ -63,9 +103,21 @@
    "peak_db": -6,
    "rms_db": -25.8,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.03
   },
   {
+   "bands": {
+    "high": -22.8,
+    "high_mid": -35.1,
+    "low": null,
+    "low_mid": null,
+    "mid": -61.6,
+    "sub": null
+   },
+   "centroid_hz": 8733,
+   "correlation": 1,
+   "crest_db": 16.5,
    "deck": "A",
    "has_notes": true,
    "lufs": -16.2,
@@ -74,9 +126,21 @@
    "peak_db": -6,
    "rms_db": -22.5,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.08
   },
   {
+   "bands": {
+    "high": -87.5,
+    "high_mid": -82.5,
+    "low": -21.7,
+    "low_mid": -61.7,
+    "mid": -72.4,
+    "sub": -13.4
+   },
+   "centroid_hz": 46,
+   "correlation": 1,
+   "crest_db": 6.8,
    "deck": "B",
    "has_notes": true,
    "lufs": -15.3,
@@ -85,22 +149,47 @@
    "peak_db": -6,
    "rms_db": -12.8,
    "silent": false,
-   "voice": "sub-bass"
+   "voice": "sub-bass",
+   "width": 0
   }
  ],
  "sections": [
   {
+   "bands": {
+    "high": -32.6,
+    "high_mid": -32.8,
+    "low": -17.4,
+    "low_mid": -33.2,
+    "mid": -41,
+    "sub": -13.1
+   },
    "bars": 16,
    "from_bar": 1,
    "lufs": -12.8,
    "name": null,
    "peak_db": -0.1,
-   "rms_db": -11.6
+   "rms_db": -11.6,
+   "true_peak_db": -0.1
   }
  ],
  "silent": [],
- "version": "listen/1",
- "warnings": [],
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": 1.2,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": 0.9
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "true_peak",
+  "loudness:high"
+ ],
+ "warnings": [
+  "the master's true peak is -0.1 dBTP, over the streaming ceiling of -1 dBTP: take 1.2 dB off (`master: level 0.87`), which also brings it to the target",
+  "the master is -12.8 LUFS, 1.2 LU over the streaming target of -14 LUFS, which turns it down by as much: the true peak's `master: level 0.87` fixes both"
+ ],
  "window": {
   "bars": 16,
   "from_bar": 1,

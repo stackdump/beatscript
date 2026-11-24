@@ -1,5 +1,6 @@
 {
  "cid": "z4EBG9j951xnNrR8QDtVh3Y9J7XETpLzmrFMYH1H57uYcFThR5P",
+ "clashes": [],
  "decks": {
   "A": {
    "has_notes": true,
@@ -37,14 +38,41 @@
   "tonal": false
  },
  "master": {
+  "bands": {
+   "high": -30.8,
+   "high_mid": -32,
+   "low": -16.5,
+   "low_mid": -29.7,
+   "mid": -40.2,
+   "sub": -21.1
+  },
+  "centroid_hz": 407,
   "clipped_ms": 0,
   "clipped_samples": 0,
+  "correlation": 0.99,
+  "crest_db": 11.9,
+  "lra": 0.5,
   "lufs": -13.6,
   "peak_db": -3,
-  "rms_db": -14.9
+  "plr_db": 10.8,
+  "rms_db": -14.9,
+  "short_term_max_lufs": -13.1,
+  "true_peak_db": -2.8,
+  "width": 0
  },
  "parts": [
   {
+   "bands": {
+    "high": -85.1,
+    "high_mid": -73.1,
+    "low": -15.2,
+    "low_mid": -28.2,
+    "mid": -48.4,
+    "sub": -20
+   },
+   "centroid_hz": 117,
+   "correlation": 1,
+   "crest_db": 10.8,
    "deck": "A",
    "has_notes": true,
    "lufs": -13,
@@ -53,9 +81,21 @@
    "peak_db": -3,
    "rms_db": -13.8,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0
   },
   {
+   "bands": {
+    "high": -36.6,
+    "high_mid": -27,
+    "low": -25,
+    "low_mid": -46.6,
+    "mid": -35.3,
+    "sub": -53.8
+   },
+   "centroid_hz": 1701,
+   "correlation": 0.95,
+   "crest_db": 19.4,
    "deck": "A",
    "has_notes": true,
    "lufs": -16,
@@ -64,9 +104,21 @@
    "peak_db": -3,
    "rms_db": -22.4,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.03
   },
   {
+   "bands": {
+    "high": -26.8,
+    "high_mid": -39.1,
+    "low": null,
+    "low_mid": null,
+    "mid": -65.6,
+    "sub": null
+   },
+   "centroid_hz": 8743,
+   "correlation": 1,
+   "crest_db": 23.6,
    "deck": "A",
    "has_notes": true,
    "lufs": -19.7,
@@ -75,7 +127,8 @@
    "peak_db": -3,
    "rms_db": -26.5,
    "silent": false,
-   "voice": null
+   "voice": null,
+   "width": 0.08
   },
   {
    "deck": "B",
@@ -98,12 +151,21 @@
  ],
  "sections": [
   {
+   "bands": {
+    "high": -30.8,
+    "high_mid": -32,
+    "low": -16.5,
+    "low_mid": -29.7,
+    "mid": -40.2,
+    "sub": -21.1
+   },
    "bars": 8,
    "from_bar": 1,
    "lufs": -13.6,
    "name": null,
    "peak_db": -3,
-   "rms_db": -14.9
+   "rms_db": -14.9,
+   "true_peak_db": -2.8
   }
  ],
  "silent": [
@@ -117,7 +179,18 @@
    "why": "the crossfader is all the way to A (0.00), which shuts deck B"
   }
  ],
- "version": "listen/1",
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": 0.4,
+  "met": true,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": -1.8
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "silent:B:crossfader"
+ ],
  "warnings": [
   "the crossfader is all the way to A (0.00), which shuts deck B"
  ],

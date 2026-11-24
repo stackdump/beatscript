@@ -1,0 +1,970 @@
+{
+ "cid": "z4EBG9j5h3tQFTs4aXGUNtD57Lxw1CUefHUbFpHkKC3czDK62Tz",
+ "clashes": [
+  {
+   "band": "low_mid",
+   "bars": [
+    [
+     1,
+     2
+    ],
+    [
+     5,
+     6
+    ],
+    [
+     17,
+     18
+    ],
+    [
+     21,
+     22
+    ],
+    [
+     25,
+     26
+    ],
+    [
+     33,
+     34
+    ],
+    [
+     37,
+     38
+    ],
+    [
+     49,
+     50
+    ],
+    [
+     53,
+     54
+    ],
+    [
+     57,
+     58
+    ],
+    [
+     65,
+     66
+    ],
+    [
+     69,
+     70
+    ],
+    [
+     81,
+     82
+    ],
+    [
+     85,
+     86
+    ],
+    [
+     89,
+     90
+    ],
+    [
+     97,
+     98
+    ],
+    [
+     101,
+     102
+    ],
+    [
+     113,
+     114
+    ],
+    [
+     117,
+     118
+    ],
+    [
+     121,
+     122
+    ]
+   ],
+   "gap_db": 1.3,
+   "hz": "250-500 Hz",
+   "overlap": 0.74,
+   "parts": [
+    "B.harmony",
+    "B.melody"
+   ],
+   "sections": [
+    "night",
+    "night@2",
+    "spot@2",
+    "night@3",
+    "night@4",
+    "spot@4",
+    "night@5",
+    "night@6",
+    "spot@6",
+    "night@7",
+    "night@8",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "mid",
+   "bars": [
+    [
+     1,
+     2
+    ],
+    [
+     10,
+     11
+    ],
+    [
+     17,
+     18
+    ],
+    [
+     25,
+     26
+    ],
+    [
+     33,
+     34
+    ],
+    [
+     42,
+     43
+    ],
+    [
+     49,
+     50
+    ],
+    [
+     57,
+     58
+    ],
+    [
+     65,
+     66
+    ],
+    [
+     74,
+     75
+    ],
+    [
+     81,
+     82
+    ],
+    [
+     89,
+     91
+    ],
+    [
+     97,
+     98
+    ],
+    [
+     106,
+     107
+    ],
+    [
+     113,
+     114
+    ],
+    [
+     121,
+     123
+    ]
+   ],
+   "gap_db": 3.6,
+   "hz": "500-2k Hz",
+   "overlap": 0.73,
+   "parts": [
+    "B.vox",
+    "B.harmony"
+   ],
+   "sections": [
+    "night",
+    "spot",
+    "night@2",
+    "spot@2",
+    "night@3",
+    "spot@3",
+    "night@4",
+    "spot@4",
+    "night@5",
+    "spot@5",
+    "night@6",
+    "spot@6",
+    "night@7",
+    "spot@7",
+    "night@8",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "mid",
+   "bars": [
+    [
+     9,
+     10
+    ],
+    [
+     13,
+     14
+    ],
+    [
+     41,
+     42
+    ],
+    [
+     45,
+     46
+    ],
+    [
+     73,
+     74
+    ],
+    [
+     77,
+     78
+    ],
+    [
+     105,
+     106
+    ],
+    [
+     109,
+     110
+    ]
+   ],
+   "gap_db": 5.2,
+   "hz": "500-2k Hz",
+   "overlap": 0.68,
+   "parts": [
+    "B.vox",
+    "B.melody"
+   ],
+   "sections": [
+    "spot",
+    "spot@3",
+    "spot@5",
+    "spot@7"
+   ]
+  },
+  {
+   "band": "mid",
+   "bars": [
+    [
+     9,
+     10
+    ],
+    [
+     41,
+     42
+    ],
+    [
+     73,
+     74
+    ],
+    [
+     105,
+     106
+    ]
+   ],
+   "gap_db": 0.5,
+   "hz": "500-2k Hz",
+   "overlap": 0.71,
+   "parts": [
+    "B.melody",
+    "B.harmony"
+   ],
+   "sections": [
+    "spot",
+    "spot@3",
+    "spot@5",
+    "spot@7"
+   ]
+  },
+  {
+   "band": "low_mid",
+   "bars": [
+    [
+     89,
+     90
+    ],
+    [
+     93,
+     94
+    ],
+    [
+     121,
+     122
+    ],
+    [
+     125,
+     126
+    ]
+   ],
+   "gap_db": 3,
+   "hz": "250-500 Hz",
+   "overlap": 0.57,
+   "parts": [
+    "B.vox",
+    "B.melody"
+   ],
+   "sections": [
+    "spot@6",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "mid",
+   "bars": [
+    [
+     25,
+     26
+    ],
+    [
+     92,
+     93
+    ],
+    [
+     124,
+     125
+    ]
+   ],
+   "gap_db": 8.2,
+   "hz": "500-2k Hz",
+   "overlap": 0.61,
+   "parts": [
+    "B.vox",
+    "A.clap"
+   ],
+   "sections": [
+    "spot@2",
+    "spot@6",
+    "spot@8"
+   ]
+  },
+  {
+   "band": "low",
+   "bars": [
+    [
+     62,
+     63
+    ]
+   ],
+   "gap_db": 7.1,
+   "hz": "60-250 Hz",
+   "overlap": 0.6,
+   "parts": [
+    "A.kick",
+    "B.melody"
+   ],
+   "sections": [
+    "spot@4"
+   ]
+  }
+ ],
+ "decks": {
+  "A": {
+   "has_notes": true,
+   "lufs": -16.2,
+   "parts": [
+    "kick",
+    "clap",
+    "hihat",
+    "bass",
+    "snare"
+   ],
+   "peak_db": -6,
+   "rms_db": -17.9,
+   "silent": false
+  },
+  "B": {
+   "has_notes": true,
+   "lufs": -16.2,
+   "parts": [
+    "harmony",
+    "melody",
+    "vox",
+    "voxc"
+   ],
+   "peak_db": -4.5,
+   "rms_db": -18.8,
+   "silent": false
+  }
+ },
+ "detected": {
+  "bpm": 122,
+  "bpm_confidence": 157.02,
+  "bpm_match": "same",
+  "declared_bpm": 122,
+  "declared_key": "am",
+  "key": "A minor",
+  "key_confidence": 0.296,
+  "key_match": "same",
+  "tonal": false
+ },
+ "master": {
+  "bands": {
+   "high": -34.7,
+   "high_mid": -32.9,
+   "low": -18.7,
+   "low_mid": -21.7,
+   "mid": -22.3,
+   "sub": -26.8
+  },
+  "centroid_hz": 481,
+  "clipped_ms": 0,
+  "clipped_samples": 0,
+  "correlation": 0.91,
+  "crest_db": 15,
+  "lra": 3.7,
+  "lufs": -13.3,
+  "peak_db": -0.3,
+  "plr_db": 13,
+  "rms_db": -15.3,
+  "short_term_max_lufs": -9.8,
+  "true_peak_db": -0.3,
+  "width": 0.05
+ },
+ "parts": [
+  {
+   "bands": {
+    "high": -87.9,
+    "high_mid": -75.8,
+    "low": -18.2,
+    "low_mid": -31.2,
+    "mid": -51.3,
+    "sub": -23.1
+   },
+   "centroid_hz": 117,
+   "correlation": 1,
+   "crest_db": 10.8,
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -16.1,
+   "measured": true,
+   "part": "kick",
+   "peak_db": -6,
+   "rms_db": -16.8,
+   "silent": false,
+   "voice": null,
+   "width": 0
+  },
+  {
+   "bands": {
+    "high": -43.2,
+    "high_mid": -30.8,
+    "low": -55.7,
+    "low_mid": -47,
+    "mid": -27.9,
+    "sub": -74
+   },
+   "centroid_hz": 2030,
+   "correlation": 0.8,
+   "crest_db": 20,
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -19.5,
+   "measured": true,
+   "part": "clap",
+   "peak_db": -6,
+   "rms_db": -26,
+   "silent": false,
+   "voice": null,
+   "width": 0.1
+  },
+  {
+   "bands": {
+    "high": -26.8,
+    "high_mid": -39.1,
+    "low": null,
+    "low_mid": null,
+    "mid": -65.6,
+    "sub": null
+   },
+   "centroid_hz": 8732,
+   "correlation": 1,
+   "crest_db": 20.5,
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -20.1,
+   "measured": true,
+   "part": "hihat",
+   "peak_db": -6,
+   "rms_db": -26.5,
+   "silent": false,
+   "voice": null,
+   "width": 0.08
+  },
+  {
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "measured": false,
+   "part": "bass",
+   "voice": "sub-bass"
+  },
+  {
+   "deck": "A",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "measured": false,
+   "part": "snare",
+   "voice": null
+  },
+  {
+   "bands": {
+    "high": null,
+    "high_mid": -47.1,
+    "low": -36.2,
+    "low_mid": -26,
+    "mid": -25.8,
+    "sub": -80.3
+   },
+   "centroid_hz": 578,
+   "correlation": 0.52,
+   "crest_db": 18.2,
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -20.2,
+   "measured": true,
+   "part": "harmony",
+   "peak_db": -4.5,
+   "rms_db": -22.7,
+   "silent": false,
+   "voice": "warm-pad",
+   "width": 0.24
+  },
+  {
+   "bands": {
+    "high": null,
+    "high_mid": -88.8,
+    "low": -31,
+    "low_mid": -28.6,
+    "mid": -31.6,
+    "sub": -67.6
+   },
+   "centroid_hz": 369,
+   "correlation": 0.92,
+   "crest_db": 14.2,
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -21.7,
+   "measured": true,
+   "part": "melody",
+   "peak_db": -11.2,
+   "rms_db": -25.4,
+   "silent": false,
+   "voice": "kalimba",
+   "width": 0.04
+  },
+  {
+   "bands": {
+    "high": -42.9,
+    "high_mid": -37,
+    "low": -25.9,
+    "low_mid": -25.1,
+    "mid": -22.6,
+    "sub": -72.7
+   },
+   "centroid_hz": 608,
+   "correlation": 0.9,
+   "crest_db": 14.9,
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "lufs": -15.9,
+   "measured": true,
+   "part": "vox",
+   "peak_db": -4.5,
+   "rms_db": -19.4,
+   "silent": false,
+   "voice": "voice-robot-choir",
+   "width": 0.05
+  },
+  {
+   "deck": "B",
+   "from": {
+    "call": "template(deep-house, @tempest_such_stuff)",
+    "generator": null,
+    "kind": "template",
+    "place": "arrange",
+    "resolved": "z4EBG9j7WfodKM4zWt9ckB8iGFque9JHjjMMhrzni6CMojtzudF",
+    "sections": null
+   },
+   "has_notes": true,
+   "measured": false,
+   "part": "voxc",
+   "voice": "voice-robot-choir"
+  }
+ ],
+ "sections": [
+  {
+   "bands": {
+    "high": -36.8,
+    "high_mid": -35.8,
+    "low": -18.6,
+    "low_mid": -23,
+    "mid": -25.6,
+    "sub": -27.5
+   },
+   "bars": 8,
+   "from_bar": 1,
+   "lufs": -14.3,
+   "name": "night",
+   "peak_db": -2.8,
+   "rms_db": -16.2,
+   "true_peak_db": -2.8
+  },
+  {
+   "bands": {
+    "high": -34.7,
+    "high_mid": -31.3,
+    "low": -18.8,
+    "low_mid": -20.6,
+    "mid": -20.5,
+    "sub": -27.5
+   },
+   "bars": 8,
+   "from_bar": 9,
+   "lufs": -12.6,
+   "name": "spot",
+   "peak_db": -0.9,
+   "rms_db": -14.7,
+   "true_peak_db": -0.9
+  },
+  {
+   "bands": {
+    "high": -36.3,
+    "high_mid": -35.2,
+    "low": -18.9,
+    "low_mid": -23.2,
+    "mid": -25.5,
+    "sub": -27.7
+   },
+   "bars": 8,
+   "from_bar": 17,
+   "lufs": -14.5,
+   "name": "night@2",
+   "peak_db": -2.8,
+   "rms_db": -16.4,
+   "true_peak_db": -2.8
+  },
+  {
+   "bands": {
+    "high": -33.6,
+    "high_mid": -32.1,
+    "low": -18,
+    "low_mid": -19.4,
+    "mid": -20.7,
+    "sub": -26.5
+   },
+   "bars": 8,
+   "from_bar": 25,
+   "lufs": -12,
+   "name": "spot@2",
+   "peak_db": -0.9,
+   "rms_db": -14.1,
+   "true_peak_db": -0.8
+  },
+  {
+   "bands": {
+    "high": -36.3,
+    "high_mid": -35.2,
+    "low": -19.1,
+    "low_mid": -23.4,
+    "mid": -25.5,
+    "sub": -27.4
+   },
+   "bars": 8,
+   "from_bar": 33,
+   "lufs": -14.6,
+   "name": "night@3",
+   "peak_db": -3,
+   "rms_db": -16.6,
+   "true_peak_db": -3
+  },
+  {
+   "bands": {
+    "high": -34,
+    "high_mid": -30.9,
+    "low": -19.4,
+    "low_mid": -20.9,
+    "mid": -20.5,
+    "sub": -26.4
+   },
+   "bars": 8,
+   "from_bar": 41,
+   "lufs": -12.8,
+   "name": "spot@3",
+   "peak_db": -0.7,
+   "rms_db": -14.9,
+   "true_peak_db": -0.7
+  },
+  {
+   "bands": {
+    "high": -36.2,
+    "high_mid": -35.2,
+    "low": -19.1,
+    "low_mid": -23.4,
+    "mid": -25.5,
+    "sub": -27.4
+   },
+   "bars": 8,
+   "from_bar": 49,
+   "lufs": -14.6,
+   "name": "night@4",
+   "peak_db": -3,
+   "rms_db": -16.5,
+   "true_peak_db": -3
+  },
+  {
+   "bands": {
+    "high": -33.5,
+    "high_mid": -32,
+    "low": -17.1,
+    "low_mid": -20.8,
+    "mid": -19.1,
+    "sub": -26.4
+   },
+   "bars": 8,
+   "from_bar": 57,
+   "lufs": -11.4,
+   "name": "spot@4",
+   "peak_db": -0.5,
+   "rms_db": -13.6,
+   "true_peak_db": -0.4
+  },
+  {
+   "bands": {
+    "high": -36.2,
+    "high_mid": -35.5,
+    "low": -19.2,
+    "low_mid": -23.5,
+    "mid": -25.5,
+    "sub": -27.2
+   },
+   "bars": 8,
+   "from_bar": 65,
+   "lufs": -14.7,
+   "name": "night@5",
+   "peak_db": -3.1,
+   "rms_db": -16.6,
+   "true_peak_db": -3
+  },
+  {
+   "bands": {
+    "high": -33.7,
+    "high_mid": -30.8,
+    "low": -19.5,
+    "low_mid": -21,
+    "mid": -20.5,
+    "sub": -26.2
+   },
+   "bars": 8,
+   "from_bar": 73,
+   "lufs": -12.8,
+   "name": "spot@5",
+   "peak_db": -0.3,
+   "rms_db": -15,
+   "true_peak_db": -0.3
+  },
+  {
+   "bands": {
+    "high": -36.1,
+    "high_mid": -35.7,
+    "low": -19.3,
+    "low_mid": -23.6,
+    "mid": -25.5,
+    "sub": -26.9
+   },
+   "bars": 8,
+   "from_bar": 81,
+   "lufs": -14.8,
+   "name": "night@6",
+   "peak_db": -3.1,
+   "rms_db": -16.7,
+   "true_peak_db": -3.1
+  },
+  {
+   "bands": {
+    "high": -32.8,
+    "high_mid": -31.7,
+    "low": -17.4,
+    "low_mid": -19.9,
+    "mid": -20.9,
+    "sub": -26
+   },
+   "bars": 8,
+   "from_bar": 89,
+   "lufs": -11.8,
+   "name": "spot@6",
+   "peak_db": -0.8,
+   "rms_db": -13.9,
+   "true_peak_db": -0.7
+  },
+  {
+   "bands": {
+    "high": -36.1,
+    "high_mid": -35.7,
+    "low": -19.3,
+    "low_mid": -23.6,
+    "mid": -25.5,
+    "sub": -26.9
+   },
+   "bars": 8,
+   "from_bar": 97,
+   "lufs": -14.8,
+   "name": "night@7",
+   "peak_db": -3.3,
+   "rms_db": -16.7,
+   "true_peak_db": -3.2
+  },
+  {
+   "bands": {
+    "high": -33.6,
+    "high_mid": -30.6,
+    "low": -19.6,
+    "low_mid": -21.1,
+    "mid": -20.5,
+    "sub": -25.9
+   },
+   "bars": 8,
+   "from_bar": 105,
+   "lufs": -12.9,
+   "name": "spot@7",
+   "peak_db": -0.7,
+   "rms_db": -15,
+   "true_peak_db": -0.7
+  },
+  {
+   "bands": {
+    "high": -36,
+    "high_mid": -35.7,
+    "low": -19.3,
+    "low_mid": -23.6,
+    "mid": -25.5,
+    "sub": -26.9
+   },
+   "bars": 8,
+   "from_bar": 113,
+   "lufs": -14.8,
+   "name": "night@8",
+   "peak_db": -3.2,
+   "rms_db": -16.7,
+   "true_peak_db": -3.2
+  },
+  {
+   "bands": {
+    "high": -32.8,
+    "high_mid": -31.6,
+    "low": -17.5,
+    "low_mid": -19.9,
+    "mid": -20.9,
+    "sub": -25.9
+   },
+   "bars": 8,
+   "from_bar": 121,
+   "lufs": -11.8,
+   "name": "spot@8",
+   "peak_db": -1,
+   "rms_db": -14,
+   "true_peak_db": -1
+  }
+ ],
+ "silent": [],
+ "targets": {
+  "lufs": -14,
+  "lufs_delta": 0.7,
+  "met": false,
+  "name": "streaming",
+  "true_peak_db": -1,
+  "true_peak_delta": 0.7
+ },
+ "version": "listen/2",
+ "warning_ids": [
+  "clash:B.harmony/B.melody:low_mid",
+  "clash:B.harmony/B.vox:mid",
+  "clash:B.melody/B.vox:mid",
+  "clash:A.clap/B.vox:mid",
+  "true_peak"
+ ],
+ "warnings": [
+  "deck B harmony and deck B melody clash at 250-500 Hz (low_mid) in bars 1-2, 5-6, 17-18, 21-22, 25-26, 33-34, 37-38, 49-50, 53-54, 57-58, 65-66, 69-70, 81-82, 85-86, 89-90, 97-98, 101-102, 113-114, 117-118 and 121-122: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the melody on a deck of its own",
+  "deck B vox and deck B harmony clash at 500-2k Hz (mid) in bars 1-2, 10-11, 17-18, 25-26, 33-34, 42-43, 49-50, 57-58, 65-66, 74-75, 81-82, 89-91, 97-98, 106-107, 113-114 and 121-123: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the harmony on a deck of its own",
+  "deck B vox and deck B melody clash at 500-2k Hz (mid) in bars 9-10, 13-14, 41-42, 45-46, 73-74, 77-78, 105-106 and 109-110: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the melody on a deck of its own",
+  "deck B vox and deck A clap clash at 500-2k Hz (mid) in bars 25-26, 92-93 and 124-125: `mix { B eq mid -4 }` (on all of deck B), or lower the vox's `vel=`",
+  "the master's true peak is -0.3 dBTP, over the streaming ceiling of -1 dBTP: take 0.7 dB off (`master: level 0.92`), or round the peaks with `master: drive`"
+ ],
+ "window": {
+  "bars": 128,
+  "from_bar": 1,
+  "program_bars": 128,
+  "seconds": 251.803,
+  "section": null
+ }
+}
