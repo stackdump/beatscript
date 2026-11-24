@@ -34,12 +34,13 @@ use djhost::deck::offline::OfflineConductor;
 use djlive::ast::Deck;
 use djlive::compile::{Compiled, DeckIr};
 
+use crate::mix::{self, MixStats, Spectrum, Targets, TruePeak};
 use crate::render::{self, Events, Format, Options, Plan, RenderError, Tap};
 
 /// A deck or part with notes that measures under this (integrated, or no block above the absolute gate) is silent.
 pub const SILENT_LUFS: f64 = -60.0;
 /// The summary's own version: a golden made by another version is not compared number for number.
-pub const VERSION: &str = "listen/1";
+pub const VERSION: &str = "listen/2";
 /// Sub-block of the loudness analysis, seconds (BS.1770: 400 ms blocks, 75 % overlap).
 const SUB_SECONDS: f64 = 0.1;
 /// The analysis signal for tempo and key: the master, mono, at the render's rate over this.
@@ -61,11 +62,13 @@ pub struct ListenOptions {
     /// Seconds of audio the part renders may take in all (the main render is not counted). 0: no part renders.
     pub budget_seconds: f64,
     pub sr: u32,
+    /// The delivery target the master is measured against (`targets` in the answer, and the loudness warnings).
+    pub targets: Targets,
 }
 
 impl Default for ListenOptions {
     fn default() -> Self {
-        ListenOptions { section: None, bars: None, max_bars: 128, budget_seconds: 900.0, sr: SR }
+        ListenOptions { section: None, bars: None, max_bars: 128, budget_seconds: 900.0, sr: SR, targets: Targets::default() }
     }
 }
 
@@ -197,18 +200,54 @@ struct Meter {
     acc_n: usize,
     /// Per sub-block: (K-weighted energy, raw mean square, peak).
     blocks: Vec<(f64, f64, f32)>,
+    acc_st: (f64, f64, f64),
+    /// Per sub-block: the sums of l², r² and l·r (the stereo image).
+    stereo: Vec<(f64, f64, f64)>,
+    /// The bands, frame by frame (a part's and the master's: mix.rs).
+    spec: Option<Spectrum>,
+    /// The true peak (the master's).
+    tp: Option<TruePeak>,
 }
 
 impl Meter {
     fn new(sr: f64) -> Meter {
-        Meter { kl: KWeighting::new(sr), kr: KWeighting::new(sr), sub: ((sr * SUB_SECONDS) as usize).max(1), acc_k: 0.0, acc_raw: 0.0, acc_peak: 0.0, acc_n: 0, blocks: Vec::new() }
+        Meter::with(sr, false, false)
+    }
+
+    /// A meter that also takes the spectrum (`spec`) and the true peak (`tp`).
+    fn with(sr: f64, spec: bool, tp: bool) -> Meter {
+        let sub = ((sr * SUB_SECONDS) as usize).max(1);
+        Meter {
+            kl: KWeighting::new(sr),
+            kr: KWeighting::new(sr),
+            sub,
+            acc_k: 0.0,
+            acc_raw: 0.0,
+            acc_peak: 0.0,
+            acc_n: 0,
+            blocks: Vec::new(),
+            acc_st: (0.0, 0.0, 0.0),
+            stereo: Vec::new(),
+            spec: spec.then(|| Spectrum::new(sr, sub)),
+            tp: tp.then(|| TruePeak::new(sub)),
+        }
     }
 
     fn push(&mut self, l: &[f32], r: &[f32]) {
+        if let Some(s) = &mut self.spec {
+            s.push(l, r);
+        }
+        if let Some(t) = &mut self.tp {
+            t.push(l, r);
+        }
         for (a, b) in l.iter().zip(r) {
             let (ka, kb) = (self.kl.process(f64::from(*a)), self.kr.process(f64::from(*b)));
             self.acc_k += ka * ka + kb * kb;
-            self.acc_raw += (f64::from(*a) * f64::from(*a) + f64::from(*b) * f64::from(*b)) * 0.5;
+            let (x, y) = (f64::from(*a), f64::from(*b));
+            self.acc_raw += (x * x + y * y) * 0.5;
+            self.acc_st.0 += x * x;
+            self.acc_st.1 += y * y;
+            self.acc_st.2 += x * y;
             self.acc_peak = self.acc_peak.max(a.abs()).max(b.abs());
             self.acc_n += 1;
             if self.acc_n == self.sub {
@@ -219,6 +258,12 @@ impl Meter {
 
     /// Feed silence (a stem that did not sound in this block) without running the filters for nothing.
     fn push_silence(&mut self, n: usize) {
+        if let Some(s) = &mut self.spec {
+            s.push_zeros(n);
+        }
+        if let Some(t) = &mut self.tp {
+            t.push_zeros(n);
+        }
         let mut left = n;
         while left > 0 {
             let take = left.min(self.sub - self.acc_n);
@@ -238,6 +283,8 @@ impl Meter {
     fn close(&mut self) {
         let n = self.acc_n.max(1) as f64;
         self.blocks.push((self.acc_k / n, self.acc_raw / n, self.acc_peak));
+        self.stereo.push(self.acc_st);
+        self.acc_st = (0.0, 0.0, 0.0);
         self.acc_k = 0.0;
         self.acc_raw = 0.0;
         self.acc_peak = 0.0;
@@ -248,6 +295,27 @@ impl Meter {
         if self.acc_n > 0 {
             self.close();
         }
+        if let Some(s) = &mut self.spec {
+            s.finish();
+        }
+        if let Some(t) = &mut self.tp {
+            t.finish();
+        }
+    }
+
+    /// The bands, centroid and stereo image over sub-block `ranges` taken together.
+    fn mix_over(&self, ranges: &[std::ops::Range<usize>]) -> MixStats {
+        let (mut ll, mut rr, mut lr) = (0.0, 0.0, 0.0);
+        for r in ranges {
+            let end = r.end.min(self.stereo.len());
+            for s in &self.stereo[r.start.min(end)..end] {
+                ll += s.0;
+                rr += s.1;
+                lr += s.2;
+            }
+        }
+        let spec = self.spec.as_ref().and_then(|sp| mix::band_means(ranges.iter().flat_map(|r| sp.frames_in(r.clone()).iter())));
+        MixStats::of(spec, ll, rr, lr)
     }
 
     /// The measures over sub-blocks `range` (clamped).
@@ -357,11 +425,14 @@ struct ListenTap {
     /// Whether this is the main pass (master, clipping, tempo, key, the mixer) or a part pass (stems only).
     main: bool,
     notes: Vec<String>,
+    /// The stems whose spectrum is taken (None: every one).
+    spec_for: Option<BTreeSet<String>>,
 }
 
 impl ListenTap {
     fn new(win: Window, sr: f64, main: bool) -> ListenTap {
-        ListenTap { win, sr, master: Meter::new(sr), stems: BTreeMap::new(), clipped: 0, mono: Vec::new(), mono_acc: (0.0, 0), mix: Vec::new(), decks: Vec::new(), main, notes: Vec::new() }
+        let master = if main { Meter::with(sr, true, true) } else { Meter::new(sr) };
+        ListenTap { win, sr, master, stems: BTreeMap::new(), clipped: 0, mono: Vec::new(), mono_acc: (0.0, 0), mix: Vec::new(), decks: Vec::new(), main, notes: Vec::new(), spec_for: None }
     }
 }
 
@@ -389,8 +460,9 @@ impl Tap for ListenTap {
                 if sl.len() < hi {
                     continue;
                 }
+                let spec = self.spec_for.as_ref().map_or(true, |s| s.contains(name));
                 let m = self.stems.entry(name.clone()).or_insert_with(|| {
-                    let mut m = Meter::new(self.sr);
+                    let mut m = Meter::with(self.sr, spec, false);
                     // a stem that first sounds late still lines up with the window's sub-blocks
                     let behind = ((a + lo as i64 - w0).max(0)) as usize;
                     m.push_silence(behind);
@@ -893,8 +965,10 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
     let win = Window { from_bar, bars, bar_frames };
     let opts = Options { sr: lo.sr, format: Format::F32le, max_bars: from_bar + bars, from_bar: 0, chunk_ms: 1000, file: None };
 
-    // the main pass
+    // the main pass (a deck of one part is that part: its spectrum is taken here; a deck of several, in the part passes)
+    let all_roles = roles(c);
     let mut tap = ListenTap::new(win, sr, true);
+    tap.spec_for = Some(all_roles.iter().filter(|(_, r)| r.len() == 1).map(|(d, _)| d.name().to_string()).collect());
     let mut ev_sink = std::io::sink();
     let mut ev = Events::new(&mut ev_sink);
     let main = render::render_compiled(c, check_ms, &opts, &mut std::io::sink(), &mut ev, t0, &mut tap)?;
@@ -910,11 +984,12 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
     let clip = |s: &Stretch| -> (u32, u32) { (s.start.max(from_bar), (s.start + s.bars).min(from_bar + bars)) };
 
     // the part passes (a deck the main pass finds silent all through is not taken apart: its parts are silent with it)
-    let all_roles = roles(c);
     let deck_heard = |d: &Deck| tap.stems.get(d.name()).is_some_and(|m| !m.stats(0..usize::MAX).silent());
     let roles: BTreeMap<Deck, Vec<String>> = all_roles.iter().map(|(d, r)| (*d, if deck_heard(d) { r.clone() } else { r.iter().take(1).cloned().collect() })).collect();
     let max_roles = roles.values().map(Vec::len).max().unwrap_or(0);
     let mut part_meters: BTreeMap<(Deck, String), (Stats, bool)> = BTreeMap::new();
+    // a part of a deck of several, as its own pass heard it (its bands)
+    let mut part_specs: BTreeMap<(Deck, String), Meter> = BTreeMap::new();
     let window_seconds = f64::from(from_bar + bars) * bar_frames / sr;
     let mut spent = 0.0;
     let mut skipped_parts = 0;
@@ -940,7 +1015,10 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
                 // the stretches of the window where this part has notes
                 let ranges: Vec<std::ops::Range<usize>> = in_win.iter().filter(|s| s.decks.get(&d).is_some_and(|ir| ir.parts.iter().any(|p| p.role == role && has_notes(p)))).map(|s| { let (a, b) = clip(s); sub_of(a)..sub_of(b) }).collect();
                 let st = pt.stems.get(d.name()).map(|m| stats_over(m, &ranges)).unwrap_or_default();
-                part_meters.insert((d, role), (st, true));
+                part_meters.insert((d, role.clone()), (st, true));
+                if let Some(m) = pt.stems.remove(d.name()) {
+                    part_specs.insert((d, role), m);
+                }
             }
         }
     }
@@ -966,7 +1044,19 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
     ms.json(&mut m);
     m.set("clipped_samples", JsonValue::int(tap.clipped as i64));
     m.set("clipped_ms", r3(tap.clipped as f64 / 2.0 / sr * 1000.0));
+    // the mix: the true peak, the dynamics, the loudness over time, the bands and the stereo image
+    let true_peak = tap.master.tp.as_ref().and_then(|t| t.over(0..usize::MAX));
+    let master_mix = tap.master.mix_over(&[0..usize::MAX]);
+    let kblocks: Vec<f64> = tap.master.blocks.iter().map(|b| b.0).collect();
+    let st = mix::short_term(&kblocks, (3.0 / SUB_SECONDS).round() as usize);
+    m.set("true_peak_db", r1(true_peak));
+    m.set("crest_db", r1(crest(&ms)));
+    m.set("plr_db", r1(true_peak.zip(ms.lufs).map(|(p, l)| p - l)));
+    m.set("short_term_max_lufs", r1(st.iter().copied().reduce(f64::max)));
+    m.set("lra", r1(mix::loudness_range(&st)));
+    master_mix.json(&mut m);
     out.set("master", JsonValue::Object(m));
+    out.set("targets", lo.targets.json(ms.lufs, true_peak));
 
     // tempo and key
     let msr = sr / DECIMATE as f64;
@@ -996,6 +1086,8 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
         count.into_iter().max_by_key(|(_, (n, _))| *n).filter(|(_, (n, _))| *n * 2 >= total.max(1)).map(|(c, (_, w))| (c, w))
     };
     let vocoded = |deck: &str| tap.mix.iter().any(|m| m.get(deck).is_some_and(|x| x.vocoder));
+    // the parts heard, for the mix's warnings and clashes
+    let mut heard: Vec<Heard> = Vec::new();
     for (d, rs) in &all_roles {
         let name = d.name();
         let with_notes: Vec<&&Stretch> = in_win.iter().filter(|s| s.decks.get(d).is_some_and(|ir| ir.parts.iter().any(has_notes))).collect();
@@ -1038,6 +1130,24 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
             if measured {
                 pst.json(&mut p);
                 p.set("silent", JsonValue::Bool(has && pst.silent()));
+                // the part's mix, over the bars it has notes in
+                let pranges: Vec<std::ops::Range<usize>> = in_win
+                    .iter()
+                    .filter(|s| s.decks.get(d).is_some_and(|ir| ir.parts.iter().any(|p| &p.role == role && has_notes(p))))
+                    .map(|s| {
+                        let (a, b) = clip(s);
+                        sub_of(a)..sub_of(b)
+                    })
+                    .collect();
+                let meter = if rs.len() == 1 { tap.stems.get(name) } else { part_specs.get(&(*d, role.clone())) };
+                if let Some(mt) = meter.filter(|m| m.spec.is_some()) {
+                    let mm = mt.mix_over(&pranges);
+                    p.set("crest_db", r1(crest(&pst)));
+                    mm.json(&mut p);
+                    if has && !pst.silent() {
+                        heard.push(Heard { deck: *d, role: role.clone(), roles: rs.len(), lufs: pst.lufs, mix: mm });
+                    }
+                }
             } else if plays && st.silent() {
                 // the deck is not heard: neither is any part of it (the reason is the deck's, in `silent`)
                 p.set("silent", JsonValue::Bool(has));
@@ -1068,6 +1178,11 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
         o.set("from_bar", JsonValue::int(i64::from(a) + 1));
         o.set("bars", JsonValue::int(i64::from(b - a)));
         st.json(&mut o);
+        o.set("true_peak_db", r1(tap.master.tp.as_ref().and_then(|t| t.over(sub_of(a)..sub_of(b)))));
+        let mm = tap.master.mix_over(&[sub_of(a)..sub_of(b)]);
+        if mm.bands.iter().any(Option::is_some) {
+            o.set("bands", mix::bands_json(&mm.bands));
+        }
         secs.push(JsonValue::Object(o));
     }
     out.set("sections", JsonValue::Array(secs));
@@ -1080,18 +1195,31 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
         .collect();
     out.set("bar_lufs", JsonValue::Array(curve));
 
-    // what to say first
-    let mut warnings: Vec<JsonValue> = Vec::new();
+    // what to say first, in the order to fix it (docs/beatscript/polish.md): what is not heard, clipping, clashes, balance,
+    // loudness, width. Each warning has a stable id (`warning_ids`, side by side), so a compare can say which went.
+    let mut warnings: Vec<mix::Warning> = Vec::new();
     let mut seen = BTreeSet::new();
     for s in out.get("silent").and_then(|v| v.as_array()).cloned().unwrap_or_default() {
         if let Some(w) = s.get("why").and_then(|w| w.as_str()) {
             if seen.insert(w.to_string()) {
-                warnings.push(JsonValue::str(w.to_string()));
+                let part = s.get("part").and_then(|p| p.as_str()).map(|p| format!(".{p}")).unwrap_or_default();
+                let id = format!("silent:{}{part}:{}", s.get("deck").and_then(|d| d.as_str()).unwrap_or(""), s.get("reason").and_then(|r| r.as_str()).unwrap_or(""));
+                warnings.push((id, w.to_string()));
             }
         }
     }
     if tap.clipped > 0 {
-        warnings.push(JsonValue::str(format!("the master clips: {} samples over full scale", tap.clipped)));
+        warnings.push(("clip".into(), format!("the master clips: {} samples over full scale", tap.clipped)));
+    }
+    // the mixer the window had: the master fader and each deck's (their highest)
+    let master_level = tap.mix.iter().filter_map(|m| m.values().next().map(|x| x.master)).fold(f64::NAN, f64::max);
+    let master_level = if master_level.is_nan() { 1.0 } else { master_level };
+    let deck_level = |deck: &str| tap.mix.iter().filter_map(|m| m.get(deck).map(|x| x.volume)).fold(f64::NAN, f64::max);
+    let target_w = mix::target_warnings(&lo.targets, ms.lufs, true_peak, master_level);
+    // a master that clips: its true peak is fixed now; one only over the target's ceiling is delivery, with the loudness
+    let clipping = tap.clipped > 0;
+    if clipping {
+        warnings.extend(target_w.iter().filter(|(id, _)| id == "true_peak").cloned());
     }
     // the macro lines (docs/beatscript/ext-control.md): each call in the window, the bar the engine starts it on, and whether it played
     // (only when the program has one, so every other summary is the one it was)
@@ -1116,13 +1244,61 @@ pub fn listen_compiled(c: &Compiled, lo: &ListenOptions, t0: Instant) -> Result<
             o.set("played", JsonValue::Bool(m.refused.is_none()));
             if let Some(why) = &m.refused {
                 o.set("refused", JsonValue::str(why.clone()));
-                warnings.push(JsonValue::str(format!("line {} `{}`: the engine did not play it at bar {}: {why}", m.line, m.text, r3(m.starts_at()).js_stringified())));
+                warnings.push((format!("macro:{}", m.line), format!("line {} `{}`: the engine did not play it at bar {}: {why}", m.line, m.text, r3(m.starts_at()).js_stringified())));
             }
             list.push(JsonValue::Object(o));
         }
         out.set("macros", JsonValue::Array(list));
     }
-    out.set("warnings", JsonValue::Array(warnings));
+    // clashes: two parts heard in the same band in the same bars
+    let specs: Vec<mix::PartSpectrum> = heard
+        .iter()
+        .filter_map(|h| {
+            let m = if h.roles == 1 { tap.stems.get(h.deck.name()) } else { part_specs.get(&(h.deck, h.role.clone())) };
+            m.and_then(|m| m.spec.as_ref()).map(|spec| mix::PartSpectrum { deck: h.deck.name().to_string(), role: h.role.clone(), spec })
+        })
+        .collect();
+    let bar_subs: Vec<(u32, std::ops::Range<usize>)> = (from_bar..from_bar + bars).map(|b| (b, sub_of(b)..sub_of(b + 1))).collect();
+    let section_of = |bar: u32| all.iter().find(|s| s.start <= bar && bar < s.start + s.bars).map(|s| s.name.clone()).filter(|n| !n.is_empty());
+    let clashes = match tap.master.spec.as_ref() {
+        Some(master) if specs.len() > 1 => mix::clashes(&specs, master, &bar_subs, &section_of, if bars < 4 { 1 } else { 2 }),
+        _ => Vec::new(),
+    };
+    out.set("clashes", JsonValue::Array(clashes.iter().map(mix::Clash::json).collect()));
+    let roles_of = |deck: &str| all_roles.iter().find(|(d, _)| d.name() == deck).map_or(1, |(_, r)| r.len());
+    // one warning a pair of parts (its worst band), the four worst pairs
+    let mut pairs = BTreeSet::new();
+    for c in &clashes {
+        if pairs.len() >= 4 {
+            break;
+        }
+        let pair = if c.a <= c.b { (c.a.clone(), c.b.clone()) } else { (c.b.clone(), c.a.clone()) };
+        if pairs.insert(pair) {
+            warnings.push(mix::clash_warning(c, &roles_of));
+        }
+    }
+    // balance: a part far under the mix
+    if let Some(ml) = ms.lufs {
+        for h in &heard {
+            if let Some(l) = h.lufs.filter(|l| *l < ml - BURIED_LU) {
+                warnings.push(mix::buried_warning(h.deck.name(), &h.role, ml - l, h.roles, deck_level(h.deck.name())));
+            }
+        }
+    }
+    // loudness and the ceiling against the target, and the dynamics
+    warnings.extend(target_w.into_iter().filter(|(id, _)| !(clipping && id == "true_peak")));
+    // width: low end that is wide, a master that cancels in mono
+    for h in &heard {
+        if let Some(w) = h.mix.width.filter(|w| *w > WIDE_LOW && h.mix.low_share() >= 0.6) {
+            warnings.push(mix::wide_low_warning(h.deck.name(), &h.role, w));
+        }
+    }
+    if let Some(corr) = master_mix.correlation.filter(|c| *c < 0.0) {
+        let widest = heard.iter().filter_map(|h| h.mix.width.map(|w| (h, w))).max_by(|a, b| a.1.total_cmp(&b.1)).map(|(h, w)| (h.deck.name(), h.role.as_str(), w));
+        warnings.push(mix::phase_warning(corr, widest));
+    }
+    out.set("warning_ids", JsonValue::Array(warnings.iter().map(|(id, _)| JsonValue::str(id.clone())).collect()));
+    out.set("warnings", JsonValue::Array(warnings.into_iter().map(|(_, w)| JsonValue::str(w)).collect()));
     out.set("notes", JsonValue::Array(notes.into_iter().map(JsonValue::str).collect()));
     let mut t = JsonObject::new();
     t.set("main", r3(main_ms));
@@ -1146,6 +1322,26 @@ fn stats_over(m: &Meter, ranges: &[std::ops::Range<usize>]) -> Stats {
     Stats { lufs: gated(&blocks), rms_db: db_pow(raw), peak_db: db_amp(f64::from(peak)), loudness: blocks.iter().map(|x| x.0).sum::<f64>() / blocks.len() as f64 }
 }
 
+/// A part far under the master's loudness: a warning (LU).
+const BURIED_LU: f64 = 22.0;
+/// A part whose power is mostly under 250 Hz and is wider than this: a warning.
+const WIDE_LOW: f64 = 0.3;
+
+/// A part heard, for the mix's warnings.
+struct Heard {
+    deck: Deck,
+    role: String,
+    /// The parts its deck has.
+    roles: usize,
+    lufs: Option<f64>,
+    mix: MixStats,
+}
+
+/// Peak over RMS (dB).
+fn crest(s: &Stats) -> Option<f64> {
+    s.peak_db.zip(s.rms_db).map(|(p, r)| p - r)
+}
+
 fn silent_entry(deck: &str, part: Option<&str>, section: &str, a: u32, b: u32, code: &str, why: &str) -> JsonValue {
     let mut o = JsonObject::new();
     o.set("deck", JsonValue::str(deck.to_string()));
@@ -1161,11 +1357,14 @@ fn silent_entry(deck: &str, part: Option<&str>, section: &str, a: u32, b: u32, c
 // ---------------------------------------------------------------------------------------------
 // the command
 
-/// `beatscript listen [--file F] [--section NAME] [--bars N] [--max-bars N] [--budget S] [--sr HZ]`: the summary on stdout, one
-/// line of JSON. Exit 0, or 1 with `{"error":{"code","message"}}` on stdout.
+/// `beatscript listen [--file F] [--section NAME] [--bars N] [--max-bars N] [--budget S] [--sr HZ] [--targets T] [--compare F]`:
+/// the summary on stdout, one line of JSON (with `compare`: the summary gains `compare`, what changed from that program,
+/// [`mix::compare`]). Exit 0, or 1 with `{"error":{"code","message"}}` on stdout.
 pub fn main(args: Vec<String>) -> i32 {
     let mut lo = ListenOptions::default();
     let mut file: Option<String> = None;
+    let mut compare: Option<String> = None;
+    let mut targets: Option<String> = None;
     let mut it = args.iter().skip_while(|a| a.as_str() == "listen").peekable();
     let fail = |code: &str, m: String| -> i32 {
         let mut e = JsonObject::new();
@@ -1190,8 +1389,10 @@ pub fn main(args: Vec<String>) -> i32 {
             "--max-bars" => lo.max_bars = num(value()).map_or(lo.max_bars, |x| x as u32),
             "--budget" => lo.budget_seconds = num(value()).unwrap_or(lo.budget_seconds),
             "--sr" => lo.sr = num(value()).map_or(lo.sr, |x| x as u32),
+            "--targets" => targets = value(),
+            "--compare" => compare = value(),
             "-h" | "--help" => {
-                println!("beatscript listen [--file F | stdin] [--section NAME] [--bars N] [--max-bars N] [--budget SECONDS] [--sr HZ]");
+                println!("beatscript listen [--file F | stdin] [--section NAME] [--bars N] [--max-bars N] [--budget SECONDS] [--sr HZ] [--targets streaming|apple|broadcast|club|LUFS/dBTP] [--compare F]");
                 return 0;
             }
             f => return fail("usage", format!("unknown flag `{f}`")),
@@ -1205,7 +1406,28 @@ pub fn main(args: Vec<String>) -> i32 {
     if let Err(e) = read {
         return fail("io", e.to_string());
     }
-    let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| listen(&text, &lo)));
+    if let Some(t) = targets {
+        match Targets::parse(&t) {
+            Ok(t) => lo.targets = t,
+            Err(e) => return fail("usage", e),
+        }
+    }
+    let before = match compare.as_deref().map(std::fs::read_to_string) {
+        Some(Ok(t)) => Some(t),
+        Some(Err(e)) => return fail("io", e.to_string()),
+        None => None,
+    };
+    let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let mut v = listen(&text, &lo)?;
+        if let Some(b) = &before {
+            let prev = listen(b, &lo)?;
+            if let JsonValue::Object(o) = &mut v {
+                let cmp = mix::compare(&prev, &v_clone_without_compare(o));
+                o.set("compare", cmp);
+            }
+        }
+        Ok::<JsonValue, RenderError>(v)
+    }));
     match r {
         Ok(Ok(v)) => {
             println!("{}", v.js_stringified());
@@ -1214,6 +1436,13 @@ pub fn main(args: Vec<String>) -> i32 {
         Ok(Err(e)) => fail(e.code, e.message),
         Err(_) => fail("internal", "listen panicked".into()),
     }
+}
+
+/// An answer as an object value (for [`mix::compare`], before `compare` is set on it).
+fn v_clone_without_compare(o: &JsonObject) -> JsonValue {
+    let mut c = o.clone();
+    c.remove("compare");
+    JsonValue::Object(c)
 }
 
 #[cfg(test)]
@@ -1250,6 +1479,137 @@ mod tests {
         // a program with none has no `macros` (every other summary is the one it was)
         let plain = listen("tempo 120\ndeck A: kick x ~ x ~\nend at bar 2\n", &ListenOptions { budget_seconds: 0.0, ..Default::default() }).unwrap();
         assert!(plain.get("macros").is_none());
+    }
+
+    /// The value at `path` (`master/bands/sub`, `parts/0/lufs`) of an answer.
+    fn at<'a>(v: &'a JsonValue, path: &str) -> Option<&'a JsonValue> {
+        path.split('/').try_fold(v, |x, k| match k.parse::<usize>() {
+            Ok(i) => x.as_array().and_then(|a| a.get(i)),
+            Err(_) => x.get(k),
+        })
+    }
+
+    fn near(v: &JsonValue, path: &str, want: f64, tol: f64) {
+        let got = at(v, path).and_then(JsonValue::as_f64).unwrap_or_else(|| panic!("no number at {path} in {}", v.canonical_js()));
+        assert!((got - want).abs() <= tol, "{path}: {got}, the golden is {want} (within {tol})");
+    }
+
+    fn part<'a>(v: &'a JsonValue, deck: &str, role: &str) -> &'a JsonValue {
+        let parts = v.get("parts").and_then(JsonValue::as_array).expect("parts");
+        parts.iter().find(|p| p.get("deck").and_then(JsonValue::as_str) == Some(deck) && p.get("part").and_then(JsonValue::as_str) == Some(role)).unwrap_or_else(|| panic!("no part {deck}.{role}"))
+    }
+
+    fn ids(v: &JsonValue) -> Vec<String> {
+        v.get("warning_ids").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()
+    }
+
+    fn without_ms(v: &JsonValue) -> String {
+        let JsonValue::Object(o) = v else { return v.canonical_js() };
+        let mut o = o.clone();
+        o.remove("ms");
+        JsonValue::Object(o).canonical_js()
+    }
+
+    const FIRST_BEAT: &str = include_str!("../../../site/examples/first-beat.beatscript");
+    const DUBSTEP_V4: &str = include_str!("../../../site/examples/hand-dubstep-140-v4.beatscript");
+
+    /// The mix (mix.rs) of first-beat, as numbers taken 2026-11-24 (it has no control lines, so how the render plays those
+    /// does not move it): the master's loudness, true peak, dynamics, bands and stereo; the parts' bands and centroids; the
+    /// kick and the sub bass sharing 60-250 Hz all through; the pad 26 LU under the mix; the targets; and the warnings, in
+    /// the order to fix them. The same text gives the same answer.
+    #[test]
+    fn mix_golden_numbers_of_first_beat() {
+        let lo = ListenOptions::default();
+        let v = listen(FIRST_BEAT, &lo).unwrap_or_else(|e| panic!("{e:?}"));
+        assert_eq!(v.get("version").and_then(JsonValue::as_str), Some("listen/2"));
+        near(&v, "master/lufs", -12.7, 0.3);
+        near(&v, "master/true_peak_db", -0.2, 0.3);
+        near(&v, "master/crest_db", 13.8, 0.5);
+        near(&v, "master/plr_db", 12.5, 0.5);
+        near(&v, "master/short_term_max_lufs", -12.2, 0.3);
+        near(&v, "master/lra", 0.6, 0.5);
+        for (band, want) in [("sub", -24.1), ("low", -14.6), ("low_mid", -32.7), ("mid", -43.0), ("high_mid", -35.0), ("high", -33.9)] {
+            near(&v, &format!("master/bands/{band}"), want, 1.0);
+        }
+        near(&v, "master/centroid_hz", 231.0, 15.0);
+        near(&v, "master/width", 0.0, 0.02);
+        near(&v, "master/correlation", 1.0, 0.02);
+        let kick = part(&v, "A", "kick");
+        near(kick, "centroid_hz", 117.0, 10.0);
+        near(kick, "bands/low", -18.2, 1.0);
+        near(kick, "crest_db", 10.8, 0.5);
+        let hat = part(&v, "A", "hihat");
+        near(hat, "centroid_hz", 8743.0, 100.0);
+        near(hat, "bands/high", -29.8, 1.0);
+        near(part(&v, "A", "snare"), "centroid_hz", 1701.0, 60.0);
+        near(part(&v, "B", "bass"), "bands/low", -16.3, 1.0);
+        near(part(&v, "B", "harmony"), "lufs", -38.7, 1.0);
+        near(part(&v, "B", "harmony"), "width", 0.14, 0.05);
+        let clashes = v.get("clashes").and_then(JsonValue::as_array).expect("clashes");
+        assert_eq!(clashes.len(), 1, "{}", v.canonical_js());
+        assert_eq!(clashes[0].get("parts").map(JsonValue::canonical_js).as_deref(), Some(r#"["B.bass","A.kick"]"#));
+        assert_eq!(clashes[0].get("band").and_then(JsonValue::as_str), Some("low"));
+        assert_eq!(clashes[0].get("bars").map(JsonValue::canonical_js).as_deref(), Some("[[1,8]]"));
+        near(&v, "targets/lufs_delta", 1.3, 0.3);
+        assert_eq!(at(&v, "targets/met").and_then(JsonValue::as_bool), Some(false));
+        assert_eq!(ids(&v), ["clash:A.kick/B.bass:low", "buried:B.harmony", "true_peak", "loudness:high"], "{}", v.canonical_js());
+        let w = v.get("warnings").map(JsonValue::canonical_js).unwrap_or_default();
+        assert!(w.contains("duck B under A.kick 6db") && w.contains("`master: level 0.86` fixes both"), "{w}");
+        assert_eq!(without_ms(&listen(FIRST_BEAT, &lo).unwrap()), without_ms(&v), "the same text, the same answer");
+    }
+
+    /// The loop, end to end: the duck first-beat's clash warning names, written in, takes the clash away, and a compare with the
+    /// version before says the warning was fixed and the bass went down in the low band.
+    #[test]
+    fn the_duck_the_warning_names_fixes_the_clash_and_compare_says_so() {
+        let lo = ListenOptions::default();
+        let before = listen(FIRST_BEAT, &lo).unwrap();
+        let ducked = FIRST_BEAT.replace("end at bar 8", "duck B under A.kick 6db\nend at bar 8");
+        let after = listen(&ducked, &lo).unwrap_or_else(|e| panic!("{e:?}"));
+        assert!(!ids(&after).iter().any(|i| i.starts_with("clash:")), "{}", after.canonical_js());
+        let c = mix::compare(&before, &after);
+        let fixed = c.get("fixed").map(JsonValue::canonical_js).unwrap_or_default();
+        assert!(fixed.contains("deck B bass and deck A kick clash"), "{}", c.canonical_js());
+        assert_eq!(c.get("introduced").map(JsonValue::canonical_js).as_deref(), Some("[]"), "{}", c.canonical_js());
+        let bass = c.get("parts").and_then(JsonValue::as_array).and_then(|a| a.iter().find(|p| p.get("part").and_then(JsonValue::as_str) == Some("bass"))).cloned().expect("the bass moved");
+        assert!(at(&bass, "bands/low").and_then(JsonValue::as_f64).is_some_and(|d| d < -0.5), "{}", c.canonical_js());
+        // the bass a little lower brings the master within 1 LU of the target too: that warning goes as well
+        assert!(c.get("summary").and_then(JsonValue::as_str).is_some_and(|s| s.ends_with("2 warnings fixed, 0 introduced, 2 kept")), "{}", c.canonical_js());
+        assert!(fixed.contains("LU over the streaming target"), "{}", c.canonical_js());
+    }
+
+    /// The mix of hand-dubstep-140-v4 (the example the polish page works through), as numbers taken 2026-11-24: sections, two
+    /// decks of several parts (each part measured on its own pass), the kick and the wobble bass sharing deck A and the sub in
+    /// the drops, a true peak at the ceiling with the loudness under the target. Its control lines are played by the render
+    /// as it was then: a change to how the render plays them moves these numbers, and is a reason to re-take them.
+    #[test]
+    fn mix_golden_numbers_of_hand_dubstep_v4() {
+        let v = listen(DUBSTEP_V4, &ListenOptions::default()).unwrap_or_else(|e| panic!("{e:?}"));
+        near(&v, "master/lufs", -15.6, 0.5);
+        near(&v, "master/true_peak_db", -0.9, 0.5);
+        near(&v, "master/lra", 10.7, 1.5);
+        near(&v, "master/short_term_max_lufs", -12.2, 0.5);
+        for (band, want) in [("sub", -27.8), ("low", -22.0), ("low_mid", -24.1), ("mid", -25.7), ("high_mid", -35.3), ("high", -44.1)] {
+            near(&v, &format!("master/bands/{band}"), want, 1.5);
+        }
+        near(&v, "master/centroid_hz", 381.0, 40.0);
+        let bass = part(&v, "A", "bass");
+        near(bass, "bands/sub", -19.7, 1.5);
+        near(bass, "centroid_hz", 76.0, 10.0);
+        near(part(&v, "A", "hihat"), "centroid_hz", 8737.0, 150.0);
+        near(part(&v, "B", "melody"), "centroid_hz", 531.0, 50.0);
+        let drop = v.get("sections").and_then(JsonValue::as_array).and_then(|a| a.iter().find(|s| s.get("name").and_then(JsonValue::as_str) == Some("drop"))).cloned().expect("drop");
+        near(&drop, "true_peak_db", -1.8, 0.5);
+        near(&drop, "bands/sub", -23.5, 1.5);
+        let first = at(&v, "clashes/0").expect("a clash");
+        assert_eq!(first.get("parts").map(JsonValue::canonical_js).as_deref(), Some(r#"["A.bass","A.kick"]"#), "{}", v.canonical_js());
+        assert_eq!(first.get("band").and_then(JsonValue::as_str), Some("sub"));
+        let ids = ids(&v);
+        // it does not clip, so its true peak (at the ceiling) is said with the loudness, last
+        assert_eq!(ids.first().map(String::as_str), Some("clash:A.bass/A.kick:sub"), "{ids:?}");
+        assert_eq!(ids[ids.len().saturating_sub(2)..], ["true_peak", "loudness:low"], "{ids:?}");
+        let w = v.get("warnings").map(JsonValue::canonical_js).unwrap_or_default();
+        assert!(w.contains("put the bass on a deck of its own and `duck` it under A.kick"), "{w}");
     }
 
     #[test]

@@ -40,8 +40,10 @@ BPM_TOL = 0.01
 TIMEOUT_S = 300
 BUS_SOCK = os.environ.get("LISTEN_BUS_SOCK", "data/metrics/publish.sock")
 LAST = os.environ.get("LISTEN_LAST", "data/listen/last.json")
-# what a golden keeps (the rest is timing or curve detail that is not compared)
-KEEP = ("version", "cid", "window", "master", "detected", "decks", "parts", "silent", "sections", "warnings")
+# what a golden keeps (the rest is timing or curve detail that is not compared). Since listen/2 it also records the mix
+# (clashes, targets, warning_ids, and the bands and true peak inside master, parts and sections): kept so a change shows in
+# the golden's diff, and not a reason to fail (the gate below is unchanged).
+KEEP = ("version", "cid", "window", "master", "detected", "decks", "parts", "silent", "sections", "clashes", "targets", "warnings", "warning_ids")
 
 
 def listen(beatscript: str, path: str) -> dict:

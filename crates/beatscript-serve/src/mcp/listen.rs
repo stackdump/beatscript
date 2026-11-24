@@ -3,9 +3,15 @@
 //! deck, part and section, the parts that have notes and are not heard (and why, when the mixer says), the detected tempo
 //! and key next to the declared ones, and clipping.
 //!
+//! The mix as well (crates/beatscript-cli/src/mix.rs): bands, centroid and stereo image per part and on the master, the
+//! master's true peak, crest, PLR, short-term maximum and loudness range, the clashes between parts, the master against a
+//! delivery target (`targets`), and with `compare` (the previous version, by CID or text) what changed and which warnings
+//! were fixed or introduced. The loop that uses it is docs/beatscript/polish.md (`/docs/polish`).
+//!
 //! Read-only and open to everyone (no sign-in): it stores nothing. It is limited like `render` (per caller an hour, four
-//! times that per address), at most [`CONCURRENT`] run at once, and answers are cached by (CID, section, bars), so asking
-//! again is free. A child of `tools` so it shares the argument rules and the checker.
+//! times that per address), at most [`CONCURRENT`] run at once, and answers are cached by (CID, section, bars, targets), so
+//! asking again is free (a compare is two listens, each cached). A child of `tools` so it shares the argument rules and the
+//! checker.
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -55,7 +61,7 @@ impl Listen {
 }
 
 /// tools/list's entry.
-pub fn tool_def(max_prog: usize, per_hour: usize) -> Value {
+pub fn tool_def(p: &str, max_prog: usize, per_hour: usize) -> Value {
     let desc = format!(
         "Listen to a BeatScript program without audio: it is rendered offline through the same engine as render, and you get a \
 small JSON summary to check your work by ear, as numbers. Per deck and per part (a role of a deck's line: drums, bass, ...): \
@@ -76,7 +82,19 @@ and bars again is answered from the cache. Programs are at most {max_prog} bytes
 bars from the start. Like render, the offline engine plays the notes, the mixer and insert moves it has ops for and the \
 `macro` lines (the DJ macro catalogue: see the macros tool); `notes` names the control lines it leaves out. A program with \
 a macro line gains `macros`: each call in the window, `at_bar` (the bar the engine starts it on, as the time words count), \
-and `played`, with `refused` (the engine's reason, also a warning) when it was not."
+and `played`, with `refused` (the engine's reason, also a warning) when it was not. \
+The mix, to polish it by ear: each measured part and the master have `bands` (dB in sub 20-60 Hz, low 60-250, low_mid 250-500, \
+mid 500-2k, high_mid 2k-6k, high 6k up, on rms_db's scale), `centroid_hz`, `width` (0 mono, 0.5 wide, 1 out of phase), \
+`correlation` and `crest_db`; the master also `true_peak_db` (dBTP, 4x oversampled), `plr_db`, `short_term_max_lufs` and `lra`; \
+each section its `bands` and `true_peak_db`. `clashes` lists parts that carry the same band in the same bars at levels that mask \
+each other ({{parts, band, hz, bars, overlap, gap_db, sections}}, the louder part first). `targets` (default streaming: -14 LUFS, \
+-1 dBTP; also apple, broadcast, club, or LUFS/dBTP such as -12/-1) gives the master's lufs_delta and true_peak_delta and `met`. \
+`warnings` come in the order to fix them (not heard, clipping, clashes, balance, loudness, width), each saying the BeatScript \
+line that fixes it, and `warning_ids` gives each a stable id. With `compare` (the previous version: a CID or its text) the \
+answer gains `compare`: deltas (now minus before) of the master, each part and each section, the targets before and after, and \
+the warnings `fixed`, `introduced` and `kept`, with a one-line `summary`. On a long program listen a `section` at a time: a part \
+past the budget of part renders is not measured (notes says so) and has no bands. The loop (check, listen, edit, listen with \
+compare) and which lines fix what: {p}/docs/polish.md."
     );
     tool(
         "listen",
@@ -89,6 +107,8 @@ and `played`, with `refused` (the engine's reason, also a warning) when it was n
             ("example", sprop("Name of an example, from list_examples.", &[("maxLength", json!(64)), ("pattern", json!(NAME_PAT))])),
             ("section", sprop("Listen to this section only (its name in the program).", &[("maxLength", json!(64))])),
             ("bars", json!({"type": "integer", "minimum": 1, "maximum": MAX_BARS, "description": "At most this many bars of the window, from its start."})),
+            ("targets", sprop("The delivery target the master is measured against: streaming (default: -14 LUFS, -1 dBTP), apple (-16, -1), broadcast (-23, -1), club (-8, -0.3), or LUFS/dBTP such as -12/-1.", &[("maxLength", json!(32))])),
+            ("compare", sprop("The previous version to compare with: a CID or the program's text. The answer gains `compare` (what changed, and the warnings fixed and introduced); the same section, bars and targets are used for both.", &[("maxLength", json!(max_prog))])),
         ],
         &[],
     )
@@ -96,7 +116,7 @@ and `played`, with `refused` (the engine's reason, also a warning) when it was n
 
 impl Tools {
     pub(super) fn listen_tool(&self, c: &Caller, a: Args) -> R {
-        a.only(&["text", "cid", "example", "section", "bars"])?;
+        a.only(&["text", "cid", "example", "section", "bars", "targets", "compare"])?;
         let mut text = a.str("text", self.max_prog)?.unwrap_or_default();
         let cid = a.str("cid", 100)?.unwrap_or_default();
         let example = a.str("example", 64)?.unwrap_or_default();
@@ -106,24 +126,59 @@ impl Tools {
         }
         let section = a.str("section", 64)?.filter(|s| !s.trim().is_empty()).map(|s| s.trim().to_string());
         let bars = a.num("bars", 1.0, f64::from(MAX_BARS))?.map(|b| b as u32);
+        let targets = match a.str("targets", 32)?.filter(|s| !s.trim().is_empty()) {
+            Some(t) => crate::mix::Targets::parse(&t).map_err(bad)?,
+            None => crate::mix::Targets::default(),
+        };
+        let compare = a.str("compare", self.max_prog)?.filter(|s| !s.trim().is_empty());
         if !cid.is_empty() {
-            if !is_cid(&cid) {
-                return Err(bad("argument \"cid\" is not a CID (it starts with z)"));
-            }
-            text = match self.stored(&cid) {
-                Some((t, ..)) => t,
-                None => match self.app.examples.list.iter().find(|e| e.cid == cid).and_then(|e| self.example_text(&e.name)) {
-                    Some(t) => t,
-                    None => return Err(Fail::new(404, "not_found", format!("no stored program has CID {cid}. Pass its text as `text`."))),
-                },
-            };
+            text = self.listen_text_of(&cid)?;
         } else if !example.is_empty() {
             if !name_ok(&example) {
                 return Err(bad("argument \"example\" is an example name, as list_examples gives"));
             }
             text = self.example_text(&example).ok_or_else(|| Fail::new(404, "not_found", format!("no example is named {}; call list_examples", q(&example))))?;
         }
-        let rep = self.check_program(c, &text)?;
+        let mut v = self.listen_one(c, &text, section.clone(), bars, &targets)?;
+        if let Some(before) = compare {
+            let before = before.trim();
+            let prev_text = if is_cid(before) { self.listen_text_of(before)? } else { before.to_string() };
+            let prev = self.listen_one(c, &prev_text, section, bars, &targets).map_err(|mut e| {
+                e.err.message = format!("compare: {}", e.err.message);
+                e
+            })?;
+            let as_js = |v: &Value| {
+                let mut v = v.clone();
+                if let Some(o) = v.as_object_mut() {
+                    for k in ["lexicon", "cached", "compare"] {
+                        o.remove(k);
+                    }
+                }
+                djengine::json::JsonValue::parse(&v.to_string()).map_err(|e| Fail::new(500, "internal", format!("{e:?}")))
+            };
+            let cmp = crate::mix::compare(&as_js(&prev)?, &as_js(&v)?);
+            v["compare"] = serde_json::from_str(&cmp.js_stringified()).map_err(|e| Fail::new(500, "internal", e.to_string()))?;
+        }
+        Ok(v)
+    }
+
+    /// The text of a stored program or an example, by CID.
+    fn listen_text_of(&self, cid: &str) -> Result<String, Fail> {
+        if !is_cid(cid) {
+            return Err(bad("argument \"cid\" is not a CID (it starts with z)"));
+        }
+        match self.stored(cid) {
+            Some((t, ..)) => Ok(t),
+            None => match self.app.examples.list.iter().find(|e| e.cid == cid).and_then(|e| self.example_text(&e.name)) {
+                Some(t) => Ok(t),
+                None => Err(Fail::new(404, "not_found", format!("no stored program has CID {cid}. Pass its text as `text`."))),
+            },
+        }
+    }
+
+    /// One listen: checked, from the cache or rendered (and counted against the limits), with its lexicon.
+    fn listen_one(&self, c: &Caller, text: &str, section: Option<String>, bars: Option<u32>, targets: &crate::mix::Targets) -> R {
+        let rep = self.check_program(c, text)?;
         if !Rep(&rep).ok() {
             return Err(needs_fixing(&rep, "it cannot be listened to"));
         }
@@ -131,8 +186,8 @@ impl Tools {
             return Err(e);
         }
         let pcid = rep["cid"].as_str().unwrap_or("").to_string();
-        let lexicon = self.harvest(&text, Some(&rep));
-        let key = format!("{pcid}|{}|{}", section.as_deref().unwrap_or(""), bars.map_or(String::new(), |b| b.to_string()));
+        let lexicon = self.harvest(text, Some(&rep));
+        let key = format!("{pcid}|{}|{}|{}", section.as_deref().unwrap_or(""), bars.map_or(String::new(), |b| b.to_string()), targets.key());
         if let Some(v) = (!pcid.is_empty()).then(|| self.listen.cached(&key)).flatten() {
             let mut v = v;
             v["cached"] = json!(true);
@@ -154,8 +209,8 @@ impl Tools {
             }
         }
         let _done = Done(&l.running);
-        let opts = crate::listen::ListenOptions { section, bars, max_bars: MAX_BARS, budget_seconds: PART_BUDGET_SECONDS, sr: crate::listen::SR };
-        let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| crate::listen::listen(&text, &opts)));
+        let opts = crate::listen::ListenOptions { section, bars, max_bars: MAX_BARS, budget_seconds: PART_BUDGET_SECONDS, sr: crate::listen::SR, targets: targets.clone() };
+        let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| crate::listen::listen(text, &opts)));
         let v = match r {
             Ok(Ok(v)) => v,
             Ok(Err(e)) if e.code == "usage" => return Err(bad(e.message)),
@@ -242,7 +297,7 @@ mod tests {
 
     #[test]
     fn the_tool_is_listed() {
-        let d = tool_def(16384, 30);
+        let d = tool_def("https://beatscript.app", 16384, 30);
         assert_eq!(d["name"], "listen");
         assert_eq!(d["annotations"]["readOnlyHint"], true);
     }

@@ -48,6 +48,9 @@ mod export_route; // ?format=midi|stems|stems-opus on the render route (docs/EXP
 #[path = "../../beatscript-cli/src/listen.rs"]
 #[allow(dead_code)] // its CLI half is beatscript's
 mod listen;
+#[path = "../../beatscript-cli/src/mix.rs"]
+#[allow(dead_code)]
+mod mix; // listen's mix analysis and its compare (the MCP listen tool's `compare`)
 
 mod content;
 mod docs;

@@ -13,6 +13,9 @@ mod render;
 #[path = "../src/listen.rs"]
 mod listen;
 
+#[path = "../src/mix.rs"]
+mod mix;
+
 use std::time::Instant;
 
 use djengine::json::JsonValue;
@@ -265,12 +268,48 @@ fn curve(v: &JsonValue) -> Vec<Option<f64>> {
 
 /// `examples/beatscript/render-controls.beatscript` (no move): listen's answer (less its timings), pinned before the change.
 /// Re-pinned after the rename for the program's CID alone: with the old CID put back, the answer is the old pin's
-/// (2e42b7cdcd8cf5ea4a35c9ccef307279a5bbbf295f8e7780119b8cd3675ff74f).
+/// (2e42b7cdcd8cf5ea4a35c9ccef307279a5bbbf295f8e7780119b8cd3675ff74f). Since listen/2 the pin is of the answer as listen/1
+/// said it ([`as_listen1`]): the mix it added is new fields and new warnings, and every number listen/1 gave is the same.
 const PIN_LISTEN_NO_MOVE: &str = "bb45e0083745e3d0c3446c4331ba4b80672b47c47321e69625a420c35601a73f";
+
+/// listen/2's answer as listen/1 gave it: without the mix (mix.rs: bands, stereo, true peak, loudness range, clashes,
+/// targets) and the warnings it added (kept: the ones whose id is a silence, the clipping or a macro).
+fn as_listen1(v: &JsonValue) -> JsonValue {
+    const MIX: [&str; 9] = ["bands", "centroid_hz", "width", "correlation", "crest_db", "true_peak_db", "plr_db", "short_term_max_lufs", "lra"];
+    let strip = |x: &JsonValue| -> JsonValue {
+        let JsonValue::Object(o) = x else { return x.clone() };
+        let mut o = o.clone();
+        for k in MIX {
+            o.remove(k);
+        }
+        JsonValue::Object(o)
+    };
+    let JsonValue::Object(o) = v else { return v.clone() };
+    let mut o = o.clone();
+    o.set("version", JsonValue::str("listen/1"));
+    for k in ["clashes", "targets", "warning_ids"] {
+        o.remove(k);
+    }
+    if let Some(m) = o.get("master").map(strip) {
+        o.set("master", m);
+    }
+    for k in ["parts", "sections"] {
+        if let Some(JsonValue::Array(a)) = o.get(k) {
+            let a = a.iter().map(strip).collect();
+            o.set(k, JsonValue::Array(a));
+        }
+    }
+    let ids: Vec<String> = v.get("warning_ids").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default();
+    if let Some(JsonValue::Array(w)) = o.get("warnings") {
+        let kept = w.iter().enumerate().filter(|(i, _)| ids.get(*i).is_some_and(|id| id.starts_with("silent:") || id == "clip" || id.starts_with("macro:"))).map(|(_, x)| x.clone()).collect();
+        o.set("warnings", JsonValue::Array(kept));
+    }
+    JsonValue::Object(o)
+}
 
 #[test]
 fn pin_listen_of_a_program_with_no_move_is_as_it_was() {
-    let v = listen_of(&example("render-controls.beatscript"));
+    let v = as_listen1(&listen_of(&example("render-controls.beatscript")));
     assert_eq!(hex(v.canonical_js().as_bytes()), PIN_LISTEN_NO_MOVE, "{}", v.canonical_js());
 }
 

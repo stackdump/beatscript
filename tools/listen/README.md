@@ -12,7 +12,7 @@ These tests hold that summary still for every example the site lists and for the
 | `fixtures/silent-crossfader.beatscript` | the crossfader all the way to A shuts deck B (BeatScript Android 0.3.40 started its Player there) |
 | `fixtures/silent-mute.beatscript` | a deck muted and never put back |
 | `fixtures/filter-exit-restores.beatscript` | a `filter_exit` move mutes its deck and the program puts it back at the next phrase line (djapp left it muted) |
-| `goldens/<name>.json` | the summary of each program as last accepted |
+| `goldens/<name>.json` | the summary of each program as last accepted (since `listen/2` with the mix: bands, true peak, clashes, targets; docs/beatscript/polish.md) |
 
 A fixture's `# expect:` lines (`silent deck=B reason=crossfader`, `heard deck=B section=later`) are checked on every run,
 so regenerating the goldens cannot hide the bug a fixture exists for.

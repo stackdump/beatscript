@@ -693,7 +693,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 &["station"],
             ),
         ];
-        v.push(listen::tool_def(max_prog, render_per_hour));
+        v.push(listen::tool_def(p, max_prog, render_per_hour));
         v.push(artifact::tool_def(p, max_prog));
         v.push(embed::tool_def(p, max_prog));
         // the lexicon harvest, said once (text::LEXICON_DESC, also docs/beatscript/lexicon-harvest.md's)

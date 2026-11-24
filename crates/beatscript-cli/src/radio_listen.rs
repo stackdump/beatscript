@@ -39,7 +39,7 @@ fn heard(text: &str, cache: &mut BTreeMap<String, Heard>) -> Heard {
         return h.clone();
     }
     beatscript_api::generate::install();
-    let lo = ListenOptions { section: None, bars: Some(16), max_bars: 16, budget_seconds: 0.0, sr: crate::listen::SR };
+    let lo = ListenOptions { section: None, bars: Some(16), max_bars: 16, budget_seconds: 0.0, sr: crate::listen::SR, targets: Default::default() };
     let v = listen(text, &lo).unwrap_or_else(|e| panic!("listen: {e:?}\n{text}"));
     let det = v.get("detected").expect("detected");
     let bpm = num(det.get("bpm")).or_else(|| num(det.get("declared_bpm"))).expect("a tempo");

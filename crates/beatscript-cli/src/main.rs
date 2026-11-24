@@ -5,6 +5,7 @@
 mod export;
 mod files;
 mod listen;
+mod mix;
 #[cfg(test)]
 mod radio_listen;
 mod lsp;

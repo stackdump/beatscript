@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### `listen` hears the mix: polish it by ear, with `compare` (2026-11-24)
+
+- `listen` (the MCP tool and `beatscript listen`) measures the mix: each measured part and the master have `bands` (dB in
+  sub, low, low_mid, mid, high_mid, high), `centroid_hz`, `width`, `correlation` and `crest_db`; the master also
+  `true_peak_db` (4x oversampled), `plr_db`, `short_term_max_lufs` and `lra` (EBU Tech 3342); each section its `bands` and
+  `true_peak_db`. The summary's version is `listen/2`.
+- `clashes`: parts that carry the same band in the same bars at levels that mask each other, bar by bar (a duck that takes
+  a bass out of the kick's way clears one even at the same levels). Two drums sharing a band are a kit, not a clash.
+- `targets` (default streaming: -14 LUFS, -1 dBTP; also apple, broadcast, club, or `LUFS/dBTP`): the master's deltas and
+  `met`.
+- `warnings` come in the order to fix them (not heard, clipping, clashes, balance, loudness, width) and each names the
+  BeatScript line that fixes it (`master: level 0.84`, `duck B under A.kick 6db`, `mix { B eq low -6 }`, `vel=`); each has a
+  stable id in `warning_ids`.
+- `compare` (the previous version, by CID or text; `--compare FILE` on the command line): deltas of the master, each part and
+  each section, the targets before and after, and the warnings fixed, introduced and kept, with a one-line summary.
+- A new page, [Polish a mix](https://beatscript.app/docs/polish): the loop, the targets, the order of fixes and the lines that
+  make them, and what the language cannot do yet (no pan or width on a strip, no limiter, EQ per deck only), which is in
+  docs/ROADMAP.md. llms.txt, the MCP instructions and the listen tool's description link it.
+
 ### The radio in any page: `<beatscript-radio>`, and the artifact tool's `station` (2026-11-23)
 
 - `@stackdump/beatscript-player` 0.4.0 has `<beatscript-radio>` beside `<beatscript-track>`: a station and its player, its

@@ -333,6 +333,15 @@
         {"tool": "share", "stores": true, "args": {"text": "arrange from template(passacaglia, @eccl3_season, upper=ode_to_joy)\n"}, "save": {"x": "/expanded_cid"}, "expect": [["/stored", "=", true], ["/expanded_cid", "~", "z"], ["/expanded_url", "~", "/p/z"]]},
         {"tool": "open", "args": {"url": "${x}"}, "expect": [["/cid", "=", "${x}"], ["/meta/source", "=", "expansion"], ["/meta/expanded_from", "has"], ["/meta/based_on", "~", "ode_to_joy"]]}
       ]
+    },
+    {
+      "id": "polish-loop",
+      "docs": ["polish.md"],
+      "say": [["listen", "https://beatscript.app/docs/polish.md"], ["listen", "compare"], ["listen", "targets"], ["listen", "clashes"], ["listen", "true_peak_db"], ["listen", "warning_ids"]],
+      "calls": [
+        {"tool": "listen", "args": {"text": "tempo 120\nkey am\nsection main 4 bars {\n  deck A: kick x ~ x ~ x ~ x ~\n  deck B: bass a1 ~ a1 ~ a1 ~ a1 ~ inst=sub-bass\n}\narrange main\n", "targets": "streaming"}, "expect": [["/version", "=", "listen/2"], ["/targets/name", "=", "streaming"], ["/targets/lufs", "=", -14], ["/master/true_peak_db", "has"], ["/master/bands/sub", "has"], ["/master/lra", "has"], ["/parts/0/bands", "has"], ["/clashes", "has"], ["/warning_ids", "has"]]},
+        {"tool": "listen", "args": {"text": "tempo 120\nkey am\nsection main 4 bars {\n  deck A: kick x ~ x ~ x ~ x ~\n  deck B: bass a1 ~ a1 ~ a1 ~ a1 ~ inst=sub-bass\n  deck B: level 0.5\n}\narrange main\n", "compare": "tempo 120\nkey am\nsection main 4 bars {\n  deck A: kick x ~ x ~ x ~ x ~\n  deck B: bass a1 ~ a1 ~ a1 ~ a1 ~ inst=sub-bass\n}\narrange main\n"}, "expect": [["/compare/summary", "~", "warning"], ["/compare/master/lufs", "has"], ["/compare/fixed", "has"], ["/compare/introduced", "has"]]}
+      ]
     }
   ]
 }

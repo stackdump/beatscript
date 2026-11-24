@@ -64,6 +64,12 @@ const RADIO_MD: &str = include_str!("../../../docs/beatscript/radio.md");
 const RADIO_PATH: &str = "/docs/radio";
 const RADIO_TITLE: &str = "Radio: stations";
 const RADIO_BLURB: &str = "Stations: endless, deterministic runs of tracks, each station one small program. Position N is always the same track; turn a knob (genre, seed, step, forms, tempo, key, length) and you move to a neighbouring station, at the same position.";
+/// Polish a mix: the listen loop (docs/beatscript/polish.md, the MCP `listen` tool's mix analysis, crates/beatscript-cli/src/mix.rs):
+/// `/docs/polish` and its markdown, listed in the docs index, its JSON-LD, llms.txt and the sitemap. Built in, like the forms.
+const POLISH_MD: &str = include_str!("../../../docs/beatscript/polish.md");
+const POLISH_PATH: &str = "/docs/polish";
+const POLISH_TITLE: &str = "Polish a mix";
+const POLISH_BLURB: &str = "The listen loop: check, listen, change one line, listen again with compare. What listen measures (bands, clashes, true peak, loudness range, width), the delivery targets, the order of fixes and the BeatScript lines that make each one.";
 
 /// Who authored a program and what rights it has (docs/AUTHORSHIP.md, `beatscript_serve::rights`): `/authorship` and
 /// `/authorship.md`, listed in the docs index, its JSON-LD and llms.txt.
@@ -735,6 +741,7 @@ impl Docs {
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{FOUND_PATH}"), "name": FOUND_TITLE, "description": FOUND_BLURB, "url": format!("{p}{FOUND_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{FOUND_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{FORMS_PATH}"), "name": FORMS_TITLE, "description": FORMS_BLURB, "url": format!("{p}{FORMS_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{FORMS_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{RADIO_PATH}"), "name": RADIO_TITLE, "description": RADIO_BLURB, "url": format!("{p}{RADIO_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{RADIO_PATH}.md"), "encodingFormat": "text/markdown"}}));
+        parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{POLISH_PATH}"), "name": POLISH_TITLE, "description": POLISH_BLURB, "url": format!("{p}{POLISH_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{POLISH_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{EMBED_PATH}"), "name": EMBED_TITLE, "description": EMBED_BLURB, "url": format!("{p}{EMBED_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{EMBED_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{AUTHORSHIP_PATH}"), "name": AUTHORSHIP_TITLE, "description": AUTHORSHIP_BLURB, "url": format!("{p}{AUTHORSHIP_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{AUTHORSHIP_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "Dataset", "@id": format!("{p}{}", beatscript_serve::themes::PATH), "name": beatscript_serve::themes::TITLE, "description": beatscript_serve::themes::BLURB, "url": format!("{p}{}", beatscript_serve::themes::PATH), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}/themes.txt"), "encodingFormat": "text/plain"}}));
@@ -757,6 +764,7 @@ impl Docs {
         b.push_str("<li><a href=\"/themes\">Theme library</a>: melodies, basses and figures composed and published before 1929, CC0, as BeatScript bars in a stated key, to borrow and morph</li>\n");
         b.push_str("<li><a href=\"/docs/found-phrases\">Found phrases</a>: borrowing public-domain text for its shape: a line chosen for its meter, matched to the groove, buried and spotlit. The technique behind the phrasebook and the phrase templates</li>\n");
         b.push_str("<li><a href=\"/docs/radio\">Radio: stations</a>: endless, deterministic stations, each one small program: position N is always the same track, and a knob turned moves you to a neighbouring station at the same position</li>\n");
+        b.push_str("<li><a href=\"/docs/polish\">Polish a mix</a>: the listen loop: check, listen, change one line, listen again with compare; what listen measures, the delivery targets, the order of fixes and the lines that make them</li>\n");
         b.push_str("<li><a href=\"/docs/embed\">Embed a program</a>: one embed config for every surface: the player and the studio (the editor as an MCP server inside a Claude artifact or any page), iframe, the &lt;beatscript-player&gt; element, oEmbed, link previews that play, a README card, Jupyter, VS Code, plain audio</li>\n");
         b.push_str("<li><a href=\"/authorship\">Authorship and rights</a>: who authored a program and what rights it has, in plain language</li>\n");
         b.push_str("<li><a href=\"/phrasebook\">Phrasebook</a>: lines of verse, scripture, speech and work song first published before 1929, CC0, each with its meter as a step pattern, to sing by id</li>\n");
@@ -809,6 +817,13 @@ impl Docs {
                 let r = render_markdown(RADIO_MD);
                 let nav = self.installed();
                 let html = shell(RADIO_TITLE, RADIO_BLURB, &format!("{}{RADIO_PATH}", self.public), "/docs/radio.md", "radio", &nav, &r.toc, &r.body);
+                Some(Answer::Body(HTML, Bytes::from(html), None, true))
+            }
+            "/docs/polish.md" => body(MD, Some(POLISH_MD.to_string())),
+            "/docs/polish" => {
+                let r = render_markdown(POLISH_MD);
+                let nav = self.installed();
+                let html = shell(POLISH_TITLE, POLISH_BLURB, &format!("{}{POLISH_PATH}", self.public), "/docs/polish.md", "polish", &nav, &r.toc, &r.body);
                 Some(Answer::Body(HTML, Bytes::from(html), None, true))
             }
             "/docs/embed.md" => body(MD, Some(EMBED_MD.to_string())),
@@ -916,7 +931,7 @@ impl Docs {
         matches!(
             path,
             "/llms.txt" | "/llms-full.txt" | "/docs/BEATSCRIPT.md" | "/docs/BTW.md" | "/docs/cheatsheet.md" | "/docs/api.md" | "/docs/assets/docs.css" | "/docs/assets/docs.js" | "/docs/" | "/docs/cheatsheet" | "/docs/language" | "/docs/api" | "/docs/arrange.md" | "/docs/arrange" | "/schema" | "/schema.jsonld" | "/schema.md" | "/docs/open-data" | "/docs/open-data.md" | "/grammar" | "/grammar.ebnf" | "/grammar.css" | "/lineage.css" | "/mcp.css" | "/authorship" | "/authorship.md" | "/phrasebook" | "/docs/found-phrases" | "/docs/found-phrases.md" | "/docs/forms" | "/docs/forms.md" | "/themes"
-                | "/docs/embed" | "/docs/embed.md" | "/docs/radio" | "/docs/radio.md"
+                | "/docs/embed" | "/docs/embed.md" | "/docs/radio" | "/docs/radio.md" | "/docs/polish" | "/docs/polish.md"
         )
     }
 
@@ -946,6 +961,7 @@ impl Docs {
         b.push_str(&format!("- [Found phrases]({p}{FOUND_PATH}.md): the technique for sung lines: borrow public-domain text for its shape, pick a line for its meter (trochees chant on the kick, iambs lilt on the offbeat, anapests and dactyls want a triplet feel, shanties call and respond), keep the vocal low, cycle it buried and spotlit, cross it onto the drums with xfer, fix pronunciation with phoneme escapes ([page]({p}{FOUND_PATH}))\n"));
         b.push_str(&format!("- [Forms]({p}{FORMS_PATH}.md): arrange shapes from classical music: quodlibet (themes take turns and cross-morph), passacaglia (a fixed ground under cumulative variations), canon (a theme chasing its own copy), rondo (a refrain returning mutated), fugue (a subject re-entering transposed), theme and variations (one source, a transform a section); each a template built from public-domain themes, `arrange from template(quodlibet, @psalm42_deep_calleth)` ([page]({p}{FORMS_PATH}))\n"));
         b.push_str(&format!("- [Radio: stations]({p}{RADIO_PATH}.md): a station is one small program (`station {{ from gen@2 techno seed=42; next seed=~; forms seeded passacaglia }}`) naming an endless, deterministic run of tracks: position N is always the same track (the same CID), the walk steps the seed (`seed=+N` counts on, `seed=~` draws from the CID of the track before), the forms take turns, and the segue from N to N+1 is the cross form of their seeds; a listener turns knobs (genre, seed, step, forms, tempo, key, length) and keeps N; the MCP `station` tool and POST {p}/api/station answer it ([page]({p}{RADIO_PATH}))\n"));
+        b.push_str(&format!("- [Polish a mix]({p}{POLISH_PATH}.md): the loop for polishing a mix with the MCP `listen` tool: check, listen, change one line, listen again with `compare` (the previous version's CID or text: deltas, and the warnings fixed and introduced); what it measures per part and on the master (bands, centroid, width, correlation, crest; true peak, PLR, short-term max, loudness range), clashes between parts, delivery `targets` (streaming -14 LUFS / -1 dBTP, apple, broadcast, club), the order of fixes (not heard, clipping, clashes, balance, loudness, width) and the lines that make each one (`level`, `vel=`, `mix {{ B eq low -6 }}`, `duck B under A.kick 6db`, `filter hp`, `drive`), and what the language cannot do yet ([page]({p}{POLISH_PATH}))\n"));
         b.push_str(&format!("- [Embed a program]({p}{EMBED_PATH}.md): one embed config ({p}/embed-config.schema.json) for every surface: <beatscript-track> and <beatscript-studio> (the editor as an MCP server inside a Claude artifact or any page: check, fmt, expand, generate, share and the rest offline, compose and store through the artifact's capabilities), an iframe of {p}/embed/<CID> (?compact=1, ?theme=light), the <beatscript-player cid=…> element ({p}/embed.js), oEmbed ({p}/oembed?url=<a /p/ or /c/ link>&format=json), /c/<CID> cards that play (twitter:player, og:audio), a README card ({p}/card/<CID>.svg), Jupyter, VS Code, Obsidian, and the rendered audio ({p}/api/render/<CID>?format=opus); per target, whether the engine runs and what it gets instead; the MCP embed tool writes each one ([page]({p}{EMBED_PATH}))\n"));
         b.push_str(&format!("- [Instruments]({p}/api/instruments): the voices, families, drum kits and palettes a program may name (JSON)\n"));
         b.push_str(&format!("- [API reference]({p}/docs/api.md): every HTTP route, sign-in and tokens, compose, render streaming, sessions, the MCP tools with examples\n"));
@@ -1424,6 +1440,36 @@ mod tests {
         let tools = crate::mcp::tools::tool_list("https://beatscript.app", 16384, 60, 30, (50, 20, 30, 8, 30));
         let st = tools.iter().find(|t| t["name"] == "station").expect("the station tool");
         assert!(st["description"].as_str().unwrap_or("").contains("https://beatscript.app/docs/radio.md"));
+    }
+
+    /// One doc (docs/beatscript/polish.md), many views: the page and its markdown, the docs index and its JSON-LD, llms.txt and the
+    /// sitemap, with no inline style; the listen tool's description and the MCP instructions' authoring loop point at it.
+    #[test]
+    fn the_polish_page_is_one_doc_in_many_views() {
+        let d = Docs::new(None, None, "https://beatscript.app");
+        let ex = Examples { list: Vec::new(), text: HashMap::new() };
+        let Some(Answer::Body(ct, b, _, _)) = d.answer(POLISH_PATH, &ex) else { panic!("{POLISH_PATH} is not served") };
+        assert!(ct.starts_with("text/html"));
+        let html = String::from_utf8_lossy(&b);
+        assert!(inline_styles(&html).is_empty(), "{:?}", inline_styles(&html));
+        assert!(html.contains("<link rel=\"canonical\" href=\"https://beatscript.app/docs/polish\">"));
+        assert!(d.is_route("/docs/polish") && d.is_route("/docs/polish.md"));
+        assert_eq!(d.respond(&Method::GET, &HeaderMap::new(), "/docs/polish.md", &ex).expect("the markdown is a route").status(), 200);
+        assert!(beatscript_serve::opendata::sitemap("https://beatscript.app", &[]).contains("<loc>https://beatscript.app/docs/polish</loc>"));
+        let l = d.llms_txt(&ex);
+        assert!(l.contains("https://beatscript.app/docs/polish.md") && l.contains("https://beatscript.app/docs/polish)"), "llms.txt lacks the polish page");
+        let index = String::from_utf8_lossy(&d.render_index()).to_string();
+        assert!(index.contains("<a href=\"/docs/polish\">Polish a mix</a>"));
+        assert!(index.contains("\"@id\":\"https://beatscript.app/docs/polish\""), "the index's JSON-LD");
+        let tools = crate::mcp::tools::tool_list("https://beatscript.app", 16384, 60, 30, (50, 20, 30, 8, 30));
+        let t = tools.iter().find(|t| t["name"] == "listen").expect("the listen tool");
+        assert!(t["description"].as_str().unwrap_or("").contains("https://beatscript.app/docs/polish.md"));
+        assert!(t["inputSchema"]["properties"]["compare"].is_object() && t["inputSchema"]["properties"]["targets"].is_object());
+        assert!(crate::mcp::text::INSTRUCTIONS.contains("%[1]s/docs/polish.md"), "the authoring loop's listen step names the page");
+        // the page names every line it tells you to write, and what the language lacks
+        for said in ["duck B under A.kick 6db", "mix { B eq low -6 }", "filter hp 150", "master: drive", "vel=", "no pan or width control", "a limiter and a compressor", "docs/ROADMAP.md"] {
+            assert!(POLISH_MD.contains(said), "the page does not say {said}");
+        }
     }
 
     /// One doc (docs/beatscript/forms.md), many views: the page and its markdown, the docs index and its JSON-LD, llms.txt and the
