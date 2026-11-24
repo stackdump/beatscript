@@ -106,7 +106,8 @@ G=$(curl -s -m 20 $U/grammar.ebnf)
 printf '%s' "$G" | grep -q '"never"'; echo 'grammar.ebnf: assert never (6598)'
 printf '%s' "$G" | grep -q '"launch"'; echo 'grammar.ebnf: launch (6600)'
 printf '%s' "$G" | grep -q '"template"'; echo 'grammar.ebnf: template (6642)'
-printf '%s' "$G" | grep -q '\[ INT \] mut_target'; echo 'grammar.ebnf: ~N / @N (6640)'
+printf '%s' "$G" | grep -qF '[ INT ] ( switch | mut_target mut_op'; echo 'grammar.ebnf: ~N / @N, a mutation or a control switch (6640)'
+printf '%s' "$G" | grep -qF 'switch      = "control" [ NAME ] ( "on" | "off" )'; echo 'grammar.ebnf: the control switch (~ control off)'
 printf '%s' "$G" | grep -q 'ROMAN \[ "/" INT \]'; echo 'grammar.ebnf: roman numerals in calls (6596)'
 curl -s -m 20 $U/docs/cheatsheet.md | grep -q 'rests('; echo 'cheat sheet teaches rests() (6599)'
 PB=$(curl -s -m 20 $U/phrasebook.jsonld | grep -o '"@id": *"z4EBG9j[^"]*"' | head -1 | grep -o 'z4EBG9j[^"]*')
