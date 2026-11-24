@@ -276,10 +276,12 @@ dependencies = [
 name = "beatscript-api"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "djengine",
  "djhost",
  "djlive",
  "miniz_oxide 0.8.9",
+ "windwheel",
 ]
 
 [[package]]
@@ -864,7 +866,6 @@ dependencies = [
 name = "djweb"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "beatscript-api",
  "beatscriptls",
  "djhost",
@@ -872,7 +873,6 @@ dependencies = [
  "rtrb",
  "sha2 0.10.9",
  "wasm-bindgen",
- "windwheel",
 ]
 
 [[package]]

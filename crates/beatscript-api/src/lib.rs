@@ -22,6 +22,9 @@ pub mod share;
 pub mod snapshot;
 pub mod station;
 pub mod utf16;
+/// The Wheel as the page plays it (the `wheel` feature: djweb and `beatscript render`).
+#[cfg(feature = "wheel")]
+pub mod wheel;
 
 pub use cheatsheet::cheatsheet;
 pub use generate::{generate, generate_json, GenRequest, Generated};

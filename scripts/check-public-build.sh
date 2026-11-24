@@ -8,8 +8,10 @@
 # 1. The dependency check: a default build of every shipped target (the wasm, the server, the CLIs, the language
 #    crates) has none of
 #      - djlexicon-booth   the booth's private pronouncing dictionary (CMUdict); it is not in this repo at all
-#      - windwheel         the Wheel (public, MIT): behind djhost's off-by-default `windwheel` feature, and in the browser
-#                          module only (djweb src/wheel.rs: the page plays a program's `wheel` lines); no other target
+#      - windwheel         the Wheel (public, MIT): behind djhost's off-by-default `windwheel` feature and beatscript-api's
+#                          off-by-default `wheel` feature (src/wheel.rs), which only what plays a program's `wheel` lines turns
+#                          on: the browser module (djweb) and the offline render (beatscript-cli's `beatscript render`, and
+#                          beatscript-serve, which links that render): no other target
 #      - djrust-wallet     the booth identity, behind djhost's off-by-default `wallet` feature
 #    in its tree. djhost itself may be there (beatscript-serve reads its ontology vocabulary, beatscript its render path).
 # 2. The workspace has exactly the allowlisted members: a new crate is a decision, not an accident.
@@ -23,8 +25,9 @@ members=(beatscript-api beatscript-cli beatscriptls beatscript-round beatscript-
 banned='^(djlexicon-booth|windwheel|djrust-wallet) '
 fail=0
 
-# the browser module plays the Wheel (djweb src/wheel.rs): windwheel is allowed there and nowhere else
-banned_in() { if [ "$1" = djweb ]; then printf '%s' '^(djlexicon-booth|djrust-wallet) '; else printf '%s' "$banned"; fi; }
+# the page and the render play the Wheel (beatscript-api src/wheel.rs, its `wheel` feature): windwheel is allowed in the browser
+# module, the render (beatscript-cli) and the server that links it, and nowhere else
+banned_in() { case $1 in djweb|beatscript-serve|beatscript|beatscript-cli) printf '%s' '^(djlexicon-booth|djrust-wallet) ' ;; *) printf '%s' "$banned" ;; esac; }
 
 for p in "${targets[@]}"; do
   if hits=$(cargo tree -q -p "$p" -e normal,build --prefix none 2>/dev/null | grep -E "$(banned_in "$p")" | sort -u) && [ -n "$hits" ]; then
@@ -34,7 +37,7 @@ for p in "${targets[@]}"; do
   fi
 done
 if [ "${1:-}" = "--tree" ]; then
-  [ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel (but djweb's) or djrust-wallet)"
+  [ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel (but the page's and the render's) or djrust-wallet)"
   exit $fail
 fi
 
@@ -58,5 +61,5 @@ if a=$(list | grep -iE '\.(caf|aif|aiff)$') && [ -n "$a" ]; then
   echo "check-public-build: Apple loop audio in the tree: $a" >&2; fail=1
 fi
 
-[ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel (but djweb's) or djrust-wallet; members as allowlisted; no dictionary data; no loop audio)"
+[ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel (but the page's and the render's) or djrust-wallet; members as allowlisted; no dictionary data; no loop audio)"
 exit $fail

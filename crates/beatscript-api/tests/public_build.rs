@@ -1,6 +1,7 @@
 //! What a default build may contain (scripts/check-public-build.sh, which this runs): code is MIT, programs and
 //! content CC0; no shipped target links the booth's private dictionary (CMUdict, not in this repo) or the wallet, and
-//! only the browser module (djweb, which plays the Wheel) links windwheel.
+//! only what plays a program's `wheel` lines (the browser module, djweb, and the offline render, beatscript-cli and the server that
+//! links it) links windwheel.
 
 #[test]
 fn a_public_build_cannot_include_the_booth_dictionary() {

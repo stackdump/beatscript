@@ -7,9 +7,18 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+default = []
+# The Wheel as the page plays it (src/wheel.rs): windwheel's tonewheel and the voice around it. On in the browser module
+# (djweb) and in `beatscript render` (beatscript-cli, and beatscript-serve, which links its render), so both play one Wheel;
+# off everywhere else (scripts/check-public-build.sh).
+wheel = ["dep:windwheel", "dep:anyhow"]
+
 [dependencies]
 djengine.workspace = true
 djlive.workspace = true
+windwheel = { workspace = true, optional = true }
+anyhow = { version = "1", optional = true }
 
 [dev-dependencies]
 # The snapshot generator and its drift test read the real registry and catalog (djhost is not wasm-friendly,
