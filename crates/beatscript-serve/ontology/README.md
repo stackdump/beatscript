@@ -53,20 +53,9 @@ A release is built from four inputs:
 
 The build is deterministic: the same inputs give the same bytes.
 
-## Regenerating
-
-Run `scripts/regenerate.sh` instead of the manual steps below (the MCP `tools-list.json` fixture, `build.sh`, `fixtures.py`
-against a local server, `tools/ontology/refresh.py`). It runs them in order on a free port with a temporary data dir,
-is idempotent (a second run changes nothing, the snapshot keeps the `fetched` date it has) and changes only the generated
-paths listed at the top of the script. `scripts/regenerate.sh --check` regenerates, prints the paths that differ from what
-is committed, exits 1 if there are any and puts the tree back. The merge queue runs the script after a rebase, so two
-pull requests that both change the vocabulary no longer conflict on `generated/`, `release/`, `release.lock`, `fixtures/`
-and `tools-list.json`: whatever the rebase made of them, the script rebuilds them from the rebased tree.
-
 ## Changing it
 
 ```
-scripts/regenerate.sh                          # everything generated, in order: use this, and the lines below only to see what it runs
 crates/beatscript-serve/ontology/build.sh      # dump beatscript-serve's vocabulary, regenerate generated/, build release/, lock, check
 crates/beatscript-serve/ontology/sync.sh check # every file against release.lock, manifest.json and upstream.lock (offline)
 ```

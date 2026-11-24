@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: for f in deploy/*.sh site/deploy/deploy.sh scripts/regenerate.sh; do bash -n "$f" || exit 1; done && sh -n scripts/build-linux.sh
+      - run: for f in deploy/*.sh site/deploy/deploy.sh; do bash -n "$f" || exit 1; done && sh -n scripts/build-linux.sh
       - run: bash deploy/test-host.sh
       - run: bash deploy/test-live-checks.sh
       # the ~/services steps against a synthetic host: the btw-rust -> beatscript cutover, its rollbacks, the steady state
