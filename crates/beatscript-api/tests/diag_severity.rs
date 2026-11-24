@@ -7,7 +7,7 @@
 use beatscript_api::generate::{generate, GenRequest};
 use djengine::json::JsonValue;
 
-const REPRO_CID: &str = "z4EBG9jGM2ysxZvwdkidt3rSHzoUuqoEXtHNZB9grVV3c6G8C1T";
+const REPRO_CID: &str = "z4EBG9j1GNdChBUSszyidKRiLZEL5vECeFGppDFeu2eZXEDqUUT";
 
 fn n(r: &JsonValue, k: &str) -> i64 {
     r.get(k).and_then(JsonValue::as_i64).unwrap_or_else(|| panic!("{k} is not a number: {}", r.js_stringified()))
