@@ -569,8 +569,7 @@ hihat x*8?              a bare ? is ?0.5
 |---|---|
 | `e(k, n)` / `e(k, n, rot)` / `euclid(...)` | `k` hits over `n` steps (Bjorklund, as `djrust::gen::euclidean`), rotated by `rot`. As a term it takes one slot, so `kick e(5,8)` is a bar of eight steps and `kick x e(3,8)` puts the eight steps in the second half. `0 <= k <= n`, `1 <= n <= 64` ("Euclidean rhythms and polymeter"). |
 | `markov(key, density)` / `markov(density)` / `markov(key, density, seed)` | a Markov melody of one bar in the key's scale (`djrust::gen::markov`). The key is the program's `key` (or the section's) when left out. `density` 0..1. Same seed, same notes: the seed is, when left out, taken from the text of the part. |
-| `arp(chord, mode, n)` | the chord's notes one at a time over `n` steps (default 8) in `up`, `down` or `updown`. |
-| `markov(..., shift=n)` / `arp(..., shift=n)` | its notes `n` degrees of the key up (-21..21): `arp(am, up, 8, shift=1)` in A minor is b d f; what `up n` writes |
+| `arp(chord, mode, n)` | the chord's notes one at a time over `n` steps (default 8) in `up`, `down` or `updown`. Either takes `shift=n`: its notes `n` key degrees up (-21..21; `up n` writes it). |
 | `chord(chord)` / `chord(chord, octave)` | the chord's notes together. A chord is a symbol (`am7`) or a numeral (`V7`). |
 | `choose [a b c] weights 3 1 1 [seed=4]` | one option a bar, picked by a hash, by weight (not a call: it has its own words, "Seeded chance"). |
 
@@ -1181,7 +1180,7 @@ arrange {
 | `thin p` / `fill p` / `euclid k` | each sounding step rests with chance `p` / each rest takes the step before it with chance `p` / the hits re-spread as `k` Euclidean hits |
 | `half` / `double` / `stutter n` | the first half at half speed / the pattern twice in the bar / the first `1/n` of it `n` times |
 | `ratchet p` / `swing amt` | a sounding step struck twice with chance `p`: doubled on the grid (`*2`) when its step is longer than a sixteenth, else ratcheted inside it (`x:2`, again `x:4`, at most `x:8`), so no hit snaps / every second step later by `amt` of a step (on the sixteenth grid) |
-| `up n` / `down n` / `oct n` / `invert` / `drift p` | scale degrees of the `key` up / down / octaves / turned over about the first note / a step up or down with chance `p`. A Roman numeral moves by degrees too (in A minor `i` up 2 is `III`, the key's own triad there; `V7` up 1 is `VI7`); so do `markov`/`arp` (`shift=2`) |
+| `up n` / `down n` / `oct n` / `invert` / `drift p` | scale degrees of the `key` up / down / octaves / turned over about the first note / a step up or down with chance `p`. A Roman numeral moves by degrees too (in A minor `i` up 2 is `III`, the key's own triad there; `V7` up 1 is `VI7`) |
 | `vel n` / `accent p` | accents on the `n` strongest steps (`vel -n` takes `n` off) / an accent with chance `p` |
 | `morph b p` / `xfer b` / `mask b` | each step becomes `b`'s with chance `p` / `b`'s rhythm with these notes / rests where `b` rests |
 | `grow` / `decay` | one rest filled / one sounding step taken out (seeded; they pile up pass on pass) |
