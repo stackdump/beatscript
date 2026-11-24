@@ -50,6 +50,17 @@
 - Each voice family says its generic sound (`ns:familyWave`: soft, sine, saw, bell or square), from the engine's tonal voice.
 - The MCP fixtures are re-recorded as `mcp-0.4.0.json` (with `get_genre acid`); the header snapshot has 277 terms.
 
+### The acid voice by its own name, and its knobs
+
+- `inst=acid-bass` is the 303-style acid voice (`acid` is the same voice and stays; `acid-square` its square). `instruments`
+  lists it, and `check` says nothing about it.
+- Its knobs are tonal part params: `cutoff=` (Hz, 20 to 12000), `res=`, `env=`, `accent=` and `drive=` (0 to 100 each),
+  carried on each note's binding only when set, so no existing net or CID moves. `drive=` is new to the voice (the
+  filter's saturation; 0, the default, is the voice as it was). They are not reserved words. On a drum part they are
+  errors; on another voice, a warning. docs/beatscript/ext-acid.md.
+- The seeded generator's `gen@4` (now the default) is `gen@3` with the acid genre's bass on `inst=acid-bass`; `gen@1` to
+  `gen@3` print what they always printed.
+
 ## v0.1.0 (2026-11-22): the first public release, and BeatScript 2
 
 The first release of stackdump/beatscript as the single upstream of BeatScript and beatscript.app.

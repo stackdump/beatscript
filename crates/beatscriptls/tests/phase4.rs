@@ -104,12 +104,12 @@ fn a_wire_offers_the_defs_and_their_ports() {
 fn after_a_parts_steps_every_param_the_parser_takes() {
     // held to djlive: a param the language adds (glide=, decay=, pitch-drop=) is offered and has its hover doc
     let l = labels("deck B: bass 1 3 @", None);
-    for p in djlive::parse::PARAMS {
+    for p in djlive::parse::PARAMS.iter().chain(djlive::compile::ACID_PARAMS.iter()) {
         assert!(l.contains(&format!("{p}=")), "`{p}=` is not offered: {l:?}");
-        assert!(beatscriptls::lang::PART_PARAMS.iter().any(|(n, _, _)| *n == p), "lang::PART_PARAMS has no `{p}`");
+        assert!(beatscriptls::lang::PART_PARAMS.iter().any(|(n, _, _)| n == p), "lang::PART_PARAMS has no `{p}`");
     }
     for (n, _, _) in beatscriptls::lang::PART_PARAMS {
-        assert!(djlive::parse::PARAMS.contains(n), "lang::PART_PARAMS offers `{n}`, which djlive does not parse");
+        assert!(djlive::parse::PARAMS.contains(n) || djlive::compile::ACID_PARAMS.contains(n), "lang::PART_PARAMS offers `{n}`, which djlive does not parse");
     }
 }
 

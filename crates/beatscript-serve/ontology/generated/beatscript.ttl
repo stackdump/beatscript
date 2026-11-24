@@ -487,18 +487,23 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/grammar-pname> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#GrammarProduction> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "pname"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The pname production of BeatScript's grammar (velocity, octave, length, voice, its generators' seed, a drum kit, a sound, where it plays; tonal, an 808: glide= decay= ms, pitch-drop= 1 to 24 semitones)."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The pname production of BeatScript's grammar (velocity, octave, length, voice, its generators' seed, a drum kit, a sound, where it plays; tonal, an 808: glide= decay= ms, pitch-drop= 1 to 24 semitones; the acid voice's knobs: cutoff= Hz 20 to 12000, the rest 0 to 100; not reserved words)."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
-    <https://beatscript.app/ontology/ns#ebnf> "\"vel\" | \"oct\" | \"len\" | \"inst\" | \"seed\" | \"kit\" | \"sound\" | \"route\" | \"glide\" | \"decay\" | \"pitch-drop\"" ;
+    <https://beatscript.app/ontology/ns#ebnf> "\"vel\" | \"oct\" | \"len\" | \"inst\" | \"seed\" | \"kit\" | \"sound\" | \"route\" | \"glide\" | \"decay\" | \"pitch-drop\" | \"cutoff\" | \"res\" | \"env\" | \"accent\" | \"drive\"" ;
     <https://beatscript.app/ontology/ns#writtenAs> "pname" ;
     <https://beatscript.app/ontology/ns#grammarSection> "Parts"@en ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-accent> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-cutoff> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-decay> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-drive> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-env> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-glide> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-inst> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-kit> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-len> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-oct> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-pitch-drop> ;
+    <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-res> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-route> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-seed> ;
     <https://beatscript.app/ontology/ns#usesKeyword> <https://beatscript.app/ontology/concept/keyword-sound> ;
@@ -2463,6 +2468,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "^" .
 
+<https://beatscript.app/ontology/concept/keyword-accent> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "accent"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword accent of BeatScript, written in: pname."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "accent" .
+
 <https://beatscript.app/ontology/concept/keyword-add> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "add"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword add of BeatScript, written in: engine."@en ;
@@ -2649,6 +2660,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "cut" .
 
+<https://beatscript.app/ontology/concept/keyword-cutoff> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "cutoff"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword cutoff of BeatScript, written in: pname."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "cutoff" .
+
 <https://beatscript.app/ontology/concept/keyword-db> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "db"@en ;
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword db of BeatScript, written in: db, mixitem."@en ;
@@ -2699,7 +2716,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/keyword-drive> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "drive"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "The keyword drive of BeatScript, written in: action."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword drive of BeatScript, written in: action, pname."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "drive" .
 
@@ -2750,6 +2767,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword ends of BeatScript, written in: assert."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "ends" .
+
+<https://beatscript.app/ontology/concept/keyword-env> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "env"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword env of BeatScript, written in: pname."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "env" .
 
 <https://beatscript.app/ontology/concept/keyword-eq> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "eq"@en ;
@@ -3260,6 +3283,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The keyword repeat of BeatScript, written in: repeat."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#keywordText> "repeat" .
+
+<https://beatscript.app/ontology/concept/keyword-res> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "res"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The keyword res of BeatScript, written in: pname."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#keywordText> "res" .
 
 <https://beatscript.app/ontology/concept/keyword-resonance> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#Keyword> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "resonance"@en ;
@@ -4477,6 +4506,14 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 <https://beatscript.app/ontology/instrument/acid> a <https://beatscript.app/ontology/ns#BeatScriptVoice> ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#writtenAs> "inst=acid" ;
+    <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-acid> .
+
+<https://beatscript.app/ontology/instrument/acid-bass> a <https://beatscript.app/ontology/ns#BeatScriptVoice> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "acid-bass"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The BeatScript voice acid-bass, written inst=acid-bass."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#writtenAs> "inst=acid-bass" ;
+    <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-bass> ;
     <https://beatscript.app/ontology/ns#inVoiceFamily> <https://beatscript.app/ontology/concept/voice-family-acid> .
 
 <https://beatscript.app/ontology/instrument/acid-square> a <https://beatscript.app/ontology/ns#BeatScriptVoice> ;
@@ -9353,11 +9390,11 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
 
 <https://beatscript.app/ontology/concept/tool-beatscript-generate> a <https://beatscript.app/ontology/ns#McpTool> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "generate"@en ;
-    <http://www.w3.org/2004/02/skos/core#definition> "Generate a whole BeatScript track from a seed, with no model and no sign-in: the beats generator picks the genre's rhythms (Euclidean), chord progression, instruments and song structure from the seed, and the result is printed as readable source (named lets, a def for the shared groove, sections, an arrange, filter ramps, the chords as Roman numerals and e()/arp()/markov()/every/rotate/degrade with their seeds written out, so one `key` line moves the whole song) for you to edit. Same genre, bpm, key, length and seed: the same text and CID, every time; the seed and generator are in the #! header so the track can be re-derived. The program passes check and is stored as public CC0 (source generate). Answers text, cid, name, seed, generator, url and render_url; play it with eval or load, or edit it and check again.\n\nThe answer also has gen, the call that is this program in BeatScript (gen@2 techno seed=42, with the bpm=, key= and length= you gave: `arrange from gen@2 techno seed=42` plays it), expanded_cid (the same as cid: a generated program has no references), and parts, so you can pick parts without reading the text: one entry a role, {role, section, sections, voice or kit, text, let, gen}, where gen is the call that is just that part (gen@2 techno seed=42 section=drop part=bass) and let is what `let drop_bass = <gen>` writes (a let a bar). Put a part's gen in a let or on a part line of your own program to layer it, mutate it in an arrange or cross it with another seed; there it is fitted to your program's key and tempo unless it says key= and bpm=, and check reports it in refs. With part (a role) the answer gains that part and its let alone; generator picks the version (1, 2 or 3, as gen@1, gen@2 and gen@3 name them; 3 writes BeatScript 2); seeds (a list, or {count, start}, at most 16) answers a compact summary a seed instead of one program.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "Generate a whole BeatScript track from a seed, with no model and no sign-in: the beats generator picks the genre's rhythms (Euclidean), chord progression, instruments and song structure from the seed, and the result is printed as readable source (named lets, a def for the shared groove, sections, an arrange, filter ramps, the chords as Roman numerals and e()/arp()/markov()/every/rotate/degrade with their seeds written out, so one `key` line moves the whole song) for you to edit. Same genre, bpm, key, length and seed: the same text and CID, every time; the seed and generator are in the #! header so the track can be re-derived. The program passes check and is stored as public CC0 (source generate). Answers text, cid, name, seed, generator, url and render_url; play it with eval or load, or edit it and check again.\n\nThe answer also has gen, the call that is this program in BeatScript (gen@2 techno seed=42, with the bpm=, key= and length= you gave: `arrange from gen@2 techno seed=42` plays it), expanded_cid (the same as cid: a generated program has no references), and parts, so you can pick parts without reading the text: one entry a role, {role, section, sections, voice or kit, text, let, gen}, where gen is the call that is just that part (gen@2 techno seed=42 section=drop part=bass) and let is what `let drop_bass = <gen>` writes (a let a bar). Put a part's gen in a let or on a part line of your own program to layer it, mutate it in an arrange or cross it with another seed; there it is fitted to your program's key and tempo unless it says key= and bpm=, and check reports it in refs. With part (a role) the answer gains that part and its let alone; generator picks the version (1, 2, 3 or 4, as gen@1 to gen@4 name them; 3 writes BeatScript 2, 4 is 3 with the acid genre's bass on the 303); seeds (a list, or {count, start}, at most 16) answers a compact summary a seed instead of one program.\n\nLexicon harvest, a side effect with no flag: when the program checks and may be kept (no samples or loops, no `use restricted`, public visibility; push_private records nothing), the (word, phonemes) pairs of its lyrics are recorded to grow the CC0 lexicon: each annotated escape word=/phonemes/ (jingle=/j ii ng g uh l/ sings the escape and keeps the word) and each word no lexicon knows, with the rules' pronunciation. Only the word, its phonemes and the program's CID are kept, never the text. The answer's lexicon is {harvested, new}: the pairs taken from this program, and how many no program had given before. When check says a word is not in the lexicon and it sounds wrong, write it as word=/phonemes/."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#providedBy> <https://beatscript.app/ontology/concept/product-beatscript-mcp> ;
     <https://beatscript.app/ontology/ns#toolName> "generate" ;
-    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"bpm\":{\"description\":\"Tempo; default the genre's.\",\"maximum\":300,\"minimum\":40,\"type\":\"number\"},\"generator\":{\"description\":\"The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen), 2 (seeded@2, the chords and arps as Roman numerals) or 3 (seeded@3: seeded@2's music written in BeatScript 2, `#! beatscript 2` first); default 3. A version always prints the same program for the same inputs.\",\"enum\":[1,2,3],\"type\":\"integer\"},\"genre\":{\"description\":\"The genre whose rhythms, chords, instruments and song structure it uses (default techno).\",\"enum\":[\"techno\",\"house\",\"jazz\",\"ambient\",\"dnb\",\"edm\",\"speedcore\",\"dubstep\",\"country\",\"blues\",\"synthwave\",\"trance\",\"lofi\",\"reggae\",\"funk\",\"bossa\",\"trap\",\"garage\",\"metal\",\"electro\",\"deephouse\",\"italo\",\"acid\"],\"type\":\"string\"},\"key\":{\"description\":\"Key: am, c, f#m, d:dorian ...; default the genre's.\",\"maxLength\":16,\"type\":\"string\"},\"length\":{\"description\":\"Song length (default standard).\",\"enum\":[\"short\",\"standard\",\"long\"],\"type\":\"string\"},\"part\":{\"description\":\"One part (a role): the answer gains part (that role's entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = <drop_bass_1 ...>), to paste into a program of your own.\",\"enum\":[\"kick\",\"snare\",\"hihat\",\"clap\",\"bass\",\"melody\",\"harmony\",\"arp\"],\"type\":\"string\"},\"section\":{\"description\":\"With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).\",\"maxLength\":32,\"type\":\"string\"},\"seed\":{\"description\":\"A number or a word (default 1). Same inputs, same program text and CID.\",\"type\":[\"string\",\"integer\"]},\"seeds\":{\"anyOf\":[{\"items\":{\"type\":[\"string\",\"integer\"]},\"maxItems\":16,\"minItems\":1,\"type\":\"array\"},{\"additionalProperties\":false,\"properties\":{\"count\":{\"maximum\":16,\"minimum\":1,\"type\":\"integer\"},\"start\":{\"minimum\":0,\"type\":\"integer\"}},\"required\":[\"count\"],\"type\":\"object\"}],\"description\":\"Instead of seed: many seeds, as a list ([1, 2, \\\"sunrise\\\"]) or as {count, start} (count seeds from start, default 1), at most 16. The answer is programs, one compact summary a seed in order: seed, generator, cid, name, key, tempo, bars, gen, parts (role, section, sections, voice or kit, text, gen) and url and render_url; each program is stored as one generate stores it, and nothing else is. The same seeds give the same summaries.\"}},\"required\":[],\"type\":\"object\"}" ;
+    <https://beatscript.app/ontology/ns#inputSchema> "{\"additionalProperties\":false,\"properties\":{\"bpm\":{\"description\":\"Tempo; default the genre's.\",\"maximum\":300,\"minimum\":40,\"type\":\"number\"},\"generator\":{\"description\":\"The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen), 2 (seeded@2, the chords and arps as Roman numerals), 3 (seeded@3: seeded@2's music written in BeatScript 2, `#! beatscript 2` first) or 4 (seeded@4: seeded@3 with the acid genre's bass on the 303, `inst=acid-bass`); default 4. A version always prints the same program for the same inputs.\",\"enum\":[1,2,3,4],\"type\":\"integer\"},\"genre\":{\"description\":\"The genre whose rhythms, chords, instruments and song structure it uses (default techno).\",\"enum\":[\"techno\",\"house\",\"jazz\",\"ambient\",\"dnb\",\"edm\",\"speedcore\",\"dubstep\",\"country\",\"blues\",\"synthwave\",\"trance\",\"lofi\",\"reggae\",\"funk\",\"bossa\",\"trap\",\"garage\",\"metal\",\"electro\",\"deephouse\",\"italo\",\"acid\"],\"type\":\"string\"},\"key\":{\"description\":\"Key: am, c, f#m, d:dorian ...; default the genre's.\",\"maxLength\":16,\"type\":\"string\"},\"length\":{\"description\":\"Song length (default standard).\",\"enum\":[\"short\",\"standard\",\"long\"],\"type\":\"string\"},\"part\":{\"description\":\"One part (a role): the answer gains part (that role's entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = <drop_bass_1 ...>), to paste into a program of your own.\",\"enum\":[\"kick\",\"snare\",\"hihat\",\"clap\",\"bass\",\"melody\",\"harmony\",\"arp\"],\"type\":\"string\"},\"section\":{\"description\":\"With part: the section the part is taken from (default the drop or chorus when it plays there, else the first section it plays in).\",\"maxLength\":32,\"type\":\"string\"},\"seed\":{\"description\":\"A number or a word (default 1). Same inputs, same program text and CID.\",\"type\":[\"string\",\"integer\"]},\"seeds\":{\"anyOf\":[{\"items\":{\"type\":[\"string\",\"integer\"]},\"maxItems\":16,\"minItems\":1,\"type\":\"array\"},{\"additionalProperties\":false,\"properties\":{\"count\":{\"maximum\":16,\"minimum\":1,\"type\":\"integer\"},\"start\":{\"minimum\":0,\"type\":\"integer\"}},\"required\":[\"count\"],\"type\":\"object\"}],\"description\":\"Instead of seed: many seeds, as a list ([1, 2, \\\"sunrise\\\"]) or as {count, start} (count seeds from start, default 1), at most 16. The answer is programs, one compact summary a seed in order: seed, generator, cid, name, key, tempo, bars, gen, parts (role, section, sections, voice or kit, text, gen) and url and render_url; each program is stored as one generate stores it, and nothing else is. The same seeds give the same summaries.\"}},\"required\":[],\"type\":\"object\"}" ;
     <https://beatscript.app/ontology/ns#readOnly> false ;
     <https://beatscript.app/ontology/ns#needsToken> false ;
     <https://beatscript.app/ontology/ns#toolTitle> "Generate a track from a seed (no model)"@en ;

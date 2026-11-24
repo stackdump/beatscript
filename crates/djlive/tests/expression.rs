@@ -92,7 +92,7 @@ fn glide_bends_a_slide_into_the_next_note_and_without_it_a_slide_only_holds() {
 #[test]
 fn a_slide_on_the_acid_voice_glides_by_itself_as_a_303s_does() {
     // the acid voice (a 303, djrust's "acid" engine): `^` glides without `glide=`, in 60 ms
-    for inst in ["acid", "acid-square"] {
+    for inst in ["acid-bass", "acid", "acid-square"] {
         assert!(djlive::compile::slides_by_itself(inst), "{inst}");
         let b = bindings(&format!("deck B: bass f1 ~ ~ ~ f1^ ~ ~ ~ f2 ~ ~ ~ ~ ~ ~ ~ inst={inst}\n"), Deck::B, "bass");
         assert_eq!(b.iter().map(|(s, m)| (*s, int(m, "glide"))).collect::<Vec<_>>(), [(0, None), (4, None), (8, Some(i64::from(djlive::compile::SELF_SLIDE_MS)))]);
@@ -110,7 +110,7 @@ fn a_slide_on_the_acid_voice_glides_by_itself_as_a_303s_does() {
         assert_eq!(b.iter().map(|(s, m)| (*s, slide(m), int(m, "glide"))).collect::<Vec<_>>(), [(0, false, Some(60)), (15, true, None)]);
     }
     // every other voice's `^` holds, as it always has (a name that contains `acid` is not the voice)
-    for inst in ["sub-bass", "acid-bass", "bass"] {
+    for inst in ["sub-bass", "acid-lead", "bass"] {
         assert!(!djlive::compile::slides_by_itself(inst), "{inst}");
         let b = bindings(&format!("deck B: bass f1^ f2 inst={inst}\n"), Deck::B, "bass");
         assert!(b.iter().all(|(_, m)| m.get("glide").is_none() && m.get("slide").is_none()), "{inst}");
@@ -118,6 +118,43 @@ fn a_slide_on_the_acid_voice_glides_by_itself_as_a_303s_does() {
         let b = bindings(&format!("deck B: bass f1^ f2 glide=50 inst={inst}\n"), Deck::B, "bass");
         assert!(b.iter().all(|(_, m)| m.get("slide").is_none()), "{inst}");
     }
+}
+
+/// The acid voice's knobs (`cutoff=` `res=` `env=` `accent=` `drive=`, docs/beatscript/ext-acid.md): on every note's binding,
+/// only when set; errors on a drum part and out of range; a warning on a voice that has no such filter.
+#[test]
+fn the_acid_knobs_are_on_every_note_of_the_part_and_only_when_set() {
+    let b = bindings("deck B: bass a1 ~ a1! c2^ e2 ~ inst=acid-bass cutoff=450 res=85 env=60 accent=100 drive=20\n", Deck::B, "bass");
+    assert_eq!(b.len(), 4);
+    for (_, m) in &b {
+        assert_eq!([int(m, "cutoff"), int(m, "res"), int(m, "env"), int(m, "accent"), int(m, "drive")], [Some(450), Some(85), Some(60), Some(100), Some(20)], "{}", m.js_stringified());
+    }
+    // a knob at 0 is said (it is a turn of the knob, not "unset")
+    let b = bindings("deck B: bass a1 ~ inst=acid-bass env=0\n", Deck::B, "bass");
+    assert_eq!((int(&b[0].1, "env"), b[0].1.get("cutoff")), (Some(0), None));
+    // what the binding says is what the engine reads
+    let e = djengine::pflow::NoteExpr::from_json(&bindings("deck B: bass a1 inst=acid-bass cutoff=450 res=85 drive=20\n", Deck::B, "bass")[0].1);
+    assert_eq!((e.acid.cutoff_hz, e.acid.res, e.acid.env, e.acid.drive), (450, Some(85), None, Some(20)));
+    // none set: the bindings every acid part always had
+    for (_, m) in bindings("deck B: bass a1 ~ a1 ~ inst=acid-bass\n", Deck::B, "bass") {
+        let keys: Vec<&str> = m.as_object().unwrap().keys().collect();
+        assert_eq!(keys, ["note", "channel", "velocity", "durationSteps"]);
+    }
+    // they are not reserved words: a section may still be called `drive`, a let `accent`
+    let c = check("let accent = [1 ~ 1 1]\nsection drive 1 bars {\n  deck B: bass accent inst=acid-bass accent=90\n}\narrange drive\n");
+    assert!(c.ok(), "{:?}", c.diagnostics);
+    // the errors
+    assert!(one_error("deck A: kick x x cutoff=400\n").contains("tonal part"));
+    assert!(one_error("deck B: bass f1 f2 inst=acid-bass cutoff=15000\n").contains("20 to 12000"));
+    assert!(one_error("deck B: bass f1 f2 inst=acid-bass res=101\n").contains("0 to 100"));
+    assert!(one_error("deck B: bass f1 f2 inst=acid-bass env=10..20\n").contains("one number"));
+    assert!(one_error("deck B: bass f1 f2 inst=acid-bass drive=0.5\n").contains("whole number"));
+    // on a voice with no such filter: said, and the part plays as it would without
+    let c = check("deck B: bass f1 f2 inst=sub-bass cutoff=800\n");
+    assert!(c.ok());
+    assert!(c.diagnostics.iter().any(|d| !d.is_error() && d.message.contains("knob of the acid voice")), "{:?}", c.diagnostics);
+    let c = check("deck B: bass f1 f2 inst=acid-square cutoff=800\n");
+    assert!(!c.diagnostics.iter().any(|d| d.message.contains("knob of the acid voice")), "{:?}", c.diagnostics);
 }
 
 #[test]

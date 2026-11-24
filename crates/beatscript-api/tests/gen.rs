@@ -112,7 +112,7 @@ fn the_same_call_is_the_same_cid_and_resolves_to_the_same_pin() {
     let s = &s1[0];
     assert_eq!((s.kind, s.half, s.place, s.name.as_deref(), s.generator.as_deref()), ("gen", refs::ENGINE, "let", Some("bed"), Some("seeded@2")));
     let pin = s.resolved.clone().unwrap();
-    // gen@2's program, as seeded@2 prints it (the current generator is 3, which prints it in BeatScript 2)
+    // gen@2's program, as seeded@2 prints it (3 prints it in BeatScript 2)
     let req = beatscript_api::GenRequest { genre: "techno".into(), seed: "42".into(), bpm: Some(128.0), key: "c".into(), ..Default::default() };
     let g2 = beatscript_api::generate::generate_version(2, &req).unwrap();
     let report = beatscript_api::check_report(&g2.text);
@@ -128,7 +128,7 @@ fn the_same_call_is_the_same_cid_and_resolves_to_the_same_pin() {
 #[test]
 fn every_version_is_callable_and_pinned() {
     beatscript_api::generate::install();
-    let calls = ["gen@1 techno seed=42", "gen@2 techno seed=42", "gen@1 dubstep seed=54876", "gen@2 trap seed=54877", "gen@2 house seed=sunrise bpm=124 key=am", "gen@2 dnb seed=7 length=short", "gen@1 lofi seed=3 key=f#m length=long", "gen@3 techno seed=42", "gen@3 house seed=sunrise bpm=124 key=am"];
+    let calls = ["gen@1 techno seed=42", "gen@2 techno seed=42", "gen@1 dubstep seed=54876", "gen@2 trap seed=54877", "gen@2 house seed=sunrise bpm=124 key=am", "gen@2 dnb seed=7 length=short", "gen@1 lofi seed=3 key=f#m length=long", "gen@3 techno seed=42", "gen@3 house seed=sunrise bpm=124 key=am", "gen@3 acid seed=42", "gen@4 techno seed=42", "gen@4 acid seed=42"];
     let host = djlive::gen::Host::default();
     let got: String = calls.iter().map(|c| format!("{c} -> {}\n", djlive::gen::resolve_word(c, &host).unwrap_or_else(|d| panic!("{c}: {}", d.message)).cid)).collect();
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/gen-pins.txt");
@@ -143,8 +143,34 @@ fn every_version_is_callable_and_pinned() {
     assert!(djlive::gen::resolve_word("gen@2 techno seed=42", &host).unwrap().text.contains("#! generator: seeded@2"));
     let v3 = djlive::gen::resolve_word("gen@3 techno seed=42", &host).unwrap();
     assert!(v3.text.starts_with("#! beatscript 2\n") && v3.text.contains("#! generator: seeded@3"), "{}", v3.text);
-    let e = errors("let bed = gen@4 techno seed=1 section=drop part=bass\n");
-    assert!(e.iter().any(|(at, m)| at == "gen@4" && m.contains("gen@1, gen@2, gen@3")), "{e:?}");
+    let e = errors("let bed = gen@5 techno seed=1 section=drop part=bass\n");
+    assert!(e.iter().any(|(at, m)| at == "gen@5" && m.contains("gen@1, gen@2, gen@3, gen@4")), "{e:?}");
+}
+
+/// `seeded@4` is `seeded@3` with the acid genre's bass on the 303: the acid genre's program differs from 3's only in its
+/// generator line and its bass voice (`sub-bass`, 3's fallback, is `acid-bass`), and every other genre only in its generator
+/// line. The acid voice's pick draws from the stream as 3's did, so no later choice moves.
+#[test]
+fn seeded_4_puts_the_acid_genres_bass_on_the_303_and_changes_nothing_else() {
+    beatscript_api::generate::install();
+    for genre in ["acid", "techno", "house", "dnb"] {
+        for seed in ["1", "42", "sunrise"] {
+            let req = beatscript_api::GenRequest { genre: genre.into(), seed: seed.into(), ..Default::default() };
+            let g3 = beatscript_api::generate::generate_version(3, &req).unwrap().text.replace("seeded@3", "seeded@4");
+            let g4 = beatscript_api::generate::generate_version(4, &req).unwrap().text;
+            if genre == "acid" {
+                assert!(g4.contains("inst=acid-bass") && !g4.contains("inst=sub-bass"), "{genre} {seed}: {g4}");
+                assert_eq!(g3.replace("inst=sub-bass", "inst=acid-bass"), g4, "{genre} {seed}");
+                // it checks with no word about its voice
+                let report = beatscript_api::check_report(&g4);
+                let diags = report.get("diagnostics").and_then(djengine::json::JsonValue::as_array).cloned().unwrap_or_default();
+                let said = |d: &djengine::json::JsonValue, k: &str| d.get(k).and_then(djengine::json::JsonValue::as_str).unwrap_or("").to_string();
+                assert!(!diags.iter().any(|d| said(d, "severity") != "info" && said(d, "message").contains("voice")), "{diags:?}");
+            } else {
+                assert_eq!(g3, g4, "{genre} {seed}");
+            }
+        }
+    }
 }
 
 /// A swung genre's call brings its swing to the whole program (`arrange from`), in every version, unless the program says its

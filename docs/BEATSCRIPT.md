@@ -103,7 +103,8 @@ of a BeatScript 2 program means what it meant before, and plays the same.
   served at `https://beatscript.app/context/beatscript-v1.jsonld`; the old context stays served, unchanged, at
   `/context/v1.jsonld`.
 - **The generators.** `gen@1` and `gen@2` print what they always printed, byte for byte (BeatScript 1, so their pins hold);
-  `gen@3` is `gen@2`'s program written in BeatScript 2, its version line first.
+  `gen@3` is `gen@2`'s program written in BeatScript 2, its version line first; `gen@4` is `gen@3`'s with the acid genre's
+  bass on the 303 (`inst=acid-bass`).
 
 ## Two halves: structure and engine
 
@@ -257,7 +258,8 @@ role        = "kick" | "snare" | "hihat" | "clap"             (* drum parts: a h
 param       = pname "=" pvalue                                (* vel=70..100  oct=2  len=3  inst=sub-bass  glide=60 *)
             | "voice-lead" [ "=" ( "on" | "off" ) ] ;         (* a switch, on when it is bare *)
 pname       = "vel" | "oct" | "len" | "inst" | "seed" | "kit" | "sound" | "route"   (* velocity, octave, length, voice, its generators' seed, a drum kit, a sound, where it plays *)
-            | "glide" | "decay" | "pitch-drop" ;              (* tonal, an 808: glide= decay= ms, pitch-drop= 1 to 24 semitones *)
+            | "glide" | "decay" | "pitch-drop"                (* tonal, an 808: glide= decay= ms, pitch-drop= 1 to 24 semitones *)
+            | "cutoff" | "res" | "env" | "accent" | "drive" ; (* the acid voice's knobs: cutoff= Hz 20 to 12000, the rest 0 to 100; not reserved words *)
 pvalue      = arith [ ".." arith ] | WORD | PARAM ;           (* a number, a range drawn per hit, a name; a $name in a body *)
 
 (* == Mini-notation: the rhythm of a part == *)
@@ -582,7 +584,8 @@ hihat x*8?              a bare ? is ?0.5
 | `len=3` | 1..16 | note length in steps (drums 1, tonal 2). |
 | `inst=sub-bass` | a name | the instrument. |
 | `seed=7` | a whole number | the seed of the part's generators (and of its chance terms, unless they say their own). |
-| `glide=70` `decay=900` `pitch-drop=7` | ms, ms, semitones | tonal: `^` bends into the next note; each note's tail; starts 7 semitones high. On `inst=acid` a `^` slides without `glide=` (60 ms) and `decay=` is its filter's sweep. |
+| `glide=70` `decay=900` `pitch-drop=7` | ms, ms, semitones | tonal: `^` bends into the next note; each note's tail; starts 7 semitones high. On `inst=acid-bass` a `^` slides without `glide=` (60 ms) and `decay=` is its filter's sweep. |
+| `cutoff=400` `res=80` `env=60` `accent=90` `drive=20` | Hz 20..12000, then 0..100 each | tonal, the acid voice's knobs: the filter's floor, its resonance, how far each strike opens it (100 is 6 octaves), how much an accent `!` does, how hard the oscillator drives the filter. Defaults 300, 72, 45, 80, 0. On any other voice they are ignored, with a warning. |
 | `voice-lead` / `voice-lead=off` | on or off | a `harmony` (or `arp`) part of chords: each chord after the first is voiced for the least motion from the one before; bare, it is on. |
 
 Every number of a param may be arithmetic (`vel=(60 + $i * 4)..100`, `oct=3 - 1`).
@@ -1102,7 +1105,8 @@ step; with `glide=` it bends), `x&` a flam, `x:3` a ratchet (3 hits in the sixte
 
 ### Expression marks
 
-The marks say how a hit is played, and the tonal params `glide=`, `decay=` and `pitch-drop=` shape an 808. A
+The marks say how a hit is played, the tonal params `glide=`, `decay=` and `pitch-drop=` shape an 808, and
+`cutoff=` `res=` `env=` `accent=` `drive=` turn the acid voice's knobs. A
 program that uses none of them is the program it was: same canonical text, same nets, same CIDs
 (`crates/beatscript-api/tests/cid_pins.rs` pins every program in the repo).
 
@@ -1122,14 +1126,20 @@ program that uses none of them is the program it was: same canonical text, same 
 - **Pitch drop** `pitch-drop=N` (semitones, 1 to 24) on a tonal part: each note starts N semitones high and falls
   onto its pitch in 50 ms, an 808's punch. A gliding note glides instead.
 
-**The acid voice** (`inst=acid`, a saw; `inst=acid-square`, a square) is a 303-style voice made in the engine (no
-samples): an oscillator into a resonant four-pole lowpass that an envelope sweeps on each note. It plays the marks as a
-303 does. An accent `!` is louder, opens the filter further and sweeps it shorter, and accents in a row build on each
+**The acid voice** (`inst=acid-bass`, a saw, also called `inst=acid`; `inst=acid-square`, a square) is a 303-style voice
+made in the engine (no samples): an oscillator into a resonant four-pole (24 dB) lowpass that an envelope sweeps on each
+note, with a soft output stage. It plays the marks as a 303 does. An accent `!` is louder, opens the filter further and sweeps it shorter, and accents in a row build on each
 other (the engine reads the accent from the velocity: above 110 in proportion, all of it at 127, so a `vel=` up there is
 accented too). A slide `^` carries the voice into the next note without striking it again, the last step's into the
 first: in 60 ms, or in `glide=` ms (the note it leaves says `slide` on its binding, so its gate stays open). A note that does not slide lets the one
-before go (one note at a time, as a 303; a chord's notes each sound). Long note, with its decisions:
-`docs/beatscript/ext-acid.md`. Example: `examples/beatscript/acid-303.beatscript`.
+before go (one note at a time, as a 303; a chord's notes each sound). Its knobs are part params, each on every note's
+binding only when set (`cutoff`, `res`, `env`, `accent`, `drive`), so a part without them is the net it always was:
+`cutoff=` (Hz, 20 to 12000, default 300) the filter's floor; `res=` (0 to 100, default 72) its resonance; `env=` (0 to
+100, default 45: 100 is 6 octaves) how far each strike opens it; `accent=` (0 to 100, default 80) how much an accent does;
+`drive=` (0 to 100, default 0) how hard the oscillator drives the filter's saturation, grit and not loudness. `decay=` is
+its decay knob and `glide=` its slide time. They are not reserved words (`section drive` is still a section); on a drum
+part they are errors, and on a voice that is not the acid voice a warning (it plays as it would without them). Long note,
+with its decisions: `docs/beatscript/ext-acid.md`. Example: `examples/beatscript/acid-303.beatscript`.
 
 `glide=`, `decay=` and `pitch-drop=` on a drum part are errors. Marks work on drums and tonal parts alike, in groups
 (`[x x]&` flams both), alternations and `deg( )`. The net carries them on each note's binding (`glide`, `decay`,
@@ -1335,11 +1345,13 @@ arrange from gen@2 techno seed=42 bpm=128 key=am            the whole program
 - **Params**: the genre, then `seed=` (a whole number or a word; a call always says its seed), `bpm=` (40 to 300), `key=`,
   `length=` (short, standard or long), and which piece: `section=` (one of the program's sections) and `part=` (a role).
   `seed=42` and `seed = 42` are one call.
-- **The version is in the text**: `gen@1` is `seeded@1`, `gen@2` is `seeded@2` and `gen@3` is `seeded@3` (a generated
+- **The version is in the text**: `gen@1` is `seeded@1`, `gen@2` is `seeded@2`, `gen@3` is `seeded@3` and `gen@4` is `seeded@4` (a generated
   program's `#! generator:` line). A bare `gen` is `gen@2`, and the canonical text writes the version, so it is in the CID (a
   `#! seeds:` line is a comment, and is not). Every version stays callable: a generator that would print another program for the
   same inputs is a new version, and the old one is kept as it was. `gen@3` is `gen@2`'s program in BeatScript 2 (its version
-  line first, "Versions"); `gen@1` and `gen@2` still print BeatScript 1, byte for byte. The tests pin what a sample of calls
+  line first, "Versions"); `gen@4` is `gen@3`'s program with the acid genre's bass on the 303 (`inst=acid-bass`, where 3 had
+  no acid voice to pick and wrote `sub-bass`), every other genre's the same but its `#! generator:` line; `gen@1` and `gen@2`
+  still print BeatScript 1, byte for byte. The tests pin what a sample of calls
   resolves to.
 - **It fits the program**: unless the call says its own `bpm=` or `key=`, it is generated at the program's `tempo` and in its
   `key`, so two seeds crossed with `morph` or `xfer` never clash. `check` says so at the call, with the CID: `gen@2 techno seed=42
@@ -2647,13 +2659,14 @@ deck A: bass riff inst=harp
 ## Sounds
 
 `btw instruments` (and `describe btw`) lists every **voice** the engine voices by itself (`wobble-lead`,
-`hoover`, `detuned-saw`, `pwm-lead`, `acid` and `acid-square` (a 303's), the `voice-*` singers, the stingers), the
-**family words** (`bass`, `reese`, `sub`, `pad` ...: a name that contains one plays that family's generic voice; `acid`
-is a voice of its own, so `acid-bass` is the generic saw bass), the drum **kits** and the sound **palettes**. In a part:
+`hoover`, `detuned-saw`, `pwm-lead`, `acid-bass` and `acid-square` (a 303's; `acid` is `acid-bass`), the `voice-*` singers,
+the stingers), the **family words** (`bass`, `reese`, `sub`, `pad` ...: a name that contains one plays that family's generic
+voice; `acid-bass` and `acid` are a voice of their own, `acid-lead` is the generic saw bass), the drum **kits** and the sound
+**palettes**. In a part:
 
 | param | takes | does |
 |---|---|---|
-| `inst=wobble-lead` | a voice | the part's instrument. An unknown name is an **error with the nearest names**; a family word (`inst=reese`) is accepted with a **warning** that it plays the generic saw bass, and which voices have a sound of their own. `inst=acid` is a 303: `!` accents, `^` slides |
+| `inst=wobble-lead` | a voice | the part's instrument. An unknown name is an **error with the nearest names**; a family word (`inst=reese`) is accepted with a **warning** that it plays the generic saw bass, and which voices have a sound of their own. `inst=acid-bass` (or `inst=acid`) is a 303: `!` accents, `^` slides, `cutoff=` `res=` `env=` `accent=` `drive=` turn its knobs |
 | `kit=drums-808` | a kit | a drum part's kit (set once the net has landed) |
 | `sound=synth:wobble-lead` | `own`, `synth`, `synth:NAME`, `inst:NAME` | the role's sound option on the deck, set once the net has landed (`DeckAction::SetRoleVoice`) |
 | `route=td3` | `td3` | a tonal part also fills the TD-3 editor's sixteen steps (note, octave shift, accent, slide, rest) once its net lands; `do td3 write confirm=true` sends it (a dry run unless confirmed) |

@@ -72,6 +72,20 @@ pub const LIMITS: &[Limit] = &[
     lim("glide", "glide (ms)", 1.0, 2000.0, 1.0, "ms", true),
     lim("decay", "note decay (ms)", 10.0, 10000.0, 10.0, "ms", true),
     lim("pitch-drop", "pitch drop (semitones)", 1.0, 24.0, 1.0, "semitones", true),
+    Limit {
+        kind: "cutoff",
+        label: "acid cutoff",
+        min: Some(20.0),
+        max: Some(12000.0),
+        step: 1.0,
+        unit: "hz",
+        integer: true,
+        log: true,
+    },
+    lim("res", "acid resonance", 0.0, 100.0, 1.0, "", true),
+    lim("env", "acid envelope depth", 0.0, 100.0, 1.0, "", true),
+    lim("accent", "acid accent", 0.0, 100.0, 1.0, "", true),
+    lim("drive", "acid drive", 0.0, 100.0, 1.0, "", true),
     lim("ratchet", "ratchet (strikes in the step)", 2.0, 8.0, 1.0, "", true),
     lim("seed", "seed", 0.0, 4_294_967_295.0, 1.0, "", true),
     lim("times", "times in its slot (*n)", 1.0, 64.0, 1.0, "", true),
@@ -481,6 +495,11 @@ fn classify(a: &Analysis, i: usize, reg: &dyn Registry) -> (Limit, String) {
                 "glide" => named("glide"),
                 "decay" => named("decay"),
                 "pitch-drop" => named("pitch-drop"),
+                "cutoff" => named("cutoff"),
+                "res" => named("res"),
+                "env" => named("env"),
+                "accent" => named("accent"),
+                "drive" => named("drive"),
                 "seed" => named("seed"),
                 "bars" => named("bars"),
                 "depth" | "center" => {
@@ -658,7 +677,7 @@ pub fn number_at(a: &Analysis, at: usize, reg: &dyn Registry) -> Option<NumberAt
             {
                 return None;
             }
-            if djlive::parse::ROLES.contains(&w.as_str()) || djlive::parse::PARAMS.contains(&w.as_str()) {
+            if djlive::parse::ROLES.contains(&w.as_str()) || djlive::parse::PARAMS.contains(&w.as_str()) || djlive::compile::ACID_PARAMS.contains(&w.as_str()) {
                 return None;
             }
             // canonical notes are lower case; `A` and `B` are decks

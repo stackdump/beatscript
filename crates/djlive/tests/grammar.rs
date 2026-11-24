@@ -358,15 +358,16 @@ fn a_reference_to_a_stored_program_is_a_sentence_the_parser_reads() {
 }
 
 /// The parameters of a part are named in the grammar, so the Grammar page lists every one: `pname` is the parser's
-/// `parse::PARAMS` (`glide=`, `decay=`, `pitch-drop=` and the rest), no more and no fewer.
+/// `parse::PARAMS` (`glide=`, `decay=`, `pitch-drop=` and the rest) and the acid voice's knobs (`compile::ACID_PARAMS`, which
+/// are not reserved words), no more and no fewer.
 #[test]
 fn the_grammar_names_every_parameter_of_a_part() {
     let g = grammar::grammar();
     let r = g.rule("pname").expect("grammar.ebnf has `pname`, the parameters of a part");
     let mut named = std::collections::BTreeSet::new();
     r.node.terms(&mut named);
-    let want: std::collections::BTreeSet<String> = djlive::parse::PARAMS.iter().map(|p| p.to_string()).collect();
-    assert_eq!(named, want, "grammar.ebnf's `pname` is not parse::PARAMS");
+    let want: std::collections::BTreeSet<String> = djlive::parse::PARAMS.iter().chain(djlive::compile::ACID_PARAMS.iter()).map(|p| p.to_string()).collect();
+    assert_eq!(named, want, "grammar.ebnf's `pname` is not parse::PARAMS and compile::ACID_PARAMS");
 }
 
 /// `drive` is a word of the control grammar and no reserved word: the grammar writes it after a target and the parser reads it

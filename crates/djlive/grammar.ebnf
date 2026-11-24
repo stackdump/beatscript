@@ -57,7 +57,8 @@ role        = "kick" | "snare" | "hihat" | "clap"             (* drum parts: a h
 param       = pname "=" pvalue                                (* vel=70..100  oct=2  len=3  inst=sub-bass  glide=60 *)
             | "voice-lead" [ "=" ( "on" | "off" ) ] ;         (* a switch, on when it is bare *)
 pname       = "vel" | "oct" | "len" | "inst" | "seed" | "kit" | "sound" | "route"   (* velocity, octave, length, voice, its generators' seed, a drum kit, a sound, where it plays *)
-            | "glide" | "decay" | "pitch-drop" ;              (* tonal, an 808: glide= decay= ms, pitch-drop= 1 to 24 semitones *)
+            | "glide" | "decay" | "pitch-drop"                (* tonal, an 808: glide= decay= ms, pitch-drop= 1 to 24 semitones *)
+            | "cutoff" | "res" | "env" | "accent" | "drive" ; (* the acid voice's knobs: cutoff= Hz 20 to 12000, the rest 0 to 100; not reserved words *)
 pvalue      = arith [ ".." arith ] | WORD | PARAM ;           (* a number, a range drawn per hit, a name; a $name in a body *)
 
 (* == Mini-notation: the rhythm of a part == *)

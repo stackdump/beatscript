@@ -60,6 +60,11 @@ pub const PART_PARAMS: &[(&str, &str, &str)] = &[
     ("glide", "a tonal part's slide time in ms, 1..2000: a slide `^` bends the voice into the next note (without glide= a `^` only holds)", "glide=${1:60}"),
     ("decay", "a tonal part's note tail in ms, 10..10000", "decay=${1:300}"),
     ("pitch-drop", "a tonal part's drop in semitones, 1..24: each note starts that high and falls onto its pitch in 50 ms", "pitch-drop=${1:12}"),
+    ("cutoff", "the acid voice's cutoff knob, Hz 20..12000: the filter's floor before its envelope opens it (default 300)", "cutoff=${1:300}"),
+    ("res", "the acid voice's resonance knob, 0..100: how hard the filter rings (default 72)", "res=${1:72}"),
+    ("env", "the acid voice's envelope knob, 0..100: how far each strike opens the filter, 100 is 6 octaves (default 45)", "env=${1:45}"),
+    ("accent", "the acid voice's accent knob, 0..100: how much an accented note `!` opens the filter and is louder (default 80)", "accent=${1:80}"),
+    ("drive", "the acid voice's drive knob, 0..100: how hard the oscillator drives the filter's saturation (default 0, clean)", "drive=${1:25}"),
 ];
 
 /// The evolve operators (`melody: rotate 1 transpose <0 5>`), with what their number is.

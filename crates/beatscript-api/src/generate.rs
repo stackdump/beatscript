@@ -25,8 +25,15 @@ use crate::snapshot::web_env;
 /// voice-leads; a stored program keeps its text and CID.
 /// 3: the program 2 prints, in BeatScript 2: `#! beatscript 2` first (djlive::version), so the same music has its new CID.
 /// 2 prints what it always printed (BeatScript 1), so every `gen@2` pin keeps its CID.
+/// 4: the program 3 prints, but the acid genre's bass plays the 303 (`inst=acid-bass`, [`ACID_BASS_FROM`]) where 3 had no
+/// acid voice to pick and fell back to `sub-bass`; every other genre, and every other line, is 3's to the character.
 pub const GENERATOR: &str = "seeded";
-pub const GENERATOR_VERSION: u32 = 3;
+pub const GENERATOR_VERSION: u32 = 4;
+
+/// The first version whose acid genre's bass is the acid voice, by its own name.
+pub const ACID_BASS_FROM: u32 = 4;
+/// The acid voice's own name (djrust's instrument table: `acid` is the same voice).
+pub const ACID_BASS: &str = "acid-bass";
 
 /// What a caller may set. Empty / `None` fields take the genre's own.
 #[derive(Clone, Debug, Default)]
@@ -244,8 +251,8 @@ impl Pick<'_> {
 
 /// Voices the engine gained after `seeded@1` and `seeded@2` were pinned (`tests/fixtures/gen-pins.txt`): the acid voice
 /// (docs/beatscript/ext-acid.md), a family word when they were made. Neither version picks one, so each still prints the program it
-/// always did for the same inputs; a later version may.
-pub const VOICES_AFTER_V2: [&str; 2] = ["acid", "acid-square"];
+/// always did for the same inputs; 4 picks `acid-bass` for the acid genre's bass alone ([`ACID_BASS_FROM`]).
+pub const VOICES_AFTER_V2: [&str; 3] = ["acid", "acid-bass", "acid-square"];
 
 /// A voice the program may name: a real voice (not just a family word) that starts with a letter, and one this version had.
 fn voice_ok(name: &str) -> bool {
@@ -256,7 +263,7 @@ fn kit_ok(name: &str) -> bool {
     web_env().catalog.kits.iter().any(|v| v == name)
 }
 
-fn instrument(t: &BeatsTables, genre: &str, role: &str, p: &mut Pick) -> Option<String> {
+fn instrument(t: &BeatsTables, genre: &str, role: &str, version: u32, p: &mut Pick) -> Option<String> {
     let mut cands: Vec<String> = t
         .instrument_set(genre)
         .and_then(|m| m.get(role).cloned())
@@ -273,6 +280,11 @@ fn instrument(t: &BeatsTables, genre: &str, role: &str, p: &mut Pick) -> Option<
             _ => vec!["lead".into()],
         };
         cands.retain(|n| voice_ok(n));
+    }
+    // the acid genre's bass is the 303 from 4 on: one candidate where 3 had one (`sub-bass`), so the pick draws from the
+    // stream as it did and every later choice of the program is 3's
+    if version >= ACID_BASS_FROM && genre == "acid" && role == "bass" {
+        cands = vec![ACID_BASS.to_string()];
     }
     p.of(&cands).cloned()
 }
@@ -346,7 +358,8 @@ pub fn generate(req: &GenRequest) -> Result<Generated, String> {
     generate_as(req, GENERATOR_VERSION)
 }
 
-/// What `seeded@version` prints for `req`, for the versions this generator's body is (2 and 3: 3 is 2 in BeatScript 2).
+/// What `seeded@version` prints for `req`, for the versions this generator's body is (2, 3 and 4: 3 is 2 in BeatScript 2, 4 is 3
+/// with the acid genre's bass the 303).
 fn generate_as(req: &GenRequest, version: u32) -> Result<Generated, String> {
     let t = BeatsTables::shared();
     let genre = if req.genre.trim().is_empty() { "techno".to_string() } else { req.genre.trim().to_lowercase() };
@@ -400,10 +413,10 @@ fn generate_as(req: &GenRequest, version: u32) -> Result<Generated, String> {
     let kick_c = drum(def, "kick", "C");
     let swing = (def.swing / 100.0).clamp(0.0, 0.6);
 
-    let inst_bass = instrument(t, &genre, "bass", &mut p);
-    let inst_lead = instrument(t, &genre, "melody", &mut p);
-    let inst_pad = instrument(t, &genre, "harmony", &mut p);
-    let inst_arp = instrument(t, &genre, "arp", &mut p);
+    let inst_bass = instrument(t, &genre, "bass", version, &mut p);
+    let inst_lead = instrument(t, &genre, "melody", version, &mut p);
+    let inst_pad = instrument(t, &genre, "harmony", version, &mut p);
+    let inst_arp = instrument(t, &genre, "arp", version, &mut p);
     let drum_kit = kit(t, &genre, &mut p);
 
     let bassline: Vec<String> = roots.iter().map(|d| bass_bar(*d, def.bass_density, &mut p, def.walking_bass)).collect();
@@ -573,11 +586,12 @@ fn generate_as(req: &GenRequest, version: u32) -> Result<Generated, String> {
 
 /// The seeded generator as the language calls it: `gen@N genre seed=...` (djlive::gen, docs/beatscript/ext-ffi.md) is the program
 /// `seeded@N` prints. Every version it ever printed stays callable: 1 is [`crate::generate_v1`], frozen, 2 is the program 3
-/// prints without its version line (BeatScript 1, as it always printed), 3 is [`generate`].
+/// prints without its version line (BeatScript 1, as it always printed), 3 is the program 4 prints with the acid genre's bass on
+/// `sub-bass`, 4 is [`generate`].
 pub struct Seeded;
 
 /// The versions `gen@N` can name, oldest first.
-pub const VERSIONS: [u32; 3] = [1, 2, GENERATOR_VERSION];
+pub const VERSIONS: [u32; 4] = [1, 2, 3, GENERATOR_VERSION];
 
 impl djlive::gen::Generator for Seeded {
     fn name(&self) -> &str {
@@ -599,7 +613,7 @@ impl djlive::gen::Generator for Seeded {
     fn generate(&self, version: u32, r: &djlive::gen::GenRequest) -> Result<String, String> {
         match version {
             1 => crate::generate_v1::generate(&crate::generate_v1::GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }).map(|g| g.text),
-            2 | GENERATOR_VERSION => generate_as(&GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }, version).map(|g| g.text),
+            2 | 3 | GENERATOR_VERSION => generate_as(&GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }, version).map(|g| g.text),
             v => Err(format!("{GENERATOR}@{v} is not one this build has ({})", VERSIONS.iter().map(|v| format!("{GENERATOR}@{v}")).collect::<Vec<_>>().join(", "))),
         }
     }
@@ -628,7 +642,7 @@ pub fn generate_version(version: u32, req: &GenRequest) -> Result<Generated, Str
             key: g.key,
             length: g.length,
         }),
-        2 | GENERATOR_VERSION => generate_as(req, version),
+        2 | 3 | GENERATOR_VERSION => generate_as(req, version),
         v => Err(format!("{GENERATOR}@{v} is not one this build has ({})", VERSIONS.iter().map(|v| format!("{GENERATOR}@{v}")).collect::<Vec<_>>().join(", "))),
     }
 }

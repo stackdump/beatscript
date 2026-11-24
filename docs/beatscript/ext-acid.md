@@ -1,8 +1,9 @@
 # The acid voice: a 303 made in the engine
 
 `inst=acid` used to be a family word: any name with `acid` in it played the engine's plain saw bass, and `check` said so.
-It is now what the name promised, a 303-style voice of its own, and `inst=acid-square` is the same voice on its square
-wave. It is all synthesis, in the public engine (stackdump/djrust `src/wave/acid.rs`, MIT, no samples), so the offline
+It is now what the name promised, a 303-style voice of its own. Its own name is `inst=acid-bass` (`acid` is the same
+voice: one instrument table entry each, alike), and `inst=acid-square` is the same voice on its square wave. Its knobs
+are part params: `cutoff=`, `res=`, `env=`, `accent=`, `drive=` ("Its knobs", below). It is all synthesis, in the public engine (stackdump/djrust `src/wave/acid.rs`, MIT, no samples), so the offline
 render (`beatscript listen`, `beatscript render`) and the browser (djweb's wasm, the same djrust) play it alike. Example
 `examples/beatscript/acid-303.beatscript`. Tests: djrust `tests/wave_acid.rs` and the unit tests in `src/wave/acid.rs`; here
 `crates/djlive/tests/expression.rs` (what a slide on the acid voice lowers to).
@@ -15,6 +16,7 @@ Nothing new. The voice is a name `inst=` takes, and the marks and params it play
 ```text
 deck B: bass a1 a1 a2^ a1 ~ c2! a1 g1^ a1 a1 ~ e2^ d2 a1 c2! a2! decay=180 inst=acid
 deck B: melody ~ ~ ~ ~ a3! ~ ~ e3^ g3 ~ ~ ~ c4!^ b3 ~ ~ decay=600 glide=110 inst=acid-square
+deck B: bass acid inst=acid-bass cutoff=220 res=90 env=70 accent=100 drive=25
 ```
 
 | written | on the acid voice |
@@ -26,6 +28,22 @@ deck B: melody ~ ~ ~ ~ a3! ~ ~ e3^ g3 ~ ~ ~ c4!^ b3 ~ ~ decay=600 glide=110 inst
 | `pitch-drop=7` | each note starts 7 semitones high and falls onto its pitch in 50 ms, as on every voice |
 | `len=` | how long the note's gate is open: the voice is let go 30 ms before the note ends (at most half the note) |
 | `vel=` | the level, and the accent: a velocity above 110 is accented in proportion, all of it at 127 (a humanized 100 is not) |
+| `cutoff=220` | the cutoff knob, Hz (20 to 12000, default 300): the filter's floor, before a strike's envelope opens it |
+| `res=90` | the resonance knob, 0 to 100 (default 72): how hard the filter rings at its cutoff (100 rings hardest, and stays bounded) |
+| `env=70` | the env mod knob, 0 to 100 (default 45): how far each strike opens the filter, 100 is 6 octaves (45 is 2.7) |
+| `accent=100` | the accent knob, 0 to 100 (default 80): how much an accented note is louder, opens further and sweeps shorter |
+| `drive=25` | the drive knob, 0 to 100 (default 0): how hard the oscillator drives the filter's saturation; the level is given back after it, so it is grit, not loudness |
+
+## Its knobs
+
+A 303 has six knobs; five are part params here and the sixth, decay, is `decay=`. Each is one whole number for the part
+(not a range), carried on every note's binding under its own key (`cutoff` Hz; `res`, `env`, `accent`, `drive` 0 to 100),
+written only when set, so a part without them compiles to the net it always did and no pinned CID moves. The engine
+reads them per note (djrust `pflow::AcidKnobs`, applied in `wave::acid` when a note is struck or slid into), over the
+voice's own settings (`AcidParams`, the instrument table's): a knob the note does not set is the voice's, computed
+exactly as before, so a note without knobs sounds as it always did, to the sample. The knobs are not reserved words
+(`compile::ACID_PARAMS`, beside `parse::PARAMS`): `section drive` and `let accent = ...` are still names. On a drum part
+they are errors; on a voice that is not the acid voice they are a warning, and the part plays as it would without them.
 
 ## What it lowers to
 
@@ -37,7 +55,7 @@ high on a slide step. (The ring cuts a note's length at its end, so a `^` on the
 before the bar line and swell back into the downbeat.) On every other voice neither key is written, and the `^` holds
 its note as it always has. Which voices slide by
 themselves is the engine's to say: the entries of its instrument table that play its `"acid"` engine
-(`djlive::compile::slides_by_itself`), today `acid` and `acid-square`.
+(`djlive::compile::slides_by_itself`), today `acid-bass`, `acid` and `acid-square`.
 
 The engine plays a net's notes on the acid lane so:
 
@@ -77,8 +95,9 @@ of the voice is needed or kept.
 ## What it refuses
 
 Nothing new. `glide=`, `decay=` and `pitch-drop=` on a drum part are errors, as before (the help names the drum marks).
-A name that contains `acid` but is not a voice (`inst=acid-bass`) still plays the generic saw bass, and `check` warns that
-it does and names `acid` among the voices with a sound of their own.
+A name that contains `acid` but is not a voice (`inst=acid-lead`) still plays the generic saw bass, and `check` warns that
+it does and names `acid-bass` among the voices with a sound of their own. `cutoff=` and the other knobs on a drum part
+are errors; out of range, or a range, are errors; on a voice that is not the acid voice, a warning.
 
 ## Decisions
 
@@ -117,8 +136,26 @@ it does and names `acid` among the voices with a sound of their own.
   and `genre@1` (djengine `data/genre-templates.txt`, what `use genre@1 techno.drop as drop` borrows) froze those bass
   lines without it. `genre_template` leaves the same two voices out, so it still writes what `genre@1` froze
   (beatscript-serve's `genre_templates_v1_are_frozen`). Naming the 303 there is a `genre@2` (Proposals).
-- **The knobs are fixed defaults.** The language has no per-part cutoff, resonance or envelope today (Proposals); the
-  deck's filter insert (`deck B: filter lp 400 -> 3k over 8 bars`, `resonance`) is the sweep a set already has.
+- **`acid-bass` is the voice's name, and `acid` stays.** The item that asked for the voice named it `acid-bass` (a name
+  that starts with a letter: `303` cannot be written). `acid` is beats' word for the genre's bass and what programs already
+  say, so both are entries of the instrument table, alike: `inst=acid` plays the same 303 with no warning, and no program
+  that says it moves.
+- **The knobs are part params, 0 to 100.** A 303's knobs are dials; a whole-number turn of 0 to 100 needs no decimals in
+  the text or floats on the binding (the binding's numbers stay whole, as every other key's are), and the cutoff, the one
+  knob with a unit, is in Hz. They are per part, carried per note as `decay=` is, so a slide into a note takes the new
+  note's knobs. They are not reserved words: `drive` names sections (the pinned `matrix-130` has `section drive`).
+- **Drive is new to the voice, and off by default.** The oscillator's level into the ladder's saturation was fixed; the
+  knob raises it by up to 4x and divides the level back out after the ladder, so the grit changes and the loudness does
+  not (much). At 0 the arithmetic is what it was, so `acid` and `acid-bass` sound exactly as `acid` did.
+- **The oscillator is chosen by name.** `acid-bass` is the saw and `acid-square` the square, as before: a part picks a
+  sound by its `inst=`, and the square's level is calibrated apart from the saw's. A `wave=` param would be a word-valued
+  knob the binding does not carry today.
+- **`gen@4` puts the acid genre's bass on the 303.** `seeded@3` could not pick the acid voice (it was not a voice when
+  `gen@1` and `gen@2` were pinned, `VOICES_AFTER_V2`) and wrote `sub-bass` for the acid genre's bass, so a track in that genre
+  had to name a stand-in by hand. `seeded@4` writes `inst=acid-bass` there and nothing else differs: the pick draws from
+  the seed's stream as 3's did, so every later choice is 3's, and every other genre prints 3's program but its
+  `#! generator:` line (`tests/gen.rs`). The bitwrap ontology's other genres whose bass is acid (techno, edm, speedcore)
+  keep theirs: that is the `genre@2` question below.
 
 ## Not done
 
@@ -128,17 +165,17 @@ it does and names `acid` among the voices with a sound of their own.
 - `sound=synth:acid` (a role's sound option) plays the voice, but a `^` on that part does not slide by itself: the
   language only knows the part's `inst=`.
 - A composed track whose bass is `acid` (the default bass of techno, edm, trance, speedcore and acid; an alternative in
-  seven more genres) plays the 303 in the app (where no sampled bass is bound), with no slides.
+  seven more genres) plays the 303 in the app (where no sampled bass is bound), with no slides. The composer's genre
+  tables are beats' (djrust `data/genres-native.json`) and still name it `acid`: the same voice as `acid-bass`, so the
+  composed acid genre already plays it; renaming it there would move that genre's composed nets for no change in sound.
+- The knobs on `sound=synth:acid` (a role's sound option) are not read: the language only knows a part's `inst=`.
 
 ## Proposals
 
-For Matt's yes or no; none is built.
+For Matt's yes or no; none is built. (`cutoff=`, `res=`, `env=` and `accent=`, once proposals here, are built: "Its knobs".)
 
-- **`cutoff=`, `res=`, `env=` on a tonal part** (Hz 20 to 12000, 0 to 1, octaves 0 to 6), the acid voice's other knobs,
-  carried on each note's binding as `decay=` is (`cutoff`, `resonance`, `envMod`), written only when set so no CID moves,
-  and a warning on a voice that has no filter of its own. The engine already reads them from an `"acid"` overlay object
-  (`AcidParams::from_json`); the cost is the language's surface (grammar, `check`, beatscriptls, the ontology), not the sound.
-- **`accent=` (0 to 1)**, the accent knob, the same way.
+- **The ontology's part params**: the ontology run reads `parse::PARAMS` for its part-parameter terms; it should chain
+  `compile::ACID_PARAMS` so the five knobs are terms too.
 - **`genre@2`, the genre templates with the 303**: techno, edm and speedcore written with `inst=acid` on their bass, as
   the ontology names it, in a second file beside `genre@1` (djengine `genre_templates::VERSIONS`). It is the same
   question as the composed acid basses under Not done: whether a genre whose bass is acid plays the 303 now.

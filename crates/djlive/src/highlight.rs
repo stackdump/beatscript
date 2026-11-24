@@ -92,7 +92,7 @@ pub fn highlight(src: &str) -> Vec<(Span, Class)> {
                     Class::Keyword
                 } else if next == Some(&Tok::LParen) {
                     Class::Generator
-                } else if (next == Some(&Tok::Eq) && (PARAMS.contains(&w.as_str()) || crate::mixmoves::PARAMS.contains(&w.as_str()) || crate::shape::LFO_PARAMS.contains(&w.as_str()) || crate::sing::PARAMS.contains(&w.as_str()))) || w == "voice-lead" {
+                } else if (next == Some(&Tok::Eq) && (PARAMS.contains(&w.as_str()) || crate::compile::ACID_PARAMS.contains(&w.as_str()) || crate::mixmoves::PARAMS.contains(&w.as_str()) || crate::shape::LFO_PARAMS.contains(&w.as_str()) || crate::sing::PARAMS.contains(&w.as_str()))) || w == "voice-lead" {
                     // `voice-lead` (F5) is a part's switch, bare or `=on`; `voice=` (F9) names a sung voice
                     Class::Param
                 } else if w == "A" || w == "B" {
