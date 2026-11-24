@@ -543,6 +543,35 @@ export function advance(state) {
   return { ...state, n, now: state.next && state.next.n === n ? state.next : null, next: null, segue: null };
 }
 
+/**
+ * The play order from here, for a player of the station (the /radio page and the player package's <beatscript-radio>): the
+ * queue's items first, else the segue after the station track that plays, then the station's next tracks (a few of them:
+ * one that fails to resolve is passed over for the one after it). `current` is what plays ({kind: 'track' | 'segue' |
+ * 'queue' | ..., n}) or null; `ahead` the answer's tracks after N; `started` whether a station track has played. Entries are
+ * {kind: 'queue', item} | {kind: 'segue', segue} | {kind: 'track', track}.
+ */
+export function playOrder(state, { current = null, ahead = [], queue = [], started = false, depth = 3 } = {}) {
+  const out = [];
+  for (const item of queue || []) out.push({ kind: 'queue', item });
+  const seg = state.segue;
+  if (!out.length && current && current.kind === 'track' && state.segues && seg && seg.from === current.n && current.n === state.n) out.push({ kind: 'segue', segue: seg });
+  // the station goes on after the track it is at (or plays track N when nothing of it has played yet)
+  const played = current && (current.kind === 'track' || current.kind === 'segue');
+  const nextN = played || started ? state.n + 1 : state.n;
+  const pool = [state.now, state.next, ...(ahead || [])].filter(Boolean);
+  for (let n = nextN; n < nextN + depth; n++) {
+    const track = pool.find((x) => x.n === n);
+    if (track) out.push({ kind: 'track', track });
+  }
+  return out;
+}
+
+/** A station track at position n started playing: the state moves there (one on is an advance; anything else a step). */
+export function trackStarted(state, n) {
+  if (n === state.n) return state;
+  return n === state.n + 1 ? advance(state) : stepTo(state, n);
+}
+
 // ---- scan ------------------------------------------------------------------------------------------------------------------------
 
 /**

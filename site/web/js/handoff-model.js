@@ -97,11 +97,19 @@ export class Handoff {
 
   changed() { if (this.onChange) this.onChange(this); }
 
+  /** Let go of what a next item prepared (it will not play). */
+  drop(n) {
+    if (n && n.prepared && this.sink.discard) this.sink.discard(n.prepared);
+    if (n) n.prepared = null;
+  }
+
   /** Resolve a descriptor (its prepare()), keeping what it answers; a later resolve of another one wins. */
   resolve(desc) {
-    if (!desc) { this.next = null; return; }
+    if (!desc) { this.drop(this.next); this.next = null; return; }
     const seq = ++this.seq;
     const n = { desc, state: 'resolving', prepared: null, error: null, seq };
+    // a next item that was ready and is passed over now (the order changed) is let go
+    this.drop(this.next);
     this.next = n;
     let p;
     try { p = Promise.resolve(desc.prepare()); } catch (e) { p = Promise.reject(e); }
@@ -124,9 +132,9 @@ export class Handoff {
   /** Look again at what is next (the queue changed, the station was retuned): resolve it unless it is the same. */
   refresh() {
     // nothing plays: nothing is resolved ahead (the engine starts only on a click)
-    if (!this.current) { this.next = null; return; }
+    if (!this.current) { this.drop(this.next); this.next = null; return; }
     const d = this.provider.upcoming();
-    if (!d) { this.next = null; this.changed(); return; }
+    if (!d) { this.drop(this.next); this.next = null; this.changed(); return; }
     if (this.next && this.next.desc.key === d.key && this.next.state !== 'failed') return;
     this.resolve(d);
   }
@@ -147,6 +155,8 @@ export class Handoff {
   }
 
   play(desc, prepared) {
+    // the next item plays: it is not next any more (and what it prepared is the sink's now)
+    if (this.next && this.next.prepared === prepared) this.next = null;
     this.sink.play(prepared, desc);
     this.current = { desc, prepared };
     this.bridging = null;

@@ -359,3 +359,65 @@ test('bridge: every bridge, in every kind of key, checks clean with the real che
     }
   }
 });
+
+test('handoff: a ready next item that is passed over (the order changed) is let go, never the one that plays', async () => {
+  // what the sink was given to discard, and what it played: a prepared item is one or the other, never both
+  const discarded = [];
+  let order = ['B'];
+  const played = [];
+  const make = (name) => ({ key: name, kind: 'track', cid: CID(name), tempo: 120, musicKey: 'am', prepare: () => Promise.resolve({ name }) });
+  const h = new H.Handoff({
+    provider: { upcoming: () => (order.length ? make(order[0]) : null), after: () => null, commit: () => {} },
+    sink: { play: (p) => played.push(p.name), bridge: () => {}, stop: () => {}, discard: (p) => discarded.push(p.name) },
+    now: () => 0,
+  });
+  await h.start(make('A'));
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(h.next.state, 'ready');
+  // a segue comes into the order before B (the station's answer arrived): B was ready, and is let go
+  order = ['G', 'B'];
+  h.refresh();
+  await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(discarded, ['B']);
+  assert.equal(h.next.desc.key, 'G');
+  // G plays: it is not discarded, and it is not next any more
+  h.boundary();
+  assert.deepEqual(played, ['A', 'G']);
+  assert.ok(!discarded.includes('G'));
+  // nothing is next: the one resolved for after G (the order still says G, then B) is dropped when the order empties
+  await Promise.resolve(); await Promise.resolve();
+  order = [];
+  h.refresh();
+  assert.equal(h.next, null);
+  assert.ok(discarded.length >= 2 && !discarded.includes('A'));
+});
+
+// ---- station-model: the play order the /radio page and <beatscript-radio> share --------------------------------------------------
+
+test('station: playOrder is the segue after the track that plays, then the next tracks; trackStarted moves N there', async () => {
+  const S = await J('station-model.js');
+  const t = (n) => ({ n, cid: CID(`t${n}`), text: `track ${n}` });
+  const base = { ...S.initialState({ n: 3 }), now: t(3), next: t(4), segue: { from: 3, to: 4, cid: CID('g3'), text: 'segue' } };
+  // nothing has played: track N first
+  assert.deepEqual(S.playOrder(base, { ahead: [t(4), t(5)] }).map((e) => e.kind === 'track' ? e.track.n : e.kind), [3, 4, 5]);
+  // track N plays: its segue, then N+1 and on
+  const after = S.playOrder(base, { current: { kind: 'track', n: 3 }, ahead: [t(4), t(5), t(6)] });
+  assert.deepEqual(after.map((e) => e.kind === 'track' ? e.track.n : e.kind), ['segue', 4, 5, 6]);
+  // segues off: straight to N+1
+  assert.deepEqual(S.playOrder({ ...base, segues: false }, { current: { kind: 'track', n: 3 }, ahead: [t(4)] }).map((e) => e.track && e.track.n), [4]);
+  // the segue plays: N+1 next (not the segue again)
+  assert.deepEqual(S.playOrder(base, { current: { kind: 'segue', n: 3 }, ahead: [t(4), t(5)] }).map((e) => e.kind === 'track' ? e.track.n : e.kind), [4, 5]);
+  // the queue goes first, and then no segue
+  assert.deepEqual(S.playOrder(base, { current: { kind: 'track', n: 3 }, queue: [{ id: 'q1' }], ahead: [t(4)] }).map((e) => e.kind), ['queue', 'track']);
+  // depth
+  assert.equal(S.playOrder(base, { started: true, ahead: [t(4), t(5), t(6), t(7)], depth: 2 }).length, 2);
+  // trackStarted: one on is an advance (the next track becomes now), anything else a step
+  const a = S.trackStarted(base, 4);
+  assert.equal(a.n, 4);
+  assert.equal(a.now && a.now.n, 4);
+  assert.equal(a.segue, null);
+  assert.equal(S.trackStarted(base, 3), base);
+  const b = S.trackStarted(base, 9);
+  assert.equal(b.n, 9);
+  assert.equal(b.now, null);
+});
