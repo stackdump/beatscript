@@ -25,8 +25,8 @@ site for every path no Go route takes. The rest goes to `-fallback`, or is a JSO
 ## What is the same as Go
 
 - **Data on disk**: `<data>/programs/<cid>.json` (read and, for `<cid>.<packed>`, written in Go's shape), and
-  `<data>/render/<cid>.<sr>.r2.wav` + `.meta`, Go's names, so either server serves the other's WAV. Opus is
-  `<cid>.<sr>.r2rs.opus`: another encoder, so another render version (RUST-SERVER.md §5). Parts are `*.rs.part`.
+  `<data>/render/<cid>.<sr>.r3.wav` + `.meta` (Go's names, at the render version `r3`). Opus is
+  `<cid>.<sr>.r3rs.opus`: another encoder, so another render version (RUST-SERVER.md §5). Parts are `*.rs.part`.
 - **CID check**: the store re-hashes the text (`djlive::compile::program_cid`, what Go's `btw.ProgramCID` mirrors);
   `<cid>.<packed>` is opened with `beatscript_api::open_json` (what `beatscript open` prints), refused on a mismatch (422
   `cid_mismatch`), and stored like an anonymous `PUT /api/programs/<cid>`, with the per-address limit.

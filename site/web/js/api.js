@@ -13,7 +13,7 @@ const seg = (re, what) => (v) => {
 const cidSeg = seg(CID_RE, 'a CID');
 const nameSeg = seg(EXAMPLE_RE, 'an example name');
 // what the server's renderer is (beatscript-serve service::RENDER_VERSION, crates/beatscript-serve; it was Go internal/site/api RenderVersion): part of every render URL, so a renderer change is a new URL
-export const RENDER_VERSION = 'r2';
+export const RENDER_VERSION = 'r3';
 export const EXPORT_VERSION = 'x1';
 export const EXPORT_FORMATS = ['midi', 'stems', 'stems-opus'];
 const sidSeg = seg(SESSION_RE, 'a session id');

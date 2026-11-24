@@ -45,16 +45,19 @@ pub enum Fmt {
     Wav,
 }
 
-/// The Go server's `api.RenderVersion`: what the engine makes of a program. Bump it with the Go side when the engine
-/// starts producing different audio for the same CID (cached files are served immutable).
-pub const RENDER_VERSION: &str = "r2";
+/// What the engine makes of a program (the Go server's `api.RenderVersion` was `r2`). Bump it when the render starts producing
+/// different audio for the same CID (cached files are served immutable); the page's `RENDER_VERSION` (site/web/js/api.js)
+/// says the same. `r3` (2026-11-24): the render plays a program's control lines as the browser's engine plays them (the Wheel,
+/// reverb and master crush as the page has them, `kit=` / `sound=`, every move on the booth's scheduler: beatscript-cli
+/// src/browser.rs). Files of an older version are no longer cache names: never served, counted or evicted.
+pub const RENDER_VERSION: &str = "r3";
 
 /// beatscript-serve's Opus is not the Go server's: the same PCM through another encoder (libopus 1.3.1 in-process at 48 kHz,
 /// where Go pipes 44.1 kHz through ffmpeg's resampler and the system libopus). Different bytes are a different render,
 /// so they get their own version and never share a file name or an ETag with Go's `r2` Opus. The name is chosen so the
-/// Go server's start-up sweep (`(?:r\d+\.)?`) neither counts nor deletes these files. WAV is byte-identical to Go's
-/// (the contract test checks it) and shares `r2`.
-pub const OPUS_VERSION: &str = "r2rs";
+/// Go server's start-up sweep (`(?:r\d+\.)?`) neither counts nor deletes these files. WAV was byte-identical to Go's
+/// (the contract test checked it) and shared `r2`; both moved on together (`r3`, `r3rs`).
+pub const OPUS_VERSION: &str = "r3rs";
 
 impl Fmt {
     pub fn version(self) -> &'static str {
@@ -580,7 +583,7 @@ fn is_stale(p: &Path) -> bool {
     std::fs::metadata(p).and_then(|m| m.modified()).ok().and_then(|t| SystemTime::now().duration_since(t).ok()).is_some_and(|age| age > PART_ORPHAN_AFTER)
 }
 
-/// `<cid>.<sr>.<version>.<fmt>` of this server's versions (Go's `reCacheName`, per format: WAV `r2`, Opus `r2rs`).
+/// `<cid>.<sr>.<version>.<fmt>` of this server's versions (Go's `reCacheName`, per format: WAV [`RENDER_VERSION`], Opus [`OPUS_VERSION`]).
 pub fn is_cache_name(n: &str) -> bool {
     let mut it = n.rsplitn(4, '.');
     let (Some(ext), Some(ver), Some(sr), Some(cid)) = (it.next(), it.next(), it.next(), it.next()) else { return false };

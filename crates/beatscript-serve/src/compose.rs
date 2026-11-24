@@ -38,13 +38,13 @@ pub const PUBLIC_NOTICE: &str = "Everything generated here is published: the pro
 
 pub const NOT_CONFIGURED_HELP: &str = "compose is not configured: set the GEMINI_API_KEY environment variable of the btw-bitwrap service and restart it (BEATSCRIPT_MODEL=fake runs the recorded fixtures instead of a real model)";
 
-/// The render version a URL handed out for a format names (docs/RUST-SERVER.md §5.1: beatscript-serve's Opus is `r2rs`, its
-/// WAV the same bytes as Go's `r2`).
+/// The render version a URL handed out for a format names (docs/RUST-SERVER.md §5.1: beatscript-serve's Opus has its own,
+/// [`crate::service::OPUS_VERSION`]; WAV is [`crate::service::RENDER_VERSION`]).
 pub fn render_version(format: &str) -> &'static str {
     if format == "opus" {
-        "r2rs"
+        crate::service::OPUS_VERSION
     } else {
-        "r2"
+        crate::service::RENDER_VERSION
     }
 }
 

@@ -296,11 +296,11 @@ fn old_data() -> (tempfile::TempDir, Vec<(String, String)>) {
     // render files of the first program: a WAV and its meta (no CID in it), an Opus (left), and a card
     let render = p.join("render");
     std::fs::create_dir_all(&render).unwrap();
-    std::fs::write(render.join(format!("{}.48000.r2.wav", out[0].0)), b"RIFF....WAVEfmt fake audio").unwrap();
-    std::fs::write(render.join(format!("{}.48000.r2.wav.meta", out[0].0)), "{\"seconds\":2,\"bars\":1}").unwrap();
-    std::fs::write(render.join(format!("{}.44100.r2.wav", out[2].0)), b"RIFF dice").unwrap();
-    std::fs::write(render.join(format!("{}.44100.r2.wav.meta", out[2].0)), format!("{{\"seconds\":2,\"bars\":1,\"cid\":\"{}\"}}", out[2].0)).unwrap();
-    std::fs::write(render.join(format!("{}.48000.r2rs.opus", out[0].0)), b"OggS").unwrap();
+    std::fs::write(render.join(format!("{}.48000.r3.wav", out[0].0)), b"RIFF....WAVEfmt fake audio").unwrap();
+    std::fs::write(render.join(format!("{}.48000.r3.wav.meta", out[0].0)), "{\"seconds\":2,\"bars\":1}").unwrap();
+    std::fs::write(render.join(format!("{}.44100.r3.wav", out[2].0)), b"RIFF dice").unwrap();
+    std::fs::write(render.join(format!("{}.44100.r3.wav.meta", out[2].0)), format!("{{\"seconds\":2,\"bars\":1,\"cid\":\"{}\"}}", out[2].0)).unwrap();
+    std::fs::write(render.join(format!("{}.48000.r3rs.opus", out[0].0)), b"OggS").unwrap();
     let cards = p.join("cards");
     std::fs::create_dir_all(&cards).unwrap();
     std::fs::write(cards.join(format!("{}.wide.v2.abcd.png", out[0].0)), b"png").unwrap();
@@ -439,11 +439,11 @@ fn migration_writes_twins_through_the_gate_verifies_its_backup_and_is_idempotent
     use std::os::unix::fs::MetadataExt;
     let r = d.path().join("render");
     let ino = |n: String| std::fs::metadata(r.join(n)).unwrap().ino();
-    assert_eq!(ino(format!("{x0}.48000.r2.wav")), ino(format!("{y0}.48000.r2.wav")));
-    assert_eq!(ino(format!("{x0}.48000.r2.wav.meta")), ino(format!("{y0}.48000.r2.wav.meta")));
+    assert_eq!(ino(format!("{x0}.48000.r3.wav")), ino(format!("{y0}.48000.r3.wav")));
+    assert_eq!(ino(format!("{x0}.48000.r3.wav.meta")), ino(format!("{y0}.48000.r3.wav.meta")));
     let y2 = twin(&progs[2].1);
-    assert_eq!(std::fs::read_to_string(r.join(format!("{y2}.44100.r2.wav.meta"))).unwrap(), format!("{{\"seconds\":2,\"bars\":1,\"cid\":\"{y2}\"}}"));
-    assert!(!r.join(format!("{y0}.48000.r2rs.opus")).exists(), "Opus re-renders");
+    assert_eq!(std::fs::read_to_string(r.join(format!("{y2}.44100.r3.wav.meta"))).unwrap(), format!("{{\"seconds\":2,\"bars\":1,\"cid\":\"{y2}\"}}"));
+    assert!(!r.join(format!("{y0}.48000.r3rs.opus")).exists(), "Opus re-renders");
 
     // again: nothing to do, nothing written (not even a backup)
     let mid = snapshot(d.path());

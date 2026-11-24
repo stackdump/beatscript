@@ -11,7 +11,7 @@
 //!
 //! - playlists: an item whose CID has a twin names the twin, with `renamed_from` kept on the item (through the playlists
 //!   store's own `update`, which writes each account file atomically);
-//! - the render cache: `render/<X>.<sr>.r2.wav` (+ `.meta`) is hard-linked to `render/<Y>...` (a twin plays the same: the
+//! - the render cache: `render/<X>.<sr>.r3.wav` (+ `.meta`) is hard-linked to `render/<Y>...` (a twin plays the same: the
 //!   sound is seeded from the legacy CID), or a `.meta` that names X is copied with Y in its place. Opus files are left to
 //!   re-render (their Ogg stream serial is derived from the CID, so a link would not be the file the twin renders to), as
 //!   are the export cache (MIDI and stems carry the CID and rights) and the share cards (they print the CID).
@@ -326,7 +326,7 @@ fn plan_playlists(dir: &Path, p: &Plan) -> PlaylistPlan {
     out
 }
 
-/// A WAV render's cache name (`<cid>.<sr>.r2.wav`), or its `.meta`.
+/// A WAV render's cache name (`<cid>.<sr>.r3.wav`), or its `.meta`.
 fn is_wav_render(name: &str) -> bool {
     let base = name.strip_suffix(".meta").unwrap_or(name);
     base.ends_with(".wav") && crate::service::is_cache_name(base)
@@ -766,10 +766,10 @@ mod tests {
     #[test]
     fn wav_renders_only() {
         let c = "z4EBG9izF5J75dpqKKpJ7KeFUeJfSkHoefqEUsSAPWGbcgBdjDx";
-        assert!(is_wav_render(&format!("{c}.48000.r2.wav")));
-        assert!(is_wav_render(&format!("{c}.48000.r2.wav.meta")));
-        assert!(!is_wav_render(&format!("{c}.48000.r2rs.opus")));
-        assert!(!is_wav_render(&format!("{c}.48000.r2rs.opus.meta")));
-        assert!(!is_wav_render(&format!("{c}.48000.r2.wav.rs.part")));
+        assert!(is_wav_render(&format!("{c}.48000.r3.wav")));
+        assert!(is_wav_render(&format!("{c}.48000.r3.wav.meta")));
+        assert!(!is_wav_render(&format!("{c}.48000.r3rs.opus")));
+        assert!(!is_wav_render(&format!("{c}.48000.r3rs.opus.meta")));
+        assert!(!is_wav_render(&format!("{c}.48000.r3.wav.rs.part")));
     }
 }

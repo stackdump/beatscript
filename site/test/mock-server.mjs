@@ -95,7 +95,7 @@ function renderStatus(cid, url) {
   const seconds = (set && set.seconds) || (c && c.seconds) || 120;
   const st = set ? set.state : 'none';
   if (set && set.state === 'failed') return { cid, restricted: true, formats: {} };
-  const f = { state: st, url: `/api/render/${cid}?format=opus&v=r2`, available: true };
+  const f = { state: st, url: `/api/render/${cid}?format=opus&v=r3rs`, available: true };
   if (st === 'ready') { f.seconds = seconds; f.bytes = Math.round(seconds * 12000); }
   if (st === 'rendering') { f.seconds = seconds; f.seconds_rendered = Math.round(seconds * (set.pct || 0) / 100); f.bytes = 4096; }
   return { cid, bars: (c && c.song_bars) || 0, seconds, restricted: false, formats: { opus: f, wav: { state: 'none', available: true } } };
