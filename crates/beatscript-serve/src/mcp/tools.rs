@@ -1705,7 +1705,7 @@ impl Tools {
         if !ends {
             note += " This program does not end by itself (it loops, or has no timeline), so the render is cut at the server's bar limit; add `end at bar N` for a length of your own.";
         }
-        note += " The offline render plays the notes and sounds, not control lines (filters, reverb, do ...), so it can sound plainer than the browser.";
+        note += " The render plays the program as the browser's engine does (its control lines too: filters, reverb, the Wheel, moves ...).";
         if export {
             note = match format.as_str() {
                 "midi" => "Download stream_url: a Standard MIDI File (type 1), one track per part (drums on channel 10, General MIDI), the tempo map, the key and a marker per section. The notes are the ones the render plays.".into(),
@@ -1743,7 +1743,7 @@ impl Tools {
                 "needs": "Node 22+, ffmpeg and Google Chrome on your machine; the script steps the page's fake clock frame by frame, renders the audio with beatscript and muxes them",
                 "outputs": ["beatscript-demo.mp4 (45-60 s, H.264 CRF 20, AAC 192k, 1920x1080, faststart)", "btw-hero-loop.mp4 and .webm (10-15 s, silent, the drop)", "btw-poster.png"],
             })),
-            "note": "record_url_manual_clock has no audio and no wall clock: it only moves when window.__btw.setTime is called. audio_url is the offline render of the same program (notes and sounds, not control lines such as filter sweeps).",
+            "note": "record_url_manual_clock has no audio and no wall clock: it only moves when window.__btw.setTime is called. audio_url is the offline render of the same program, which plays it as the browser's engine does (control lines too).",
         })))
     }
 

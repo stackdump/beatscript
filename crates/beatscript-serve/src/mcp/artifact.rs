@@ -245,7 +245,7 @@ impl Page {
             Some(b) => (
                 String::new(),
                 format!("<audio controls preload=\"metadata\" src=\"data:audio/ogg;base64,{}\"></audio>", base64::engine::general_purpose::STANDARD.encode(b)),
-                "The audio is the site's offline render of this program (Ogg Opus), carried in the page: nothing is loaded. It plays the notes and sounds, not the control lines, so it can sound plainer than the editor. Sound starts only when you press Play. A browser without Ogg Opus (older Safari) can play the program on beatscript.app.".to_string(),
+                "The audio is the site's offline render of this program (Ogg Opus), carried in the page: nothing is loaded. It plays the program as the editor's engine does, control lines too. Sound starts only when you press Play. A browser without Ogg Opus (older Safari) can play the program on beatscript.app.".to_string(),
             ),
         };
         format!(

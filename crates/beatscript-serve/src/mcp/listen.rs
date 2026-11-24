@@ -79,8 +79,9 @@ key or tempo says so in `notes`, in check's words; and the answer gains `expande
 cid, example; optionally `section` (listen to that section only) and `bars` (at most this many bars of the window). \
 Nothing is stored and no sign-in is needed. At most {per_hour} new listens an hour per caller; the same program, section \
 and bars again is answered from the cache. Programs are at most {max_prog} bytes; the render covers at most {MAX_BARS} \
-bars from the start. Like render, the offline engine plays the notes, the mixer and insert moves it has ops for and the \
-`macro` lines (the DJ macro catalogue: see the macros tool); `notes` names the control lines it leaves out. A program with \
+bars from the start. Like render, the offline engine plays the program as the browser's engine does (its control lines too: \
+the mixer, inserts and their ramps, the vocoder, the Wheel, moves, kit= and sound=) and the `macro` lines (the DJ macro \
+catalogue: see the macros tool); `notes` names any control line it leaves out. A program with \
 a macro line gains `macros`: each call in the window, `at_bar` (the bar the engine starts it on, as the time words count), \
 and `played`, with `refused` (the engine's reason, also a warning) when it was not. \
 The mix, to polish it by ear: each measured part and the master have `bands` (dB in sub 20-60 Hz, low 60-250, low_mid 250-500, \
