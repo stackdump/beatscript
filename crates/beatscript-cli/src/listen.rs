@@ -1581,25 +1581,27 @@ mod tests {
     /// The mix of hand-dubstep-140-v4 (the example the polish page works through), as numbers taken 2026-11-24: sections, two
     /// decks of several parts (each part measured on its own pass), the kick and the wobble bass sharing deck A and the sub in
     /// the drops, a true peak at the ceiling with the loudness under the target. Its control lines are played by the render
-    /// as it was then: a change to how the render plays them moves these numbers, and is a reason to re-take them.
+    /// as it was then: a change to how the render plays them moves these numbers, and is a reason to re-take them. Re-taken
+    /// at render r3 (its control lines as the page plays them: the Wheel, the reverb as each strip's wet): the drop's true peak
+    /// -1.8 -> -0.8 dB, A.bass's sub band -19.7 -> -21.1 dB, the rest within a few tenths.
     #[test]
     fn mix_golden_numbers_of_hand_dubstep_v4() {
         let v = listen(DUBSTEP_V4, &ListenOptions::default()).unwrap_or_else(|e| panic!("{e:?}"));
-        near(&v, "master/lufs", -15.6, 0.5);
-        near(&v, "master/true_peak_db", -0.9, 0.5);
-        near(&v, "master/lra", 10.7, 1.5);
+        near(&v, "master/lufs", -15.8, 0.5);
+        near(&v, "master/true_peak_db", -0.8, 0.5);
+        near(&v, "master/lra", 10.9, 1.5);
         near(&v, "master/short_term_max_lufs", -12.2, 0.5);
-        for (band, want) in [("sub", -27.8), ("low", -22.0), ("low_mid", -24.1), ("mid", -25.7), ("high_mid", -35.3), ("high", -44.1)] {
+        for (band, want) in [("sub", -27.8), ("low", -22.0), ("low_mid", -24.2), ("mid", -25.8), ("high_mid", -35.5), ("high", -44.3)] {
             near(&v, &format!("master/bands/{band}"), want, 1.5);
         }
-        near(&v, "master/centroid_hz", 381.0, 40.0);
+        near(&v, "master/centroid_hz", 377.0, 40.0);
         let bass = part(&v, "A", "bass");
-        near(bass, "bands/sub", -19.7, 1.5);
+        near(bass, "bands/sub", -21.1, 1.5);
         near(bass, "centroid_hz", 76.0, 10.0);
-        near(part(&v, "A", "hihat"), "centroid_hz", 8737.0, 150.0);
-        near(part(&v, "B", "melody"), "centroid_hz", 531.0, 50.0);
+        near(part(&v, "A", "hihat"), "centroid_hz", 8729.0, 150.0);
+        near(part(&v, "B", "melody"), "centroid_hz", 541.0, 50.0);
         let drop = v.get("sections").and_then(JsonValue::as_array).and_then(|a| a.iter().find(|s| s.get("name").and_then(JsonValue::as_str) == Some("drop"))).cloned().expect("drop");
-        near(&drop, "true_peak_db", -1.8, 0.5);
+        near(&drop, "true_peak_db", -0.8, 0.5);
         near(&drop, "bands/sub", -23.5, 1.5);
         let first = at(&v, "clashes/0").expect("a clash");
         assert_eq!(first.get("parts").map(JsonValue::canonical_js).as_deref(), Some(r#"["A.bass","A.kick"]"#), "{}", v.canonical_js());
