@@ -48,8 +48,11 @@ dist = path.resolve(dist);
 const pkg = JSON.parse(fs.readFileSync(path.join(dist, 'package.json'), 'utf8'));
 const CDN = `https://cdn.jsdelivr.net/npm/${pkg.name}@${pkg.version}/`;
 
-// an artifact's policy, with 'wasm-unsafe-eval' (the artifact probe found it allowed; without it no wasm runs)
+// an artifact's policy, with 'wasm-unsafe-eval' (the artifact probe found it allowed; without it no wasm runs). The package's
+// own page is held to it as it is (the element's styles are a constructed stylesheet: style-src 'self' shows them); the
+// artifact tool's page has its own <style> as the track page does, which an artifact allows, so its policy says so.
 const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' cdn.jsdelivr.net; connect-src 'self'";
+const ARTIFACT_CSP = `${CSP}; style-src 'self' 'unsafe-inline'`;
 const TYPES = { '.js': 'text/javascript', '.html': 'text/html; charset=utf-8', '.json': 'application/json', '.ts': 'text/plain' };
 // what the test page sees before any of its own scripts: blocked requests, and any storage or cookie use
 const WATCH = `window.__violations = []; document.addEventListener('securitypolicyviolation', (e) => window.__violations.push({ directive: e.violatedDirective, blocked: e.blockedURI }));
@@ -94,7 +97,7 @@ const artifact = pagePath ? fs.readFileSync(pagePath, 'utf8') : null;
 const site = await serve((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname === '/favicon.ico') { res.writeHead(204); res.end(); return; }
-  if (u.pathname === '/artifact.html' && artifact) { res.writeHead(200, { 'Content-Type': TYPES['.html'], 'Content-Security-Policy': CSP }); res.end(artifact); return; }
+  if (u.pathname === '/artifact.html' && artifact) { res.writeHead(200, { 'Content-Type': TYPES['.html'], 'Content-Security-Policy': ARTIFACT_CSP }); res.end(artifact); return; }
   file(res, path.join(dist, decodeURIComponent(u.pathname)), u.pathname.endsWith('.html') ? { 'Content-Security-Policy': CSP } : {});
 });
 
