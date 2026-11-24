@@ -2078,7 +2078,9 @@ impl<'a> Compiler<'a> {
         // an `inst=` does not re-roll which hits drop. A part with no chance keeps the text it always hashed (the params
         // too), so a `markov` part's notes, and the CIDs of every old program, do not move.
         // (of the part written out: sugar is the notes of its longhand, seeds and all; with no sugar it is the canonical text)
-        let seed_text = if crate::chance::has_chance(&part.pattern) { print::part_pattern(part) } else { print::part(part) };
+        // A generator's `shift=` (what `~ lead up 2` writes) is not in the text a part with no chance hashes: a `markov(...)`
+        // with no seed of its own plays the same tune moved by degrees of the key, not another tune.
+        let seed_text = if crate::chance::has_chance(&part.pattern) { print::part_pattern(part) } else { print::part(&pattern::unshifted(part)) };
         let seed = seed.unwrap_or_else(|| fnv(&format!("{}:{}", deck.name(), seed_text)));
         let base_vel = vel.map_or(100, |(a, b)| (a + b) / 2);
         let before = self.diags.len();

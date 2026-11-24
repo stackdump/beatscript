@@ -717,9 +717,21 @@ fn roman_moved(r: &crate::scale::Roman, key: Key, f: &mut dyn FnMut(i64) -> i64)
 }
 
 /// A generator whose notes are picked as it plays (`markov(...)`, `arp(...)`): pitched, but with no notes in the text for
-/// an operator to move by scale degrees. `oct` moves it whole ([`octave_call`]).
+/// an operator to move. `oct` moves it whole ([`octave_call`]) and `up`/`down` by degrees of the key ([`shift_call`]);
+/// either may have wrapped it in `octave(...)` already, and it is still the generator.
 fn generator_call(c: &Call) -> bool {
-    matches!(c.name.text.as_str(), "markov" | "arp")
+    matches!(c.name.text.as_str(), "markov" | "arp") || octave_of_generator(c).is_some()
+}
+
+/// `octave(markov(...), 1)`: the generator inside and the octaves (as `oct` writes it).
+fn octave_of_generator(c: &Call) -> Option<(&Call, i64)> {
+    if c.name.text != "octave" {
+        return None;
+    }
+    match c.args.as_slice() {
+        [Arg::Call(inner), Arg::Num(n)] if n.value.fract() == 0.0 && generator_call(inner) => Some((inner, n.value as i64)),
+        _ => None,
+    }
 }
 
 /// The steps hold a generator ([`generator_call`]) at any depth the operators reach.
@@ -734,23 +746,76 @@ fn has_generator(terms: &[Term]) -> bool {
 
 /// The name of the first generator in the steps.
 fn generator_name(terms: &[Term]) -> Option<String> {
+    fn name(c: &Call) -> String {
+        octave_of_generator(c).map_or_else(|| c.name.text.clone(), |(inner, _)| name(inner))
+    }
     terms.iter().find_map(|t| match &t.atom {
         Atom::Group(seqs) => seqs.iter().find_map(|s| generator_name(&s.terms)),
         Atom::Alt(ts) => generator_name(ts),
-        Atom::Call(c) if generator_call(c) => Some(c.name.text.clone()),
+        Atom::Call(c) if generator_call(c) => Some(name(c)),
         _ => None,
     })
 }
 
-/// A term with each generator in it played `k` octaves on: `octave(markov(0.3, 1303), 1)`.
+fn int_num(v: i64, span: Span) -> crate::ast::Num {
+    crate::ast::Num { value: v as f64, int: true, span, canon: None }
+}
+
+/// A term with each generator in it played `k` octaves on: `octave(markov(0.3, 1303), 1)`; one already played some
+/// octaves on is played `k` more (`octave(markov(...), 2)`), and none (the bare generator) when they come to 0.
 fn octave_call(t: &Term, k: i64) -> Term {
     let atom = match &t.atom {
         Atom::Call(c) if generator_call(c) && k != 0 => {
-            let n = crate::ast::Num { value: k as f64, int: true, span: c.span, canon: None };
-            Atom::Call(Call { name: Word { text: "octave".to_string(), span: c.span }, args: vec![Arg::Call(Box::new(c.clone())), Arg::Num(n)], span: c.span })
+            let (inner, had) = octave_of_generator(c).map_or((c, 0), |(inner, n)| (inner, n));
+            let n = (had + k).clamp(-48, 48);
+            if n == 0 {
+                Atom::Call(inner.clone())
+            } else {
+                Atom::Call(Call { name: Word { text: "octave".to_string(), span: c.span }, args: vec![Arg::Call(Box::new(inner.clone())), Arg::Num(int_num(n, c.span))], span: c.span })
+            }
         }
         Atom::Group(seqs) => Atom::Group(seqs.iter().map(|s| Seq { span: s.span, terms: s.terms.iter().map(|x| octave_call(x, k)).collect() }).collect()),
         Atom::Alt(ts) => Atom::Alt(ts.iter().map(|x| octave_call(x, k)).collect()),
+        a => a.clone(),
+    };
+    Term { atom, ..t.clone() }
+}
+
+/// A generator with its notes moved `k` more degrees of the key it plays in: `markov(0.3, 1303)` up 2 is
+/// `markov(0.3, 1303, shift=2)`, and then down 2 is `markov(0.3, 1303)` again. Inside an `octave(...)` the generator moves.
+fn shifted_generator(c: &Call, k: i64) -> Call {
+    if let Some((inner, n)) = octave_of_generator(c) {
+        return Call { args: vec![Arg::Call(Box::new(shifted_generator(inner, k))), Arg::Num(int_num(n, c.span))], ..c.clone() };
+    }
+    let mut args = c.args.clone();
+    let at = args.iter().position(|a| matches!(a, Arg::Named(n, _) if n.text == "shift"));
+    let had = match at.map(|i| &args[i]) {
+        Some(Arg::Named(_, v)) => match &**v {
+            Arg::Num(n) if n.value.fract() == 0.0 => n.value as i64,
+            // a shift= that does not read is left for check to say so
+            _ => return c.clone(),
+        },
+        _ => 0,
+    };
+    let to = (had + k).clamp(-crate::pattern::MAX_SHIFT, crate::pattern::MAX_SHIFT);
+    let arg = Arg::Named(Word { text: "shift".to_string(), span: c.span }, Box::new(Arg::Num(int_num(to, c.span))));
+    match (at, to) {
+        (Some(i), 0) => {
+            args.remove(i);
+        }
+        (Some(i), _) => args[i] = arg,
+        (None, 0) => {}
+        (None, _) => args.push(arg),
+    }
+    Call { args, ..c.clone() }
+}
+
+/// A term with each generator in it moved `k` degrees of the key ([`shifted_generator`]), into its groups and alternations.
+fn shift_call(t: &Term, k: i64) -> Term {
+    let atom = match &t.atom {
+        Atom::Call(c) if generator_call(c) && k != 0 => Atom::Call(shifted_generator(c, k)),
+        Atom::Group(seqs) => Atom::Group(seqs.iter().map(|s| Seq { span: s.span, terms: s.terms.iter().map(|x| shift_call(x, k)).collect() }).collect()),
+        Atom::Alt(ts) => Atom::Alt(ts.iter().map(|x| shift_call(x, k)).collect()),
         a => a.clone(),
     };
     Term { atom, ..t.clone() }
@@ -1168,7 +1233,8 @@ fn apply_op(op: &MutOp, seq: &Seq, ctx: &Ctx, rng: &mut Rng) -> Seq {
         }
         "up" | "down" => {
             let k = if op.name.text == "up" { a as i64 } else { -(a as i64) };
-            t = t.iter().map(|x| map_pitches(x, key, &mut |p| p + k)).collect();
+            // notes move along the scale in the text; a generator is given `shift=`, so the notes it picks move the same way
+            t = t.iter().map(|x| shift_call(&map_pitches(x, key, &mut |p| p + k), k)).collect();
         }
         "invert" => {
             if let Some(axis) = first_pos(&t, key) {
@@ -1469,12 +1535,13 @@ fn check_op(op: &MutOp, at: (usize, usize, usize), under_jux: bool, hits: &[Stri
                 let then = if under_jux { "`jux` gives it no right copy" } else { "it does nothing there" };
                 c.diags.push(Diagnostic::warning(op.span, format!("`{}` moves pitches, and `{h}` is a drum pattern: {then}", op.name.text)));
                 c.skip.insert(at);
-            } else if op.name.text != "oct" && has_generator(&pats[h].terms) {
-                // a generator picks its notes as it plays: there are none in the text to move by a degree or a voicing
+            } else if !matches!(op.name.text.as_str(), "oct" | "up" | "down") && has_generator(&pats[h].terms) {
+                // a generator picks its notes as it plays: `oct` and `up`/`down` move them whole (octave(...), shift=), but
+                // there are none in the text to turn over, drift or voice
                 let name = generator_name(&pats[h].terms).unwrap_or_default();
                 c.diags.push(
                     Diagnostic::warning(op.span, format!("`{h}` plays `{name}(...)`, whose notes are picked as it plays: `{}` leaves them as they are", op.name.text))
-                        .help("`oct 1` moves a generator by whole octaves; to move it by scale degrees, write its notes out"),
+                        .help("`up 2`, `down 2` and `oct 1` move a generator's notes (by degrees of the key, by octaves); for the rest, write its notes out"),
                 );
             } else if let (true, Some(o)) = (has_chord_call(&pats[h].terms), octaves.get(h)) {
                 // a chord call plays in the octave of the part that reads it: one let, one voicing

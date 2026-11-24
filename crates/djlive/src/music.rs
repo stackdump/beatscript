@@ -125,6 +125,17 @@ impl Key {
         midi(self.tonic, oct) + iv[i % iv.len()] as i32 + 12 * (i / iv.len()) as i32
     }
 
+    /// MIDI note `m` moved `k` degrees along this key's scale, so the result is a tone of the key: a note off the scale
+    /// snaps down to a scale tone first (as the arrange pitch operators do). `k` = the scale's length is an octave.
+    pub fn shift_degrees(self, m: i32, k: i64) -> i32 {
+        let iv = self.intervals();
+        let n = iv.len() as i64;
+        let rel = i64::from(m - i32::from(self.tonic));
+        let (oct, pc) = (rel.div_euclid(12), rel.rem_euclid(12));
+        let pos = oct * n + iv.iter().rposition(|x| *x <= pc).unwrap_or(0) as i64 + k;
+        (i64::from(self.tonic) + pos.div_euclid(n) * 12 + iv[pos.rem_euclid(n) as usize]) as i32
+    }
+
     /// The name as it is written back: `am`, `c`, `d:dorian`.
     pub fn text(self) -> String {
         const NAMES: [&str; 12] = ["c", "c#", "d", "eb", "e", "f", "f#", "g", "ab", "a", "bb", "b"];

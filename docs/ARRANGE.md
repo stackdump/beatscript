@@ -223,9 +223,12 @@ scale snaps down to a scale tone first.
 Notes (`c3`), plain degrees (`1 3 5`), written degrees (`deg(b3 5')`) and Roman numerals all move. A numeral that is the
 key's own triad on its degree becomes the key's own triad on the new one (in A minor, `<i i iv v>` up 2 is
 `<III III VI VII>`); any other keeps its accidental, case and quality (`V7` up 1 is `VI7`); a numeral has no octave, so `oct`
-leaves it. A generator (`markov(...)`, `arp(...)`) is pitched too, but picks its notes as it plays: `oct n` plays it `n`
-octaves on (`octave(markov(0.3, 1303), 1)`), and the other pitch operators leave it as it is, which `check` says. Chord
-symbols (`am7`) do not move.
+leaves it. A generator (`markov(...)`, `arp(...)`) is pitched too, but picks its notes as it plays: `up n` / `down n` move
+those notes by `n` degrees of the key, written as `shift=` on the call (`markov(0.3, 1303)` up 2 is
+`markov(0.3, 1303, shift=2)`; in A minor `arp(am, up, 8)` up 1 plays b d f, the key's own triad on its second degree, not
+a semitone higher), and a `shift=` that comes to 0 is taken off again. `oct n` plays it `n` octaves on
+(`octave(markov(0.3, 1303), 1)`). `invert` and `drift` leave it as it is, which `check` says. Chord symbols (`am7`) do not
+move.
 
 ### Feel
 

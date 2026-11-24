@@ -532,6 +532,83 @@ fn shift_notes(evs: Vec<Ev>, by: i32, ctx: &Ctx) -> Vec<Ev> {
         .collect()
 }
 
+/// The most scale degrees `shift=` moves a generator: three octaves of a seven-note scale.
+pub const MAX_SHIFT: i64 = 21;
+
+/// `markov(..., shift=2)`, `arp(..., shift=-1)`: how many degrees of the key the generator's notes are moved (0 when it is
+/// not written). It is what `~ lead up 2` writes on a generator (mutate.rs). None: it is written but is not a whole number
+/// in range (said).
+fn shift_arg(ctx: &mut Ctx, args: &Args) -> Option<i64> {
+    let Some((_, v)) = args.named.iter().find(|(n, _)| n.text == "shift") else { return Some(0) };
+    let ok = matches!(v, Arg::Num(n) if n.value.fract() == 0.0 && n.value.abs() <= MAX_SHIFT as f64);
+    if !ok {
+        ctx.err(
+            Diagnostic::error(v.span(), format!("shift= is a whole number of scale degrees from -{MAX_SHIFT} to {MAX_SHIFT}"))
+                .found(v.span().text(ctx.src).to_string())
+                .help("markov(0.3, 1303, shift=2): its notes two degrees of the key up"),
+        );
+        return None;
+    }
+    match v {
+        Arg::Num(n) => Some(n.value as i64),
+        _ => Some(0),
+    }
+}
+
+/// The part with every generator's `shift=` taken out: the text its implicit seed is hashed from (compile.rs), so that moving
+/// a `markov(...)` by degrees does not pick it another tune. A part with no `shift=` is itself.
+pub(crate) fn unshifted(part: &Part) -> std::borrow::Cow<'_, Part> {
+    fn call(c: &mut Call) -> bool {
+        let n = c.args.len();
+        if GENERATORS.contains(&c.name.text.as_str()) {
+            c.args.retain(|a| !matches!(a, Arg::Named(w, _) if w.text == "shift"));
+        }
+        let mut changed = c.args.len() != n;
+        for a in &mut c.args {
+            changed |= arg(a);
+        }
+        changed
+    }
+    fn arg(a: &mut Arg) -> bool {
+        match a {
+            Arg::Call(c) => call(c),
+            Arg::Pat(s) => seq(s),
+            Arg::Named(_, v) => arg(v),
+            _ => false,
+        }
+    }
+    fn term(t: &mut Term) -> bool {
+        match &mut t.atom {
+            Atom::Group(ss) | Atom::Deg(ss) => ss.iter_mut().fold(false, |c, s| seq(s) | c),
+            Atom::Alt(ts) => ts.iter_mut().fold(false, |c, t| term(t) | c),
+            Atom::Call(c) => call(c),
+            _ => false,
+        }
+    }
+    fn seq(s: &mut Seq) -> bool {
+        s.terms.iter_mut().fold(false, |c, t| term(t) | c)
+    }
+    let mut p = part.clone();
+    if seq(&mut p.pattern) {
+        std::borrow::Cow::Owned(p)
+    } else {
+        std::borrow::Cow::Borrowed(part)
+    }
+}
+
+/// The notes moved `k` degrees along `key`'s scale (a note off the scale snaps down to one first).
+fn shift_degrees(evs: Vec<Ev>, key: Key, k: i64) -> Vec<Ev> {
+    if k == 0 {
+        return evs;
+    }
+    evs.into_iter()
+        .map(|e| match e.sound {
+            Sound::Note(n) => Ev { sound: Sound::Note(key.shift_degrees(n, k)), ..e },
+            Sound::Hit => e,
+        })
+        .collect()
+}
+
 fn eval_transform(c: &Call, cycle: i64, ctx: &mut Ctx) -> Vec<Ev> {
     let args = Args::of(c);
     let n_pos = args.pos.len();
@@ -688,6 +765,7 @@ fn eval_call(c: &Call, cycle: i64, ctx: &mut Ctx) -> Vec<Ev> {
                 ctx.err(Diagnostic::error(first.span(), "a density is 0 to 1").found(first.span().text(ctx.src).to_string()));
                 return Vec::new();
             }
+            let Some(shift) = shift_arg(ctx, &args) else { return Vec::new() };
             let seed = match rest.get(1) {
                 Some(a) => int_arg(ctx, a, "the seed", 0, 4_294_967_295).unwrap_or(0) as f64,
                 None => args.named_num("seed").unwrap_or(f64::from(ctx.seed)),
@@ -712,7 +790,7 @@ fn eval_call(c: &Call, cycle: i64, ctx: &mut Ctx) -> Vec<Ev> {
                 })
                 .collect();
             out.sort_by(|a, b| a.at.partial_cmp(&b.at).unwrap());
-            out
+            shift_degrees(out, key, shift)
         }
         "arp" => {
             // arp(chord) | arp(chord, mode) | arp(chord, mode, n)
@@ -720,6 +798,7 @@ fn eval_call(c: &Call, cycle: i64, ctx: &mut Ctx) -> Vec<Ev> {
                 return Vec::new();
             }
             let Some(chord) = chord_arg(ctx, args.pos[0]) else { return Vec::new() };
+            let Some(shift) = shift_arg(ctx, &args) else { return Vec::new() };
             let mode = match args.pos.get(1) {
                 Some(Arg::Word(w)) if matches!(w.text.as_str(), "up" | "down" | "updown") => w.text.clone(),
                 Some(other) => {
@@ -742,7 +821,8 @@ fn eval_call(c: &Call, cycle: i64, ctx: &mut Ctx) -> Vec<Ev> {
                 let back: Vec<i32> = notes[1..notes.len() - 1].iter().rev().copied().collect();
                 notes.extend(back);
             }
-            (0..n).map(|i| Ev { at: i as f64 / n as f64, sound: Sound::Note(notes[i as usize % notes.len()]), vel: None, accent: false, slide: false, marks: Marks::default(), sid: NO_SPAN }).collect()
+            let evs = (0..n).map(|i| Ev { at: i as f64 / n as f64, sound: Sound::Note(notes[i as usize % notes.len()]), vel: None, accent: false, slide: false, marks: Marks::default(), sid: NO_SPAN }).collect();
+            shift_degrees(evs, ctx.key, shift)
         }
         "chord" => {
             if !arity(c, ctx, "chord(am7) or chord(am7, 3): chord, octave", 1, 2, args.pos.len()) {

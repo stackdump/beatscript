@@ -80,7 +80,7 @@ atom        = "x"                                             (* a hit *)
             | choose                                          (* choose [a b c] weights 3 1 1 *)
             | call
             | NAME ;                                          (* a let pattern's name *)
-call        = NAME "(" [ arg { "," arg } ] ")" ;              (* e(5,8)  markov(0.6)  arp(am7, up)  chord(am)  maybe(p, 0.5) *)
+call        = NAME "(" [ arg { "," arg } ] ")" ;              (* e(5,8)  markov(0.6, shift=2)  arp(am7, up)  chord(am)  maybe(p, 0.5) *)
 arg         = arith | KEY | CHORD | ROMAN [ "/" INT ] | NAME | NAME "=" ( arith | WORD ) | "[" pattern "]" | degrees | call | PARAM ;
                                                               (* a chord of chord() and arp(): a symbol (am7) or a numeral (V7  bVII  V7/7), the numeral read in the key in force *)
 

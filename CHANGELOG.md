@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### `up` and `down` keep the key on markov and arp lines (2026-11-24)
+
+- In an `arrange { }`, `up n` / `down n` on a let of `markov(...)` or `arp(...)` now move the notes it picks by `n` degrees
+  of the key's scale, written on the call as `shift=n` (`markov(0.3, 1303)` up 2 is `markov(0.3, 1303, shift=2)`; in
+  A minor `arp(am, up, 8)` up 1 plays b d f). Before, they did nothing and `check` warned. A `shift=` that comes back to 0
+  is taken off, and the operators reach a generator `oct` already wrapped in `octave(...)`. Other lines move as before.
+- `markov` and `arp` take `shift=n` (-21 to 21) written by hand too. A note off the scale (an arp chord's raised seventh)
+  snaps down to a scale tone first, as the arrange pitch operators do with notes. Taste call: the alternative was a
+  semitone transpose that keeps the key's name; scale degrees keep every note in the key instead.
+- The implicit seed of a part with no chance leaves `shift=` out, so an unseeded `markov(...)` plays the same tune, moved.
+- `oct` on a generator already played some octaves on adds to them (`octave(markov(...), 2)`) instead of doing nothing.
+
 ### Arrange mutations and evolve work where they are written (2026-11-23)
 
 - A mutation that takes a pattern down to one step (`decay` or `thin` of a one-`[...]` let, `half` of `x ~`) no longer
