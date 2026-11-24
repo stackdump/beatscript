@@ -31,22 +31,22 @@
   "declared_bpm": 132,
   "declared_key": "am",
   "key": "A minor",
-  "key_confidence": 0.799,
+  "key_confidence": 0.806,
   "key_match": "same",
   "tonal": false
  },
  "master": {
   "bands": {
-   "high": -69.9,
-   "high_mid": -34.8,
+   "high": -70.1,
+   "high_mid": -34.9,
    "low": -15.3,
    "low_mid": -24.6,
-   "mid": -25.7,
+   "mid": -25.6,
    "sub": -18.8
   },
   "centroid_hz": 180,
-  "clipped_ms": 40.522,
-  "clipped_samples": 1787,
+  "clipped_ms": 40.975,
+  "clipped_samples": 1807,
   "correlation": 0.99,
   "crest_db": 17.6,
   "lra": 0.7,
@@ -132,11 +132,11 @@
  "sections": [
   {
    "bands": {
-    "high": -69.9,
-    "high_mid": -34.8,
+    "high": -70.1,
+    "high_mid": -34.9,
     "low": -15.3,
     "low_mid": -24.6,
-    "mid": -25.7,
+    "mid": -25.6,
     "sub": -18.8
    },
    "bars": 16,
@@ -164,7 +164,7 @@
   "loudness:high"
  ],
  "warnings": [
-  "the master clips: 1787 samples over full scale",
+  "the master clips: 1807 samples over full scale",
   "the master's true peak is 4.7 dBTP, over the streaming ceiling of -1 dBTP: its peaks stand 16.9 dB over its loudness, so the level that meets the ceiling (`master: level 0.52`) would leave it 3.9 LU under the target: round the peaks first with `master: drive` or a lower `vel=` on the loudest hits (BeatScript has no limiter), then set the level",
   "the master is -12.2 LUFS, 1.8 LU over the streaming target of -14 LUFS, which turns it down by as much: once the peaks are rounded, `master: level 0.81`"
  ],

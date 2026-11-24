@@ -10,10 +10,35 @@
     ],
     [
      49,
-     73
+     72
     ]
    ],
-   "gap_db": 8.5,
+   "gap_db": 9.3,
+   "hz": "60-250 Hz",
+   "overlap": 1,
+   "parts": [
+    "A.bass",
+    "B.harmony"
+   ],
+   "sections": [
+    "drive",
+    "climax",
+    "lift"
+   ]
+  },
+  {
+   "band": "low",
+   "bars": [
+    [
+     17,
+     32
+    ],
+    [
+     49,
+     72
+    ]
+   ],
+   "gap_db": 8.6,
    "hz": "60-250 Hz",
    "overlap": 1,
    "parts": [
@@ -22,33 +47,6 @@
    ],
    "sections": [
     "drive",
-    "climax",
-    "lift",
-    "outro"
-   ]
-  },
-  {
-   "band": "low",
-   "bars": [
-    [
-     17,
-     33
-    ],
-    [
-     49,
-     72
-    ]
-   ],
-   "gap_db": 9.1,
-   "hz": "60-250 Hz",
-   "overlap": 0.99,
-   "parts": [
-    "A.bass",
-    "B.harmony"
-   ],
-   "sections": [
-    "drive",
-    "breakdown",
     "climax",
     "lift"
    ]
@@ -95,7 +93,7 @@
    ],
    "gap_db": 4.3,
    "hz": "500-2k Hz",
-   "overlap": 0.71,
+   "overlap": 0.75,
    "parts": [
     "B.melody",
     "B.arp"
@@ -106,27 +104,6 @@
     "breakdown",
     "climax",
     "lift"
-   ]
-  },
-  {
-   "band": "low",
-   "bars": [
-    [
-     49,
-     73
-    ]
-   ],
-   "gap_db": 7.8,
-   "hz": "60-250 Hz",
-   "overlap": 0.89,
-   "parts": [
-    "A.melody",
-    "A.snare"
-   ],
-   "sections": [
-    "climax",
-    "lift",
-    "outro"
    ]
   },
   {
@@ -158,7 +135,7 @@
      72
     ]
    ],
-   "gap_db": 9.4,
+   "gap_db": 9.2,
    "hz": "60-250 Hz",
    "overlap": 0.95,
    "parts": [
@@ -171,24 +148,48 @@
    ]
   },
   {
+   "band": "low",
+   "bars": [
+    [
+     49,
+     72
+    ]
+   ],
+   "gap_db": 8.1,
+   "hz": "60-250 Hz",
+   "overlap": 0.89,
+   "parts": [
+    "A.melody",
+    "A.snare"
+   ],
+   "sections": [
+    "climax",
+    "lift"
+   ]
+  },
+  {
    "band": "mid",
    "bars": [
+    [
+     51,
+     52
+    ],
     [
      54,
      57
     ],
     [
-     61,
+     59,
      63
     ],
     [
-     66,
+     65,
      72
     ]
    ],
-   "gap_db": 1.7,
+   "gap_db": 1.5,
    "hz": "500-2k Hz",
-   "overlap": 0.58,
+   "overlap": 0.62,
    "parts": [
     "A.clap",
     "B.arp"
@@ -202,34 +203,43 @@
    "band": "mid",
    "bars": [
     [
-     55,
-     57
+     49,
+     51
     ],
     [
-     59,
+     53,
      61
     ],
     [
      63,
      64
+    ],
+    [
+     66,
+     67
+    ],
+    [
+     70,
+     71
     ]
    ],
-   "gap_db": 2.9,
+   "gap_db": 2.3,
    "hz": "500-2k Hz",
-   "overlap": 0.63,
+   "overlap": 0.62,
    "parts": [
     "B.melody",
     "A.clap"
    ],
    "sections": [
-    "climax"
+    "climax",
+    "lift"
    ]
   }
  ],
  "decks": {
   "A": {
    "has_notes": true,
-   "lufs": -14.8,
+   "lufs": -16.9,
    "parts": [
     "kick",
     "snare",
@@ -238,478 +248,478 @@
     "melody",
     "clap"
    ],
-   "peak_db": -4.1,
-   "rms_db": -17.2,
+   "peak_db": -5.3,
+   "rms_db": -19.2,
    "silent": false
   },
   "B": {
    "has_notes": true,
-   "lufs": -15.5,
+   "lufs": -17.7,
    "parts": [
     "arp",
     "melody",
     "harmony"
    ],
-   "peak_db": -6,
-   "rms_db": -18.1,
+   "peak_db": -6.7,
+   "rms_db": -20.4,
    "silent": false
   }
  },
  "detected": {
   "bpm": 130,
-  "bpm_confidence": 3.507,
+  "bpm_confidence": 3.553,
   "bpm_match": "same",
   "declared_bpm": 130,
   "declared_key": "d:phrygian",
   "key": "D minor",
-  "key_confidence": 0.047,
+  "key_confidence": 0.036,
   "key_match": "same",
   "tonal": false
  },
  "master": {
   "bands": {
-   "high": -36.7,
-   "high_mid": -28.7,
-   "low": -20.5,
-   "low_mid": -24.9,
-   "mid": -23.5,
-   "sub": -29.6
+   "high": -36.8,
+   "high_mid": -29.2,
+   "low": -20.6,
+   "low_mid": -25.4,
+   "mid": -24.2,
+   "sub": -29.3
   },
-  "centroid_hz": 678,
+  "centroid_hz": 656,
   "clipped_ms": 0,
   "clipped_samples": 0,
-  "correlation": 0.82,
-  "crest_db": 16.9,
-  "lra": 5.3,
-  "lufs": -14.5,
-  "peak_db": -0.3,
-  "plr_db": 14.3,
-  "rms_db": -17.2,
-  "short_term_max_lufs": -12.3,
-  "true_peak_db": -0.2,
-  "width": 0.09
+  "correlation": 0.88,
+  "crest_db": 16.8,
+  "lra": 6.7,
+  "lufs": -14.9,
+  "peak_db": -0.7,
+  "plr_db": 14.2,
+  "rms_db": -17.5,
+  "short_term_max_lufs": -12.2,
+  "true_peak_db": -0.6,
+  "width": 0.06
  },
  "parts": [
   {
    "bands": {
-    "high": -88.8,
-    "high_mid": -76.6,
-    "low": -18.5,
-    "low_mid": -32,
-    "mid": -51.1,
-    "sub": -22.4
+    "high": -89.2,
+    "high_mid": -76.8,
+    "low": -20.1,
+    "low_mid": -33.6,
+    "mid": -52.5,
+    "sub": -24.3
    },
-   "centroid_hz": 108,
+   "centroid_hz": 109,
    "correlation": 1,
-   "crest_db": 12.8,
+   "crest_db": 13.1,
    "deck": "A",
    "has_notes": true,
-   "lufs": -14.7,
+   "lufs": -16.3,
    "measured": true,
    "part": "kick",
-   "peak_db": -4.1,
-   "rms_db": -16.9,
+   "peak_db": -5.4,
+   "rms_db": -18.6,
    "silent": false,
    "voice": "drums-breakbeat",
    "width": 0
   },
   {
    "bands": {
-    "high": -35,
-    "high_mid": -25.4,
-    "low": -23.3,
-    "low_mid": -44.9,
-    "mid": -33.7,
-    "sub": -51.8
+    "high": -37.2,
+    "high_mid": -27.5,
+    "low": -26,
+    "low_mid": -47,
+    "mid": -35.6,
+    "sub": -54
    },
-   "centroid_hz": 1678,
-   "correlation": 0.96,
-   "crest_db": 16.7,
+   "centroid_hz": 1795,
+   "correlation": 0.92,
+   "crest_db": 17.8,
    "deck": "A",
    "has_notes": true,
-   "lufs": -16.3,
+   "lufs": -18.7,
    "measured": true,
    "part": "snare",
-   "peak_db": -4.1,
-   "rms_db": -20.8,
+   "peak_db": -5.5,
+   "rms_db": -23.2,
    "silent": false,
    "voice": null,
-   "width": 0.02
+   "width": 0.04
   },
   {
    "bands": {
-    "high": -24.1,
-    "high_mid": -36.4,
+    "high": -25.9,
+    "high_mid": -38.2,
     "low": null,
     "low_mid": null,
-    "mid": -62.9,
+    "mid": -64.7,
     "sub": null
    },
-   "centroid_hz": 8734,
-   "correlation": 1,
-   "crest_db": 19.7,
+   "centroid_hz": 8732,
+   "correlation": 0.98,
+   "crest_db": 20.3,
    "deck": "A",
    "has_notes": true,
-   "lufs": -16.8,
+   "lufs": -18.7,
    "measured": true,
    "part": "hihat",
-   "peak_db": -4.1,
-   "rms_db": -23.8,
+   "peak_db": -5.4,
+   "rms_db": -25.6,
    "silent": false,
    "voice": null,
-   "width": 0.08
+   "width": 0.09
   },
   {
    "bands": {
-    "high": -54.4,
-    "high_mid": -41.1,
-    "low": -15,
-    "low_mid": -27.6,
-    "mid": -28.3,
-    "sub": -35.3
+    "high": -56,
+    "high_mid": -42.5,
+    "low": -16.8,
+    "low_mid": -29.2,
+    "mid": -29.8,
+    "sub": -36.9
    },
-   "centroid_hz": 139,
+   "centroid_hz": 142,
    "correlation": 0.99,
-   "crest_db": 8.2,
+   "crest_db": 8.5,
    "deck": "A",
    "has_notes": true,
-   "lufs": -13.7,
+   "lufs": -15.4,
    "measured": true,
    "part": "bass",
-   "peak_db": -6.3,
-   "rms_db": -14.5,
+   "peak_db": -7.8,
+   "rms_db": -16.3,
    "silent": false,
    "voice": "distorted-lead",
-   "width": 0
+   "width": 0.01
   },
   {
    "bands": {
     "high": null,
-    "high_mid": -84,
-    "low": -15,
-    "low_mid": -50.7,
-    "mid": -64.5,
-    "sub": -45.8
+    "high_mid": -85.6,
+    "low": -16.8,
+    "low_mid": -52.5,
+    "mid": -66.1,
+    "sub": -47.5
    },
-   "centroid_hz": 135,
+   "centroid_hz": 134,
    "correlation": 1,
-   "crest_db": 10.9,
+   "crest_db": 11.4,
    "deck": "A",
    "has_notes": true,
-   "lufs": -13.4,
+   "lufs": -15.2,
    "measured": true,
    "part": "melody",
-   "peak_db": -4.1,
-   "rms_db": -15,
+   "peak_db": -5.5,
+   "rms_db": -16.8,
    "silent": false,
    "voice": "subdrop",
    "width": 0
   },
   {
    "bands": {
-    "high": -37.9,
-    "high_mid": -25.5,
-    "low": -50.3,
-    "low_mid": -41.4,
-    "mid": -22.8,
-    "sub": -68.8
+    "high": -39.6,
+    "high_mid": -27,
+    "low": -52.1,
+    "low_mid": -43,
+    "mid": -24.3,
+    "sub": -70.6
    },
-   "centroid_hz": 2035,
-   "correlation": 0.85,
-   "crest_db": 16.7,
+   "centroid_hz": 2025,
+   "correlation": 0.77,
+   "crest_db": 16.9,
    "deck": "A",
    "has_notes": true,
-   "lufs": -16.2,
+   "lufs": -17.7,
    "measured": true,
    "part": "clap",
-   "peak_db": -4.1,
-   "rms_db": -20.8,
+   "peak_db": -5.4,
+   "rms_db": -22.3,
    "silent": false,
    "voice": null,
-   "width": 0.08
+   "width": 0.12
   },
   {
    "bands": {
-    "high": -35.8,
-    "high_mid": -28.8,
-    "low": -47.6,
-    "low_mid": -51.1,
-    "mid": -24.4,
-    "sub": -40.9
+    "high": -37.9,
+    "high_mid": -30.7,
+    "low": -50,
+    "low_mid": -53.2,
+    "mid": -26.3,
+    "sub": -43.4
    },
-   "centroid_hz": 1910,
-   "correlation": 0.87,
-   "crest_db": 15.1,
+   "centroid_hz": 1891,
+   "correlation": 0.8,
+   "crest_db": 16,
    "deck": "B",
    "has_notes": true,
-   "lufs": -18.6,
+   "lufs": -20.5,
    "measured": true,
    "part": "arp",
-   "peak_db": -6,
-   "rms_db": -21.1,
+   "peak_db": -7.1,
+   "rms_db": -23,
    "silent": false,
    "voice": "bright-pluck",
-   "width": 0.07
+   "width": 0.1
   },
   {
    "bands": {
     "high": null,
-    "high_mid": -45.3,
-    "low": -70.4,
-    "low_mid": -20.4,
-    "mid": -21.7,
-    "sub": -83.9
+    "high_mid": -47.7,
+    "low": -73,
+    "low_mid": -22.7,
+    "mid": -23.7,
+    "sub": -86.5
    },
-   "centroid_hz": 623,
-   "correlation": 0.87,
-   "crest_db": 12,
+   "centroid_hz": 631,
+   "correlation": 0.75,
+   "crest_db": 13.5,
    "deck": "B",
    "has_notes": true,
-   "lufs": -14.9,
+   "lufs": -17,
    "measured": true,
    "part": "melody",
-   "peak_db": -6,
-   "rms_db": -18,
+   "peak_db": -6.7,
+   "rms_db": -20.1,
    "silent": false,
    "voice": "piano",
-   "width": 0.07
+   "width": 0.13
   },
   {
    "bands": {
-    "high": -86.2,
-    "high_mid": -66.2,
-    "low": -22.3,
-    "low_mid": -25.9,
-    "mid": -27,
-    "sub": -73.6
+    "high": -87.9,
+    "high_mid": -70.8,
+    "low": -25.3,
+    "low_mid": -28.8,
+    "mid": -29.1,
+    "sub": -75.4
    },
-   "centroid_hz": 365,
-   "correlation": 0.9,
-   "crest_db": 13.8,
+   "centroid_hz": 388,
+   "correlation": 0.83,
+   "crest_db": 15.9,
    "deck": "B",
    "has_notes": true,
-   "lufs": -17.6,
+   "lufs": -20.4,
    "measured": true,
    "part": "harmony",
-   "peak_db": -6,
-   "rms_db": -19.8,
+   "peak_db": -6.7,
+   "rms_db": -22.6,
    "silent": false,
    "voice": "strings",
-   "width": 0.05
+   "width": 0.09
   }
  ],
  "sections": [
   {
    "bands": {
-    "high": -46.5,
-    "high_mid": -31.7,
+    "high": -46.7,
+    "high_mid": -32.3,
     "low": -40.4,
-    "low_mid": -23.2,
-    "mid": -22.3,
-    "sub": -48.5
+    "low_mid": -23.9,
+    "mid": -23.1,
+    "sub": -48.6
    },
    "bars": 8,
    "from_bar": 1,
-   "lufs": -16.5,
+   "lufs": -17.3,
    "name": "intro",
-   "peak_db": -4.8,
-   "rms_db": -19.4,
-   "true_peak_db": -4.8
+   "peak_db": -5.6,
+   "rms_db": -20.1,
+   "true_peak_db": -5.6
   },
   {
    "bands": {
-    "high": -36.9,
-    "high_mid": -27.7,
-    "low": -23,
-    "low_mid": -23.7,
-    "mid": -22.7,
-    "sub": -28.1
+    "high": -37.1,
+    "high_mid": -28.2,
+    "low": -23.1,
+    "low_mid": -24.3,
+    "mid": -23.6,
+    "sub": -27.9
    },
    "bars": 8,
    "from_bar": 9,
-   "lufs": -14.8,
+   "lufs": -15.4,
    "name": "breakin",
-   "peak_db": -3,
-   "rms_db": -17.4,
-   "true_peak_db": -2.5
+   "peak_db": -3.3,
+   "rms_db": -17.9,
+   "true_peak_db": -3
   },
   {
    "bands": {
-    "high": -34.9,
-    "high_mid": -26.5,
+    "high": -35,
+    "high_mid": -26.7,
     "low": -19.7,
-    "low_mid": -30,
-    "mid": -23.6,
-    "sub": -26.5
+    "low_mid": -30.2,
+    "mid": -23.8,
+    "sub": -26.3
    },
    "bars": 16,
    "from_bar": 17,
-   "lufs": -14.4,
+   "lufs": -14.5,
    "name": "drive",
-   "peak_db": -1.2,
+   "peak_db": -1.1,
    "rms_db": -16.8,
-   "true_peak_db": -1.1
+   "true_peak_db": -0.9
   },
   {
    "bands": {
-    "high": -52.4,
-    "high_mid": -45,
-    "low": -23.5,
-    "low_mid": -26.5,
-    "mid": -26.8,
-    "sub": -59.9
+    "high": -51.9,
+    "high_mid": -46.2,
+    "low": -24.7,
+    "low_mid": -27.4,
+    "mid": -28.8,
+    "sub": -60
    },
    "bars": 8,
    "from_bar": 33,
-   "lufs": -18.3,
+   "lufs": -19.7,
    "name": "breakdown",
-   "peak_db": -7.5,
-   "rms_db": -20.5,
-   "true_peak_db": -7.5
+   "peak_db": -9.3,
+   "rms_db": -21.8,
+   "true_peak_db": -9.3
   },
   {
    "bands": {
-    "high": -36.3,
-    "high_mid": -25.1,
-    "low": -23.2,
-    "low_mid": -26.5,
-    "mid": -25.3,
-    "sub": -67.6
+    "high": -36.8,
+    "high_mid": -26.2,
+    "low": -23.5,
+    "low_mid": -27.2,
+    "mid": -26.3,
+    "sub": -73.2
    },
    "bars": 8,
    "from_bar": 41,
-   "lufs": -15.1,
+   "lufs": -16,
    "name": "riser",
-   "peak_db": -2,
-   "rms_db": -18.8,
-   "true_peak_db": -1.6
-  },
-  {
-   "bands": {
-    "high": -34.9,
-    "high_mid": -28.4,
-    "low": -17.3,
-    "low_mid": -23.4,
-    "mid": -22.2,
-    "sub": -27.3
-   },
-   "bars": 4,
-   "from_bar": 49,
-   "lufs": -12.6,
-   "name": "climax",
-   "peak_db": -0.5,
-   "rms_db": -14.8,
-   "true_peak_db": -0.2
-  },
-  {
-   "bands": {
-    "high": -33.6,
-    "high_mid": -29.1,
-    "low": -17.3,
-    "low_mid": -23.3,
-    "mid": -22.4,
-    "sub": -27.6
-   },
-   "bars": 4,
-   "from_bar": 53,
-   "lufs": -12.7,
-   "name": "climax",
-   "peak_db": -0.3,
-   "rms_db": -14.9,
-   "true_peak_db": -0.3
-  },
-  {
-   "bands": {
-    "high": -33.7,
-    "high_mid": -29.2,
-    "low": -17.3,
-    "low_mid": -23.3,
-    "mid": -21.9,
-    "sub": -27.5
-   },
-   "bars": 4,
-   "from_bar": 57,
-   "lufs": -12.6,
-   "name": "climax",
-   "peak_db": -0.5,
-   "rms_db": -14.8,
-   "true_peak_db": -0.5
-  },
-  {
-   "bands": {
-    "high": -34.3,
-    "high_mid": -29.3,
-    "low": -17.2,
-    "low_mid": -22.6,
-    "mid": -22.2,
-    "sub": -27.5
-   },
-   "bars": 4,
-   "from_bar": 61,
-   "lufs": -12.6,
-   "name": "climax",
-   "peak_db": -1.6,
-   "rms_db": -14.7,
-   "true_peak_db": -1.6
-  },
-  {
-   "bands": {
-    "high": -36,
-    "high_mid": -30.3,
-    "low": -18.2,
-    "low_mid": -23.1,
-    "mid": -23.2,
-    "sub": -28.6
-   },
-   "bars": 8,
-   "from_bar": 65,
-   "lufs": -13.5,
-   "name": "lift",
-   "peak_db": -1.7,
-   "rms_db": -15.6,
+   "peak_db": -1.4,
+   "rms_db": -19.5,
    "true_peak_db": -1.4
   },
   {
    "bands": {
-    "high": -69.9,
-    "high_mid": -50.2,
-    "low": -43.1,
-    "low_mid": -26.3,
-    "mid": -26.5,
-    "sub": -44.5
+    "high": -34.7,
+    "high_mid": -28.5,
+    "low": -17.1,
+    "low_mid": -23.5,
+    "mid": -22.5,
+    "sub": -26.9
+   },
+   "bars": 4,
+   "from_bar": 49,
+   "lufs": -12.7,
+   "name": "climax",
+   "peak_db": -1.7,
+   "rms_db": -14.8,
+   "true_peak_db": -1.6
+  },
+  {
+   "bands": {
+    "high": -33.6,
+    "high_mid": -29.3,
+    "low": -17.2,
+    "low_mid": -23.4,
+    "mid": -22.8,
+    "sub": -27.1
+   },
+   "bars": 4,
+   "from_bar": 53,
+   "lufs": -12.8,
+   "name": "climax",
+   "peak_db": -1.1,
+   "rms_db": -14.9,
+   "true_peak_db": -1.1
+  },
+  {
+   "bands": {
+    "high": -33.7,
+    "high_mid": -29.4,
+    "low": -17.3,
+    "low_mid": -23.5,
+    "mid": -22.2,
+    "sub": -27.1
+   },
+   "bars": 4,
+   "from_bar": 57,
+   "lufs": -12.8,
+   "name": "climax",
+   "peak_db": -0.7,
+   "rms_db": -14.9,
+   "true_peak_db": -0.6
+  },
+  {
+   "bands": {
+    "high": -34.3,
+    "high_mid": -29.6,
+    "low": -17.2,
+    "low_mid": -22.8,
+    "mid": -22.5,
+    "sub": -27.2
+   },
+   "bars": 4,
+   "from_bar": 61,
+   "lufs": -12.8,
+   "name": "climax",
+   "peak_db": -1.3,
+   "rms_db": -14.8,
+   "true_peak_db": -1.3
+  },
+  {
+   "bands": {
+    "high": -36.1,
+    "high_mid": -30.7,
+    "low": -18.3,
+    "low_mid": -23.8,
+    "mid": -23.8,
+    "sub": -28.3
+   },
+   "bars": 8,
+   "from_bar": 65,
+   "lufs": -13.8,
+   "name": "lift",
+   "peak_db": -1.4,
+   "rms_db": -15.9,
+   "true_peak_db": -1.4
+  },
+  {
+   "bands": {
+    "high": -69,
+    "high_mid": -51.3,
+    "low": -45.1,
+    "low_mid": -28,
+    "mid": -28.5,
+    "sub": -70.5
    },
    "bars": 8,
    "from_bar": 73,
-   "lufs": -17.6,
+   "lufs": -19.4,
    "name": "outro",
-   "peak_db": -6.2,
-   "rms_db": -23.3,
-   "true_peak_db": -6.2
+   "peak_db": -8.4,
+   "rms_db": -25.2,
+   "true_peak_db": -8.4
   }
  ],
  "silent": [],
  "targets": {
   "lufs": -14,
-  "lufs_delta": -0.5,
+  "lufs_delta": -0.9,
   "met": false,
   "name": "streaming",
   "true_peak_db": -1,
-  "true_peak_delta": 0.8
+  "true_peak_delta": 0.4
  },
  "version": "listen/2",
  "warning_ids": [
-  "clash:A.bass/A.snare:low",
   "clash:A.bass/B.harmony:low",
+  "clash:A.bass/A.snare:low",
   "clash:B.arp/B.melody:mid",
-  "clash:A.melody/A.snare:low",
+  "clash:A.bass/A.melody:low",
   "true_peak"
  ],
  "warnings": [
-  "deck A bass and deck A snare clash at 60-250 Hz (low) in bars 17-32 and 49-73: they share deck A, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the snare on a deck of its own",
-  "deck A bass and deck B harmony clash at 60-250 Hz (low) in bars 17-33 and 49-72: `mix { B eq low -6 }` or `deck B: filter hp 150` (on all of deck B)",
+  "deck A bass and deck B harmony clash at 60-250 Hz (low) in bars 17-32 and 49-72: `mix { B eq low -6 }` or `deck B: filter hp 150` (on all of deck B)",
+  "deck A bass and deck A snare clash at 60-250 Hz (low) in bars 17-32 and 49-72: they share deck A, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the snare on a deck of its own",
   "deck B melody and deck B arp clash at 500-2k Hz (mid) in bars 1-3, 5-7, 9-12, 14-16, 33-40, 49-51, 53-59, 61-64 and 70-71: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the arp on a deck of its own",
-  "deck A melody and deck A snare clash at 60-250 Hz (low) in bars 49-73: they share deck A, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the melody on a deck of its own",
-  "the master's true peak is -0.2 dBTP, over the streaming ceiling of -1 dBTP: its peaks stand 14.3 dB over its loudness, so the level that meets the ceiling (`master: level 0.92`) would leave it 1.3 LU under the target: round the peaks first with `master: drive` or a lower `vel=` on the loudest hits (BeatScript has no limiter), then set the level"
+  "deck A bass and deck A melody clash at 60-250 Hz (low) in bars 49-73: they share deck A, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the melody on a deck of its own",
+  "the master's true peak is -0.6 dBTP, over the streaming ceiling of -1 dBTP: its peaks stand 14.2 dB over its loudness, so the level that meets the ceiling (`master: level 0.96`) would leave it 1.2 LU under the target: round the peaks first with `master: drive` or a lower `vel=` on the loudest hits (BeatScript has no limiter), then set the level"
  ],
  "window": {
   "bars": 80,

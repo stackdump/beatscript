@@ -6,12 +6,12 @@
    "bars": [
     [
      1,
-     32
+     21
     ]
    ],
-   "gap_db": 3.9,
+   "gap_db": 4,
    "hz": "60-250 Hz",
-   "overlap": 0.94,
+   "overlap": 0.95,
    "parts": [
     "A.bass",
     "A.kick"
@@ -19,8 +19,7 @@
    "sections": [
     "call",
     "answer",
-    "hands",
-    "turn"
+    "hands"
    ]
   },
   {
@@ -52,15 +51,16 @@
  "decks": {
   "A": {
    "has_notes": true,
-   "lufs": -17.6,
+   "lufs": -16.8,
    "parts": [
     "kick",
     "hihat",
     "bass"
    ],
-   "peak_db": -6,
-   "rms_db": -18.5,
-   "silent": false
+   "peak_db": -5.5,
+   "rms_db": -19.5,
+   "silent": false,
+   "vocoder": true
   },
   "B": {
    "has_notes": true,
@@ -82,99 +82,99 @@
   "declared_bpm": 124,
   "declared_key": "am",
   "key": "E minor",
-  "key_confidence": 0.159,
+  "key_confidence": 0.195,
   "key_match": "unsure",
   "tonal": false
  },
  "master": {
   "bands": {
-   "high": -32,
-   "high_mid": -34.1,
-   "low": -19.7,
+   "high": -27.2,
+   "high_mid": -30.8,
+   "low": -21.5,
    "low_mid": -21.5,
    "mid": -19.8,
-   "sub": -25.4
+   "sub": -27.7
   },
-  "centroid_hz": 596,
+  "centroid_hz": 1050,
   "clipped_ms": 0,
   "clipped_samples": 0,
-  "correlation": 0.92,
-  "crest_db": 14.8,
-  "lra": 1.8,
-  "lufs": -13,
+  "correlation": 0.91,
+  "crest_db": 15.1,
+  "lra": 3.2,
+  "lufs": -12.8,
   "peak_db": -0.2,
-  "plr_db": 12.8,
-  "rms_db": -15,
-  "short_term_max_lufs": -11.4,
-  "true_peak_db": -0.2,
-  "width": 0.04
+  "plr_db": 12.7,
+  "rms_db": -15.4,
+  "short_term_max_lufs": -10.6,
+  "true_peak_db": -0.1,
+  "width": 0.05
  },
  "parts": [
   {
    "bands": {
-    "high": -88.2,
-    "high_mid": -76.2,
-    "low": -20.5,
-    "low_mid": -34,
-    "mid": -52.8,
-    "sub": -24.2
+    "high": -43.5,
+    "high_mid": -37,
+    "low": -21.5,
+    "low_mid": -33.6,
+    "mid": -39.3,
+    "sub": -26.5
    },
-   "centroid_hz": 107,
+   "centroid_hz": 235,
    "correlation": 1,
-   "crest_db": 12.8,
+   "crest_db": 14.9,
    "deck": "A",
    "has_notes": true,
-   "lufs": -16.1,
+   "lufs": -17.6,
    "measured": true,
    "part": "kick",
-   "peak_db": -6,
-   "rms_db": -18.8,
+   "peak_db": -5,
+   "rms_db": -19.9,
    "silent": false,
    "voice": null,
    "width": 0
   },
   {
    "bands": {
-    "high": -32.7,
-    "high_mid": -44.9,
-    "low": null,
-    "low_mid": null,
-    "mid": -71.1,
-    "sub": null
+    "high": -26.8,
+    "high_mid": -32.9,
+    "low": -60.8,
+    "low_mid": -52.2,
+    "mid": -45.1,
+    "sub": -68.1
    },
-   "centroid_hz": 8727,
-   "correlation": 1,
-   "crest_db": 26.4,
+   "centroid_hz": 7175,
+   "correlation": 0.98,
+   "crest_db": 20.2,
    "deck": "A",
    "has_notes": true,
-   "lufs": -22.7,
+   "lufs": -16.5,
    "measured": true,
    "part": "hihat",
-   "peak_db": -6,
-   "rms_db": -32.4,
+   "peak_db": -5.6,
+   "rms_db": -25.8,
    "silent": false,
    "voice": null,
-   "width": 0.08
+   "width": 0.01
   },
   {
    "bands": {
-    "high": null,
-    "high_mid": -85.5,
-    "low": -16.6,
-    "low_mid": -55.4,
-    "mid": -66.6,
-    "sub": -40.3
+    "high": -61.1,
+    "high_mid": -57.5,
+    "low": -18.9,
+    "low_mid": -57.8,
+    "mid": -68.6,
+    "sub": -42.6
    },
-   "centroid_hz": 101,
+   "centroid_hz": 102,
    "correlation": 1,
-   "crest_db": 10.6,
+   "crest_db": 12.9,
    "deck": "A",
    "has_notes": true,
-   "lufs": -15.5,
+   "lufs": -16.2,
    "measured": true,
    "part": "bass",
    "peak_db": -6,
-   "rms_db": -16.6,
+   "rms_db": -18.9,
    "silent": false,
    "voice": null,
    "width": 0
@@ -209,7 +209,7 @@
     "low": -60.2,
     "low_mid": -21.7,
     "mid": -19.9,
-    "sub": -72.3
+    "sub": -72.4
    },
    "centroid_hz": 873,
    "correlation": 0.85,
@@ -286,47 +286,47 @@
   },
   {
    "bands": {
-    "high": -36.3,
-    "high_mid": -36.4,
-    "low": -19.7,
+    "high": -39.3,
+    "high_mid": -35.6,
+    "low": -24.6,
     "low_mid": -20.8,
     "mid": -19.7,
-    "sub": -25.4
+    "sub": -30.5
    },
    "bars": 8,
    "from_bar": 17,
-   "lufs": -13,
+   "lufs": -14.1,
    "name": "hands",
-   "peak_db": -1,
-   "rms_db": -14.8,
-   "true_peak_db": -1
+   "peak_db": -1.8,
+   "rms_db": -16.2,
+   "true_peak_db": -1.7
   },
   {
    "bands": {
-    "high": -27.3,
-    "high_mid": -32.5,
-    "low": -19.8,
-    "low_mid": -21.8,
-    "mid": -21.3,
-    "sub": -25.4
+    "high": -21.5,
+    "high_mid": -26.4,
+    "low": -24.5,
+    "low_mid": -21.7,
+    "mid": -21.2,
+    "sub": -42.2
    },
    "bars": 8,
    "from_bar": 25,
-   "lufs": -13,
+   "lufs": -11.5,
    "name": "turn",
-   "peak_db": -0.2,
-   "rms_db": -15.3,
-   "true_peak_db": -0.2
+   "peak_db": -0.4,
+   "rms_db": -15.6,
+   "true_peak_db": -0.1
   }
  ],
  "silent": [],
  "targets": {
   "lufs": -14,
-  "lufs_delta": 1,
+  "lufs_delta": 1.2,
   "met": false,
   "name": "streaming",
   "true_peak_db": -1,
-  "true_peak_delta": 0.8
+  "true_peak_delta": 0.9
  },
  "version": "listen/2",
  "warning_ids": [
@@ -337,11 +337,11 @@
   "loudness:high"
  ],
  "warnings": [
-  "deck A bass and deck A kick clash at 60-250 Hz (low) in bars 1-32: they share deck A, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the bass on a deck of its own and `duck` it under A.kick",
+  "deck A bass and deck A kick clash at 60-250 Hz (low) in bars 1-21: they share deck A, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the bass on a deck of its own and `duck` it under A.kick",
   "deck B melody and deck B vox clash at 500-2k Hz (mid) in bars 3-4 and 18-25: they share deck B, so its EQ and a duck move both: lower one's `vel=`, move one an octave (`oct=`), or put the vox on a deck of its own",
   "deck B voxc is 26 LU under the mix and barely heard: raise its `vel=`",
-  "the master's true peak is -0.2 dBTP, over the streaming ceiling of -1 dBTP: take 1.0 dB off (`master: level 0.89`), which also brings it to the target",
-  "the master is -13.0 LUFS, 1.0 LU over the streaming target of -14 LUFS, which turns it down by as much: the true peak's `master: level 0.89` fixes both"
+  "the master's true peak is -0.1 dBTP, over the streaming ceiling of -1 dBTP: take 1.2 dB off (`master: level 0.87`), which also brings it to the target",
+  "the master is -12.8 LUFS, 1.2 LU over the streaming target of -14 LUFS, which turns it down by as much: the true peak's `master: level 0.87` fixes both"
  ],
  "window": {
   "bars": 32,

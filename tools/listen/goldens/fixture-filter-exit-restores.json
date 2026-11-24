@@ -5,6 +5,10 @@
    "band": "low",
    "bars": [
     [
+     1,
+     2
+    ],
+    [
      9,
      10
     ],
@@ -29,6 +33,7 @@
     "A.kick"
    ],
    "sections": [
+    "intro",
     "later"
    ]
   }
@@ -51,19 +56,19 @@
    "parts": [
     "bass"
    ],
-   "peak_db": 5,
-   "rms_db": -16.8,
+   "peak_db": 5.1,
+   "rms_db": -16.6,
    "silent": false
   }
  },
  "detected": {
   "bpm": 124,
-  "bpm_confidence": 84.084,
+  "bpm_confidence": 85.708,
   "bpm_match": "same",
   "declared_bpm": 124,
   "declared_key": null,
   "key": "A minor",
-  "key_confidence": 0.045,
+  "key_confidence": 0.049,
   "key_match": "undeclared",
   "tonal": false
  },
@@ -71,23 +76,23 @@
   "bands": {
    "high": -32.5,
    "high_mid": -45.1,
-   "low": -14.4,
+   "low": -14.3,
    "low_mid": -31.2,
    "mid": -51.3,
    "sub": -23.1
   },
-  "centroid_hz": 236,
-  "clipped_ms": 72.789,
-  "clipped_samples": 3210,
+  "centroid_hz": 234,
+  "clipped_ms": 72.608,
+  "clipped_samples": 3202,
   "correlation": 1,
-  "crest_db": 19.3,
-  "lra": 6.3,
-  "lufs": -12.5,
-  "peak_db": 5.6,
-  "plr_db": 18.2,
+  "crest_db": 19.5,
+  "lra": 6.2,
+  "lufs": -12.4,
+  "peak_db": 5.8,
+  "plr_db": 18.3,
   "rms_db": -13.7,
   "short_term_max_lufs": -8.7,
-  "true_peak_db": 5.6,
+  "true_peak_db": 5.8,
   "width": 0
  },
  "parts": [
@@ -140,22 +145,22 @@
   {
    "bands": {
     "high": null,
-    "high_mid": -86.2,
-    "low": -16.8,
-    "low_mid": -55.8,
+    "high_mid": -86.7,
+    "low": -16.6,
+    "low_mid": -55.3,
     "mid": -67.1,
-    "sub": -42.3
+    "sub": -42.1
    },
    "centroid_hz": 113,
    "correlation": 1,
-   "crest_db": 21.8,
+   "crest_db": 21.6,
    "deck": "B",
    "has_notes": true,
    "lufs": -14.2,
    "measured": true,
    "part": "bass",
-   "peak_db": 5,
-   "rms_db": -16.8,
+   "peak_db": 5.1,
+   "rms_db": -16.6,
    "silent": false,
    "voice": "sub-bass",
    "width": 0
@@ -166,18 +171,18 @@
    "bands": {
     "high": -32.5,
     "high_mid": -45.1,
-    "low": -15.1,
-    "low_mid": -31.2,
-    "mid": -51.3,
+    "low": -14.8,
+    "low_mid": -31.1,
+    "mid": -51.4,
     "sub": -23.1
    },
    "bars": 8,
    "from_bar": 1,
-   "lufs": -13.1,
+   "lufs": -12.8,
    "name": "intro",
-   "peak_db": 5.6,
-   "rms_db": -14.3,
-   "true_peak_db": 5.6
+   "peak_db": 5.8,
+   "rms_db": -14,
+   "true_peak_db": 5.8
   },
   {
    "bands": {
@@ -199,9 +204,9 @@
  ],
  "silent": [
   {
-   "bars": 4,
+   "bars": 3,
    "deck": "B",
-   "from_bar": 4,
+   "from_bar": 5,
    "part": null,
    "reason": "mute",
    "section": "intro",
@@ -210,11 +215,11 @@
  ],
  "targets": {
   "lufs": -14,
-  "lufs_delta": 1.5,
+  "lufs_delta": 1.6,
   "met": false,
   "name": "streaming",
   "true_peak_db": -1,
-  "true_peak_delta": 6.6
+  "true_peak_delta": 6.8
  },
  "version": "listen/2",
  "warning_ids": [
@@ -226,10 +231,10 @@
  ],
  "warnings": [
   "deck B is muted",
-  "the master clips: 3210 samples over full scale",
-  "the master's true peak is 5.6 dBTP, over the streaming ceiling of -1 dBTP: its peaks stand 18.2 dB over its loudness, so the level that meets the ceiling (`master: level 0.47`) would leave it 5.2 LU under the target: round the peaks first with `master: drive` or a lower `vel=` on the loudest hits (BeatScript has no limiter), then set the level",
-  "deck B bass and deck A kick clash at 60-250 Hz (low) in bars 9-10, 12-13, 15-16 and 18-24: `duck B under A.kick 6db`, or `mix { B eq low -6 }`",
-  "the master is -12.5 LUFS, 1.5 LU over the streaming target of -14 LUFS, which turns it down by as much: once the peaks are rounded, `master: level 0.84`"
+  "the master clips: 3202 samples over full scale",
+  "the master's true peak is 5.8 dBTP, over the streaming ceiling of -1 dBTP: its peaks stand 18.3 dB over its loudness, so the level that meets the ceiling (`master: level 0.46`) would leave it 5.3 LU under the target: round the peaks first with `master: drive` or a lower `vel=` on the loudest hits (BeatScript has no limiter), then set the level",
+  "deck B bass and deck A kick clash at 60-250 Hz (low) in bars 1-2, 9-10, 12-13, 15-16 and 18-24: `duck B under A.kick 6db`, or `mix { B eq low -6 }`",
+  "the master is -12.4 LUFS, 1.6 LU over the streaming target of -14 LUFS, which turns it down by as much: once the peaks are rounded, `master: level 0.84`"
  ],
  "window": {
   "bars": 24,
