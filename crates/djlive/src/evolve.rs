@@ -21,7 +21,9 @@ use crate::ast::*;
 use crate::compile::{fnv, DeckIr, Hit, PartIr};
 use crate::diag::Diagnostic;
 
-pub const TRANSFORMS: [&str; 6] = ["rotate", "transpose", "octave", "invert", "reverse", "thin"];
+pub const TRANSFORMS: [&str; 9] = ["rotate", "transpose", "octave", "invert", "reverse", "thin", "fill", "slow", "fast"];
+/// The transforms that roll dice (a hash of the seed, the generation and the hit): they take `seed=`.
+const SEEDED: [&str; 2] = ["thin", "fill"];
 /// Generations an evolve may make.
 pub const MAX_GENS: u32 = 256;
 
@@ -60,8 +62,13 @@ pub fn check(block: &EvolveBlock, decks: &BTreeMap<Deck, DeckIr>, diags: &mut Ve
         for op in &r.ops {
             let name = op.name.text.as_str();
             if !TRANSFORMS.contains(&name) {
-                let mut d = Diagnostic::error(op.name.span, format!("`{name}` is not a transform of an evolve")).expected(&TRANSFORMS.map(|t| t)).found(format!("`{name}`"));
-                if let Some(n) = crate::parse::nearest(name, TRANSFORMS) {
+                // an operator of `arrange { }` mutations that an evolve does not take is said as that: the two lists differ
+                let arrange_only = crate::mutate::operator_names().contains(&name);
+                let msg = if arrange_only { format!("`{name}` is an operator of `arrange {{ }}` mutations, not a transform of an evolve") } else { format!("`{name}` is not a transform of an evolve") };
+                let mut d = Diagnostic::error(op.name.span, msg).expected(&TRANSFORMS.map(|t| t)).found(format!("`{name}`"));
+                if arrange_only {
+                    d = d.help(format!("an evolve's transforms: {}; or mutate the pattern from the arrangement: arrange {{ drop  ~ acid {name} ...  drop }}", TRANSFORMS.join(" ")));
+                } else if let Some(n) = crate::parse::nearest(name, TRANSFORMS) {
                     d = d.help(format!("did you mean `{n}`?"));
                 }
                 diags.push(d);
@@ -72,13 +79,16 @@ pub fn check(block: &EvolveBlock, decks: &BTreeMap<Deck, DeckIr>, diags: &mut Ve
                 "transpose" => (1, "transpose 5, or transpose <0 5 7 0>: semitones, one per generation"),
                 "octave" => (1, "octave 1"),
                 "thin" => (1, "thin 0.1 seed=3: the share of hits to drop"),
+                "fill" => (1, "fill 0.2 seed=3: the share of rests to fill, each with the hit before it"),
+                "slow" => (1, "slow 2, or slow <1 1 2 2>: the first half of the bar played over the whole of it"),
+                "fast" => (1, "fast 2, or fast <1 2>: the bar played twice in the time of one (1, 2, 4, 8 or 16)"),
                 _ => (0, ""),
             };
             if op.args.len() != want_args {
                 diags.push(Diagnostic::error(op.span, format!("`{name}` takes {} argument{}", want_args, if want_args == 1 { "" } else { "s" })).help(usage.to_string()));
             }
-            if op.seed.is_some() && name != "thin" {
-                diags.push(Diagnostic::error(op.span, format!("`{name}` has no seed: only `thin` is random")));
+            if op.seed.is_some() && !SEEDED.contains(&name) {
+                diags.push(Diagnostic::error(op.span, format!("`{name}` has no seed: only `thin` and `fill` are random")));
             }
             for a in &op.args {
                 let vals: Vec<&Num> = match a {
@@ -90,11 +100,13 @@ pub fn check(block: &EvolveBlock, decks: &BTreeMap<Deck, DeckIr>, diags: &mut Ve
                         "rotate" => n.int && (-15.0..=15.0).contains(&n.value),
                         "transpose" => n.int && (-48.0..=48.0).contains(&n.value),
                         "octave" => n.int && (-4.0..=4.0).contains(&n.value),
-                        "thin" => (0.0..=1.0).contains(&n.value),
+                        "thin" | "fill" => (0.0..=1.0).contains(&n.value),
+                        "slow" => n.int && (1.0..=16.0).contains(&n.value),
+                        "fast" => n.int && [1.0, 2.0, 4.0, 8.0, 16.0].contains(&n.value),
                         _ => true,
                     };
                     if !ok {
-                        diags.push(Diagnostic::error(n.span, format!("`{name}` takes {}", match name { "rotate" => "a whole number of steps, -15 to 15", "transpose" => "a whole number of semitones, -48 to 48", "octave" => "a whole number of octaves, -4 to 4", _ => "a share 0 to 1" })));
+                        diags.push(Diagnostic::error(n.span, format!("`{name}` takes {}", match name { "rotate" => "a whole number of steps, -15 to 15", "transpose" => "a whole number of semitones, -48 to 48", "octave" => "a whole number of octaves, -4 to 4", "slow" => "a whole number, 1 to 16", "fast" => "1, 2, 4, 8 or 16 (the bar's sixteenths divide by it)", _ => "a share 0 to 1" })));
                     }
                 }
             }
@@ -172,6 +184,68 @@ fn apply_op(part: &mut PartIr, op: &EvolveOp, gen: u32) {
                         x >= p
                     });
                 }
+            }
+        }
+        "fill" => {
+            // each step of a bar with no hit on it, by the dice, takes a copy of the hits of the last step before it that
+            // has some (round the bar): what the mutation `fill` does to a pattern's rests. A bar with no hits stays empty
+            let p = arg_at(op, 0, gen).unwrap_or(0.0);
+            let seed = seed_of(op, &part.role);
+            for grid in part.grids_mut() {
+                for (bar, c) in grid.iter_mut().enumerate() {
+                    if c.is_empty() {
+                        continue;
+                    }
+                    let held: Vec<u8> = c.iter().map(|h| h.step).collect();
+                    let mut added: Vec<Hit> = Vec::new();
+                    for step in 0..16u8 {
+                        if held.contains(&step) {
+                            continue;
+                        }
+                        let x = f64::from(fnv(&format!("{seed}:{gen}:{bar}:{step}:fill"))) / f64::from(u32::MAX);
+                        if x >= p {
+                            continue;
+                        }
+                        let before = (1..=16u8).map(|k| (step + 16 - k) % 16).find(|s| held.contains(s));
+                        if let Some(b) = before {
+                            added.extend(c.iter().filter(|h| h.step == b).map(|h| Hit { step, dur: 1, ..h.clone() }));
+                        }
+                    }
+                    c.extend(added);
+                    c.sort_by_key(|h| (h.step, h.note));
+                }
+            }
+        }
+        "slow" | "fast" => {
+            // within each bar, as rotate and reverse are: `slow k` plays the bar's first 1/k over the whole of it (a hit
+            // at step s moves to s*k, its length with it; what would fall past the bar's end is gone); `fast k` plays the
+            // bar k times in the time of one (a hit at s lands at s/k, and again every 16/k steps)
+            let k = (arg_at(op, 0, gen).unwrap_or(1.0) as u32).max(1);
+            if k == 1 {
+                return;
+            }
+            for c in part.grids_mut().into_iter().flatten() {
+                let old = std::mem::take(c);
+                if name == "slow" {
+                    for h in old {
+                        let s = u32::from(h.step) * k;
+                        if s < 16 {
+                            c.push(Hit { step: s as u8, dur: (u32::from(h.dur) * k).min(16 - s).max(1) as u8, ..h });
+                        }
+                    }
+                } else {
+                    let span = 16 / k;
+                    for h in &old {
+                        let s = u32::from(h.step) / k;
+                        for rep in 0..k {
+                            let at = (s + rep * span) as u8;
+                            if !c.iter().any(|x: &Hit| x.step == at && x.note == h.note) {
+                                c.push(Hit { step: at, dur: (u32::from(h.dur) / k).max(1) as u8, ..h.clone() });
+                            }
+                        }
+                    }
+                }
+                c.sort_by_key(|h| (h.step, h.note));
             }
         }
         _ => {}
@@ -303,13 +377,21 @@ pub fn orbit_of(block: &EvolveBlock, deck: Deck, part0: &PartIr) -> Orbit {
     // state and the clock: a repeated state may only be a generation where nothing happened to drop. What
     // thin does reach for certain is a part with no hits left, which every transform leaves empty: that is its
     // fixed point, and the only one it can prove.
-    let thins = block.rules.iter().any(|r| {
-        let on = match &r.target {
-            EvolveTarget::Role(w) => w.text == part0.role,
-            EvolveTarget::Deck(x) => *x == deck,
-        };
-        on && r.ops.iter().any(|o| o.name.text == "thin" && o.args.iter().any(|a| matches!(a, EvolveArg::Num(n) if n.value > 0.0)))
-    });
+    let rolls = |which: &str| {
+        block.rules.iter().any(|r| {
+            let on = match &r.target {
+                EvolveTarget::Role(w) => w.text == part0.role,
+                EvolveTarget::Deck(x) => *x == deck,
+            };
+            on && r.ops.iter().any(|o| o.name.text == which && o.args.iter().any(|a| matches!(a, EvolveArg::Num(n) if n.value > 0.0)))
+        })
+    };
+    let thins = rolls("thin");
+    // `fill` rolls dice the same way, so a state seen again proves nothing either. What it does reach for certain (with
+    // no `thin` against it) is a part whose every bar with a hit has a hit on every step: there is no rest left to fill, and
+    // when a generation then leaves it as it was under rules with no clock of their own, every later one does
+    let fills = !thins && rolls("fill");
+    let full = |p: &PartIr| p.cycles.iter().all(|c| c.is_empty() || (0..16u8).all(|s| c.iter().any(|h| h.step == s)));
     let empty = |p: &PartIr| p.cycles.iter().all(Vec::is_empty) && p.twin.as_ref().map_or(true, |t| t.cycles.iter().all(Vec::is_empty));
     let mut seen: BTreeMap<(u128, u64), u32> = BTreeMap::new();
     let mut part = part0.clone();
@@ -320,7 +402,14 @@ pub fn orbit_of(block: &EvolveBlock, deck: Deck, part0: &PartIr) -> Orbit {
         seen.insert((state_key(&part), 0), 0);
     }
     for gen in 1..=SEARCH_GENS {
+        let before = fills.then(|| state_key(&part));
         step_part(block, deck, &mut part, gen);
+        if fills {
+            if threshold == 0 && round == 1 && full(&part) && before == Some(state_key(&part)) {
+                return Orbit { deck, role: part0.role.clone(), tail: gen - 1, period: 1, found: true };
+            }
+            continue;
+        }
         if thins {
             if empty(&part) {
                 return Orbit { deck, role: part0.role.clone(), tail: gen, period: 1, found: true };

@@ -97,6 +97,20 @@
 		<skos:prefLabel xml:lang="en">Euclidean rhythm</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/concept/euclidean-rhythm"/>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/evolve-fast">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EvolveOperator"/>
+		<skos:definition xml:lang="en">The evolve operator fast: applied to a part once a generation.</skos:definition>
+		<skos:prefLabel xml:lang="en">fast</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>fast</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/evolve-fill">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EvolveOperator"/>
+		<skos:definition xml:lang="en">The evolve operator fill: applied to a part once a generation.</skos:definition>
+		<skos:prefLabel xml:lang="en">fill</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>fill</ns:writtenAs>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/evolve-invert">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EvolveOperator"/>
 		<skos:definition xml:lang="en">The evolve operator invert: applied to a part once a generation.</skos:definition>
@@ -124,6 +138,13 @@
 		<skos:prefLabel xml:lang="en">rotate</skos:prefLabel>
 		<ns:status>stable</ns:status>
 		<ns:writtenAs>rotate</ns:writtenAs>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/evolve-slow">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EvolveOperator"/>
+		<skos:definition xml:lang="en">The evolve operator slow: applied to a part once a generation.</skos:definition>
+		<skos:prefLabel xml:lang="en">slow</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:writtenAs>slow</ns:writtenAs>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/evolve-thin">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EvolveOperator"/>
@@ -1668,16 +1689,19 @@
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/grammar-op">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#GrammarProduction"/>
-		<skos:definition xml:lang="en">The op production of BeatScript&apos;s grammar.</skos:definition>
+		<skos:definition xml:lang="en">The op production of BeatScript&apos;s grammar (seed= on thin and fill).</skos:definition>
 		<skos:prefLabel xml:lang="en">op</skos:prefLabel>
-		<ns:ebnf>( &quot;rotate&quot; | &quot;transpose&quot; | &quot;octave&quot; | &quot;invert&quot; | &quot;reverse&quot; | &quot;thin&quot; ) { NUMBER | &quot;&lt;&quot; NUMBER { NUMBER } &quot;&gt;&quot; } [ &quot;seed=&quot; INT ]</ns:ebnf>
+		<ns:ebnf>( &quot;rotate&quot; | &quot;transpose&quot; | &quot;octave&quot; | &quot;invert&quot; | &quot;reverse&quot; | &quot;thin&quot; | &quot;fill&quot; | &quot;slow&quot; | &quot;fast&quot; ) { NUMBER | &quot;&lt;&quot; NUMBER { NUMBER } &quot;&gt;&quot; } [ &quot;seed=&quot; INT ]</ns:ebnf>
 		<ns:grammarSection xml:lang="en">Evolving</ns:grammarSection>
 		<ns:status>stable</ns:status>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-fast"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-fill"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-invert"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-octave"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-reverse"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-rotate"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-seed-param"/>
+		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-slow"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-gt"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-symbol-lt"/>
 		<ns:usesKeyword rdf:resource="https://beatscript.app/ontology/concept/keyword-thin"/>
@@ -3042,6 +3066,20 @@
 		<ns:keywordText>fader</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-fast">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword fast of BeatScript, written in: op.</skos:definition>
+		<skos:prefLabel xml:lang="en">fast</skos:prefLabel>
+		<ns:keywordText>fast</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-fill">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword fill of BeatScript, written in: op.</skos:definition>
+		<skos:prefLabel xml:lang="en">fill</skos:prefLabel>
+		<ns:keywordText>fill</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-filter-exit">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
 		<skos:definition xml:lang="en">The keyword filter_exit of BeatScript, written in: MOVE, TRANSITION.</skos:definition>
@@ -3719,6 +3757,13 @@
 		<skos:definition xml:lang="en">The keyword sing of BeatScript, written in: sing, subject.</skos:definition>
 		<skos:prefLabel xml:lang="en">sing</skos:prefLabel>
 		<ns:keywordText>sing</ns:keywordText>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-slow">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#Keyword"/>
+		<skos:definition xml:lang="en">The keyword slow of BeatScript, written in: op.</skos:definition>
+		<skos:prefLabel xml:lang="en">slow</skos:prefLabel>
+		<ns:keywordText>slow</ns:keywordText>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/keyword-snare">

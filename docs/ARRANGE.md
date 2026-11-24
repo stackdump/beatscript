@@ -171,7 +171,14 @@ in the editor and the MCP tools can show the generation that is playing as BeatS
 - A section can name a generation directly: `bass acid_a@0` is always the original, `acid_a@3` the third generation.
   Naming one the block never makes is an error.
 - A pattern is changed step by step. Its steps are its top-level terms, so a group `[c2 e2]` or an alternation
-  `<a b>` counts as one step. The pitch operators also reach inside groups and alternations.
+  `<a b>` among other steps counts as one step. The pitch operators also reach inside groups and alternations.
+- A pattern that is one `[...]` and nothing else (`let acid = [1 1 ~ 1 3 ~ 1 5 ~ ...]`, a bar of sixteenths) is the steps
+  inside it: every operator works inside the brackets, and the brackets stay.
+- A pattern that is one `<...>` cycle of bars (`let riff = <[...] [...]>`, `let chords = <i i iv v>`) is changed a bar at a
+  time, each bar as its own steps (a `[...]` bar is the steps inside it), with one stream of dice through the bars:
+  `rot 3` rotates every bar, `accent 0.3` accents steps inside them. A cross operator reads `b` the same way, bar for bar
+  when `b` is a cycle too.
+- A pattern a mutation takes down to one step (`half` of `x ~`, `thin 1` of `x`) stays a pattern: it plays that step.
 
 ## The operators
 
@@ -198,7 +205,7 @@ another `let` pattern. The examples start from `a3 c4 ~ e4 g4 ~ a4 ~` in `key am
 | `half` | half speed: the first half of the steps fill the bar |
 | `double` | double speed: the pattern twice in the bar (up to 64 steps) |
 | `stutter n` | the first `1/n` of the pattern, `n` times |
-| `ratchet p` | each sounding step is played twice in its slot (`*2`) with chance `p` |
+| `ratchet p` | each sounding step is struck twice with chance `p`: doubled on the grid (`*2`) when its step is longer than a sixteenth (8 steps or fewer), else ratcheted inside its own step (`x:2`; a second time `x:4`, at most `x:8`), so no hit snaps or is lost |
 | `swing amt` | every second step later by `amt` of a step, on the sixteenth grid. It works only where a step is two sixteenths or more (8 steps or fewer); on a 16-step pattern it does nothing |
 
 ### Pitch
@@ -213,8 +220,12 @@ scale snaps down to a scale tone first.
 | `invert` | turned over about the first note, on the scale | `a3 f3 ~ d3 b2 ~ a2 ~` |
 | `drift p` | each note a degree up or down with chance `p` | |
 
-Notes (`c3`), plain degrees (`1 3 5`) and written degrees (`deg(b3 5')`) all move. Chord symbols and Roman
-numerals do not.
+Notes (`c3`), plain degrees (`1 3 5`), written degrees (`deg(b3 5')`) and Roman numerals all move. A numeral that is the
+key's own triad on its degree becomes the key's own triad on the new one (in A minor, `<i i iv v>` up 2 is
+`<III III VI VII>`); any other keeps its accidental, case and quality (`V7` up 1 is `VI7`); a numeral has no octave, so `oct`
+leaves it. A generator (`markov(...)`, `arp(...)`) is pitched too, but picks its notes as it plays: `oct n` plays it `n`
+octaves on (`octave(markov(0.3, 1303), 1)`), and the other pitch operators leave it as it is, which `check` says. Chord
+symbols (`am7`) do not move.
 
 ### Feel
 
