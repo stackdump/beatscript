@@ -2,6 +2,7 @@
 // run.mjs: does the page's ENGINE sound like the server's STREAM? (site/test/parity/README.md)
 //
 //   node site/test/parity/run.mjs [--corpus repros,examples,DIR...] [--only REGEX] [--out DIR] [--gate REGEX]
+//                                    [--level-gate REGEX [--lufs-tol LU] [--mel-tol DB] [--int-tol LU] [--level-ceilings FILE]]
 //                                    [--beatscript PATH] [--keep-wav] [--jobs N]
 //
 // For each program:
@@ -16,7 +17,11 @@
 // and, with --keep-wav, both renders as WAV.
 //
 // Exit 1 when a program matching --gate (default: ^00-base$, the repro with no control lines) has a flagged bar, or a
-// program failed to render. Skips (exit 0) when the wasm is not built or Chrome / beatscript are not there.
+// program failed to render, or a program matching --level-gate strays in loudness or spectrum: a bar whose |dLUFS| is over
+// --lufs-tol (default 1 LU) or whose log-mel distance is over --mel-tol (default 3 dB), or a song whose integrated |dLUFS|
+// is over --int-tol (default 0.5 LU); --level-ceilings FILE (JSON, {"name": {"lufs","mel","int","why"}}) gives a program
+// its own bounds (a known gap, said in `why`), so it is still held to where it is and cannot get worse unseen. (The onset measures are left out of that gate: on a continuous part, an acid line, their
+// detector flags bars whose loudness and spectrum agree to 0.01 LU and 0.4 dB.) render-parity.sh runs it on the examples. Skips (exit 0) when the wasm is not built or Chrome / beatscript are not there.
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,6 +36,9 @@ const SR = 48000;
 const OUT = path.resolve(arg('out', path.join(here, 'out')));
 const ONLY = arg('only') ? new RegExp(arg('only')) : null;
 const GATE = new RegExp(arg('gate', '^00-base$'));
+const LEVEL_GATE = arg('level-gate') ? new RegExp(arg('level-gate')) : null;
+const TOL = { lufs: Number(arg('lufs-tol', 1)), mel: Number(arg('mel-tol', 3)), int: Number(arg('int-tol', 0.5)) };
+const CEILINGS = arg('level-ceilings') ? JSON.parse(fs.readFileSync(arg('level-ceilings'), 'utf8')) : {};
 const JOBS = Number(arg('jobs', 2));
 const KEEP = flag('keep-wav');
 const BEATSCRIPT_CLI = findBeatscriptCli(arg('beatscript'));
@@ -157,9 +165,13 @@ for (const p of progs) {
         fs.writeFileSync(path.join(OUT, `${p.name}.engine.wav`), wav(pcmE.subarray(Math.round(cmp.offsetMs * SR / 1000) * 4), SR));
     }
     row.worst = cmp.bars.filter((b) => b.flags.length).sort((a, b) => b.score - a.score).slice(0, 4).map((b) => ({ bar: b.bar, section: b.section, flags: b.flags }));
+    // loudness and spectrum alone, bar by bar (the level gate's measures); a bar silent on both sides says nothing
+    // (a bar heard on one side only is as far off as a bar can be)
+    const heard = cmp.bars.map((b) => (b.flags.some((f) => /silent/.test(f)) || !Number.isFinite(b.dLufs) ? { ...b, dLufs: b.flags.some((f) => /silent/.test(f)) ? 99 : 0 } : b));
+    row.level = { maxBarDLufs: +Math.max(0, ...heard.map((b) => Math.abs(b.dLufs))).toFixed(2), maxBarMel: +Math.max(0, ...heard.map((b) => b.mel || 0)).toFixed(2), meanBarMel: +(heard.reduce((a, b) => a + (b.mel || 0), 0) / Math.max(1, heard.length)).toFixed(2), dLufs: +(cmp.summary.lufsEngine - cmp.summary.lufsStream).toFixed(2) };
     results.push(row);
     const pr = row.perf;
-    console.log(`  engine ${p.name}: offset ${cmp.offsetMs} ms, ${cmp.summary.flagged}/${cmp.summary.bars} bars flagged, mean score ${cmp.summary.meanScore}, dLUFS ${(cmp.summary.lufsEngine - cmp.summary.lufsStream).toFixed(1)}${pr ? `, slow ${pr.slow} (max ${pr.maxMs} ms, ${pr.slowBars.length} bars, ${pr.slowFlagged} flagged)` : ''}${eng.ignored.length ? `, ignored: ${eng.ignored.join('; ')}` : ''}`);
+    console.log(`  engine ${p.name}: offset ${cmp.offsetMs} ms, ${cmp.summary.flagged}/${cmp.summary.bars} bars flagged, mean score ${cmp.summary.meanScore}, dLUFS ${(cmp.summary.lufsEngine - cmp.summary.lufsStream).toFixed(1)}, bars: max |dLUFS| ${row.level.maxBarDLufs}, max mel ${row.level.maxBarMel} dB${pr ? `, slow ${pr.slow} (max ${pr.maxMs} ms, ${pr.slowBars.length} bars, ${pr.slowFlagged} flagged)` : ''}${eng.ignored.length ? `, ignored: ${eng.ignored.join('; ')}` : ''}`);
 }
 await h.close();
 
@@ -193,6 +205,20 @@ for (const r of results) {
 fs.writeFileSync(path.join(OUT, 'RESULTS.md'), `${md.join('\n')}\n`);
 console.log(`parity: wrote ${path.join(OUT, 'RESULTS.md')}`);
 
+if (LEVEL_GATE) {
+    for (const r of results.filter((x) => LEVEL_GATE.test(x.name))) {
+        if (!r.level) { console.log(`FAIL level gate: ${r.name} ${r.error || r.skipped}`); failed++; continue; }
+        const why = [];
+        const c = CEILINGS[r.name] || null;
+        const t = { ...TOL, ...(c || {}) };
+        if (r.level.maxBarDLufs > t.lufs) why.push(`a bar ${r.level.maxBarDLufs} LU off (> ${t.lufs})`);
+        if (r.level.maxBarMel > t.mel) why.push(`a bar ${r.level.maxBarMel} dB of log-mel off (> ${t.mel})`);
+        if (Math.abs(r.level.dLufs) > t.int) why.push(`integrated ${r.level.dLufs} LU off (> ${t.int})`);
+        const known = c && c.why ? ` (a known gap, its own bounds: ${c.why})` : '';
+        if (why.length) { console.log(`FAIL level gate: ${r.name}: ${why.join('; ')}${known}`); failed++; }
+        else console.log(`ok level gate: ${r.name}: bars within ${r.level.maxBarDLufs} LU and ${r.level.maxBarMel} dB, integrated ${r.level.dLufs} LU${known}`);
+    }
+}
 const gated = results.filter((r) => GATE.test(r.name));
 for (const r of gated) if (!r.summary || r.summary.flagged) { console.log(`FAIL parity gate: ${r.name} ${r.summary ? `${r.summary.flagged} bars flagged` : r.error || r.skipped}`); failed++; }
 process.exit(failed ? 1 : 0);

@@ -14,7 +14,17 @@ node site/test/parity/run.mjs --corpus repros,examples,<dir>... [--only REGEX] [
 node site/test/parity/loop.mjs             # `loop` in the engine vs the same arrangement written out
 node site/test/parity/loop-status.mjs [file.beatscript]   # the header's numbers through a looping program (Node only)
 PARITY_WASM_DIR=<dir with beatscript.js, beatscript_bg.wasm> ...    # test another build of the module (the deployed one, say)
+site/test/parity/render-parity.sh [--beatscript PATH]   # the render test: five site examples held to the level gate (below)
 ```
+
+**render-parity.sh** is the test that the server's render (`beatscript render`: the stream, `listen`, the stems) plays what
+the page plays (site/PARITY.md, "Now"): hand-dubstep-140-v4, acid-line, markers-demo, evolve-demo and matrix-130 rendered
+both ways and held to `--level-gate`, loudness and spectrum only: every bar within 1 LU (`LUFS_TOL`) and 3 dB of log-mel
+(`MEL_TOL`), the song within 0.5 LU (`INT_TOL`). A program with a known gap has its own bounds in `render-ceilings.json`,
+with why, so it cannot get worse unseen. Run it on a build host (gir has Chrome, node and the pinned wasm-bindgen; never on
+valoper), with the module the change ships (`PARITY_WASM_DIR`) and the `beatscript` it builds (`--beatscript`). The onset
+measures are left out of this gate: on a continuous part (an acid line) their detector flags bars whose loudness and
+spectrum agree to 0.01 LU and 0.4 dB.
 
 Needs `site/web/wasm/` (`scripts/build-web-wasm.sh site/web/wasm`), Chrome (`CHROME=`, default
 `/usr/bin/google-chrome` or the macOS path) and beatscript (`--beatscript`, `BEATSCRIPT_BIN`, or `site/bin/beatscript`). Each script prints

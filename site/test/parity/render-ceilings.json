@@ -1,0 +1,5 @@
+{
+  "hand-dubstep-140-v4": { "lufs": 1.5, "why": "bar 40, the breakdown's last bar (the next section's nets load in it): 1.4 LU; 1.0 before render r3" },
+  "markers-demo": { "lufs": 3, "mel": 6, "why": "the drop (evolve generations, a filter ramp each bar) is 4 to 5 dB of log-mel off and bar 8 2.6 LU, the same before render r3: the notes, not a control line" },
+  "matrix-130": { "lufs": 100, "mel": 30, "why": "a section hand-over: from breakin on, alternations a bar apart, and the page's outro ends a bar after the render's (a bar heard on one side only); the same before render r3: the notes, not a control line" }
+}
