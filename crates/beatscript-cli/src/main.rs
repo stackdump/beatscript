@@ -48,9 +48,10 @@ usage: beatscript <command> [options]
   cheatsheet                             the compact grammar generated from docs/BEATSCRIPT.md (markdown)
   render       [--sr N] [--format s16le|f32le] [--chunk-ms N] [--max-bars N] [--from-bar N] [--file F | -]
                                          stream raw PCM to stdout while rendering (events as JSON lines on stderr)
-  export       --format midi|stems [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F | -]
+  export       --format midi|stems [--dry] [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F | -]
                                          for a DAW: the Standard MIDI File, or a zip of stems (a WAV per part and
-                                         per deck, the master, the .mid and manifest.json), on stdout
+                                         per deck, the master, the .mid and manifest.json), on stdout; --dry: each
+                                         part before its deck and the master, the moves it leaves out in manifest.json
   lsp                                    the language server (LSP over stdio): diagnostics, quick-fixes, outline, navigation,
                                          rename, completion, hover, signature help, inlay hints, refactors (crates/beatscriptls)
   listen       [--section NAME] [--bars N] [--max-bars N] [--budget SECONDS] [--sr N] [--file F | -]

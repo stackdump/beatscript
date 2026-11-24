@@ -1063,6 +1063,8 @@ test('security: what becomes part of a URL path is checked first (CID, example n
   assert.equal(api.exportUrl(cid), `/api/render/${cid}?format=midi&v=r3.x1`);
   assert.equal(api.exportUrl(cid, 'stems'), `/api/render/${cid}?format=stems&v=r3.x1`);
   assert.equal(api.exportUrl(cid, 'stems-opus'), `/api/render/${cid}?format=stems-opus&v=r3.x1`);
+  assert.equal(api.exportUrl(cid, 'stems-dry'), `/api/render/${cid}?format=stems-dry&v=r3.x1`);
+  assert.equal(api.exportUrl(cid, 'stems-dry-opus'), `/api/render/${cid}?format=stems-dry-opus&v=r3.x1`);
   assert.equal(api.exportUrl(cid, 'wav&x=1'), `/api/render/${cid}?format=midi&v=r3.x1`, 'an export format is from a short list');
   assert.equal(api.eventsUrl('PqjBDf8367OflXp4zG-TKQ'), '/api/session/PqjBDf8367OflXp4zG-TKQ/events');
   seen.length = 0;

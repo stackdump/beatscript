@@ -155,7 +155,7 @@ const MAX_FIRES: usize = 4096;
 
 /// The places (in bars from the start, exact) a control fires at within a render of `total` bars: a bar line, or a time
 /// between two (`at bar 4 beat 2`, `every 2 beats`).
-pub(crate) fn fire_pos(t: Timing, total: u32) -> Vec<Rat> {
+pub fn fire_pos(t: Timing, total: u32) -> Vec<Rat> {
     let end = Rat::int(i64::from(total));
     let every = |from: Rat, step: Rat| -> Vec<Rat> {
         let mut out = Vec::new();

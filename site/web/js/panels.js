@@ -540,8 +540,12 @@ export class Panels {
       a.click();
       a.remove();
     };
+    // the stems as they come: what the server is making names its file as the zip will (.wav or .opus)
+    const ext = (format) => (format.endsWith('-opus') ? 'opus' : 'wav');
+    const ready = h('div', { class: 'btnrow' });
     const go = async (format, btn) => {
       btns.forEach((b) => { b.disabled = true; });
+      ready.replaceChildren();
       try {
         await app.ensureStored(report, text);
         const url = app.api.exportUrl(report.cid, format);
@@ -551,16 +555,35 @@ export class Panels {
           status.textContent = 'The MIDI file: a track per part, drums on channel 10, the tempo map, the key and a marker per section.';
           return;
         }
+        const dry = format.startsWith('stems-dry');
+        let fails = 0;
         for (;;) {
           if (ac.signal.aborted) return;
           const one = new AbortController();
           ac.signal.addEventListener('abort', () => one.abort(), { once: true });
-          const res = await fetch(url, { signal: one.signal });
-          if (res.status === 202) {
+          let res;
+          try {
+            res = await fetch(url, { signal: one.signal });
+          } catch (e) {
+            if (ac.signal.aborted) return;
+            res = null; // the network dropped a poll: ask again, as for a 5xx
+          }
+          const wait = (s) => new Promise((r) => setTimeout(r, s * 1000));
+          if (res && res.status === 202) {
+            fails = 0;
             const j = await res.json().catch(() => ({}));
-            status.textContent = `Making the stems on the server: ${j.file || 'master.wav'}${j.done ? ` (${j.done} done)` : ''}…`;
-            const wait = Math.max(1, Math.min(10, Number(res.headers.get('Retry-After')) || 3));
-            await new Promise((r) => setTimeout(r, wait * 1000));
+            status.textContent = `Making the stems on the server: ${j.file || `master.${ext(format)}`}${j.done ? ` (${j.done} done)` : ''}…`;
+            await wait(Math.max(1, Math.min(10, Number(res.headers.get('Retry-After')) || 3)));
+            continue;
+          }
+          // the job's own failure is a JSON error (a 500 with a code): that is the answer, not a reason to ask again
+          const jobErr = res && res.status === 500 && (res.headers.get('Content-Type') || '').includes('json');
+          if (!res || (res.status >= 500 && !jobErr)) {
+            // a 502/503 while the server restarts or is busy is not the end of the job: wait and ask again, a few times
+            if (++fails > 6) throw new ApiError({ code: 'render_failed', message: res ? `the server answered ${res.status} several times; try again in a minute` : 'the server did not answer; try again in a minute' });
+            status.textContent = `The server answered ${res ? res.status : 'nothing'}; asking again…`;
+            one.abort();
+            await wait(Math.min(10, 2 * fails));
             continue;
           }
           if (!res.ok) {
@@ -568,7 +591,10 @@ export class Panels {
             throw new ApiError({ code: (j && j.code) || 'render_failed', message: (j && (j.message || j.error)) || `the server answered ${res.status}` });
           }
           one.abort(); // the zip is ready: the browser downloads it itself instead of this page reading it
-          status.textContent = 'Stems ready: a file per part and per deck, the master, the .mid and manifest.json.';
+          status.textContent = dry
+            ? 'Dry stems ready: a file per part before its deck and the master, the master as it plays, the .mid and manifest.json (with every move the parts leave out).'
+            : 'Stems ready: a file per part and per deck, the master, the .mid and manifest.json.';
+          ready.replaceChildren(h('a', { href: url, download: '', class: 'tb' }, `Download the ${dry ? 'dry ' : ''}stems (.zip)`));
           save(url);
           return;
         }
@@ -589,11 +615,15 @@ export class Panels {
       btn('MIDI', 'midi', 'A Standard MIDI File of the notes the render plays'),
       btn('Stems (WAV)', 'stems', 'A zip: a 32-bit float WAV per part and per deck that add up to the master'),
       btn('Stems (Opus)', 'stems-opus', 'The same zip with smaller Ogg Opus stems'),
+      btn('Dry stems (WAV)', 'stems-dry', 'A zip: each part before its deck and the master, and every move it leaves out in manifest.json'),
+      btn('Dry stems (Opus)', 'stems-dry-opus', 'The same dry zip with smaller Ogg Opus stems'),
     ];
     const box = this.pop('Export for a DAW',
       h('p', { class: 'note' }, 'The server renders this program and keeps it publicly under its CID (CC0-1.0 unless you shared it with other rights). The notes are the ones the render plays; each stem is its part as it sits in the mix, and the stems add up to the master. Stems take a minute or two for a long song.'),
+      h('p', { class: 'note' }, 'Dry stems: each part as its voices make it, with no level, filter, EQ, sends or master effects, so you mix it in the DAW; manifest.json lists every move left out, with bar times.'),
       h('div', { class: 'btnrow' }, ...btns),
       status,
+      ready,
       h('div', { class: 'btnrow' }, h('button', { type: 'button', class: 'tb', onclick: () => this.close() }, 'Close')));
     box.querySelector('button').focus({ preventScroll: true });
   }

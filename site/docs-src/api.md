@@ -198,6 +198,18 @@ curl -s https://beatscript.app/api/examples | head -c 300          # find a CID
 curl -sL 'https://beatscript.app/api/render/z4EBG9j...?format=opus' -o track.opus
 ```
 
+**For a DAW** (the same route, `format=` one of these; the full description is the repository's docs/EXPORT.md):
+
+- `midi`: a Standard MIDI File of the notes the render plays, a track per part, at once.
+- `stems`, `stems-opus`: a zip of a part's stem each and a deck's, the master, the `.mid` and `manifest.json`; each stem
+  is its part as it sits in the mix, and they add up to the master.
+- `stems-dry`, `stems-dry-opus`: the same zip with **dry** stems: each part before its deck and the master (no level,
+  crossfader, EQ, filter, sends or master effects), the master as it plays, and in `manifest.json` every control move the
+  parts leave out (each part's `automation`, `master_automation`, with bar times) and the master's effects.
+
+A stems URL answers `202` with `{"state": "rendering", "file", "done"}` and `Retry-After` while the zip is made (a minute or
+two for a long song); ask again until it is the zip. `file` is the stem being made, named as it is in the zip.
+
 ## Sessions
 
 The browser and MCP meet in a **session**. The page does `POST /api/session` (answers `{"id": "<22 characters>", "user": ...}`), then opens

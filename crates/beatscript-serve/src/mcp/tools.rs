@@ -576,7 +576,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                     ("text", stored_text.clone()),
                     ("cid", cid_stored.clone()),
                     ("example", example.clone()),
-                    ("format", sprop("opus (Ogg Opus, smaller, for download or <audio>) or wav (16-bit stereo, plays chunk by chunk in a web page) to listen; for a DAW: midi (a Standard MIDI File of the notes, a track per part), stems (a zip: a 32-bit float WAV per part and per deck that add up to the master, the master, the .mid and manifest.json with the CID, tempo, key, license and credits) or stems-opus (the same zip with Ogg Opus stems).", &[("enum", json!(["opus", "wav", "midi", "stems", "stems-opus"])), ("default", json!("opus"))])),
+                    ("format", sprop("opus (Ogg Opus, smaller, for download or <audio>) or wav (16-bit stereo, plays chunk by chunk in a web page) to listen; for a DAW: midi (a Standard MIDI File of the notes, a track per part), stems (a zip: a 32-bit float WAV per part and per deck that add up to the master, the master, the .mid and manifest.json with the CID, tempo, key, license and credits) or stems-opus (the same zip with Ogg Opus stems); stems-dry and stems-dry-opus: dry stems (each part before its deck and the master: no level, crossfader, EQ, filter, sends or master effects), with every control move they leave out, and the master's effects, in manifest.json.", &[("enum", json!(["opus", "wav", "midi", "stems", "stems-opus", "stems-dry", "stems-dry-opus"])), ("default", json!("opus"))])),
                 ],
                 &[],
             ),
@@ -1644,10 +1644,10 @@ impl Tools {
         if n != 1 {
             return Err(bad("give exactly one of text, cid, example"));
         }
-        let format = a.str("format", 8)?.filter(|f| !f.is_empty()).unwrap_or_else(|| "opus".into());
+        let format = a.str("format", 16)?.filter(|f| !f.is_empty()).unwrap_or_else(|| "opus".into());
         let export = crate::export_route::FORMATS.contains(&format.as_str());
         if format != "opus" && format != "wav" && !export {
-            return Err(bad("argument \"format\" is opus, wav, midi, stems or stems-opus"));
+            return Err(bad("argument \"format\" is opus, wav, midi, stems, stems-opus, stems-dry or stems-dry-opus"));
         }
         let mut seconds = None;
         let mut ends = true;
@@ -1709,6 +1709,7 @@ impl Tools {
         if export {
             note = match format.as_str() {
                 "midi" => "Download stream_url: a Standard MIDI File (type 1), one track per part (drums on channel 10, General MIDI), the tempo map, the key and a marker per section. The notes are the ones the render plays.".into(),
+                "stems-dry" | "stems-dry-opus" => "GET stream_url: while the stems are being made it answers 202 with {state, file, done} and Retry-After; ask again until it is the zip (a minute or two for a long song). Each stem is its part dry: its voices before the deck and the master (no level, crossfader, EQ, filter, sends or master effects); master.wav is the mix as it plays, and manifest.json lists every control move the parts leave out (each part's `automation`, `master_automation`) and the master's effects, with bar times.".into(),
                 _ => "GET stream_url: while the stems are being made it answers 202 with {state, file, done} and Retry-After; ask again until it is the zip (a minute or two for a long song). Each stem is its part as it sits in the mix, master effects applied per stem; manifest.json says how closely they add up to the master.".into(),
             };
             if !ends {

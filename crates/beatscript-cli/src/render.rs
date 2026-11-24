@@ -454,6 +454,18 @@ fn heard(ctl: &djlive::compile::Control, moves: &djhost::offline_moves::ProgramM
     })
 }
 
+/// A control move [`Controls::keep_transport`] took out: the beat it was on, its line's key, what it set (`A` `volume`,
+/// `Master` `filter.sweep`, `master` `level`) and to what, and the move as the engine is given it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RemovedMove {
+    pub beat: f64,
+    pub key: String,
+    pub target: String,
+    pub param: String,
+    pub value: Option<f64>,
+    pub text: String,
+}
+
 /// The program's next bar line after `beat`, in beats (a bar line itself: the next one).
 fn next_bar_beat(beat: f64) -> f64 {
     let b = beat / 4.0;
@@ -523,6 +535,99 @@ impl Controls {
             macro_lines.insert(ctl.key.clone(), (line, text));
         }
         Controls { moves, next: 0, unheard, macro_lines, bpm, sr, macros: Vec::new(), deferred: Vec::new(), perform, browser, wheel: true }
+    }
+
+    /// The dry stems' timeline (export.rs): only the moves that start or stop a deck are kept, so every note the mix plays is
+    /// still played; every other move (a level, an EQ, the crossfader, the master, an insert and its ramp, a trick, a macro, a
+    /// duck) is taken out and returned, in timeline order, and the DJ moves are dropped (their lines are the program's own).
+    pub fn keep_transport(&mut self) -> Vec<RemovedMove> {
+        let mut removed = Vec::new();
+        self.moves.retain(|(_, _, _, m)| {
+            match m {
+                Move::Arrange(e) => {
+                    if matches!(&e.op, ArrangeOp::Deck(DeckAction::Play { .. })) {
+                        return true;
+                    }
+                    let (target, param, value) = match &e.op {
+                        ArrangeOp::Deck(DeckAction::Param { deck, name, value }) => (deck.clone(), name.clone(), Some(*value)),
+                        ArrangeOp::Deck(DeckAction::Master(v)) => ("master".into(), "level".into(), Some(*v)),
+                        ArrangeOp::Deck(DeckAction::Crossfader(v)) => (String::new(), "crossfader".into(), Some(*v)),
+                        op => (op.deck().unwrap_or_default(), op.op(), None),
+                    };
+                    let key = e.text.strip_prefix("put back ").unwrap_or(&e.text).to_string();
+                    removed.push(RemovedMove { beat: e.at, key, target, param, value, text: e.op.json().canonical_js() });
+                }
+                Move::Call(t) => {
+                    // the Wheel is an instrument, not the mix (its own stem's pass plays it); a deck's start and stop is transport
+                    let p = &t.call.params;
+                    let txt = |k: &str| p.get(k).and_then(JsonValue::as_str).map(str::to_string);
+                    let num = |k: &str| p.get(k).and_then(JsonValue::as_f64);
+                    if t.call.noun == "wheel" || (t.call.noun == "deck" && matches!(txt("action").as_deref(), Some("play" | "stop" | "pause"))) {
+                        return true;
+                    }
+                    let mut knobs: Vec<(String, String, Option<f64>)> = Vec::new();
+                    match t.call.noun.as_str() {
+                        "mixer" => {
+                            let deck = txt("deck").unwrap_or_default();
+                            for k in ["volume", "gain", "filter", "low", "mid", "high"] {
+                                if let Some(v) = num(k) {
+                                    knobs.push((deck.clone(), k.into(), Some(v)));
+                                }
+                            }
+                            if let Some(m) = p.get("mute") {
+                                let on = matches!(m, JsonValue::Bool(true)) || m.as_str() == Some("true") || m.as_f64() == Some(1.0);
+                                knobs.push((deck.clone(), "mute".into(), Some(if on { 1.0 } else { 0.0 })));
+                            }
+                            if let Some(v) = num("crossfader") {
+                                knobs.push((String::new(), "crossfader".into(), Some(v)));
+                            }
+                            if let Some(v) = num("master") {
+                                knobs.push(("master".into(), "level".into(), Some(v)));
+                            }
+                        }
+                        "inserts" => {
+                            let target = txt("target").unwrap_or_default();
+                            match txt("action").as_deref() {
+                                Some("on") => {
+                                    let on = !matches!(p.get("on"), Some(JsonValue::Bool(false)));
+                                    knobs.push((target, format!("{} on", txt("effect").unwrap_or_else(|| "insert".into())), Some(if on { 1.0 } else { 0.0 })));
+                                }
+                                _ => knobs.push((target, txt("param").unwrap_or_else(|| "insert".into()), num("value"))),
+                            }
+                        }
+                        noun => {
+                            let target = txt("target").or_else(|| txt("deck")).unwrap_or_default();
+                            let what = txt("param").or_else(|| txt("action")).map_or_else(|| noun.to_string(), |w| format!("{noun} {w}"));
+                            knobs.push((target, what, num("value")));
+                        }
+                    }
+                    if knobs.is_empty() {
+                        knobs.push((txt("target").or_else(|| txt("deck")).unwrap_or_default(), t.call.noun.clone(), None));
+                    }
+                    for (target, param, value) in knobs {
+                        removed.push(RemovedMove { beat: t.beat, key: t.key.clone(), target, param, value, text: t.call.text() });
+                    }
+                }
+                Move::Net(e, b, key) => {
+                    use djlive::nets::Event as E;
+                    let on = |x: bool| Some(if x { 1.0 } else { 0.0 });
+                    let (target, param, value) = match e {
+                        E::Set { target, param, value } => (target.clone(), param.clone(), Some(*value)),
+                        E::Insert { target, effect, on: o } => (target.clone(), format!("{effect} on"), on(*o)),
+                        E::Mute { deck, on: o } => (deck.clone(), "mute".into(), on(*o)),
+                        E::Trick { deck, kind, on: o, .. } => (deck.clone(), format!("trick {kind}"), on(*o)),
+                        E::Fire { target, id, .. } => (target.clone(), format!("macro {id}"), None),
+                        E::Release { target, id } => (target.clone(), format!("release {id}"), None),
+                    };
+                    removed.push(RemovedMove { beat: *b, key: key.clone().unwrap_or_default(), target, param, value, text: e.text() });
+                }
+            }
+            false
+        });
+        self.next = 0;
+        self.deferred.clear();
+        self.perform = None;
+        removed
     }
 
     fn frame_of(&self, beat: f64) -> i64 {

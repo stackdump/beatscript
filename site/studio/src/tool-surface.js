@@ -455,7 +455,7 @@ export function createToolSurface({ beatscript, caps = {}, site = 'https://beats
       inputSchema: schema({
         text: text('The program text. It must pass check; it is stored publicly (CC0-1.0).'),
         cid: str('CID of a program already stored.', { maxLength: 100, pattern: CID_PAT }),
-        format: { type: 'string', enum: ['opus', 'wav', 'midi', 'stems', 'stems-opus'], default: 'opus', description: 'opus or wav to listen; midi, stems or stems-opus for a DAW.' },
+        format: { type: 'string', enum: ['opus', 'wav', 'midi', 'stems', 'stems-opus', 'stems-dry', 'stems-dry-opus'], default: 'opus', description: 'opus or wav to listen; midi, stems or stems-opus for a DAW (stems-dry, stems-dry-opus: each part before its deck and the master, its moves in manifest.json).' },
       }),
       run: (a) => {
         const t = strArg(a, 'text');

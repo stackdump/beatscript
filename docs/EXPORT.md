@@ -1,14 +1,15 @@
 # Export: a BeatScript program for a DAW
 
-A program leaves BeatScript as a **Standard MIDI File** (its notes) or as **stems** (its audio, one file a part and a
-deck, that add back up to the master). Both come out of the render itself, so the same canonical text (the same
-CID) gives the same bytes.
+A program leaves BeatScript as a **Standard MIDI File** (its notes), as **stems** (its audio, one file a part and a
+deck, that add back up to the master) or as **dry stems** (each part before its deck and the master, with the moves it
+leaves out written down). All come out of the render itself, so the same canonical text (the same CID) gives the same
+bytes.
 
 | Where | How |
 |---|---|
-| shell | `beatscript export --format midi\|stems [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F]` (bytes on stdout) |
-| site | `GET /api/render/<CID>?format=midi\|stems\|stems-opus` (the MCP `render` tool's `format`) |
-| web editor | the Export buttons: MIDI, Stems |
+| shell | `beatscript export --format midi\|stems [--dry] [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F]` (bytes on stdout) |
+| site | `GET /api/render/<CID>?format=midi\|stems\|stems-opus\|stems-dry\|stems-dry-opus` (the MCP `render` tool's `format`) |
+| web editor | the Export for a DAW buttons: MIDI, Stems (WAV / Opus), Dry stems (WAV / Opus) |
 | code | `crates/beatscript-cli/src/export.rs` (the passes, the WAVs, the manifest, the zip), `djengine::smf` (the MIDI file, General MIDI) |
 
 ## The MIDI file
@@ -106,6 +107,63 @@ mix's limiter had to clamp at its ceiling is the one place they can differ.
 
 The license, author, credits and forked_from are the stored rights (`share` stores them; CC0-1.0 by default).
 
+## Dry stems
+
+Stems as they sit in the mix are what you want to rebuild the mix; for finishing in a DAW you want them **dry**: each
+part as its voices make it, and the moves that shaped it written down so you can redo them with your own tools.
+
+`beatscript export --format stems --dry`, or `format=stems-dry` / `stems-dry-opus` on the site (the same job as
+`stems`: a `202` with `{state, file, done}` and `Retry-After` until the zip is made, then the zip). The zip's folder is
+`beatscript-<CID12>-dry/`, so it unzips beside the wet one:
+
+```
+beatscript-<CID12>-dry/manifest.json
+beatscript-<CID12>-dry/song.mid
+beatscript-<CID12>-dry/master.wav          the mix as it plays (the same samples as the wet bundle's master)
+beatscript-<CID12>-dry/A-kick.wav  A-bass.wav  B-melody.wav ...
+beatscript-<CID12>-dry/wheel.wav         a program that plays the Wheel: the Wheel alone, before the master
+```
+
+No deck stems: a dry deck would be the sum of its dry parts. The Wheel is an instrument: its own lines (`wheel play`,
+`wheel sequence ...`) are kept in its dry stem, and only the master's reach it in the mix.
+
+**How a dry stem is made.** One render a part, every other part's lanes at level 0 as for a wet stem, but:
+
+- **no control move but a deck's start and stop** (`Controls::keep_transport`): no level, EQ, crossfader or master
+  level, no insert (`filter`, `resonance`, `reverb`, `delay`, `crush`) or its ramp, no trick, no macro, no `duck`
+  line, no DJ `move`. The sections still load and start the decks, so the part plays every note it plays in the mix
+  (`played` is the wet export's, a test pins it);
+- **the deck's strip at unity**: volume 1, trim 1, the crossfader full on the part's side, the master level 1;
+- **the deck's limiter off** and **its room and echo sends at 0** (`set_unit_sends`).
+
+What stays is the voice: the instrument, its envelope and its own filter, the notes' velocities, and a duck depth the
+program gives its voices (a kick dipping the bass inside the deck's engine). The test exports the dubstep example
+twice, the second time with its master and deck lines changed (lowpass made highpass, other levels, more reverb): the
+dry stems are the same samples, the wet ones are not.
+
+**The manifest** says `"stems":{"dry":true, ...}` (no sum check: dry parts do not add up to the master, by design) and
+carries what was left out:
+
+- `stems.master_fx_lines`: the master's lines, each once;
+- each part's `automation`: its deck's lines;
+- `master_automation`: the master's lines; `other_automation`: the rest (the crossfader, a line on no one deck).
+
+One entry a line of the program (a line a `repeat` or a `def` copies is one entry, all its fires together):
+
+```json
+{"line":88,"text":"deck A: resonance 0.2 -> 0.4 over 8 bars","scope":"deck","deck":"A",
+ "fires":[176],"hold_bars":null,
+ "series":[{"target":"A","param":"filter.res","points":[[176,0.2],[176.25,0.2025], … ,[208,0.4]]}],
+ "events":[{"at":176,"bar":45,"beat":1,"target":"A","param":"filter on","value":1,"move":"insert A filter on"}],
+ "note":null}
+```
+
+`fires` and `at` are beats from the start; `bar` and `beat` are 1-based. `series` is one knob's values over time, the
+values the render sent the engine (a ramp sampled as the runtime samples it), as `[at, value]` pairs: a level is
+`volume` 0…1, the master's `level`, an insert knob its own (`filter.sweep`, `filter.res`, `reverb.mix`). `events` are
+the switches: an insert on or off, a mute, a trick, a macro fired or let go. A line with no move on the render's
+timeline the dry pass takes out (a DJ `move`) has empty `series` and `events` and says so in `note`.
+
 ## Determinism
 
 Nothing in the files has a clock: the zip's entries are dated 1980-01-01, stored in a fixed order (manifest, MIDI,
@@ -118,5 +176,5 @@ master, decks, parts), the manifest's keys in a fixed order, the MIDI's events s
   curve (the manifest's `tempo_curve` and its notes say so).
 - **Control lines the render does not hear** (see the render's own notes): not in the stems either. The render plays
   a program's control lines as the browser's engine plays them (crates/beatscript-cli/RENDER.md), so the stems are what
-  the page plays.
+  the page plays (in the dry manifest a line it does not hear is listed with the rest, with a `note`).
 - **Samples and loops** (`sample` / `loop "..." as`) and restricted programs are not rendered, so not exported.

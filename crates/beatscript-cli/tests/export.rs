@@ -23,7 +23,7 @@ const SONG: &str = "#! name: export-test\ntempo 128\nkey am\nsection one 2 bars 
 const RAMP: &str = "tempo 120 -> 140 over 2 bars\nsection one 4 bars {\n  deck A: kick x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\n}\narrange one\n";
 
 fn opts() -> ExportOptions {
-    ExportOptions { sr: 44_100, max_bars: 64, rights: Rights::default(), threads: 1 }
+    ExportOptions { sr: 44_100, max_bars: 64, rights: Rights::default(), threads: 1, dry: false }
 }
 
 fn tmp(name: &str) -> PathBuf {
@@ -185,4 +185,107 @@ fn the_right_copy_of_a_jux_is_in_its_part_in_the_midi_and_in_the_stems() {
     let p = s.parts_sum.unwrap();
     assert!(p.max_abs < 1e-4 && p.rms < 1e-5, "parts: {p:?}");
     let _ = std::fs::remove_dir_all(&d);
+}
+
+/// The dubstep example (beatscript 2): a master filter swept in every section, a master reverb, deck levels, a deck filter and
+/// resonance ramps, a riser and a DJ move. Its first 24 bars: the intro, the build and half the drop.
+const DUBSTEP: &str = include_str!("../../../site/examples/hand-dubstep-140-v4.beatscript");
+
+fn wav(path: &std::path::Path) -> Vec<f32> {
+    export::WavIn::open(path).unwrap().read(usize::MAX >> 4).unwrap()
+}
+
+fn rms(x: &[f32]) -> f64 {
+    (x.iter().map(|v| f64::from(*v) * f64::from(*v)).sum::<f64>() / x.len().max(1) as f64).sqrt()
+}
+
+/// Bars `from..to` of an interleaved stereo stem at 140 bpm.
+fn bars(x: &[f32], from: u32, to: u32) -> &[f32] {
+    let frame = |b: u32| ((f64::from(b) * 4.0 * 60.0 / 140.0 * 44_100.0).round() as usize * 2).min(x.len());
+    &x[frame(from)..frame(to)]
+}
+
+#[test]
+fn dry_stems_are_each_part_before_its_deck_and_the_master_with_the_moves_in_the_manifest() {
+    let o = ExportOptions { max_bars: 24, threads: 4, dry: true, ..opts() };
+    let d = tmp("dry");
+    let e = export::stems(DUBSTEP, &o, &d, &mut |_| {}).unwrap();
+    // a file per part, the master, the MIDI and the manifest; no deck stems
+    let files: Vec<&str> = e.files.iter().map(|(f, _)| f.as_str()).collect();
+    assert_eq!(files, vec!["master.wav", "A-kick.wav", "A-hihat.wav", "A-snare.wav", "A-bass.wav", "B-harmony.wav", "B-melody.wav", "wheel.wav", "song.mid", "manifest.json"]);
+    assert_eq!(export::bundle_folder(&e), format!("beatscript-{}-dry", &e.cid[..12]));
+    for p in &e.parts {
+        assert!(wav(&d.join(p.file())).iter().any(|v| v.abs() > 1e-3), "{} is silent", p.file());
+    }
+    // the same notes as the wet export, and its master is the mix
+    let w = tmp("wet");
+    let wet = export::stems(DUBSTEP, &ExportOptions { dry: false, ..o.clone() }, &w, &mut |_| {}).unwrap();
+    assert_eq!(e.played, wet.played);
+    assert!(wav(&d.join("master.wav")) == wav(&w.join("master.wav")), "the dry bundle's master is the mix");
+    // the intro: deck A at level 0.4 under a master lowpass at 400 Hz. Dry, the hats are the hats; wet, they are nearly gone
+    let (dh, wh) = (wav(&d.join("A-hihat.wav")), wav(&w.join("A-hihat.wav")));
+    let (dry_intro, wet_intro) = (rms(bars(&dh, 0, 2)), rms(bars(&wh, 0, 2)));
+    assert!(dry_intro > 4.0 * wet_intro, "the intro's hats: dry {dry_intro}, wet {wet_intro}");
+    // no master and no deck processing: the master's and the decks' lines moved somewhere else give the same dry stems,
+    // sample for sample (and different wet ones)
+    let moved = DUBSTEP
+        .replace("master: filter lp", "master: filter hp")
+        .replace("master: reverb 0.15", "master: reverb 0.6")
+        .replace("deck A: level 0.4", "deck A: level 0.9")
+        .replace("deck A: level 0.9\n  deck B: level 0.9", "deck A: level 0.2\n  deck B: level 0.5");
+    assert_ne!(moved, DUBSTEP);
+    let d2 = tmp("dry2");
+    let e2 = export::stems(&moved, &o, &d2, &mut |_| {}).unwrap();
+    assert_ne!(e2.cid, e.cid);
+    for p in &e.parts {
+        assert!(wav(&d.join(p.file())) == wav(&d2.join(p.file())), "{}: the master's and the decks' lines reach the dry stem", p.file());
+    }
+    let w2 = tmp("wet2");
+    export::stems(&moved, &ExportOptions { dry: false, ..o.clone() }, &w2, &mut |_| {}).unwrap();
+    assert!(wav(&w.join("A-hihat.wav")) != wav(&w2.join("A-hihat.wav")), "the wet stem hears them");
+    // the manifest: dry, no sum check, the master's lines, and every removed move with its bar time
+    let man = std::fs::read_to_string(d.join("manifest.json")).unwrap();
+    let v = djengine::json::JsonValue::parse(&man).unwrap();
+    assert_eq!(v.get("stems").and_then(|s| s.get("dry")).and_then(|x| x.as_bool()), Some(true), "{man}");
+    assert!(v.get("stems").and_then(|s| s.get("parts_sum_check")).is_some_and(|x| matches!(x, djengine::json::JsonValue::Null)));
+    let lines = |k: &str| v.get(k).and_then(|x| x.as_array()).cloned().unwrap_or_default();
+    let text = |a: &djengine::json::JsonValue| a.get("text").and_then(|t| t.as_str()).unwrap_or("").to_string();
+    let master = lines("master_automation");
+    let sweep = master.iter().find(|a| text(a) == "master: filter lp 400 -> 6000 over 8 bars").unwrap_or_else(|| panic!("the intro's sweep in {man}"));
+    let series = sweep.get("series").and_then(|s| s.as_array()).unwrap();
+    let pts = series[0].get("points").and_then(|p| p.as_array()).unwrap();
+    assert!(pts.len() > 8, "a ramp's points: {pts:?}");
+    let first = pts[0].as_array().unwrap();
+    let last = pts[pts.len() - 1].as_array().unwrap();
+    assert_eq!(first[0].as_f64(), Some(0.0));
+    assert!(last[0].as_f64().unwrap() <= 32.0 && last[0].as_f64().unwrap() > 28.0, "it ends at bar 9: {last:?}");
+    assert!(master.iter().any(|a| text(a).starts_with("master: reverb")), "{man}");
+    let fx = v.get("stems").and_then(|s| s.get("master_fx_lines")).and_then(|x| x.as_array()).unwrap();
+    assert!(fx.iter().any(|l| l.as_str() == Some("master: filter lp 400 -> 6000 over 8 bars")), "{fx:?}");
+    // a part carries its deck's lines: deck A's level in the intro, at bar 1, and its level in the build, at bar 9
+    let parts = lines("parts");
+    let kick = parts.iter().find(|p| p.get("file").and_then(|f| f.as_str()) == Some("A-kick.wav")).unwrap();
+    let auto = kick.get("automation").and_then(|a| a.as_array()).unwrap();
+    let level = |t: &str| auto.iter().find(|a| text(a) == t).unwrap_or_else(|| panic!("{t} in {auto:?}")).clone();
+    let intro = level("deck A: level 0.4");
+    assert_eq!(intro.get("scope").and_then(|s| s.as_str()), Some("deck"));
+    assert_eq!(intro.get("fires").and_then(|f| f.as_array()).map(|f| f.iter().filter_map(|x| x.as_f64()).collect::<Vec<_>>()), Some(vec![0.0]));
+    assert!(intro.get("series").and_then(|s| s.as_array()).is_some_and(|s| s.iter().any(|x| x.get("param").and_then(|p| p.as_str()) == Some("volume"))), "{intro:?}");
+    assert!(level("deck A: level 0.9").get("fires").and_then(|f| f.as_array()).is_some_and(|f| f.iter().any(|x| x.as_f64() == Some(32.0))));
+    // deck B's parts carry deck B's lines, not deck A's
+    let pad = parts.iter().find(|p| p.get("file").and_then(|f| f.as_str()) == Some("B-harmony.wav")).unwrap();
+    assert!(pad.get("automation").and_then(|a| a.as_array()).unwrap().iter().all(|a| a.get("deck").and_then(|x| x.as_str()) == Some("B")));
+    // the wet manifest has none of it
+    let wman = std::fs::read_to_string(w.join("manifest.json")).unwrap();
+    assert!(!wman.contains("automation") && !wman.contains("\"dry\""), "{wman}");
+    // the dry export is deterministic too
+    let d3 = tmp("dry3");
+    let e3 = export::stems(DUBSTEP, &ExportOptions { threads: 1, ..o.clone() }, &d3, &mut |_| {}).unwrap();
+    let (mut z1, mut z3) = (Vec::new(), Vec::new());
+    export::zip(&d, &export::bundle_order(&e), "x", &mut z1).unwrap();
+    export::zip(&d3, &export::bundle_order(&e3), "x", &mut z3).unwrap();
+    assert!(z1 == z3, "the same dry zip");
+    for x in [d, d2, d3, w, w2] {
+        let _ = std::fs::remove_dir_all(x);
+    }
 }

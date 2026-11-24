@@ -47,11 +47,13 @@ pub struct ExportOptions {
     pub rights: Rights,
     /// Stems renders run side by side on this many threads (each its own engine); 1: one after the other.
     pub threads: usize,
+    /// Dry stems ([`stems`]): each part's voices before the deck and the master, the moves taken out written to the manifest.
+    pub dry: bool,
 }
 
 impl Default for ExportOptions {
     fn default() -> Self {
-        ExportOptions { sr: 44_100, max_bars: 256, rights: Rights::default(), threads: 1 }
+        ExportOptions { sr: 44_100, max_bars: 256, rights: Rights::default(), threads: 1, dry: false }
     }
 }
 
@@ -140,6 +142,24 @@ pub struct Exported {
     pub tempo_curve: bool,
     /// The stems' codec: `wav` (32-bit float), or `opus` once a server has encoded them.
     pub codec: &'static str,
+    /// Dry stems: the control lines whose moves the parts were rendered without (None: the stems are wet, as in the mix).
+    pub dry: Option<Vec<Automation>>,
+}
+
+/// A control line the dry stems were rendered without, and what it did in the mix ([`crate::render::Controls::keep_transport`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Automation {
+    /// 1-based, in the program text, and the line as written.
+    pub line: usize,
+    pub text: String,
+    /// `master`, `deck` (then `deck` names it) or `other` (the crossfader, a line on no one deck).
+    pub scope: &'static str,
+    pub deck: Option<String>,
+    /// Where the line fires, in beats from the start; `hold`: put back after this many bars.
+    pub fires: Vec<f64>,
+    pub hold_bars: Option<f64>,
+    /// The moves it made in the mix, in time order.
+    pub moves: Vec<crate::render::RemovedMove>,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -180,10 +200,15 @@ struct Pass<'w> {
     gens: BTreeMap<(String, i32), Vec<String>>,
     played: Vec<Played>,
     out: Option<&'w mut WavOut>,
+    /// A dry pass: the soloed deck's strip at unity, its limiter out and its room and echo sends at 0.
+    dry: bool,
 }
 
 impl Pass<'_> {
     fn touch(&mut self, cond: &mut OfflineConductor) {
+        if self.dry {
+            self.dry_strip(cond);
+        }
         for d in &self.decks {
             let Some(core) = cond.renderer.deck_mut(d) else { continue };
             core.runner.record_events = self.collect;
@@ -272,6 +297,50 @@ impl Pass<'_> {
     }
 }
 
+impl Pass<'_> {
+    /// The dry pass's deck as the voices make it (export.rs's module words): its strip at unity (volume 1, trim 1, the
+    /// crossfader full on its side, the master level 1), its limiter out, its room and echo sends at 0. Set before every
+    /// block, so a section's new project is dry from its first; the strip's knobs are sent only when they moved.
+    fn dry_strip(&mut self, cond: &mut OfflineConductor) {
+        let deck = match &self.solo {
+            Solo::Part(d, _) | Solo::Deck(d) => d.clone(),
+            Solo::All => return,
+            Solo::Wheel => {
+                // the Wheel joins the master after the decks: only the master level is on its way
+                let e = cond.engine_mut();
+                if e.master != 1.0 {
+                    e.set_master(1.0);
+                }
+                return;
+            }
+        };
+        let e = cond.engine_mut();
+        if e.deck(&deck).is_some_and(|m| m.volume != 1.0) {
+            e.set_volume(&deck, 1.0);
+        }
+        if e.deck(&deck).is_some_and(|m| m.gain != 0.5) {
+            e.set_gain(&deck, 0.5); // trim_for_gain(0.5) = 1
+        }
+        let xf = match deck.as_str() {
+            "A" => Some(0.0),
+            "B" => Some(1.0),
+            _ => None,
+        };
+        if let Some(x) = xf.filter(|x| e.crossfader != *x) {
+            e.set_crossfader(x);
+        }
+        if e.master != 1.0 {
+            e.set_master(1.0);
+        }
+        for d in &self.decks {
+            if let Some(core) = cond.renderer.deck_mut(d) {
+                core.limiter = None;
+                core.runner.set_unit_sends(0.0, 0.0, 0.0, 1);
+            }
+        }
+    }
+}
+
 impl Driver for Pass<'_> {
     fn ready(&mut self, cond: &mut OfflineConductor) -> Result<(), RenderError> {
         if self.solo != Solo::All {
@@ -336,12 +405,20 @@ fn job(text: &str, o: &ExportOptions) -> Result<Job, RenderError> {
 
 impl Job {
     fn pass(&self, solo: Solo, collect: bool, curve: Curve, out: Option<&mut WavOut>) -> Result<Vec<Played>, RenderError> {
+        self.pass_with(solo, collect, curve, out, false)
+    }
+
+    /// [`pass`](Self::pass), dry or not: a dry pass hears only the moves that start and stop a deck ([`Controls::keep_transport`]).
+    fn pass_with(&self, solo: Solo, collect: bool, curve: Curve, out: Option<&mut WavOut>, dry: bool) -> Result<Vec<Played>, RenderError> {
         let bpm = self.plan.bpm;
         let sr = self.sr;
         let mut ctls = Controls::new(&self.c, self.plan.program_bars, sr);
+        if dry {
+            ctls.keep_transport();
+        }
         // the Wheel is in the master and in its own stem, and in no deck's or part's
         ctls.wheel = matches!(solo, Solo::All | Solo::Wheel);
-        let mut p = Pass { decks: self.decks.clone(), solo, curve, io_err: None, collect, spt: sr * 60.0 / (bpm * 4.0), bpm, gens: BTreeMap::new(), played: Vec::new(), out };
+        let mut p = Pass { decks: self.decks.clone(), solo, curve, io_err: None, collect, spt: sr * 60.0 / (bpm * 4.0), bpm, gens: BTreeMap::new(), played: Vec::new(), out, dry };
         drive(&self.c, &self.plan, sr, self.want, &mut ctls, &mut p)?;
         if let Curve::Record(files) = &mut p.curve {
             for w in files.values_mut() {
@@ -453,8 +530,90 @@ impl Job {
             rights: resolved_rights(c, rights),
             tempo_curve: curve,
             codec: "wav",
+            dry: None,
         }
     }
+
+    /// The control lines a dry stem is rendered without: each line that made a move the dry pass takes out (its moves, where
+    /// they fire), and each line that is not a move on the timeline at all (a DJ move, a line the render plays another way).
+    /// A line that only starts or stops a deck, or plays the Wheel, is not one: the dry stems keep it.
+    fn automation(&self) -> Vec<Automation> {
+        let c = &self.c;
+        let removed = Controls::new(c, self.plan.program_bars, self.sr).keep_transport();
+        let mut out: Vec<Automation> = Vec::new();
+        let mut seen: BTreeMap<usize, usize> = BTreeMap::new();
+        for ctl in &c.controls {
+            let base = ctl.effect.base();
+            if let djlive::compile::Effect::Calls(cs) = base {
+                // a deck's start and stop, and the Wheel (an instrument, with its own stem): the dry stems keep them
+                if !cs.is_empty() && cs.iter().all(|x| x.noun == "deck" || x.noun == "wheel") {
+                    continue;
+                }
+            }
+            let own = ctl.span.text(&c.source).lines().next().unwrap_or("").trim().to_string();
+            let line = djlive::diag::line_col(&c.source, ctl.span.start).0;
+            let text = if own.is_empty() || own.starts_with("import") { ctl.key.clone() } else { own };
+            let moves: Vec<crate::render::RemovedMove> = removed.iter().filter(|m| m.key == ctl.key).cloned().collect();
+            let fires: Vec<f64> = djhost::beatscript_render::fire_pos(ctl.timing, self.plan.program_bars).into_iter().map(|r| r.to_f64() * 4.0).filter(|b| *b < f64::from(self.plan.bars) * 4.0).collect();
+            let (scope, deck) = scope_of(&text, &moves);
+            let a = Automation { line, text, scope, deck, fires, hold_bars: ctl.hold.map(|h| h.as_bars().to_f64()), moves };
+            // a line a `repeat` or a `def` copies: one entry, its fires and moves together
+            match seen.get(&a.line).copied().filter(|&i| out[i].text == a.text) {
+                Some(i) => {
+                    out[i].fires.extend(a.fires);
+                    out[i].moves.extend(a.moves);
+                }
+                None => {
+                    seen.insert(a.line, out.len());
+                    out.push(a);
+                }
+            }
+        }
+        for a in out.iter_mut() {
+            a.fires.sort_by(f64::total_cmp);
+            a.fires.dedup();
+            a.moves.sort_by(|x, y| x.beat.total_cmp(&y.beat));
+        }
+        out
+    }
+}
+
+/// Whom a control line acts on: the targets of its moves (a deck, the master), else its text (`master: ...`, `deck A: ...`,
+/// `... on A`).
+fn scope_of(text: &str, moves: &[crate::render::RemovedMove]) -> (&'static str, Option<String>) {
+    let mut decks: Vec<String> = Vec::new();
+    let mut master = false;
+    for m in moves {
+        let t = m.target.as_str();
+        if t.eq_ignore_ascii_case("master") || (t.is_empty() && m.param != "crossfader") {
+            master = true;
+        } else if !t.is_empty() && !decks.iter().any(|d| d == t) {
+            decks.push(t.to_string());
+        }
+    }
+    if decks.len() == 1 && !master {
+        return ("deck", decks.pop());
+    }
+    if master && decks.is_empty() {
+        return ("master", None);
+    }
+    if !moves.is_empty() {
+        return ("other", None);
+    }
+    // no move to read it from: the text
+    let words: Vec<&str> = text.split(|ch: char| ch.is_whitespace() || ch == ':').filter(|w| !w.is_empty()).collect();
+    if words.iter().any(|w| *w == "master") {
+        return ("master", None);
+    }
+    for (i, w) in words.iter().enumerate() {
+        if (*w == "deck" || *w == "on") && i + 1 < words.len() {
+            let d = words[i + 1];
+            if d.len() <= 2 && d.chars().all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit()) && d.chars().next().is_some_and(|ch| ch.is_ascii_uppercase()) {
+                return ("deck", Some(d.to_string()));
+            }
+        }
+    }
+    ("other", None)
 }
 
 fn header(c: &Compiled, key: &str) -> Option<String> {
@@ -508,18 +667,25 @@ pub fn stems(text: &str, o: &ExportOptions, dir: &Path, progress: &mut (dyn FnMu
     progress("master.wav");
     let mut master = WavOut::create(&dir.join("master.wav"), o.sr)?;
     let curve_file = |d: &str| dir.join(format!(".curve-{d}.f32"));
-    let mut rec = BTreeMap::new();
-    for d in &j.decks {
-        rec.insert(d.clone(), BufWriter::new(File::create(curve_file(d))?));
-    }
-    let played = j.pass(Solo::All, true, Curve::Record(rec), Some(&mut master))?;
+    // the master is the mix either way; only the wet parts replay its limiter
+    let master_curve = if o.dry {
+        Curve::Off
+    } else {
+        let mut rec = BTreeMap::new();
+        for d in &j.decks {
+            rec.insert(d.clone(), BufWriter::new(File::create(curve_file(d))?));
+        }
+        Curve::Record(rec)
+    };
+    let played = j.pass(Solo::All, true, master_curve, Some(&mut master))?;
     master.finish(o.sr)?;
     let parts = j.parts(&played);
     let (midi, curve) = j.midi(&parts, &played, &o.rights);
     let mut e = j.exported(parts, played, midi, curve, &o.rights);
     e.files.push(("master.wav".into(), "master"));
-    // the decks' and the parts' renders: independent of each other, so side by side on `threads`
-    let mut jobs: Vec<(String, &'static str, Solo)> = j.decks.iter().map(|d| (format!("deck-{d}.wav"), "deck", Solo::Deck(d.clone()))).collect();
+    // the decks' and the parts' renders: independent of each other, so side by side on `threads` (dry: the parts only; a dry
+    // deck would be the sum of its dry parts)
+    let mut jobs: Vec<(String, &'static str, Solo)> = if o.dry { Vec::new() } else { j.decks.iter().map(|d| (format!("deck-{d}.wav"), "deck", Solo::Deck(d.clone()))).collect() };
     jobs.extend(e.parts.iter().map(|p| (p.file(), "part", Solo::Part(p.deck.clone(), p.role.clone()))));
     // a program that plays the Wheel: its own stem (it is no deck's: the page adds it to the master after the decks)
     if plays_wheel(&j.c) {
@@ -527,6 +693,11 @@ pub fn stems(text: &str, o: &ExportOptions, dir: &Path, progress: &mut (dyn FnMu
     }
     let run = |(f, _, solo): &(String, &'static str, Solo)| -> Result<(), RenderError> {
         let mut w = WavOut::create(&dir.join(f), o.sr)?;
+        if o.dry {
+            j.pass_with(solo.clone(), false, Curve::Off, Some(&mut w), true)?;
+            w.finish(o.sr)?;
+            return Ok(());
+        }
         let curve = match solo {
             // the deck's own runner plays its whole mix: its limiter is the master's as it is
             Solo::Deck(_) | Solo::All | Solo::Wheel => Curve::Off,
@@ -589,6 +760,14 @@ pub fn stems(text: &str, o: &ExportOptions, dir: &Path, progress: &mut (dyn FnMu
     }
     std::fs::write(dir.join("song.mid"), &e.midi)?;
     e.files.push(("song.mid".into(), "midi"));
+    if o.dry {
+        // dry parts do not add up to the master (that is the point): no sum check; what they leave out is in the manifest
+        e.dry = Some(j.automation());
+        e.notes.push("dry stems: each part before its deck and the master (no level, crossfader, EQ, filter, insert, send, trick, move or master effect, the deck's limiter off); master.wav is the mix as it plays, and `automation` in manifest.json is every control move the parts were rendered without".into());
+        std::fs::write(dir.join("manifest.json"), manifest(&e))?;
+        e.files.push(("manifest.json".into(), "manifest"));
+        return Ok(e);
+    }
     e.parts_sum = Some(sum_check(&dir.join("master.wav"), &part_files)?);
     e.decks_sum = Some(sum_check(&dir.join("master.wav"), &deck_files)?);
     if let Some(s) = e.parts_sum.filter(|s| s.peak > 1.0) {
@@ -622,7 +801,7 @@ pub fn manifest(e: &Exported) -> String {
         .parts
         .iter()
         .map(|p| {
-            JsonValue::Object(JsonObject::from_pairs(vec![
+            let mut pairs = vec![
                 ("deck", JsonValue::str(p.deck.clone())),
                 ("role", JsonValue::str(p.role.clone())),
                 ("file", JsonValue::str(if e.codec == "wav" { p.file() } else { p.file().replace(".wav", &format!(".{}", e.codec)) })),
@@ -632,12 +811,40 @@ pub fn manifest(e: &Exported) -> String {
                 ("instrument", opt_str(&p.instrument)),
                 ("gm_program", p.program.map_or(JsonValue::Null, |g| JsonValue::int(i64::from(g) + 1))),
                 ("notes", JsonValue::int(p.notes as i64)),
-            ]))
+            ];
+            if let Some(auto) = &e.dry {
+                // the deck's lines: what its strip, inserts and moves did to this part in the mix
+                pairs.push(("automation", JsonValue::Array(auto.iter().filter(|a| a.scope == "deck" && a.deck.as_deref() == Some(p.deck.as_str())).map(automation_json).collect())));
+            }
+            JsonValue::Object(JsonObject::from_pairs(pairs))
         })
         .collect();
     let files = e.files.iter().map(|(f, k)| JsonValue::Object(JsonObject::from_pairs(vec![("path", JsonValue::str(f.clone())), ("kind", JsonValue::str(*k))]))).collect();
     let r = &e.rights;
-    let o = JsonObject::from_pairs(vec![
+    let stems = match &e.dry {
+        None => JsonValue::Object(JsonObject::from_pairs(vec![
+            ("method", JsonValue::str("each stem is the render with every other part's lanes at level 0: ducking, modulation and the deck's own effects still run; a program's Wheel is in the master and in wheel.wav only")),
+            ("master_fx", JsonValue::str("applied per stem: the master chain (and each deck's output stage) is applied to every stem as to the mix")),
+            ("master_fx_lines", JsonValue::Array(e.master_fx.iter().cloned().map(JsonValue::str).collect())),
+            ("sum_check_on", JsonValue::str("the 32-bit float WAVs, before any encoding")),
+            ("parts_sum_check", sum(&e.parts_sum)),
+            ("decks_sum_check", sum(&e.decks_sum)),
+        ])),
+        Some(_) => JsonValue::Object(JsonObject::from_pairs(vec![
+            ("dry", JsonValue::Bool(true)),
+            ("method", JsonValue::str("dry: each stem is its part's voices alone, before the deck and the master: the deck's strip at unity (volume, trim, crossfader, EQ and filter untouched by any line), its limiter off, its room and echo sends at 0, and no control move but the ones that start and stop a deck. The sections still load and start the decks and every other part's lanes still run at level 0, so each part plays every note it plays in the mix, and a kick still ducks the bass under a duck depth the program gives its voices")),
+            ("master_fx", JsonValue::str("not applied: the master's lines are master_fx_lines, their moves master_automation")),
+            ("master_fx_lines", JsonValue::Array({
+                // each line once (a `repeat` or a `def` makes many of one), in the program's order
+                let mut seen = std::collections::BTreeSet::new();
+                e.master_fx.iter().filter(|l| seen.insert(l.as_str())).cloned().map(JsonValue::str).collect()
+            })),
+            ("automation", JsonValue::str("each part's `automation` is its deck's lines (levels, EQ, filter, resonance, inserts, sends, tricks, moves) with the moves they made in the mix; master_automation is the master's, other_automation the rest (the crossfader, a line on no one deck); the Wheel is an instrument, in wheel.wav, and its lines are not here. `at` and `fires` are beats from the start, `bar` and `beat` 1-based; `points` are [at, value] pairs of one knob")),
+            ("parts_sum_check", JsonValue::Null),
+        ])),
+    };
+    let lines = |scope: &str| JsonValue::Array(e.dry.iter().flatten().filter(|a| a.scope == scope).map(automation_json).collect());
+    let mut o = JsonObject::from_pairs(vec![
         ("generator", JsonValue::str("BeatScript")),
         ("cid", JsonValue::str(e.cid.clone())),
         ("name", JsonValue::str(e.name.clone())),
@@ -657,20 +864,61 @@ pub fn manifest(e: &Exported) -> String {
         ("decks", JsonValue::Array(e.decks.iter().cloned().map(JsonValue::str).collect())),
         ("parts", JsonValue::Array(parts)),
         ("files", JsonValue::Array(files)),
-        (
-            "stems",
-            JsonValue::Object(JsonObject::from_pairs(vec![
-                ("method", JsonValue::str("each stem is the render with every other part's lanes at level 0: ducking, modulation and the deck's own effects still run; a program's Wheel is in the master and in wheel.wav only")),
-                ("master_fx", JsonValue::str("applied per stem: the master chain (and each deck's output stage) is applied to every stem as to the mix")),
-                ("master_fx_lines", JsonValue::Array(e.master_fx.iter().cloned().map(JsonValue::str).collect())),
-                ("sum_check_on", JsonValue::str("the 32-bit float WAVs, before any encoding")),
-                ("parts_sum_check", sum(&e.parts_sum)),
-                ("decks_sum_check", sum(&e.decks_sum)),
-            ])),
-        ),
+        ("stems", stems),
         ("notes", JsonValue::Array(e.notes.iter().cloned().map(JsonValue::str).collect())),
     ]);
+    if e.dry.is_some() {
+        o.set("master_automation", lines("master"));
+        o.set("other_automation", lines("other"));
+    }
     JsonValue::Object(o).js_stringified() + "\n"
+}
+
+/// `(bar, beat)`, both 1-based, of `at` beats from the start.
+fn bar_beat(at: f64) -> (i64, f64) {
+    let bar = (at / 4.0 + 1e-9).floor();
+    (bar as i64 + 1, ((at - bar * 4.0 + 1.0) * 1000.0).round() / 1000.0)
+}
+
+/// One line of a dry export's automation: the line, whom it acts on, where it fires, and its moves: a knob's values as `points`
+/// (one series a knob, in time order), anything else (an insert or a trick switched, a macro) as `events`.
+fn automation_json(a: &Automation) -> JsonValue {
+    let mut series: Vec<((String, String), Vec<JsonValue>)> = Vec::new();
+    let mut events = Vec::new();
+    for m in &a.moves {
+        let switch = m.param.ends_with(" on") || m.param == "mute" || m.param.starts_with("trick ") || m.value.is_none();
+        if switch {
+            let (bar, beat) = bar_beat(m.beat);
+            let mut ev = vec![("at", n3(m.beat)), ("bar", JsonValue::int(bar)), ("beat", JsonValue::Number(beat)), ("target", JsonValue::str(m.target.clone())), ("param", JsonValue::str(m.param.clone()))];
+            if let Some(v) = m.value {
+                ev.push(("value", n3(v)));
+            }
+            ev.push(("move", JsonValue::str(m.text.clone())));
+            events.push(JsonValue::Object(JsonObject::from_pairs(ev)));
+            continue;
+        }
+        let k = (m.target.clone(), m.param.clone());
+        let pt = JsonValue::Array(vec![n3(m.beat), JsonValue::Number(m.value.map_or(0.0, |v| (v * 1e6).round() / 1e6))]);
+        match series.iter_mut().find(|(key, _)| *key == k) {
+            Some((_, v)) => v.push(pt),
+            None => series.push((k, vec![pt])),
+        }
+    }
+    let series: Vec<JsonValue> = series.into_iter().map(|((t, p), pts)| JsonValue::Object(JsonObject::from_pairs(vec![("target", JsonValue::str(t)), ("param", JsonValue::str(p)), ("points", JsonValue::Array(pts))]))).collect();
+    JsonValue::Object(JsonObject::from_pairs(vec![
+        ("line", JsonValue::int(a.line as i64)),
+        ("text", JsonValue::str(a.text.clone())),
+        ("scope", JsonValue::str(a.scope)),
+        ("deck", opt_str(&a.deck)),
+        ("fires", JsonValue::Array(a.fires.iter().map(|b| n3(*b)).collect())),
+        ("hold_bars", a.hold_bars.map_or(JsonValue::Null, n3)),
+        ("series", JsonValue::Array(series)),
+        ("events", JsonValue::Array(events)),
+        (
+            "note",
+            if a.moves.is_empty() { JsonValue::str("no move on the render's timeline the dry pass takes out (a DJ move): left out of the dry stems") } else { JsonValue::Null },
+        ),
+    ]))
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -885,6 +1133,17 @@ fn plays_wheel(c: &Compiled) -> bool {
     })
 }
 
+/// The folder a bundle's zip puts its files in: `beatscript-<CID12>`, `beatscript-<CID12>-dry` for dry stems (both can sit side by
+/// side once unzipped).
+pub fn bundle_folder(e: &Exported) -> String {
+    let base = format!("beatscript-{}", &e.cid[..e.cid.len().min(12)]);
+    if e.dry.is_some() {
+        base + "-dry"
+    } else {
+        base
+    }
+}
+
 /// The bundle's files in zip order: the manifest and the MIDI first (small: a reader sees what it is at once), then
 /// the master, the decks, the parts.
 pub fn bundle_order(e: &Exported) -> Vec<String> {
@@ -904,7 +1163,8 @@ pub fn bundle_order(e: &Exported) -> Vec<String> {
 // ---------------------------------------------------------------------------------------------
 // the command
 
-/// `beatscript export --format midi|stems [--sr N] [--max-bars N] [--file F | -]`: the .mid, or the zip of stems, on stdout.
+/// `beatscript export --format midi|stems [--dry] [--sr N] [--max-bars N] [--file F | -]`: the .mid, or the zip of stems (`--dry`:
+/// dry stems), on stdout.
 pub fn main(args: Vec<String>) -> i32 {
     let run = || -> Result<(), RenderError> {
         let usage = |m: String| RenderError { code: "usage", message: m };
@@ -921,8 +1181,9 @@ pub fn main(args: Vec<String>) -> i32 {
                 "--max-bars" => o.max_bars = val("--max-bars")?.parse().map_err(|_| usage("--max-bars: a whole number".into()))?,
                 "--license" => o.rights.license = Some(val("--license")?),
                 "--credit" => o.rights.credits.push(val("--credit")?),
+                "--dry" => o.dry = true,
                 "-" => file = None,
-                other => return Err(usage(format!("unknown argument `{other}` (beatscript export --format midi|stems [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F])"))),
+                other => return Err(usage(format!("unknown argument `{other}` (beatscript export --format midi|stems [--dry] [--sr N] [--max-bars N] [--license L] [--credit C]... [--file F])"))),
             }
         }
         let mut text = String::new();
@@ -941,7 +1202,7 @@ pub fn main(args: Vec<String>) -> i32 {
             "stems" => {
                 let dir = std::env::temp_dir().join(format!("beatscript-export-{}", std::process::id()));
                 let r = stems(&text, &o, &dir, &mut |f| eprintln!("{{\"event\":\"file\",\"name\":\"{f}\"}}"));
-                let z = r.and_then(|e| zip(&dir, &bundle_order(&e), &format!("beatscript-{}", &e.cid[..e.cid.len().min(12)]), &mut out).map_err(RenderError::from));
+                let z = r.and_then(|e| zip(&dir, &bundle_order(&e), &bundle_folder(&e), &mut out).map_err(RenderError::from));
                 let _ = std::fs::remove_dir_all(&dir);
                 z?;
             }

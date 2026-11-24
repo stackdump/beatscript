@@ -1,10 +1,12 @@
-//! The render route's export formats (docs/EXPORT.md): `GET /api/render/<cid>[.<packed>]?format=midi|stems|stems-opus`.
+//! The render route's export formats (docs/EXPORT.md): `GET /api/render/<cid>[.<packed>]?format=midi|stems|stems-opus|stems-dry|stems-dry-opus`.
 //!
 //! - `midi`: the Standard MIDI File, made at once (one render) and kept; `audio/midi`, an attachment.
 //! - `stems`, `stems-opus`: the zip of stems (a WAV, or an Ogg Opus, a part and a deck, the master, the .mid and
 //!   `manifest.json` with the stored rights). Many renders, so a job: the first request starts it and is answered
 //!   `202` with what it is doing (`Retry-After`); asking again is the same until the zip is there, then it is the
 //!   zip. One stems job at a time on the server, a few new ones an hour from an address, the last few zips kept.
+//! - `stems-dry`, `stems-dry-opus`: the same job and zip with dry stems: each part before its deck and the master, the
+//!   master as it plays, and the control moves the parts leave out in `manifest.json` (export.rs).
 //!
 //! The work is beatscript's export (export.rs, linked in by path as render.rs is): this file is the HTTP around it.
 
@@ -24,7 +26,7 @@ use crate::service::{Limiter, RENDER_VERSION};
 use crate::{content, go_body, go_json, store, ApiError, AppState};
 
 /// The formats this file serves.
-pub const FORMATS: [&str; 3] = ["midi", "stems", "stems-opus"];
+pub const FORMATS: [&str; 5] = ["midi", "stems", "stems-opus", "stems-dry", "stems-dry-opus"];
 /// What an export's files are named by, beside the render version: bumped when the export's bytes change.
 const EXPORT_VERSION: &str = "x1";
 /// A program longer than this has no stems here (a stem a minute is ~21 MB of float WAV).
@@ -72,6 +74,8 @@ fn file_name(cid: &str, format: &str) -> String {
     let (sr, ext) = match format {
         "midi" => (44_100, "mid"),
         "stems-opus" => (48_000, "stems-opus.zip"),
+        "stems-dry" => (44_100, "stems-dry.zip"),
+        "stems-dry-opus" => (48_000, "stems-dry-opus.zip"),
         _ => (44_100, "stems.zip"),
     };
     format!("{cid}.{sr}.{RENDER_VERSION}.{EXPORT_VERSION}.{ext}")
@@ -136,7 +140,7 @@ fn render_err(e: crate::render::RenderError) -> ApiError {
     }
 }
 
-/// `GET /api/render/<cid>?format=midi|stems|stems-opus`.
+/// `GET /api/render/<cid>?format=midi|stems|stems-opus|stems-dry|stems-dry-opus`.
 pub async fn serve(app: AppState, raw: String, format: String, req: Request) -> Result<Response<Body>, ApiError> {
     let cid = raw.split_once('.').map_or(raw.as_str(), |(c, _)| c).to_string();
     if !store::is_cid(&cid) {
@@ -164,7 +168,7 @@ pub async fn serve(app: AppState, raw: String, format: String, req: Request) -> 
             if !ok {
                 return Err(ApiError::new(429, "rate_limited", "too many exports from this address; try again later").retry(retry));
             }
-            let opts = ExportOptions { sr: 44_100, max_bars: app.cfg.render_max_bars, rights: rights.clone(), threads: 1 };
+            let opts = ExportOptions { sr: 44_100, max_bars: app.cfg.render_max_bars, rights: rights.clone(), threads: 1, dry: false };
             let text = p.text.clone();
             let _slot = app.check_slots.clone().acquire_owned().await.map_err(|e| ApiError::internal(e.to_string()))?;
             let e = tokio::task::spawn_blocking(move || export::midi(&text, &opts)).await.map_err(|e| ApiError::internal(e.to_string()))?.map_err(render_err)?;
@@ -180,6 +184,11 @@ pub async fn serve(app: AppState, raw: String, format: String, req: Request) -> 
     if rep["seconds"].as_f64().is_some_and(|s| s > STEMS_MAX_SECONDS) {
         return Err(ApiError::new(422, "too_large", format!("stems are made for programs up to {} minutes; this one is longer (the MIDI export has no limit)", STEMS_MAX_SECONDS / 60.0)));
     }
+    let opus = format.ends_with("-opus");
+    let dry = format.starts_with("stems-dry");
+    // what the progress names: a stem as it will be in the zip (an Opus one is encoded from its WAV once it is made)
+    let shown = move |f: &str| if opus { f.strip_suffix(".wav").map_or_else(|| f.to_string(), |s| format!("{s}.opus")) } else { f.to_string() };
+    let first = shown("master.wav");
     let key = name.clone();
     let mut jobs = exports().jobs.lock().unwrap();
     match jobs.get(&key).cloned() {
@@ -199,10 +208,9 @@ pub async fn serve(app: AppState, raw: String, format: String, req: Request) -> 
     if !ok {
         return Err(ApiError::new(429, "rate_limited", "too many stems from this address; try again later").retry(retry));
     }
-    jobs.insert(key.clone(), JobState::Running { file: "master.wav".into(), done: 0 });
+    jobs.insert(key.clone(), JobState::Running { file: first.clone(), done: 0 });
     drop(jobs);
-    let opus = format == "stems-opus";
-    let opts = ExportOptions { sr: if opus { 48_000 } else { 44_100 }, max_bars: app.cfg.render_max_bars, rights, threads: STEMS_THREADS };
+    let opts = ExportOptions { sr: if opus { 48_000 } else { 44_100 }, max_bars: app.cfg.render_max_bars, rights, threads: STEMS_THREADS, dry };
     let (text, cid2, d2, key2) = (p.text.clone(), cid.clone(), d.clone(), key.clone());
     std::thread::Builder::new()
         .name(format!("stems {}", &cid[..cid.len().min(12)]))
@@ -213,7 +221,7 @@ pub async fn serve(app: AppState, raw: String, format: String, req: Request) -> 
             let k3 = key2.clone();
             let mut progress = move |f: &str| {
                 if let Some(j) = exports().jobs.lock().unwrap().get_mut(&k3) {
-                    *j = JobState::Running { file: f.to_string(), done };
+                    *j = JobState::Running { file: shown(f), done };
                 }
                 done += 1;
             };
@@ -224,7 +232,7 @@ pub async fn serve(app: AppState, raw: String, format: String, req: Request) -> 
                 }
                 let tmp = d2.join(format!(".{key2}.{}", std::process::id()));
                 let mut f = std::io::BufWriter::new(std::fs::File::create(&tmp).map_err(|e| ApiError::internal(e.to_string()))?);
-                export::zip(&work, &export::bundle_order(&e), &format!("beatscript-{}", &cid2[..cid2.len().min(12)]), &mut f).map_err(|e| ApiError::internal(e.to_string()))?;
+                export::zip(&work, &export::bundle_order(&e), &export::bundle_folder(&e), &mut f).map_err(|e| ApiError::internal(e.to_string()))?;
                 drop(f);
                 std::fs::rename(&tmp, d2.join(&key2)).map_err(|e| ApiError::internal(e.to_string()))?;
                 Ok(())
@@ -251,7 +259,7 @@ pub async fn serve(app: AppState, raw: String, format: String, req: Request) -> 
             }
         })
         .map_err(|e| ApiError::internal(e.to_string()))?;
-    Ok(json_response(202, &json!({"cid": cid, "format": format, "state": "rendering", "file": "master.wav", "done": 0}), Some(3)))
+    Ok(json_response(202, &json!({"cid": cid, "format": format, "state": "rendering", "file": first, "done": 0}), Some(3)))
 }
 
 /// Every WAV of the bundle as Ogg Opus (96 kb/s, the render's own encoder), the manifest written again to say so.

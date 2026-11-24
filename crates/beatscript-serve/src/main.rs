@@ -3,7 +3,7 @@
 //!
 //! Routes (the Go server's, same status codes, error JSON and headers):
 //!   GET|HEAD /api/render/<cid>[.<packed>]?format=opus|wav&sr=44100|48000
-//!   GET|HEAD /api/render/<cid>[.<packed>]?format=midi|stems|stems-opus   for a DAW (export_route.rs)
+//!   GET|HEAD /api/render/<cid>[.<packed>]?format=midi|stems|stems-opus|stems-dry|stems-dry-opus   for a DAW (export_route.rs)
 //!   GET      /api/render/<cid>/status[?sr=]
 //!   GET      /healthz
 //!   GET      /api/examples, /examples/<name>.beatscript (and .btw, its name before the rename)
@@ -44,7 +44,7 @@ mod render;
 #[path = "../../beatscript-cli/src/export.rs"]
 #[allow(dead_code)]
 mod export;
-mod export_route; // ?format=midi|stems|stems-opus on the render route (docs/EXPORT.md)
+mod export_route; // ?format=midi|stems|stems-opus|stems-dry|stems-dry-opus on the render route (docs/EXPORT.md)
 #[path = "../../beatscript-cli/src/listen.rs"]
 #[allow(dead_code)] // its CLI half is beatscript's
 mod listen;
@@ -454,7 +454,7 @@ fn parse_params(raw: &str, q: &HashMap<String, String>) -> Result<Key, ApiError>
     let format = match q.get("format").map(String::as_str) {
         Some("wav") => Fmt::Wav,
         Some("opus") | Some("") | None => Fmt::Opus,
-        Some(_) => return Err(ApiError::new(400, "bad_request", "format must be opus, wav, midi, stems or stems-opus")),
+        Some(_) => return Err(ApiError::new(400, "bad_request", "format must be opus, wav, midi, stems, stems-opus, stems-dry or stems-dry-opus")),
     };
     let sr = match q.get("sr").map(String::as_str) {
         None | Some("") => 44_100,
