@@ -8,12 +8,14 @@
 //
 // The output is the npm package and also the files to put beside a page:
 //   beatscript-track.js        the element (ESM)        beatscript-track.umd.js   a classic-script loader of it
+//   beatscript-radio.js        <beatscript-radio>: a station and its player (the /radio page's models, the same engine)
 //   beatscript-render.js       the offline render (mode="render"; also usable on its own, in a page, a Worker or Node)
 //   render-model.js            its arithmetic and the WAV writer (both re-export the editor's: js/render*.js)
 //   js/                        the editor's engine and render, unchanged (engine.js, its worklet and composer, the facade;
 //                              render.js, render-client.js, render-worker.js, render-model.js: the editor's render source's)
 //   wasm/beatscript.js                the wasm-bindgen glue    wasm/beatscript_bg.wasm.b64.js   the module, base64, as an ES module
 //   test/csp.html              a page under an artifact-like CSP that plays a program
+//   test/radio.html            the same for <beatscript-radio>
 //   beatscript-track.d.ts      its types                LICENSE, LICENSES/         MIT (code), CC0-1.0 (programs, data)
 //   package.json, README.md, hashes.json (sha256 of every file, and the module's own hashes.json)
 // The module is inlined so that nothing is fetched (a page whose connect-src is 'self' cannot fetch a .wasm from a CDN,
@@ -34,9 +36,12 @@ const out = path.resolve(arg('--out', path.join(here, 'dist')));
 // (station-model.js and version.js: wasm-mock.js imports them; highlight.js and util.js: the editor's syntax highlighting, for the
 // `highlight` attribute); and the render the editor's render source plays, the same files (render.js and its worker,
 // client and model)
-const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'version.js', 'embed-model.js', 'station-model.js', 'highlight.js', 'util.js', 'render.js', 'render-client.js', 'render-worker.js', 'render-model.js'];
+const ENGINE = ['engine.js', 'engine-worklet.js', 'engine-composer.js', 'engine-polyfill.js', 'engine-calls.js', 'mixer-model.js', 'wasm.js', 'wasm-mock.js', 'version.js', 'embed-model.js', 'station-model.js', 'highlight.js', 'util.js', 'render.js', 'render-client.js', 'render-worker.js', 'render-model.js',
+  // <beatscript-radio>: the /radio page's models (the play order, the handoff and its bridges, the playlist's formatting, the
+  // presence pause) and the driver, the same files the page runs
+  'driver.js', 'handoff-model.js', 'playlist-model.js', 'queue-model.js'];
 // the player's own files, at the package's top level
-const OWN = ['beatscript-track.js', 'beatscript-track.umd.js', 'beatscript-track.d.ts', 'beatscript-render.js', 'render-model.js', 'package.json'];
+const OWN = ['beatscript-track.js', 'beatscript-track.umd.js', 'beatscript-track.d.ts', 'beatscript-radio.js', 'beatscript-radio.d.ts', 'beatscript-render.js', 'render-model.js', 'package.json'];
 
 for (const f of ['beatscript.js', 'beatscript_bg.wasm']) {
   if (!fs.existsSync(path.join(wasmDir, f))) {
@@ -55,6 +60,7 @@ for (const f of OWN) cp(path.join(here, 'src', f), f);
 cp(path.join(here, '..', 'embed', 'embed-config.js'), 'embed-config.js');
 cp(path.join(here, 'README.md'), 'README.md');
 cp(path.join(here, 'test', 'csp.html'), 'test/csp.html');
+cp(path.join(here, 'test', 'radio.html'), 'test/radio.html');
 // the licences: the code is MIT; the bundled programs (test/csp.html's) and the engine's data (kits, voices, the sing
 // tables, built into the wasm) are CC0-1.0, as REUSE.toml says for the repository
 const repo = path.join(here, '..', '..');

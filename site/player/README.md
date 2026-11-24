@@ -9,7 +9,7 @@ It is made for pages with a strict Content Security Policy, such as a Claude art
 or a CDN, fetches only to the page's own origin, no frames.
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.3.0/beatscript-track.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.4.0/beatscript-track.js"></script>
 
 <beatscript-track>
   <script type="text/beatscript">
@@ -108,6 +108,57 @@ From 0.3.0 the player reads BeatScript 2, the language under its new name: a pro
 `#! beatscript 2` (the line the editor's fmt writes first). A program in the old spelling, `#! btw 1` or no version line
 at all (every program written before the rename), still plays as it did and keeps its CID; `cid` is checked against the
 program in the version it says. The element, its attributes, its events and its types are those of 0.2.0.
+
+## `<beatscript-radio>`: a station
+
+From 0.4.0 the package has the radio too: a BeatScript station (docs/beatscript/radio.md) and its player, on the models of
+beatscript.app/radio. A station's tracks are deterministic from its text, so the element computes them in the page with the
+engine's own station answer (the wasm's `beatscript_station`, what `POST /api/station` answers): nothing is fetched, and it
+stores nothing (no cookies, no localStorage).
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@stackdump/beatscript-player@0.4.0/beatscript-radio.js"></script>
+
+<beatscript-radio genre="house" locks="tempo key"></beatscript-radio>
+```
+
+With no `station` it plays the techno radio. The station can be its text (an attribute, or a child
+`<script type="text/beatscript">`), or its CID with the text in the child script (the text must be that station).
+
+| attribute | |
+|---|---|
+| `station` | the station's program text, or its CID (the text then in a child `<script type="text/beatscript">`) |
+| `cid` | the CID the station's text must have: a text that is not that station is refused |
+| `genre` `seed` `step` `forms` `tempo` `key` `length` | the station's knobs: each one given retunes the station before it plays (`forms` is a space-separated rotation; `step` is `+N` or `~`) |
+| `locks` | knobs held fixed, space or comma separated: "scan" and "more like this" leave them alone |
+| `n` | the position to start at (default 0) |
+| `segues` | `off`: no segue between tracks (default on, as /radio plays them) |
+| `autoplay` | start without a click when the browser lets it (default off: a Claude artifact needs a click, and the element then says so) |
+| `compact` | the transport and the title only |
+| `theme` | `dark` (the default) or `light` |
+| `site` | where the plain links point (default `https://beatscript.app`) |
+
+It shows a transport (previous, play/stop, next), the title, elapsed and total time, the section and bar, the tempo and
+key, a level meter, the playlist (what plays, then the station's next tracks and the segue after the one playing, each
+with its status: playing, resolving, ready, bridging, failed), "more like this" (one seed along) and "scan" (a notch along
+a knob that is not locked), and a peek drawer: the playing program's text, an edit applied on the next bar (a hot
+reload), "back to station" and Copy. Changing an attribute retunes it, and what plays moves to the new station's track N.
+
+**No dead air, no gap.** What is next is compiled while the current item plays and primed on an engine of its own (its
+nets installed, its decks held). Half a beat before the current item's last bar line, or at once on Next, the held decks
+are let go and the outgoing engine fades out under them over 120 ms. When the next item is not ready in time, a small CC0
+bridge loop at the outgoing tempo and key is hot-reloaded into what plays (it lands on the next bar line) until it is.
+`site/test/player-radio.mjs` holds it to that: across every track change, no silence on the element's output longer than
+one 1024-frame buffer. At most three engines run at once (playing, fading, primed).
+
+It fires `play`, `stop`, `trackchange` (detail `{kind, n, cid, title}`) and `bridge`. `radio.output` is the GainNode all
+of its sound goes through (after the first Play), `radio.report` what the tests read. Types: `beatscript-radio.d.ts`
+(`import '@stackdump/beatscript-player/radio'`). The MCP `artifact` tool's `station` option writes a whole page with it,
+pinned to this version with an integrity hash on every module. `test/radio.html` is a page under an artifact-like CSP.
+
+A long track's check and compile (a form's template is written out: a few seconds for a 200-bar fugue) runs on the
+page's thread while the current item plays; its sound goes on (the engine is on the audio thread), but the readout
+pauses for that long.
 
 ## Licence
 
