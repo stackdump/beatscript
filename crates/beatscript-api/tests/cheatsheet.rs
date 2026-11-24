@@ -71,7 +71,7 @@ fn its_key_lines_are_btw_mds_own() {
         "| `end after outro` | where the section `outro` ends (the song stops there, later sections never play) |",
         "| `rotate n` | every hit `n` steps (sixteenths) along its bar, wrapping |",
         "| `thin p [seed=s]` | drops the share `p` of the hits, picked by a hash of (seed, generation, bar, step, note): the same seed, the same hits |",
-        "| `arp(chord, mode, n)` | the chord's notes one at a time over `n` steps (default 8) in `up`, `down` or `updown`. |",
+        "| `arp(chord, mode, n)` | the chord's notes one at a time over `n` steps (default 8) in `up`, `down` or `updown`. Either takes `shift=n`: its notes `n` key degrees up (-21..21; `up n` writes it). |",
         "| `vel=90` / `vel=70..100` | 1..127 | velocity. A range gives each hit its own, by a hash of its place: the same text, the same velocities. |",
         "| `degrade(p, a)` / `degrade(p, a, seed)` | drops the share `a` of the hits: seeded, so the same text is the same hits |",
         "- **`section name N bars { ... }`** and **`arrange a b c`**: the song is the sections in that order (a section",
