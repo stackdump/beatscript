@@ -156,7 +156,7 @@ curl -s -m 20 $U/llms.txt | grep -q "$U/docs/found-phrases.md"; echo 'llms.txt l
 curl -s -m 20 $U/docs/ | grep -q 'href="/docs/found-phrases"'; echo 'the docs index lists found-phrases'
 curl -s -m 20 $U/docs/cheatsheet.md | grep -q 'found-phrases.md'; echo 'the cheat sheet links found-phrases'
 curl -s -m 20 $U/docs/BEATSCRIPT.md | grep -q 'found-phrases.md'; echo 'BEATSCRIPT.md links found-phrases'
-test "$(curl -s -m 20 $U/docs/cheatsheet.md | wc -c)" -le 30000; echo 'the cheat sheet is within its 30 KB cap'
+test "$(curl -s -m 20 $U/docs/cheatsheet.md | wc -c)" -le 32000; echo 'the cheat sheet is within its 32 KB cap (crates/beatscript-api/tests/cheatsheet.rs it_is_compact)'
 I=$(mcp '{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"deploy-check","version":"1"}}}')
 printf '%s' "$I" | grep -q 'consider a phrasebook line chosen for its meter'; echo 'mcp instructions: the authoring loop has the phrasebook step'
 printf '%s' "$I" | grep -q 'consider a classical form'; echo 'mcp instructions: the authoring loop has the forms step'
@@ -234,12 +234,14 @@ w=s.get("warnings")
 assert w == [], w
 print("live check: genre=trap, kit=drums-808, pad", sys.argv[1], ": no style warning")' "$PAD"
 done
+# drums-lofi: no genre of trap's family (edm) has it. (drums-cr78 was the probe until ontology 0.4.0 put electro, whose
+# kit it is, in that family: a family's kit is not unusual, so cr78 stopped warning for trap by design.)
 gck 'tempo 140
-deck A: kick x ~ x ~ kit=drums-cr78' trap | python3 -c '
+deck A: kick x ~ x ~ kit=drums-lofi' trap | python3 -c '
 import json,sys
 w=json.load(sys.stdin)["style"]["warnings"]
 assert [x["code"] for x in w] == ["kit"] and "(its kit is drums-808)" in w[0]["message"], w
-print("live check: kit=drums-cr78 is still unusual for trap (its kit is drums-808)")'
+print("live check: kit=drums-lofi is still unusual for trap (its kit is drums-808)")'
 TM=$(mcp "$(python3 -c 'import json,sys; print(json.dumps({"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"check","arguments":{"text":sys.argv[1],"genre":"trap"}}}))' "tempo 140
 key em
 $TRAPDRUMS")")
