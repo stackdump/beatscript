@@ -2,7 +2,7 @@
   "check": {
     "ok": true,
     "errors": 0,
-    "warnings": 4,
+    "warnings": 1,
     "infos": 0,
     "diagnostics": [
       {
@@ -19,51 +19,6 @@
         "found": "",
         "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing (in `riser(8, drop)`, line 55, and 1 other call)",
         "render": "warning: the browser does not play this: the `loop_roll` move (of the moves the browser plays vocoder_handoff only)\n  --> 29:3\n   |\n29 |   before $into 4 bars: move loop_roll on A over 4 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing (in `riser(8, drop)`, line 55, and 1 other call)"
-      },
-      {
-        "severity": "warning",
-        "line": 88,
-        "col": 3,
-        "end_col": 43,
-        "start": 2837,
-        "end": 2877,
-        "start16": 2837,
-        "end16": 2877,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n  --> 88:3\n   |\n88 |   deck A: resonance 0.2 -> 0.4 over 8 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 104,
-        "col": 3,
-        "end_col": 44,
-        "start": 3406,
-        "end": 3447,
-        "start16": 3406,
-        "end16": 3447,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n   --> 104:3\n    |\n104 |   deck A: resonance 0.4 -> 0.55 over 4 bars\n    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 118,
-        "col": 3,
-        "end_col": 44,
-        "start": 3881,
-        "end": 3922,
-        "start16": 3881,
-        "end16": 3922,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n   --> 118:3\n    |\n118 |   deck A: resonance 0.55 -> 0.7 over 4 bars\n    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
       }
     ],
     "cid": "z4EBG9jB3vwMeCJNSp8WJLWDRM7ADEWxi23HyNSij5cHBL94r7v",
@@ -181,51 +136,6 @@
         "found": "",
         "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing (in `riser(8, drop)`, line 55, and 1 other call)",
         "render": "warning: the browser does not play this: the `loop_roll` move (of the moves the browser plays vocoder_handoff only)\n  --> 29:3\n   |\n29 |   before $into 4 bars: move loop_roll on A over 4 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing (in `riser(8, drop)`, line 55, and 1 other call)"
-      },
-      {
-        "severity": "warning",
-        "line": 88,
-        "col": 3,
-        "end_col": 43,
-        "start": 2837,
-        "end": 2877,
-        "start16": 2837,
-        "end16": 2877,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n  --> 88:3\n   |\n88 |   deck A: resonance 0.2 -> 0.4 over 8 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 104,
-        "col": 3,
-        "end_col": 44,
-        "start": 3406,
-        "end": 3447,
-        "start16": 3406,
-        "end16": 3447,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n   --> 104:3\n    |\n104 |   deck A: resonance 0.4 -> 0.55 over 4 bars\n    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 118,
-        "col": 3,
-        "end_col": 44,
-        "start": 3881,
-        "end": 3922,
-        "start16": 3881,
-        "end16": 3922,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n   --> 118:3\n    |\n118 |   deck A: resonance 0.55 -> 0.7 over 4 bars\n    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
       }
     ],
     "from_cid": "z4EBG9jB3vwMeCJNSp8WJLWDRM7ADEWxi23HyNSij5cHBL94r7v",

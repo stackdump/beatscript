@@ -2,24 +2,9 @@
   "check": {
     "ok": true,
     "errors": 0,
-    "warnings": 2,
+    "warnings": 1,
     "infos": 0,
     "diagnostics": [
-      {
-        "severity": "warning",
-        "line": 6,
-        "col": 1,
-        "end_col": 41,
-        "start": 182,
-        "end": 222,
-        "start16": 182,
-        "end16": 222,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n --> 6:1\n  |\n6 | master: resonance 0.2 -> 0.8 over 4 bars\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
       {
         "severity": "warning",
         "line": 9,
@@ -70,21 +55,6 @@
     "version": 2,
     "comments": ["ramps on inserts and mixer levels, a timed line with an undo."],
     "diagnostics": [
-      {
-        "severity": "warning",
-        "line": 6,
-        "col": 1,
-        "end_col": 41,
-        "start": 182,
-        "end": 222,
-        "start16": 182,
-        "end16": 222,
-        "message": "the browser does not play this: the filter's `filter.res` (the browser sweeps it)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the filter's `filter.res` (the browser sweeps it)\n --> 6:1\n  |\n6 | master: resonance 0.2 -> 0.8 over 4 bars\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
       {
         "severity": "warning",
         "line": 9,

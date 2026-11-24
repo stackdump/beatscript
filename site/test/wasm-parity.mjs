@@ -126,16 +126,21 @@ const calls = await import(pathToFileURL(path.join(jsDir, 'engine-calls.js')).hr
     ok('mixer crossfader', eq(mapCall('mixer', { crossfader: 0.25 }).ops, [{ type: 'crossfader', value: 0.25 }]));
     ok('mixer master is a master action', mapCall('mixer', { master: 0.5 }).ops[0].json === '{"op":"master","value":0.5}');
     ok('deck play / stop', eq(mapCall('deck', { action: 'play', deck: 'A' }).ops, [{ type: 'play', deck: 'A', on: true }]) && eq(mapCall('deck', { action: 'stop', deck: 'A' }).ops, [{ type: 'play', deck: 'A', on: false }]));
-    const mf = mapCall('inserts', { action: 'set', target: 'Master', param: 'filter.sweep', value: knob(400, false) });
-    const mfj = mf.ops.map((o) => ({ deck: o.deck, ...JSON.parse(o.json) }));
-    ok('master filter sweep becomes lp-freq and hp-freq on both decks', eq(mfj.map((o) => `${o.deck}:${o.key}`), ['A:lp-freq', 'B:lp-freq', 'A:hp-freq', 'B:hp-freq']) && mfj[2].value === 0, JSON.stringify(mfj));
-    // masterFx's value is a position 0..1 of the slider (MasterFxKey::slider_value): lp 400 Hz is slider 26, position 0.26
-    ok('master filter sweep sends a slider position, not slider units', mfj[0].value === Math.round(100 * Math.log(4) / Math.log(200)) / 100 && mfj[0].value < 1, JSON.stringify(mfj[0]));
-    const mo = mapCall('inserts', { action: 'on', target: 'Master', effect: 'filter', on: false });
-    ok('master filter off opens both units', mo.ops.length === 4 && mo.ops.every((o) => { const j = JSON.parse(o.json); return j.key === 'lp-freq' ? j.value === 1 : j.value === 0; }));
-    ok('master filter on alone changes nothing', mapCall('inserts', { action: 'on', target: 'Master', effect: 'filter', on: true }).ops.length === 0);
-    const dr = mapCall('inserts', { action: 'set', target: 'A', param: 'filter.sweep', value: knob(8000, false) });
-    ok('a deck filter sweep is the strip filter knob', dr.ops.length === 1 && dr.ops[0].type === 'param' && dr.ops[0].name === 'filter' && dr.ops[0].value < 0.45);
+    // the filter is the booth's insert filter (djrust `live_op("inserts", ..)`): its switch, sweep and resonance, on the strip named
+    const ins = (o) => o.type === 'live' && o.method === 'inserts' ? JSON.parse(o.params) : null;
+    const mf = mapCall('inserts', { action: 'set', target: 'Master', param: 'filter.sweep', value: knob(400, false) }).ops;
+    ok('master filter sweep is the master insert chain\'s sweep knob', mf.length === 1 && eq(ins(mf[0]), { param: 'filter.sweep', target: 'master', value: knob(400, false) }), JSON.stringify(mf));
+    const mo = mapCall('inserts', { action: 'on', target: 'Master', effect: 'filter', on: false }).ops;
+    ok('master filter off switches the insert filter off', mo.length === 1 && eq(ins(mo[0]), { effect: 'filter', on: false, target: 'master' }), JSON.stringify(mo));
+    const mon = mapCall('inserts', { action: 'on', target: 'Master', effect: 'filter', on: true }).ops;
+    ok('master filter on switches it on', mon.length === 1 && ins(mon[0]).on === true);
+    const dr = mapCall('inserts', { action: 'set', target: 'A', param: 'filter.sweep', value: knob(8000, false) }).ops;
+    ok('a deck filter sweep is that deck\'s insert chain', dr.length === 1 && ins(dr[0]).target === 'A' && ins(dr[0]).param === 'filter.sweep');
+    const rs = mapCall('inserts', { action: 'set', target: 'A', param: 'filter.res', value: 0.4 }).ops;
+    ok('a deck\'s resonance is its insert filter\'s filter.res', !mapCall('inserts', { action: 'set', target: 'A', param: 'filter.res', value: 0.4 }).ignored && rs.length === 1 && eq(ins(rs[0]), { param: 'filter.res', target: 'A', value: 0.4 }), JSON.stringify(rs));
+    const mr = mapCall('inserts', { action: 'set', target: 'Master', param: 'filter.res', value: 1.5 }).ops;
+    ok('the master\'s resonance too, held to 0..1', mr.length === 1 && eq(ins(mr[0]), { param: 'filter.res', target: 'master', value: 1 }), JSON.stringify(mr));
+    ok('the filter\'s mix is still ignored, and says so', /filter\.mix/.test(mapCall('inserts', { action: 'set', target: 'A', param: 'filter.mix', value: 0.5 }).ignored || ''));
     ok('master reverb mix is reverbWet on both decks', eq(mapCall('inserts', { action: 'set', target: 'Master', param: 'reverb.mix', value: 0.3 }).ops.map((o) => `${o.deck}${o.name}${o.value}`), ['AreverbWet0.3', 'BreverbWet0.3']));
     ok('reverb off is wet 0', mapCall('inserts', { action: 'on', target: 'Master', effect: 'reverb', on: false }).ops.every((o) => o.value === 0));
     const cr = mapCall('inserts', { action: 'set', target: 'Master', param: 'crush.mix', value: 0.5 }).ops;
@@ -249,6 +254,41 @@ const hashBlocks = () => { const h = crypto.createHash('sha256'); const inter = 
     ok('a refused call is a warning', port.out.some((m) => m.type === 'warn'));
     port.onmessage({ data: { type: 'dispose' } });
     ok('dispose ends the processor', quantum() === false);
+}
+
+// ============================================================ 3b. resonance: the insert filter's filter.res reaches the engine
+{
+    // two worklets, the same program and the same low-pass, one with no resonance and one with all of it: the live op is taken
+    // (no warning) and the two sound different; the resonance is the booth's own (djrust `fx::insert`, Q 0.707 + res^2 * 9.3)
+    const w = await workletScope();
+    const Proc = w.registered['beatscript-engine'];
+    const aLoad = firstLoad(PROGRAM).find((l) => l.deck === 'A');
+    const bytes = new glue.DjComposer(SR).prepare_share('A', JSON.stringify(aLoad.envelope), '[]');
+    const play = (res) => {
+        const p = new Proc({ processorOptions: { module: w.module } });
+        const port = p.port;
+        const L = new Float32Array(128), R = new Float32Array(128);
+        const quantum = () => p.process([[]], [[L, R]]);
+        port.onmessage({ data: { type: 'install', id: 1, deck: 'A', bytes } });
+        let n = 0;
+        while (!port.out.some((m) => m.type === 'installed' || m.type === 'install-failed') && n++ < 5000) quantum();
+        while (p.quanta % 4 !== 0) quantum();
+        for (const op of [
+            calls.mapCall('inserts', { action: 'on', target: 'A', effect: 'filter', on: true }),
+            calls.mapCall('inserts', { action: 'set', target: 'A', param: 'filter.sweep', value: 0.2 }),
+            calls.mapCall('inserts', { action: 'set', target: 'A', param: 'filter.res', value: res }),
+        ].flatMap((r) => r.ops)) port.onmessage({ data: op });
+        port.onmessage({ data: { type: 'play', deck: 'A', on: true } });
+        const hb = hashBlocks();
+        let e = 0;
+        for (let i = 0; i < (2 * SR) / 128; i++) { quantum(); hb.add(L, R); for (let k = 0; k < 128; k++) e += L[k] * L[k]; }
+        port.onmessage({ data: { type: 'dispose' } });
+        return { hash: hb.h.digest('hex'), e, warns: port.out.filter((m) => m.type === 'warn' || m.type === 'error') };
+    };
+    const dry = play(0), wet = play(1);
+    ok('the inserts live op is taken, no warning', dry.warns.length === 0 && wet.warns.length === 0, JSON.stringify(dry.warns.concat(wet.warns)));
+    ok('the filtered deck still plays', dry.e > 0 && wet.e > 0, `${dry.e} ${wet.e}`);
+    ok('resonance 1 sounds unlike resonance 0 at the same cutoff', dry.hash !== wet.hash && Math.abs(wet.e / dry.e - 1) > 0.01, `energy ${dry.e.toFixed(3)} vs ${wet.e.toFixed(3)}`);
 }
 
 // ============================================================ 4. createEngine, a fake context, a real BeatscriptRun

@@ -87,13 +87,14 @@ pub fn browser_plays(noun: &str, p: &JsonValue) -> Result<(), String> {
                 return Err(format!("inserts on `{target}`"));
             }
             match effect.as_str() {
-                "filter" if off || param == "filter.sweep" => Ok(()),
+                // the booth's insert filter itself (djrust `live_op("inserts", ..)`): its sweep and its resonance, at the same curves
+                "filter" if off || param == "filter.sweep" || param == "filter.res" => Ok(()),
                 "reverb" if off || param == "reverb.mix" => Ok(()),
                 "crush" if master && (off || param == "crush.mix") => Ok(()),
                 _ if off && p.get("on").and_then(JsonValue::as_bool) == Some(false) => Ok(()),
                 "crush" => Err("the bitcrusher on a deck (the browser has it on the master)".into()),
                 "delay" => Err("the delay insert".into()),
-                "filter" => Err(format!("the filter's `{param}` (the browser sweeps it)")),
+                "filter" => Err(format!("the filter's `{param}` (the browser sweeps it and sets its resonance)")),
                 e => Err(format!("the `{e}` insert")),
             }
         }

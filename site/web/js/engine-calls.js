@@ -11,11 +11,11 @@
  *   mixer     {deck A|B, volume | gain | filter | low | mid | high | mute}  the deck strip, same 0..1 knobs
  *             {crossfader}  {master}                                        the mixer
  *   deck      {action: play | stop | pause, deck}                             the deck's transport
- *   inserts   target Master, effect filter    sweep knob -> both decks' master FX units' lp-freq / hp-freq (cutoff
- *                                             mapped across the two scales; the same cutoff, not the same filter)
+ *   inserts   target Master | A | B, effect filter   on / off, filter.sweep, filter.res -> that strip's insert chain (the
+ *                                             booth's filter: djrust `live_op("inserts", ..)`, the same sweep and resonance
+ *                                             curves; a ramp, `resonance 0.2 -> 0.4 over 8 bars`, is one `set` a pass)
  *             target Master, effect reverb    mix -> each deck strip's reverb wet (the master has no reverb here)
  *             target Master, effect crush     mix -> both decks' master FX crushers (crush-bits)
- *             target A | B, effect filter     sweep knob -> the deck strip's filter knob (cutoff mapped across the scales)
  *             target A | B, effect reverb     mix -> that strip's reverb wet
  *   fx        {action: set, param: drive, deck?, value}                       the deck's FX unit drive (the master chain's
  *             distortion: 0 is off, bit for bit); no deck is both decks (`master: drive 0.6`), A or B is that deck's
@@ -36,7 +36,7 @@
  *   A `sing` line is not a call here: on this host it is a part of its deck's net (djlive sing.rs, "In the nets"),
  *   so it is sung through the deck like any part and stops with the net.
  * IGNORED, with one console note per kind (and `check` warns about each where the program is written)
- *   inserts delay, filter resonance, crush on a deck, delay time; the Wheel target
+ *   inserts delay, filter mix, crush on a deck, delay time; the Wheel target
  *   vocal (a `sing` line that is timed or performed, `do vocal ...`), vocoder status / list / select / cycle_* / preset_*,
  *   moves (filter_exit, echo_out, loop_roll, bass_swap, phrase_sync), loopsets, queue, autodj, td3,
  *   `deck load|sync`, mixer pfl / aux / headphone_*, and any other noun
@@ -47,6 +47,8 @@
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const DECKS = ['A', 'B'];
+/** The insert filter's knobs this engine plays (djrust `InsertParam` ids). */
+const FILTER_KNOBS = ['filter.sweep', 'filter.res'];
 
 /** The Wheel's actions (djhost control_registry `A_WHEEL`): the ones that wind the instrument, and the voice's. */
 export const WHEEL_WINDS = new Set(['load', 'key', 'sequence', 'brightness']);
@@ -149,24 +151,12 @@ export function mapCall(noun, params) {
         const on = p.action === 'on' ? p.on !== false : undefined;
         const value = num(p.value);
         if (effect === 'filter') {
-            if (p.action === 'on') {
-                if (on === false) {
-                    // switched off: open
-                    if (target === 'Master') ops.push(...masterFx('lp-freq', 100), ...masterFx('hp-freq', 0));
-                    else ops.push(param(target, 'filter', 0.5));
-                }
-                // switched on: the sweep value that follows sets it
-            } else if (p.param === 'filter.sweep' && Number.isFinite(value)) {
-                const corners = sweepCorners(value);
-                if (target === 'Master') {
-                    const s = masterFilterSliders(corners);
-                    ops.push(...masterFx('lp-freq', s.lp), ...masterFx('hp-freq', s.hp));
-                } else {
-                    ops.push(param(target, 'filter', stripFilterKnob(corners)));
-                }
-            } else {
-                skipped.push(`inserts ${p.param || 'filter'}`);
-            }
+            // the booth's own insert filter (djrust `fx::insert`, through the `inserts` live op): the same sweep corners, the same
+            // resonance curve (Q 0.707 + res^2 * 9.3, none in the open middle) and the same glide, on the deck's strip or the master
+            const t = target === 'Master' ? 'master' : target;
+            if (p.action === 'on') ops.push(live('inserts', { target: t, effect: 'filter', on: on !== false }));
+            else if (FILTER_KNOBS.includes(p.param) && Number.isFinite(value)) ops.push(live('inserts', { target: t, param: p.param, value: clamp01(value) }));
+            else skipped.push(`inserts ${p.param || 'filter'}`);
         } else if (effect === 'reverb') {
             if (p.action === 'on' && on === false) for (const d of decks) ops.push(param(d, 'reverbWet', 0));
             else if (p.param === 'reverb.mix' && Number.isFinite(value)) for (const d of decks) ops.push(param(d, 'reverbWet', clamp01(value)));

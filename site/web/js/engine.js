@@ -301,6 +301,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
     const noted = new Set();
     const lastSent = new Map();
     let touched = false; // a live op (the vocoder) was sent: resetLive() puts it back
+    const inserted = new Set(); // the strips whose insert filter the program touched (`inserts` live ops): resetLive() switches them off
     function post(op, dedupe) {
         if (disposed) return;
         // a knob that has not moved is not sent again (a ramp calls on every pass)
@@ -314,6 +315,8 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
                 const j = JSON.parse(op.params);
                 if (j.swap || j.remove || op.phrase) { send(op); touched = true; return; }
                 key += `:${op.method}:${j.instance ?? 0}:${Object.keys(j).sort().join(',')}`;
+                // an insert knob or switch is its own key per strip and knob, so a sweep and a resonance ramping together each dedupe
+                if (op.method === 'inserts') { key += `:${j.target}:${j.param ?? j.effect}`; inserted.add(j.target); }
                 val = op.params;
                 touched = true;
             }
@@ -470,7 +473,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
         /** Forget which ignored calls were noted, so a new program's are emitted ('ignored') again. */
         resetNotes() { noted.clear(); },
 
-        /** The program stopped: the vocoders it used go off and the extra instances away (the next program starts clean). */
+        /** The program stopped: the vocoders it used go off and the extra instances away, the insert filters it used off (the next program starts clean). */
         resetLive() {
             if (wheelTouched && !disposed) {
                 // the program stopped: the wheel goes back to none loaded, held (the next program starts clean)
@@ -484,6 +487,12 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
             if (!touched || disposed) return;
             touched = false;
             for (const [k] of lastSent) if (k.startsWith('live:')) lastSent.delete(k);
+            // the insert filter goes off (it fades), its resonance back to the chain's default, so the next program starts as a fresh chain does
+            for (const target of inserted) {
+                send({ type: 'live', method: 'inserts', params: JSON.stringify({ effect: 'filter', on: false, target }) });
+                send({ type: 'live', method: 'inserts', params: JSON.stringify({ param: 'filter.res', target, value: 0.3 }) });
+            }
+            inserted.clear();
             send({ type: 'live', method: 'vocoder', params: JSON.stringify({ on: false, swap: false }), reset: true });
         },
 

@@ -272,9 +272,9 @@ identified against reference bars (p1 = one kick, p2 = two, p3 = three, `four` =
    `SetRoleVoice` ops) to close rows 7 and 12.
 3. **Inserts in the offline render**: filter (with resonance), reverb, delay, crush. The arrangement has no op for an
    insert. Once it does, the stream gets rows 1, 2, 4, 8, 9, 13 and 15, the most common lines in composed programs.
-4. **The engine's missing effects** need djrust engine work, then a wasm rebuild. Resonance: the master chain's filter
-   Q is a constant (`FILTER_Q_DB`), and the strip filter is fixed Butterworth, so `filter.res` needs a Q control in
-   `Dj`. The others: delay, tricks, freeze, vocoder, moves, deck tempo. `fire_macro` / `engage` exist in the facade and
+4. **The engine's missing effects** need djrust engine work, then a wasm rebuild. Resonance is done (2026-11-24): djrust's
+   `inserts` live op puts the booth's own insert filter in `Dj`, and the page sends every filter call there (switch, sweep,
+   `filter.res`), so a deck's or the master's filter and its resonance play at the booth's curves. The others: delay, tricks, freeze, vocoder, moves, deck tempo. `fire_macro` / `engage` exist in the facade and
    may cover some tricks.
 5. **Tempo curves.** `beatscript` renders a program at its first tempo, and the engine follows the curve (its nets carry each
    section's tempo). Toward the render would mean the engine holding one tempo, which contradicts the program text.
