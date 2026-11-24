@@ -183,7 +183,7 @@ From `engine-calls.js` and from the `ignored` events and console lines captured 
 | `trick` | `trick on deck=A kind=stutter` / `tape_stop` / `spin_back` / `filter` / ..., and `duck B under A.kick 6db` (a `pump` trick) |
 | `freeze` | `freeze phrase bars=1`, `do freeze ...` |
 | `vocoder` | `do vocoder set mix=0 -> 0.8 over 8 bars`, `vocoder ...` |
-| `moves` | `move filter_exit on B over 4 bars` (also `echo_out`, `loop_roll`, `bass_swap`, `phrase_sync`, `vocoder_handoff`) |
+| `moves phrase_sync seed` | `move phrase_sync on B` with no `do=cut` (a program's deck plays its own nets, not a seed; every other move plays: engine-calls.js `MoveScheduler`) |
 | `deck tempo` | `at bar 2: tempo 128 -> 150 over 4 bars`, any tempo curve (the runtime sets the deck tempo each pass) |
 | `deck load`, `deck sync` | `deck B: load techno:42`, `deck A: sync` |
 | `loopsets` | `load pair dnb:2602 group 2` |
@@ -274,7 +274,7 @@ identified against reference bars (p1 = one kick, p2 = two, p3 = three, `four` =
    insert. Once it does, the stream gets rows 1, 2, 4, 8, 9, 13 and 15, the most common lines in composed programs.
 4. **The engine's missing effects** need djrust engine work, then a wasm rebuild. Resonance is done (2026-11-24): djrust's
    `inserts` live op puts the booth's own insert filter in `Dj`, and the page sends every filter call there (switch, sweep,
-   `filter.res`), so a deck's or the master's filter and its resonance play at the booth's curves. The others: delay, tricks, freeze, vocoder, moves, deck tempo. `fire_macro` / `engage` exist in the facade and
+   `filter.res`), so a deck's or the master's filter and its resonance play at the booth's curves. The others: delay, tricks, freeze, vocoder, deck tempo (the moves play since the page's `MoveScheduler`). `fire_macro` / `engage` exist in the facade and
    may cover some tricks.
 5. **Tempo curves.** `beatscript` renders a program at its first tempo, and the engine follows the curve (its nets carry each
    section's tempo). Toward the render would mean the engine holding one tempo, which contradicts the program text.

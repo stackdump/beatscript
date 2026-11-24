@@ -25,6 +25,10 @@
  *             and the crossfader), else it plays on its own strip; a ramp (`mix=0 -> 1 over 8 bars`) is one `set` a pass
  *   moves     {action: arm, kind: vocoder_handoff, deck}  the vocoder's carrier and modulator swapped on the next
  *             phrase line (8 bars) of `deck`, as the desktop's move does
+ *             {action: arm | toggle, kind: filter_exit | echo_out | loop_roll | bass_swap | phrase_sync (do=cut), deck A|B,
+ *             bars?}  a {type:'move'} op: the worklet's MoveScheduler (below), a port of the booth's move scheduler
+ *             (djhost perform.rs `Moves`), lands it on the deck's next bar or phrase line as the booth does
+ *             {action: cancel, kind?, deck?} | {action: cancel_all}  the move let go as the booth lets it go
  *   wheel     {action: load | key | sequence | brightness | play | pause | toggle | motor | level | interval | sync |
  *             step | follow | pluck | trigger | status | presets, ...}  the Wheel: windwheel's tonewheel, the booth's own
  *             instrument (djweb src/wheel.rs). One op per call, `{type:'wheel', action, params}`: engine.js has a load,
@@ -38,7 +42,8 @@
  * IGNORED, with one console note per kind (and `check` warns about each where the program is written)
  *   inserts delay, filter mix, crush on a deck, delay time; the Wheel target
  *   vocal (a `sing` line that is timed or performed, `do vocal ...`), vocoder status / list / select / cycle_* / preset_*,
- *   moves (filter_exit, echo_out, loop_roll, bass_swap, phrase_sync), loopsets, queue, autodj, td3,
+ *   a phrase_sync that steps a seed (do=seed, the default: a program's deck plays its own nets, not a seed; the booth's
+ *   offline render does not play it either), a move on a deck other than A or B, moves status, loopsets, queue, autodj, td3,
  *   `deck load|sync`, mixer pfl / aux / headphone_*, and any other noun
  *   effects fire / release (a `macro` line, docs/beatscript/ext-control.md): noted by its id, `macro riser`, as the line says it; the
  *   offline render and `listen` play it, this engine plays none of the DJ catalogue yet
@@ -203,9 +208,18 @@ export function mapCall(noun, params) {
         break;
     }
     case 'moves': {
+        const deck = typeof p.deck === 'string' ? p.deck.trim().toUpperCase() : undefined;
         if (p.action === 'arm' && p.kind === 'vocoder_handoff') {
-            ops.push({ ...live('vocoder', { swap: true }), phrase: { deck: DECKS.includes(p.deck) ? p.deck : 'A', bars: 8 } });
-        } else skipped.push('moves');
+            ops.push({ ...live('vocoder', { swap: true }), phrase: { deck: DECKS.includes(deck) ? deck : 'A', bars: 8 } });
+        } else if ((p.action === 'arm' || p.action === 'toggle') && SCHEDULED_MOVES.includes(p.kind)) {
+            if (!DECKS.includes(deck)) skipped.push(`moves on deck ${p.deck}`);
+            else if (p.kind === 'phrase_sync' && phraseAction(p.do) !== 'cut') skipped.push('moves phrase_sync seed');
+            else ops.push({ type: 'move', action: p.action, kind: p.kind, deck, bars: moveBars(p.kind, num(p.bars)), do: p.kind === 'phrase_sync' ? 'cut' : undefined });
+        } else if (p.action === 'cancel' && (p.kind === undefined || MOVE_KINDS.includes(p.kind))) {
+            ops.push({ type: 'move', action: 'cancel', kind: p.kind, deck });
+        } else if (p.action === 'cancel_all') {
+            ops.push({ type: 'move', action: 'cancel_all' });
+        } else skipped.push(`moves ${p.action || '?'}${p.kind ? ` ${p.kind}` : ''}`);
         break;
     }
     case 'wheel': {
@@ -228,4 +242,233 @@ export function mapSound(deck, role, option) {
     const kit = typeof option === 'string' && option.startsWith('kit:') ? option.slice(4) : null;
     const json = kit !== null ? { op: 'setKit', deck, kit } : { op: 'setRoleVoice', deck, role, voice: option };
     return { type: 'perform', deck, json: JSON.stringify(json) };
+}
+
+// ---- the moves (djhost perform.rs, `Moves`) ----------------------------------------------------------------------------
+
+/** Every move the language has (djlive compile.rs MOVES). */
+export const MOVE_KINDS = ['filter_exit', 'echo_out', 'loop_roll', 'bass_swap', 'phrase_sync', 'vocoder_handoff'];
+/** The moves the worklet's MoveScheduler times (vocoder_handoff is a phrased live op of its own, above). */
+export const SCHEDULED_MOVES = ['filter_exit', 'echo_out', 'loop_roll', 'bass_swap', 'phrase_sync'];
+/** How far into the high-pass the filter exit rides (perform.rs FILTER_EXIT_AMOUNT). */
+export const FILTER_EXIT_AMOUNT = 0.9;
+/** The wash's dry fade on an echo out, in beats (perform.rs ECHO_CUT_BEATS). */
+export const ECHO_CUT_BEATS = 0.25;
+/** A loop roll's stages on a deck that loops (a net deck, which every deck of a program is), in beats (perform.rs ROLL_BEATS). */
+export const ROLL_BEATS = [4, 2, 1, 0.5];
+const TICKS_PER_BAR = 16;
+const BEATS_PER_BAR = 4;
+
+/** What a phrase sync does on its line (perform.rs `PhraseAction::parse`; no `do`, or one it does not know, is a seed). */
+export function phraseAction(v) {
+    const s = typeof v === 'string' ? v.trim().toLowerCase() : '';
+    return ['cut', 'xfade', 'crossfader', 'transition'].includes(s) ? 'cut' : 'seed';
+}
+
+/** A move's `bars` as `Moves::arm` takes it: none or 0 is the move's own default, at most 64. */
+export function moveBars(kind, bars) {
+    const def = { bass_swap: 8, vocoder_handoff: 8, phrase_sync: 16, filter_exit: 4, echo_out: 4, loop_roll: 1 }[kind] || 4;
+    const b = Number.isFinite(bars) ? Math.max(0, Math.floor(bars)) : 0;
+    return Math.min(64, b === 0 ? def : b);
+}
+
+/**
+ * The booth's move scheduler (djhost perform.rs `Moves`) on the browser engine: a move armed now lands on the next bar line
+ * (filter_exit, echo_out, loop_roll) or phrase line (bass_swap, phrase_sync) of the deck that times it, and runs its schedule
+ * over the engine's primitives, as the booth's does:
+ *
+ *   bass_swap    at arm: the incoming deck's low EQ cut; on the outgoing deck's phrase line: the lows swapped
+ *   phrase_sync  (do=cut) on the phrase line of the deck playing out: the crossfader cut over to the deck
+ *   filter_exit  on the bar line: the `filter` trick rides a high-pass over `bars`; `bars` later the deck is muted, the filter
+ *                back open behind it
+ *   echo_out     on the bar line: the `wash` trick (the dry gone in a 16th, the room ringing); `bars` later the deck muted, the
+ *                wash off behind it
+ *   loop_roll    on the bar line: a 4-beat loop, halved every `bars` bars on the move's own clock (4 -> 2 -> 1 -> 1/2 beat),
+ *                released on the line after the last (the drop)
+ *
+ * A stopped deck acts at once, as a stopped grid does in the booth. One of each kind a deck (a bass swap: one at all): arming
+ * again cancels the one in flight. The program puts a muted strip back itself (the runtime's `mixer {mute: false}` on the
+ * first phrase line after the move), as it does in the booth.
+ *
+ * Lines are the worklet's, as for the vocoder handoff: a deck's place in its net in ticks (16 to the bar), a line crossed when
+ * the place passes a multiple of the period or wraps (a new net lands on a bar line). Pure: everything goes through `host`:
+ *   position(deck) -> ticks | null (not playing)    bpm(deck) -> number       eqLow(deck) -> 0..1
+ *   setEqLow(deck, v)   setMute(deck, on)   trick(deck, kind, on, args?)   loopBeats(deck, beats)   loopHalve(deck)
+ *   exitLoop(deck)      crossfadeTo(deck)
+ */
+export class MoveScheduler {
+    constructor(host) {
+        this.host = host;
+        this.active = [];
+        this.nextId = 0;
+        /** The last word on each move, by `kind:deck` (`kind:*` for a bass swap), as the booth's `last`. */
+        this.last = {};
+    }
+
+    get busy() { return this.active.length > 0; }
+
+    other(deck) { return deck === 'A' ? 'B' : 'A'; }
+
+    plays(deck) {
+        const pos = this.host.position(deck);
+        return pos !== null && pos !== undefined && this.host.bpm(deck) > 0;
+    }
+
+    /** perform.rs `pick_grid`: `first` if it plays, else `then` if it does, else null (at once). */
+    pickGrid(first, then) {
+        if (this.plays(first)) return first;
+        return then && this.plays(then) ? then : null;
+    }
+
+    oneAtATime(kind) { return kind === 'bass_swap'; }
+
+    note(kind, deck, text) { this.last[`${kind}:${this.oneAtATime(kind) ? '*' : deck}`] = text; }
+
+    /** A {type:'move'} op from mapCall. */
+    apply(op) {
+        if (op.action === 'cancel_all') return this.cancelAll();
+        if (op.action === 'cancel') return this.cancelKind(op.kind, op.deck);
+        if (op.action === 'toggle' && this.find(op.kind, op.deck)) return this.cancelKind(op.kind, op.deck);
+        if (op.action === 'arm' || op.action === 'toggle') return this.arm(op.kind, op.deck, op.bars);
+        return false;
+    }
+
+    find(kind, deck) {
+        return this.active.find((m) => m.kind === kind && (this.oneAtATime(kind) || m.deck === deck)) || null;
+    }
+
+    /** `Moves::arm`. Returns the move's id. */
+    arm(kind, deck, bars) {
+        if (!SCHEDULED_MOVES.includes(kind) || (deck !== 'A' && deck !== 'B')) return null;
+        bars = moveBars(kind, bars);
+        for (const m of this.active.filter((x) => x.kind === kind && (this.oneAtATime(kind) || x.deck === deck))) this.cancel(m.id);
+        const out = this.other(deck);
+        const m = { id: ++this.nextId, kind, deck, bars, phase: 'armed', grid: null, ticks: TICKS_PER_BAR, last: null, left: 1, savedLow: 0.5, stage: 0, elapsed: 0 };
+        if (kind === 'bass_swap') {
+            // the outgoing deck holds the phrase: it is the one playing out
+            m.savedLow = this.host.eqLow(deck) ?? 0.5;
+            m.grid = this.pickGrid(out, deck);
+            m.ticks = bars * TICKS_PER_BAR;
+        } else if (kind === 'phrase_sync') {
+            m.grid = this.pickGrid(out, deck);
+            m.ticks = bars * TICKS_PER_BAR;
+        } else {
+            m.grid = this.pickGrid(deck, null);
+        }
+        m.last = m.grid ? this.host.position(m.grid) : null;
+        // what happens at once
+        if (kind === 'bass_swap' && m.savedLow > 0) this.host.setEqLow(deck, 0);
+        this.active.push(m);
+        this.note(kind, deck, m.grid ? `armed: on the ${m.ticks === TICKS_PER_BAR ? 'next bar' : `next ${bars}-bar phrase`} line of ${m.grid}` : 'armed: at once (not playing)');
+        return m.id;
+    }
+
+    /** `Moves::cancel`: one waiting is dropped (a bass swap gives the incoming lows back), one running let go. */
+    cancel(id) {
+        const i = this.active.findIndex((m) => m.id === id);
+        if (i < 0) return false;
+        const [m] = this.active.splice(i, 1);
+        if (m.kind === 'bass_swap' && m.phase === 'armed') this.host.setEqLow(m.deck, m.savedLow);
+        else if (m.kind === 'filter_exit' && m.phase === 'running') this.host.trick(m.deck, 'filter', false);
+        else if (m.kind === 'echo_out' && m.phase === 'running') this.host.trick(m.deck, 'wash', false);
+        else if (m.kind === 'loop_roll' && m.phase === 'running') this.host.exitLoop(m.deck);
+        this.note(m.kind, m.deck, 'cancelled');
+        return true;
+    }
+
+    /** The move of `kind` on `deck` (any deck for a bass swap) cancelled; no kind: every move on `deck`, or every move. */
+    cancelKind(kind, deck) {
+        const ids = this.active.filter((m) => (kind === undefined || m.kind === kind) && (deck === undefined || (kind && this.oneAtATime(kind)) || m.deck === deck)).map((m) => m.id);
+        for (const id of ids) this.cancel(id);
+        return ids.length > 0;
+    }
+
+    cancelAll() {
+        for (const m of this.active.slice()) this.cancel(m.id);
+        return true;
+    }
+
+    /**
+     * Whether `m`'s next line has come: `m.left` lines of `m.ticks` on its grid deck. A deck that stopped (or a move with no
+     * grid) is there at once, as a stopped grid is in the booth.
+     */
+    lineCome(m) {
+        if (!m.grid) return true;
+        const pos = this.host.position(m.grid);
+        if (pos === null || pos === undefined) return true;
+        const last = m.last === null || m.last === undefined ? pos : m.last;
+        if (pos < last || Math.floor(pos / m.ticks + 1e-9) !== Math.floor(last / m.ticks + 1e-9)) m.left--;
+        m.last = pos;
+        return m.left <= 0;
+    }
+
+    /** One pass of `dt` seconds of audio: every move whose line has come acts (`Moves::service`). */
+    service(dt) {
+        for (const m of this.active.slice()) {
+            const word = this.step(m, dt);
+            if (word !== null) {
+                this.active = this.active.filter((x) => x !== m);
+                this.note(m.kind, m.deck, word);
+            }
+        }
+    }
+
+    /** Advance one move; the last word when it is over, else null. */
+    step(m, dt) {
+        const h = this.host;
+        if (m.kind === 'loop_roll' && m.phase === 'running') {
+            // a roll keeps its own beats: the looping deck's place wraps
+            if (this.plays(m.deck)) m.elapsed += (dt * h.bpm(m.deck)) / 60;
+            const stepBeats = m.bars * BEATS_PER_BAR;
+            if (m.elapsed < (m.stage + 1) * stepBeats - 1e-6) return null;
+            m.stage++;
+            if (m.stage < ROLL_BEATS.length) { h.loopHalve(m.deck); return null; }
+            h.exitLoop(m.deck);
+            return `${m.deck} roll released on the drop`;
+        }
+        const stopped = !m.grid || !this.plays(m.grid);
+        if (!this.lineCome(m)) return null;
+        const deck = m.deck;
+        switch (m.kind) {
+        case 'bass_swap': {
+            const out = this.other(deck);
+            const give = m.savedLow > 0 ? m.savedLow : Math.max(h.eqLow(out) ?? 0.5, 0.5);
+            h.setEqLow(deck, give);
+            h.setEqLow(out, 0);
+            return `lows swapped ${out} → ${deck}`;
+        }
+        case 'phrase_sync':
+            h.crossfadeTo(deck);
+            return `crossfader cut to ${deck}`;
+        case 'filter_exit':
+        case 'echo_out': {
+            const trick = m.kind === 'filter_exit' ? 'filter' : 'wash';
+            if (m.phase === 'armed') {
+                h.trick(deck, trick, true, m.kind === 'filter_exit' ? { amount: FILTER_EXIT_AMOUNT, bars: m.bars } : { beats: ECHO_CUT_BEATS, amount: 1 });
+                if (stopped) {
+                    // a stopped deck has no downbeat to wait for, and nothing rings
+                    h.setMute(deck, true);
+                    h.trick(deck, trick, false);
+                    return `${deck} cut at once (stopped)`;
+                }
+                m.phase = 'running';
+                m.grid = deck;
+                m.ticks = TICKS_PER_BAR;
+                m.left = m.bars;
+                return null;
+            }
+            h.setMute(deck, true);
+            h.trick(deck, trick, false);
+            return m.kind === 'filter_exit' ? `${deck} cut` : `${deck} tail over, channel cut`;
+        }
+        case 'loop_roll':
+            if (stopped) return `${deck} is not playing: nothing to roll`;
+            h.loopBeats(deck, ROLL_BEATS[0]);
+            m.phase = 'running';
+            m.stage = 0;
+            m.elapsed = 0;
+            return null;
+        }
+        return 'not a move';
+    }
 }

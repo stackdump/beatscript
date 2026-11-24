@@ -300,10 +300,19 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
 
     const noted = new Set();
     const lastSent = new Map();
-    let touched = false; // a live op (the vocoder) was sent: resetLive() puts it back
+    let touched = false; // a live op (the vocoder) or a move was sent: resetLive() puts it back
     const inserted = new Set(); // the strips whose insert filter the program touched (`inserts` live ops): resetLive() switches them off
     function post(op, dedupe) {
         if (disposed) return;
+        if (op.type === 'move') {
+            // a move (engine-calls.js MoveScheduler) is never deduped, and what it will move on the audio thread (a strip's mute and
+            // low EQ, the crossfader) is forgotten here, so the program's put-back (`mixer {mute: false}`) is sent even when it is
+            // the value this page last sent
+            for (const k of ['param:A:mute', 'param:B:mute', 'param:A:eqLow', 'param:B:eqLow', 'crossfader::']) lastSent.delete(k);
+            touched = true;
+            send(op);
+            return;
+        }
         // a knob that has not moved is not sent again (a ramp calls on every pass)
         if (dedupe) {
             let key = `${op.type}:${op.deck || ''}:${op.name || ''}`;
@@ -473,7 +482,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
         /** Forget which ignored calls were noted, so a new program's are emitted ('ignored') again. */
         resetNotes() { noted.clear(); },
 
-        /** The program stopped: the vocoders it used go off and the extra instances away, the insert filters it used off (the next program starts clean). */
+        /** The program stopped: the vocoders it used go off and the extra instances away, the insert filters it used off, and its moves in flight are let go (the next program starts clean). */
         resetLive() {
             if (wheelTouched && !disposed) {
                 // the program stopped: the wheel goes back to none loaded, held (the next program starts clean)

@@ -109,10 +109,28 @@ pub fn browser_plays(noun: &str, p: &JsonValue) -> Result<(), String> {
             "set" | "on" | "swap" | "add" | "remove" => Ok(()),
             a => Err(format!("`vocoder {a}` (the browser sets, swaps, adds and removes vocoders)")),
         },
-        "moves" => match (s("action"), s("kind")) {
-            (Some("arm"), Some("vocoder_handoff")) => Ok(()),
-            _ => Err(format!("the `{}` move (of the moves the browser plays vocoder_handoff only)", s("kind").or(s("name")).unwrap_or("?"))),
-        },
+        // every move the booth plays: vocoder_handoff as a phrased live op, the rest on the page's MoveScheduler (engine-calls.js),
+        // a port of djhost perform.rs `Moves`; a phrase sync that steps a seed is not, as in the booth's offline render
+        "moves" => {
+            const SCHEDULED: [&str; 5] = ["filter_exit", "echo_out", "loop_roll", "bass_swap", "phrase_sync"];
+            let deck = s("deck").map(|d| d.trim().to_ascii_uppercase());
+            match (s("action"), s("kind")) {
+                (Some("arm"), Some("vocoder_handoff")) => Ok(()),
+                (Some("arm" | "toggle"), Some(k)) if SCHEDULED.contains(&k) => {
+                    if !matches!(deck.as_deref(), Some("A" | "B")) {
+                        Err(format!("the `{k}` move on deck `{}` (the browser has the decks A and B)", s("deck").unwrap_or("?")))
+                    } else if k == "phrase_sync" && !matches!(s("do").map(|d| d.trim().to_ascii_lowercase()).as_deref(), Some("cut" | "xfade" | "crossfader" | "transition")) {
+                        Err("a `phrase_sync` that steps a seed (a program's deck plays its own nets, not a seed: `do=cut` plays)".into())
+                    } else {
+                        Ok(())
+                    }
+                }
+                (Some("cancel"), None) | (Some("cancel_all"), _) => Ok(()),
+                (Some("cancel"), Some(k)) if k == "vocoder_handoff" || SCHEDULED.contains(&k) => Ok(()),
+                (Some(a @ ("arm" | "toggle" | "cancel")), k) => Err(format!("the `{}` move (the browser plays filter_exit, echo_out, loop_roll, bass_swap, phrase_sync with do=cut and vocoder_handoff)", k.or(s("name")).unwrap_or(a))),
+                (a, _) => Err(format!("`moves {}` (the browser arms and cancels the moves)", a.unwrap_or("?"))),
+            }
+        }
         "vocal" => Err("a timed or performed `sing` line, or a `do vocal` line: the browser sings a `sing` line that starts with its section or the program".into()),
         // a `macro` line (docs/beatscript/ext-control.md): named as the line names it, as the page's "not played here" does
         "effects" => match (s("action"), s("id")) {

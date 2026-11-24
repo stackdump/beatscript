@@ -150,7 +150,8 @@ const calls = await import(pathToFileURL(path.join(jsDir, 'engine-calls.js')).hr
     ok('master drive is the FX unit\'s drive on both decks', fxd.length === 2 && fxd.every((o) => o.type === 'perform' && JSON.parse(o.json).op === 'fx' && JSON.parse(o.json).param === 'drive' && JSON.parse(o.json).value === 0.6) && eq(fxd.map((o) => o.deck), ['A', 'B']));
     ok('a deck\'s drive is that deck\'s', eq(mapCall('fx', { action: 'set', deck: 'B', param: 'drive', value: 0.3 }).ops.map((o) => o.deck), ['B']));
     ok('the FX unit\'s other knobs are ignored, and say so', mapCall('fx', { action: 'set', deck: 'A', param: 'crush', value: 0.3 }).ignored.includes('crush'));
-    ok('a move is ignored, and says so', mapCall('moves', { action: 'move', name: 'loop_roll', deck: 'A' }).ignored === 'moves');
+    ok('a move is a move op for the worklet\'s MoveScheduler', eq(mapCall('moves', { action: 'arm', kind: 'loop_roll', deck: 'A', bars: 4 }).ops.map((o) => `${o.type}:${o.kind}:${o.deck}:${o.bars}`), ['move:loop_roll:A:4']));
+    ok('a phrase sync that steps a seed is ignored, and says so', mapCall('moves', { action: 'arm', kind: 'phrase_sync', deck: 'B' }).ignored.includes('phrase_sync seed'));
     ok('the Wheel target is ignored', !!mapCall('inserts', { action: 'set', target: 'Wheel', param: 'filter.sweep', value: 0.3 }).ignored);
     ok('a sound with a kit is setKit', JSON.parse(mapSound('A', 'kick', 'kit:drums-808').json).op === 'setKit');
     ok('a sound with a voice is setRoleVoice', JSON.parse(mapSound('A', 'bass', 'synth:reese').json).op === 'setRoleVoice');

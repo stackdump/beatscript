@@ -22,6 +22,10 @@
  *     {type:'wheel', reset}                 the wheel back to none loaded, held (a program stopped)
  *     {type:'wheelMaster', name, value}     the program's master as the decks get it (a master FX key at its slider position,
  *                                           reverbWet, level), on the wheel's own chain (djweb src/wheel.rs `master`)
+ *     {type:'move', action, kind, deck, bars}   a DJ move (filter_exit, echo_out, loop_roll, bass_swap, phrase_sync cut) armed on
+ *                                           the MoveScheduler (engine-calls.js), which lands it on the deck's bar or phrase
+ *                                           line as the booth's move scheduler does, over Dj.live_op (trick, loop_beats),
+ *                                           Dj.perform (loop halve / exit), Dj.set_param and Dj.set_crossfader
  *     {type:'batch', msgs:[...]}           any of the above (not install / load_share), acted on in one quantum
  *     {type:'dispose'}
  *   worklet -> page
@@ -37,6 +41,7 @@
 
 import './engine-polyfill.js';
 import * as glue from '../wasm/beatscript.js';
+import { MoveScheduler } from './engine-calls.js';
 
 const QUANTUM = 128;
 const CROSSFADER_CENTRE = 0.5; // both decks at full level, as on the desktop
@@ -66,6 +71,8 @@ class BeatscriptEngine extends AudioWorkletProcessor {
         this.installing = new Map(); // deck -> {id, quanta}
         this.pending = []; // plays waiting for a bar line: {deck, on, leader, last, bar}
         this.phrased = []; // live ops waiting for a phrase line: {method, params, deck, ticks, last, block}
+        this.eqLow = { A: 0.5, B: 0.5 }; // the strips' low EQ as last set (a bass swap gives back what it cut)
+        this.moves = new MoveScheduler(this.moveHost());
         this.perf = o.perf ? { slow: [], n: 0 } : null; // ?perf=1 (test only): blocks of 3 ms or more on Date.now(), with what they did
         this.port.onmessage = (e) => this.onMessage(e.data);
         if (o.module) {
@@ -149,6 +156,7 @@ class BeatscriptEngine extends AudioWorkletProcessor {
                 if (msg.reset) {
                     // the program stopped: every vocoder instance in use goes off, the extra ones away
                     this.phrased = [];
+                    this.moves.cancelAll();
                     let inst = [];
                     try { inst = (JSON.parse(dj.vocoders()).instances || []).map((v) => v.instance); } catch { /* none */ }
                     for (const k of inst) dj.live_op('vocoder', JSON.stringify(k === 0 ? { instance: 0, on: false } : { instance: k, remove: true }));
@@ -165,7 +173,14 @@ class BeatscriptEngine extends AudioWorkletProcessor {
             }
             case 'wheel': this.onWheel(dj, msg); break;
             case 'wheelMaster': if (this.wheel) this.wheel.master(msg.name, Number(msg.value)); break;
-            case 'param': dj.set_param(msg.deck, msg.name, Number(msg.value)); break;
+            case 'param':
+                if (msg.name === 'eqLow' && (msg.deck === 'A' || msg.deck === 'B')) this.eqLow[msg.deck] = Number(msg.value);
+                dj.set_param(msg.deck, msg.name, Number(msg.value));
+                break;
+            case 'move':
+                if (msg.action === 'cancel' && msg.kind === 'vocoder_handoff') this.phrased = this.phrased.filter((p) => !(p.method === 'vocoder' && /"swap":true/.test(p.params)));
+                else this.moves.apply(msg);
+                break;
             case 'crossfader': dj.set_crossfader(Number(msg.value)); break;
             case 'perform': {
                 const r = dj.perform(msg.deck, msg.json);
@@ -211,6 +226,29 @@ class BeatscriptEngine extends AudioWorkletProcessor {
             const s = JSON.parse(dj.state(deck));
             return s.playing ? ticksOf(s) : null;
         } catch { return null; }
+    }
+
+    /**
+     * What the MoveScheduler acts through: this engine's decks. A call the engine refuses is a warning, never a stop.
+     */
+    moveHost() {
+        const self = this;
+        const tryDo = (what, f) => {
+            try { const r = f(); if (typeof r === 'string' && r !== 'done') self.port.postMessage({ type: 'warn', message: `move: ${what}: ${r}` }); } catch (err) { self.port.postMessage({ type: 'warn', message: `move: ${what}: ${String((err && err.message) || err)}` }); }
+        };
+        const state = (deck) => { try { return JSON.parse(self.dj.state(deck)); } catch { return null; } };
+        return {
+            position: (deck) => (self.dj ? self.position(self.dj, deck) : null),
+            bpm: (deck) => { const s = self.dj && state(deck); return s && s.playing ? Number(s.tempo) || 0 : 0; },
+            eqLow: (deck) => self.eqLow[deck],
+            setEqLow: (deck, v) => { self.eqLow[deck] = v; tryDo('eqLow', () => self.dj.set_param(deck, 'eqLow', v)); },
+            setMute: (deck, on) => tryDo('mute', () => self.dj.set_param(deck, 'mute', on ? 1 : 0)),
+            trick: (deck, kind, on, args) => tryDo(`trick ${kind}`, () => self.dj.live_op('trick', JSON.stringify({ deck, kind, action: on ? 'on' : 'off', quant: 'now', ...(on ? args || {} : {}) }))),
+            loopBeats: (deck, beats) => tryDo('loop_beats', () => self.dj.live_op('loop_beats', JSON.stringify({ deck, beats }))),
+            loopHalve: (deck) => tryDo('loop halve', () => self.dj.perform(deck, JSON.stringify({ op: 'loop', loop: 'halve' }))),
+            exitLoop: (deck) => tryDo('loop exit', () => self.dj.perform(deck, JSON.stringify({ op: 'loop', loop: 'exit' }))),
+            crossfadeTo: (deck) => tryDo('crossfader', () => self.dj.set_crossfader(deck === 'A' ? 0 : 1)),
+        };
     }
 
     /** Apply the plays that were waiting for a bar line: the leader has crossed one (or wrapped to the top of a new net) since the last quantum. */
@@ -273,6 +311,7 @@ class BeatscriptEngine extends AudioWorkletProcessor {
             if (pf) tI = Date.now();
             if (this.pending.length) { this.bars(dj); if (pf) did += 'B'; }
             if (this.phrased.length) this.phrases(dj);
+            if (this.moves.busy) this.moves.service(n / sampleRate);
             if (pf) tB = Date.now();
             dj.render(out[0], out[1] || out[0]);
             if (this.wheel) this.wheel.render_add(out[0], out[1] || out[0]);

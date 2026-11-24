@@ -27,7 +27,7 @@ const { mapCaret } = await J('util.js');
 const { parseMixer, reportedMixer } = await J('mixer-model.js');
 const { makeFacade } = await J('wasm.js');
 const { SHARE_RIGHTS, AUTHORSHIP_PATH } = await J('rights.js');
-const { mapCall } = await J('engine-calls.js');
+const { mapCall, MoveScheduler } = await J('engine-calls.js');
 const mockMod = (await J('wasm-mock.js')).mockModule();
 
 // the real wasm when it is built, else the mock. BEATSCRIPT_REQUIRE_WASM=1 (a build host's run) makes a missing module a
@@ -1204,7 +1204,7 @@ test('engine worklet centres the crossfader when it builds the Dj (deck B is aud
   const posted = [];
   class AudioWorkletProcessor { constructor() { this.port = { postMessage: (m) => posted.push(m), onmessage: null }; } }
   const registerProcessor = (_n, c) => { Proc = c; };
-  new Function('glue', 'AudioWorkletProcessor', 'registerProcessor', 'sampleRate', src)(glue, AudioWorkletProcessor, registerProcessor, 48000);
+  new Function('glue', 'AudioWorkletProcessor', 'registerProcessor', 'sampleRate', 'MoveScheduler', src)(glue, AudioWorkletProcessor, registerProcessor, 48000, MoveScheduler);
   assert.ok(Proc, 'the worklet registers its processor');
   const p = new Proc();
   p.up(new Uint8Array(0));
@@ -3306,4 +3306,189 @@ test('provenance: the real module keeps the CID of the text it stores', { skip: 
   assert.ok(sent.startsWith('#! beatscript 2\n') && sent.endsWith(`# from: gen@2 techno seed=42 section=drop part=bass -> ${pin}\n`), sent);
   assert.ok(!sent.includes('private note') && !sent.includes('#! name'), sent);
   assert.equal(facade.fmt(sent).cid, f.cid, 'the same program');
+});
+
+// ---- engine-calls.js: the moves (a port of djhost perform.rs `Moves`) ----------------------------------------------------
+
+test('engine-calls: every move the booth plays is a move op or the phrased vocoder swap; a phrase sync that steps a seed is not played', () => {
+  for (const kind of ['filter_exit', 'echo_out', 'loop_roll', 'bass_swap']) {
+    const r = mapCall('moves', { action: 'arm', kind, deck: 'A', bars: 4 });
+    assert.equal(r.ignored, undefined, kind);
+    assert.deepEqual(r.ops, [{ type: 'move', action: 'arm', kind, deck: 'A', bars: 4, do: undefined }], kind);
+  }
+  // no `over`: the move's own default, as Moves::arm reads a 0
+  assert.equal(mapCall('moves', { action: 'arm', kind: 'loop_roll', deck: 'B' }).ops[0].bars, 1);
+  assert.equal(mapCall('moves', { action: 'arm', kind: 'bass_swap', deck: 'B' }).ops[0].bars, 8);
+  assert.equal(mapCall('moves', { action: 'arm', kind: 'filter_exit', deck: 'b', bars: 500 }).ops[0].bars, 64, 'at most 64 bars, and b is B');
+  assert.equal(mapCall('moves', { action: 'arm', kind: 'phrase_sync', deck: 'B', do: 'cut' }).ops[0].bars, 16);
+  assert.match(mapCall('moves', { action: 'arm', kind: 'phrase_sync', deck: 'B' }).ignored, /phrase_sync seed/);
+  assert.match(mapCall('moves', { action: 'arm', kind: 'loop_roll', deck: 'L' }).ignored, /deck L/);
+  const v = mapCall('moves', { action: 'arm', kind: 'vocoder_handoff', deck: 'A' }).ops[0];
+  assert.equal(v.type, 'live');
+  assert.deepEqual(v.phrase, { deck: 'A', bars: 8 });
+  assert.deepEqual(mapCall('moves', { action: 'cancel', kind: 'loop_roll', deck: 'A' }).ops, [{ type: 'move', action: 'cancel', kind: 'loop_roll', deck: 'A' }]);
+  assert.deepEqual(mapCall('moves', { action: 'cancel_all' }).ops, [{ type: 'move', action: 'cancel_all' }]);
+  assert.ok(mapCall('moves', { action: 'status' }).ignored);
+});
+
+/** A fake engine for the MoveScheduler: two decks on a clock of `bpm`, 16 ticks to the bar, and a log of what was done. */
+function fakeDecks(bpm = 120) {
+  const d = { A: { pos: 0, playing: true }, B: { pos: 0, playing: true } };
+  const log = [];
+  const eq = { A: 0.5, B: 0.5 };
+  const bar = (deck) => Math.floor(d[deck].pos / 16 + 1e-9) + 1;
+  const host = {
+    position: (k) => (d[k].playing ? d[k].pos : null),
+    bpm: (k) => (d[k].playing ? bpm : 0),
+    eqLow: (k) => eq[k],
+    setEqLow: (k, v) => { eq[k] = v; log.push(`${k} low ${v} @${bar(k)}`); },
+    setMute: (k, on) => log.push(`${k} mute ${on} @${bar(k)}`),
+    trick: (k, kind, on, args) => log.push(`${k} ${kind} ${on}${args ? ` ${JSON.stringify(args)}` : ''} @${bar(k)}`),
+    loopBeats: (k, b) => log.push(`${k} loop ${b} @${bar(k)}`),
+    loopHalve: (k) => log.push(`${k} halve @${bar(k)}`),
+    exitLoop: (k) => log.push(`${k} exit @${bar(k)}`),
+    crossfadeTo: (k) => log.push(`xfade ${k} @${bar('A')}`),
+  };
+  const m = new MoveScheduler(host);
+  // advance both decks by `ticks` in quanta of a 32nd (a tick is a 16th: 1/8 beat a step)
+  const run = (ticks) => {
+    const step = 0.5;
+    for (let t = 0; t < ticks; t += step) {
+      for (const k of ['A', 'B']) if (d[k].playing) d[k].pos += step;
+      m.service((step / 4) * (60 / bpm));
+    }
+  };
+  return { d, log, eq, m, run };
+}
+
+test('moves: a filter exit sweeps from the next bar line and cuts the deck `bars` bars later, as the booth does', () => {
+  const f = fakeDecks();
+  f.d.A.pos = 6; // in bar 1
+  f.m.apply({ action: 'arm', kind: 'filter_exit', deck: 'A', bars: 2 });
+  f.run(16 * 4);
+  assert.deepEqual(f.log, ['A filter true {"amount":0.9,"bars":2} @2', 'A mute true @4', 'A filter false @4']);
+  assert.ok(!f.m.busy);
+});
+
+test('moves: an echo out washes on the bar line and cuts after its tail; a stopped deck is cut at once', () => {
+  const f = fakeDecks();
+  f.m.apply({ action: 'arm', kind: 'echo_out', deck: 'B', bars: 1 });
+  f.run(16 * 3);
+  assert.deepEqual(f.log, ['B wash true {"beats":0.25,"amount":1} @2', 'B mute true @3', 'B wash false @3']);
+  const g = fakeDecks();
+  g.d.B.playing = false;
+  g.m.apply({ action: 'arm', kind: 'echo_out', deck: 'B', bars: 4 });
+  g.run(1);
+  assert.deepEqual(g.log.map((l) => l.replace(/ @.*/, '')), ['B wash true {"beats":0.25,"amount":1}', 'B mute true', 'B wash false']);
+});
+
+test('moves: a loop roll loops 4 beats on the bar line, halves every `bars` bars (4 -> 2 -> 1 -> 1/2) and lets go on the drop', () => {
+  const f = fakeDecks(140);
+  f.d.A.pos = 3;
+  f.m.apply({ action: 'arm', kind: 'loop_roll', deck: 'A', bars: 2 });
+  f.run(16 * 12);
+  // the roll keeps its own beats, so the fake's place (which does not loop) reads where each stage falls
+  assert.deepEqual(f.log, ['A loop 4 @2', 'A halve @4', 'A halve @6', 'A halve @8', 'A exit @10']);
+  assert.match(f.m.last['loop_roll:A'], /released on the drop/);
+  const s = fakeDecks();
+  s.d.A.playing = false;
+  s.m.apply({ action: 'arm', kind: 'loop_roll', deck: 'A' });
+  s.run(1);
+  assert.deepEqual(s.log, []);
+  assert.match(s.m.last['loop_roll:A'], /not playing/);
+});
+
+test('moves: a bass swap cuts the incoming lows at once and swaps them on the outgoing deck\'s phrase line', () => {
+  const f = fakeDecks();
+  f.d.A.pos = 16 * 3; // bar 4 of the outgoing deck
+  f.eq.B = 0.7;
+  f.m.apply({ action: 'arm', kind: 'bass_swap', deck: 'B', bars: 8 });
+  assert.deepEqual(f.log, ['B low 0 @1']);
+  f.run(16 * 6);
+  assert.deepEqual(f.log.slice(1), ['B low 0.7 @6', 'A low 0 @9']);
+  assert.ok(!f.m.busy);
+  // cancelled while it waits: the incoming lows come back
+  const c = fakeDecks();
+  c.m.apply({ action: 'arm', kind: 'bass_swap', deck: 'B' });
+  c.m.apply({ action: 'cancel', kind: 'bass_swap' });
+  assert.deepEqual(c.log, ['B low 0 @1', 'B low 0.5 @1']);
+});
+
+test('moves: a phrase sync cut moves the crossfader on the phrase line of the deck playing out', () => {
+  const f = fakeDecks();
+  f.d.A.pos = 16 * 2;
+  f.m.apply({ action: 'arm', kind: 'phrase_sync', deck: 'B', bars: 8, do: 'cut' });
+  f.run(16 * 8);
+  assert.deepEqual(f.log, ['xfade B @9']);
+});
+
+test('moves: arming again replaces the move in flight; a running roll cancelled is released; cancel_all lets everything go', () => {
+  const f = fakeDecks();
+  f.m.apply({ action: 'arm', kind: 'loop_roll', deck: 'A', bars: 1 });
+  f.run(20);
+  assert.deepEqual(f.log, ['A loop 4 @2']);
+  f.m.apply({ action: 'arm', kind: 'loop_roll', deck: 'A', bars: 1 });
+  assert.equal(f.log.at(-1), 'A exit @2', 'the running one is let go first');
+  f.m.apply({ action: 'arm', kind: 'filter_exit', deck: 'B', bars: 4 });
+  f.run(16);
+  f.m.apply({ action: 'cancel_all' });
+  assert.ok(f.log.includes('B filter false @3'), f.log.join('\n'));
+  assert.ok(!f.m.busy);
+  // toggle: arms, and a second toggle cancels
+  f.m.apply({ action: 'toggle', kind: 'echo_out', deck: 'A' });
+  assert.ok(f.m.busy);
+  f.m.apply({ action: 'toggle', kind: 'echo_out', deck: 'A' });
+  assert.ok(!f.m.busy);
+});
+
+test('moves: a new net landing on a bar line (the deck place wraps to 0) is a line', () => {
+  const f = fakeDecks();
+  f.d.A.pos = 40; // bar 3 of a 4-bar net
+  f.m.apply({ action: 'arm', kind: 'echo_out', deck: 'A', bars: 1 });
+  f.run(4);
+  f.d.A.pos = 0; // the next section's net, on its first bar line
+  f.run(1);
+  assert.equal(f.log[0], 'A wash true {"beats":0.25,"amount":1} @1');
+});
+
+test('engine worklet: a move op arms the MoveScheduler, which acts through the Dj (trick, loop_beats, loop halve / exit, set_param)', () => {
+  let src = fs.readFileSync(path.join(web, 'js', 'engine-worklet.js'), 'utf8');
+  src = src.replace(/^import .*$/gm, '').replace(/^export /gm, '');
+  const calls = [];
+  const st = { A: { playing: true, tick: 1, position: 1, tempo: 120 }, B: { playing: false, tick: 0, position: 0, tempo: 120 } };
+  class Dj {
+    set_crossfader(v) { calls.push(`xfade ${v}`); }
+    state(d) { return JSON.stringify(st[d]); }
+    set_param(d, n, v) { calls.push(`param ${d} ${n} ${v}`); }
+    live_op(m, p) { calls.push(`live ${m} ${p}`); }
+    perform(d, j) { calls.push(`perform ${d} ${j}`); return 'done'; }
+    render() {} tick() {} installing() { return false; }
+  }
+  let Proc;
+  const glue = { initSync() {}, Dj, engine_version: () => 'test' };
+  class AudioWorkletProcessor { constructor() { this.port = { postMessage: () => {}, onmessage: null }; } }
+  new Function('glue', 'AudioWorkletProcessor', 'registerProcessor', 'sampleRate', 'currentTime', 'MoveScheduler', src)(glue, AudioWorkletProcessor, (_n, c) => { Proc = c; }, 48000, 0, MoveScheduler);
+  const p = new Proc();
+  p.up(new Uint8Array(0));
+  calls.length = 0;
+  p.onMessage({ type: 'move', action: 'arm', kind: 'loop_roll', deck: 'A', bars: 1 });
+  const out = [[new Float32Array(128)], [new Float32Array(128)]];
+  const quantum = () => p.process([], [[out[0][0], out[1][0]]]);
+  quantum();
+  assert.deepEqual(calls, [], 'nothing before the bar line');
+  st.A.tick = 17; st.A.position = 17.2; // past the bar line
+  quantum();
+  assert.deepEqual(calls, ['live loop_beats {"deck":"A","beats":4}']);
+  // a bar of beats at 120 bpm is 2 s: 750 quanta of 128 frames at 48 kHz
+  for (let i = 0; i < 760; i++) quantum();
+  assert.equal(calls.at(-1), 'perform A {"op":"loop","loop":"halve"}');
+  p.onMessage({ type: 'move', action: 'cancel_all' });
+  assert.equal(calls.at(-1), 'perform A {"op":"loop","loop":"exit"}');
+  // a bass swap on a stopped outgoing deck acts at once, through the strips' low EQ
+  calls.length = 0;
+  p.onMessage({ type: 'param', deck: 'A', name: 'eqLow', value: 0.6 });
+  p.onMessage({ type: 'move', action: 'arm', kind: 'bass_swap', deck: 'A', bars: 8 });
+  st.A.playing = false;
+  quantum();
+  assert.deepEqual(calls, ['param A eqLow 0.6', 'param A eqLow 0', 'param A eqLow 0.6', 'param B eqLow 0']);
 });
