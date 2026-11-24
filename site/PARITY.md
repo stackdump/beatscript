@@ -18,6 +18,95 @@ render them in `beatscript` ("Not fixed", 1-3), which changes the reference. Whi
 here. Two differences were the render's own bug or a shared one, not the engine's: `end after SECTION` (fixed in `beatscript`)
 and a silent outro in `assert.beatscript` (both sides).
 
+## Now (2026-11-24, render version r3): the stream plays what the engine plays
+
+The 2026-11-19 report below took the stream as the reference and asked whether to move the engine toward it. Since then
+the engine gained booth parity (moves, the Wheel, resonance), and the direction is settled the other way: **the server's
+render (`beatscript render`: the stream, `listen`, the stems) plays a program's control lines as the browser's engine
+plays them** (crates/beatscript-cli/RENDER.md). The page's `Dj` is a thin wasm wrapper over the very djrust `Engine` the
+render steps, so the render takes the same calls: `crates/beatscript-cli/src/browser.rs` is engine-calls.js `mapCall` in
+Rust (held to it op for op by `tests/browser_calls.rs`, which runs this module under node), applied through the same
+`Engine` methods, and the Wheel is the page's own voice (beatscript-api `wheel`). Where both sides make the same calls the
+audio is the same up to when a call lands (the page acts within a 25 ms pass, the render on the exact frame).
+
+### Inventory: each control line, the page and the render
+
+| line | the page (engine-calls.js -> `Dj`) | render r2 (before) | render r3 (now) |
+|---|---|---|---|
+| notes, voices, sections, `evolve`, swing, a `sing` in its deck's net | the nets | the nets | the nets (same) |
+| deck and master `level`, EQ, mute, crossfader, `play`/`stop`, `mix`, ramps, lfos | `set_param` / `perform` / `set_crossfader` | the same calls | the same calls |
+| `do mixer ... gain=` / `filter=` (the strip's knobs) | `set_param` | not played | `set_param` |
+| `master:` / `deck X:` `filter lp/hp/off/open`, ramps; `resonance`, static and swept | `inserts` live op (the booth's insert filter) | the same chain (net events, ramps on sixteenths) | the same calls, ramps sampled as the runtime sends them |
+| `reverb` (master, deck, ramps) | each deck strip's reverb wet | the booth's insert reverb (-1.6 LU on repro 05) | the strip's reverb wet (identical) |
+| `master: crush` | the decks' master FX crush bits | the booth's insert crush | crush bits (identical) |
+| `drive` | the FX unit's drive | the same | the same |
+| `do vocoder ...` (and its ramps) | `vocoder` live op | not played | `vocoder` live op |
+| `kit=`, `sound=` | `setKit` / `setRoleVoice` once the net lands | not applied (repros 27, 28) | applied after each section's load (identical) |
+| the Wheel (`wheel load/key/sequence/play/pause/motor/level/sync/...`) | WheelVoice after the decks, with the page's master reverb, crush and level | not played | the same voice (beatscript-api `wheel`), a 128-frame quantum at a time |
+| `move filter_exit` / `echo_out` | MoveScheduler (a port of the booth's `Moves`): from the bar line after the arming one | the control net: a bar earlier (repro 22) | the booth's `Moves`: as the page |
+| `move loop_roll` / `bass_swap` / `phrase_sync do=cut` | MoveScheduler | the booth's `Moves` | the booth's `Moves` |
+| `move vocoder_handoff` | the vocoder swapped on the deck's phrase line | not played | the booth's `Moves` (vocoder swap) |
+| `delay`, `crush` on a deck, the filter's mix | ignored | the booth's inserts | the booth's inserts (the render plays more) |
+| `macro` lines (`effects fire`/`release`), `duck` | ignored | played (DJ catalogue, the pump) | played (the render plays more) |
+| `phrase_sync` that steps a seed, `do trick`, `freeze`, a timed or performed vocal, `deck load/sync`, `queue`, `autodj`, `td3`, other nouns | ignored | not played | not played (named in the render's notes) |
+| a tempo curve or a section's own tempo | each section's net plays at its tempo; the `deck tempo` calls are ignored | the timeline at the opening tempo | the same: **a remaining gap** |
+
+A rule of the runtime the render now keeps too: a line that fires on a bar line is the last word on what it sets, so a ramp
+on the same insert that began before it ends there without its last value (the riser's `reverb 0.1 -> 0.5 over 8 bars`
+reaching its end on the drop's `reverb 0.15`; without the rule the render's drop was 4 LU quieter than the page's).
+
+### Results (gir, 2026-11-24; the module built from this branch; the harness's corpus)
+
+Per program: bars flagged (of all), the worst bar's |dLUFS| and log-mel distance, the mean score; before (render r2, main
+`ebf924b`) and now (r3). 99 is a bar heard on one side only.
+
+| program | r2 flagged | r2 worst bar LU / mel dB | r2 score | r3 flagged | r3 worst bar LU / mel dB | r3 score |
+|---|---|---|---|---|---|---|
+| 05-master-reverb | 0 / 8 | 1.85 / 3.8 | 0.641 | 0 / 8 | 0.00 / 0.0 | 0 |
+| 07-master-crush | 0 / 8 | 0.14 / 3.8 | 0.603 | 0 / 8 | 0.02 / 0.1 | 0.003 |
+| 09-deck-reverb | 0 / 8 | 0.42 / 0.6 | 0.499 | 0 / 8 | 0.00 / 0.0 | 0 |
+| 22-move-filter-exit | 3 / 8 | 7.25 / 3.1 | 0.731 | 0 / 8 | 0.02 / 0.1 | 0.004 |
+| 24-reverb-ramp | 1 / 8 | 3.30 / 4.2 | 0.504 | 0 / 8 | 0.01 / 0.0 | 0.009 |
+| 27-kit | 6 / 8 | 0.36 / 2.0 | 0.921 | 0 / 8 | 0.00 / 0.0 | 0 |
+| 28-sound-voice | 7 / 8 | 2.89 / 3.5 | 1.996 | 0 / 8 | 0.00 / 0.0 | 0 |
+| 06-master-delay, 25-delay-ramp, 08-deck-crush, 21-duck | | | 1.772, 1.274, 0.357, 0.135 | | | unchanged: the render plays them, the page does not |
+| the other repros (00-04, 10-20, 23, 26) | | | 0 to 0.085 | | | unchanged |
+| acid-line | 16 / 16 | 0.03 / 0.6 | 1.488 | 0 / 16 | 0.07 / 0.5 | 0.023 |
+| hand-dubstep-140-v2 | 0 / 64 | 1.13 / 2.5 | 0.212 | 0 / 64 | 0.37 / 1.2 | 0.034 |
+| hand-dubstep-140-v4 (the Wheel) | 9 / 68 | 1.08 / 5.2 | 0.415 | 14 / 68 | 1.39 / 2.6 | 0.41 |
+| evolve-demo | 8 / 32 | 0.03 / 0.5 | 0.529 | 8 / 32 | 0.03 / 0.5 | 0.529 |
+| markers-demo | 21 / 24 | 2.61 / 5.9 | 1.732 | 21 / 24 | 2.61 / 5.4 | 1.738 |
+| matrix-130 (the Wheel, `kit=`) | 78 / 80 | 99 / 28.2 | 2.616 | 78 / 80 | 99 / 28.0 | 2.605 |
+| trance-138 | 64 / 64 | 4.62 / 11.1 | 2.169 | 64 / 64 | 0.10 / 9.0 | 2.167 |
+| trap-expression | 16 / 16 | 0.01 / 0.6 | 1.317 | 0 / 16 | 0.00 / 0.0 | 0 |
+| vocals | 11 / 32 | 1.68 / 7.7 | 0.509 | 0 / 32 | 0.04 / 1.2 | 0.086 |
+| arrange-in-eight-lines | 32 / 32 | 0.31 / 3.9 | 2.068 | 31 / 32 | 0.33 / 2.7 | 1.957 |
+| arrange-mutations | 127 / 132 | 4.59 / 26.9 | 2.272 | 127 / 132 | 4.59 / 26.9 | 2.272 |
+| assyrian-122, commit-message-122, such-stuff-as-dreams-122, first-beat, pattern-sugar | | | 0 to 0.084 | | | unchanged |
+
+The flag counts include the onset detector, which on a continuous part (an acid line) flags bars whose loudness and spectrum
+agree to 0.01 LU and 0.4 dB; the level columns are the measure. **The test** is `site/test/parity/render-parity.sh`: the five
+examples above held to 1 LU and 3 dB a bar and 0.5 LU a song, with the known gaps below held to where they are
+(`render-ceilings.json`).
+
+### What remains (none of it a control line the page plays and the render does not)
+
+1. **The notes at a section's hand-over** (matrix-130, markers-demo's drop, trance-138, arrange-mutations, perform-moves'
+   drop): the same size before and after r3, and trance-138 is 9 dB of log-mel off with every control line taken out, so
+   it is not a control line. In matrix-130 and perform-moves an alternation (`<p_a p_b p_c p_d>`, `<c2 ~ e2 ~>`) plays a
+   bar apart on the two sides from the second section on, and matrix-130's page outro ends a bar after the render's. The
+   runtime loads a section's nets at phase 0 on its first bar as the render does (`sync_nets`), so the place to look is the
+   page's net installer (`Dj::begin_install` / `install_step`) against the render's `Load` hand-over in djrust.
+2. **Tempo curves and a section's own tempo** (examples/beatscript/tempo.beatscript: 33 of 40 bars): the page's decks play
+   each section's net at its tempo and its sections follow deck A's bars; the render's timeline runs at the opening tempo.
+   Following it means a piecewise beat-to-frame map through the render (sections, the control timeline, the moves' clock).
+3. **What the render plays and the page does not**: a delay, a crush on a deck, `macro` lines, `duck`. These are the page's
+   gap (engine-calls.js IGNORED), not the render's.
+4. **When a call lands**: the page acts within a pass (25 ms live, 1024 frames in the harness), the render on the exact
+   frame; under the insert filter's glide that is a fraction of a dB.
+
+The rest of this file is the 2026-11-19 report, kept as it was.
+
 ## The short answer
 
 1. **With no control lines, engine and stream are sample-identical.** The notes, voices, sections, evolve and swing
