@@ -243,6 +243,32 @@ const hashBlocks = () => { const h = crypto.createHash('sha256'); const inter = 
     let refPeak = 0; for (const s of ref) refPeak = Math.max(refPeak, Math.abs(s));
     ok('the worklet and the offline render play the same loudness', Math.abs(peak - refPeak) < 0.02, `${peak} vs ${refPeak}`);
     console.log(`  worklet vs render_offline: ${hb.h.digest('hex') === refHash ? 'identical samples' : 'same music, samples differ in the first few frames'}; offline RMS ${refRms.toFixed(4)}, peak ${refPeak.toFixed(3)}`);
+    // the moves (engine-calls.js MoveScheduler) on the real engine: every call they make is one the Dj takes, and a loop roll loops
+    {
+        const gridBeats = () => port.out.filter((m) => m.type === 'grid').map((m) => m.decks.A.beat);
+        const moveWarns = () => port.out.filter((m) => m.type === 'warn' && /^move:/.test(m.message)).map((m) => m.message);
+        const seen = port.out.length;
+        port.onmessage({ data: { type: 'move', action: 'arm', kind: 'loop_roll', deck: 'A', bars: 1 } });
+        const secs = (s) => { for (let i = 0; i < (s * SR) / 128; i++) quantum(); };
+        const bar = (4 * 60) / 124;
+        secs(bar * 3);
+        const beats = gridBeats().slice(-Math.round((bar * 2) / 0.025));
+        const back = beats.some((b, i) => i > 0 && b < beats[i - 1] - 0.1);
+        ok('a loop roll loops the deck: its place goes back while it rolls', back, `beats ${beats.filter((_, i) => i % 10 === 0).map((b) => b.toFixed(2)).join(' ')}`);
+        secs(bar * 3);
+        ok('and lets go on the drop', !p.moves.busy, JSON.stringify(p.moves.last));
+        port.onmessage({ data: { type: 'move', action: 'arm', kind: 'filter_exit', deck: 'A', bars: 1 } });
+        port.onmessage({ data: { type: 'move', action: 'arm', kind: 'echo_out', deck: 'B', bars: 1 } });
+        port.onmessage({ data: { type: 'move', action: 'arm', kind: 'bass_swap', deck: 'B', bars: 8 } });
+        port.onmessage({ data: { type: 'move', action: 'arm', kind: 'phrase_sync', deck: 'B', bars: 8, do: 'cut' } });
+        secs(bar * 3);
+        ok('a filter exit, an echo out, a bass swap and a phrase sync cut: every call is one the engine takes', moveWarns().length === 0, moveWarns().join('; '));
+        ok('the filter exit cut the deck', /A cut/.test(p.moves.last['filter_exit:A'] || ''), JSON.stringify(p.moves.last));
+        port.onmessage({ data: { type: 'move', action: 'cancel_all' } });
+        port.onmessage({ data: { type: 'param', deck: 'A', name: 'mute', value: 0 } });
+        port.onmessage({ data: { type: 'crossfader', value: 0.5 } });
+        ok('no error while the moves ran', !port.out.slice(seen).some((m) => m.type === 'error'));
+    }
     port.onmessage({ data: { type: 'install', id: 8, deck: 'A', bytes: new Uint8Array([1, 2, 3]) } });
     ok('garbage bytes are refused, not a trap', port.out.some((m) => m.type === 'install-failed' && m.id === 8));
     const before = port.out.length;
