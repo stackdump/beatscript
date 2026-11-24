@@ -2624,9 +2624,9 @@ station {
 - A station holds the `station` block, `tempo`, `key` and comments, nothing else, as a set does. `#! stations: v1` is the version
   (the default; any other value is an error). The station's CID is of its canonical text; comments and `#!` lines are not in it.
 
-**Radio:** a station is an endless program, track N always the same: `station { }` holds `from gen@2 techno seed=42` (the
-first call), `next seed=~` (the step) and `forms seeded rondo fugue` (track N's form, in turn); the MCP `station` tool and
-`POST /api/station` give track `n`, its segue and its neighbours; MCP `artifact` with `station` makes a radio page: https://beatscript.app/docs/radio.md
+**Radio:** a station is an endless program, track N always the same: `station { }` holds `from gen@2 techno seed=42`
+(track 0), `next seed=~` (the step) and `forms seeded rondo fugue` (in turn); MCP `station` and `POST /api/station`
+give track `n`, its segue and neighbours; MCP `artifact` with `station` makes a page: https://beatscript.app/docs/radio.md
 
 ## Restricted sounds: local samples (design note)
 
