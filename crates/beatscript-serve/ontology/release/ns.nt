@@ -5656,6 +5656,72 @@
 <https://beatscript.app/ontology/concept/palette-world> <http://www.w3.org/2004/02/skos/core#prefLabel> "world"@en .
 <https://beatscript.app/ontology/concept/palette-world> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/palette-world> <https://beatscript.app/ontology/ns#writtenAs> "world" .
+<https://beatscript.app/ontology/concept/part-param-decay> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-decay> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-decay> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter decay, written decay=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-decay> <http://www.w3.org/2004/02/skos/core#prefLabel> "decay"@en .
+<https://beatscript.app/ontology/concept/part-param-decay> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-decay> <https://beatscript.app/ontology/ns#writtenAs> "decay=" .
+<https://beatscript.app/ontology/concept/part-param-glide> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-glide> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-glide> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter glide, written glide=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-glide> <http://www.w3.org/2004/02/skos/core#prefLabel> "glide"@en .
+<https://beatscript.app/ontology/concept/part-param-glide> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-glide> <https://beatscript.app/ontology/ns#writtenAs> "glide=" .
+<https://beatscript.app/ontology/concept/part-param-inst> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-inst> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-inst> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter inst, written inst=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-inst> <http://www.w3.org/2004/02/skos/core#prefLabel> "inst"@en .
+<https://beatscript.app/ontology/concept/part-param-inst> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-inst> <https://beatscript.app/ontology/ns#writtenAs> "inst=" .
+<https://beatscript.app/ontology/concept/part-param-kit> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-kit> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-kit> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter kit, written kit=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-kit> <http://www.w3.org/2004/02/skos/core#prefLabel> "kit"@en .
+<https://beatscript.app/ontology/concept/part-param-kit> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-kit> <https://beatscript.app/ontology/ns#writtenAs> "kit=" .
+<https://beatscript.app/ontology/concept/part-param-len> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-len> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-len> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter len, written len=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-len> <http://www.w3.org/2004/02/skos/core#prefLabel> "len"@en .
+<https://beatscript.app/ontology/concept/part-param-len> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-len> <https://beatscript.app/ontology/ns#writtenAs> "len=" .
+<https://beatscript.app/ontology/concept/part-param-oct> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-oct> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-oct> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter oct, written oct=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-oct> <http://www.w3.org/2004/02/skos/core#prefLabel> "oct"@en .
+<https://beatscript.app/ontology/concept/part-param-oct> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-oct> <https://beatscript.app/ontology/ns#writtenAs> "oct=" .
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter pitch-drop, written pitch-drop=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> <http://www.w3.org/2004/02/skos/core#prefLabel> "pitch-drop"@en .
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-pitch-drop> <https://beatscript.app/ontology/ns#writtenAs> "pitch-drop=" .
+<https://beatscript.app/ontology/concept/part-param-route> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-route> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-route> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter route, written route=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-route> <http://www.w3.org/2004/02/skos/core#prefLabel> "route"@en .
+<https://beatscript.app/ontology/concept/part-param-route> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-route> <https://beatscript.app/ontology/ns#writtenAs> "route=" .
+<https://beatscript.app/ontology/concept/part-param-seed> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-seed> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-seed> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter seed, written seed=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-seed> <http://www.w3.org/2004/02/skos/core#prefLabel> "seed"@en .
+<https://beatscript.app/ontology/concept/part-param-seed> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-seed> <https://beatscript.app/ontology/ns#writtenAs> "seed=" .
+<https://beatscript.app/ontology/concept/part-param-sound> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-sound> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-sound> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter sound, written sound=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-sound> <http://www.w3.org/2004/02/skos/core#prefLabel> "sound"@en .
+<https://beatscript.app/ontology/concept/part-param-sound> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-sound> <https://beatscript.app/ontology/ns#writtenAs> "sound=" .
+<https://beatscript.app/ontology/concept/part-param-vel> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://beatscript.app/ontology/concept/part-param-vel> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#PartParameter> .
+<https://beatscript.app/ontology/concept/part-param-vel> <http://www.w3.org/2004/02/skos/core#definition> "The part parameter vel, written vel=VALUE after a part's pattern."@en .
+<https://beatscript.app/ontology/concept/part-param-vel> <http://www.w3.org/2004/02/skos/core#prefLabel> "vel"@en .
+<https://beatscript.app/ontology/concept/part-param-vel> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/concept/part-param-vel> <https://beatscript.app/ontology/ns#writtenAs> "vel=" .
 <https://beatscript.app/ontology/concept/pattern-endofunctor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/pattern-endofunctor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#CategoricalConcept> .
 <https://beatscript.app/ontology/concept/pattern-endofunctor> <http://www.w3.org/2004/02/skos/core#definition> "Pattern as a functor from notes to notes: a function on single notes lifts to a function on patterns of them, and lifting respects composition and identity."@en .
@@ -8526,42 +8592,49 @@
 <https://beatscript.app/ontology/concept/voice-family-808> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-808> <http://www.w3.org/2004/02/skos/core#definition> "The 808 family: an inst= name containing 808 plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-808> <http://www.w3.org/2004/02/skos/core#prefLabel> "808"@en .
+<https://beatscript.app/ontology/concept/voice-family-808> <https://beatscript.app/ontology/ns#familyWave> "sine" .
 <https://beatscript.app/ontology/concept/voice-family-808> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-808> <https://beatscript.app/ontology/ns#writtenAs> "808" .
 <https://beatscript.app/ontology/concept/voice-family-acid> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-acid> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-acid> <http://www.w3.org/2004/02/skos/core#definition> "The acid family: an inst= name containing acid plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-acid> <http://www.w3.org/2004/02/skos/core#prefLabel> "acid"@en .
+<https://beatscript.app/ontology/concept/voice-family-acid> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-acid> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-acid> <https://beatscript.app/ontology/ns#writtenAs> "acid" .
 <https://beatscript.app/ontology/concept/voice-family-bass> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-bass> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-bass> <http://www.w3.org/2004/02/skos/core#definition> "The bass family: an inst= name containing bass plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-bass> <http://www.w3.org/2004/02/skos/core#prefLabel> "bass"@en .
+<https://beatscript.app/ontology/concept/voice-family-bass> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-bass> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-bass> <https://beatscript.app/ontology/ns#writtenAs> "bass" .
 <https://beatscript.app/ontology/concept/voice-family-bell> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-bell> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-bell> <http://www.w3.org/2004/02/skos/core#definition> "The bell family: an inst= name containing bell plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-bell> <http://www.w3.org/2004/02/skos/core#prefLabel> "bell"@en .
+<https://beatscript.app/ontology/concept/voice-family-bell> <https://beatscript.app/ontology/ns#familyWave> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-bell> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-bell> <https://beatscript.app/ontology/ns#writtenAs> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-chiptune> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-chiptune> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-chiptune> <http://www.w3.org/2004/02/skos/core#definition> "The chiptune family: an inst= name containing chiptune plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-chiptune> <http://www.w3.org/2004/02/skos/core#prefLabel> "chiptune"@en .
+<https://beatscript.app/ontology/concept/voice-family-chiptune> <https://beatscript.app/ontology/ns#familyWave> "square" .
 <https://beatscript.app/ontology/concept/voice-family-chiptune> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-chiptune> <https://beatscript.app/ontology/ns#writtenAs> "chiptune" .
 <https://beatscript.app/ontology/concept/voice-family-choir> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-choir> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-choir> <http://www.w3.org/2004/02/skos/core#definition> "The choir family: an inst= name containing choir plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-choir> <http://www.w3.org/2004/02/skos/core#prefLabel> "choir"@en .
+<https://beatscript.app/ontology/concept/voice-family-choir> <https://beatscript.app/ontology/ns#familyWave> "soft" .
 <https://beatscript.app/ontology/concept/voice-family-choir> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-choir> <https://beatscript.app/ontology/ns#writtenAs> "choir" .
 <https://beatscript.app/ontology/concept/voice-family-clav> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-clav> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-clav> <http://www.w3.org/2004/02/skos/core#definition> "The clav family: an inst= name containing clav plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-clav> <http://www.w3.org/2004/02/skos/core#prefLabel> "clav"@en .
+<https://beatscript.app/ontology/concept/voice-family-clav> <https://beatscript.app/ontology/ns#familyWave> "square" .
 <https://beatscript.app/ontology/concept/voice-family-clav> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-clav> <https://beatscript.app/ontology/ns#writtenAs> "clav" .
 <https://beatscript.app/ontology/concept/voice-family-drums> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
@@ -8574,18 +8647,21 @@
 <https://beatscript.app/ontology/concept/voice-family-glass> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-glass> <http://www.w3.org/2004/02/skos/core#definition> "The glass family: an inst= name containing glass plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-glass> <http://www.w3.org/2004/02/skos/core#prefLabel> "glass"@en .
+<https://beatscript.app/ontology/concept/voice-family-glass> <https://beatscript.app/ontology/ns#familyWave> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-glass> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-glass> <https://beatscript.app/ontology/ns#writtenAs> "glass" .
 <https://beatscript.app/ontology/concept/voice-family-guitar> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-guitar> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-guitar> <http://www.w3.org/2004/02/skos/core#definition> "The guitar family: an inst= name containing guitar plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-guitar> <http://www.w3.org/2004/02/skos/core#prefLabel> "guitar"@en .
+<https://beatscript.app/ontology/concept/voice-family-guitar> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-guitar> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-guitar> <https://beatscript.app/ontology/ns#writtenAs> "guitar" .
 <https://beatscript.app/ontology/concept/voice-family-harpsi> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-harpsi> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-harpsi> <http://www.w3.org/2004/02/skos/core#definition> "The harpsi family: an inst= name containing harpsi plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-harpsi> <http://www.w3.org/2004/02/skos/core#prefLabel> "harpsi"@en .
+<https://beatscript.app/ontology/concept/voice-family-harpsi> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-harpsi> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-harpsi> <https://beatscript.app/ontology/ns#writtenAs> "harpsi" .
 <https://beatscript.app/ontology/concept/voice-family-hat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
@@ -8598,6 +8674,7 @@
 <https://beatscript.app/ontology/concept/voice-family-kalimba> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-kalimba> <http://www.w3.org/2004/02/skos/core#definition> "The kalimba family: an inst= name containing kalimba plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-kalimba> <http://www.w3.org/2004/02/skos/core#prefLabel> "kalimba"@en .
+<https://beatscript.app/ontology/concept/voice-family-kalimba> <https://beatscript.app/ontology/ns#familyWave> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-kalimba> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-kalimba> <https://beatscript.app/ontology/ns#writtenAs> "kalimba" .
 <https://beatscript.app/ontology/concept/voice-family-kick> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
@@ -8610,48 +8687,56 @@
 <https://beatscript.app/ontology/concept/voice-family-marimba> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-marimba> <http://www.w3.org/2004/02/skos/core#definition> "The marimba family: an inst= name containing marimba plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-marimba> <http://www.w3.org/2004/02/skos/core#prefLabel> "marimba"@en .
+<https://beatscript.app/ontology/concept/voice-family-marimba> <https://beatscript.app/ontology/ns#familyWave> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-marimba> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-marimba> <https://beatscript.app/ontology/ns#writtenAs> "marimba" .
 <https://beatscript.app/ontology/concept/voice-family-music-box> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-music-box> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-music-box> <http://www.w3.org/2004/02/skos/core#definition> "The music-box family: an inst= name containing music-box plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-music-box> <http://www.w3.org/2004/02/skos/core#prefLabel> "music-box"@en .
+<https://beatscript.app/ontology/concept/voice-family-music-box> <https://beatscript.app/ontology/ns#familyWave> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-music-box> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-music-box> <https://beatscript.app/ontology/ns#writtenAs> "music-box" .
 <https://beatscript.app/ontology/concept/voice-family-organ> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-organ> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-organ> <http://www.w3.org/2004/02/skos/core#definition> "The organ family: an inst= name containing organ plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-organ> <http://www.w3.org/2004/02/skos/core#prefLabel> "organ"@en .
+<https://beatscript.app/ontology/concept/voice-family-organ> <https://beatscript.app/ontology/ns#familyWave> "soft" .
 <https://beatscript.app/ontology/concept/voice-family-organ> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-organ> <https://beatscript.app/ontology/ns#writtenAs> "organ" .
 <https://beatscript.app/ontology/concept/voice-family-pad> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-pad> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-pad> <http://www.w3.org/2004/02/skos/core#definition> "The pad family: an inst= name containing pad plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-pad> <http://www.w3.org/2004/02/skos/core#prefLabel> "pad"@en .
+<https://beatscript.app/ontology/concept/voice-family-pad> <https://beatscript.app/ontology/ns#familyWave> "soft" .
 <https://beatscript.app/ontology/concept/voice-family-pad> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-pad> <https://beatscript.app/ontology/ns#writtenAs> "pad" .
 <https://beatscript.app/ontology/concept/voice-family-piano> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-piano> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-piano> <http://www.w3.org/2004/02/skos/core#definition> "The piano family: an inst= name containing piano plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-piano> <http://www.w3.org/2004/02/skos/core#prefLabel> "piano"@en .
+<https://beatscript.app/ontology/concept/voice-family-piano> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-piano> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-piano> <https://beatscript.app/ontology/ns#writtenAs> "piano" .
 <https://beatscript.app/ontology/concept/voice-family-pluck> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-pluck> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-pluck> <http://www.w3.org/2004/02/skos/core#definition> "The pluck family: an inst= name containing pluck plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-pluck> <http://www.w3.org/2004/02/skos/core#prefLabel> "pluck"@en .
+<https://beatscript.app/ontology/concept/voice-family-pluck> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-pluck> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-pluck> <https://beatscript.app/ontology/ns#writtenAs> "pluck" .
 <https://beatscript.app/ontology/concept/voice-family-pwm> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-pwm> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-pwm> <http://www.w3.org/2004/02/skos/core#definition> "The pwm family: an inst= name containing pwm plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-pwm> <http://www.w3.org/2004/02/skos/core#prefLabel> "pwm"@en .
+<https://beatscript.app/ontology/concept/voice-family-pwm> <https://beatscript.app/ontology/ns#familyWave> "square" .
 <https://beatscript.app/ontology/concept/voice-family-pwm> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-pwm> <https://beatscript.app/ontology/ns#writtenAs> "pwm" .
 <https://beatscript.app/ontology/concept/voice-family-reese> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-reese> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-reese> <http://www.w3.org/2004/02/skos/core#definition> "The reese family: an inst= name containing reese plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-reese> <http://www.w3.org/2004/02/skos/core#prefLabel> "reese"@en .
+<https://beatscript.app/ontology/concept/voice-family-reese> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-reese> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-reese> <https://beatscript.app/ontology/ns#writtenAs> "reese" .
 <https://beatscript.app/ontology/concept/voice-family-snare> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
@@ -8664,36 +8749,42 @@
 <https://beatscript.app/ontology/concept/voice-family-square> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-square> <http://www.w3.org/2004/02/skos/core#definition> "The square family: an inst= name containing square plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-square> <http://www.w3.org/2004/02/skos/core#prefLabel> "square"@en .
+<https://beatscript.app/ontology/concept/voice-family-square> <https://beatscript.app/ontology/ns#familyWave> "square" .
 <https://beatscript.app/ontology/concept/voice-family-square> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-square> <https://beatscript.app/ontology/ns#writtenAs> "square" .
 <https://beatscript.app/ontology/concept/voice-family-stab> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-stab> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-stab> <http://www.w3.org/2004/02/skos/core#definition> "The stab family: an inst= name containing stab plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-stab> <http://www.w3.org/2004/02/skos/core#prefLabel> "stab"@en .
+<https://beatscript.app/ontology/concept/voice-family-stab> <https://beatscript.app/ontology/ns#familyWave> "saw" .
 <https://beatscript.app/ontology/concept/voice-family-stab> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-stab> <https://beatscript.app/ontology/ns#writtenAs> "stab" .
 <https://beatscript.app/ontology/concept/voice-family-steel> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-steel> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-steel> <http://www.w3.org/2004/02/skos/core#definition> "The steel family: an inst= name containing steel plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-steel> <http://www.w3.org/2004/02/skos/core#prefLabel> "steel"@en .
+<https://beatscript.app/ontology/concept/voice-family-steel> <https://beatscript.app/ontology/ns#familyWave> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-steel> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-steel> <https://beatscript.app/ontology/ns#writtenAs> "steel" .
 <https://beatscript.app/ontology/concept/voice-family-strings> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-strings> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-strings> <http://www.w3.org/2004/02/skos/core#definition> "The strings family: an inst= name containing strings plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-strings> <http://www.w3.org/2004/02/skos/core#prefLabel> "strings"@en .
+<https://beatscript.app/ontology/concept/voice-family-strings> <https://beatscript.app/ontology/ns#familyWave> "soft" .
 <https://beatscript.app/ontology/concept/voice-family-strings> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-strings> <https://beatscript.app/ontology/ns#writtenAs> "strings" .
 <https://beatscript.app/ontology/concept/voice-family-sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-sub> <http://www.w3.org/2004/02/skos/core#definition> "The sub family: an inst= name containing sub plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-sub> <http://www.w3.org/2004/02/skos/core#prefLabel> "sub"@en .
+<https://beatscript.app/ontology/concept/voice-family-sub> <https://beatscript.app/ontology/ns#familyWave> "sine" .
 <https://beatscript.app/ontology/concept/voice-family-sub> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-sub> <https://beatscript.app/ontology/ns#writtenAs> "sub" .
 <https://beatscript.app/ontology/concept/voice-family-vibes> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
 <https://beatscript.app/ontology/concept/voice-family-vibes> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#VoiceFamily> .
 <https://beatscript.app/ontology/concept/voice-family-vibes> <http://www.w3.org/2004/02/skos/core#definition> "The vibes family: an inst= name containing vibes plays its generic voice."@en .
 <https://beatscript.app/ontology/concept/voice-family-vibes> <http://www.w3.org/2004/02/skos/core#prefLabel> "vibes"@en .
+<https://beatscript.app/ontology/concept/voice-family-vibes> <https://beatscript.app/ontology/ns#familyWave> "bell" .
 <https://beatscript.app/ontology/concept/voice-family-vibes> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/concept/voice-family-vibes> <https://beatscript.app/ontology/ns#writtenAs> "vibes" .
 <https://beatscript.app/ontology/family/chill> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#GenreFamily> .
@@ -8712,6 +8803,49 @@
 <https://beatscript.app/ontology/family/song> <http://www.w3.org/2000/01/rdf-schema#label> "song family"@en .
 <https://beatscript.app/ontology/family/song> <http://www.w3.org/2004/02/skos/core#definition> "Song-form genres. Songs are built from verse, chorus and bridge."@en .
 <https://beatscript.app/ontology/family/song> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/family/song> .
+<https://beatscript.app/ontology/genre/acid> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
+<https://beatscript.app/ontology/genre/acid> <http://www.w3.org/2000/01/rdf-schema#label> "acid"@en .
+<https://beatscript.app/ontology/genre/acid> <http://www.w3.org/2004/02/skos/core#definition> "acid: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following techno's musicality rules), as its tables give it: 125 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 10, chords 1-1-7-1 or 1-4-1-4."@en .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#bassDensity> "0.75"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#bassDuration> "100"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#bpm> "125"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/four-on-floor> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/minor> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#durationVariation> "0.2"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/techno> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#genreId> "acid" .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#ghostNotes> "0.3"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-hihat-b> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-hihat-c> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-kick-b> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-kick-c> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-snare-b> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/acid-snare-c> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/acid-1> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/acid-2> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/acid-hihat> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#humanize> "8"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/edm> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/acid-kick> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#maxBpm> "140"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#melodyDensity> "0.25"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#melodyDuration> "90"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#minBpm> "118"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/acid-snare> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#swing> "10"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#syncopation> "0.3"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/acid> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/dark-pad> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-v8> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/edm-stab> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/organ> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/rave-organ> .
+<https://beatscript.app/ontology/genre/acid> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/rave-stab> .
 <https://beatscript.app/ontology/genre/ambient> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
 <https://beatscript.app/ontology/genre/ambient> <http://www.w3.org/2000/01/rdf-schema#label> "ambient"@en .
 <https://beatscript.app/ontology/genre/ambient> <http://www.w3.org/2004/02/skos/core#closeMatch> <http://www.wikidata.org/entity/Q193207> .
@@ -8869,6 +9003,51 @@
 <https://beatscript.app/ontology/genre/country> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums> .
 <https://beatscript.app/ontology/genre/country> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/acoustic-guitar> .
 <https://beatscript.app/ontology/genre/country> <https://beatscript.app/ontology/ns#walkingBass> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+<https://beatscript.app/ontology/genre/deephouse> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
+<https://beatscript.app/ontology/genre/deephouse> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse"@en .
+<https://beatscript.app/ontology/genre/deephouse> <http://www.w3.org/2004/02/skos/core#definition> "deephouse: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following house's musicality rules), as its tables give it: 122 BPM, dorian from MIDI note 45, the sidechained groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, swing 15, chords 1-4-1-4 or 1-7-4-5."@en .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#bassDensity> "0.5"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#bassDuration> "220"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#bpm> "122"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/sidechained> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/dorian> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#durationVariation> "0.25"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/house> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#genreId> "deephouse" .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#ghostNotes> "0.35"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-hihat-b> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-hihat-c> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-kick-b> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-kick-c> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-snare-b> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/deephouse-snare-c> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/deephouse-1> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/deephouse-2> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/deephouse-hihat> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#humanize> "12"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/edm> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/deephouse-kick> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#maxBpm> "126"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#melodyDensity> "0.35"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#melodyDuration> "160"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#minBpm> "115"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/deephouse-snare> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#swing> "15"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#syncopation> "0.25"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/bass> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/sub-bass> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/am-pad> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/glass-pad> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-v8> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/electric-piano> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/organ> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/piano> .
+<https://beatscript.app/ontology/genre/deephouse> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/vibes> .
 <https://beatscript.app/ontology/genre/dnb> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
 <https://beatscript.app/ontology/genre/dnb> <http://www.w3.org/2000/01/rdf-schema#label> "dnb"@en .
 <https://beatscript.app/ontology/genre/dnb> <http://www.w3.org/2004/02/skos/core#closeMatch> <http://www.wikidata.org/entity/Q188994> .
@@ -8989,6 +9168,54 @@
 <https://beatscript.app/ontology/genre/edm> <https://beatscript.app/ontology/ns#swing> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/genre/edm> <https://beatscript.app/ontology/ns#syncopation> "0.15"^^<http://www.w3.org/2001/XMLSchema#decimal> .
 <https://beatscript.app/ontology/genre/edm> <https://beatscript.app/ontology/ns#tensionCurve> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+<https://beatscript.app/ontology/genre/electro> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
+<https://beatscript.app/ontology/genre/electro> <http://www.w3.org/2000/01/rdf-schema#label> "electro"@en .
+<https://beatscript.app/ontology/genre/electro> <http://www.w3.org/2004/02/skos/core#definition> "electro: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following edm's musicality rules), as its tables give it: 118 BPM, minor from MIDI note 45, the breakbeat groove, kick E(5,16), snare E(2,16) rotated 4, hihat E(8,16), swing 8, chords 1-7-6-7 or 1-4-1-5."@en .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#bassDensity> "0.65"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#bassDuration> "140"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#bpm> "118"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/breakbeat> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/minor> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#durationVariation> "0.15"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/edm> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#genreId> "electro" .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#ghostNotes> "0.2"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-hihat-b> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-hihat-c> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-kick-b> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-kick-c> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-snare-b> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/electro-snare-c> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/electro-1> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/electro-2> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/electro-hihat> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#humanize> "6"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/edm> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/electro-kick> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#maxBpm> "135"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#melodyDensity> "0.4"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#melodyDuration> "110"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#minBpm> "105"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/electro-snare> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#swing> "8"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#syncopation> "0.45"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/chiptune> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/muted-pluck> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/pluck> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/bass> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/fm-bass> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/am-pad> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-808> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-cr78> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/chiptune> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/edm-stab> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/pwm-lead> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/square-lead> .
+<https://beatscript.app/ontology/genre/electro> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/sync-lead> .
 <https://beatscript.app/ontology/genre/funk> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
 <https://beatscript.app/ontology/genre/funk> <http://www.w3.org/2000/01/rdf-schema#label> "funk"@en .
 <https://beatscript.app/ontology/genre/funk> <http://www.w3.org/2004/02/skos/core#closeMatch> <http://www.wikidata.org/entity/Q164444> .
@@ -9104,6 +9331,57 @@
 <https://beatscript.app/ontology/genre/house> <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/house-snare> .
 <https://beatscript.app/ontology/genre/house> <https://beatscript.app/ontology/ns#swing> "20"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/genre/house> <https://beatscript.app/ontology/ns#syncopation> "0.2"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/italo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
+<https://beatscript.app/ontology/genre/italo> <http://www.w3.org/2000/01/rdf-schema#label> "italo"@en .
+<https://beatscript.app/ontology/genre/italo> <http://www.w3.org/2004/02/skos/core#definition> "italo: a genre the seeded generator (generate, gen@N) knows (djrust's own genre, beyond beats' catalogue, following synthwave's musicality rules), as its tables give it: 120 BPM, minor from MIDI note 45, the four on floor groove, kick E(4,16), snare E(2,16) rotated 4, hihat E(4,16) rotated 2, chords 1-6-3-7 or 1-4-7-3."@en .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#bassDensity> "0.8"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#bassDuration> "110"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#bpm> "120"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#defaultGroove> <https://beatscript.app/ontology/groove/four-on-floor> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#defaultScale> <https://beatscript.app/ontology/scale/minor> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#durationVariation> "0.15"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/genre/synthwave> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#genreId> "italo" .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#ghostNotes> "0.15"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-hihat-b> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-hihat-c> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-kick-b> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-kick-c> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-snare-b> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasDrumVariant> <https://beatscript.app/ontology/variant/italo-snare-c> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/italo-1> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hasProgression> <https://beatscript.app/ontology/progression/italo-2> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#hihatRhythm> <https://beatscript.app/ontology/rhythm/italo-hihat> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#humanize> "5"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#inFamily> <https://beatscript.app/ontology/family/song> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#kickRhythm> <https://beatscript.app/ontology/rhythm/italo-kick> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#maxBpm> "130"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#melodyDensity> "0.45"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#melodyDuration> "150"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#minBpm> "110"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#rootNote> "45"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#snareRhythm> <https://beatscript.app/ontology/rhythm/italo-snare> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#swing> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#syncopation> "0.1"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#tensionCurve> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/bright-pluck> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/edm-pluck> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalArp> <https://beatscript.app/ontology/instrument/pluck> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/bass> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/fm-bass> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalBass> <https://beatscript.app/ontology/instrument/sub-bass> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/choir> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/glass-pad> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/pad> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/strings> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalInstrument> <https://beatscript.app/ontology/instrument/warm-pad> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums-v8> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalKit> <https://beatscript.app/ontology/instrument/drums> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/brass> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/duo-lead> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/pwm-lead> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/square-lead> .
+<https://beatscript.app/ontology/genre/italo> <https://beatscript.app/ontology/ns#typicalMelody> <https://beatscript.app/ontology/instrument/tape-lead> .
 <https://beatscript.app/ontology/genre/jazz> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#Genre> .
 <https://beatscript.app/ontology/genre/jazz> <http://www.w3.org/2000/01/rdf-schema#label> "jazz"@en .
 <https://beatscript.app/ontology/genre/jazz> <http://www.w3.org/2004/02/skos/core#closeMatch> <http://www.wikidata.org/entity/Q8341> .
@@ -10399,6 +10677,11 @@
 <https://beatscript.app/ontology/ns#PartLine> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/ns#PartLine> .
 <https://beatscript.app/ontology/ns#PartLine> <https://beatscript.app/ontology/ns#categoricalReading> <https://beatscript.app/ontology/concept/monoidal-product> .
 <https://beatscript.app/ontology/ns#PartLine> <https://beatscript.app/ontology/ns#status> "in-development" .
+<https://beatscript.app/ontology/ns#PartParameter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<https://beatscript.app/ontology/ns#PartParameter> <http://www.w3.org/2000/01/rdf-schema#comment> "A NAME=VALUE setting written after a part's pattern (inst=, kit=, vel=, oct=, ...): djlive's part parameters."@en .
+<https://beatscript.app/ontology/ns#PartParameter> <http://www.w3.org/2000/01/rdf-schema#label> "part parameter"@en .
+<https://beatscript.app/ontology/ns#PartParameter> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://beatscript.app/ontology/ns#LanguageTerm> .
+<https://beatscript.app/ontology/ns#PartParameter> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/ns#PatternGenerator> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
 <https://beatscript.app/ontology/ns#PatternGenerator> <http://www.w3.org/2000/01/rdf-schema#comment> "A call that makes a pattern from its arguments, such as e(5,8), markov(0.6), chord(am) or choose."@en .
 <https://beatscript.app/ontology/ns#PatternGenerator> <http://www.w3.org/2000/01/rdf-schema#label> "pattern generator"@en .
@@ -10850,6 +11133,13 @@
 <https://beatscript.app/ontology/ns#energy> <http://www.w3.org/2000/01/rdf-schema#label> "energy"@en .
 <https://beatscript.app/ontology/ns#energy> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#decimal> .
 <https://beatscript.app/ontology/ns#energy> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/ns#energy> .
+<https://beatscript.app/ontology/ns#familyWave> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<https://beatscript.app/ontology/ns#familyWave> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#FunctionalProperty> .
+<https://beatscript.app/ontology/ns#familyWave> <http://www.w3.org/2000/01/rdf-schema#comment> "The oscillator shape of the engine's generic voice for the family: what an inst= name containing the family word plays when it has no voice of its own (soft for pads, sine for sub and 808, saw for basses and plucks, bell, square). The drum words pick no tonal sound and have none."@en .
+<https://beatscript.app/ontology/ns#familyWave> <http://www.w3.org/2000/01/rdf-schema#domain> <https://beatscript.app/ontology/ns#VoiceFamily> .
+<https://beatscript.app/ontology/ns#familyWave> <http://www.w3.org/2000/01/rdf-schema#label> "family wave"@en .
+<https://beatscript.app/ontology/ns#familyWave> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<https://beatscript.app/ontology/ns#familyWave> <https://beatscript.app/ontology/ns#status> "in-development" .
 <https://beatscript.app/ontology/ns#feel> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
 <https://beatscript.app/ontology/ns#feel> <http://www.w3.org/2000/01/rdf-schema#domain> <https://beatscript.app/ontology/ns#PhrasebookEntry> .
 <https://beatscript.app/ontology/ns#feel> <http://www.w3.org/2000/01/rdf-schema#label> "feel"@en .
@@ -10874,6 +11164,13 @@
 <https://beatscript.app/ontology/ns#firstPublished> <http://www.w3.org/2000/01/rdf-schema#label> "first published"@en .
 <https://beatscript.app/ontology/ns#firstPublished> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#gYear> .
 <https://beatscript.app/ontology/ns#firstPublished> <https://beatscript.app/ontology/ns#status> "stable" .
+<https://beatscript.app/ontology/ns#followsRulesOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#FunctionalProperty> .
+<https://beatscript.app/ontology/ns#followsRulesOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<https://beatscript.app/ontology/ns#followsRulesOf> <http://www.w3.org/2000/01/rdf-schema#comment> "The genre whose musicality rules (echo, chord colour, arp figure, voice design, beat style, ducking) the generator applies to this one: a genre of the generator's own, beyond beats' catalogue, follows a beats genre."@en .
+<https://beatscript.app/ontology/ns#followsRulesOf> <http://www.w3.org/2000/01/rdf-schema#domain> <https://beatscript.app/ontology/ns#Genre> .
+<https://beatscript.app/ontology/ns#followsRulesOf> <http://www.w3.org/2000/01/rdf-schema#label> "follows the rules of"@en .
+<https://beatscript.app/ontology/ns#followsRulesOf> <http://www.w3.org/2000/01/rdf-schema#range> <https://beatscript.app/ontology/ns#Genre> .
+<https://beatscript.app/ontology/ns#followsRulesOf> <https://beatscript.app/ontology/ns#status> "in-development" .
 <https://beatscript.app/ontology/ns#forFamily> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#FunctionalProperty> .
 <https://beatscript.app/ontology/ns#forFamily> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
 <https://beatscript.app/ontology/ns#forFamily> <http://www.w3.org/2000/01/rdf-schema#label> "for family"@en .
@@ -11704,7 +12001,7 @@
 <https://beatscript.app/ontology/ns#writtenAs> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
 <https://beatscript.app/ontology/ns#writtenAs> <https://beatscript.app/ontology/ns#status> "stable" .
 <https://beatscript.app/ontology/ns> <http://purl.org/dc/terms/creator> "stackdump" .
-<https://beatscript.app/ontology/ns> <http://purl.org/dc/terms/issued> "2026-11-22"^^<http://www.w3.org/2001/XMLSchema#date> .
+<https://beatscript.app/ontology/ns> <http://purl.org/dc/terms/issued> "2026-11-23"^^<http://www.w3.org/2001/XMLSchema#date> .
 <https://beatscript.app/ontology/ns> <http://purl.org/dc/terms/license> <https://creativecommons.org/publicdomain/zero/1.0/> .
 <https://beatscript.app/ontology/ns> <http://purl.org/dc/terms/publisher> <https://beatscript.app> .
 <https://beatscript.app/ontology/ns> <http://purl.org/dc/terms/rights> "Dedicated to the public domain under CC0 1.0 Universal."@en .
@@ -11712,9 +12009,9 @@
 <https://beatscript.app/ontology/ns> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
 <https://beatscript.app/ontology/ns> <http://www.w3.org/2000/01/rdf-schema#comment> "The vocabulary behind BeatScript: the genres the generator knows (tempo, scale, groove, Euclidean drum rhythms, instruments, chord progressions), the song structures and sections it arranges them into, the Petri-net engine concepts underneath, and the BeatScript language itself (its versions, its grammar's productions and keywords, voices, kits, control nouns and verbs, operators and both MCP servers' tools), generated from the code that implements them. Forked from the bitwrap ontology 0.2.0, whose terms it carries under this namespace, each linked to the bitwrap term it came from by prov:wasDerivedFrom; it evolves on its own from here."@en .
 <https://beatscript.app/ontology/ns> <http://www.w3.org/2000/01/rdf-schema#seeAlso> <https://ontology.pflow.xyz/ns> .
-<https://beatscript.app/ontology/ns> <http://www.w3.org/2002/07/owl#priorVersion> <https://beatscript.app/ontology/0.2.0> .
-<https://beatscript.app/ontology/ns> <http://www.w3.org/2002/07/owl#versionIRI> <https://beatscript.app/ontology/0.3.0> .
-<https://beatscript.app/ontology/ns> <http://www.w3.org/2002/07/owl#versionInfo> "0.3.0" .
+<https://beatscript.app/ontology/ns> <http://www.w3.org/2002/07/owl#priorVersion> <https://beatscript.app/ontology/0.3.0> .
+<https://beatscript.app/ontology/ns> <http://www.w3.org/2002/07/owl#versionIRI> <https://beatscript.app/ontology/0.4.0> .
+<https://beatscript.app/ontology/ns> <http://www.w3.org/2002/07/owl#versionInfo> "0.4.0" .
 <https://beatscript.app/ontology/ns> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/release/bitwrap-ontology-0.2.0.tar> .
 <https://beatscript.app/ontology/profile/chill-breakdown> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#SectionProfile> .
 <https://beatscript.app/ontology/profile/chill-breakdown> <http://www.w3.org/2000/01/rdf-schema#label> "breakdown in chill"@en .
@@ -12217,6 +12514,16 @@
 <https://beatscript.app/ontology/program/trance-138-story> <https://beatscript.app/ontology/ns#programCid> "z4EBG9jAvjcLHFS4BspK2EHUDEJQuYQswLkEzp49aWpSE3zi9JC" .
 <https://beatscript.app/ontology/program/trance-138-story> <https://beatscript.app/ontology/ns#status> "in-development" .
 <https://beatscript.app/ontology/program/trance-138-story> <https://beatscript.app/ontology/ns#tempoBpm> "138"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/acid-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/acid-1> <http://www.w3.org/2000/01/rdf-schema#label> "acid progression 1: 1-1-7-1"@en .
+<https://beatscript.app/ontology/progression/acid-1> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/acid-1> <https://beatscript.app/ontology/ns#degrees> "1 1 7 1" .
+<https://beatscript.app/ontology/progression/acid-1> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/acid-2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/acid-2> <http://www.w3.org/2000/01/rdf-schema#label> "acid progression 2: 1-4-1-4"@en .
+<https://beatscript.app/ontology/progression/acid-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/acid-2> <https://beatscript.app/ontology/ns#degrees> "1 4 1 4" .
+<https://beatscript.app/ontology/progression/acid-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/ambient-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
 <https://beatscript.app/ontology/progression/ambient-1> <http://www.w3.org/2000/01/rdf-schema#label> "ambient progression 1: 1-3-6-4"@en .
 <https://beatscript.app/ontology/progression/ambient-1> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/progression/ambient-1> .
@@ -12253,6 +12560,16 @@
 <https://beatscript.app/ontology/progression/country-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/country-2> <https://beatscript.app/ontology/ns#degrees> "1 6 4 5" .
 <https://beatscript.app/ontology/progression/country-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/deephouse-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/deephouse-1> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse progression 1: 1-4-1-4"@en .
+<https://beatscript.app/ontology/progression/deephouse-1> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/deephouse-1> <https://beatscript.app/ontology/ns#degrees> "1 4 1 4" .
+<https://beatscript.app/ontology/progression/deephouse-1> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/deephouse-2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/deephouse-2> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse progression 2: 1-7-4-5"@en .
+<https://beatscript.app/ontology/progression/deephouse-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/deephouse-2> <https://beatscript.app/ontology/ns#degrees> "1 7 4 5" .
+<https://beatscript.app/ontology/progression/deephouse-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/dnb-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
 <https://beatscript.app/ontology/progression/dnb-1> <http://www.w3.org/2000/01/rdf-schema#label> "dnb progression 1: 1-6-3-5"@en .
 <https://beatscript.app/ontology/progression/dnb-1> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/progression/dnb-1> .
@@ -12277,6 +12594,16 @@
 <https://beatscript.app/ontology/progression/edm-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/edm-2> <https://beatscript.app/ontology/ns#degrees> "1 7 6 5" .
 <https://beatscript.app/ontology/progression/edm-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/electro-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/electro-1> <http://www.w3.org/2000/01/rdf-schema#label> "electro progression 1: 1-7-6-7"@en .
+<https://beatscript.app/ontology/progression/electro-1> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/electro-1> <https://beatscript.app/ontology/ns#degrees> "1 7 6 7" .
+<https://beatscript.app/ontology/progression/electro-1> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/electro-2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/electro-2> <http://www.w3.org/2000/01/rdf-schema#label> "electro progression 2: 1-4-1-5"@en .
+<https://beatscript.app/ontology/progression/electro-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/electro-2> <https://beatscript.app/ontology/ns#degrees> "1 4 1 5" .
+<https://beatscript.app/ontology/progression/electro-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/funk-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
 <https://beatscript.app/ontology/progression/funk-1> <http://www.w3.org/2000/01/rdf-schema#label> "funk progression 1: 1-1-4-1"@en .
 <https://beatscript.app/ontology/progression/funk-1> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/progression/funk-1> .
@@ -12313,6 +12640,16 @@
 <https://beatscript.app/ontology/progression/house-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/house-2> <https://beatscript.app/ontology/ns#degrees> "1 4 6 7" .
 <https://beatscript.app/ontology/progression/house-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/italo-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/italo-1> <http://www.w3.org/2000/01/rdf-schema#label> "italo progression 1: 1-6-3-7"@en .
+<https://beatscript.app/ontology/progression/italo-1> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/italo-1> <https://beatscript.app/ontology/ns#degrees> "1 6 3 7" .
+<https://beatscript.app/ontology/progression/italo-1> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/italo-2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
+<https://beatscript.app/ontology/progression/italo-2> <http://www.w3.org/2000/01/rdf-schema#label> "italo progression 2: 1-4-7-3"@en .
+<https://beatscript.app/ontology/progression/italo-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/progression/italo-2> <https://beatscript.app/ontology/ns#degrees> "1 4 7 3" .
+<https://beatscript.app/ontology/progression/italo-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/jazz-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#ChordProgression> .
 <https://beatscript.app/ontology/progression/jazz-1> <http://www.w3.org/2000/01/rdf-schema#label> "jazz progression 1: 2-5-1-6"@en .
 <https://beatscript.app/ontology/progression/jazz-1> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/progression/jazz-1> .
@@ -12409,6 +12746,27 @@
 <https://beatscript.app/ontology/progression/trap-2> <https://beatscript.app/ontology/ns#chordCount> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/progression/trap-2> <https://beatscript.app/ontology/ns#degrees> "1 4 1 7" .
 <https://beatscript.app/ontology/progression/trap-2> <https://beatscript.app/ontology/ns#stepsPerChord> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/acid-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "acid hihat: E(4,16) rotation 2"@en .
+<https://beatscript.app/ontology/rhythm/acid-hihat> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/rhythm/acid-hihat> <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-hihat> <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-hihat> <https://beatscript.app/ontology/ns#rotation> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-hihat> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-kick> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/acid-kick> <http://www.w3.org/2000/01/rdf-schema#label> "acid kick: E(4,16) rotation 0"@en .
+<https://beatscript.app/ontology/rhythm/acid-kick> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/rhythm/acid-kick> <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-kick> <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-kick> <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-kick> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-snare> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/acid-snare> <http://www.w3.org/2000/01/rdf-schema#label> "acid snare: E(2,16) rotation 4"@en .
+<https://beatscript.app/ontology/rhythm/acid-snare> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/rhythm/acid-snare> <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-snare> <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-snare> <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/acid-snare> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/ambient-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
 <https://beatscript.app/ontology/rhythm/ambient-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "ambient hihat: E(3,16) rotation 0"@en .
 <https://beatscript.app/ontology/rhythm/ambient-hihat> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/rhythm/ambient-hihat> .
@@ -12505,6 +12863,27 @@
 <https://beatscript.app/ontology/rhythm/country-snare> <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/country-snare> <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/country-snare> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse hihat: E(4,16) rotation 2"@en .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> <https://beatscript.app/ontology/ns#rotation> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-hihat> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse kick: E(4,16) rotation 0"@en .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-kick> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse snare: E(2,16) rotation 4"@en .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/deephouse-snare> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/dnb-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
 <https://beatscript.app/ontology/rhythm/dnb-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "dnb hihat: E(7,8) rotation 0"@en .
 <https://beatscript.app/ontology/rhythm/dnb-hihat> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/rhythm/dnb-hihat> .
@@ -12577,6 +12956,27 @@
 <https://beatscript.app/ontology/rhythm/edm-snare> <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/edm-snare> <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/edm-snare> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/electro-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "electro hihat: E(8,16) rotation 0"@en .
+<https://beatscript.app/ontology/rhythm/electro-hihat> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/rhythm/electro-hihat> <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-hihat> <https://beatscript.app/ontology/ns#pulses> "8"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-hihat> <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-hihat> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-kick> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/electro-kick> <http://www.w3.org/2000/01/rdf-schema#label> "electro kick: E(5,16) rotation 0"@en .
+<https://beatscript.app/ontology/rhythm/electro-kick> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/rhythm/electro-kick> <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-kick> <https://beatscript.app/ontology/ns#pulses> "5"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-kick> <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-kick> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-snare> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/electro-snare> <http://www.w3.org/2000/01/rdf-schema#label> "electro snare: E(2,16) rotation 4"@en .
+<https://beatscript.app/ontology/rhythm/electro-snare> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/rhythm/electro-snare> <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-snare> <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-snare> <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/electro-snare> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/funk-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
 <https://beatscript.app/ontology/rhythm/funk-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "funk hihat: E(8,16) rotation 0"@en .
 <https://beatscript.app/ontology/rhythm/funk-hihat> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/rhythm/funk-hihat> .
@@ -12649,6 +13049,27 @@
 <https://beatscript.app/ontology/rhythm/house-snare> <https://beatscript.app/ontology/ns#pulses> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/house-snare> <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/house-snare> <https://beatscript.app/ontology/ns#steps> "8"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/italo-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "italo hihat: E(4,16) rotation 2"@en .
+<https://beatscript.app/ontology/rhythm/italo-hihat> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/rhythm/italo-hihat> <https://beatscript.app/ontology/ns#midiNote> "42"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-hihat> <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-hihat> <https://beatscript.app/ontology/ns#rotation> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-hihat> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-kick> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/italo-kick> <http://www.w3.org/2000/01/rdf-schema#label> "italo kick: E(4,16) rotation 0"@en .
+<https://beatscript.app/ontology/rhythm/italo-kick> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/rhythm/italo-kick> <https://beatscript.app/ontology/ns#midiNote> "36"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-kick> <https://beatscript.app/ontology/ns#pulses> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-kick> <https://beatscript.app/ontology/ns#rotation> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-kick> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-snare> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
+<https://beatscript.app/ontology/rhythm/italo-snare> <http://www.w3.org/2000/01/rdf-schema#label> "italo snare: E(2,16) rotation 4"@en .
+<https://beatscript.app/ontology/rhythm/italo-snare> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/rhythm/italo-snare> <https://beatscript.app/ontology/ns#midiNote> "38"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-snare> <https://beatscript.app/ontology/ns#pulses> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-snare> <https://beatscript.app/ontology/ns#rotation> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/rhythm/italo-snare> <https://beatscript.app/ontology/ns#steps> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/rhythm/jazz-hihat> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#EuclideanRhythm> .
 <https://beatscript.app/ontology/rhythm/jazz-hihat> <http://www.w3.org/2000/01/rdf-schema#label> "jazz hihat: E(5,12) rotation 0"@en .
 <https://beatscript.app/ontology/rhythm/jazz-hihat> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/rhythm/jazz-hihat> .
@@ -15875,6 +16296,48 @@
 <https://beatscript.app/ontology/structure/song-standard-3> <https://beatscript.app/ontology/ns#hasSlot> <https://beatscript.app/ontology/slot/song-standard-3-7> .
 <https://beatscript.app/ontology/structure/song-standard-3> <https://beatscript.app/ontology/ns#sectionCount> "7"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/structure/song-standard-3> <https://beatscript.app/ontology/ns#templateKind> "standard" .
+<https://beatscript.app/ontology/variant/acid-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/acid-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "acid hihat variant B"@en .
+<https://beatscript.app/ontology/variant/acid-hihat-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/acid-hihat-b> <https://beatscript.app/ontology/ns#hitsAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-hihat-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-hihat-b> <https://beatscript.app/ontology/ns#rotationAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-hihat-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/acid-hihat-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/acid-hihat-c> <http://www.w3.org/2000/01/rdf-schema#label> "acid hihat variant C"@en .
+<https://beatscript.app/ontology/variant/acid-hihat-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/acid-hihat-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-hihat-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-hihat-c> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-hihat-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/acid-kick-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/acid-kick-b> <http://www.w3.org/2000/01/rdf-schema#label> "acid kick variant B"@en .
+<https://beatscript.app/ontology/variant/acid-kick-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/acid-kick-b> <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-kick-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-kick-b> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-kick-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/acid-kick-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/acid-kick-c> <http://www.w3.org/2000/01/rdf-schema#label> "acid kick variant C"@en .
+<https://beatscript.app/ontology/variant/acid-kick-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/acid-kick-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-kick-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-kick-c> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-kick-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/acid-snare-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/acid-snare-b> <http://www.w3.org/2000/01/rdf-schema#label> "acid snare variant B"@en .
+<https://beatscript.app/ontology/variant/acid-snare-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/acid-snare-b> <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-snare-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-snare-b> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-snare-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/acid-snare-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/acid-snare-c> <http://www.w3.org/2000/01/rdf-schema#label> "acid snare variant C"@en .
+<https://beatscript.app/ontology/variant/acid-snare-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/acid-snare-c> <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-snare-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-snare-c> <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/acid-snare-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
 <https://beatscript.app/ontology/variant/ambient-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
 <https://beatscript.app/ontology/variant/ambient-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "ambient hihat variant B"@en .
 <https://beatscript.app/ontology/variant/ambient-hihat-b> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/variant/ambient-hihat-b> .
@@ -16067,6 +16530,48 @@
 <https://beatscript.app/ontology/variant/country-snare-c> <https://beatscript.app/ontology/ns#hitsMul> "0.5"^^<http://www.w3.org/2001/XMLSchema#decimal> .
 <https://beatscript.app/ontology/variant/country-snare-c> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/variant/country-snare-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse hihat variant B"@en .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> <https://beatscript.app/ontology/ns#hitsAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> <https://beatscript.app/ontology/ns#rotationAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse hihat variant C"@en .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-hihat-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse kick variant B"@en .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-kick-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse kick variant C"@en .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-kick-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse snare variant B"@en .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-snare-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> <http://www.w3.org/2000/01/rdf-schema#label> "deephouse snare variant C"@en .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/deephouse-snare-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
 <https://beatscript.app/ontology/variant/dnb-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
 <https://beatscript.app/ontology/variant/dnb-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "dnb hihat variant B"@en .
 <https://beatscript.app/ontology/variant/dnb-hihat-b> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/variant/dnb-hihat-b> .
@@ -16227,6 +16732,48 @@
 <https://beatscript.app/ontology/variant/edm-snare-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/variant/edm-snare-c> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/variant/edm-snare-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/electro-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/electro-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "electro hihat variant B"@en .
+<https://beatscript.app/ontology/variant/electro-hihat-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/electro-hihat-b> <https://beatscript.app/ontology/ns#hitsAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-hihat-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-hihat-b> <https://beatscript.app/ontology/ns#rotationAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-hihat-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/electro-hihat-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/electro-hihat-c> <http://www.w3.org/2000/01/rdf-schema#label> "electro hihat variant C"@en .
+<https://beatscript.app/ontology/variant/electro-hihat-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/electro-hihat-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-hihat-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-hihat-c> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-hihat-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/electro-kick-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/electro-kick-b> <http://www.w3.org/2000/01/rdf-schema#label> "electro kick variant B"@en .
+<https://beatscript.app/ontology/variant/electro-kick-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/electro-kick-b> <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-kick-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-kick-b> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-kick-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/electro-kick-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/electro-kick-c> <http://www.w3.org/2000/01/rdf-schema#label> "electro kick variant C"@en .
+<https://beatscript.app/ontology/variant/electro-kick-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/electro-kick-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-kick-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-kick-c> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-kick-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/electro-snare-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/electro-snare-b> <http://www.w3.org/2000/01/rdf-schema#label> "electro snare variant B"@en .
+<https://beatscript.app/ontology/variant/electro-snare-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/electro-snare-b> <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-snare-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-snare-b> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-snare-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/electro-snare-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/electro-snare-c> <http://www.w3.org/2000/01/rdf-schema#label> "electro snare variant C"@en .
+<https://beatscript.app/ontology/variant/electro-snare-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/electro-snare-c> <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-snare-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-snare-c> <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/electro-snare-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
 <https://beatscript.app/ontology/variant/funk-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
 <https://beatscript.app/ontology/variant/funk-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "funk hihat variant B"@en .
 <https://beatscript.app/ontology/variant/funk-hihat-b> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/variant/funk-hihat-b> .
@@ -16371,6 +16918,48 @@
 <https://beatscript.app/ontology/variant/house-snare-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/variant/house-snare-c> <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://beatscript.app/ontology/variant/house-snare-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/italo-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/italo-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "italo hihat variant B"@en .
+<https://beatscript.app/ontology/variant/italo-hihat-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/italo-hihat-b> <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-hihat-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-hihat-b> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-hihat-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/italo-hihat-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/italo-hihat-c> <http://www.w3.org/2000/01/rdf-schema#label> "italo hihat variant C"@en .
+<https://beatscript.app/ontology/variant/italo-hihat-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/hihat> .
+<https://beatscript.app/ontology/variant/italo-hihat-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-hihat-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-hihat-c> <https://beatscript.app/ontology/ns#rotationAdd> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-hihat-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/italo-kick-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/italo-kick-b> <http://www.w3.org/2000/01/rdf-schema#label> "italo kick variant B"@en .
+<https://beatscript.app/ontology/variant/italo-kick-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/italo-kick-b> <https://beatscript.app/ontology/ns#hitsAdd> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-kick-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-kick-b> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-kick-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/italo-kick-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/italo-kick-c> <http://www.w3.org/2000/01/rdf-schema#label> "italo kick variant C"@en .
+<https://beatscript.app/ontology/variant/italo-kick-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/kick> .
+<https://beatscript.app/ontology/variant/italo-kick-c> <https://beatscript.app/ontology/ns#hitsAdd> "-2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-kick-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-kick-c> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-kick-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
+<https://beatscript.app/ontology/variant/italo-snare-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/italo-snare-b> <http://www.w3.org/2000/01/rdf-schema#label> "italo snare variant B"@en .
+<https://beatscript.app/ontology/variant/italo-snare-b> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/italo-snare-b> <https://beatscript.app/ontology/ns#hitsAdd> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-snare-b> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-snare-b> <https://beatscript.app/ontology/ns#rotationAdd> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-snare-b> <https://beatscript.app/ontology/ns#variantLabel> "B" .
+<https://beatscript.app/ontology/variant/italo-snare-c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
+<https://beatscript.app/ontology/variant/italo-snare-c> <http://www.w3.org/2000/01/rdf-schema#label> "italo snare variant C"@en .
+<https://beatscript.app/ontology/variant/italo-snare-c> <https://beatscript.app/ontology/ns#forRole> <https://beatscript.app/ontology/role/snare> .
+<https://beatscript.app/ontology/variant/italo-snare-c> <https://beatscript.app/ontology/ns#hitsAdd> "-1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-snare-c> <https://beatscript.app/ontology/ns#hitsMul> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-snare-c> <https://beatscript.app/ontology/ns#rotationAdd> "4"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://beatscript.app/ontology/variant/italo-snare-c> <https://beatscript.app/ontology/ns#variantLabel> "C" .
 <https://beatscript.app/ontology/variant/jazz-hihat-b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://beatscript.app/ontology/ns#DrumVariant> .
 <https://beatscript.app/ontology/variant/jazz-hihat-b> <http://www.w3.org/2000/01/rdf-schema#label> "jazz hihat variant B"@en .
 <https://beatscript.app/ontology/variant/jazz-hihat-b> <http://www.w3.org/ns/prov#wasDerivedFrom> <https://ontology.bitwrap.io/variant/jazz-hihat-b> .

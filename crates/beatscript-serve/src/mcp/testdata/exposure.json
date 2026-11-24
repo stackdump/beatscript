@@ -116,7 +116,7 @@
         },
         {
           "tool": "check",
-          "args": {"genre": "trap", "text": "tempo 140\ndeck A: kick x ~ x ~ kit=drums-cr78\n"},
+          "args": {"genre": "trap", "text": "tempo 140\ndeck A: kick x ~ x ~ kit=drums-lofi\n"},
           "expect": [["/style/warnings/0/code", "=", "kit"], ["/style/warnings/0/message", "~", "drums-808"]]
         },
         {"tool": "genre_template", "args": {"genre": "trap"}, "expect": [["/text", "~", "kit=drums-808"], ["/genre/kit", "~", "drums-808"]]}

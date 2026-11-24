@@ -63,13 +63,14 @@ fn fork_integrity() {
         assert_eq!(hex(b), sum, "upstream {name} differs from upstream.lock");
     }
 
-    // version 0.3.0 (0.2.0 plus bitwrap's conventions module), its version IRI, the version before it, derived from the bitwrap 0.2.0 release
+    // version 0.4.0 (0.3.0 plus the generator's own genres, generated from its tables), its version IRI, the version before
+    // it, derived from the bitwrap 0.2.0 release
     let g = &o.graph;
     let onto_iri = format!("{}ns", fork::BASE);
-    assert_eq!(o.version, "0.3.0");
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionInfo")), "0.3.0");
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionIRI")), format!("{}0.3.0", fork::BASE));
-    assert_eq!(g.first(&onto_iri, &format!("{OWL}priorVersion")), format!("{}0.2.0", fork::BASE));
+    assert_eq!(o.version, "0.4.0");
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionInfo")), "0.4.0");
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}versionIRI")), format!("{}0.4.0", fork::BASE));
+    assert_eq!(g.first(&onto_iri, &format!("{OWL}priorVersion")), format!("{}0.3.0", fork::BASE));
     assert_eq!(g.first(&onto_iri, fork::PROV_DERIVED), fork::UPSTREAM_RELEASE);
     assert!(fork::UPSTREAM_RELEASE.contains(&format!("-{}.", fork::UPSTREAM_VERSION)));
     let up: Value = serde_json::from_str(fork::UPSTREAM_MANIFEST).unwrap();
@@ -421,7 +422,15 @@ fn genres_read_the_fork_as_bitwrap() {
     let names = up.of_type(&format!("{}Genre", genres::NS));
     assert!(names.len() >= 19, "{names:?}");
     assert!(names.iter().all(|n| n.starts_with(fork::BASE)), "{names:?}");
-    assert_eq!(names, fk.of_type(&format!("{}Genre", genres::NS)));
+    // the fork has every bitwrap genre, and beyond them exactly the generator's genres bitwrap does not have (since 0.4.0,
+    // generated from its tables: vocab::generator_genres)
+    let forked = fk.of_type(&format!("{}Genre", genres::NS));
+    let extra: Vec<String> = forked.iter().filter(|n| !names.contains(n)).map(|n| genres::local(n).to_string()).collect();
+    assert!(names.iter().all(|n| forked.contains(n)), "{forked:?}");
+    let mut beyond: Vec<String> = beatscript_api::generate::genres().into_iter().filter(|id| !names.iter().any(|n| genres::local(n) == id)).collect();
+    beyond.sort();
+    assert_eq!(extra, beyond);
+    assert!(extra.contains(&"acid".to_string()), "{extra:?}");
     let text = "#! genre: techno\ntempo 128\nkick x . x . x . x .\nbass inst=sub-bass c2 . c2 .\n";
     for iri in &names {
         let slug = genres::local(iri).to_string();
@@ -466,8 +475,8 @@ fn genre_graph_has_the_conventions_and_trap_its_808() {
     assert_eq!(style(&t), json!([]), "{t}");
     let t = format!("tempo 140\nkey em\n{drums}deck B: harmony [e3, g3, b3] ~ ~ ~ ~ ~ ~ ~ [c3, e3, g3] ~ ~ ~ ~ ~ ~ ~\n");
     assert_eq!(style(&t), json!([]), "{t}");
-    // a kit trap's family does not use is still unusual
-    let w = style("tempo 140\ndeck A: kick x ~ x ~ kit=drums-cr78\n");
+    // a kit trap's family does not use is still unusual (drums-lofi: lofi's; since 0.4.0 electro, an edm genre, uses cr78)
+    let w = style("tempo 140\ndeck A: kick x ~ x ~ kit=drums-lofi\n");
     assert_eq!(w[0]["code"], "kit", "{w}");
     assert!(w[0]["message"].as_str().unwrap().contains("(its kit is drums-808)"), "{w}");
     // the bitwrap ontology has no hip-hop or drill genre: no warnings, a note that says so
@@ -493,7 +502,12 @@ fn genre_templates_v1_are_frozen() {
     let g = GenreGraph(genre_graph());
     let (voices, kits) = beatscript_serve::genres::instrument_names();
     let mut body = String::new();
-    for gn in beatscript_serve::genres::genres(&g) {
+    // v1 froze the genres the graph had then; a genre the ontology gained later (0.4.0's acid, deephouse, electro, italo) is
+    // not in it, and would be a version 2's
+    let v1 = djengine::genre_templates::genres(1);
+    let now = beatscript_serve::genres::genres(&g);
+    assert!(v1.iter().all(|x| now.iter().any(|gn| gn.slug == *x)), "a genre of genre@1 is gone from the ontology: {v1:?}");
+    for gn in now.into_iter().filter(|gn| v1.is_empty() || v1.contains(&gn.slug.as_str())) {
         body.push_str(&format!("{}{}\n", djengine::genre_templates::HEAD, gn.slug));
         body.push_str(&beatscript_serve::genres::template(&g, &gn, &voices, &kits));
         body.push('\n');

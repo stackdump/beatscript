@@ -16,6 +16,8 @@ The input is the dump beatscript-serve (the beatscript.app server) writes from i
                    the CIDs of and the version it revises, and the language's current version
   instruments      what /api/instruments and the instruments tool answer: voices, kits,
                    families, palettes
+  generator        the seeded generator's genres (djrust's genre tables; the ones the upstream release lacks become
+                   genre, rhythm, progression and drum-variant individuals) and each family word's generic sound
   control_nouns    the snapshot of the DJ app's control registry: the nouns `do` reaches and the verbs each accepts
   language         the language engine's registries: generators, pattern transforms, evolve and mutation operators, sugar words, phrase templates
   mcp              both MCP servers' tools/list: BeatScript's (beatscript-serve /mcp) and the ontology's (/ontology/mcp)
@@ -199,6 +201,13 @@ class Out:
     def term(self, subject, types, label, definition, facts, kind):
         """One subject: types, label and definition (left out when they are already written by hand), then facts."""
         lines = [f"{subject} a {', '.join(types)}"]
+        if label is None:
+            # a music individual in the genre generator's shape (a genre, its rhythms, progressions and drum variants): its
+            # rdfs:label and definition are among its facts, and like bitwrap's it carries no status
+            lines += [f"    {p} {o}" for p, o in facts]
+            self.blocks.append(" ;\n".join(lines) + " .")
+            self.count[kind] = self.count.get(kind, 0) + 1
+            return
         hand = subject in self.defined
         if not hand:
             lines.append(f"    <{SKOS}prefLabel> {lit(label)}")
@@ -235,6 +244,8 @@ ns:MutationOperator a owl:Class ; rdfs:subClassOf ns:PatternTransform ; rdfs:lab
     rdfs:comment "An operator of an arrange mutation: it changes a let pattern from one point of the arrangement (~) or for one section (@)."@en .
 ns:PhraseTemplate a owl:Class ; rdfs:subClassOf ns:MusicConcept ; rdfs:label "phrase template"@en ; ns:status "stable" ;
     rdfs:comment "A template that compiles a phrase to a whole track: arrange from template(NAME, PHRASE). The phrase is the vocal line (its syllables the line's length, its stress the accents and the beats, its meter the subdivision); the arrangement is the template's own."@en .
+ns:PartParameter a owl:Class ; rdfs:subClassOf ns:LanguageTerm ; rdfs:label "part parameter"@en ; ns:status "stable" ;
+    rdfs:comment "A NAME=VALUE setting written after a part's pattern (inst=, kit=, vel=, oct=, ...): djlive's part parameters."@en .
 ns:BeatScriptVoice a owl:Class ; rdfs:subClassOf ns:Instrument ; rdfs:label "BeatScript voice"@en ; ns:status "stable" ;
     rdfs:comment "A voice a BeatScript part may name with inst=NAME: what /api/instruments lists."@en .
 ns:DrumKit a owl:Class ; rdfs:subClassOf ns:Instrument ; rdfs:label "drum kit"@en ; ns:status "stable" ;
@@ -260,6 +271,10 @@ ns:writtenAs a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "writte
     rdfs:comment "How the term is spelled in a BeatScript program."@en .
 ns:markedBy a owl:ObjectProperty ; rdfs:range ns:Keyword ; rdfs:label "marked by"@en ; ns:status "stable" .
 ns:inVoiceFamily a owl:ObjectProperty ; rdfs:domain ns:BeatScriptVoice ; rdfs:range ns:VoiceFamily ; rdfs:label "in voice family"@en ; ns:status "stable" .
+ns:familyWave a owl:DatatypeProperty, owl:FunctionalProperty ; rdfs:domain ns:VoiceFamily ; rdfs:range xsd:string ; rdfs:label "family wave"@en ; ns:status "in-development" ;
+    rdfs:comment "The oscillator shape of the engine's generic voice for the family: what an inst= name containing the family word plays when it has no voice of its own (soft for pads, sine for sub and 808, saw for basses and plucks, bell, square). The drum words pick no tonal sound and have none."@en .
+ns:followsRulesOf a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:Genre ; rdfs:range ns:Genre ; rdfs:label "follows the rules of"@en ; ns:status "in-development" ;
+    rdfs:comment "The genre whose musicality rules (echo, chord colour, arp figure, voice design, beat style, ducking) the generator applies to this one: a genre of the generator's own, beyond beats' catalogue, follows a beats genre."@en .
 ns:acceptsVerb a owl:ObjectProperty ; owl:inverseOf ns:actsOn ; rdfs:label "accepts verb"@en ; ns:status "stable" .
 ns:defaultVerb a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:ControlNoun ; rdfs:range ns:ControlVerb ; rdfs:label "default verb"@en ; ns:status "stable" .
 ns:controlParameter a owl:DatatypeProperty ; rdfs:domain ns:ControlNoun ; rdfs:range xsd:string ; rdfs:label "control parameter"@en ; ns:status "stable" .
@@ -402,6 +417,93 @@ HEADER = """@prefix owl:   <http://www.w3.org/2002/07/owl#> .
 """
 
 
+def num(x):
+    """A number as bitwrap's genre extractor writes it: a whole number is an xsd:integer, any other an xsd:decimal."""
+    return typed(int(x), "integer") if float(x).is_integer() else typed(repr(float(x)), "decimal")
+
+
+# role of the generator's instrument set -> the conventions module's property for a genre's usual instrument in that role
+TYPICAL = {"melody": "typicalMelody", "arp": "typicalArp", "bass": "typicalBass", "harmony": "typicalInstrument", "kick": "typicalKit"}
+
+
+def genres(src, odir, out):
+    gen = src.get("generator", {}).get("genres", [])
+    if not gen:
+        return
+    nt = (odir / "upstream" / "bitwrap-0.2.0" / "ns.nt").read_text()
+    have = set(re.findall(r"^<" + re.escape(UPSTREAM_BASE) + r"genre/([a-z0-9-]+)> <" + re.escape(RDF_TYPE) + "> ", nt, re.M))
+    scales = {iv: s for s, iv in re.findall(r"^<" + re.escape(UPSTREAM_BASE) + r'scale/([a-z0-9-]+)> <' + re.escape(NS.replace(BASE, UPSTREAM_BASE)) + r'intervals> "([0-9 ]+)" \.$', nt, re.M)}
+    inst = src["instruments"]
+    voices = {v for v in inst["voices"] if v[:1].isalpha()}
+    kits = set(inst["kits"])
+    for g in gen:
+        gid = g["id"]
+        if gid in have:
+            continue  # the upstream release has it, from the same tables (the drift test holds the two to each other)
+        iv = " ".join(str(i) for i in g["scale_intervals"])
+        if iv not in scales:
+            sys.exit(f"genre {gid}: no scale in the upstream release has the intervals {iv} ({g['scale']})")
+        G = iri("genre/" + gid)
+        rhythms = g["rhythms"]
+        progs = g["progressions"]
+        said = [f"{num_text(g['bpm'])} BPM", f"{scales[iv].replace('-', ' ')} from MIDI note {g['root_note']}"]
+        if g.get("groove"):
+            said.append(f"the {g['groove'].replace('-', ' ')} groove")
+        for role in ("kick", "snare", "hihat"):
+            k, n, r = rhythms[role][:3]
+            said.append(f"{role} E({k},{n})" + (f" rotated {r}" if r else ""))
+        if g["params"].get("swing"):
+            said.append(f"swing {num_text(g['params']['swing'])}")
+        if progs:
+            said.append("chords " + " or ".join("-".join(map(str, p["degrees"])) for p in progs))
+        whose = f"djrust's own genre, beyond beats' catalogue, following {g['like']}'s musicality rules" if g.get("native") and g.get("like") else "a genre of beats' catalogue"
+        definition = f"{gid}: a genre the seeded generator (generate, gen@N) knows ({whose}), as its tables give it: {', '.join(said)}."
+        facts = [("rdfs:label", lit(g["name"])), (f"<{SKOS}definition>", lit(definition)), (nsx("genreId"), lit(gid, None)),
+                 (nsx("inFamily"), iri("family/" + g["family"])), (nsx("bpm"), num(g["bpm"])), (nsx("defaultScale"), iri("scale/" + scales[iv])),
+                 (nsx("rootNote"), num(g["root_note"]))]
+        if g.get("groove"):
+            facts.append((nsx("defaultGroove"), iri("groove/" + g["groove"])))
+        for role in ("kick", "snare", "hihat"):
+            facts.append((nsx(f"{role}Rhythm"), iri(f"rhythm/{gid}-{role}")))
+        for k, v in g["params"].items():
+            facts.append((nsx(k), num(v)))
+        for k in g["flags"]:
+            facts.append((nsx(k), typed("true", "boolean")))
+        if g.get("native") and g.get("like"):
+            facts.append((nsx("followsRulesOf"), iri("genre/" + g["like"])))
+        for i in range(len(progs)):
+            facts.append((nsx("hasProgression"), iri(f"progression/{gid}-{i + 1}")))
+        for v in g["drum_variants"]:
+            facts.append((nsx("hasDrumVariant"), iri(f"variant/{gid}-{v['role']}-{v['label'].lower()}")))
+        for role, names in sorted(g["instruments"].items()):
+            if role not in TYPICAL:
+                continue
+            ok = kits if role == "kick" else voices
+            for name in names:
+                if name in ok:
+                    facts.append((nsx(TYPICAL[role]), iri("instrument/" + slug(name))))
+        out.term(G, [nsx("Genre")], None, None, facts, "Genre")
+        for role in ("kick", "snare", "hihat"):
+            k, n, r, note = rhythms[role][:4]
+            out.term(iri(f"rhythm/{gid}-{role}"), [nsx("EuclideanRhythm")], None, None,
+                     [("rdfs:label", lit(f"{g['name']} {role}: E({k},{n}) rotation {r}")), (nsx("forRole"), iri("role/" + role)),
+                      (nsx("pulses"), num(k)), (nsx("steps"), num(n)), (nsx("rotation"), num(r)), (nsx("midiNote"), num(note))], "EuclideanRhythm")
+        for i, p in enumerate(progs, 1):
+            d = p["degrees"]
+            out.term(iri(f"progression/{gid}-{i}"), [nsx("ChordProgression")], None, None,
+                     [("rdfs:label", lit(f"{g['name']} progression {i}: " + "-".join(map(str, d)))), (nsx("degrees"), lit(" ".join(map(str, d)), None)),
+                      (nsx("chordCount"), num(len(d))), (nsx("stepsPerChord"), num(p["steps_per"]))], "ChordProgression")
+        for v in g["drum_variants"]:
+            out.term(iri(f"variant/{gid}-{v['role']}-{v['label'].lower()}"), [nsx("DrumVariant")], None, None,
+                     [("rdfs:label", lit(f"{g['name']} {v['role']} variant {v['label']}")), (nsx("forRole"), iri("role/" + v["role"])),
+                      (nsx("variantLabel"), lit(v["label"], None)), (nsx("hitsAdd"), num(v["hits_add"])), (nsx("hitsMul"), num(v["hits_mul"])),
+                      (nsx("rotationAdd"), num(v["rotation_add"]))], "DrumVariant")
+
+
+def num_text(x):
+    return str(int(x)) if float(x).is_integer() else repr(float(x))
+
+
 def main():
     src = json.loads(Path(sys.argv[1]).read_text())
     odir = Path(sys.argv[2])
@@ -502,6 +604,8 @@ def main():
         out.term(c("evolve-" + slug(t)), [skos_concept, nsx("EvolveOperator")], t, f"The evolve operator {t}: applied to a part once a generation.", [(nsx("writtenAs"), lit(t, None))], "EvolveOperator")
     for t in lang["mutation_ops"]:
         out.term(c("mutation-op-" + slug(t)), [skos_concept, nsx("MutationOperator")], t, f"The arrange mutation operator {t}.", [(nsx("writtenAs"), lit(t, None))], "MutationOperator")
+    for prm in lang.get("part_params", []):
+        out.term(c("part-param-" + slug(prm)), [skos_concept, nsx("PartParameter")], prm, f"The part parameter {prm}, written {prm}=VALUE after a part's pattern.", [(nsx("writtenAs"), lit(f"{prm}=", None))], "PartParameter")
     for t in lang["templates"]:
         out.term(c("template-" + slug(t["name"])), [skos_concept, nsx("PhraseTemplate")], t["name"], f"The phrase template {t['name']}: {t['summary']}. Written {t['example']}.", [(nsx("writtenAs"), lit(t["name"], None)), ("rdfs:seeAlso", c(production_slug("template")))], "PhraseTemplate")
 
@@ -521,6 +625,13 @@ def main():
     for p in inst["palettes"]:
         out.term(c("palette-" + slug(p)), [skos_concept, nsx("Palette")], p, f"The {p} palette.", [(nsx("writtenAs"), lit(p, None))], "Palette")
     del fams
+    # each family word's generic sound (the engine's tonal voice for a name containing it)
+    for f in src.get("generator", {}).get("family_sounds", []):
+        out.facts(c("voice-family-" + slug(f["family"])), [(nsx("familyWave"), lit(f["wave"], None))])
+
+    # the generator's genres the upstream release does not have (djrust's native genres): facts from the generator's tables,
+    # in the shape bitwrap's extract/genres.py gives the beats genres, and a definition said from those facts
+    genres(src, odir, out)
 
     # the public-domain phrasebook: the corpus, its meter families and feels (closed sets in djengine; the lines are data)
     pb = src.get("phrasebook")

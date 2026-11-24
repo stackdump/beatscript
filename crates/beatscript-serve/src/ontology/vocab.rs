@@ -47,6 +47,111 @@ pub fn versions() -> Vec<Value> {
         .collect()
 }
 
+/// The generator's genre families by number, as djrust's structure tables number them (beats' structure.js
+/// `familyEDM=0, familySong=1, familyJazz=2, familyChill=3`; the ontology's `family/<name>`).
+pub const GENRE_FAMILIES: [&str; 4] = ["edm", "song", "jazz", "chill"];
+
+/// The generator's grooves (djrust `tables.json` `grooves`, by name) and the ontology's `groove/<slug>` for each.
+pub const GROOVE_SLUGS: [(&str, &str); 7] = [
+    ("FourOnFloor", "four-on-floor"),
+    ("Offbeat", "offbeat"),
+    ("Sidechained", "sidechained"),
+    ("SyncoPocket", "syncopated-pocket"),
+    ("Breakbeat", "breakbeat"),
+    ("Walking", "walking"),
+    ("Bossa", "bossa"),
+];
+
+/// Every genre the seeded generator (`generate`, `gen@N`) knows (`beatscript_api::generate::genres()`), with what djrust's
+/// tables say of it: tempo, root note, scale (by name and by its intervals), the three Euclidean drum rhythms, the feel
+/// parameters, the family and groove, the chord progressions, the drum-style variants, and the instrument candidates per
+/// role (every name, a voice or not: the generator script keeps the ones BeatScript can write). A native genre (djrust's
+/// own, not in beats' catalogue) also says which beats genre's musicality rules it follows.
+pub fn generator_genres() -> Vec<Value> {
+    use djengine::gen::tables::BeatsTables;
+    let t = BeatsTables::shared();
+    let groove_name: BTreeMap<i64, &str> = t.grooves.iter().map(|(k, v)| (*v, k.as_str())).collect();
+    beatscript_api::generate::genres()
+        .into_iter()
+        .map(|id| {
+            let d = &t.genres[&id];
+            let theory = d.theory.as_ref();
+            let groove = t.theme_table(&id).and_then(|th| groove_name.get(&th.groove).copied());
+            let groove = groove.map(|n| GROOVE_SLUGS.iter().find(|(name, _)| *name == n).map(|(_, s)| *s).unwrap_or_else(|| panic!("genre {id}: groove {n} has no slug in vocab::GROOVE_SLUGS")));
+            let family = t.family_of(&id);
+            let family = GENRE_FAMILIES.get(family as usize).unwrap_or_else(|| panic!("genre {id}: family {family} is not in vocab::GENRE_FAMILIES"));
+            let mut params = serde_json::Map::new();
+            for (k, v) in [
+                ("swing", d.swing),
+                ("humanize", d.humanize),
+                ("durationVariation", d.duration_variation),
+                ("melodyDensity", d.melody_density),
+                ("melodyDuration", d.melody_duration as f64),
+                ("bassDensity", d.bass_density),
+                ("bassDuration", d.bass_duration as f64),
+                ("syncopation", d.syncopation),
+                ("ghostNotes", d.ghost_notes),
+                ("modalInterchange", d.modal_interchange),
+                ("polyrhythm", d.polyrhythm as f64),
+            ] {
+                // modal interchange and polyrhythm are only said of the genres that have them (as the bitwrap ontology does)
+                if v != 0.0 || !matches!(k, "modalInterchange" | "polyrhythm") {
+                    params.insert(k.into(), json!(v));
+                }
+            }
+            let flags: Vec<&str> = [("drumFills", d.drum_fills), ("walkingBass", d.walking_bass), ("callResponse", d.call_response), ("tensionCurve", d.tension_curve)]
+                .into_iter()
+                .filter(|(_, on)| *on)
+                .map(|(k, _)| k)
+                .collect();
+            let progressions: Vec<Value> = theory
+                .map(|th| th.chord_progs.iter().map(|p| json!({"degrees": p.chords.iter().map(|c| c.root + 1).collect::<Vec<_>>(), "steps_per": p.steps_per})).collect())
+                .unwrap_or_default();
+            let mut variants = Vec::new();
+            for (role, vs) in theory.map(|th| &th.drum_styles).into_iter().flatten() {
+                for (label, v) in vs {
+                    variants.push(json!({"role": role, "label": label, "hits_add": v.hits_add, "hits_mul": v.hits_mul.unwrap_or(1.0), "rotation_add": v.rotation_add}));
+                }
+            }
+            let instruments: serde_json::Map<String, Value> = t.instrument_set(&id).map(|m| m.iter().map(|(r, v)| (r.to_string(), json!(v))).collect()).unwrap_or_default();
+            json!({
+                "id": id,
+                "name": d.name,
+                "bpm": d.bpm,
+                "root_note": d.root_note,
+                "scale": d.scale_name,
+                "scale_intervals": djengine::gen::core::scale_intervals(&d.scale_name),
+                "rhythms": {"kick": d.kick, "snare": d.snare, "hihat": d.hihat},
+                "params": params,
+                "flags": flags,
+                "family": family,
+                "groove": groove,
+                "native": t.is_native(&id),
+                "like": t.native.get(&id).map(|n| n.like.clone()),
+                "progressions": progressions,
+                "drum_variants": variants,
+                "instruments": instruments,
+            })
+        })
+        .collect()
+}
+
+/// The sound each voice family word makes when an `inst=` name contains it and has no voice of its own: the engine's
+/// generic tonal voice for that word (djrust `wave::synth::tonal_voice`). A word whose generic voice is the same as a
+/// name with no family word at all (the drum words) is left out: it picks no tonal sound.
+pub fn family_sounds(families: &[String]) -> Vec<Value> {
+    use djengine::wave::synth::tonal_voice;
+    let key = |v: &djengine::wave::synth::VoiceSpec| (v.wave.clone(), v.attack.to_bits(), v.decay_scale.to_bits(), v.level.to_bits(), v.max_decay.to_bits());
+    let plain = key(&tonal_voice(Some("\u{1}"), None));
+    families
+        .iter()
+        .filter_map(|f| {
+            let v = tonal_voice(Some(f), None);
+            (key(&v) != plain).then(|| json!({"family": f, "wave": v.wave}))
+        })
+        .collect()
+}
+
 /// The dump tools/ontology/beatscript.py reads.
 pub fn sources() -> Value {
     let snapshot: Value = serde_json::from_str(beatscript_api::snapshot::SNAPSHOT_JSON).expect("snapshot.json");
@@ -57,6 +162,10 @@ pub fn sources() -> Value {
         "source": {"repo": "beatscript-serve (beatscript.app)", "commit": option_env!("BEATSCRIPT_SERVE_COMMIT").unwrap_or("working tree")},
         "grammar_ebnf": GRAMMAR,
         "versions": versions(),
+        "generator": {
+            "genres": generator_genres(),
+            "family_sounds": family_sounds(&serde_json::from_value::<Vec<String>>(instruments["families"].clone()).expect("families")),
+        },
         "instruments": instruments,
         "control_nouns": snapshot["nouns"],
         "language": {
@@ -68,6 +177,8 @@ pub fn sources() -> Value {
             "templates": djlive::template::TEMPLATES.iter().map(|t| json!({"name": t.name, "summary": t.summary, "example": t.example})).collect::<Vec<_>>(),
             "forms": djlive::template::forms().map(|(t, f)| json!({"name": t.name, "label": f.label, "shape": f.shape, "plan": f.plan, "mutations": f.mutations, "themes": f.themes, "reference": f.reference.map(|(n, c)| json!({"name": n, "cid": c}))})).collect::<Vec<_>>(),
             "roles": djlive::parse::ROLES,
+            // TODO(acid-bass): once feat/acid-bass-voice lands, chain its tonal knobs, which are kept out of PARAMS (and so
+            // out of parse::reserved()) on purpose: djlive::parse::PARAMS.iter().chain(djlive::compile::ACID_PARAMS.iter())
             "part_params": djlive::parse::PARAMS,
         },
         "phrasebook": {
@@ -196,6 +307,54 @@ pub fn drift(g: &Index) -> Vec<String> {
     same("kit", strs(&inst["kits"]), kits, &mut errs);
     same("voice family", strs(&inst["families"]), by(g, "VoiceFamily", "writtenAs").into_keys(), &mut errs);
     same("palette", strs(&inst["palettes"]), by(g, "Palette", "writtenAs").into_keys(), &mut errs);
+    // each family word's generic sound
+    let fams = by(g, "VoiceFamily", "writtenAs");
+    for f in src["generator"]["family_sounds"].as_array().unwrap() {
+        let (name, wave) = (f["family"].as_str().unwrap(), f["wave"].as_str().unwrap());
+        if let Some(s) = fams.get(name) {
+            let have = g.first(s, &format!("{NS}familyWave"));
+            if have != wave {
+                errs.push(format!("voice family {name}: the ontology's familyWave is {have:?}, the engine's generic voice plays {wave:?}"));
+            }
+        }
+    }
+
+    // the generator's genres: the same set, and each one's tempo, root, scale, family, groove, drum rhythms and progressions
+    let genres = by(g, "Genre", "genreId");
+    let gen = src["generator"]["genres"].as_array().unwrap();
+    same("genre", gen.iter().map(|x| x["id"].as_str().unwrap().to_string()).collect(), genres.keys().cloned(), &mut errs);
+    for x in gen {
+        let id = x["id"].as_str().unwrap();
+        let Some(s) = genres.get(id) else { continue };
+        let p = |local: &str| format!("{NS}{local}");
+        let mut differs = |what: &str, have: String, want: String| {
+            if have != want {
+                errs.push(format!("genre {id}: {what} is {have:?} in the ontology, {want:?} in the generator"));
+            }
+        };
+        let num = |v: &Value| v.as_f64().map(|n| n.to_string()).unwrap_or_default();
+        differs("bpm", g.num(s, &p("bpm")).map(|n| n.to_string()).unwrap_or_default(), num(&x["bpm"]));
+        differs("root note", g.num(s, &p("rootNote")).map(|n| n.to_string()).unwrap_or_default(), num(&x["root_note"]));
+        let iv: Vec<String> = x["scale_intervals"].as_array().unwrap().iter().map(|n| n.to_string()).collect();
+        differs("scale's intervals", g.first(&g.first(s, &p("defaultScale")), &p("intervals")), iv.join(" "));
+        differs("family", Index::local(&g.first(s, &p("inFamily"))), x["family"].as_str().unwrap().to_string());
+        differs("groove", Index::local(&g.first(s, &p("defaultGroove"))), x["groove"].as_str().unwrap_or_default().to_string());
+        for role in ["kick", "snare", "hihat"] {
+            let r = g.first(s, &p(&format!("{role}Rhythm")));
+            let have: Vec<String> = ["pulses", "steps", "rotation"].iter().map(|k| g.num(&r, &p(k)).map(|n| n.to_string()).unwrap_or_default()).collect();
+            let want: Vec<String> = x["rhythms"][role].as_array().unwrap().iter().take(3).map(num).collect();
+            differs(&format!("{role} rhythm"), have.join(","), want.join(","));
+        }
+        let mut have: Vec<String> = g.all(s, &p("hasProgression")).iter().map(|pr| g.first(pr, &p("degrees"))).collect();
+        let mut want: Vec<String> = x["progressions"].as_array().unwrap().iter().map(|pr| pr["degrees"].as_array().unwrap().iter().map(|d| d.to_string()).collect::<Vec<_>>().join(" ")).collect();
+        have.sort();
+        want.sort();
+        differs("progressions", have.join(" | "), want.join(" | "));
+    }
+
+    // the roles a part plays (djlive's ROLES, what a section's roles and a role= name): the ontology's instrument roles
+    let roles = g.of_type(&format!("{NS}InstrumentRole")).into_iter().map(|r| g.label(&r));
+    same("instrument role", strs(&src["language"]["roles"]), roles, &mut errs);
 
     // the control registry: nouns, each noun's verbs, and the other names it answers to (its skos:altLabel: the noun btw
     // is also beatscript)
@@ -216,6 +375,8 @@ pub fn drift(g: &Index) -> Vec<String> {
     let l = &src["language"];
     same("evolve operator", strs(&l["evolve_ops"]), by(g, "EvolveOperator", "writtenAs").into_keys(), &mut errs);
     same("mutation operator", strs(&l["mutation_ops"]), by(g, "MutationOperator", "writtenAs").into_keys(), &mut errs);
+    let params = by(g, "PartParameter", "writtenAs").into_keys().filter_map(|w| w.strip_suffix('=').map(str::to_string));
+    same("part parameter", strs(&l["part_params"]), params, &mut errs);
     let templates: BTreeSet<String> = l["templates"].as_array().unwrap().iter().map(|t| t["name"].as_str().unwrap().to_string()).collect();
     same("phrase template", templates, by(g, "PhraseTemplate", "writtenAs").into_keys(), &mut errs);
     let mut gens = strs(&l["generators"]);
