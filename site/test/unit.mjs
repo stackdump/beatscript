@@ -2171,6 +2171,28 @@ test('engine-calls: the FX unit\'s drive is the engine\'s own `fx` action on a d
   for (const p of [null, undefined, 3, 'a', {}, { deck: 3 }, { action: 'set', param: 'drive' }]) mapCall('fx', p);
 });
 
+test('engine-calls: every wheel action is played: one op per call, in order, its params as the call gave them', () => {
+  const one = (p) => mapCall('wheel', p);
+  assert.deepEqual(one({ action: 'load', preset: 'cmaj7-hoop' }), { ops: [{ type: 'wheel', action: 'load', params: '{"action":"load","preset":"cmaj7-hoop"}' }] });
+  assert.deepEqual(one({ action: 'motor', on: true, speed: 1.05 }).ops[0], { type: 'wheel', action: 'motor', params: '{"action":"motor","on":true,"speed":1.05}' });
+  for (const action of ['key', 'sequence', 'brightness', 'play', 'pause', 'toggle', 'level', 'interval', 'sync', 'step', 'follow', 'pluck', 'trigger']) {
+    const r = one({ action });
+    assert.equal(r.ignored, undefined, action);
+    assert.equal(r.ops.length, 1, action);
+    assert.equal(r.ops[0].action, action);
+  }
+  assert.deepEqual(one({ action: 'status' }), { ops: [] }, 'a read plays nothing and is not "not played"');
+  assert.deepEqual(one({ action: 'presets' }), { ops: [] });
+  assert.deepEqual(one({ action: 'spin' }), { ops: [], ignored: 'wheel spin' });
+  assert.deepEqual(one({}), { ops: [] }, 'no action: the noun default, status');
+  for (const p of [null, undefined, 3, 'a', { action: 3 }]) mapCall('wheel', p);
+});
+
+test('engine-calls: the actions that wind are the composer\'s (WHEEL_WINDS), the rest the voice\'s', async () => {
+  const { WHEEL_WINDS } = await J('engine-calls.js');
+  assert.deepEqual([...WHEEL_WINDS].sort(), ['brightness', 'key', 'load', 'sequence']);
+});
+
 test('engine-calls: a macro line (effects fire / release) is not played here, and is named as the line names it', () => {
   assert.deepEqual(mapCall('effects', { action: 'fire', target: 'A', id: 'riser', bars: 8 }), { ops: [], ignored: 'macro riser' });
   assert.deepEqual(mapCall('effects', { action: 'release', target: 'A', id: 'tape_stop' }), { ops: [], ignored: 'macro tape_stop' });

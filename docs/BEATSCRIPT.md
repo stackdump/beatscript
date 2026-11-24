@@ -830,8 +830,9 @@ wheel play
 wheel pause
 ```
 
-A wheel line takes a time head like any other (`at bar 16: wheel play`). The browser engine on beatscript.app does not
-play the wheel: the line checks, and the page lists it as "not played here: wheel".
+A wheel line takes a time head like any other (`at bar 16: wheel play`). The browser engine on beatscript.app plays the
+wheel too, the same instrument as the booth: the wheel goes into the master after the decks, so `master:` filter, reverb
+and level reach it.
 
 ## Functions and structure
 

@@ -2,7 +2,7 @@
   "check": {
     "ok": true,
     "errors": 0,
-    "warnings": 4,
+    "warnings": 2,
     "infos": 0,
     "diagnostics": [
       {
@@ -34,36 +34,6 @@
         "found": "",
         "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
         "render": "warning: the browser does not play this: `trick` (the browser's engine has no such unit)\n --> 9:1\n  |\n9 | at bar 8 for 4 bars: trick on deck=A kind=stutter\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 11,
-        "col": 1,
-        "end_col": 28,
-        "start": 355,
-        "end": 382,
-        "start16": 355,
-        "end16": 382,
-        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 11:1\n   |\n11 | wheel sync deck=A ratio=1/4\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 12,
-        "col": 1,
-        "end_col": 42,
-        "start": 383,
-        "end": 424,
-        "start16": 383,
-        "end16": 424,
-        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 12:1\n   |\n12 | at bar 4: wheel interval beats=1/2 deck=A\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
       }
     ],
     "cid": "z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP",
@@ -133,36 +103,6 @@
         "found": "",
         "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
         "render": "warning: the browser does not play this: `trick` (the browser's engine has no such unit)\n --> 9:1\n  |\n9 | at bar 8 for 4 bars: trick on deck=A kind=stutter\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 11,
-        "col": 1,
-        "end_col": 28,
-        "start": 355,
-        "end": 382,
-        "start16": 355,
-        "end16": 382,
-        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 11:1\n   |\n11 | wheel sync deck=A ratio=1/4\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 12,
-        "col": 1,
-        "end_col": 42,
-        "start": 383,
-        "end": 424,
-        "start16": 383,
-        "end16": 424,
-        "message": "the browser does not play this: `wheel` (the browser's engine has no such unit)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: `wheel` (the browser's engine has no such unit)\n  --> 12:1\n   |\n12 | at bar 4: wheel interval beats=1/2 deck=A\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
       }
     ],
     "from_cid": "z4EBG9jFVYrPzD1sQgeDaYMj9EXGQdjggTtDM2bnsDgkp2gXxZP",

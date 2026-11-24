@@ -16,6 +16,12 @@
  *     {type:'param', deck, name, value}     Dj.set_param (volume, gain, filter, eqLow, eqMid, eqHigh, mute, reverbWet ...)
  *     {type:'crossfader', value}            Dj.set_crossfader
  *     {type:'perform', deck, json}          Dj.perform (any DeckAction JSON: masterFx, master, setKit, setRoleVoice ...)
+ *     {type:'wheel', install}               the Wheel: an instrument wound in the composer (WheelVoice.install's bytes)
+ *     {type:'wheel', params, wind?}         a `wheel` call for the voice (play, pause, motor, level, sync ...); with wind (no
+ *                                           composer), a load / key / sequence / brightness wound here, on the audio thread
+ *     {type:'wheel', reset}                 the wheel back to none loaded, held (a program stopped)
+ *     {type:'wheelMaster', name, value}     the program's master as the decks get it (a master FX key at its slider position,
+ *                                           reverbWet, level), on the wheel's own chain (djweb src/wheel.rs `master`)
  *     {type:'batch', msgs:[...]}           any of the above (not install / load_share), acted on in one quantum
  *     {type:'dispose'}
  *   worklet -> page
@@ -70,6 +76,9 @@ class BeatscriptEngine extends AudioWorkletProcessor {
     up(moduleOrBytes) {
         glue.initSync({ module: moduleOrBytes });
         this.dj = new glue.Dj(sampleRate);
+        // the Wheel: its voice beside the engine, added to the master after it (a module from before it has none)
+        this.wheel = typeof glue.WheelVoice === 'function' ? new glue.WheelVoice(sampleRate) : null;
+        this.winder = null;
         // The engine starts with its crossfader at 0 (all deck A). The desktop centres it when its audio starts (djapp
         // audio_io.rs) and the offline render mixes both decks; without this every part on deck B was faded out here.
         // A program's own `crossfader` still moves it from the centre.
@@ -93,6 +102,9 @@ class BeatscriptEngine extends AudioWorkletProcessor {
         }
         if (msg.type === 'dispose') {
             try { if (this.dj) this.dj.free(); } catch { /* going away */ }
+            try { if (this.wheel) this.wheel.free(); if (this.winder) this.winder.free(); } catch { /* going away */ }
+            this.wheel = null;
+            this.winder = null;
             this.dj = null;
             this.disposed = true;
             return;
@@ -151,6 +163,8 @@ class BeatscriptEngine extends AudioWorkletProcessor {
                 dj.live_op(msg.method, msg.params);
                 break;
             }
+            case 'wheel': this.onWheel(dj, msg); break;
+            case 'wheelMaster': if (this.wheel) this.wheel.master(msg.name, Number(msg.value)); break;
             case 'param': dj.set_param(msg.deck, msg.name, Number(msg.value)); break;
             case 'crossfader': dj.set_crossfader(Number(msg.value)); break;
             case 'perform': {
@@ -162,6 +176,30 @@ class BeatscriptEngine extends AudioWorkletProcessor {
         } catch (err) {
             this.port.postMessage({ type: 'warn', message: `${msg.type}: ${String((err && err.message) || err)}` });
         }
+    }
+
+    /** The Wheel's messages (see the header). A refusal is a warning, as the booth answers a call it cannot do. */
+    onWheel(dj, msg) {
+        if (msg.reset) {
+            try { if (this.wheel) this.wheel.free(); if (this.winder) this.winder.free(); } catch { /* gone */ }
+            this.wheel = typeof glue.WheelVoice === 'function' ? new glue.WheelVoice(sampleRate) : null;
+            this.winder = null;
+            return;
+        }
+        if (!this.wheel) return;
+        if (msg.install) { this.wheel.install(msg.install); return; }
+        if (typeof msg.params !== 'string') return;
+        let action = '';
+        try { action = JSON.parse(msg.params).action || ''; } catch { /* the voice says */ }
+        if (msg.wind || (this.winder && action === 'level')) {
+            // no composer: wound here, on the audio thread (it will glitch for a few ms)
+            if (!this.winder) this.winder = new glue.WheelWinder();
+            const bytes = this.winder.call(msg.params);
+            if (bytes.length) this.wheel.install(bytes);
+            if (msg.wind) return;
+        }
+        const tempo = (d) => { try { return Number(JSON.parse(dj.state(d)).tempo) || 0; } catch { return 0; } };
+        this.wheel.call(msg.params, tempo('A'), tempo('B'));
     }
 
     /**
@@ -237,6 +275,7 @@ class BeatscriptEngine extends AudioWorkletProcessor {
             if (this.phrased.length) this.phrases(dj);
             if (pf) tB = Date.now();
             dj.render(out[0], out[1] || out[0]);
+            if (this.wheel) this.wheel.render_add(out[0], out[1] || out[0]);
             if (pf) tR = Date.now();
             this.frames += n;
             this.quanta++;

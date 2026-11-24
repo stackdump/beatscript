@@ -54,10 +54,12 @@ node --test site/test/unit.mjs           # the page's pure-JS tests
 scripts/build-web-wasm.sh site/web/wasm  # the browser module (needs the wasm-bindgen CLI the lockfile pins)
 ```
 
-Experimental and booth-only parts are off by default: djhost's `windwheel` feature (the Wheel, from
+Booth-only parts are off by default: djhost's `windwheel` feature (the Wheel, from
 [stackdump/windwheel-bitwrap-io](https://github.com/stackdump/windwheel-bitwrap-io)) and its `wallet` feature (signed
-set recordings, djrust-wallet). `scripts/check-public-build.sh` fails if a default build of any shipped target has
-either in its tree, or the booth's pronouncing dictionary, which is not in this repository at all.
+set recordings, djrust-wallet). The browser module (djweb) has the Wheel too, the same instrument, so the page plays a
+program's `wheel` lines as the booth does (`crates/djweb/src/wheel.rs`). `scripts/check-public-build.sh` fails if a
+default build of any other shipped target has windwheel in its tree, if any has the wallet, or the booth's
+pronouncing dictionary, which is not in this repository at all.
 
 ## Deploy
 

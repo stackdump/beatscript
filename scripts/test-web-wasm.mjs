@@ -24,6 +24,11 @@
 //     takes), hashes to the same samples as the native `render_offline` of the same envelope; so does wasm
 //     `render_offline` (wasm and native engine agree) -- the determinism proof that the browser plays the program
 //   - the install is taken in steps small enough for a render quantum (the slowest step is reported)
+//   - the Wheel: the program's `wheel` calls through WheelWinder -> WheelVoice.install / WheelVoice.call -> render_add in
+//     128-frame quanta (the composer's and the worklet's path) give the native core's samples (native_dump `wheel_render`,
+//     which crates/djweb/tests/wheel_parity.rs proves is the booth's, bit for bit); bit for bit on the programs here, and
+//     the check allows rounding (90 dB under the peak), since windwheel calls std's exp / sin / tanh / powf, the
+//     platform's libm natively and Rust's own on wasm32
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -115,6 +120,7 @@ function simulate(text) {
     const commands = [];
     const marks = [];
     let firstA = null;
+    const wheel = [];
     for (let pass = 0; pass < PASSES; pass++) {
         if (playing.A || playing.B) beat += 0.25;
         const d = playing.A ? 'A' : playing.B ? 'B' : null;
@@ -124,6 +130,8 @@ function simulate(text) {
             if (c.op === 'play') {
                 if (c.on && !(playing.A || playing.B)) beat = 0;
                 playing[c.deck === 'B' ? 'B' : 'A'] = c.on;
+            } else if (c.op === 'call' && c.noun === 'wheel') {
+                wheel.push(JSON.stringify(c.params));
             } else if (c.op === 'load_net' && c.deck === 'A' && firstA === null) {
                 firstA = JSON.stringify(c.envelope);
             }
@@ -133,7 +141,37 @@ function simulate(text) {
     }
     const status = run.status();
     run.free();
-    return { evalAnswer, commands, marks, status, firstA };
+    return { evalAnswer, commands, marks, status, firstA, wheel };
+}
+
+// ---- the Wheel through the page's path (native_dump `wheel_render`: the same calls, the same quanta)
+const WHEEL_CALLS = 24;
+const WHEEL_FRAMES = 4800;
+function wheelRender(calls) {
+    const winder = new glue.WheelWinder();
+    const voice = new glue.WheelVoice(SR);
+    const L = new Float32Array(128), R = new Float32Array(128);
+    const inter = new Float32Array(256);
+    const h = crypto.createHash('sha256');
+    const samples = [];
+    const wounds = [];
+    let peak = 0;
+    for (const c of calls.slice(0, WHEEL_CALLS)) {
+        try {
+            const bytes = winder.call(c);
+            if (bytes.length) { wounds.push(sha256(Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength))); voice.install(bytes); }
+        } catch { /* refused, as natively */ }
+        try { voice.call(c, 140, 140); } catch { /* refused, as natively */ }
+        for (let q = 0; q < Math.floor(WHEEL_FRAMES / 128); q++) {
+            L.fill(0); R.fill(0);
+            voice.render_add(L, R);
+            for (let i = 0; i < 128; i++) { inter[2 * i] = L[i]; inter[2 * i + 1] = R[i]; samples.push(L[i], R[i]); peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i])); }
+            h.update(Buffer.from(inter.buffer, 0, 1024));
+        }
+    }
+    winder.free();
+    voice.free();
+    return { sha: h.digest('hex'), peak, samples, wounds };
 }
 
 // ---- the engine through the worklet's path
@@ -232,6 +270,20 @@ for (const f of files) {
         ok(`${name}: BeatscriptRun marks == native at each bar (${s.marks.length})`, markBad < 0 && s.marks.length === nat.run.marks.length, `first difference at bar ${markBad}`);
         ok(`${name}: BeatscriptRun status == native`, s.status === nat.run.status);
         simulated++;
+
+        // the Wheel
+        ok(`${name}: the same wheel calls as native`, (nat.wheel ? nat.wheel.calls : 0) === Math.min(s.wheel.length, WHEEL_CALLS));
+        if (nat.wheel) {
+            const w = wheelRender(s.wheel);
+            ok(`${name}: the Wheel's instruments wind to the same bytes as native (${w.wounds.length})`, JSON.stringify(w.wounds) === JSON.stringify(nat.wheel.wounds || []), `${w.wounds.map((x) => x.slice(0, 8))} vs ${(nat.wheel.wounds || []).map((x) => x.slice(0, 8))}`);
+            let worst = 0, energy = 0;
+            const ns = nat.wheel.samples || [];
+            for (let i = 0; i < ns.length; i++) { worst = Math.max(worst, Math.abs(w.samples[i] - ns[i])); energy = Math.max(energy, Math.abs(ns[i])); }
+            const db = worst > 0 ? 20 * Math.log10(worst / Math.max(energy, 1e-12)) : -Infinity;
+            console.log(`${name}: the Wheel, ${nat.wheel.calls} calls: ${w.sha === nat.wheel.sha256 ? 'bit for bit with native' : `within ${db.toFixed(0)} dB of native's peak`}`);
+            ok(`${name}: the Wheel (composer and worklet path) == native to rounding, ${nat.wheel.calls} calls (worst ${db.toFixed(0)} dB below the peak${w.sha === nat.wheel.sha256 ? ', bit for bit' : ''})`, ns.length === w.samples.length && db < -90, `worst difference ${worst} of ${energy}, ${w.samples.length} vs ${ns.length} samples`);
+            ok(`${name}: the Wheel's peak agrees`, Math.abs(w.peak - nat.wheel.peak) < 1e-6, `${w.peak} vs ${nat.wheel.peak}`);
+        }
 
         // the engine
         if (s.firstA && nat.render && nat.render.sha256) {

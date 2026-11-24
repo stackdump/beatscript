@@ -29,8 +29,9 @@ homepage = "https://beatscript.app"
 # to move it, change both revs (they must be equal) and run `cargo update -p djrust -p djrust-wallet`.
 djrust = { git = "https://github.com/stackdump/djrust", rev = "0482c9173663f93486f9256e27a2bcddabfc5efd", default-features = false }
 djrust-wallet = { git = "https://github.com/stackdump/djrust", rev = "0482c9173663f93486f9256e27a2bcddabfc5efd" }
-# The Wheel (a linear tonewheel), public stackdump/windwheel-bitwrap-io. Experimental: only djhost's off-by-default
-# `windwheel` feature pulls it in. No default build has it (scripts/check-public-build.sh).
+# The Wheel (a linear tonewheel), public stackdump/windwheel-bitwrap-io: djhost's off-by-default `windwheel` feature
+# (the booth) and the browser module (djweb src/wheel.rs, so the page plays `wheel` lines as the booth does) pull it in.
+# No other default build has it (scripts/check-public-build.sh).
 windwheel = { git = "https://github.com/stackdump/windwheel-bitwrap-io", rev = "9e396405794e8c218b8618ea887cbfde8cc70ba4", default-features = false }
 djengine = { path = "crates/djengine" }
 djhost = { path = "crates/djhost" }

@@ -118,6 +118,9 @@ pub fn browser_plays(noun: &str, p: &JsonValue) -> Result<(), String> {
             (Some("fire" | "release"), Some(id)) => Err(format!("`macro {id}` (the browser plays none of the DJ macro catalogue; render and listen do)")),
             (a, _) => Err(format!("`effects {}` (the Effects window is the booth's)", a.unwrap_or("?"))),
         },
+        // the Wheel: windwheel's tonewheel, the booth's own instrument (djweb src/wheel.rs), every action of the noun
+        // (engine-calls.js `wheel`); `status` and `presets` ask and play nothing
+        "wheel" => Ok(()),
         other => Err(format!("`{other}` (the browser's engine has no such unit)")),
     }
 }

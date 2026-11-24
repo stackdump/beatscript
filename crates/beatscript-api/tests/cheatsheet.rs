@@ -190,11 +190,12 @@ fn the_patterns_it_teaches_check() {
 }
 
 #[test]
-fn it_documents_the_wheel_and_says_the_browser_does_not_play_it() {
+fn it_documents_the_wheel_and_says_the_browser_plays_it() {
     let sheet = beatscript_api::cheatsheet();
-    for l in ["wheel load preset=", "wheel key root=", "wheel sequence notes=", "wheel motor on=", "wheel level db=", "wheel play", "wheel pause", "not played here: wheel"] {
+    for l in ["wheel load preset=", "wheel key root=", "wheel sequence notes=", "wheel motor on=", "wheel level db=", "wheel play", "wheel pause", "plays the\nwheel too", "The browser engine plays `wheel`"] {
         assert!(sheet.contains(l), "the cheat sheet has no `{l}`");
     }
+    assert!(!sheet.contains("not played here: wheel"));
 }
 
 #[test]
@@ -226,5 +227,5 @@ fn it_teaches_macro_and_says_the_browser_does_not_play_it() {
     assert!(sheet.lines().any(|l| l == "macro riser on A over 8 bars"), "the Control table's line");
     assert!(sheet.contains("MACRO NAME"), "the grammar's alternative");
     let tail = sheet.split("## On beatscript.app").nth(1).expect("the closing note");
-    assert!(tail.contains("`queue`, `macro` (`render` and `listen` do) or the sugar nouns: the page lists each as \"not played here\""), "the closing note");
+    assert!(tail.contains("`queue`, `macro` (`render` and `listen` do) or the other sugar nouns: the page lists each as \"not played here\""), "the closing note");
 }

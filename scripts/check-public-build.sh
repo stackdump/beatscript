@@ -8,7 +8,8 @@
 # 1. The dependency check: a default build of every shipped target (the wasm, the server, the CLIs, the language
 #    crates) has none of
 #      - djlexicon-booth   the booth's private pronouncing dictionary (CMUdict); it is not in this repo at all
-#      - windwheel         experimental, behind djhost's off-by-default `windwheel` feature
+#      - windwheel         the Wheel (public, MIT): behind djhost's off-by-default `windwheel` feature, and in the browser
+#                          module only (djweb src/wheel.rs: the page plays a program's `wheel` lines); no other target
 #      - djrust-wallet     the booth identity, behind djhost's off-by-default `wallet` feature
 #    in its tree. djhost itself may be there (beatscript-serve reads its ontology vocabulary, beatscript its render path).
 # 2. The workspace has exactly the allowlisted members: a new crate is a decision, not an accident.
@@ -22,15 +23,18 @@ members=(beatscript-api beatscript-cli beatscriptls beatscript-round beatscript-
 banned='^(djlexicon-booth|windwheel|djrust-wallet) '
 fail=0
 
+# the browser module plays the Wheel (djweb src/wheel.rs): windwheel is allowed there and nowhere else
+banned_in() { if [ "$1" = djweb ]; then printf '%s' '^(djlexicon-booth|djrust-wallet) '; else printf '%s' "$banned"; fi; }
+
 for p in "${targets[@]}"; do
-  if hits=$(cargo tree -q -p "$p" -e normal,build --prefix none 2>/dev/null | grep -E "$banned" | sort -u) && [ -n "$hits" ]; then
+  if hits=$(cargo tree -q -p "$p" -e normal,build --prefix none 2>/dev/null | grep -E "$(banned_in "$p")" | sort -u) && [ -n "$hits" ]; then
     echo "check-public-build: a default build of $p has $(printf '%s' "$hits" | awk '{print $1}' | tr '\n' ' ')in its tree" >&2
     for b in $(printf '%s\n' "$hits" | awk '{print $1}'); do cargo tree -q -p "$p" -e normal,build -i "$b" >&2 || true; done
     fail=1
   fi
 done
 if [ "${1:-}" = "--tree" ]; then
-  [ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel or djrust-wallet)"
+  [ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel (but djweb's) or djrust-wallet)"
   exit $fail
 fi
 
@@ -54,5 +58,5 @@ if a=$(list | grep -iE '\.(caf|aif|aiff)$') && [ -n "$a" ]; then
   echo "check-public-build: Apple loop audio in the tree: $a" >&2; fail=1
 fi
 
-[ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel or djrust-wallet; members as allowlisted; no dictionary data; no loop audio)"
+[ $fail = 0 ] && echo "check-public-build: ok (no default build has djlexicon-booth, windwheel (but djweb's) or djrust-wallet; members as allowlisted; no dictionary data; no loop audio)"
 exit $fail

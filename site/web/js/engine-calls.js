@@ -25,6 +25,13 @@
  *             and the crossfader), else it plays on its own strip; a ramp (`mix=0 -> 1 over 8 bars`) is one `set` a pass
  *   moves     {action: arm, kind: vocoder_handoff, deck}  the vocoder's carrier and modulator swapped on the next
  *             phrase line (8 bars) of `deck`, as the desktop's move does
+ *   wheel     {action: load | key | sequence | brightness | play | pause | toggle | motor | level | interval | sync |
+ *             step | follow | pluck | trigger | status | presets, ...}  the Wheel: windwheel's tonewheel, the booth's own
+ *             instrument (djweb src/wheel.rs). One op per call, `{type:'wheel', action, params}`: engine.js has a load,
+ *             key, sequence or brightness wound in the composer Worker (the booth winds off the audio lock too) and the
+ *             rest played by the worklet's voice, all in the order the program gave them. It plays after the decks into
+ *             the master, through the master as the browser plays it (engine.js gives it the decks' `master:` filter,
+ *             crush, reverb and level, set alike); status and presets ask, and play nothing
  *   (and `sound` commands, which are not calls: kit:NAME -> setKit, anything else -> setRoleVoice)
  *   A `sing` line is not a call here: on this host it is a part of its deck's net (djlive sing.rs, "In the nets"),
  *   so it is sung through the deck like any part and stops with the net.
@@ -32,7 +39,7 @@
  *   inserts delay, filter resonance, crush on a deck, delay time; the Wheel target
  *   vocal (a `sing` line that is timed or performed, `do vocal ...`), vocoder status / list / select / cycle_* / preset_*,
  *   moves (filter_exit, echo_out, loop_roll, bass_swap, phrase_sync), loopsets, queue, autodj, td3,
- *   wheel, `deck load|sync`, mixer pfl / aux / headphone_*, and any other noun
+ *   `deck load|sync`, mixer pfl / aux / headphone_*, and any other noun
  *   effects fire / release (a `macro` line, docs/beatscript/ext-control.md): noted by its id, `macro riser`, as the line says it; the
  *   offline render and `listen` play it, this engine plays none of the DJ catalogue yet
  * The desktop's offline render ignores control lines altogether; the stream the server renders does the same.
@@ -40,6 +47,11 @@
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const DECKS = ['A', 'B'];
+
+/** The Wheel's actions (djhost control_registry `A_WHEEL`): the ones that wind the instrument, and the voice's. */
+export const WHEEL_WINDS = new Set(['load', 'key', 'sequence', 'brightness']);
+const WHEEL_ACTIONS = new Set([...WHEEL_WINDS, 'play', 'pause', 'toggle', 'motor', 'level', 'interval', 'sync', 'step', 'follow', 'pluck', 'trigger']);
+const WHEEL_READS = new Set(['status', 'presets']);
 
 /** The insert sweep knob's corners (mirror of djrust `fx::insert::sweep_corners`): {lp, hp} in Hz, or null. */
 export function sweepCorners(v) {
@@ -95,7 +107,7 @@ const decksOf = (target) => (target === 'Master' ? DECKS : DECKS.includes(target
  * One registry call as worklet ops. Returns `{ops: [...]}` or `{ops: [], ignored: 'why'}`.
  * Ops: {type:'param', deck, name, value} | {type:'crossfader', value} | {type:'perform', deck, json} |
  *      {type:'play', deck, on} | {type:'live', method, params, phrase?: {deck, bars}} (a djrust live op, at once or on
- *      the next phrase line of `deck`).
+ *      the next phrase line of `deck`) | {type:'wheel', action, params} (the Wheel: params the call's own, as JSON).
  */
 export function mapCall(noun, params) {
     const p = params && typeof params === 'object' ? params : {};
@@ -204,6 +216,12 @@ export function mapCall(noun, params) {
         if (p.action === 'arm' && p.kind === 'vocoder_handoff') {
             ops.push({ ...live('vocoder', { swap: true }), phrase: { deck: DECKS.includes(p.deck) ? p.deck : 'A', bars: 8 } });
         } else skipped.push('moves');
+        break;
+    }
+    case 'wheel': {
+        const action = typeof p.action === 'string' ? p.action : 'status';
+        if (WHEEL_ACTIONS.has(action)) ops.push({ type: 'wheel', action, params: JSON.stringify({ ...p, action }) });
+        else if (!WHEEL_READS.has(action)) skipped.push(`wheel ${action}`);
         break;
     }
     default:

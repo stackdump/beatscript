@@ -8,14 +8,21 @@
  *
  *   page -> worker   {type:'init', module, sampleRate}
  *                    {type:'prepare', id, deck, text}        text: the raw-nets share envelope, as JSON
+ *                    {type:'wind', id, params}               a `wheel` call (params: its JSON): the Wheel's instrument wound
+ *                                                            here (WheelWinder: a load, key, sequence or brightness), as the
+ *                                                            booth winds off its audio lock; id 0 asks for no answer (a level)
+ *                    {type:'wind-reset'}                     the instrument forgotten (the program stopped)
  *   worker -> page   {type:'ready'}   {type:'error', message}                       (init)
  *                    {type:'prepared', id, deck, bytes, ms}  bytes transferred
  *                    {type:'prepare-failed', id, deck, error}
+ *                    {type:'wound', id, bytes}  {type:'wound', id, error}   bytes (transferred) for WheelVoice.install; empty:
+ *                                                            nothing to install
  */
 
 import * as glue from '../wasm/beatscript.js';
 
 let composer = null;
+let winder = null;
 
 self.onmessage = (e) => {
     const m = e.data;
@@ -35,5 +42,16 @@ self.onmessage = (e) => {
         } catch (err) {
             self.postMessage({ type: 'prepare-failed', id: m.id, deck: m.deck, error: String((err && err.message) || err) });
         }
+    } else if (m.type === 'wind') {
+        try {
+            if (!winder) winder = new glue.WheelWinder();
+            const bytes = winder.call(m.params);
+            if (m.id) self.postMessage({ type: 'wound', id: m.id, bytes }, [bytes.buffer]);
+        } catch (err) {
+            if (m.id) self.postMessage({ type: 'wound', id: m.id, error: String((err && err.message) || err) });
+        }
+    } else if (m.type === 'wind-reset') {
+        try { if (winder) winder.free(); } catch { /* gone */ }
+        winder = null;
     }
 };

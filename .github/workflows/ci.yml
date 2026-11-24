@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      # default builds have no windwheel, no djrust-wallet and no booth dictionary; members as allowlisted;
+      # default builds have no windwheel (but djweb, the browser's Wheel), no djrust-wallet and no booth dictionary; members as allowlisted;
       # no dictionary data, no loop audio
       - name: scripts/check-public-build.sh
         run: bash scripts/check-public-build.sh

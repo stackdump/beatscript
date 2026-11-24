@@ -1,7 +1,8 @@
 //! The native side of scripts/test-web-wasm.mjs: for each program file given, print as one JSON document what the
 //! browser module must answer byte for byte (check, fmt, share, open), what the runtime does on a fake clock
 //! (a hash of every service pass and of the marks at every bar), and a hash of the engine's first seconds of
-//! audio for the program's first deck-A net (`render_offline`, the engine's own native render).
+//! audio for the program's first deck-A net (`render_offline`, the engine's own native render), and a hash of the
+//! Wheel's audio for the program's `wheel` calls ([`wheel_render`]).
 //!
 //!   cargo run -q -p djweb --example native_dump -- [--seconds 3] [--passes 640] FILE.beatscript ...
 //!
@@ -26,14 +27,16 @@ fn j(s: impl Into<String>) -> JsonValue {
 }
 
 /// One program on the fake clock: (the eval answer, the hash of each pass's commands, the hash of the marks every 16 passes,
-/// the status at the end, the first load_net envelope of deck A as JSON text).
-fn simulate(text: &str, passes: usize) -> (String, Vec<String>, Vec<String>, String, Option<String>) {
+/// the status at the end, the first load_net envelope of deck A as JSON text, the params of every `wheel` call in order).
+#[allow(clippy::type_complexity)]
+fn simulate(text: &str, passes: usize) -> (String, Vec<String>, Vec<String>, String, Option<String>, Vec<String>) {
     let mut run = beatscript_api::run::Run::new();
     let eval = run.eval_str(text);
     let mut beat = 0.0f64;
     let mut playing: BTreeMap<&str, bool> = BTreeMap::from([("A", false), ("B", false)]);
     let (mut cmd_hashes, mut mark_hashes) = (Vec::new(), Vec::new());
     let mut first_a: Option<String> = None;
+    let mut wheel = Vec::new();
     for pass in 0..passes {
         let any = playing.values().any(|p| *p);
         if any {
@@ -47,6 +50,9 @@ fn simulate(text: &str, passes: usize) -> (String, Vec<String>, Vec<String>, Str
         let cmds = JsonValue::parse(&out).expect("commands are json");
         for c in cmds.as_array().unwrap() {
             match c.get("op").and_then(JsonValue::as_str) {
+                Some("call") if c.get("noun").and_then(JsonValue::as_str) == Some("wheel") => {
+                    wheel.push(c.get("params").map(JsonValue::canonical_js).unwrap_or_default());
+                }
                 Some("play") => {
                     let on = c.get("on").and_then(JsonValue::as_bool).unwrap();
                     if on && !playing.values().any(|p| *p) {
@@ -66,7 +72,45 @@ fn simulate(text: &str, passes: usize) -> (String, Vec<String>, Vec<String>, Str
             mark_hashes.push(sha(&run.marks_str()));
         }
     }
-    (eval, cmd_hashes, mark_hashes, run.status_str(), first_a)
+    (eval, cmd_hashes, mark_hashes, run.status_str(), first_a, wheel)
+}
+
+/// The Wheel through the page's path (scripts/test-web-wasm.mjs `wheelRender` does the same with the module): each of the
+/// first [`WHEEL_CALLS`] `wheel` calls in order (a wind crosses as bytes, as from the composer to the worklet), then
+/// [`WHEEL_FRAMES`] frames rendered in 128-frame quanta, both decks at 140 BPM. (sha256 of the interleaved f32 samples, peak.)
+const WHEEL_CALLS: usize = 24;
+const WHEEL_FRAMES: usize = 4800;
+fn wheel_render(calls: &[String]) -> (String, f64, Vec<f32>, Vec<String>) {
+    use djweb::wheel::{Args, WheelCore, Winder, Wound};
+    let mut winder = Winder::new();
+    let mut voice = WheelCore::new(48000.0);
+    let mut h = Sha256::new();
+    let mut peak = 0f32;
+    let mut all = Vec::new();
+    let mut wounds = Vec::new();
+    let (mut l, mut r) = ([0f32; 128], [0f32; 128]);
+    for c in calls.iter().take(WHEEL_CALLS) {
+        if let Ok(a) = Args::parse(c) {
+            if let Ok(Some(w)) = winder.call(&a) {
+                let bytes = w.encode();
+                wounds.push(hex(&Sha256::digest(&bytes)));
+                voice.install(&Wound::decode(&bytes).expect("a wound instrument decodes"));
+            }
+            let _ = voice.call(&a, |_| 140.0);
+        }
+        for _ in 0..WHEEL_FRAMES / 128 {
+            l.fill(0.0);
+            r.fill(0.0);
+            voice.render_add(&mut l, &mut r);
+            for i in 0..128 {
+                h.update(l[i].to_le_bytes());
+                h.update(r[i].to_le_bytes());
+                all.extend([l[i], r[i]]);
+                peak = peak.max(l[i].abs()).max(r[i].abs());
+            }
+        }
+    }
+    (hex(&h.finalize()), peak as f64, all, wounds)
 }
 
 fn main() {
@@ -96,7 +140,19 @@ fn main() {
         o.set("highlight", j(beatscript_api::highlight_json_utf16(&text)));
         let ok = JsonValue::parse(&beatscript_api::check_json(&text)).ok().and_then(|v| v.get("ok").and_then(JsonValue::as_bool)) == Some(true);
         if ok {
-            let (eval, cmds, marks, status, first_a) = simulate(&text, passes);
+            let (eval, cmds, marks, status, first_a, wheel) = simulate(&text, passes);
+            if !wheel.is_empty() {
+                let (sha256, peak, samples, wounds) = wheel_render(&wheel);
+                let mut w = JsonObject::new();
+                w.set("calls", JsonValue::int(wheel.len().min(WHEEL_CALLS) as i64));
+                w.set("sha256", j(sha256));
+                w.set("peak", JsonValue::Number(peak));
+                w.set("wounds", JsonValue::Array(wounds.into_iter().map(JsonValue::str).collect()));
+                // the samples themselves, so a difference is measured, not only seen: std's transcendental functions
+                // (windwheel calls exp, sin, tanh, powf) are the platform's natively and Rust's own libm on wasm32
+                w.set("samples", JsonValue::Array(samples.into_iter().map(|x| JsonValue::Number(x as f64)).collect()));
+                o.set("wheel", JsonValue::Object(w));
+            }
             let strs = |v: Vec<String>| JsonValue::Array(v.into_iter().map(JsonValue::str).collect());
             let mut r = JsonObject::new();
             r.set("eval", j(eval));

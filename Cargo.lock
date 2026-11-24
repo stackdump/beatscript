@@ -864,11 +864,15 @@ dependencies = [
 name = "djweb"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "beatscript-api",
  "beatscriptls",
+ "djhost",
  "djrust",
+ "rtrb",
  "sha2 0.10.9",
  "wasm-bindgen",
+ "windwheel",
 ]
 
 [[package]]

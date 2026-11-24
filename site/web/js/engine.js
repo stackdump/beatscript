@@ -38,7 +38,7 @@
  * import is always ../wasm/beatscript.js.
  */
 
-import { mapCall, mapSound } from './engine-calls.js';
+import { mapCall, mapSound, WHEEL_WINDS } from './engine-calls.js';
 import { parseMixer } from './mixer-model.js';
 
 const DECKS = ['A', 'B'];
@@ -150,6 +150,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
     const comp = await makeComposer(composer, module, context.sampleRate, (m) => onComposerMessage(m));
 
     function onComposerMessage(m) {
+        if (m.type === 'wound') { wound(m); return; }
         const item = prepares.get(m.id);
         if (!item) return;
         prepares.delete(m.id);
@@ -322,9 +323,56 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
         send(op);
     }
 
+    // ---- the Wheel (engine-calls.js `wheel`). Its calls go in the order the program gave them: a load, key, sequence or
+    // brightness is wound in the composer (a few ms to a few tens of ms, never on the audio thread) and its result
+    // installed in the worklet's voice before the calls after it are sent; the rest go to the voice as they are. With no
+    // composer the worklet winds them itself. A `level` is told to the composer as well, which keeps it for the next wind.
+    const wheelQ = [];
+    let wheelWinding = null; // {id, timer} while a wind is out
+    let wheelSeq = 0;
+    let wheelTouched = false;
+    function wheel(op) {
+        wheelTouched = true;
+        wheelQ.push(op);
+        pumpWheel();
+    }
+    function pumpWheel() {
+        while (!disposed && !wheelWinding && wheelQ.length) {
+            const op = wheelQ.shift();
+            if (!comp.wind) { send({ type: 'wheel', params: op.params, wind: WHEEL_WINDS.has(op.action) }); continue; }
+            if (WHEEL_WINDS.has(op.action)) {
+                const id = ++wheelSeq;
+                wheelWinding = { id, timer: setTimeout(() => wound({ id, error: 'the composer did not answer' }), STEP_TIMEOUT_MS) };
+                comp.wind(id, op.params);
+                return;
+            }
+            if (op.action === 'level') comp.wind(0, op.params);
+            send({ type: 'wheel', params: op.params });
+        }
+    }
+    function wound(m) {
+        if (!wheelWinding || m.id !== wheelWinding.id) return;
+        clearTimeout(wheelWinding.timer);
+        wheelWinding = null;
+        if (m.error) emit('error', { message: `the wheel: ${m.error}` });
+        else if (m.bytes && m.bytes.length) sendNow({ type: 'wheel', install: m.bytes }, [m.bytes.buffer]);
+        pumpWheel();
+    }
+
     function call(noun, params) {
         const r = mapCall(noun, params);
-        for (const op of r.ops) post(op, true);
+        for (const op of r.ops) {
+            if (op.type === 'wheel') { wheel(op); continue; }
+            post(op, true);
+            // the program's master reaches the wheel as it reaches the decks: deck A's share of a master op, given to the wheel too
+            const p = params || {};
+            if (op.deck === 'A' && ((noun === 'inserts' && p.target === 'Master') || (noun === 'mixer' && p.master !== undefined))) {
+                const j = op.type === 'perform' ? JSON.parse(op.json) : null;
+                if (j && j.op === 'masterFx') post({ type: 'wheelMaster', name: j.key, value: j.value }, true);
+                else if (j && j.op === 'master') post({ type: 'wheelMaster', name: 'level', value: j.value }, true);
+                else if (op.type === 'param' && op.name === 'reverbWet') post({ type: 'wheelMaster', name: 'reverbWet', value: op.value }, true);
+            }
+        }
         if (r.ignored && !noted.has(r.ignored)) {
             noted.add(r.ignored);
             console.info(`BeatScript engine: ignoring ${r.ignored} (the in-browser engine does not have it; see js/engine-calls.js)`);
@@ -424,6 +472,15 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
 
         /** The program stopped: the vocoders it used go off and the extra instances away (the next program starts clean). */
         resetLive() {
+            if (wheelTouched && !disposed) {
+                // the program stopped: the wheel goes back to none loaded, held (the next program starts clean)
+                wheelTouched = false;
+                wheelQ.length = 0;
+                if (wheelWinding) { clearTimeout(wheelWinding.timer); wheelWinding = null; }
+                for (const [k] of lastSent) if (k.startsWith('wheelMaster:')) lastSent.delete(k);
+                if (comp.windReset) comp.windReset();
+                send({ type: 'wheel', reset: true });
+            }
             if (!touched || disposed) return;
             touched = false;
             for (const [k] of lastSent) if (k.startsWith('live:')) lastSent.delete(k);
@@ -450,6 +507,7 @@ export async function createEngine({ context, destination, wasmUrl, module: comp
             disposed = true;
             clearTimeout(readyTimer);
             for (const d of DECKS) for (const it of queues[d]) { clearTimeout(it.timer); it.state = 'dropped'; }
+            if (wheelWinding) clearTimeout(wheelWinding.timer);
             DECKS.forEach((d) => { queues[d].length = 0; });
             try { node.port.postMessage({ type: 'dispose' }); } catch { /* gone */ }
             try { node.disconnect(); gain.disconnect(); } catch { /* gone */ }
@@ -490,6 +548,8 @@ async function makeComposer(kind, module, sampleRate, onMessage) {
             return {
                 kind: 'worker',
                 prepare: (id, deck, text) => w.postMessage({ type: 'prepare', id, deck, text }),
+                wind: (id, params) => w.postMessage({ type: 'wind', id, params }),
+                windReset: () => w.postMessage({ type: 'wind-reset' }),
                 dispose: () => w.terminate(),
             };
         } catch (err) {
@@ -502,8 +562,21 @@ async function makeComposer(kind, module, sampleRate, onMessage) {
             const glue = await import('../wasm/beatscript.js');
             glue.initSync({ module });
             const c = new glue.DjComposer(sampleRate);
+            let winder = null;
             return {
                 kind: 'main',
+                wind: (id, params) => {
+                    setTimeout(() => {
+                        try {
+                            if (!winder) winder = new glue.WheelWinder();
+                            const bytes = winder.call(params);
+                            if (id) onMessage({ type: 'wound', id, bytes });
+                        } catch (err) {
+                            if (id) onMessage({ type: 'wound', id, error: String((err && err.message) || err) });
+                        }
+                    }, 0);
+                },
+                windReset: () => { try { if (winder) winder.free(); } catch { /* gone */ } winder = null; },
                 prepare: (id, deck, text) => {
                     setTimeout(() => {
                         const t0 = performance.now();

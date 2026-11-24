@@ -26,7 +26,8 @@ transfer = ["djrust/transfer", "djengine/transfer"]
 network = ["djrust/network", "dep:rtrb"]
 # The Wheel (windwheel's linear tonewheel, public stackdump/windwheel-bitwrap-io, pinned in the workspace)
 # played into an input strip of its own: the core djapp and djandroid share (`wheel`). Experimental, so off by
-# default: no default build has windwheel in its tree (scripts/check-public-build.sh). `windwheel` is the same switch.
+# default: no default build has windwheel in its tree but the browser module's, djweb, which plays the same instrument
+# (its src/wheel.rs; scripts/check-public-build.sh). `windwheel` is the same switch.
 wheel = ["dep:windwheel", "dep:rtrb", "dep:anyhow"]
 windwheel = ["wheel"]
 # Set recordings signed by the booth's identity (setrec: did:pkh, EIP-191) with djrust-wallet. Off by default, so a

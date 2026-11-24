@@ -18,7 +18,14 @@ djrust = { workspace = true, features = ["wasm"] }
 # Exactly the installed wasm-bindgen CLI (~/.cargo/bin/wasm-bindgen 0.2.129): the glue and the
 # module must agree to the patch.
 wasm-bindgen = "=0.2.129"
+# The Wheel (src/wheel.rs): windwheel's linear tonewheel, public stackdump/windwheel-bitwrap-io, the instrument the
+# booth plays (djhost's `wheel` feature), so a `wheel` line plays here as it does there. Pinned in the workspace.
+windwheel = { workspace = true }
+anyhow = "1"
 
 [dev-dependencies]
 # examples/native_dump.rs hashes what it dumps
 sha2 = "0.10"
+# tests/wheel_parity.rs renders the booth's Wheel (djhost, its `wheel` feature) beside src/wheel.rs
+djhost = { workspace = true, features = ["wheel"] }
+rtrb = "0.3"

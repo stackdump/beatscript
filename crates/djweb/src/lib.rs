@@ -7,6 +7,9 @@
 //!   in `beatscript-api`, which the `beatscript` binary shares, so the browser and the server answer the same bytes.
 //! - **the engine**: djrust's public browser facade, re-exported (`Dj`, `DjComposer`, `render_offline`, ...), which
 //!   runs in an AudioWorklet (`Dj`) and a Worker (`DjComposer`).
+//! - **the Wheel** ([`wheel`]): windwheel's tonewheel, the booth's instrument, as `WheelVoice` (in the AudioWorklet,
+//!   beside `Dj`) and `WheelWinder` (in the Worker, beside `DjComposer`): engine exports, defined in wheel.rs, which
+//!   never had a `btw` name (as the engine's own never did).
 //!
 //! Native builds compile this crate too (the workspace tests do), but only the wasm32 target can *call* the
 //! exports: `cargo test -p djweb` checks what does not need a JS host.
@@ -24,13 +27,15 @@ extern "C" {
 
 /// Panics become a console error naming the place (the engine's own `Dj::new` silences the hook in the
 /// worklet's instance; this is the page's instance, where a message helps).
-fn init() {
+pub(crate) fn init() {
     use std::sync::Once;
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
         std::panic::set_hook(Box::new(|info| console_error(&format!("djweb panic: {info}"))));
     });
 }
+
+pub mod wheel;
 
 // ---- the language ----
 
