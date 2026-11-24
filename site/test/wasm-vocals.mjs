@@ -43,7 +43,9 @@ const SR = 48000;
     ok('swap', JSON.parse(mapCall('vocoder', { action: 'swap' }).ops[0].params).swap === true);
     const h = mapCall('moves', { action: 'arm', kind: 'vocoder_handoff', deck: 'B' });
     ok('vocoder_handoff swaps on the next phrase line of its deck', h.ops[0].phrase.deck === 'B' && h.ops[0].phrase.bars === 8 && JSON.parse(h.ops[0].params).swap === true, JSON.stringify(h));
-    ok('another move is still ignored, by name', mapCall('moves', { action: 'arm', kind: 'echo_out' }).ignored === 'moves');
+    const eo = mapCall('moves', { action: 'arm', kind: 'echo_out', deck: 'A' });
+    ok('echo_out is played now: a move op on its deck', !eo.ignored && eo.ops[0].type === 'move' && eo.ops[0].kind === 'echo_out' && eo.ops[0].deck === 'A', JSON.stringify(eo));
+    ok('a move the browser does not know is still ignored, by name', mapCall('moves', { action: 'arm', kind: 'nope' }).ignored === 'moves arm nope');
     ok('a vocal call is ignored, by name', mapCall('vocal', { action: 'create' }).ignored === 'vocal');
     ok('vocoder status is ignored', mapCall('vocoder', { action: 'status' }).ignored === 'vocoder status');
 }
