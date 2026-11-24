@@ -159,7 +159,10 @@ fn check_warns_where_the_browser_does_not_play_a_line() {
     assert!(warn(plays).iter().all(|w| !w.starts_with("the browser")), "{:?}", warn(plays));
     let timed = "deck A: melody [a3 c4 e4 g4]\nat bar 4: deck A: sing \"/h ay/\" on melody\n";
     assert!(warn(timed).iter().any(|w| w.starts_with("the browser does not play this") && w.contains("sing")), "{:?}", warn(timed));
+    // every move but a phrase sync that steps a seed plays here (engine-calls.js MoveScheduler: tests/moves_web.rs)
     let echo = "deck A: melody [a3 c4 e4 g4]\ndeck B: bass a2 ~ e2 ~\nat bar 2: move echo_out on B over 4 bars\n";
-    let w = warn(echo);
-    assert!(w.iter().any(|w| w.starts_with("the browser does not play this")), "{w:?}");
+    assert!(warn(echo).iter().all(|w| !w.starts_with("the browser")), "{:?}", warn(echo));
+    let seed = "deck A: melody [a3 c4 e4 g4]\ndeck B: bass a2 ~ e2 ~\nat bar 2: move phrase_sync on B\n";
+    let w = warn(seed);
+    assert!(w.iter().any(|w| w.starts_with("the browser does not play this") && w.contains("phrase_sync")), "{w:?}");
 }
