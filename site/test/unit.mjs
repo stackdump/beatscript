@@ -711,6 +711,91 @@ test('driver: the carried-forward status equals the real status() at every step 
   assert.ok(asked < ticks / 8, `status() was asked ${asked} times in ${ticks} frames`);
 });
 
+/**
+ * A source shaped like the engine (EngineSource over engine.js): grid() is the worklet's LAST REPORT, not the decks as
+ * they are now. A stop lands at once but is only seen at the next report; a start waits for its nets to load, so it lands
+ * one report later. report() is the worklet reporting.
+ */
+class LaggedEngineSource {
+  constructor(bpm = 124) {
+    this.kind = 'engine';
+    this.bpm = bpm;
+    this.decks = { A: false, B: false };
+    this.starting = new Set();
+    this.reported = null;
+    this.beat = 0;
+  }
+  grid() { return this.reported ? { ...this.reported, playing: { ...this.reported.playing } } : null; }
+  handle(cmds) {
+    for (const c of cmds || []) {
+      if (c.op !== 'play') continue;
+      if (c.on) this.starting.add(c.deck);
+      else { this.decks[c.deck] = false; this.starting.delete(c.deck); }
+    }
+  }
+  report(beats = 0) {
+    const on = this.decks.A || this.decks.B;
+    this.beat = on ? this.beat + beats : 0;
+    this.reported = on ? { deck: this.decks.A ? 'A' : 'B', beat: this.beat, bpm: this.bpm, playing: { ...this.decks } } : null;
+    for (const d of this.starting) this.decks[d] = true;
+    this.starting.clear();
+  }
+  stop() {}
+}
+
+test('driver: a run that replaces a playing one on the same engine starts (it is not shown the stale grid of the one stopped)', async () => {
+  // The radio's stall (2026-11-24): station #2 came in after a live segue and sat at 0:00, "—", meters flat. The engine's
+  // grid() still said both decks played (its report from before the stop), the new run took its decks for started and never
+  // sent its own play, the stop landed, and nothing played again.
+  const { Driver } = await J('driver.js');
+  const text = program(0).replace(/(# tail \d+\n)+/, '');
+  let now = 0;
+  const d = new Driver(facade, { now: () => now });
+  const src = new LaggedEngineSource();
+  const prep = () => { const run = facade.newRun(); const res = run.eval(text); assert.ok(res.ok); return { run, res }; };
+  const a = prep();
+  d.adopt(a.run, text, a.res, src);
+  d.tick(); // service(null): A's load and play
+  for (let i = 0; i < 12; i++) { src.report(0.25); now += 25; d.tick(); }
+  assert.ok(src.decks.A && src.grid(), 'the first run plays');
+  const b = prep();
+  const grids = [];
+  const service = b.run.service.bind(b.run);
+  b.run.service = (g) => { grids.push(g); return service(g); };
+  d.adopt(b.run, text, b.res, src);
+  assert.ok(src.grid() && src.grid().playing.A, 'the engine still reports the stopped run as playing');
+  d.tick();
+  assert.equal(grids[0], null, 'the new run is not shown the stale grid: it starts as on a cold start');
+  for (let i = 0; i < 12; i++) { src.report(0.25); now += 25; d.tick(); }
+  assert.ok(src.decks.A, 'the new run started its decks');
+  assert.ok(grids.some((g) => g && g.playing.A), 'and is shown the grid once they play');
+  assert.equal(d.hold, null, 'the hold ends when the engine has reported nothing playing');
+  for (let i = 0; i < 80; i++) { src.report(0.25); now += 25; d.tick(); }
+  assert.ok(d.last.status.bar >= 1, `its clock moves (bar ${d.last.status.bar})`);
+});
+
+test('driver: the hold on a swapped run ends after HOLD_MS even if the engine never reports nothing playing', async () => {
+  const { Driver, HOLD_MS } = await J('driver.js');
+  const text = program(0).replace(/(# tail \d+\n)+/, '');
+  let now = 0;
+  const d = new Driver(facade, { now: () => now });
+  const playing = { deck: 'A', beat: 2, bpm: 124, playing: { A: true, B: false } };
+  const src = { kind: 'engine', grid: () => playing, handle() {}, stop() {} };
+  const r1 = facade.newRun(); const res1 = r1.eval(text);
+  d.adopt(r1, text, res1, src);
+  assert.equal(d.hold, null, 'a first run is not held');
+  const r2 = facade.newRun(); const res2 = r2.eval(text);
+  d.adopt(r2, text, res2, src);
+  assert.ok(d.hold, 'a run that replaced one on the same source is held');
+  d.tick();
+  assert.equal(d.last.grid, null);
+  now += HOLD_MS + 1;
+  d.tick();
+  assert.equal(d.hold, null);
+  assert.notEqual(d.last.grid, null);
+  d.stopSound();
+});
+
 test('stream: an underrun re-anchors the next chunk and takes the gap off the media clock', async () => {
   const ctx = new FakeCtx();
   const first = [wavHeader(), pcm16(44100)];

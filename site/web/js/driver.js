@@ -60,9 +60,14 @@ export class ManualClock {
   }
 }
 
+/** How long a run that replaced another on the same source is kept from that source's grid at most (see adopt). */
+export const HOLD_MS = 2000;
+
 export class Driver {
-  constructor(beatscript) {
+  constructor(beatscript, { now = () => Date.now() } = {}) {
     this.beatscript = beatscript;
+    this.now = now;
+    this.hold = null; // {since}: a run that replaced another on the same source, not shown its grid yet (adopt)
     this.run = null;
     this.src = null;
     this.evalText = null; // the text the running program was evaluated from (markers are in its coordinates)
@@ -103,19 +108,29 @@ export class Driver {
    * holds from its bar 0. The radio compiles what is next while the current item plays, so the change is a swap.
    */
   adopt(run, text, res, src) {
+    const swap = !!this.run && this.src === src;
     if (this.run) this.stopSound();
     this.run = run;
     this.src = src;
     this.evalText = text;
     this.evalCid = (res && res.cid) || run.cid();
     this._st = null;
+    // The same source played the run just stopped: its grid() is the last report from before the stop (both decks still
+    // playing) until the engine reports again. A new run that sees that grid takes its decks for started and never sends its
+    // own load and play, so nothing sounds and the clock stays at bar 0. It is given no grid until the source has said
+    // nothing plays (or HOLD_MS has gone by), as on a cold start.
+    this.hold = swap ? { since: this.now() } : null;
     return res;
   }
 
   /** One pass: service the runtime with the source's clock, hand its commands on, read what to show. */
   tick() {
     if (!this.run || !this.src) return null;
-    const grid = this.src.grid();
+    let grid = this.src.grid();
+    if (this.hold) {
+      if (grid == null || this.now() - this.hold.since > HOLD_MS) this.hold = null;
+      else grid = null;
+    }
     const cmds = this.run.service(grid);
     this.src.handle(cmds);
     const marks = this.run.marks();
@@ -162,6 +177,7 @@ export class Driver {
     } catch { /* a stopped runtime has nothing to put back */ }
     this.src.stop();
     this.run.free();
+    this.hold = null;
     this.run = null;
     this.src = null;
     this.evalText = null;

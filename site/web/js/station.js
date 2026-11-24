@@ -38,6 +38,8 @@ import {
 } from './station-model.js';
 
 const TICK_MS = 25;
+// a live item with no sound this long after it was asked has stalled (Radio.watchLive)
+const LIVE_STALL_MS = 5000;
 /** The station tracks the playlist shows after the one playing (the answer's count is this + 1). */
 const AHEAD = 6;
 const $ = (id) => document.getElementById(id);
@@ -513,6 +515,8 @@ class Radio {
       p.run = null; // the driver has it now
       this.playingFrom = 'live';
     }
+    // a live item is watched until the engine plays it (watchLive)
+    this.liveWatch = p.source === 'render' ? null : { key: d.key, since: Date.now(), heard: false, tries: 0 };
     const rep = p.report || {};
     this.target = d.kind === 'queue' ? playBars(d.item, rep) : playBars(null, rep);
     this.plan_ = renderPlan(rep);
@@ -536,7 +540,52 @@ class Radio {
     if (this.driver) this.driver.stopSound();
     if (this.audio) this.audio.pause();
     this.playingFrom = null;
+    this.liveWatch = null;
     this.pos = {};
+  }
+
+  /**
+   * Never dead air: a live item the engine has not started LIVE_STALL_MS after it was asked (no grid: nothing sounds, the
+   * clock stays at 0:00) is not left there. Its render when it is ready (and the mode allows one), else it is started again
+   * on a fresh run, once; else the player goes on to what is next. Says so, on the page and in the console. True when it acted.
+   */
+  watchLive(f) {
+    const w = this.liveWatch;
+    if (!w || w.heard || this.handoff.bridging) return false;
+    if (f && f.grid) { w.heard = true; return false; }
+    if (Date.now() - w.since < LIVE_STALL_MS) return false;
+    const c = this.handoff.current;
+    if (!c || c.desc.key !== w.key) { this.liveWatch = null; return false; }
+    const d = c.desc;
+    const text = c.prepared.text;
+    const report = c.prepared.report;
+    const r = d.cid ? this.tracker.get(d.cid) : { state: 'none' };
+    console.warn(`beatscript radio: ${d.title || d.key} has not started on the live engine after ${LIVE_STALL_MS} ms`);
+    if (this.mode !== 'live' && r.state === 'ready' && r.url) {
+      this.plMsg(`${d.title} did not start live: playing its render.`, 'err');
+      c.prepared = { source: 'render', url: r.url, report, text };
+      this.soundPlay(c.prepared, d);
+      return true;
+    }
+    if (w.tries < 1 && this.beatscript && text) {
+      const run = this.beatscript.newRun();
+      const res = run.eval(text);
+      if (res && res.ok) {
+        this.plMsg(`${d.title} did not start live: starting it again.`, 'err');
+        // stopped first, so the new run starts on an engine with nothing playing
+        this.driver.stopSound();
+        c.prepared = { source: 'live', run, res, report, text };
+        this.soundPlay(c.prepared, d);
+        this.liveWatch.tries = w.tries + 1;
+        return true;
+      }
+      run.free();
+    }
+    this.plMsg(`${d.title} did not start live: going on to what is next.`, 'err');
+    this.liveWatch = null;
+    this.driver.stopSound();
+    this.handoff.boundary();
+    return true;
   }
 
   // ---- the transport ------------------------------------------------------------------------------------------------------
@@ -637,6 +686,7 @@ class Radio {
     } else if (this.driver) {
       const f = this.driver.tick();
       if (!f) return;
+      if (this.watchLive(f)) return;
       const st = f.status || {};
       bar = Math.max(0, st.bar || 0);
       ended = !!st.ended;
