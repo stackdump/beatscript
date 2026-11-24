@@ -12,6 +12,7 @@ ${name} an earlier call did not save. Exits 1 on any failure, printing each one.
 import json
 import os
 import sys
+import time
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -24,11 +25,23 @@ def rpc(url, token, method, params, n=[0]):
     h = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream", "User-Agent": "beatscript-deploy-check/1"}
     if token:
         h["Authorization"] = "Bearer " + token
-    with urllib.request.urlopen(urllib.request.Request(url, body, h), timeout=60) as r:
-        d = json.loads(r.read())
-    if "error" in d:
-        raise RuntimeError(d["error"].get("message", d["error"]))
-    return d["result"]
+    # the checker allows a caller about 60 calls a minute: a tool answer that is rate_limited is waited out (its
+    # retry_after) and asked again, a few times
+    for attempt in range(4):
+        with urllib.request.urlopen(urllib.request.Request(url, body, h), timeout=60) as r:
+            d = json.loads(r.read())
+        if "error" in d:
+            raise RuntimeError(d["error"].get("message", d["error"]))
+        err = None
+        if method == "tools/call":
+            try:
+                err = json.loads(d["result"]["content"][0]["text"]).get("error")
+            except (KeyError, IndexError, TypeError, ValueError, AttributeError):
+                err = None
+        if attempt < 3 and isinstance(err, dict) and err.get("code") == "rate_limited":
+            time.sleep(min(float(err.get("retry_after") or 5), 60) + 1)
+            continue
+        return d["result"]
 
 
 def pointer(v, p):

@@ -14,6 +14,7 @@ Python standard library only. Run by deploy/live-checks.sh after every deploy.
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -67,8 +68,16 @@ def findings(where, text):
 
 def mcp(method, params=None):
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params or {}}).encode()
-    st, hdr, b = fetch("/mcp", body, {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"})
-    return st, hdr, b
+    # the checker allows a caller about 60 calls a minute and the live checks before this one spend them: a tool answer
+    # that is rate_limited is waited out (its retry_after) and asked again, a few times, never counted as a finding
+    for attempt in range(4):
+        st, hdr, b = fetch("/mcp", body, {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"})
+        t = tool_text(b) if method == "tools/call" else None
+        err = t.get("error") if isinstance(t, dict) else None
+        if attempt < 3 and isinstance(err, dict) and err.get("code") == "rate_limited":
+            time.sleep(min(float(err.get("retry_after") or 5), 60) + 1)
+            continue
+        return st, hdr, b
 
 
 def tool_text(b):
