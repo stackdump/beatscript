@@ -2,40 +2,9 @@
   "check": {
     "ok": true,
     "errors": 0,
-    "warnings": 2,
+    "warnings": 0,
     "infos": 0,
-    "diagnostics": [
-      {
-        "severity": "warning",
-        "line": 80,
-        "col": 3,
-        "end_col": 43,
-        "start": 3062,
-        "end": 3102,
-        "start16": 3062,
-        "end16": 3102,
-        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 80:3\n   |\n80 |   at bar 7: move echo_out on A over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 81,
-        "col": 3,
-        "end_col": 43,
-        "start": 3105,
-        "end": 3145,
-        "start16": 3105,
-        "end16": 3145,
-        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 81:3\n   |\n81 |   at bar 7: move echo_out on B over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      }
-    ],
+    "diagnostics": [],
     "cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ",
     "canonical": "tempo 138\nkey am\nlet rst = ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet cl = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~\nlet r4 = kk\nlet r2 = x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~\nlet r1 = x x x x x x x x x x x x x x x x\nlet ba = ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2\nlet bf = ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2\nlet bc = ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2\nlet bg = ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2\nlet aa = a4 c5 e5 a5 e5 c5 a4 c5 a4 c5 e5 a5 e5 c5 a4 c5\nlet af = f4 a4 c5 f5 c5 a4 f4 a4 f4 a4 c5 f5 c5 a4 f4 a4\nlet ac = c5 e5 g5 c6 g5 e5 c5 e5 c5 e5 g5 c6 g5 e5 c5 e5\nlet ag = g4 b4 d5 g5 d5 b4 g4 b4 g4 b4 d5 g5 d5 b4 g4 b4\nlet m1 = e5 ~ ~ ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m2 = ~ ~ ~ ~ ~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~\nlet m3 = g5 ~ ~ ~ ~ ~ e5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m4 = ~ ~ ~ ~ ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~\nlet m5 = e5 ~ ~ ~ ~ ~ g5 ~ e5 ~ ~ ~ ~ ~ ~ ~\nlet m6 = ~ ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~\nlet m7 = g5 ~ ~ ~ ~ ~ e5 ~ d5 ~ ~ ~ ~ ~ ~ ~\nlet m8 = ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~ a5 ~ ~ ~\nlet pads = <chord(am) chord(am) chord(f) chord(f) chord(c) chord(c) chord(g) chord(g)>\nlet basses = <ba ba bf bf bc bc bg bg>\nlet arps = <aa aa af af ac ac ag ag>\nlet mels = <m1 m2 m3 m4 m5 m6 m7 m8>\nlet clap_in = <rst rst rst rst rst rst rst rst cl cl cl cl cl cl cl cl>\nlet bass_in = <rst rst rst rst rst rst rst rst ba ba bf bf bc bc bg bg>\nlet clap_out = <cl cl cl cl rst rst rst rst>\nlet roll = <rst rst rst rst rst rst rst rst kk kk r2 r2 r1 r1 r1 rst>\ndef deckA(k, h, c, s, b) {\n  deck A: kick $k vel=112 | hihat $h vel=70..95 | clap $c vel=100 | snare $s vel=80..110 | bass $b inst=sub-bass oct=2 len=1\n}\ndef deckB(a, p, m) {\n  deck B: arp $a inst=bright-pluck vel=70..95 len=1 | harmony $p inst=warm-pad len=16 vel=80 | melody $m inst=detuned-saw len=8 vel=105\n}\nsection intro 16 bars {\n  deckA(kk, hh, clap_in, rst, bass_in)\n  deckB(rst, pads, rst)\n  master: filter lp 400 -> 16000 over 16 bars\n}\nsection breakdown 16 bars {\n  deckA(rst, every(16, rst, hh), rst, roll, rst)\n  deckB(every(16, rst, arps), pads, every(16, rst, mels))\n  at bar 8: master: filter lp 16000 -> 1500 over 1 bars\n  at bar 9: master: filter lp 1500 -> 18000 over 7 bars\n}\nsection drop 24 bars {\n  deckA(kk, hh, cl, rst, basses)\n  deckB(arps, pads, mels)\n}\nsection outro 8 bars {\n  deckA(kk, hh, clap_out, rst, basses)\n  deckB(rst, pads, rst)\n  master: filter lp 18000 -> 800 over 8 bars\n  at bar 7: move echo_out on A over 1 bars\n  at bar 7: move echo_out on B over 1 bars\n}\narrange intro breakdown drop outro\n",
     "version": 1,
@@ -138,38 +107,7 @@
       "snare roll that builds the breakdown: every 4th, every 2nd, every step, then the gap before the drop",
       "a deck's parts, whatever bars they have in a section"
     ],
-    "diagnostics": [
-      {
-        "severity": "warning",
-        "line": 80,
-        "col": 3,
-        "end_col": 43,
-        "start": 3062,
-        "end": 3102,
-        "start16": 3062,
-        "end16": 3102,
-        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 80:3\n   |\n80 |   at bar 7: move echo_out on A over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      },
-      {
-        "severity": "warning",
-        "line": 81,
-        "col": 3,
-        "end_col": 43,
-        "start": 3105,
-        "end": 3145,
-        "start16": 3105,
-        "end16": 3145,
-        "message": "the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)",
-        "expected": [],
-        "found": "",
-        "help": "it checks, and plays in the BeatScript app (the booth); here the line does nothing",
-        "render": "warning: the browser does not play this: the `echo_out` move (of the moves the browser plays vocoder_handoff only)\n  --> 81:3\n   |\n81 |   at bar 7: move echo_out on B over 1 bars\n   |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   = help: it checks, and plays in the BeatScript app (the booth); here the line does nothing"
-      }
-    ],
+    "diagnostics": [],
     "from_cid": "z4EBG9jDzsE2UHZfL8A9ouKLU5vUJsgHC8nVaTE7sWjci7PCukZ",
     "text": "#! beatscript 2\n#! name: trance-138\n#! license: CC0-1.0\n#! visibility: public\n# trance-138: 64 bars, said once each. The longhand (trance-138.live: every part one 64-bar\n# alternation with rest bars) and this text are two ways to write the same song.\ntempo 138\nkey am\n\n# the bars\nlet rst = ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\nlet kk = x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~\nlet hh = ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~\nlet cl = ~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~\nlet r4 = kk\nlet r2 = x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~\nlet r1 = x x x x x x x x x x x x x x x x\n\n# eight bars of the anthem, and what plays under it: two bars to a chord, am f c g\nlet ba = ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2 ~ a2 a2 a2\nlet bf = ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2 ~ f2 f2 f2\nlet bc = ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2 ~ c2 c2 c2\nlet bg = ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2 ~ g2 g2 g2\nlet aa = a4 c5 e5 a5 e5 c5 a4 c5 a4 c5 e5 a5 e5 c5 a4 c5\nlet af = f4 a4 c5 f5 c5 a4 f4 a4 f4 a4 c5 f5 c5 a4 f4 a4\nlet ac = c5 e5 g5 c6 g5 e5 c5 e5 c5 e5 g5 c6 g5 e5 c5 e5\nlet ag = g4 b4 d5 g5 d5 b4 g4 b4 g4 b4 d5 g5 d5 b4 g4 b4\nlet m1 = e5 ~ ~ ~ ~ ~ d5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m2 = ~ ~ ~ ~ ~ ~ ~ ~ a4 ~ ~ ~ c5 ~ ~ ~\nlet m3 = g5 ~ ~ ~ ~ ~ e5 ~ c5 ~ ~ ~ ~ ~ ~ ~\nlet m4 = ~ ~ ~ ~ ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~\nlet m5 = e5 ~ ~ ~ ~ ~ g5 ~ e5 ~ ~ ~ ~ ~ ~ ~\nlet m6 = ~ ~ ~ ~ ~ ~ ~ ~ c5 ~ ~ ~ e5 ~ ~ ~\nlet m7 = g5 ~ ~ ~ ~ ~ e5 ~ d5 ~ ~ ~ ~ ~ ~ ~\nlet m8 = ~ ~ ~ ~ b4 ~ ~ ~ d5 ~ ~ ~ a5 ~ ~ ~\n\n# the parts, eight bars round\nlet pads = <chord(am) chord(am) chord(f) chord(f) chord(c) chord(c) chord(g) chord(g)>\nlet basses = <ba ba bf bf bc bc bg bg>\nlet arps = <aa aa af af ac ac ag ag>\nlet mels = <m1 m2 m3 m4 m5 m6 m7 m8>\n\n# the half-and-half bars of the intro (the second eight bars add the clap and the bass), and the\n# snare roll that builds the breakdown: every 4th, every 2nd, every step, then the gap before the drop\nlet clap_in = <rst rst rst rst rst rst rst rst cl cl cl cl cl cl cl cl>\nlet bass_in = <rst rst rst rst rst rst rst rst ba ba bf bf bc bc bg bg>\nlet clap_out = <cl cl cl cl rst rst rst rst>\nlet roll = <rst rst rst rst rst rst rst rst kk kk r2 r2 r1 r1 r1 rst>\n\n# a deck's parts, whatever bars they have in a section\ndef deckA(k, h, c, s, b) {\n  deck A: kick $k vel=112 | hihat $h vel=70..95 | clap $c vel=100 | snare $s vel=80..110 | bass $b inst=sub-bass oct=2 len=1\n}\ndef deckB(a, p, m) {\n  deck B: arp $a inst=bright-pluck vel=70..95 len=1 | harmony $p inst=warm-pad len=16 vel=80 | melody $m inst=detuned-saw len=8 vel=105\n}\n\nsection intro 16 bars {\n  deckA(kk, hh, clap_in, rst, bass_in)\n  deckB(rst, pads, rst)\n  master: filter lp 400 -> 16000 over 16 bars\n}\n\nsection breakdown 16 bars {\n  deckA(rst, every(16, rst, hh), rst, roll, rst)\n  deckB(every(16, rst, arps), pads, every(16, rst, mels))\n  at bar 8: master: filter lp 16000 -> 1500 over 1 bars\n  at bar 9: master: filter lp 1500 -> 18000 over 7 bars\n}\n\nsection drop 24 bars {\n  deckA(kk, hh, cl, rst, basses)\n  deckB(arps, pads, mels)\n}\n\nsection outro 8 bars {\n  deckA(kk, hh, clap_out, rst, basses)\n  deckB(rst, pads, rst)\n  master: filter lp 18000 -> 800 over 8 bars\n  at bar 7: move echo_out on A over 1 bars\n  at bar 7: move echo_out on B over 1 bars\n}\n\narrange intro breakdown drop outro\n"
   },
