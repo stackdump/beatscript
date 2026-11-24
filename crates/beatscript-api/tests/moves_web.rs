@@ -25,14 +25,14 @@ fn the_browser_plays_every_move_the_booth_plays() {
         "at bar 4: do moves cancel kind=loop_roll deck=A",
         "at bar 4: do moves cancel_all",
     ] {
-        let w = warnings(&format!("tempo 120\ndeck A: kick x ~ x ~\ndeck B: hat ~ x ~ x\n{line}\n"));
+        let w = warnings(&format!("tempo 120\ndeck A: kick x ~ x ~\ndeck B: bass c2 ~ c2 ~\n{line}\n"));
         assert!(w.is_empty(), "`{line}` says the browser does not play it: {w:?}");
     }
 }
 
 #[test]
 fn a_phrase_sync_that_steps_a_seed_is_still_not_played_here() {
-    let w = warnings("tempo 120\ndeck A: kick x ~ x ~\ndeck B: hat ~ x ~ x\nat bar 2: move phrase_sync on B\n");
+    let w = warnings("tempo 120\ndeck A: kick x ~ x ~\ndeck B: bass c2 ~ c2 ~\nat bar 2: move phrase_sync on B\n");
     assert!(w.iter().any(|m| m.contains("`phrase_sync` that steps a seed")), "{w:?}");
 }
 
