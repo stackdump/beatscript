@@ -343,7 +343,7 @@ impl AuthSvc {
     pub fn caller(&self, h: &HeaderMap, method: &str, path: &str, body: &[u8]) -> Result<Option<Caller>, AuthError> {
         let cookie = cookie_value(h.get_all("cookie").iter().filter_map(|v| v.to_str().ok()), "btw_session");
         let authz = h.get("authorization").and_then(|v| v.to_str().ok());
-        self.verify.caller(cookie, authz, method, path, body)
+        self.verify.caller_at(self.now(), cookie, authz, method, path, body)
     }
 
     /// Go's `UserFrom`: the session cookie, then `Authorization: Bearer btw_…` (no phones). `Ok(None)`: anonymous;
@@ -351,7 +351,7 @@ impl AuthSvc {
     pub fn user(&self, h: &HeaderMap) -> Result<Option<User>, AuthError> {
         let cookie = cookie_value(h.get_all("cookie").iter().filter_map(|v| v.to_str().ok()), COOKIE_NAME);
         let authz = h.get("authorization").and_then(|v| v.to_str().ok()).filter(|a| !a.starts_with("BtwDevice "));
-        let c = self.verify.caller(cookie, authz, "", "", b"")?;
+        let c = self.verify.caller_at(self.now(), cookie, authz, "", "", b"")?;
         Ok(c.and_then(|c| User::from_id(&c.uid, if c.via == beatscript_serve::playlists::auth::Via::Token { "token" } else { "cookie" })))
     }
 
