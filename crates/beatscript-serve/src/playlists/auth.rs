@@ -305,7 +305,14 @@ impl Auth {
     /// Go's `UserFrom` plus the `BtwDevice` scheme (as `PUT /api/shares/<cid>` accepts all three): the cookie first,
     /// then the Authorization header. `Ok(None)` is anonymous. `cookie` is the `btw_session` value, if any.
     pub fn caller(&self, cookie: Option<&str>, authorization: Option<&str>, method: &str, path: &str, body: &[u8]) -> Result<Option<Caller>, AuthError> {
-        let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+        self.caller_at(SystemTime::now(), cookie, authorization, method, path, body)
+    }
+
+    /// `caller` judged at `at` instead of the wall clock: the cookie's expiry and the device's clock skew are measured
+    /// against the clock its owner runs on (`AuthSvc`'s injectable one), so a service with a fixed clock does not see a
+    /// session expire because the real date moved on.
+    pub fn caller_at(&self, at: SystemTime, cookie: Option<&str>, authorization: Option<&str>, method: &str, path: &str, body: &[u8]) -> Result<Option<Caller>, AuthError> {
+        let now = at.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
         let mut cookie_err = None;
         if let Some(c) = cookie.filter(|c| !c.is_empty()) {
             match self.parse_cookie(c, now.as_secs() as i64) {
