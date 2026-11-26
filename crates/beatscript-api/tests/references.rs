@@ -127,7 +127,7 @@ fn generate_s_call_is_its_program_and_a_part_s_call_writes_its_let() {
         }
     }
     // the request's own key and tempo are in the call; what it left to the genre is left out
-    let req = beatscript_api::GenRequest { genre: "techno".into(), seed: "9".into(), bpm: Some(128.0), key: "f#m".into(), length: "short".into() };
+    let req = beatscript_api::GenRequest { genre: "techno".into(), seed: "9".into(), bpm: Some(128.0), key: "f#m".into(), length: "short".into(), ..Default::default() };
     let g = beatscript_api::generate::generate(&req).unwrap();
     let cid = s(&report(&g.text, false), "cid").to_string();
     assert_eq!(beatscript_api::generate::gen_call(3, &req, &g, &cid).as_deref(), Some("gen@3 techno seed=9 bpm=128 key=f#m length=short"));

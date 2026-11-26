@@ -1141,7 +1141,7 @@ async fn generate(State(st): St, req: Request) -> Response<Body> {
         Value::String(t) if !t.trim().is_empty() => t.trim().parse().ok(),
         _ => None,
     };
-    let greq = beatscript_api::GenRequest { genre: s("genre"), bpm, key: s("key"), length: s("length"), seed: s("seed") };
+    let greq = beatscript_api::GenRequest { genre: s("genre"), bpm, key: s("key"), length: s("length"), seed: s("seed"), ending: s("ending") };
     // the MCP tool's `generator` (1 or 2), `part` and `section` (one seed: `seeds` is the MCP tool's alone)
     let mut ask = crate::mcp::tools::GenAsk::new(greq);
     ask.version = match crate::mcp::tools::gen_version(v.get("generator").filter(|g| !g.is_null())) {
