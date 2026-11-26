@@ -383,7 +383,7 @@ fn generate_as(req: &GenRequest, version: u32) -> Result<Generated, String> {
     let looped = match req.ending.trim() {
         "" | "end" => false,
         "loop" if version >= 3 => true,
-        "loop" => return Err("ending=loop needs the generator version 3 (BeatScript 2)".to_string()),
+        "loop" => return Err("ending=loop needs generator 3 or later (BeatScript 2)".to_string()),
         other => return Err(format!("unknown ending {other:?}; one of: end, loop")),
     };
     let bpm = req.bpm.unwrap_or(def.bpm);
@@ -643,7 +643,7 @@ pub fn install() {
 /// The program of `version` for a request: [`generate`] (the current one) or the frozen [`crate::generate_v1`].
 pub fn generate_version(version: u32, req: &GenRequest) -> Result<Generated, String> {
     match version {
-        1 if req.ending.trim() == "loop" => Err("ending=loop needs the generator version 3 (BeatScript 2)".to_string()),
+        1 if req.ending.trim() == "loop" => Err("ending=loop needs generator 3 or later (BeatScript 2)".to_string()),
         1 => crate::generate_v1::generate(&crate::generate_v1::GenRequest { genre: req.genre.clone(), bpm: req.bpm, key: req.key.clone(), length: req.length.clone(), seed: req.seed.clone() }).map(|g| Generated {
             text: g.text,
             body: g.body,
