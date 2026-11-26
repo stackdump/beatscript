@@ -305,7 +305,7 @@
             "type": "number"
           },
           "ending": {
-            "description": "How the song ends: end (default: after its last section) or loop (it starts again at its end, like beats.bitwrap.io's Loop). loop needs generator 3 or later.",
+            "description": "How the song ends: end (default: after its last section) or loop (it starts again at its end). loop needs generator 3 or later.",
             "enum": [
               "end",
               "loop"

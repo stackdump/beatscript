@@ -22,7 +22,7 @@ fn evolve(r: &JsonValue) -> Vec<String> {
 }
 
 fn repro() -> String {
-    let g = generate(&GenRequest { genre: "trap".into(), bpm: Some(140.0), key: "dm".into(), length: "long".into(), seed: "38953".into() }).unwrap();
+    let g = generate(&GenRequest { genre: "trap".into(), bpm: Some(140.0), key: "dm".into(), length: "long".into(), seed: "38953".into(), ending: String::new() }).unwrap();
     g.text
 }
 
