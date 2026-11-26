@@ -62,7 +62,7 @@ fn different_seeds_different_programs() {
 
 #[test]
 fn inputs_are_honoured_and_checked() {
-    let r = GenRequest { genre: "trance".into(), bpm: Some(150.0), key: "f#m".into(), length: "short".into(), seed: "9".into() };
+    let r = GenRequest { genre: "trance".into(), bpm: Some(150.0), key: "f#m".into(), length: "short".into(), seed: "9".into(), ..Default::default() };
     let out = generate(&r).unwrap();
     assert!(out.body.starts_with("tempo 150\nkey f#m\n"), "{}", out.body);
     assert!(generate(&GenRequest { genre: "polka".into(), ..Default::default() }).is_err());
@@ -217,4 +217,36 @@ fn the_chords_and_the_arps_say_no_pitch() {
         }
         assert!(out.body.contains("harmony chords") && out.body.contains("voice-lead=on"), "{g}");
     }
+}
+
+#[test]
+fn ending_loop_adds_a_loop_line_and_end_keeps_the_cid() {
+    for g in genres() {
+        for len in ["short", "standard", "long"] {
+            let base = GenRequest { genre: g.clone(), length: len.into(), seed: "7".into(), ..Default::default() };
+            let plain = generate(&base).unwrap();
+            // the default and an explicit `end` print the same program: every existing CID is unchanged
+            let ended = generate(&GenRequest { ending: "end".into(), ..base.clone() }).unwrap();
+            assert_eq!(plain.text, ended.text);
+            assert!(!plain.body.lines().any(|l| l.trim() == "loop"));
+            let looped = generate(&GenRequest { ending: "loop".into(), ..base.clone() }).unwrap();
+            assert_eq!(looped.body, format!("{}loop\n", plain.body), "{g} {len}");
+            assert!(looped.body.trim_end().ends_with("\nloop"));
+            let rep = check(&looped.text);
+            assert_eq!(rep.get("ok").and_then(JsonValue::as_bool), Some(true), "{g} {len}:\n{}\n{}", looped.text, rep.js_stringified());
+            assert_eq!(rep.get("errors").and_then(JsonValue::as_i64), Some(0));
+            let f = JsonValue::parse(&beatscript_api::fmt_json(&looped.text)).unwrap();
+            let canon = f.get("canonical").and_then(JsonValue::as_str).unwrap().to_string();
+            assert_eq!(canon, format!("{}{}", djlive::version::CANONICAL_HEAD, looped.body), "{g} {len}: not canonical");
+        }
+    }
+}
+
+#[test]
+fn ending_is_validated_and_needs_generator_3() {
+    assert!(generate(&GenRequest { ending: "forever".into(), ..Default::default() }).is_err());
+    assert!(beatscript_api::generate::generate_version(1, &GenRequest { ending: "loop".into(), ..Default::default() }).is_err());
+    assert!(beatscript_api::generate::generate_version(2, &GenRequest { ending: "loop".into(), ..Default::default() }).is_err());
+    let j = beatscript_api::generate::generate_json(r#"{"genre":"techno","seed":3,"ending":"loop"}"#);
+    assert!(j.contains("loop"), "{j}");
 }

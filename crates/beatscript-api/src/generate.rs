@@ -46,6 +46,9 @@ pub struct GenRequest {
     pub length: String,
     /// A number or a word.
     pub seed: String,
+    /// How the song ends: `` or `end` (the default: after the last section, no line written) or `loop` (a `loop` line:
+    /// it starts again at its end, as beats.bitwrap.io's Loop structure does). Only `seeded@3` (BeatScript 2) writes it.
+    pub ending: String,
 }
 
 #[derive(Clone, Debug)]
@@ -377,6 +380,12 @@ fn generate_as(req: &GenRequest, version: u32) -> Result<Generated, String> {
         "long" => "extended",
         _ => "standard",
     };
+    let looped = match req.ending.trim() {
+        "" | "end" => false,
+        "loop" if version >= 3 => true,
+        "loop" => return Err("ending=loop needs the generator version 3 (BeatScript 2)".to_string()),
+        other => return Err(format!("unknown ending {other:?}; one of: end, loop")),
+    };
     let bpm = req.bpm.unwrap_or(def.bpm);
     if !(40.0..=300.0).contains(&bpm) {
         return Err(format!("bpm {bpm} is out of range (40..300)"));
@@ -569,6 +578,9 @@ fn generate_as(req: &GenRequest, version: u32) -> Result<Generated, String> {
         ln(&mut b, "}");
     }
     ln(&mut b, &format!("arrange {}", order.join(" ")));
+    if looped {
+        ln(&mut b, "loop");
+    }
 
     let name = generate_track_name(&genre, sv as f64);
     let mut text = String::new();
@@ -613,7 +625,7 @@ impl djlive::gen::Generator for Seeded {
     fn generate(&self, version: u32, r: &djlive::gen::GenRequest) -> Result<String, String> {
         match version {
             1 => crate::generate_v1::generate(&crate::generate_v1::GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }).map(|g| g.text),
-            2 | 3 | GENERATOR_VERSION => generate_as(&GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone() }, version).map(|g| g.text),
+            2 | 3 | GENERATOR_VERSION => generate_as(&GenRequest { genre: r.genre.clone(), bpm: r.bpm, key: r.key.clone(), length: r.length.clone(), seed: r.seed.clone(), ending: String::new() }, version).map(|g| g.text),
             v => Err(format!("{GENERATOR}@{v} is not one this build has ({})", VERSIONS.iter().map(|v| format!("{GENERATOR}@{v}")).collect::<Vec<_>>().join(", "))),
         }
     }
@@ -631,6 +643,7 @@ pub fn install() {
 /// The program of `version` for a request: [`generate`] (the current one) or the frozen [`crate::generate_v1`].
 pub fn generate_version(version: u32, req: &GenRequest) -> Result<Generated, String> {
     match version {
+        1 if req.ending.trim() == "loop" => Err("ending=loop needs the generator version 3 (BeatScript 2)".to_string()),
         1 => crate::generate_v1::generate(&crate::generate_v1::GenRequest { genre: req.genre.clone(), bpm: req.bpm, key: req.key.clone(), length: req.length.clone(), seed: req.seed.clone() }).map(|g| Generated {
             text: g.text,
             body: g.body,
@@ -767,7 +780,7 @@ pub fn generate_json(input: &str) -> String {
         Some(JsonValue::String(s)) if !s.trim().is_empty() => s.trim().parse::<f64>().ok(),
         _ => None,
     };
-    let req = GenRequest { genre: s("genre"), bpm, key: s("key"), length: s("length"), seed: s("seed") };
+    let req = GenRequest { genre: s("genre"), bpm, key: s("key"), length: s("length"), seed: s("seed"), ending: s("ending") };
     generated_json(&req).js_stringified()
 }
 

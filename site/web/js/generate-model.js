@@ -46,8 +46,11 @@ export function callSeed(seed) {
 }
 
 /** The request beatscript_generate / POST /api/generate take. */
-export function genRequest({ genre, seed, length }) {
-  return { genre: genre || 'techno', seed: String(seed == null ? '' : seed).trim() || '1', length: LENGTHS.includes(length) ? length : 'standard' };
+export function genRequest({ genre, seed, length, ending }) {
+  const r = { genre: genre || 'techno', seed: String(seed == null ? '' : seed).trim() || '1', length: LENGTHS.includes(length) ? length : 'standard' };
+  // `end` (the default) is left out so the request, and the program, are the ones every earlier request made
+  if (ending === 'loop') r.ending = 'loop';
+  return r;
 }
 
 /** `gen@2 techno seed=42 section=drop part=bass` (with ` length=L` unless it is standard): one part of one section, as a reference. */
@@ -115,11 +118,12 @@ export function loadGenState(store, genres) {
     genre: genres.includes(v.genre) ? v.genre : 'techno',
     seed: typeof v.seed === 'string' && v.seed.trim() && v.seed.length <= 64 ? v.seed.trim() : randomSeed(),
     length: LENGTHS.includes(v.length) ? v.length : 'standard',
+    ending: v.ending === 'loop' ? 'loop' : 'end',
     section: typeof v.section === 'string' ? v.section : '',
     part: ROLES.includes(v.part) ? v.part : '',
   };
 }
 
 export function saveGenState(store, st) {
-  try { if (store) store.setItem('beatscript.gen', JSON.stringify({ genre: st.genre, seed: st.seed, length: st.length, section: st.section, part: st.part })); } catch { /* private mode */ }
+  try { if (store) store.setItem('beatscript.gen', JSON.stringify({ genre: st.genre, seed: st.seed, length: st.length, ending: st.ending, section: st.section, part: st.part })); } catch { /* private mode */ }
 }
