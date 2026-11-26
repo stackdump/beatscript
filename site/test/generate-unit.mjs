@@ -101,10 +101,12 @@ test('generate: the structure is the check report\'s sections in play order and 
 test('generate: the remembered inputs are checked, a bad one takes the default', () => {
   const mem = (v) => ({ getItem: () => v, setItem() {} });
   const g = ['techno', 'house'];
-  assert.deepEqual(M.loadGenState(mem(JSON.stringify({ genre: 'house', seed: '9', length: 'long', section: 'drop', part: 'bass' })), g), { genre: 'house', seed: '9', length: 'long', section: 'drop', part: 'bass' });
+  assert.deepEqual(M.loadGenState(mem(JSON.stringify({ genre: 'house', seed: '9', length: 'long', section: 'drop', part: 'bass' })), g), { genre: 'house', seed: '9', length: 'long', ending: 'end', section: 'drop', part: 'bass' });
+  assert.equal(M.loadGenState(mem(JSON.stringify({ ending: 'loop' })), g).ending, 'loop');
   const bad = M.loadGenState(mem('{"genre":"polka","seed":"","length":"x","part":"tuba"}'), g);
   assert.equal(bad.genre, 'techno');
   assert.equal(bad.length, 'standard');
+  assert.equal(bad.ending, 'end');
   assert.equal(bad.part, '');
   assert.match(bad.seed, /^\d+$/);
   assert.equal(M.loadGenState(mem('not json'), g).genre, 'techno');

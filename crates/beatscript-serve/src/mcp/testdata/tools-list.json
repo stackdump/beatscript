@@ -294,6 +294,14 @@
             "minimum": 40,
             "type": "number"
           },
+          "ending": {
+            "description": "How the song ends: end (default: after its last section) or loop (it starts again at its end, like beats.bitwrap.io's Loop). loop needs generator 3.",
+            "enum": [
+              "end",
+              "loop"
+            ],
+            "type": "string"
+          },
           "generator": {
             "description": "The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen), 2 (seeded@2, the chords and arps as Roman numerals) or 3 (seeded@3: seeded@2's music written in BeatScript 2, `#! beatscript 2` first); default 3. A version always prints the same program for the same inputs.",
             "enum": [
