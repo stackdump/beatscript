@@ -749,22 +749,33 @@ fn json_valid(b: &[u8]) -> bool {
     serde_json::from_slice::<serde::de::IgnoredAny>(b).is_ok()
 }
 
+/// The Android App Links statement (`/.well-known/assetlinks.json`), the one list of fingerprints in the repo: every key an
+/// `app.beatscript` install can be signed with (the CDN build's release key and the Play-managed keys). Embedded, so every
+/// host this server answers for (beatscript.app, btw.bitwrap.io, beats.bitwrap.io, whichever vhost nginx proxies here)
+/// serves it itself: 200, `application/json`, never a redirect. Play's "Domain ownership not verified" came of a file
+/// that lived outside the repo with one fingerprint.
+const ASSETLINKS: &[u8] = include_bytes!("public/assetlinks.json");
+
 async fn assetlinks(State(st): St) -> Response<Body> {
+    // `-assetlinks-file` (BEATSCRIPT_ASSETLINKS_FILE) is an explicit override, read on each request; unset, the embedded
+    // statement is served. Production leaves it unset: a stale file on the host must not shadow the repo's list.
     let f = st.cfg().flag("assetlinks-file", "");
-    if f.is_empty() {
-        return not_found();
-    }
-    match std::fs::read(&f) {
-        Ok(b) if json_valid(&b) => Response::builder()
-            .header(header::CACHE_CONTROL, "no-cache")
-            .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
-            .body(go_body(b))
-            .unwrap(),
-        r => {
-            eprintln!("assetlinks: {f} unreadable or not JSON: {:?}", r.err());
-            ApiError::new(500, "internal", "the asset links file is not available").response()
+    let body = if f.is_empty() {
+        ASSETLINKS.to_vec()
+    } else {
+        match std::fs::read(&f) {
+            Ok(b) if json_valid(&b) => b,
+            r => {
+                eprintln!("assetlinks: {f} unreadable or not JSON: {:?}", r.err());
+                return ApiError::new(500, "internal", "the asset links file is not available").response();
+            }
         }
-    }
+    };
+    Response::builder()
+        .header(header::CACHE_CONTROL, "no-cache")
+        .header(header::CONTENT_TYPE, "application/json; charset=utf-8")
+        .body(go_body(body))
+        .unwrap()
 }
 
 async fn instruments(State(st): St, req: Request) -> Response<Body> {
@@ -1418,6 +1429,26 @@ pub fn routes(app: &AppState) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Play Console's statement for app.beatscript: four fingerprints, in its order, under the one package.
+    #[test]
+    fn the_embedded_assetlinks_names_all_four_play_fingerprints() {
+        let v: Value = serde_json::from_slice(ASSETLINKS).expect("assetlinks.json parses");
+        let a = v.as_array().expect("an array of statements");
+        assert_eq!(a.len(), 1);
+        assert_eq!(a[0]["relation"], json!(["delegate_permission/common.handle_all_urls"]));
+        assert_eq!(a[0]["target"]["namespace"], "android_app");
+        assert_eq!(a[0]["target"]["package_name"], "app.beatscript");
+        let fp: Vec<&str> = a[0]["target"]["sha256_cert_fingerprints"].as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect();
+        assert_eq!(fp.len(), 4);
+        for f in &fp {
+            let parts: Vec<&str> = f.split(':').collect();
+            assert_eq!(parts.len(), 32, "{f}");
+            assert!(parts.iter().all(|p| p.len() == 2 && p.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_lowercase())), "{f}");
+        }
+        assert_eq!(fp.iter().collect::<std::collections::BTreeSet<_>>().len(), 4, "no duplicates");
+        assert!(fp[0].starts_with("B6:64:E3") && fp[1].starts_with("36:62:1E") && fp[2].starts_with("4F:89:F0") && fp[3].starts_with("9E:15:70"));
+    }
 
     /// The download: the meta's `#!` lines, the text's own (a BeatScript 2 text's version line), then the kept `# from:` lines,
     /// then the program; the same CID as the text.

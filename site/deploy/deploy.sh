@@ -22,6 +22,11 @@
 #   site/deploy/deploy.sh verify-beatscript       curl https://beatscript.app
 #   site/deploy/deploy.sh nginx-redirect-btw      btw.bitwrap.io becomes a 301 to beatscript.app, except /api/, /mcp, /context/
 #                                                    (nginx/btw.bitwrap.io.redirect.conf), nginx -t, reload; restores on failure
+#   site/deploy/deploy.sh nginx-assetlinks        Android App Links on every claimed host: installs snippets/beatscript-assetlinks.conf
+#                                                    (nginx/assetlinks.snippet.conf), reinstalls the btw.bitwrap.io vhost from
+#                                                    nginx/btw.bitwrap.io.redirect.conf (it includes the snippet) and adds the include to
+#                                                    beats.bitwrap.io's 443 server block if it is not there; nginx -t, reload; restores on failure
+#   site/deploy/deploy.sh verify-assetlinks       curl -I and the body of /.well-known/assetlinks.json on the three hosts: 200, application/json, 4 fingerprints
 #
 # The beatscript-serve binary, the wasm and the docs are built and installed by deploy/deploy.sh, which also owns the
 # beatscript service's ~/services entry and CMD (it was btw-rust until the rename: deploy/deploy.sh renames it, in one
@@ -181,6 +186,39 @@ sudo -n install -m 644 /tmp/btw.bitwrap.io /etc/nginx/sites-available/btw.bitwra
 if sudo -n nginx -t; then sudo -n systemctl reload nginx && echo "nginx reloaded (btw.bitwrap.io redirects to beatscript.app)"; else
   echo "nginx -t FAILED: restoring the proxy vhost"; sudo -n cp /etc/nginx/sites-available/btw.bitwrap.io.bak.proxy /etc/nginx/sites-available/btw.bitwrap.io; sudo -n nginx -t; exit 1; fi
 EOS
+  ;;
+nginx-assetlinks)
+  scp -q "$HERE/nginx/assetlinks.snippet.conf" "$HOST:/tmp/beatscript-assetlinks.conf"
+  scp -q "$HERE/nginx/btw.bitwrap.io.redirect.conf" "$HOST:/tmp/btw.bitwrap.io"
+  run bash -s <<'EOS'
+set -euo pipefail
+[ -f /etc/nginx/conf.d/btw-front.conf ] || { echo 'no /etc/nginx/conf.d/btw-front.conf (upstream btw_front): run deploy.sh upstream first' >&2; exit 1; }
+S=/etc/nginx/sites-available
+INC='include /etc/nginx/snippets/beatscript-assetlinks.conf;'
+stamp=$(date +%Y%m%d%H%M%S)
+sudo -n cp $S/btw.bitwrap.io $S/btw.bitwrap.io.bak.assetlinks-$stamp
+sudo -n cp $S/beats.bitwrap.io $S/beats.bitwrap.io.bak.assetlinks-$stamp
+sudo -n install -m 644 /tmp/beatscript-assetlinks.conf /etc/nginx/snippets/beatscript-assetlinks.conf
+sudo -n install -m 644 /tmp/btw.bitwrap.io $S/btw.bitwrap.io
+# beats.bitwrap.io: certbot manages that file, so add one line after its blocklist includes, once
+if ! grep -qF "$INC" $S/beats.bitwrap.io; then
+  sudo -n sed -i "0,/include \/etc\/nginx\/blocklist-botcheck.conf;/s||include /etc/nginx/blocklist-botcheck.conf;\n\n    # Android App Links: 200 from this host itself (snippets/beatscript-assetlinks.conf, proxied to beatscript-serve)\n    $INC|" $S/beats.bitwrap.io
+fi
+grep -cF "$INC" $S/beats.bitwrap.io | grep -qx 1 || { echo "beats.bitwrap.io: the include is not there exactly once" >&2; ok=0; }
+if [ "${ok:-1}" = 1 ] && sudo -n nginx -t; then sudo -n systemctl reload nginx && echo "nginx reloaded (assetlinks on btw.bitwrap.io and beats.bitwrap.io)"; else
+  echo "nginx -t FAILED: restoring both vhosts"
+  sudo -n cp $S/btw.bitwrap.io.bak.assetlinks-$stamp $S/btw.bitwrap.io
+  sudo -n cp $S/beats.bitwrap.io.bak.assetlinks-$stamp $S/beats.bitwrap.io
+  sudo -n nginx -t; exit 1; fi
+EOS
+  ;;
+verify-assetlinks)
+  for h in beatscript.app btw.bitwrap.io beats.bitwrap.io; do
+    printf '%-20s ' "$h"
+    curl -sS -m 15 -o /tmp/assetlinks.$$ -w '%{http_code} %{content_type} redirect=%{redirect_url}  ' "https://$h/.well-known/assetlinks.json"
+    python3 -c 'import json,sys; v=json.load(open(sys.argv[1])); print(len(v[0]["target"]["sha256_cert_fingerprints"]), "fingerprints,", v[0]["target"]["package_name"])' /tmp/assetlinks.$$ || echo "body is not the statement"
+  done
+  rm -f /tmp/assetlinks.$$
   ;;
 verify-beatscript)
   for h in beatscript.app; do
