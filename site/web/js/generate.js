@@ -27,6 +27,9 @@ export function generateBody(panels) {
   const dice = h('button', { type: 'button', class: 'tb', id: 'gen-random', title: 'A random seed', 'aria-label': 'Random seed' }, '🎲');
   const len = h('select', { id: 'gen-length', 'aria-label': 'Length' }, ...LENGTHS.map((v) => h('option', { value: v }, v)));
   len.value = st.length;
+  // how the song ends: `end` after its last section (the default) or `loop`, which starts it again (beats.bitwrap.io's Loop)
+  const ending = h('select', { id: 'gen-ending', 'aria-label': 'Ending' }, h('option', { value: 'end' }, 'end'), h('option', { value: 'loop' }, 'loop'));
+  ending.value = st.ending;
   const structure = h('p', { class: 'note', id: 'gen-structure', 'aria-live': 'polite' });
   const go = h('button', { type: 'button', class: 'tb primary', id: 'gen-go', title: 'Write the program into the editor and play it (Enter)' }, 'Generate');
   const status = h('div', { role: 'status', id: 'gen-status' });
@@ -37,11 +40,11 @@ export function generateBody(panels) {
 
   let preview = null; // the generated answer for the current inputs (not yet in the editor)
 
-  const req = () => genRequest({ genre: genre.value, seed: seed.value, length: len.value });
+  const req = () => genRequest({ genre: genre.value, seed: seed.value, length: len.value, ending: ending.value });
 
   /** Generate for the current inputs without touching the editor: the structure line and the section and part lists. */
   const refresh = () => {
-    st.genre = genre.value; st.seed = seed.value.trim() || '1'; st.length = len.value;
+    st.genre = genre.value; st.seed = seed.value.trim() || '1'; st.length = len.value; st.ending = ending.value;
     save();
     preview = null;
     try { preview = app.beatscript && app.beatscript.generate ? app.beatscript.generate(req()) : null; } catch (e) { console.warn('beatscript: generate preview', e); }
@@ -104,6 +107,7 @@ export function generateBody(panels) {
 
   genre.addEventListener('change', refresh);
   len.addEventListener('change', refresh);
+  ending.addEventListener('change', refresh);
   seed.addEventListener('change', refresh);
   seed.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); step(e.key === 'ArrowUp' ? 1 : -1); }
@@ -127,7 +131,7 @@ export function generateBody(panels) {
   const body = h('div', { class: 'gen', id: 'gen' },
     h('p', { class: 'note' }, 'The seeded generator writes a whole track from a seed, with the genre\'s rhythms, chords and song structure. No model and no sign-in: the same genre, seed and length always give the same program and CID.'),
     h('fieldset', { class: 'plain' },
-      h('div', { class: 'row' }, h('label', {}, 'Genre', genre), h('label', {}, 'Length', len)),
+      h('div', { class: 'row' }, h('label', {}, 'Genre', genre), h('label', {}, 'Length', len), h('label', {}, 'Ending', ending)),
       h('div', { class: 'row gen-seed' }, h('label', {}, 'Seed', seed), prev, next, dice),
       h('p', { class: 'note', id: 'gen-seed-help' }, 'Step the seed while it plays: −1 / +1, the [ and ] keys, or Up / Down in the seed box.'),
       structure,

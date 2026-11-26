@@ -51,6 +51,10 @@ test('generate: a random seed is a whole number under 100000', () => {
 test('generate: the request and the call say the same inputs; length is written only when not standard', () => {
   assert.deepEqual(M.genRequest({ genre: 'house', seed: ' 7 ', length: 'long' }), { genre: 'house', seed: '7', length: 'long' });
   assert.deepEqual(M.genRequest({ genre: '', seed: '', length: 'huge' }), { genre: 'techno', seed: '1', length: 'standard' });
+  // the ending: `end` is the default and is not sent (the request, and so the program and its CID, are the old ones); `loop` is
+  assert.deepEqual(M.genRequest({ genre: 'house', seed: '7', length: 'long', ending: 'end' }), { genre: 'house', seed: '7', length: 'long' });
+  assert.deepEqual(M.genRequest({ genre: 'house', seed: '7', length: 'long', ending: 'loop' }), { genre: 'house', seed: '7', length: 'long', ending: 'loop' });
+  assert.deepEqual(M.genRequest({ ending: 'forever' }), { genre: 'techno', seed: '1', length: 'standard' });
   assert.equal(M.genCall({ genre: 'techno', seed: '42', length: 'standard', section: 'drop', part: 'bass' }), 'gen@2 techno seed=42 section=drop part=bass');
   assert.equal(M.genCall({ genre: 'house', seed: '7', length: 'short', section: 'intro', part: 'kick' }), 'gen@2 house seed=7 length=short section=intro part=kick');
   // a NAME seed is written as it is; any other word as its number (the same track)

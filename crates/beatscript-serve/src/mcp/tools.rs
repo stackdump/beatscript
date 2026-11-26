@@ -504,6 +504,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                     ("bpm", json!({"type": "number", "minimum": 40, "maximum": 300, "description": "Tempo; default the genre's."})),
                     ("key", sprop("Key: am, c, f#m, d:dorian ...; default the genre's.", &[("maxLength", json!(16))])),
                     ("length", json!({"type": "string", "enum": ["short", "standard", "long"], "description": "Song length (default standard)."})),
+                    ("ending", json!({"type": "string", "enum": ["end", "loop"], "description": "How the song ends: end (default: after its last section) or loop (it starts again at its end, like beats.bitwrap.io's Loop). loop needs generator 3 or later."})),
                     ("seed", json!({"type": ["string", "integer"], "description": "A number or a word (default 1). Same inputs, same program text and CID."})),
                     ("generator", json!({"type": "integer", "enum": beatscript_api::generate::VERSIONS, "description": format!("The version of the seeded generator, as gen@N names it in a program: 1 (seeded@1, frozen), 2 (seeded@2, the chords and arps as Roman numerals), 3 (seeded@3: seeded@2's music written in BeatScript 2, `#! beatscript 2` first) or 4 (seeded@4: seeded@3 with the acid genre's bass on the 303, `inst=acid-bass`); default {}. A version always prints the same program for the same inputs.", beatscript_api::generate::GENERATOR_VERSION)})),
                     ("part", json!({"type": "string", "enum": djlive::parse::ROLES, "description": "One part (a role): the answer gains part (that role's entry of parts) and let, the let its gen call writes (let drop_bass_1 = ... let drop_bass = <drop_bass_1 ...>), to paste into a program of your own."})),
@@ -1156,7 +1157,7 @@ impl Tools {
     /// The seeded generator (beatscript_api::generate): no model, no sign-in. The program is stored like compose's (public,
     /// CC0, source "generate", its seed in the meta) and comes back with its render and share links.
     fn generate_tool(&self, c: &Caller, a: Args) -> R {
-        a.only(&["genre", "bpm", "key", "length", "seed", "seeds", "generator", "part", "section"])?;
+        a.only(&["genre", "bpm", "key", "length", "seed", "seeds", "generator", "part", "section", "ending"])?;
         let one_seed = |v: &Value, what: &str| match v {
             Value::String(s) if s.len() <= 64 => Ok(s.clone()),
             Value::Number(n) if n.as_u64().is_some() => Ok(n.to_string()),
@@ -1173,6 +1174,7 @@ impl Tools {
                 key: a.str("key", 16)?.unwrap_or_default(),
                 length: a.str("length", 16)?.unwrap_or_default(),
                 seed,
+                ending: a.str("ending", 8)?.unwrap_or_default(),
             },
             version: gen_version(a.present("generator"))?,
             part: a.str("part", 16)?.filter(|p| !p.trim().is_empty()),
