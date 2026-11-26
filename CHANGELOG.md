@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Android App Links: the server embeds the statement, all four Play fingerprints, on every host (2026-11-26)
+
+- `/.well-known/assetlinks.json` is served from the binary (`crates/beatscript-serve/src/public/assetlinks.json`, the one
+  list of fingerprints in the repo): 200, `application/json`, no redirect, whatever Host. It was a host file with one
+  fingerprint, and Play Console reported "Domain ownership not verified" on all three domains. `-assetlinks-file` stays
+  as an explicit override; production leaves it unset.
+- nginx: `btw.bitwrap.io` no longer 301s `/.well-known/assetlinks.json` and `beats.bitwrap.io` no longer 404s it
+  (`site/deploy/nginx/assetlinks.snippet.conf`; `site/deploy/deploy.sh nginx-assetlinks`, `verify-assetlinks`).
+
 ### `listen` hears the mix: polish it by ear, with `compare` (2026-11-24)
 
 - `listen` (the MCP tool and `beatscript listen`) measures the mix: each measured part and the master have `bands` (dB in
