@@ -16,6 +16,12 @@ is the one list of fingerprints in the repo (embedded with `include_bytes!`). Ch
 - `-assetlinks-file` / `BEATSCRIPT_ASSETLINKS_FILE` is an explicit override (read on each request, refused at start if it
   is not JSON). **Leave it unset in production**: a file on the host would shadow the repo's list, which is how Play came
   to report "Domain ownership not verified" (the host file had one fingerprint).
+- **Removing the variable from `~/.env-services/btw-bitwrap` is not enough.** `~/services` sources that file into the
+  service's long-lived tmux window shell with `set -a; . file`, which adds and overwrites but never unsets, so
+  `restart` kept the old `BTW_ASSETLINKS_FILE` and the "fixed" deploy of 2026-11-26 changed nothing. Unset it in the
+  window (`tmux send-keys -t servers:beatscript 'unset BTW_ASSETLINKS_FILE' Enter`) and restart, or run
+  `site/deploy/deploy.sh services-env-unset` once so every restart unsets what the last one exported.
+  `verify-assetlinks` checks the running process's environment for this.
 
 ## Expected content
 
@@ -47,7 +53,7 @@ beats.bitwrap.io's vhost (certbot owns that file, so it is edited in place, once
 ## Check
 
 ```
-site/deploy/deploy.sh verify-assetlinks                          # the three hosts: 200, application/json, 4 fingerprints
+site/deploy/deploy.sh verify-assetlinks                          # the three hosts: 200, application/json, no redirect, 4 fingerprints; no env override; exits nonzero on a miss
 curl -sI https://beatscript.app/.well-known/assetlinks.json     # 200, content-type: application/json
 curl -s "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://beatscript.app&relation=delegate_permission/common.handle_all_urls"
 adb shell pm get-app-links app.beatscript                        # beatscript.app: verified

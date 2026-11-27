@@ -26,7 +26,9 @@
 #                                                    (nginx/assetlinks.snippet.conf), reinstalls the btw.bitwrap.io vhost from
 #                                                    nginx/btw.bitwrap.io.redirect.conf (it includes the snippet) and adds the include to
 #                                                    beats.bitwrap.io's 443 server block if it is not there; nginx -t, reload; restores on failure
-#   site/deploy/deploy.sh verify-assetlinks       curl -I and the body of /.well-known/assetlinks.json on the three hosts: 200, application/json, 4 fingerprints
+#   site/deploy/deploy.sh verify-assetlinks       the three hosts: 200, application/json, no redirect, the repo's fingerprints, and no ASSETLINKS_FILE in
+#                                                    the running server's env; exits nonzero on any miss
+#   site/deploy/deploy.sh services-env-unset      patch ~/services so a restart unsets variables deleted from ~/.env-services/<name> (idempotent, backup)
 #
 # The beatscript-serve binary, the wasm and the docs are built and installed by deploy/deploy.sh, which also owns the
 # beatscript service's ~/services entry and CMD (it was btw-rust until the rename: deploy/deploy.sh renames it, in one
@@ -212,13 +214,33 @@ if [ "${ok:-1}" = 1 ] && sudo -n nginx -t; then sudo -n systemctl reload nginx &
   sudo -n nginx -t; exit 1; fi
 EOS
   ;;
+services-env-unset)
+  # ~/services only ever added variables to a service's window shell, so one deleted from ~/.env-services/<name>
+  # survived every restart (BTW_ASSETLINKS_FILE shadowed the embedded assetlinks.json). Idempotent; see the script.
+  run python3 - < "$HERE/services-env-unset.py"
+  ;;
 verify-assetlinks)
+  # Exits nonzero unless all three hosts answer 200 application/json with no redirect, package app.beatscript and
+  # exactly the fingerprints in the repo's embedded list, AND the running beatscript-serve carries no assetlinks
+  # override in its environment (a leftover BTW_/BEATSCRIPT_ASSETLINKS_FILE shadows the list: 2026-11-26).
+  want=$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))[0]["target"]["sha256_cert_fingerprints"]))' \
+    "$GO/crates/beatscript-serve/src/public/assetlinks.json")
+  tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT; bad=0
   for h in beatscript.app btw.bitwrap.io beats.bitwrap.io; do
     printf '%-20s ' "$h"
-    curl -sS -m 15 -o /tmp/assetlinks.$$ -w '%{http_code} %{content_type} redirect=%{redirect_url}  ' "https://$h/.well-known/assetlinks.json"
-    python3 -c 'import json,sys; v=json.load(open(sys.argv[1])); print(len(v[0]["target"]["sha256_cert_fingerprints"]), "fingerprints,", v[0]["target"]["package_name"])' /tmp/assetlinks.$$ || echo "body is not the statement"
+    if ! out=$(curl -sS -m 15 -o "$tmp" -w '%{http_code} %{content_type} redirects=%{num_redirects}' "https://$h/.well-known/assetlinks.json"); then
+      echo "curl failed"; bad=1; continue; fi
+    if body=$(python3 -c 'import json,sys; v=json.load(open(sys.argv[1])); t=v[0]["target"]; print(len(t["sha256_cert_fingerprints"]), "fingerprints,", t["package_name"])' "$tmp" 2>/dev/null); then :; else body="body is not the statement"; fi
+    echo "$out  $body"
+    case "$out" in "200 application/json"*" redirects=0") ;; *) echo "  FAIL: want 200, application/json, no redirect" >&2; bad=1 ;; esac
+    case "$body" in "$want fingerprints, app.beatscript") ;; *) echo "  FAIL: want $want fingerprints, app.beatscript" >&2; bad=1 ;; esac
   done
-  rm -f /tmp/assetlinks.$$
+  printf '%-20s ' "serve env"
+  # shellcheck disable=SC2016
+  if run 'p=$(pgrep -f "[b]eatscript-serve.* -addr 127.0.0.1:'$PORT'" | head -1); [ -n "$p" ] || { echo "no beatscript-serve process"; exit 3; }
+          if tr "\0" "\n" < /proc/$p/environ | grep -qE "^(BTW|BEATSCRIPT)_ASSETLINKS_FILE="; then echo "pid $p HAS an ASSETLINKS_FILE override"; exit 4; fi
+          echo "pid $p: no ASSETLINKS_FILE override"'; then :; else echo "  FAIL: see above" >&2; bad=1; fi
+  [ "$bad" = 0 ] && echo "verify-assetlinks: ok" || { echo "verify-assetlinks: FAILED" >&2; exit 1; }
   ;;
 verify-beatscript)
   for h in beatscript.app; do
