@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### The booth's jog gesture as a record: `deck scratch`, `seek from_seconds`, `nudge duration` (2026-11-27)
+
+- The control registry's `deck` noun has `scratch` (`seconds`: the platter's net turn, `beats`, `strokes`, `duration`,
+  `position`): the record of a jog gesture as djrust's activity tail finalizes it, one line per gesture instead of a
+  comment per tick (`do deck scratch deck=A position=32.5 beats=1 seconds=0.5 strokes=3 duration=0.91`). It is a record of
+  the gesture, not sample-exact audio: a replay turns the platter by its net travel.
+- `seek` takes `from_seconds` (where the playhead was) and `nudge` a `duration`, both for the record. docs/CONTROL.md's
+  `deck` rows list them.
+
 ### Android App Links: the server embeds the statement, all four Play fingerprints, on every host (2026-11-26)
 
 - `/.well-known/assetlinks.json` is served from the binary (`crates/beatscript-serve/src/public/assetlinks.json`, the one
