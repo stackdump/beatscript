@@ -5994,6 +5994,7 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-loop> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-jump> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-seek> ;
+    <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-scratch> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-role> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-macro> ;
     <https://beatscript.app/ontology/ns#acceptsVerb> <https://beatscript.app/ontology/concept/verb-master-macro> ;
@@ -6022,6 +6023,10 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <https://beatscript.app/ontology/ns#controlParameter> "op" ;
     <https://beatscript.app/ontology/ns#controlParameter> "beats" ;
     <https://beatscript.app/ontology/ns#controlParameter> "seconds" ;
+    <https://beatscript.app/ontology/ns#controlParameter> "from_seconds" ;
+    <https://beatscript.app/ontology/ns#controlParameter> "strokes" ;
+    <https://beatscript.app/ontology/ns#controlParameter> "duration" ;
+    <https://beatscript.app/ontology/ns#controlParameter> "position" ;
     <https://beatscript.app/ontology/ns#controlParameter> "role" ;
     <https://beatscript.app/ontology/ns#controlParameter> "id" ;
     <https://beatscript.app/ontology/ns#controlParameter> "bars" ;
@@ -8851,6 +8856,12 @@ ns:themeWork a owl:DatatypeProperty ; rdfs:domain ns:ThemeEntry ; rdfs:range xsd
     <http://www.w3.org/2004/02/skos/core#definition> "The control verb scene_save, accepted by: clips."@en ;
     <https://beatscript.app/ontology/ns#status> "stable" ;
     <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-clips> .
+
+<https://beatscript.app/ontology/concept/verb-scratch> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#ControlVerb> ;
+    <http://www.w3.org/2004/02/skos/core#prefLabel> "scratch"@en ;
+    <http://www.w3.org/2004/02/skos/core#definition> "The control verb scratch, accepted by: deck."@en ;
+    <https://beatscript.app/ontology/ns#status> "stable" ;
+    <https://beatscript.app/ontology/ns#actsOn> <https://beatscript.app/ontology/concept/noun-deck> .
 
 <https://beatscript.app/ontology/concept/verb-scrub> a <http://www.w3.org/2004/02/skos/core#Concept>, <https://beatscript.app/ontology/ns#ControlVerb> ;
     <http://www.w3.org/2004/02/skos/core#prefLabel> "scrub"@en ;

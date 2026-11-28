@@ -5004,6 +5004,7 @@
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-rewind"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-role-disable"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-role"/>
+		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-scratch"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-section"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-seed-step"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-seek"/>
@@ -5019,7 +5020,9 @@
 		<ns:controlParameter>bpm</ns:controlParameter>
 		<ns:controlParameter>deck</ns:controlParameter>
 		<ns:controlParameter>delta</ns:controlParameter>
+		<ns:controlParameter>duration</ns:controlParameter>
 		<ns:controlParameter>from</ns:controlParameter>
+		<ns:controlParameter>from_seconds</ns:controlParameter>
 		<ns:controlParameter>genre</ns:controlParameter>
 		<ns:controlParameter>id</ns:controlParameter>
 		<ns:controlParameter>index</ns:controlParameter>
@@ -5027,6 +5030,7 @@
 		<ns:controlParameter>op</ns:controlParameter>
 		<ns:controlParameter>palette</ns:controlParameter>
 		<ns:controlParameter>path</ns:controlParameter>
+		<ns:controlParameter>position</ns:controlParameter>
 		<ns:controlParameter>ratio</ns:controlParameter>
 		<ns:controlParameter>role</ns:controlParameter>
 		<ns:controlParameter>seconds</ns:controlParameter>
@@ -5035,6 +5039,7 @@
 		<ns:controlParameter>spec</ns:controlParameter>
 		<ns:controlParameter>start</ns:controlParameter>
 		<ns:controlParameter>step</ns:controlParameter>
+		<ns:controlParameter>strokes</ns:controlParameter>
 		<ns:controlParameter>structure</ns:controlParameter>
 		<ns:controlParameter>to</ns:controlParameter>
 		<ns:controlParameter>value</ns:controlParameter>
@@ -9172,6 +9177,13 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<skos:definition xml:lang="en">The control verb scene_save, accepted by: clips.</skos:definition>
 		<skos:prefLabel xml:lang="en">scene_save</skos:prefLabel>
 		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-clips"/>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-scratch">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlVerb"/>
+		<skos:definition xml:lang="en">The control verb scratch, accepted by: deck.</skos:definition>
+		<skos:prefLabel xml:lang="en">scratch</skos:prefLabel>
+		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-deck"/>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-scrub">
