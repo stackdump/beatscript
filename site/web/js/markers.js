@@ -13,6 +13,7 @@ export class MarkerPainter {
     this.pools = { under: new Map(), over: new Map(), bars: new Map() };
     this.gen = null;
     this.last = null;
+    this.palette = null; // the over-lamps' ground and ink ({stage, ink}); null: the editor's (the stage view sets its own)
   }
 
   clear() {
@@ -56,7 +57,7 @@ export class MarkerPainter {
         const css = `left:${p.x - pad}px;top:${p.y}px;width:${p.w + pad * 2}px;height:${m.lineH}px;`;
         let style;
         if (over) {
-          const s = lampStyle(l.k);
+          const s = lampStyle(l.k, this.palette);
           style = `${css}background:${s.background};color:${s.color};`;
         } else style = `${css}background:${rgba(l.color, l.k)};`;
         if (el._style !== style) {

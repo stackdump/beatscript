@@ -380,6 +380,56 @@ html.record .ed-scroll { scrollbar-width: none; }
 html.record .ed-scroll::-webkit-scrollbar { display: none; }
 html.record .t-status::before { display: none !important; }
 
+/* ---- the stage view: ?view=stage (stage.js), record mode's page with a person in front of it ---------------------
+   Everything is under html.stage, so record mode (?record=1, the demo video) is untouched. Large type (stage.js sets
+   --fs/--lh/--gut-w in whole pixels from the width), high contrast on a black ground, the system's light theme and
+   prefers-contrast honoured, the play button and the "enable sound" banner back, nothing that edits. The type scale,
+   lamp colours and tracklist line are shared with the booth's projector window (site/docs-src/api.md "Stage view"). */
+html.stage { --bg: #000; --panel: #000; --panel-2: #000; --stage: #000; --gutter: #000; --ink: #f4f6fb; --code: #f4f6fb; --dim: #b9c0d6; --faint: #8d95b0; --line-2: #2a3358; }
+html.stage body { background: var(--stage); }
+html.stage .hdr, html.stage .transport { background: var(--stage); }
+html.stage .hdr { min-height: calc(var(--lh) * 1.9); font-size: calc(var(--fs) * 0.9); gap: calc(var(--fs) * 0.9); }
+html.stage .h-bar, html.stage .h-gen, html.stage .h-state { font-size: calc(var(--fs) * 0.8); }
+html.stage .transport { min-height: calc(var(--lh) * 1.6); font-size: calc(var(--fs) * 0.7); }
+html.stage .t-status { font-size: calc(var(--fs) * 0.7); }
+html.stage .gl { font-size: calc(var(--fs) * 0.62); }
+html.stage .c-comment { color: #9aa79a; } html.stage .c-rest { color: #a3a3b0; } html.stage .c-op, html.stage .c-punct { color: #c9ced8; }
+html.stage #btn-play { display: grid !important; width: calc(var(--lh) * 1.2); height: calc(var(--lh) * 1.2); }
+html.stage .banner:not([hidden]) { display: flex !important; font-size: calc(var(--fs) * 0.7); }
+html.stage .ed-ta { cursor: default; }
+html.stage .ly-diag, html.stage .t-prob { display: none !important; }
+html.stage .h-name { flex: none; max-width: 30vw; font-size: calc(var(--fs) * 0.6); color: var(--dim); }
+.stage-tl { font: calc(var(--fs) * 0.8) var(--mono); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding: 2px 10px; border-left: 3px solid var(--amber); }
+html.stage .stage-fs { flex: none; font-size: calc(var(--fs) * 0.6); background: transparent; color: var(--ink); border: 1px solid var(--faint); }
+html.stage .stage-fs:hover { background: rgba(127,127,127,.18); }
+html.stage .stage-fs kbd { background: transparent; color: var(--dim); border-color: var(--faint); }
+.stage-hint { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); z-index: 60; max-width: 90vw; padding: 10px 18px; border-radius: 6px; background: rgba(0,0,0,.85); color: #fff; border: 1px solid #fff; font: calc(var(--fs) * 0.7) var(--sans); pointer-events: none; }
+/* full screen (native, or filling the window where the element cannot go full screen, as on an iPhone): the header's
+   tools go, the program and its tracklist stay */
+html.stage.stage-full .stage-fs .lbl, html.stage.stage-full .stage-fs kbd { display: none; }
+html.stage.stage-max, html.stage.stage-max body { height: 100dvh; }
+html.stage.stage-max .app { position: fixed; inset: 0; z-index: 50; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: var(--stage); }
+@media (prefers-contrast: more) {
+  html.stage { --ink: #fff; --code: #fff; --dim: #e6e9f2; --faint: #c9cede; }
+  html.stage .c-comment { color: #d4dcd4; } html.stage .c-rest { color: #d0d0da; } html.stage .c-op, html.stage .c-punct { color: #fff; }
+  html.stage .c-keyword { color: #e7a6ff; } html.stage .c-role { color: #8fcbff; } html.stage .c-step, html.stage .c-note, html.stage .c-string { color: #b8f59a; }
+  html.stage .stage-tl { border-left-width: 5px; }
+}
+@media (prefers-color-scheme: light) {
+  html.stage { color-scheme: light; --bg: #fff; --panel: #fff; --panel-2: #fff; --stage: #fff; --gutter: #fff; --ink: #101218; --code: #101218; --dim: #3c4256; --faint: #5d6585; --line: #c9cfe0; --line-2: #c9cfe0; }
+  html.stage .ed-ta::selection { background: rgba(64,120,242,.25); }
+  html.stage .c-comment { color: #5f6e5f; } html.stage .c-keyword { color: #8a1f9e; } html.stage .c-role { color: #1d5fd6; } html.stage .c-action, html.stage .c-ident, html.stage .c-section { color: #7a5200; }
+  html.stage .c-deck { color: #c2253a; } html.stage .c-number, html.stage .c-param { color: #9a4f00; } html.stage .c-step, html.stage .c-note, html.stage .c-string { color: #2f7a2c; } html.stage .c-rest { color: #5e6070; }
+  html.stage .c-generator, html.stage .c-def { color: #00708f; } html.stage .c-op, html.stage .c-punct { color: #2c303a; } html.stage .c-error { color: #b0102a; } html.stage .c-word { color: var(--code); }
+  html.stage .gl.sec-hdr b, html.stage .gl.sec-hdr::after { color: #9a5a00; }
+  html.stage .stage-tl { border-left-color: #b07800; }
+  html.stage .stage-hint { background: rgba(255,255,255,.92); color: #000; border-color: #000; }
+}
+@media (prefers-color-scheme: light) and (prefers-contrast: more) {
+  html.stage { --ink: #000; --code: #000; --dim: #1a1d26; }
+  html.stage .c-comment, html.stage .c-rest, html.stage .c-op, html.stage .c-punct { color: #000; }
+}
+
 button.link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
 /* the mobile panel (pairing djrust on Android) */
 .drawer .pair-qr img.qr { display: block; width: 240px; height: 240px; image-rendering: pixelated; background: #fff; padding: 8px; border-radius: 4px; }

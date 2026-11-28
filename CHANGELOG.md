@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### The stage view: `?view=stage`, a program on a projector or a second screen (2026-11-28)
+
+- `https://beatscript.app/?view=stage&cid=<CID>` (or `&example=`, or a share link's `#...`) shows the program full screen,
+  read-only, in large high-contrast type (whole pixels from the window's width), with the firing markers and the follow-scroll
+  on, playing at once. A full-screen toggle (a header button and F; Esc leaves full screen and never stops the music; where
+  the element cannot go full screen, as on an iPhone, the stage fills the window and says Share, then Add to Home Screen), the
+  play button and the "enable sound" banner. Nothing edits: no toolbar, problems, completion, scrubbing or panels (G is off).
+- A `set { }` shows its tracklist line in the header: `2/5  now <track>  ·  next <track>`, `mix 2→3  <track> → <track>`
+  during a mix, `last` on the last track (`site/web/js/stage-model.js`, from the set's text and the sections check names).
+- The system's light theme (a white ground, dark ink, lamps lit out of white) and `prefers-contrast: more` are honoured.
+- It is record mode's page with a person in front of it (one mode, two entry points). `?record=1`, the demo-video renderer's
+  page, is unchanged: `site/test/stage-browser.mjs --base-ref <ref>` renders its frames from both trees and they are the same bytes.
+- The type scale, lamp colours and tracklist line are the visual language the booth's projector window shares
+  (`/docs/api#stage-view`); llms.txt names the view, and the ontology has `concept:stage-view`.
 ### The booth as a paired device: kind `booth` on btw-pair/2, a set pushed whole, the program resolver (2026-11-28)
 
 - A device claims as `kind: booth` (btw-pair/2 only; the signed claim text gains a `kind: booth` line, phone claims and

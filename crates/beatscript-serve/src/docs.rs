@@ -980,6 +980,7 @@ impl Docs {
         b.push_str(&format!("- [Polish a mix]({p}{POLISH_PATH}.md): the loop for polishing a mix with the MCP `listen` tool: check, listen, change one line, listen again with `compare` (the previous version's CID or text: deltas, and the warnings fixed and introduced); what it measures per part and on the master (bands, centroid, width, correlation, crest; true peak, PLR, short-term max, loudness range), clashes between parts, delivery `targets` (streaming -14 LUFS / -1 dBTP, apple, broadcast, club), the order of fixes (not heard, clipping, clashes, balance, loudness, width) and the lines that make each one (`level`, `vel=`, `mix {{ B eq low -6 }}`, `duck B under A.kick 6db`, `filter hp`, `drive`), and what the language cannot do yet ([page]({p}{POLISH_PATH}))\n"));
         b.push_str(&format!("- [Embed a program]({p}{EMBED_PATH}.md): one embed config ({p}/embed-config.schema.json) for every surface: <beatscript-track> and <beatscript-studio> (the editor as an MCP server inside a Claude artifact or any page: check, fmt, expand, generate, share and the rest offline, compose and store through the artifact's capabilities), an iframe of {p}/embed/<CID> (?compact=1, ?theme=light), the <beatscript-player cid=…> element ({p}/embed.js), oEmbed ({p}/oembed?url=<a /p/ or /c/ link>&format=json), /c/<CID> cards that play (twitter:player, og:audio), a README card ({p}/card/<CID>.svg), Jupyter, VS Code, Obsidian, and the rendered audio ({p}/api/render/<CID>?format=opus); per target, whether the engine runs and what it gets instead; the MCP embed tool writes each one ([page]({p}{EMBED_PATH}))\n"));
         b.push_str(&format!("- [Build your own]({p}{SDK_PATH}.md): the supported surfaces and how each is versioned (the language and its CIDs, the JSON reports, the embed config, the npm player and studio pinned by exact version and SRI, the MCP server and HTTP API, the ontology release, the engine crates as a git dependency pinned by rev); MIT code, CC0 programs and output; the engine crates for native builders (djlive, beatscript-api, beatscriptls, djengine, djhost and its features audio, sf2, midi, decode, network, off by default) and the UniFFI crate the Android and iPad apps use; check, fmt, expand and highlight outside the studio: the `beatscript` CLI, `beatscript lsp`, the MCP, `<beatscript-studio>`'s tools, the wasm module's exports, Rust and HTTP ([page]({p}{SDK_PATH}))\n"));
+        b.push_str(&format!("- [Stage view]({p}/docs/api#stage-view): {p}/?view=stage&cid=<CID> (or &example=<name>, or a share link's #...) shows a program on a projector or second screen: full screen (a button and F; Esc leaves it and never stops the music), read-only, large high-contrast type that follows the system's light or dark theme and prefers-contrast, the firing markers and the follow-scroll on, and for a `set {{ }}` the tracklist line (`2/5  now <track>  ·  next <track>`); record mode (?record=1, the demo video) is the same page without the person\n"));
         b.push_str(&format!("- [Instruments]({p}/api/instruments): the voices, families, drum kits and palettes a program may name (JSON)\n"));
         b.push_str(&format!("- [API reference]({p}/docs/api.md): every HTTP route, sign-in and tokens, compose, render streaming, sessions, the MCP tools with examples\n"));
         b.push_str(&format!("- [Ontology]({p}/ontology/): the BeatScript ontology, the vocabulary behind BeatScript (genres, grooves, rhythms, sections, the engine concepts and the language's own grammar, voices, controls and MCP tools) as Turtle, JSON-LD, SPARQL ({p}/ontology/sparql) and a read-only MCP server ({p}/ontology/mcp); term IRIs under {p}/ontology/ns#. Derived from the bitwrap ontology 0.2.0 (each term linked to its bitwrap IRI by prov:wasDerivedFrom), it evolves on its own\n"));
@@ -1338,6 +1339,17 @@ mod tests {
             }
         }
         assert_eq!(hits, Vec::<String>::new(), "inline styles, which the site's CSP (style-src 'self') blocks: link a stylesheet instead");
+    }
+
+    #[test]
+    fn llms_txt_names_the_stage_view_and_the_api_page_has_it() {
+        // the stage view (?view=stage, site/web/js/stage.js): llms.txt points at its section of the API page, which says what it is
+        let d = Docs::new(None, None, "https://beatscript.app");
+        let ex = Examples { list: Vec::new(), text: HashMap::new() };
+        let l = d.llms_txt(&ex);
+        assert!(l.contains("https://beatscript.app/?view=stage&cid=<CID>") && l.contains("https://beatscript.app/docs/api#stage-view"), "llms.txt lacks the stage view");
+        let api = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../site/docs-src/api.md")).expect("site/docs-src/api.md");
+        assert!(api.contains("\n## Stage view\n") && api.contains("?view=stage&cid=<CID>") && api.contains("`?record=1`"), "the API page's Stage view section");
     }
 
     #[test]
