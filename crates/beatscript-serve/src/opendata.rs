@@ -458,8 +458,9 @@ mod tests {
         let es = scan(d.path());
         let sm = sitemap("https://beatscript.app", &es);
         assert!(sm.contains(&format!("<loc>https://beatscript.app/p/{a}</loc><lastmod>2026-11-20T10:00:00Z</lastmod>")));
-        assert_eq!(sm.matches("<url>").count(), 12 + 2);
+        assert_eq!(sm.matches("<url>").count(), 13 + 2);
         assert!(sm.contains("<url><loc>https://beatscript.app/docs/polish</loc></url>"));
+        assert!(sm.contains("<url><loc>https://beatscript.app/docs/sdk</loc></url>"));
         assert!(sm.contains("<url><loc>https://beatscript.app/docs/forms</loc></url>") && sm.contains("<url><loc>https://beatscript.app/themes</loc></url>"));
         assert!(sm.contains("<url><loc>https://beatscript.app/docs/found-phrases</loc></url>"));
         assert!(sm.contains("<url><loc>https://beatscript.app/phrasebook</loc></url>"));
