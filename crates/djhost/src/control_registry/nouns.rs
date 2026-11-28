@@ -32,7 +32,8 @@ const A_DECK: &[Action] = &[
     Action::new("loop", "loop in / out / halve / double / exit / beats, on a sample deck's grid or a net deck's steps", Effect::Write),
     Action::new("jump", "beat jump: the deck `beats` beats along its music, in its place in the beat", Effect::Write)
         .with(&[Param::new("beats", "number", "how far; negative is back (a net deck: whole steps, a quarter beat each, landing on its next bar line while it plays)").req()]),
-    Action::new("seek", "seek in a sample deck", Effect::Write),
+    Action::new("seek", "seek in a sample deck (seconds; from_seconds is where the playhead was, for the record)", Effect::Write),
+    Action::new("scratch", "a scratch: the platter turned by `seconds` net (`beats` the same travel in beats), over `strokes` direction changes and `duration` seconds, from `position` (beats). A record of a jog gesture (djrust's activity tail writes it), replayed as its net travel", Effect::Write),
     Action::new("role", "switch a role", Effect::Write),
     Action::new("macro", "fire a net macro", Effect::Write),
     Action::new("master_macro", "fire a master macro", Effect::Write),
@@ -1222,11 +1223,11 @@ pub(super) const NOUNS: &[Noun] = &[
          its bars a to b counted from 1, on the sample deck with the grid the program says, no \
          beat detection; a program that is not CC0 and public, or uses samples, is refused), demo, file \
          (path: an audio file), next, seed_step (delta), tempo (bpm), pitch (value), \
-         pitch_range (value), nudge (ratio), sync (align beat|bar), section (index), hot_cue / \
+         pitch_range (value), nudge (ratio, duration?), sync (align beat|bar), section (index), hot_cue / \
          clear_cue (slot), loop (op in|out|halve|double|exit|beats, beats; a net deck loops its \
          own steps too), jump (beats: negative is back; a beat jump in the deck's place in the \
          beat: a sample deck by its grid, a net deck in whole steps on its next bar line while it \
-         plays; refused with why: no grid, past the song's end), seek (seconds), \
+         plays; refused with why: no grid, past the song's end), seek (seconds, from_seconds?), scratch (seconds net, beats?, strokes?, duration?, position?: a jog gesture), \
          role (role, on), macro (id: a net macro), master_macro (id, bars?), panic, rewind, \
          focus, sound (palette: an id or null = the default | step: ±n along the playable ones; \
          neither lists them: the track's whole sound from a palette, the same song from the next \
@@ -1235,7 +1236,7 @@ pub(super) const NOUNS: &[Noun] = &[
          kit, palette and role mutes, or a sample deck's audio, landing on the source's next bar \
          at its tempo and place in the song; start=top: the net from its start, as a recorded \
          load). Returns the deck's state after.",
-        schema: r#"{"type":"object","properties":{"deck":{"type":"string","enum":["A","B"]},"action":{"type":"string"},"on":{"type":"boolean"},"genre":{"type":"string"},"seed":{"type":"number"},"structure":{"type":"string","description":"loop (endless) or minimal|standard|extended|ab|drop|build|jam"},"spec":{"type":"string"},"path":{"type":"string"},"delta":{"type":"integer"},"bpm":{"type":"number"},"value":{"type":"number"},"ratio":{"type":"number"},"align":{"type":"string","enum":["beat","bar"]},"index":{"type":"integer"},"slot":{"type":"integer"},"op":{"type":"string"},"beats":{"type":"number"},"seconds":{"type":"number"},"role":{"type":"string"},"id":{"type":"string"},"bars":{"type":"integer"},"palette":{"type":["string","null"],"description":"sound palette id (studio, synth, synthwave, jazz, …); null = the default"},"step":{"type":"integer","description":"sound: move ±n palettes"},"from":{"type":"string","enum":["A","B"]},"to":{"type":"string","enum":["A","B"]},"start":{"type":"string","enum":["bar","top"]}},"required":["action"]}"#,
+        schema: r#"{"type":"object","properties":{"deck":{"type":"string","enum":["A","B"]},"action":{"type":"string"},"on":{"type":"boolean"},"genre":{"type":"string"},"seed":{"type":"number"},"structure":{"type":"string","description":"loop (endless) or minimal|standard|extended|ab|drop|build|jam"},"spec":{"type":"string"},"path":{"type":"string"},"delta":{"type":"integer"},"bpm":{"type":"number"},"value":{"type":"number"},"ratio":{"type":"number"},"align":{"type":"string","enum":["beat","bar"]},"index":{"type":"integer"},"slot":{"type":"integer"},"op":{"type":"string"},"beats":{"type":"number"},"seconds":{"type":"number"},"from_seconds":{"type":"number","description":"seek: where the playhead was (the record; the seek goes to `seconds`)"},"strokes":{"type":"integer","description":"scratch: direction changes of the platter"},"duration":{"type":"number","description":"scratch, nudge: how long the gesture lasted, in seconds (the record)"},"position":{"type":"number","description":"scratch: the deck's beat when the platter began to turn"},"role":{"type":"string"},"id":{"type":"string"},"bars":{"type":"integer"},"palette":{"type":["string","null"],"description":"sound palette id (studio, synth, synthwave, jazz, …); null = the default"},"step":{"type":"integer","description":"sound: move ±n palettes"},"from":{"type":"string","enum":["A","B"]},"to":{"type":"string","enum":["A","B"]},"start":{"type":"string","enum":["bar","top"]}},"required":["action"]}"#,
         params: &[],
         aliases: &[],
         local: false,
