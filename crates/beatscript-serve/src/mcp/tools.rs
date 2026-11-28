@@ -1242,7 +1242,7 @@ impl Tools {
         }
         // (checked as it was sent, so an error is at the line and column the sender wrote; it arrives formatted)
         // a set names its members, so that to a booth it goes as `set` (site/PAIRING.md "The booth")
-        let set = crate::hub::set_members(&rep).map(|m| crate::hub::set_extra(&m));
+        let set = crate::hub::set_members(&rep, |c| self.stored(c).is_some_and(|(t, _, _)| crate::hub::set_plays(&t).is_some())).map(|m| crate::hub::set_extra(&m));
         let n = self.push(c, &session, SessionEvent { kind: "eval", text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), cid: r.cid().into(), play, set })?;
         Ok(sorted(json!({
             "sent": true, "delivered": n, "cid": r.cid(), "play": play, "warnings": r.warnings(), "infos": r.infos(), "lexicon": self.harvest(&text, Some(&rep)),

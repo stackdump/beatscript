@@ -239,11 +239,11 @@ fn a_booth_pairs_receives_a_set_and_resolves_its_members() {
     let mut booth = Dev::new(7);
     let (id, tok) = offer(&s);
     let (st, v) = claim(&s, &booth.claim(&id, &tok, "Booth Mac", Some("toaster"), Some("toaster"), "btw-pair/2"));
-    assert_eq!((st, v["error"].as_str()), (400, Some("bad_request")), "{v}");
+    assert_eq!((st, v["error"]["code"].as_str()), (400, Some("bad_request")), "{v}");
     let (st, v) = claim(&s, &booth.claim(&id, &tok, "Booth Mac", Some("booth"), None, "btw-pair/1"));
     assert_eq!(st, 400, "a v1 claim cannot name a kind: {v}");
     let (st, v) = claim(&s, &booth.claim(&id, &tok, "Booth Mac", Some("booth"), None, "btw-pair/2"));
-    assert_eq!((st, v["error"].as_str()), (401, Some("bad_signature")), "the kind is signed: {v}");
+    assert_eq!((st, v["error"]["code"].as_str()), (401, Some("bad_signature")), "the kind is signed: {v}");
     let (st, v) = claim(&s, &booth.claim(&id, &tok, "Booth Mac", Some("booth"), Some("booth"), "btw-pair/2"));
     assert_eq!(st, 200, "{v}");
     assert_eq!((v["kind"].as_str(), v["programs"].as_str()), (Some("booth"), Some("https://beatscript.app/api/programs/{cid}")), "{v}");
@@ -275,7 +275,7 @@ fn a_booth_pairs_receives_a_set_and_resolves_its_members() {
     // two public members stored on the site, and a set of them
     let a = store(&s, "#! beatscript 2\ntempo 124\ndeck A: kick x ~ x ~\n");
     let b = store(&s, "#! beatscript 2\ntempo 126\ndeck A: kick x x ~ x\n");
-    let set = format!("#! beatscript 2\nset {{\n  play {a}\n  mix 8 bars with crossfade\n  play {b}\n  play {a}\n}}\n");
+    let set = format!("#! beatscript 2\nset {{\n  play {a} until bar 16\n  mix 8 bars with crossfade\n  play {b} until bar 16\n  play {a} until bar 8\n}}\n");
     let before = program_files(&s);
     let (st, v) = owner_post(&s, &format!("/api/devices/{}/push", booth.id), &json!({"type": "set", "text": set, "play": true}));
     assert_eq!(st, 200, "{v}");
@@ -290,9 +290,9 @@ fn a_booth_pairs_receives_a_set_and_resolves_its_members() {
     let (st, v) = owner_post(&s, &format!("/api/devices/{}/push", booth.id), &json!({"type": "eval", "text": set}));
     assert_eq!(st, 200, "{v}");
     let (st, v) = owner_post(&s, &format!("/api/devices/{}/push", phone.id), &json!({"type": "set", "text": set}));
-    assert_eq!((st, v["error"].as_str()), (422, Some("not_a_booth")), "{v}");
+    assert_eq!((st, v["error"]["code"].as_str()), (422, Some("not_a_booth")), "{v}");
     let (st, v) = owner_post(&s, &format!("/api/devices/{}/push", booth.id), &json!({"type": "set", "text": "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n"}));
-    assert_eq!((st, v["error"].as_str()), (422, Some("not_a_set")), "{v}");
+    assert_eq!((st, v["error"]["code"].as_str()), (422, Some("not_a_set")), "{v}");
     let (st, _) = owner_post(&s, &format!("/api/devices/{}/push", phone.id), &json!({"type": "eval", "text": set}));
     assert_eq!(st, 200);
     let pe = ps.wait("eval");
@@ -300,11 +300,11 @@ fn a_booth_pairs_receives_a_set_and_resolves_its_members() {
 
     // a member this site does not hold: the set does not check here, nothing is sent (send it sealed)
     let absent = "z".to_string() + &"Q".repeat(40);
-    let (st, v) = owner_post(&s, &format!("/api/devices/{}/push", booth.id), &json!({"type": "set", "text": format!("#! beatscript 2\nset {{\n  play {absent}\n}}\n")}));
+    let (st, v) = owner_post(&s, &format!("/api/devices/{}/push", booth.id), &json!({"type": "set", "text": format!("#! beatscript 2\nset {{\n  play {absent} until bar 8\n}}\n")}));
     assert_eq!(st, 422, "{v}");
 
     // the gate: a restricted set is refused, and nothing private reaches the store
-    let restricted = format!("#! beatscript 2\nuse restricted\nset {{\n  play {a}\n}}\n");
+    let restricted = format!("#! beatscript 2\nuse restricted\nset {{\n  play {a} until bar 8\n}}\n");
     let (st, v) = owner_post(&s, &format!("/api/devices/{}/push", booth.id), &json!({"type": "set", "text": restricted}));
     assert_eq!(st, 422, "{v}");
     assert_eq!(program_files(&s), before, "a refused set is not stored");

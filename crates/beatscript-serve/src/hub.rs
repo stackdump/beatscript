@@ -695,7 +695,7 @@ async fn device_push(State(s): State<HS>, Path(id): Path<String>, req: Request) 
                 ev.text = beatscript_serve::autoformat::autoformat(&text, maxp);
                 // a set: what its members are (the check resolved each against this site's store), for the booth to
                 // fetch any it lacks from the resolver; a set to a booth goes as `set` whichever verb asked for it
-                let set = set_members(&rep);
+                let set = set_members(&rep, |c| s.app.store.get(c).is_some_and(|p| set_plays(&p.text).is_some()));
                 if typ == "set" && set.is_none() {
                     return Err(ApiError::new(422, "not_a_set", "the program has no set block: push it as eval or load"));
                 }
@@ -720,19 +720,48 @@ async fn device_push(State(s): State<HS>, Path(id): Path<String>, req: Request) 
     r.await.unwrap_or_else(err)
 }
 
-/// A set's members as its check report names them (`set.tracks`, a track a line): each CID once, at the position of its
-/// first `play`, and whether it is itself a set. None when the program is not a set. A generator call has no CID and is
-/// not a member.
-pub fn set_members(rep: &serde_json::Value) -> Option<Vec<(i64, String, bool)>> {
-    let tracks = rep.get("set")?.get("tracks")?.as_array()?;
-    let mut out: Vec<(i64, String, bool)> = Vec::new();
-    for (i, t) in tracks.iter().enumerate() {
-        let cid = t.get("cid").and_then(|c| c.as_str()).unwrap_or("");
-        if cid.is_empty() || !crate::store::is_cid(cid) || out.iter().any(|(_, c, _)| c == cid) {
+/// The CIDs a set block's `play` lines name, in order (repeats kept), or None when `text` has no set block. Read from
+/// the canonical text, where the check has pinned every `play` to its CID (djlive parse: "pin each `play` of a set to its
+/// CID"); a generator call is not a CID and is skipped. Blocks nest by line (`… {` opens, `}` closes), so a set inside a
+/// section counts and a section's own lines do not.
+pub fn set_plays(text: &str) -> Option<Vec<String>> {
+    let mut stack: Vec<bool> = Vec::new();
+    let mut any = false;
+    let mut out = Vec::new();
+    for l in text.lines() {
+        let t = l.split('#').next().unwrap_or("").trim();
+        if t == "}" {
+            stack.pop();
             continue;
         }
-        let n = t.get("n").and_then(|n| n.as_i64()).unwrap_or(i as i64 + 1);
-        out.push((n, cid.to_string(), t.get("set").and_then(|b| b.as_bool()).unwrap_or(false)));
+        if t.ends_with('{') {
+            let is_set = t == "set {" || t.trim_end_matches('{').trim() == "set";
+            any |= is_set;
+            stack.push(is_set);
+            continue;
+        }
+        if stack.last() == Some(&true) {
+            if let Some(rest) = t.strip_prefix("play ") {
+                let w = rest.split_whitespace().next().unwrap_or("").trim_matches('"');
+                if crate::store::is_cid(w) {
+                    out.push(w.to_string());
+                }
+            }
+        }
+    }
+    any.then_some(out)
+}
+
+/// A set's members, from its check report's canonical text ([`set_plays`]): each CID once, `n` the 1-based position of
+/// its first `play` among the set's plays, and whether it is itself a set (`is_set` looks the member up). None when the
+/// program is not a set.
+pub fn set_members(rep: &serde_json::Value, is_set: impl Fn(&str) -> bool) -> Option<Vec<(i64, String, bool)>> {
+    let plays = set_plays(rep.get("canonical").and_then(|c| c.as_str()).unwrap_or(""))?;
+    let mut out: Vec<(i64, String, bool)> = Vec::new();
+    for (i, cid) in plays.iter().enumerate() {
+        if !out.iter().any(|(_, c, _)| c == cid) {
+            out.push((i as i64 + 1, cid.clone(), is_set(cid)));
+        }
     }
     Some(out)
 }
@@ -1398,3 +1427,32 @@ async fn route(State(s): State<HS>, Path(params): Path<HashMap<String, String>>,
     }
 }
 
+
+#[cfg(test)]
+mod booth_tests {
+    use super::*;
+    use serde_json::json;
+
+    const A: &str = "z4EBG9izwK48JsRwDdhc3qUkUEgLddMNUc8QVcEVXdhD23uBWQj";
+    const B: &str = "z4EBG9jBn9o8EhxX47eYxezDgNZ3mc56Pt1s6Xo1ThNCX63G8Df";
+
+    #[test]
+    fn a_sets_plays_are_its_members() {
+        let set = format!("#! beatscript 2\nset {{\n  play {A} until bar 16\n  mix 8 bars with crossfade\n  play {B} until bar 16\n  play gen@2 techno seed=42 until bar 8\n  play {A} until bar 8\n}}\n");
+        assert_eq!(set_plays(&set), Some(vec![A.to_string(), B.to_string(), A.to_string()]));
+        let rep = json!({"canonical": set});
+        let m = set_members(&rep, |c| c == B).unwrap();
+        assert_eq!(m, vec![(1, A.to_string(), false), (2, B.to_string(), true)]);
+        assert_eq!(set_extra(&m), format!("{{\"members\":[{{\"cid\":\"{A}\",\"n\":1,\"set\":false}},{{\"cid\":\"{B}\",\"n\":2,\"set\":true}}]}}"));
+    }
+
+    #[test]
+    fn not_a_set_and_sections() {
+        assert_eq!(set_plays("#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n"), None);
+        assert!(set_members(&json!({"canonical": "tempo 120\n"}), |_| false).is_none());
+        // a section's lines are not a set's; a set inside a section is
+        let t = format!("section intro 4 bars {{\n  play {B}\n  set {{\n    play {A} until bar 4\n  }}\n}}\narrange intro\n");
+        assert_eq!(set_plays(&t), Some(vec![A.to_string()]));
+        assert_eq!(programs_template("https://beatscript.app/"), "https://beatscript.app/api/programs/{cid}");
+    }
+}

@@ -750,7 +750,7 @@ class Booth:
         r, j = self.claim(booth.claim(pid, tok, "Booth Mac", kind="booth", proto="btw-pair/1", host="beatscript.app"))
         self.check("claim: v1 cannot name a kind", r["status"].split()[1] == "400", r["body"].decode(errors="replace"))
         r, j = self.claim(booth.claim(pid, tok, "Booth Mac", kind="booth"))
-        self.check("claim: the kind is signed", r["status"].split()[1] == "401" and j.get("error") == "bad_signature", r["body"].decode(errors="replace"))
+        self.check("claim: the kind is signed", r["status"].split()[1] == "401" and (j.get("error") or {}).get("code") == "bad_signature", r["body"].decode(errors="replace"))
         r, j = self.claim(booth.claim(pid, tok, "Booth Mac", kind="booth", signed_kind="booth"))
         self.check("claim: a booth pairs", r["status"].split()[1] == "200" and j.get("kind") == "booth" and j.get("programs") == f"{ORIGIN}/api/programs/{{cid}}", r["body"].decode(errors="replace"))
         booth.dev = {"rs": j.get("device_id")}
@@ -772,19 +772,22 @@ class Booth:
             raw(self.rs, "PUT", f"/api/programs/{c}", {"Content-Type": "text/plain", "X-Real-IP": self.ip()}, t.encode())
             cids.append(c)
         a, b = cids
-        st = f"#! beatscript 2\nset {{\n  play {a}\n  mix 8 bars with crossfade\n  play {b}\n  play {a}\n}}\n"
+        st = f"#! beatscript 2\nset {{\n  play {a} until bar 16\n  mix 8 bars with crossfade\n  play {b} until bar 16\n  play {a} until bar 8\n}}\n"
         r, j = self.post(f"/api/devices/{booth.dev['rs']}/push", {"type": "set", "text": st, "play": True})
         self.check("push: a set to a booth", r["status"].split()[1] == "200" and j.get("members") == [a, b], r["body"].decode(errors="replace"))
-        _, body, _ = sb.frames(2)
-        evs = [json.loads(l[5:]) for l in body.decode(errors="replace").splitlines() if l.startswith("data:")]
-        ev = next((e for e in evs if e.get("type") == "set"), None)
+        t, ev, evs = time.time() + 8, None, []
+        while ev is None and time.time() < t:
+            _, body, _ = sb.snapshot()
+            evs = [json.loads(l[5:]) for l in body.decode(errors="replace").splitlines() if l.startswith("data:")]
+            ev = next((e for e in evs if e.get("type") == "set"), None)
+            time.sleep(0.05)
         want = [{"cid": a, "n": 1, "set": False}, {"cid": b, "n": 2, "set": False}]
         self.check("the booth receives set with its members", ev is not None and ev.get("extra", {}).get("members") == want and ev.get("play") is True, str(evs)[:400])
         r, j = self.post(f"/api/devices/{phone.dev['rs']}/push", {"type": "set", "text": st})
-        self.check("push: a set to a phone is not_a_booth", r["status"].split()[1] == "422" and j.get("error") == "not_a_booth", r["body"].decode(errors="replace"))
+        self.check("push: a set to a phone is not_a_booth", r["status"].split()[1] == "422" and (j.get("error") or {}).get("code") == "not_a_booth", r["body"].decode(errors="replace"))
         r, j = self.post(f"/api/devices/{booth.dev['rs']}/push", {"type": "set", "text": "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n"})
-        self.check("push: a program with no set block is not_a_set", r["status"].split()[1] == "422" and j.get("error") == "not_a_set", r["body"].decode(errors="replace"))
-        r, j = self.post(f"/api/devices/{booth.dev['rs']}/push", {"type": "set", "text": f"#! beatscript 2\nuse restricted\nset {{\n  play {a}\n}}\n"})
+        self.check("push: a program with no set block is not_a_set", r["status"].split()[1] == "422" and (j.get("error") or {}).get("code") == "not_a_set", r["body"].decode(errors="replace"))
+        r, j = self.post(f"/api/devices/{booth.dev['rs']}/push", {"type": "set", "text": f"#! beatscript 2\nuse restricted\nset {{\n  play {a} until bar 8\n}}\n"})
         self.check("push: a restricted set is refused", r["status"].split()[1] == "422", r["body"].decode(errors="replace"))
         r = raw(self.rs, "GET", f"/api/programs/{a}")
         hs = {k.lower(): v for k, v in r["headers"] if k.lower() != "link"}
