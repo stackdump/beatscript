@@ -61,6 +61,14 @@ program's `wheel` lines as the booth does (`crates/djweb/src/wheel.rs`). `script
 default build of any other shipped target has windwheel in its tree, if any has the wallet, or the booth's
 pronouncing dictionary, which is not in this repository at all.
 
+## Build your own
+
+To put your own interface on BeatScript (a native app, an editor, a site or a tool), see
+[`docs/beatscript/sdk.md`](docs/beatscript/sdk.md), served at [beatscript.app/docs/sdk](https://beatscript.app/docs/sdk).
+It says which surfaces are supported and how each is versioned: the player and embed, the MCP server, the engine crates
+as a git dependency pinned by rev (with the FFI the Android and iPad apps use), and the language service outside the
+studio.
+
 ## Deploy
 
 `deploy/deploy.sh all` builds the wasm, beatscript-serve and the docs from one commit on `main`, checks that commit out on

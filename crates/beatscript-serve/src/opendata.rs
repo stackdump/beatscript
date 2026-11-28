@@ -173,7 +173,7 @@ pub fn dump_latest(origin: &str) -> String {
 /// `/sitemap.xml`: the site's pages and every public CC0 program's page (at most 50,000, the protocol's cap).
 pub fn sitemap(origin: &str, entries: &[Entry]) -> String {
     let mut s = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
-    for p in ["/", "/docs/", "/docs/found-phrases", "/docs/forms", "/docs/radio", "/docs/polish", "/docs/embed", "/grammar", "/schema", "/authorship", "/phrasebook", "/themes"] {
+    for p in ["/", "/docs/", "/docs/found-phrases", "/docs/forms", "/docs/radio", "/docs/polish", "/docs/embed", "/docs/sdk", "/grammar", "/schema", "/authorship", "/phrasebook", "/themes"] {
         s.push_str(&format!("<url><loc>{}{p}</loc></url>\n", xml(origin)));
     }
     for e in entries.iter().take(49_000) {
