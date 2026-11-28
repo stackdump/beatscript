@@ -52,6 +52,19 @@
 <https://beatscript.app/ontology/concept/density>	<http://www.w3.org/2004/02/skos/core#definition>	"The share of steps that sound rather than rest."@en
 <https://beatscript.app/ontology/concept/density>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"density"@en
 <https://beatscript.app/ontology/concept/density>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/concept/density>
+<https://beatscript.app/ontology/concept/device-kind-booth>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/device-kind-booth>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#DeviceKind>
+<https://beatscript.app/ontology/concept/device-kind-booth>	<http://www.w3.org/2000/01/rdf-schema#seeAlso>	<https://beatscript.app/ontology/concept/program-resolver>
+<https://beatscript.app/ontology/concept/device-kind-booth>	<http://www.w3.org/2004/02/skos/core#definition>	"The desktop DJ app, paired as a phone is but with a kind: booth line in its signed claim. It takes everything a phone does and also sets: a set event carries the set's CID and its members' CIDs, and the booth resolves each member from its own store, then from the site's program resolver, then from its offline inbox."@en
+<https://beatscript.app/ontology/concept/device-kind-booth>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"booth"@en
+<https://beatscript.app/ontology/concept/device-kind-booth>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/device-kind-booth>	<https://beatscript.app/ontology/ns#wireName>	"booth"
+<https://beatscript.app/ontology/concept/device-kind-phone>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/device-kind-phone>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#DeviceKind>
+<https://beatscript.app/ontology/concept/device-kind-phone>	<http://www.w3.org/2004/02/skos/core#definition>	"A phone running the BeatScript app: it scans the site's pairing code and plays what it is sent (eval, load, stop, sealed pushes). The kind of every device whose claim names none."@en
+<https://beatscript.app/ontology/concept/device-kind-phone>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"phone"@en
+<https://beatscript.app/ontology/concept/device-kind-phone>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/device-kind-phone>	<https://beatscript.app/ontology/ns#wireName>	"phone"
 <https://beatscript.app/ontology/concept/empty-section-identity>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
 <https://beatscript.app/ontology/concept/empty-section-identity>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#CategoricalConcept>
 <https://beatscript.app/ontology/concept/empty-section-identity>	<http://www.w3.org/2004/02/skos/core#definition>	"The section with no lines. Arranging it before or after any section leaves that section unchanged."@en
@@ -5939,6 +5952,13 @@
 <https://beatscript.app/ontology/concept/product-beatscript>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"BeatScript"@en
 <https://beatscript.app/ontology/concept/product-beatscript>	<https://beatscript.app/ontology/ns#homepage>	"https://beatscript.app"^^<http://www.w3.org/2001/XMLSchema#anyURI>
 <https://beatscript.app/ontology/concept/product-beatscript>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/program-resolver>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
+<https://beatscript.app/ontology/concept/program-resolver>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#ProgramResolver>
+<https://beatscript.app/ontology/concept/program-resolver>	<http://www.w3.org/2000/01/rdf-schema#seeAlso>	<https://beatscript.app/ontology/ns#Program>
+<https://beatscript.app/ontology/concept/program-resolver>	<http://www.w3.org/2004/02/skos/core#definition>	"GET /api/programs/{cid} on beatscript.app: a stored public program by CID ({cid, text, meta} with its licence), no sign-in, cached as immutable, its JSON-LD named by a describedby Link; 404 for anything the site does not hold."@en
+<https://beatscript.app/ontology/concept/program-resolver>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"program resolver"@en
+<https://beatscript.app/ontology/concept/program-resolver>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/concept/program-resolver>	<https://beatscript.app/ontology/ns#urlTemplate>	"https://beatscript.app/api/programs/{cid}"
 <https://beatscript.app/ontology/concept/ring-marking>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2004/02/skos/core#Concept>
 <https://beatscript.app/ontology/concept/ring-marking>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#EngineConcept>
 <https://beatscript.app/ontology/concept/ring-marking>	<http://www.w3.org/2004/02/skos/core#closeMatch>	<https://ontology.pflow.xyz/ns#Marking>
@@ -6341,7 +6361,7 @@
 <https://beatscript.app/ontology/concept/tool-beatscript-check>	<https://beatscript.app/ontology/ns#toolParameter>	"same_as"
 <https://beatscript.app/ontology/concept/tool-beatscript-check>	<https://beatscript.app/ontology/ns#toolTitle>	"Check a BeatScript program"@en
 <https://beatscript.app/ontology/concept/tool-beatscript-devices>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#McpTool>
-<https://beatscript.app/ontology/concept/tool-beatscript-devices>	<http://www.w3.org/2004/02/skos/core#definition>	"List the phones paired with the token's account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; site/PAIRING.md): id, name, fingerprint (the code both ends showed at pairing), paired, connected (djrust has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a phone paired by an account is driven over MCP with that account's token and no other.\n\nPass a phone's id as device to eval, load, get or stop to drive that phone alone (eval and load run the same checks as for a tab; a program with errors, samples or \"use restricted\" is not sent). Needs a bearer token. Read-only."@en
+<https://beatscript.app/ontology/concept/tool-beatscript-devices>	<http://www.w3.org/2004/02/skos/core#definition>	"List the devices paired with the token's account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; the desktop DJ app, a booth, pastes the link under it; site/PAIRING.md): id, name, kind (phone or booth), fingerprint (the code both ends showed at pairing), paired, connected (the device has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a device paired by an account is driven over MCP with that account's token and no other.\n\nPass a device's id as device to eval, load, get or stop to drive that device alone (eval and load run the same checks as for a tab; a program with errors, samples or \"use restricted\" is not sent). A set (a program with a set block) sent with eval to a booth arrives as a set, with the CIDs of its members: the booth fetches any it lacks from https://beatscript.app/api/programs/<CID>. Needs a bearer token. Read-only."@en
 <https://beatscript.app/ontology/concept/tool-beatscript-devices>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"devices"@en
 <https://beatscript.app/ontology/concept/tool-beatscript-devices>	<https://beatscript.app/ontology/ns#inputSchema>	"{\"additionalProperties\":false,\"properties\":{},\"required\":[],\"type\":\"object\"}"
 <https://beatscript.app/ontology/concept/tool-beatscript-devices>	<https://beatscript.app/ontology/ns#needsToken>	"true"^^<http://www.w3.org/2001/XMLSchema#boolean>
@@ -6349,7 +6369,7 @@
 <https://beatscript.app/ontology/concept/tool-beatscript-devices>	<https://beatscript.app/ontology/ns#readOnly>	"true"^^<http://www.w3.org/2001/XMLSchema#boolean>
 <https://beatscript.app/ontology/concept/tool-beatscript-devices>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/concept/tool-beatscript-devices>	<https://beatscript.app/ontology/ns#toolName>	"devices"
-<https://beatscript.app/ontology/concept/tool-beatscript-devices>	<https://beatscript.app/ontology/ns#toolTitle>	"Your paired phones"@en
+<https://beatscript.app/ontology/concept/tool-beatscript-devices>	<https://beatscript.app/ontology/ns#toolTitle>	"Your paired phones and booths"@en
 <https://beatscript.app/ontology/concept/tool-beatscript-embed>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#McpTool>
 <https://beatscript.app/ontology/concept/tool-beatscript-embed>	<http://www.w3.org/2004/02/skos/core#definition>	"A program (or a set, or a station) embedded anywhere, from one embed config (https://beatscript.app/embed-config.schema.json, the same config the <beatscript-track> player and the <beatscript-studio> editor read): give a target and a config, and get the snippet or page for it, whether the config works there, is degraded or is unsupported, and one-sentence notes on what the target cannot do and what it does instead. Use the snippet as it is. Targets: artifact, web, iframe, oembed, preview, markdown, jupyter, vscode, obsidian, audio, rss, android, json. kind is player, studio (the whole editor as an MCP server inside the page: check, fmt, expand, generate, highlight, share, open, instruments, cheatsheet run offline on the wasm engine), card or audio; source is text, cid, set or station; audio is live, render, inline or url; features and capabilities are lists. With target artifact the answer is two text blocks, a JSON summary and the page: publish the page as an HTML page (an Artifact) exactly as it is, and declare the summary's capabilities (sample, mcp with the Beatscript connector's share, render and queue, db and user, downloads, room) when you publish it. Kind player or audio on target artifact is the artifact tool's page: kind audio (or audio inline) carries the site's render of a stored program in the page (a render not cached yet is limited as render's are), kind player plays it with the pinned player; kind studio loads @stackdump/beatscript-studio from cdn.jsdelivr.net at an exact version with Subresource Integrity. markdown (a GitHub README) gets an SVG card (https://beatscript.app/card/<CID>.svg) and an audio link; iframe, oembed, preview, audio, rss and obsidian need a program the site stores (share it signed in, or render it); android is the self-sealing /p# link the app opens. Give the program as text, cid or example (or in the config's source). No sign-in, and it stores nothing unless store (artifact, player or audio only); billed as a check. Text at most 16384 bytes. See https://beatscript.app/docs/embed."@en
 <https://beatscript.app/ontology/concept/tool-beatscript-embed>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"embed"@en
@@ -6549,9 +6569,9 @@
 <https://beatscript.app/ontology/concept/tool-beatscript-open>	<https://beatscript.app/ontology/ns#toolName>	"open"
 <https://beatscript.app/ontology/concept/tool-beatscript-open>	<https://beatscript.app/ontology/ns#toolTitle>	"Open a share link"@en
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#McpTool>
-<https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<http://www.w3.org/2004/02/skos/core#definition>	"Send a private program to one of your paired phones, end-to-end encrypted, and never stored. Use it for what https://beatscript.app does not keep: covers, programs with local samples (`sample ... from`), `use restricted`, anything not under a Creative Commons licence. The program is sealed for the phone's own key (X25519 from its pairing key, ChaCha20-Poly1305) and handed to the phone's live connection in memory: it is not written to disk, a database or a log (only its size and the device id are logged), no CID is registered, and if the phone is not connected nothing is sent and nothing is kept (push again when it is). The phone opens it, checks it and plays it itself; samples resolve against files in the phone's own sample library, and any that are missing are reported back in get's diagnostics, never fetched. Give device and exactly one of text (sealed here, so the text is in this server's memory for this call, where it is formatted first, as eval's is) or sealed (an envelope you sealed yourself for the phone's seal_key from devices: then this server only ever sees ciphertext). Needs a bearer token; only your own paired phones."@en
+<https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<http://www.w3.org/2004/02/skos/core#definition>	"Send a private program to one of your paired phones, end-to-end encrypted, and never stored. Use it for what https://beatscript.app does not keep: covers, programs with local samples (`sample ... from`), `use restricted`, anything not under a Creative Commons licence. The program is sealed for the phone's own key (X25519 from its pairing key, ChaCha20-Poly1305) and handed to the phone's live connection in memory: it is not written to disk, a database or a log (only its size and the device id are logged), no CID is registered, and if the phone is not connected nothing is sent and nothing is kept (push again when it is). The phone opens it, checks it and plays it itself; samples resolve against files in the phone's own sample library, and any that are missing are reported back in get's diagnostics, never fetched. For a booth, set:true seals a set (send its private members first with load:true, so the booth holds them). Give device and exactly one of text (sealed here, so the text is in this server's memory for this call, where it is formatted first, as eval's is) or sealed (an envelope you sealed yourself for the phone's seal_key from devices: then this server only ever sees ciphertext). Needs a bearer token; only your own paired phones."@en
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<http://www.w3.org/2004/02/skos/core#prefLabel>	"push_private"@en
-<https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#inputSchema>	"{\"additionalProperties\":false,\"properties\":{\"device\":{\"description\":\"Id of one of your paired phones, from the devices tool.\",\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9_-]{6,64}$\",\"type\":\"string\"},\"load\":{\"description\":\"Load it on the phone and leave it stopped unless play (default false: play it as eval does).\",\"type\":\"boolean\"},\"play\":{\"description\":\"Start playing too (default false: load it and leave it stopped, or leave a playing tab as it is).\",\"type\":\"boolean\"},\"sealed\":{\"description\":\"An envelope you sealed for the phone's seal_key (beatscript-seal v1). Give text or sealed.\",\"maxLength\":65536,\"type\":\"string\"},\"text\":{\"description\":\"The program text, sealed here for the phone. Give text or sealed.\",\"maxLength\":16384,\"type\":\"string\"}},\"required\":[\"device\"],\"type\":\"object\"}"
+<https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#inputSchema>	"{\"additionalProperties\":false,\"properties\":{\"device\":{\"description\":\"Id of one of your paired phones, from the devices tool.\",\"maxLength\":64,\"pattern\":\"^[A-Za-z0-9_-]{6,64}$\",\"type\":\"string\"},\"load\":{\"description\":\"Load it on the phone and leave it stopped unless play (default false: play it as eval does). A booth stores it without playing.\",\"type\":\"boolean\"},\"play\":{\"description\":\"Start playing too (default false: load it and leave it stopped, or leave a playing tab as it is).\",\"type\":\"boolean\"},\"sealed\":{\"description\":\"An envelope you sealed for the phone's seal_key (beatscript-seal v1). Give text or sealed.\",\"maxLength\":65536,\"type\":\"string\"},\"set\":{\"description\":\"For a booth: the text is a set, sealed as a set (default false). Not with load.\",\"type\":\"boolean\"},\"text\":{\"description\":\"The program text, sealed here for the phone. Give text or sealed.\",\"maxLength\":16384,\"type\":\"string\"}},\"required\":[\"device\"],\"type\":\"object\"}"
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#needsToken>	"false"^^<http://www.w3.org/2001/XMLSchema#boolean>
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#providedBy>	<https://beatscript.app/ontology/concept/product-beatscript-mcp>
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#readOnly>	"false"^^<http://www.w3.org/2001/XMLSchema#boolean>
@@ -6561,6 +6581,7 @@
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#toolParameter>	"load"
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#toolParameter>	"play"
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#toolParameter>	"sealed"
+<https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#toolParameter>	"set"
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#toolParameter>	"text"
 <https://beatscript.app/ontology/concept/tool-beatscript-push-private>	<https://beatscript.app/ontology/ns#toolTitle>	"Send a private program to your phone"@en
 <https://beatscript.app/ontology/concept/tool-beatscript-queue>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<https://beatscript.app/ontology/ns#McpTool>
@@ -10518,6 +10539,10 @@
 <https://beatscript.app/ontology/ns#Deck>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/ns#Deck>
 <https://beatscript.app/ontology/ns#Deck>	<https://beatscript.app/ontology/ns#categoricalReading>	<https://beatscript.app/ontology/concept/free-smc>
 <https://beatscript.app/ontology/ns#Deck>	<https://beatscript.app/ontology/ns#status>	"stable"
+<https://beatscript.app/ontology/ns#DeviceKind>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class>
+<https://beatscript.app/ontology/ns#DeviceKind>	<http://www.w3.org/2000/01/rdf-schema#comment>	"What a paired device is, as its signed claim names it (the device record's kind): it decides which events the device takes."@en
+<https://beatscript.app/ontology/ns#DeviceKind>	<http://www.w3.org/2000/01/rdf-schema#label>	"device kind"@en
+<https://beatscript.app/ontology/ns#DeviceKind>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/ns#DjConcept>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class>
 <https://beatscript.app/ontology/ns#DjConcept>	<http://www.w3.org/2000/01/rdf-schema#comment>	"Root of the things a DJ app has: collections of loops, set planning, performance moves, effects, analysis and the control language."@en
 <https://beatscript.app/ontology/ns#DjConcept>	<http://www.w3.org/2000/01/rdf-schema#label>	"DJ concept"@en
@@ -10765,6 +10790,10 @@
 <https://beatscript.app/ontology/ns#NotesSegment>	<http://www.w3.org/2000/01/rdf-schema#subClassOf>	<https://beatscript.app/ontology/ns#MusicConcept>
 <https://beatscript.app/ontology/ns#NotesSegment>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/ns#NotesSegment>
 <https://beatscript.app/ontology/ns#NotesSegment>	<https://beatscript.app/ontology/ns#status>	"in-development"
+<https://beatscript.app/ontology/ns#PairedDevice>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class>
+<https://beatscript.app/ontology/ns#PairedDevice>	<http://www.w3.org/2000/01/rdf-schema#comment>	"A device an account paired with a BeatScript site (btw-pair/2): its Ed25519 public key is its only credential. The site pushes programs to it over its signed event stream, and private ones sealed for its key."@en
+<https://beatscript.app/ontology/ns#PairedDevice>	<http://www.w3.org/2000/01/rdf-schema#label>	"paired device"@en
+<https://beatscript.app/ontology/ns#PairedDevice>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/ns#Palette>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class>
 <https://beatscript.app/ontology/ns#Palette>	<http://www.w3.org/2000/01/rdf-schema#comment>	"A named set of sounds a program can choose as a whole."@en
 <https://beatscript.app/ontology/ns#Palette>	<http://www.w3.org/2000/01/rdf-schema#label>	"palette"@en
@@ -10856,6 +10885,10 @@
 <https://beatscript.app/ontology/ns#ProgramLine>	<http://www.w3.org/2000/01/rdf-schema#subClassOf>	<https://beatscript.app/ontology/ns#MusicConcept>
 <https://beatscript.app/ontology/ns#ProgramLine>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/ns#ProgramLine>
 <https://beatscript.app/ontology/ns#ProgramLine>	<https://beatscript.app/ontology/ns#status>	"in-development"
+<https://beatscript.app/ontology/ns#ProgramResolver>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class>
+<https://beatscript.app/ontology/ns#ProgramResolver>	<http://www.w3.org/2000/01/rdf-schema#comment>	"A read-only fetch of a public program by its CID. A device that is handed a CID it does not hold (a set's member) asks its paired site; the site answers only the Creative Commons programs it stores, so anything private, restricted or asset-using is absent there and travels only sealed."@en
+<https://beatscript.app/ontology/ns#ProgramResolver>	<http://www.w3.org/2000/01/rdf-schema#label>	"program resolver"@en
+<https://beatscript.app/ontology/ns#ProgramResolver>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/ns#ProgrammingLanguage>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class>
 <https://beatscript.app/ontology/ns#ProgrammingLanguage>	<http://www.w3.org/2000/01/rdf-schema#comment>	"A text language whose documents are programs a product runs. Its versions (ns:LanguageVersion) are in the generated vocabulary, from the code that reads them."@en
 <https://beatscript.app/ontology/ns#ProgrammingLanguage>	<http://www.w3.org/2000/01/rdf-schema#label>	"programming language"@en
@@ -11194,6 +11227,12 @@
 <https://beatscript.app/ontology/ns#degrees>	<http://www.w3.org/2000/01/rdf-schema#label>	"degrees"@en
 <https://beatscript.app/ontology/ns#degrees>	<http://www.w3.org/2000/01/rdf-schema#range>	<http://www.w3.org/2001/XMLSchema#string>
 <https://beatscript.app/ontology/ns#degrees>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/ns#degrees>
+<https://beatscript.app/ontology/ns#deviceKind>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#FunctionalProperty>
+<https://beatscript.app/ontology/ns#deviceKind>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#ObjectProperty>
+<https://beatscript.app/ontology/ns#deviceKind>	<http://www.w3.org/2000/01/rdf-schema#domain>	<https://beatscript.app/ontology/ns#PairedDevice>
+<https://beatscript.app/ontology/ns#deviceKind>	<http://www.w3.org/2000/01/rdf-schema#label>	"device kind"@en
+<https://beatscript.app/ontology/ns#deviceKind>	<http://www.w3.org/2000/01/rdf-schema#range>	<https://beatscript.app/ontology/ns#DeviceKind>
+<https://beatscript.app/ontology/ns#deviceKind>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/ns#drumFills>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#DatatypeProperty>
 <https://beatscript.app/ontology/ns#drumFills>	<http://www.w3.org/2000/01/rdf-schema#domain>	<https://beatscript.app/ontology/ns#Genre>
 <https://beatscript.app/ontology/ns#drumFills>	<http://www.w3.org/2000/01/rdf-schema#label>	"drum fills"@en
@@ -12005,6 +12044,11 @@
 <https://beatscript.app/ontology/ns#typicalMelody>	<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>	<https://beatscript.app/ontology/ns#typicalInstrument>
 <https://beatscript.app/ontology/ns#typicalMelody>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/ns#typicalMelody>
 <https://beatscript.app/ontology/ns#typicalMelody>	<https://beatscript.app/ontology/ns#status>	"in-development"
+<https://beatscript.app/ontology/ns#urlTemplate>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#DatatypeProperty>
+<https://beatscript.app/ontology/ns#urlTemplate>	<http://www.w3.org/2000/01/rdf-schema#comment>	"An RFC 6570 URL template: {cid} is the program's CID."@en
+<https://beatscript.app/ontology/ns#urlTemplate>	<http://www.w3.org/2000/01/rdf-schema#label>	"URL template"@en
+<https://beatscript.app/ontology/ns#urlTemplate>	<http://www.w3.org/2000/01/rdf-schema#range>	<http://www.w3.org/2001/XMLSchema#string>
+<https://beatscript.app/ontology/ns#urlTemplate>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/ns#usesInstrument>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#ObjectProperty>
 <https://beatscript.app/ontology/ns#usesInstrument>	<http://www.w3.org/2000/01/rdf-schema#domain>	<https://beatscript.app/ontology/ns#Genre>
 <https://beatscript.app/ontology/ns#usesInstrument>	<http://www.w3.org/2000/01/rdf-schema#label>	"uses instrument"@en
@@ -12095,6 +12139,11 @@
 <https://beatscript.app/ontology/ns#walkingBass>	<http://www.w3.org/2000/01/rdf-schema#label>	"walking bass"@en
 <https://beatscript.app/ontology/ns#walkingBass>	<http://www.w3.org/2000/01/rdf-schema#range>	<http://www.w3.org/2001/XMLSchema#boolean>
 <https://beatscript.app/ontology/ns#walkingBass>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<https://ontology.bitwrap.io/ns#walkingBass>
+<https://beatscript.app/ontology/ns#wireName>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#DatatypeProperty>
+<https://beatscript.app/ontology/ns#wireName>	<http://www.w3.org/2000/01/rdf-schema#comment>	"The string a protocol carries for the term (a JSON value or a signed text's line)."@en
+<https://beatscript.app/ontology/ns#wireName>	<http://www.w3.org/2000/01/rdf-schema#label>	"wire name"@en
+<https://beatscript.app/ontology/ns#wireName>	<http://www.w3.org/2000/01/rdf-schema#range>	<http://www.w3.org/2001/XMLSchema#string>
+<https://beatscript.app/ontology/ns#wireName>	<https://beatscript.app/ontology/ns#status>	"stable"
 <https://beatscript.app/ontology/ns#writtenAs>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#DatatypeProperty>
 <https://beatscript.app/ontology/ns#writtenAs>	<http://www.w3.org/2000/01/rdf-schema#comment>	"How the term is spelled in a BeatScript program."@en
 <https://beatscript.app/ontology/ns#writtenAs>	<http://www.w3.org/2000/01/rdf-schema#label>	"written as"@en

@@ -60,7 +60,28 @@ pub fn claim_message(host: &str, pair_id: &str, token: &str, key: &str, name: &s
 }
 
 pub fn claim_message2(site: &str, pair_id: &str, token: &str, key: &str, name: &str, ts: i64) -> String {
-    format!("{PAIR_PROTO2} claim\nsite: {site}\npair: {pair_id}\ntoken: {}\nkey: {key}\nname: {name}\nts: {ts}", sha256_hex(token.as_bytes()))
+    claim_message2_kind(site, pair_id, token, key, name, KIND_PHONE, ts)
+}
+
+/// The v2 claim of a device of `kind`: a booth's has a `kind: booth` line after `name:`; a phone's has none, so a
+/// phone's text is what it always was (`vectors-v2.json`; a booth's is `vectors-v2-booth.json`).
+pub fn claim_message2_kind(site: &str, pair_id: &str, token: &str, key: &str, name: &str, kind: &str, ts: i64) -> String {
+    let kind_line = if kind == KIND_PHONE { String::new() } else { format!("kind: {kind}\n") };
+    format!("{PAIR_PROTO2} claim\nsite: {site}\npair: {pair_id}\ntoken: {}\nkey: {key}\nname: {name}\n{kind_line}ts: {ts}", sha256_hex(token.as_bytes()))
+}
+
+/// The kinds of paired device (site/PAIRING.md "The booth"): a phone (the default, and every device paired before
+/// kinds) and a booth (the desktop DJ app), which also takes `set` pushes.
+pub const KIND_PHONE: &str = "phone";
+pub const KIND_BOOTH: &str = "booth";
+
+/// A claim's `kind` as stored: absent or empty is a phone; anything but phone or booth is refused.
+pub fn device_kind(raw: &str) -> Option<&'static str> {
+    match raw {
+        "" | KIND_PHONE => Some(KIND_PHONE),
+        KIND_BOOTH => Some(KIND_BOOTH),
+        _ => None,
+    }
 }
 
 pub fn request_message(host: &str, dev: &str, method: &str, path: &str, ts: i64, body: &[u8]) -> String {
@@ -84,7 +105,7 @@ pub fn valid_device_name(n: &str) -> bool {
     !n.is_empty() && n.len() <= MAX_DEVICE_NAME && !n.chars().any(|r| (r as u32) < 0x20 || r as u32 == 0x7f)
 }
 
-/// A paired phone (`device`): its public key is its only credential, and not a secret.
+/// A paired device (`device`), a phone or a booth: its public key is its only credential, and not a secret.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Device {
     pub id: String,
@@ -92,6 +113,14 @@ pub struct Device {
     pub name: String,
     pub key: String,
     pub paired: String,
+    /// [`KIND_PHONE`] or [`KIND_BOOTH`].
+    pub kind: &'static str,
+}
+
+impl Device {
+    pub fn is_booth(&self) -> bool {
+        self.kind == KIND_BOOTH
+    }
 }
 
 pub struct Offer {
@@ -126,7 +155,10 @@ impl Pairing {
         let list: Vec<serde_json::Value> = serde_json::from_slice(&b).map_err(|e| format!("{}: {e}", path.display()))?;
         for d in list {
             let s = |k: &str| d.get(k).and_then(|x| x.as_str()).unwrap_or("").to_string();
-            let dev = Device { id: s("id"), owner: s("owner"), name: s("name"), key: s("key"), paired: s("paired") };
+            // a record with no kind (every one written before kinds) is a phone; a kind this server does not know is
+            // left out rather than guessed
+            let Some(kind) = device_kind(&s("kind")) else { continue };
+            let dev = Device { id: s("id"), owner: s("owner"), name: s("name"), key: s("key"), paired: s("paired"), kind };
             if decode_key(&dev.key).is_ok() && !dev.id.is_empty() && !dev.owner.is_empty() {
                 p.devices.insert(dev.id.clone(), dev);
             }
@@ -170,10 +202,17 @@ pub fn devices_json(list: &[&Device]) -> String {
     let mut o = String::from("[\n");
     for (i, d) in list.iter().enumerate() {
         o.push_str("  {\n");
-        for (j, (k, v)) in [("id", &d.id), ("owner", &d.owner), ("name", &d.name), ("key", &d.key), ("paired", &d.paired)].iter().enumerate() {
+        // a phone's record is written as it always was (no kind); a booth's names its kind last
+        let kind = d.kind.to_string();
+        let mut fields = vec![("id", &d.id), ("owner", &d.owner), ("name", &d.name), ("key", &d.key), ("paired", &d.paired)];
+        if d.is_booth() {
+            fields.push(("kind", &kind));
+        }
+        let last = fields.len() - 1;
+        for (j, (k, v)) in fields.iter().enumerate() {
             o.push_str(&format!("    \"{k}\": "));
             jstr(&mut o, v);
-            o.push_str(if j < 4 { ",\n" } else { "\n" });
+            o.push_str(if j < last { ",\n" } else { "\n" });
         }
         o.push_str(if i + 1 < list.len() { "  },\n" } else { "  }\n" });
     }
@@ -270,7 +309,7 @@ mod tests {
 
     #[test]
     fn devices_file_as_go_writes_it() {
-        let d = Device { id: "a".into(), owner: "ed25519:00".into(), name: "<P>".into(), key: "k".into(), paired: "2026-11-20T12:00:00Z".into() };
+        let d = Device { id: "a".into(), owner: "ed25519:00".into(), name: "<P>".into(), key: "k".into(), paired: "2026-11-20T12:00:00Z".into(), kind: KIND_PHONE };
         assert_eq!(devices_json(&[&d]), "[\n  {\n    \"id\": \"a\",\n    \"owner\": \"ed25519:00\",\n    \"name\": \"\\u003cP\\u003e\",\n    \"key\": \"k\",\n    \"paired\": \"2026-11-20T12:00:00Z\"\n  }\n]");
         assert_eq!(devices_json(&[]), "[]");
         let dir = tempfile::tempdir().unwrap();
@@ -281,5 +320,38 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
         assert_eq!(std::fs::metadata(dir.path().join("devices.json")).unwrap().permissions().mode() & 0o777, 0o600);
         assert_eq!(Pairing::open(dir.path()).unwrap().devices.len(), 1);
+    }
+
+    /// site/testdata/pair/vectors-v2-booth.json: a booth's v2 claim (the fixed key, seed 32 x 0x01) is the phone's text
+    /// with `kind: booth` after `name:`, and its signature verifies; without the line it does not.
+    #[test]
+    fn v2_booth_vector() {
+        let g = vectors(include_str!("../../../../site/testdata/pair/vectors-v2-booth.json"));
+        let s = |k: &str| g[k].as_str().unwrap().to_string();
+        let msg = claim_message2_kind(&s("site_id"), &s("pair_id"), &s("token"), &s("key"), &s("name"), KIND_BOOTH, g["ts"].as_i64().unwrap());
+        assert_eq!(msg, s("claim_message"));
+        let key = decode_key(&s("key")).unwrap();
+        let sig = b64url_decode(&s("claim_sig")).unwrap();
+        assert!(verify(&key, &msg, &sig));
+        let as_phone = claim_message2(&s("site_id"), &s("pair_id"), &s("token"), &s("key"), &s("name"), g["ts"].as_i64().unwrap());
+        assert!(!as_phone.contains("kind:") && !verify(&key, &as_phone, &sig), "a booth's signature is not a phone's");
+        // the phone's text is unchanged by kinds
+        assert_eq!(claim_message2_kind("s", "p", "t", "k", "n", KIND_PHONE, 5), claim_message2("s", "p", "t", "k", "n", 5));
+        assert_eq!((device_kind(""), device_kind("phone"), device_kind("booth"), device_kind("Booth")), (Some(KIND_PHONE), Some(KIND_PHONE), Some(KIND_BOOTH), None));
+    }
+
+    #[test]
+    fn booth_record_names_its_kind() {
+        let d = Device { id: "b".into(), owner: "ed25519:00".into(), name: "Mac".into(), key: b64url(&[1u8; 32]), paired: "2026-11-27T12:00:00Z".into(), kind: KIND_BOOTH };
+        let j = devices_json(&[&d]);
+        assert!(j.ends_with("\"paired\": \"2026-11-27T12:00:00Z\",\n    \"kind\": \"booth\"\n  }\n]"), "{j}");
+        let dir = tempfile::tempdir().unwrap();
+        let mut p = Pairing::open(dir.path()).unwrap();
+        p.devices.insert("b".into(), d.clone());
+        p.save().unwrap();
+        assert_eq!(Pairing::open(dir.path()).unwrap().devices["b"], d);
+        // a kind this server does not know is not read as a phone
+        std::fs::write(dir.path().join("devices.json"), j.replace("\"booth\"", "\"toaster\"")).unwrap();
+        assert!(Pairing::open(dir.path()).unwrap().devices.is_empty());
     }
 }

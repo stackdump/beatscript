@@ -633,7 +633,7 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                 &[],
             ),
             tool("stop", "Stop a browser tab", fill(text::STOP_DESC, &[p]), [false, false, true, false], vec![("session", session.clone()), ("device", device.clone())], &[]),
-            tool("devices", "Your paired phones", fill(text::DEVICES_DESC, &[p]), [true, false, true, false], vec![], &[]),
+            tool("devices", "Your paired phones and booths", fill(text::DEVICES_DESC, &[p]), [true, false, true, false], vec![], &[]),
             tool(
                 "push_private",
                 "Send a private program to your phone",
@@ -643,7 +643,8 @@ pub fn tool_list(public: &str, max_prog: usize, check_per_min: usize, render_per
                     ("device", sprop("Id of one of your paired phones, from the devices tool.", &[("maxLength", json!(64)), ("pattern", json!(ID_PAT))])),
                     ("text", sprop("The program text, sealed here for the phone. Give text or sealed.", &[("maxLength", mpv.clone())])),
                     ("sealed", sprop("An envelope you sealed for the phone's seal_key (beatscript-seal v1). Give text or sealed.", &[("maxLength", json!(65536))])),
-                    ("load", json!({"type": "boolean", "description": "Load it on the phone and leave it stopped unless play (default false: play it as eval does)."})),
+                    ("load", json!({"type": "boolean", "description": "Load it on the phone and leave it stopped unless play (default false: play it as eval does). A booth stores it without playing."})),
+                    ("set", json!({"type": "boolean", "description": "For a booth: the text is a set, sealed as a set (default false). Not with load."})),
                     ("play", play.clone()),
                 ],
                 &["device"],
@@ -1240,7 +1241,9 @@ impl Tools {
             return Err(e);
         }
         // (checked as it was sent, so an error is at the line and column the sender wrote; it arrives formatted)
-        let n = self.push(c, &session, SessionEvent { kind: "eval", text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), cid: r.cid().into(), play })?;
+        // a set names its members, so that to a booth it goes as `set` (site/PAIRING.md "The booth")
+        let set = crate::hub::set_members(&rep, |c| self.stored(c).is_some_and(|(t, _, _)| crate::hub::set_plays(&t).is_some())).map(|m| crate::hub::set_extra(&m));
+        let n = self.push(c, &session, SessionEvent { kind: "eval", text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), cid: r.cid().into(), play, set })?;
         Ok(sorted(json!({
             "sent": true, "delivered": n, "cid": r.cid(), "play": play, "warnings": r.warnings(), "infos": r.infos(), "lexicon": self.harvest(&text, Some(&rep)),
             "warning_diagnostics": warnings_of(&rep),
@@ -1291,7 +1294,7 @@ impl Tools {
             cid = rep["cid"].as_str().unwrap_or("").into();
             (rep["canonical"].as_str().unwrap_or("").to_string(), "link")
         };
-        let n = self.push(c, &session, SessionEvent { kind: "load", text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), cid: cid.clone(), play })?;
+        let n = self.push(c, &session, SessionEvent { kind: "load", text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), cid: cid.clone(), play, set: None })?;
         Ok(sorted(json!({"sent": true, "delivered": n, "cid": cid, "source": source, "play": play, "lexicon": self.harvest(&text, None), "note": "Loaded into the tab. Call get to see what is playing."})))
     }
 
@@ -1380,7 +1383,7 @@ impl Tools {
     /// `push_private`: sealed for the phone and relayed in memory; nothing here is stored or checked against the
     /// storage gate, because nothing is stored (hub::private).
     fn push_private(&self, c: &Caller, a: Args) -> R {
-        a.only(&["device", "text", "sealed", "load", "play"])?;
+        a.only(&["device", "text", "sealed", "load", "play", "set"])?;
         let Some(uid) = c.uid.as_deref() else {
             return Err(Fail::new(401, "auth_required", format!("push_private needs a signed-in caller: it goes only to your own paired phones. {}", self.auth_help())));
         };
@@ -1392,7 +1395,14 @@ impl Tools {
         let sealed = a.str("sealed", beatscript_seal::MAX_ENVELOPE)?.unwrap_or_default();
         let what = match (text.is_empty(), sealed.is_empty()) {
             // (a `text` the server seals is formatted first, as eval's is; a `sealed` envelope the server cannot read)
-            (false, true) => crate::mcp::hubapi::PrivatePush::Text { kind: if a.boolean("load")? { "load" } else { "eval" }, text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), play: a.boolean("play")? || !a.boolean("load")? },
+            (false, true) => {
+                let (load, set) = (a.boolean("load")?, a.boolean("set")?);
+                if load && set {
+                    return Err(bad("give load or set, not both"));
+                }
+                let kind = if set { "set" } else if load { "load" } else { "eval" };
+                crate::mcp::hubapi::PrivatePush::Text { kind, text: beatscript_serve::autoformat::autoformat(&text, self.max_prog), play: a.boolean("play")? || kind == "eval" }
+            }
             (true, false) => crate::mcp::hubapi::PrivatePush::Sealed(sealed),
             _ => return Err(bad("give exactly one of text, sealed")),
         };

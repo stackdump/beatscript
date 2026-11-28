@@ -75,6 +75,31 @@ concept:product-beatscript-language a skos:Concept, ns:ProgrammingLanguage ; sko
     ns:mediaType "text/beatscript" ; ns:legacyMediaType "text/x-beatscript", "text/btw" ;
     rdfs:seeAlso ns:Program .
 
+# --- pairing: the devices a BeatScript site plays on, and the read they resolve programs with -------------------
+# (site/PAIRING.md; the wire strings are the device record's `kind` and the resolver route)
+
+ns:PairedDevice a owl:Class ; rdfs:label "paired device"@en ; ns:status "stable" ;
+    rdfs:comment "A device an account paired with a BeatScript site (btw-pair/2): its Ed25519 public key is its only credential. The site pushes programs to it over its signed event stream, and private ones sealed for its key."@en .
+ns:DeviceKind a owl:Class ; rdfs:label "device kind"@en ; ns:status "stable" ;
+    rdfs:comment "What a paired device is, as its signed claim names it (the device record's kind): it decides which events the device takes."@en .
+ns:deviceKind a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain ns:PairedDevice ; rdfs:range ns:DeviceKind ; rdfs:label "device kind"@en ; ns:status "stable" .
+ns:wireName a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "wire name"@en ; ns:status "stable" ;
+    rdfs:comment "The string a protocol carries for the term (a JSON value or a signed text's line)."@en .
+ns:ProgramResolver a owl:Class ; rdfs:label "program resolver"@en ; ns:status "stable" ;
+    rdfs:comment "A read-only fetch of a public program by its CID. A device that is handed a CID it does not hold (a set's member) asks its paired site; the site answers only the Creative Commons programs it stores, so anything private, restricted or asset-using is absent there and travels only sealed."@en .
+ns:urlTemplate a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "URL template"@en ; ns:status "stable" ;
+    rdfs:comment "An RFC 6570 URL template: {cid} is the program's CID."@en .
+
+concept:device-kind-phone a skos:Concept, ns:DeviceKind ; skos:prefLabel "phone"@en ; ns:status "stable" ; ns:wireName "phone" ;
+    skos:definition "A phone running the BeatScript app: it scans the site's pairing code and plays what it is sent (eval, load, stop, sealed pushes). The kind of every device whose claim names none."@en .
+concept:device-kind-booth a skos:Concept, ns:DeviceKind ; skos:prefLabel "booth"@en ; ns:status "stable" ; ns:wireName "booth" ;
+    skos:definition "The desktop DJ app, paired as a phone is but with a kind: booth line in its signed claim. It takes everything a phone does and also sets: a set event carries the set's CID and its members' CIDs, and the booth resolves each member from its own store, then from the site's program resolver, then from its offline inbox."@en ;
+    rdfs:seeAlso concept:program-resolver .
+concept:program-resolver a skos:Concept, ns:ProgramResolver ; skos:prefLabel "program resolver"@en ; ns:status "stable" ;
+    skos:definition "GET /api/programs/{cid} on beatscript.app: a stored public program by CID ({cid, text, meta} with its licence), no sign-in, cached as immutable, its JSON-LD named by a describedby Link; 404 for anything the site does not hold."@en ;
+    ns:urlTemplate "https://beatscript.app/api/programs/{cid}" ;
+    rdfs:seeAlso ns:Program .
+
 # --- conventions for the generator's own genres -----------------------------------------------------------------
 # The genres djrust's generator has beyond beats' catalogue (acid, deephouse, electro, italo) are generated from its
 # tables (generated/beatscript.ttl, since 0.4.0). What the tables do not say is a convention, written here as bitwrap's

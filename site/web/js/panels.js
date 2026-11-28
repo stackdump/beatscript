@@ -437,8 +437,11 @@ export class Panels {
       const o = await this.app.api.pairNew();
       this.phoneOffer = o;
       const left = h('span', {});
+      // a booth (the desktop DJ app) has no camera: it pastes the same link (site/PAIRING.md "The booth")
+      const linkRow = h('div', { class: 'linkrow' }, h('input', { type: 'text', readonly: true, value: o.url, 'aria-label': 'Pairing link', onfocus: (e) => e.target.select() }), h('button', { type: 'button', class: 'tb tb-sm', onclick: () => this.copy(o.url) }, 'Copy'));
       qrBox.replaceChildren(h('img', { src: o.qr, alt: 'Pairing QR code', width: '240', height: '240', class: 'qr' }),
-        h('p', { class: 'note' }, 'Waiting for the phone… ', left));
+        h('div', { class: 'note' }, 'Pairing a booth? Paste this link into the DJ app:'), linkRow,
+        h('p', { class: 'note' }, 'Waiting for the device… ', left));
       const ends = Date.now() + o.expires_in * 1000;
       const tick = async () => {
         if (this.phoneOffer !== o || this.current !== 'phone') return;
@@ -448,7 +451,7 @@ export class Panels {
         try { st = await this.app.api.pairState(o.pair_id); } catch { /* keep trying until it expires */ }
         if (st && st.state === 'paired') {
           const d = st.device || {};
-          qrBox.replaceChildren(h('div', { class: 'okbox' }, h('b', {}, `Paired: ${d.name || 'a phone'}`), h('div', { class: 'note' }, 'Its key fingerprint (the phone shows the same): ', h('code', {}, d.fingerprint || '?'))));
+          qrBox.replaceChildren(h('div', { class: 'okbox' }, h('b', {}, `Paired: ${d.name || (d.kind === 'booth' ? 'a booth' : 'a phone')}`), h('div', { class: 'note' }, 'Its key fingerprint (the phone shows the same): ', h('code', {}, d.fingerprint || '?'))));
           this.phoneOffer = null;
           this.phoneList(list);
           return;

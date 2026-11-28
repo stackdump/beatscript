@@ -28,10 +28,14 @@ impl Hub {
         if uid.is_empty() {
             return Err(ApiError::new(401, "auth_required", "a private push needs a signed-in caller: it goes only to your own paired phones"));
         }
-        let d = self.pair.lock().unwrap().devices.get(device).filter(|d| d.owner == uid).map(|d| (d.name.clone(), d.key.clone()));
-        let Some((name, key)) = d else {
+        let d = self.pair.lock().unwrap().devices.get(device).filter(|d| d.owner == uid).map(|d| (d.name.clone(), d.key.clone(), d.is_booth()));
+        let Some((name, key, booth)) = d else {
             return Err(ApiError::new(404, "not_found", format!("no paired phone has id {} on this account; call devices", gojson::go_quote(device))));
         };
+        // a sealed set is for a booth (the server cannot see inside a client-sealed envelope, so only its own sealing is held to this)
+        if matches!(what, PrivatePush::Text { kind: "set", .. }) && !booth {
+            return Err(ApiError::new(422, "not_a_booth", format!("{name} is a phone; a set goes to a booth")));
+        }
         let gone = || ApiError::new(409, "not_connected", format!("{name} is paired but not connected, so nothing was sent and nothing was kept: open BeatScript on the phone and push again"));
         if !self.core.device_status(device).0 {
             return Err(gone());

@@ -62,6 +62,21 @@
 		<skos:prefLabel xml:lang="en">density</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/concept/density"/>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/device-kind-booth">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#DeviceKind"/>
+		<rdfs:seeAlso rdf:resource="https://beatscript.app/ontology/concept/program-resolver"/>
+		<skos:definition xml:lang="en">The desktop DJ app, paired as a phone is but with a kind: booth line in its signed claim. It takes everything a phone does and also sets: a set event carries the set&apos;s CID and its members&apos; CIDs, and the booth resolves each member from its own store, then from the site&apos;s program resolver, then from its offline inbox.</skos:definition>
+		<skos:prefLabel xml:lang="en">booth</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:wireName>booth</ns:wireName>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/device-kind-phone">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#DeviceKind"/>
+		<skos:definition xml:lang="en">A phone running the BeatScript app: it scans the site&apos;s pairing code and plays what it is sent (eval, load, stop, sealed pushes). The kind of every device whose claim names none.</skos:definition>
+		<skos:prefLabel xml:lang="en">phone</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:wireName>phone</ns:wireName>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/empty-section-identity">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#CategoricalConcept"/>
 		<skos:definition xml:lang="en">The section with no lines. Arranging it before or after any section leaves that section unchanged.</skos:definition>
@@ -6517,6 +6532,14 @@
 		<ns:homepage rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://beatscript.app</ns:homepage>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/program-resolver">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ProgramResolver"/>
+		<rdfs:seeAlso rdf:resource="https://beatscript.app/ontology/ns#Program"/>
+		<skos:definition xml:lang="en">GET /api/programs/{cid} on beatscript.app: a stored public program by CID ({cid, text, meta} with its licence), no sign-in, cached as immutable, its JSON-LD named by a describedby Link; 404 for anything the site does not hold.</skos:definition>
+		<skos:prefLabel xml:lang="en">program resolver</skos:prefLabel>
+		<ns:status>stable</ns:status>
+		<ns:urlTemplate>https://beatscript.app/api/programs/{cid}</ns:urlTemplate>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/ring-marking">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EngineConcept"/>
 		<skos:closeMatch rdf:resource="https://ontology.pflow.xyz/ns#Marking"/>
@@ -6992,9 +7015,9 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Check a BeatScript program</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-devices">
-		<skos:definition xml:lang="en">List the phones paired with the token&apos;s account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; site/PAIRING.md): id, name, fingerprint (the code both ends showed at pairing), paired, connected (djrust has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a phone paired by an account is driven over MCP with that account&apos;s token and no other.
+		<skos:definition xml:lang="en">List the devices paired with the token&apos;s account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; the desktop DJ app, a booth, pastes the link under it; site/PAIRING.md): id, name, kind (phone or booth), fingerprint (the code both ends showed at pairing), paired, connected (the device has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a device paired by an account is driven over MCP with that account&apos;s token and no other.
 
-Pass a phone&apos;s id as device to eval, load, get or stop to drive that phone alone (eval and load run the same checks as for a tab; a program with errors, samples or &quot;use restricted&quot; is not sent). Needs a bearer token. Read-only.</skos:definition>
+Pass a device&apos;s id as device to eval, load, get or stop to drive that device alone (eval and load run the same checks as for a tab; a program with errors, samples or &quot;use restricted&quot; is not sent). A set (a program with a set block) sent with eval to a booth arrives as a set, with the CIDs of its members: the booth fetches any it lacks from https://beatscript.app/api/programs/&lt;CID&gt;. Needs a bearer token. Read-only.</skos:definition>
 		<skos:prefLabel xml:lang="en">devices</skos:prefLabel>
 		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:needsToken>
@@ -7002,7 +7025,7 @@ Pass a phone&apos;s id as device to eval, load, get or stop to drive that phone 
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</ns:readOnly>
 		<ns:status>stable</ns:status>
 		<ns:toolName>devices</ns:toolName>
-		<ns:toolTitle xml:lang="en">Your paired phones</ns:toolTitle>
+		<ns:toolTitle xml:lang="en">Your paired phones and booths</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-embed">
 		<skos:definition xml:lang="en">A program (or a set, or a station) embedded anywhere, from one embed config (https://beatscript.app/embed-config.schema.json, the same config the &lt;beatscript-track&gt; player and the &lt;beatscript-studio&gt; editor read): give a target and a config, and get the snippet or page for it, whether the config works there, is degraded or is unsupported, and one-sentence notes on what the target cannot do and what it does instead. Use the snippet as it is. Targets: artifact, web, iframe, oembed, preview, markdown, jupyter, vscode, obsidian, audio, rss, android, json. kind is player, studio (the whole editor as an MCP server inside the page: check, fmt, expand, generate, highlight, share, open, instruments, cheatsheet run offline on the wasm engine), card or audio; source is text, cid, set or station; audio is live, render, inline or url; features and capabilities are lists. With target artifact the answer is two text blocks, a JSON summary and the page: publish the page as an HTML page (an Artifact) exactly as it is, and declare the summary&apos;s capabilities (sample, mcp with the Beatscript connector&apos;s share, render and queue, db and user, downloads, room) when you publish it. Kind player or audio on target artifact is the artifact tool&apos;s page: kind audio (or audio inline) carries the site&apos;s render of a stored program in the page (a render not cached yet is limited as render&apos;s are), kind player plays it with the pinned player; kind studio loads @stackdump/beatscript-studio from cdn.jsdelivr.net at an exact version with Subresource Integrity. markdown (a GitHub README) gets an SVG card (https://beatscript.app/card/&lt;CID&gt;.svg) and an audio link; iframe, oembed, preview, audio, rss and obsidian need a program the site stores (share it signed in, or render it); android is the self-sealing /p# link the app opens. Give the program as text, cid or example (or in the config&apos;s source). No sign-in, and it stores nothing unless store (artifact, player or audio only); billed as a check. Text at most 16384 bytes. See https://beatscript.app/docs/embed.</skos:definition>
@@ -7235,9 +7258,9 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolTitle xml:lang="en">Open a share link</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-push-private">
-		<skos:definition xml:lang="en">Send a private program to one of your paired phones, end-to-end encrypted, and never stored. Use it for what https://beatscript.app does not keep: covers, programs with local samples (`sample ... from`), `use restricted`, anything not under a Creative Commons licence. The program is sealed for the phone&apos;s own key (X25519 from its pairing key, ChaCha20-Poly1305) and handed to the phone&apos;s live connection in memory: it is not written to disk, a database or a log (only its size and the device id are logged), no CID is registered, and if the phone is not connected nothing is sent and nothing is kept (push again when it is). The phone opens it, checks it and plays it itself; samples resolve against files in the phone&apos;s own sample library, and any that are missing are reported back in get&apos;s diagnostics, never fetched. Give device and exactly one of text (sealed here, so the text is in this server&apos;s memory for this call, where it is formatted first, as eval&apos;s is) or sealed (an envelope you sealed yourself for the phone&apos;s seal_key from devices: then this server only ever sees ciphertext). Needs a bearer token; only your own paired phones.</skos:definition>
+		<skos:definition xml:lang="en">Send a private program to one of your paired phones, end-to-end encrypted, and never stored. Use it for what https://beatscript.app does not keep: covers, programs with local samples (`sample ... from`), `use restricted`, anything not under a Creative Commons licence. The program is sealed for the phone&apos;s own key (X25519 from its pairing key, ChaCha20-Poly1305) and handed to the phone&apos;s live connection in memory: it is not written to disk, a database or a log (only its size and the device id are logged), no CID is registered, and if the phone is not connected nothing is sent and nothing is kept (push again when it is). The phone opens it, checks it and plays it itself; samples resolve against files in the phone&apos;s own sample library, and any that are missing are reported back in get&apos;s diagnostics, never fetched. For a booth, set:true seals a set (send its private members first with load:true, so the booth holds them). Give device and exactly one of text (sealed here, so the text is in this server&apos;s memory for this call, where it is formatted first, as eval&apos;s is) or sealed (an envelope you sealed yourself for the phone&apos;s seal_key from devices: then this server only ever sees ciphertext). Needs a bearer token; only your own paired phones.</skos:definition>
 		<skos:prefLabel xml:lang="en">push_private</skos:prefLabel>
-		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;device&quot;:{&quot;description&quot;:&quot;Id of one of your paired phones, from the devices tool.&quot;,&quot;maxLength&quot;:64,&quot;pattern&quot;:&quot;^[A-Za-z0-9_-]{6,64}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;load&quot;:{&quot;description&quot;:&quot;Load it on the phone and leave it stopped unless play (default false: play it as eval does).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;play&quot;:{&quot;description&quot;:&quot;Start playing too (default false: load it and leave it stopped, or leave a playing tab as it is).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;sealed&quot;:{&quot;description&quot;:&quot;An envelope you sealed for the phone&apos;s seal_key (beatscript-seal v1). Give text or sealed.&quot;,&quot;maxLength&quot;:65536,&quot;type&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, sealed here for the phone. Give text or sealed.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;device&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
+		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;device&quot;:{&quot;description&quot;:&quot;Id of one of your paired phones, from the devices tool.&quot;,&quot;maxLength&quot;:64,&quot;pattern&quot;:&quot;^[A-Za-z0-9_-]{6,64}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;load&quot;:{&quot;description&quot;:&quot;Load it on the phone and leave it stopped unless play (default false: play it as eval does). A booth stores it without playing.&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;play&quot;:{&quot;description&quot;:&quot;Start playing too (default false: load it and leave it stopped, or leave a playing tab as it is).&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;sealed&quot;:{&quot;description&quot;:&quot;An envelope you sealed for the phone&apos;s seal_key (beatscript-seal v1). Give text or sealed.&quot;,&quot;maxLength&quot;:65536,&quot;type&quot;:&quot;string&quot;},&quot;set&quot;:{&quot;description&quot;:&quot;For a booth: the text is a set, sealed as a set (default false). Not with load.&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, sealed here for the phone. Give text or sealed.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[&quot;device&quot;],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
 		<ns:providedBy rdf:resource="https://beatscript.app/ontology/concept/product-beatscript-mcp"/>
 		<ns:readOnly rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:readOnly>
@@ -7247,6 +7270,7 @@ Lexicon harvest, a side effect with no flag: when the program checks and may be 
 		<ns:toolParameter>load</ns:toolParameter>
 		<ns:toolParameter>play</ns:toolParameter>
 		<ns:toolParameter>sealed</ns:toolParameter>
+		<ns:toolParameter>set</ns:toolParameter>
 		<ns:toolParameter>text</ns:toolParameter>
 		<ns:toolTitle xml:lang="en">Send a private program to your phone</ns:toolTitle>
 	</ns:McpTool>
@@ -11695,6 +11719,11 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:categoricalReading rdf:resource="https://beatscript.app/ontology/concept/free-smc"/>
 		<ns:status>stable</ns:status>
 	</owl:Class>
+	<owl:Class rdf:about="https://beatscript.app/ontology/ns#DeviceKind">
+		<rdfs:comment xml:lang="en">What a paired device is, as its signed claim names it (the device record&apos;s kind): it decides which events the device takes.</rdfs:comment>
+		<rdfs:label xml:lang="en">device kind</rdfs:label>
+		<ns:status>stable</ns:status>
+	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#DjConcept">
 		<rdfs:comment xml:lang="en">Root of the things a DJ app has: collections of loops, set planning, performance moves, effects, analysis and the control language.</rdfs:comment>
 		<rdfs:label xml:lang="en">DJ concept</rdfs:label>
@@ -11986,6 +12015,11 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#NotesSegment"/>
 		<ns:status>in-development</ns:status>
 	</owl:Class>
+	<owl:Class rdf:about="https://beatscript.app/ontology/ns#PairedDevice">
+		<rdfs:comment xml:lang="en">A device an account paired with a BeatScript site (btw-pair/2): its Ed25519 public key is its only credential. The site pushes programs to it over its signed event stream, and private ones sealed for its key.</rdfs:comment>
+		<rdfs:label xml:lang="en">paired device</rdfs:label>
+		<ns:status>stable</ns:status>
+	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#Palette">
 		<rdfs:comment xml:lang="en">A named set of sounds a program can choose as a whole.</rdfs:comment>
 		<rdfs:label xml:lang="en">palette</rdfs:label>
@@ -12092,6 +12126,11 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#MusicConcept"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#ProgramLine"/>
 		<ns:status>in-development</ns:status>
+	</owl:Class>
+	<owl:Class rdf:about="https://beatscript.app/ontology/ns#ProgramResolver">
+		<rdfs:comment xml:lang="en">A read-only fetch of a public program by its CID. A device that is handed a CID it does not hold (a set&apos;s member) asks its paired site; the site answers only the Creative Commons programs it stores, so anything private, restricted or asset-using is absent there and travels only sealed.</rdfs:comment>
+		<rdfs:label xml:lang="en">program resolver</rdfs:label>
+		<ns:status>stable</ns:status>
 	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#ProgrammingLanguage">
 		<rdfs:comment xml:lang="en">A text language whose documents are programs a product runs. Its versions (ns:LanguageVersion) are in the generated vocabulary, from the code that reads them.</rdfs:comment>
@@ -12489,6 +12528,13 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#degrees"/>
 	</owl:DatatypeProperty>
+	<owl:FunctionalProperty rdf:about="https://beatscript.app/ontology/ns#deviceKind">
+		<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#PairedDevice"/>
+		<rdfs:label xml:lang="en">device kind</rdfs:label>
+		<rdfs:range rdf:resource="https://beatscript.app/ontology/ns#DeviceKind"/>
+		<ns:status>stable</ns:status>
+	</owl:FunctionalProperty>
 	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#drumFills">
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#Genre"/>
 		<rdfs:label xml:lang="en">drum fills</rdfs:label>
@@ -13438,6 +13484,12 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#typicalMelody"/>
 		<ns:status>in-development</ns:status>
 	</owl:ObjectProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#urlTemplate">
+		<rdfs:comment xml:lang="en">An RFC 6570 URL template: {cid} is the program&apos;s CID.</rdfs:comment>
+		<rdfs:label xml:lang="en">URL template</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
+	</owl:DatatypeProperty>
 	<owl:ObjectProperty rdf:about="https://beatscript.app/ontology/ns#usesInstrument">
 		<rdfs:domain rdf:resource="https://beatscript.app/ontology/ns#Genre"/>
 		<rdfs:label xml:lang="en">uses instrument</rdfs:label>
@@ -13543,6 +13595,12 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:label xml:lang="en">walking bass</rdfs:label>
 		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#walkingBass"/>
+	</owl:DatatypeProperty>
+	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#wireName">
+		<rdfs:comment xml:lang="en">The string a protocol carries for the term (a JSON value or a signed text&apos;s line).</rdfs:comment>
+		<rdfs:label xml:lang="en">wire name</rdfs:label>
+		<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<ns:status>stable</ns:status>
 	</owl:DatatypeProperty>
 	<owl:DatatypeProperty rdf:about="https://beatscript.app/ontology/ns#writtenAs">
 		<rdfs:comment xml:lang="en">How the term is spelled in a BeatScript program.</rdfs:comment>

@@ -1,4 +1,4 @@
-# Pairing a phone with the BeatScript site (`btw-pair/2`)
+# Pairing a phone or a booth with the BeatScript site (`btw-pair/2`)
 
 The BeatScript Android app (beatscript-app, formerly djandroid; `app.beatscript`) connects to the BeatScript site by scanning a QR
 code. Once paired, the site (and an assistant over its MCP) can send BeatScript programs to the phone and
@@ -159,6 +159,140 @@ and `short_social_url`. Fetching by CID needs no signature at all:
 `GET /api/programs/<cid>` is public (`{cid, text, meta}` with the rights), and the phone recomputes the CID from the text itself
 before it plays (a store that answers another program under a CID is refused). A CID alone does not carry a program: a CID the
 site has not stored is `404`; the self-sealing link is what works anywhere.
+
+## The booth: a paired device of kind `booth` (2026-11-27)
+
+The desktop DJ app (djapp, "the booth") pairs with the site exactly as a phone does: the same offer, the same
+`btw-pair/2` claim, the same device record, the same signed SSE stream and the same sealed push. There is one
+pairing and one push primitive; a local inbox on the booth is only its offline fallback (this replaces the drop
+folder, project-datum 6661). What is new is a device **kind**, one event (`set`), and the contract of the read the
+booth already may make: fetching a public program by CID (the resolver). Server: `crates/beatscript-serve/src/hub.rs`
+and `hub/pair.rs`; booth: djrust-vevr-se djapp (R1b).
+
+### Pairing a booth
+
+A booth has no camera, so it takes the pairing link as text: the panel shows the offer's `url` (the same
+`https://beatscript.app/pair#<pair id>.<token>` the QR code carries) under the code with a Copy button, and the person
+pastes it into the booth.
+The fragment carries the pair id and token as it does for a phone. Everything else about the offer (two minutes,
+single use, a wrong token burns it, 3 open offers per user) is unchanged.
+
+The claim names the kind:
+
+```
+POST /api/pair/claim   {proto: "btw-pair/2", pair_id, token, key, name, kind: "booth", ts, sig}
+```
+
+- `kind` is `"phone"` or `"booth"`. Absent means `"phone"`, so every phone in the field is unchanged. Any other
+  value is `400 bad_request` (`kind must be phone or booth`).
+- The kind is **signed**. For a booth the claim text gains one line after `name:`; for a phone it has none, so the
+  phone's text (and `vectors-v2.json`) is byte for byte what it was:
+
+  ```
+  btw-pair/2 claim
+  site: <site id>
+  pair: <pair id>
+  token: <hex sha256(token)>
+  key: <base64url public key>
+  name: <device name>
+  kind: booth
+  ts: <unix ms>
+  ```
+
+  A `btw-pair/1` claim cannot name a kind: `proto: "btw-pair/1"` with `kind: "booth"` is `400 bad_request`.
+  `site/testdata/pair/vectors-v2-booth.json` pins a booth's claim text and signature (the same fixed key, seed 32 ×
+  0x01, as `vectors-v2.json`, which is unchanged); `hub/pair.rs` `v2_booth_vector` reproduces it.
+- Signed requests (`btw-pair/2 request`) do not change: the kind lives in the device record, not in each request.
+- The device record (`<data>/devices.json`) carries `"kind": "booth"` for a booth and no `kind` for a phone (an
+  existing file reads back as it was written).
+- Booths count toward the 8 devices per user. Re-pairing the same key replaces the record, as for a phone, and may
+  change its kind.
+- Every view of a device names its kind: the claim answer, `GET /api/pair/<id>` (`device.kind`), `GET /api/devices`,
+  MCP `devices`, and the stream's `hello` (`kind`).
+
+### What a booth receives
+
+The booth opens the same stream: `GET /api/device/events` with `Authorization: BtwDevice <device>.<ts>.<sig>`.
+It receives the phone's events, read as a booth reads them, plus `set`:
+
+| event | data | the booth |
+|---|---|---|
+| `hello` | `{device_id, user, address, fingerprint, kind: "booth", events, programs, site_id, caps?, grant?, moved_to?}` | `programs` is the resolver template, `https://beatscript.app/api/programs/{cid}` |
+| `eval` | `{type, text, cid, play}` | stores the program in its LiveStore under `cid` and plays it now |
+| `load` | `{type, text, cid}` | stores the program in its LiveStore under `cid`; does not play |
+| `set` | `{type: "set", text, cid, play, extra: {members: [{n, cid, set}]}}` | stores the set and plays it when `play` is true (see below) |
+| `stop` | `{type}` | stops |
+| `private` | `{type: "private", extra: <beatscript-seal envelope>}` | opens it with its key; the payload's `kind` is `eval`, `load` or `set`, and it is handled as that event |
+| `get`, `ping`, `moved`, `unpaired` | as for a phone | as for a phone |
+
+`text` is always the canonical, formatted program (`#!` header lines and comments kept) and `cid` its CID. The booth
+recomputes the CID from `text` and drops an event whose CID does not match.
+
+**A set** is a program: the text with a `set { … }` block, `play <cid>` an item a line (grammar.ebnf `set`), under
+its own CID. Call 7 holds: a set is program plus take, never master audio. In the `set` event:
+
+- `cid` is the set's own CID and `text` its text.
+- `extra.members` lists the CIDs the set's `play` lines name, in order, each once: `n` is the position of its first
+  `play`, `set` is true when that member is itself a set (the booth resolves its members the same way, recursively).
+  A `play` of a generator call has no CID and is not a member.
+- The server sends a `set` only after the set checks **against this site's store**, so every member of a public set
+  push is a program the resolver answers. Nothing else is guaranteed: the booth resolves each member, in this order,
+  and fails loudly naming the CID when all three miss:
+  1. its own LiveStore;
+  2. the paired site's resolver, `GET <origin>/api/programs/<cid>` (public CC programs only, read-only);
+  3. the offline inbox (`~/Workspace/booth-inbox/` or wherever R1b puts it).
+
+**Private sets and private members** never travel in the clear and are never stored on the server. They go by
+sealed push (`push_private`, the `private` event): each private member first, sealed with payload kind `load` (store,
+do not play), then the set, sealed with payload kind `set`. The booth stores every opened `load` before it resolves
+the set, so the set's members are local by the time it plays. The server keeps nothing of either (site/PAIRING.md
+"private relay", `hub/private.rs`). A sealed `set` payload's `members` are not given by the server (it cannot read
+the set); the booth reads them from the set's text.
+
+### Pushing to a booth
+
+```
+POST /api/devices/<id>/push   {type: "eval" | "load" | "stop" | "set", text?, play?}
+```
+
+- Signed in as the owner (the site's session or the MCP token), as today; another account's device is `404`.
+- `type: "set"` is for a booth only: a phone is `422 not_a_booth` (`<name> is a phone; a set goes to a booth`).
+- A set must check here: no errors, not `use restricted`, no assets (the same gate as `eval`), and it must be a set
+  (`422 not_a_set` when the text has no `set` block). A member this site does not hold fails the check
+  (`422 bad_request`, the checker's message names the CID): push it first, or send the set sealed.
+- The answer: `{cid, delivered: 1, members: [<cid>, …]}`. A booth that is not connected is `409 no_session`, and
+  nothing is queued. Nothing a push sends is stored: a push never writes the programs store (the members were stored
+  before, through the storage gate).
+- `eval` and `load` to a booth are as for a phone: the program is checked and formatted, and a restricted or
+  asset-using program is refused (send it sealed).
+- Limits: the push runs the checker, charged to the caller's address like every check (60 a minute); the stream
+  counts toward the 40 SSE streams per address.
+
+MCP: `eval` / `load` with `device: <booth id>` send `eval` / `load`; a set text sent with `eval` to a booth goes as a
+`set` event with its members (to a phone, or a tab, it goes as `eval`, as before). The same holds for
+`/api/devices/<id>/push` with `type: "eval"`. `push_private` takes `set: true` to seal a set (payload kind `set`; a
+phone is `422 not_a_booth` when the server seals); `beatscript-seal` accepts `set` as a payload kind. `devices` lists
+each device's `kind`.
+
+### The resolver: `GET /api/programs/<cid>`
+
+This is the site's existing public read; the booth uses it as it is, and this is its contract.
+
+- **No auth**, no signature, no cookie. Read-only: the booth never uploads (call 2).
+- **200** `application/json`: `{cid, text, meta}`, `meta.license` (`CC0-1.0`, the default, or a `CC-BY…` id, with
+  `meta.credits` when given), `meta.visibility: "public"`, and `renamed_to` / `renamed_from` for a BeatScript 1 / 2
+  twin. `GET /api/programs/<cid>.beatscript` answers the text alone (`text/beatscript`).
+- **Cache**: `Cache-Control: public, max-age=31536000, immutable`, `ETag: "<cid>"`, `304` on `If-None-Match`. A CID
+  is its text, so a booth that holds one never asks again.
+- **Linked data**: the response's `Link` header names the program's JSON-LD, `</p/<cid>.jsonld>; rel="describedby";
+  type="application/ld+json"` (the `Program` document in the BeatScript context, `@id` `https://beatscript.app/p/<cid>`).
+  `GET /p/<cid>` with `Accept: application/ld+json` answers the same document.
+- **404** `{"error":"not_found"}` for a CID this site does not hold, and for anything that is not a CID. That covers
+  every private, restricted, asset-using or non-Creative-Commons program: the storage gate (`gate.rs`) never stores
+  one, so there is nothing to refuse with a 403 and the server never says whether such a program exists. A 404 is not
+  cached as immutable (a program pushed later answers at once).
+- The booth checks `cid` against the text it got (as the phone does) before it plays.
+- Discovery: `programs` in the booth's `hello` and in `/.well-known/btw-site` (`<origin>/api/programs/{cid}`).
 
 ## Not done (decide)
 
