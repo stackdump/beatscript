@@ -142,6 +142,12 @@ const A_HISTORY: &[Action] = &[
     Action::new("beats", "the window length", Effect::Write),
     Action::new("jog", "aim a deck's jog", Effect::Write),
     Action::new("snap", "jog's history back to live", Effect::Write),
+    Action::new("roll", "a roll: loop the last grid line's 1/N beat while held (on, default true), then back to live where the strip would have been (on false)", Effect::Write).with(&[
+        Param::new("on", "boolean", "true: roll (again, with a new length); false: let go (default true)"),
+        Param::new("beats", "number", "the roll's length in beats: 0.125, 0.25, 0.5, 1 (default the strip's roll length, 0.25)"),
+    ]),
+    Action::new("slip", "slip mode: a released jog goes back to live (the strip played on underneath) instead of playing on as a delay", Effect::Write)
+        .with(&[Param::new("on", "boolean", "on or off (default: toggle)")]),
     Action::new("grid", "the input's beat grid (tempo, bar 1, confidence) and the bar lines in its history window", Effect::Read),
     Action::new("align", "put the head on a line of the grid: the nearest bar (or beat), or steps lines on from it", Effect::Write).with(&[
         Param::new("unit", "string", "bar | beat (default the analysis snap setting, else bar)"),
@@ -1457,7 +1463,7 @@ pub(super) const NOUNS: &[Noun] = &[
     Noun {
         name: "history",
         tool: Some("djapp_history"),
-        summary: "any strip's history: scrub, live, loop, window, jog aim",
+        summary: "any strip's history: scrub, live, loop, roll, slip, window, jog aim",
         default_action: "status",
         actions: &A_HISTORY,
         doc:
@@ -1470,12 +1476,15 @@ pub(super) const NOUNS: &[Noun] = &[
          halves), beats (an input's window length), jog (deck A|B|off: aim that deck's jog \
          wheel at this history; it scrubs it while the deck is empty or SHIFT / historyJog is \
          held, else the deck's loop), snap (deck?: the history a jog is aimed at, back to live; \
-         also a historySnap binding). With a beat grid (an input's, from `analysis`): grid \
+         also a historySnap binding), roll (on?, beats?: while held, loop the last grid line's 1/N beat on \
+         the grid; on false, back to live where the strip would have been; a historyLoop binding \
+         with op=roll), slip (on?: a released jog goes back to live rather than playing on as a \
+         delay; a historyLive binding with op=slip). With a beat grid (an input's, from `analysis`): grid \
          (tempo, bar 1, confidence, the bar lines in the window, where the head is), align \
          (unit bar|beat, steps?: the head onto the nearest line or `steps` lines on), loop_bars \
          (bars: loop exactly N bars in place, ending on a bar line). With analysis.snap on a \
          released jog scrub lands on a line by itself.",
-        schema: r#"{"type":"object","properties":{"action":{"type":"string","enum":["status","touch","scrub","release","live","loop","loop_step","beats","jog","snap","grid","align","loop_bars"]},"unit":{"type":"string","enum":["bar","beat"]},"steps":{"type":"integer"},"bars":{"type":"integer"},"strip":{"type":"string","description":"an input's label, A, B, L, V or M"},"input":{"type":["string","number"]},"beats":{"type":"number"},"seconds":{"type":"number"},"dir":{"type":"integer"},"deck":{"type":"string"}}}"#,
+        schema: r#"{"type":"object","properties":{"action":{"type":"string","enum":["status","touch","scrub","release","live","loop","loop_step","beats","jog","snap","roll","slip","grid","align","loop_bars"]},"on":{"type":"boolean"},"unit":{"type":"string","enum":["bar","beat"]},"steps":{"type":"integer"},"bars":{"type":"integer"},"strip":{"type":"string","description":"an input's label, A, B, L, V or M"},"input":{"type":["string","number"]},"beats":{"type":"number"},"seconds":{"type":"number"},"dir":{"type":"integer"},"deck":{"type":"string"}}}"#,
         params: &[],
         aliases: &[],
         local: false,
