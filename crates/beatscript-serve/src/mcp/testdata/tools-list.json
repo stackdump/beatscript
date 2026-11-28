@@ -107,9 +107,9 @@
         "idempotentHint": true,
         "openWorldHint": false,
         "readOnlyHint": true,
-        "title": "Your paired phones"
+        "title": "Your paired phones and booths"
       },
-      "description": "List the phones paired with the token's account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; site/PAIRING.md): id, name, fingerprint (the code both ends showed at pairing), paired, connected (djrust has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a phone paired by an account is driven over MCP with that account's token and no other.\n\nPass a phone's id as device to eval, load, get or stop to drive that phone alone (eval and load run the same checks as for a tab; a program with errors, samples or \"use restricted\" is not sent). Needs a bearer token. Read-only.",
+      "description": "List the devices paired with the token's account (djrust on Android scans the QR code that https://beatscript.app shows under Mobile; the desktop DJ app, a booth, pastes the link under it; site/PAIRING.md): id, name, kind (phone or booth), fingerprint (the code both ends showed at pairing), paired, connected (the device has its stream open now), last_seen, and state (what it last reported: cid, playing, section, bar). Pairing is the grant: a device paired by an account is driven over MCP with that account's token and no other.\n\nPass a device's id as device to eval, load, get or stop to drive that device alone (eval and load run the same checks as for a tab; a program with errors, samples or \"use restricted\" is not sent). A set (a program with a set block) sent with eval to a booth arrives as a set, with the CIDs of its members: the booth fetches any it lacks from https://beatscript.app/api/programs/<CID>. Needs a bearer token. Read-only.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -779,7 +779,7 @@
         "readOnlyHint": false,
         "title": "Send a private program to your phone"
       },
-      "description": "Send a private program to one of your paired phones, end-to-end encrypted, and never stored. Use it for what https://beatscript.app does not keep: covers, programs with local samples (`sample ... from`), `use restricted`, anything not under a Creative Commons licence. The program is sealed for the phone's own key (X25519 from its pairing key, ChaCha20-Poly1305) and handed to the phone's live connection in memory: it is not written to disk, a database or a log (only its size and the device id are logged), no CID is registered, and if the phone is not connected nothing is sent and nothing is kept (push again when it is). The phone opens it, checks it and plays it itself; samples resolve against files in the phone's own sample library, and any that are missing are reported back in get's diagnostics, never fetched. Give device and exactly one of text (sealed here, so the text is in this server's memory for this call, where it is formatted first, as eval's is) or sealed (an envelope you sealed yourself for the phone's seal_key from devices: then this server only ever sees ciphertext). Needs a bearer token; only your own paired phones.",
+      "description": "Send a private program to one of your paired phones, end-to-end encrypted, and never stored. Use it for what https://beatscript.app does not keep: covers, programs with local samples (`sample ... from`), `use restricted`, anything not under a Creative Commons licence. The program is sealed for the phone's own key (X25519 from its pairing key, ChaCha20-Poly1305) and handed to the phone's live connection in memory: it is not written to disk, a database or a log (only its size and the device id are logged), no CID is registered, and if the phone is not connected nothing is sent and nothing is kept (push again when it is). The phone opens it, checks it and plays it itself; samples resolve against files in the phone's own sample library, and any that are missing are reported back in get's diagnostics, never fetched. For a booth, set:true seals a set (send its private members first with load:true, so the booth holds them). Give device and exactly one of text (sealed here, so the text is in this server's memory for this call, where it is formatted first, as eval's is) or sealed (an envelope you sealed yourself for the phone's seal_key from devices: then this server only ever sees ciphertext). Needs a bearer token; only your own paired phones.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -790,7 +790,7 @@
             "type": "string"
           },
           "load": {
-            "description": "Load it on the phone and leave it stopped unless play (default false: play it as eval does).",
+            "description": "Load it on the phone and leave it stopped unless play (default false: play it as eval does). A booth stores it without playing.",
             "type": "boolean"
           },
           "play": {
@@ -801,6 +801,10 @@
             "description": "An envelope you sealed for the phone's seal_key (beatscript-seal v1). Give text or sealed.",
             "maxLength": 65536,
             "type": "string"
+          },
+          "set": {
+            "description": "For a booth: the text is a set, sealed as a set (default false). Not with load.",
+            "type": "boolean"
           },
           "text": {
             "description": "The program text, sealed here for the phone. Give text or sealed.",
