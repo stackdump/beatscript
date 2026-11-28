@@ -55,7 +55,7 @@ for i in $(seq 1 30); do command curl -s -m 5 $U/healthz | grep -qF "\"version\"
 # (shown on stderr without `tee /dev/stderr`, which reopens a redirected stderr file and truncates the log)
 HZ=$(curl -s -m 10 $U/healthz); printf '%s\n' "$HZ" >&2
 printf '%s' "$HZ" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d.get("version") == sys.argv[1], d; assert d.get("name") == "beatscript", d' "$V"; echo "/healthz: name beatscript, version $V"
-for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /.well-known/beatscript-capabilities.json /.well-known/btw-site /.well-known/beatscript-site /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /embed.js /js/embed-player.js /radio /js/station.js /js/station-model.js; do
+for p in /grammar /grammar.ebnf /.well-known/btw-capabilities.json /.well-known/beatscript-capabilities.json /.well-known/btw-site /.well-known/beatscript-site /docs/cheatsheet /authorship /authorship.md /phrasebook /phrasebook.txt /phrasebook.jsonld /docs/found-phrases /docs/found-phrases.md /docs/forms /docs/forms.md /themes /themes.txt /themes.jsonld /docs/embed /docs/embed.md /docs/sdk /docs/sdk.md /embed.js /js/embed-player.js /radio /js/station.js /js/station-model.js; do
   c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' $U$p); echo "$p $c"; test "$c" = 200
 done
 for p in /grammar.css /lineage.css /mcp.css /card/card.css /css/beatscript.css /docs/assets/docs.css /css/embed.css /css/station.css; do
@@ -271,6 +271,9 @@ curl -s -m 20 $U/embed.js | grep -q 'beatscript-player'; echo '/embed.js defines
 curl -s -m 20 $U/docs/embed.md | grep -q '^# Embed a program'; echo '/docs/embed.md is the embed doc'
 curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/docs/embed</loc>"; echo 'sitemap lists /docs/embed'
 curl -s -m 20 $U/llms.txt | grep -q "$U/docs/embed"; echo 'llms.txt lists /docs/embed'
+curl -s -m 20 $U/docs/sdk.md | grep -q '^# Build your own'; echo '/docs/sdk.md is the sdk doc'
+curl -s -m 20 $U/sitemap.xml | grep -q "<loc>$U/docs/sdk</loc>"; echo 'sitemap lists /docs/sdk'
+curl -s -m 20 $U/llms.txt | grep -q "$U/docs/sdk"; echo 'llms.txt lists /docs/sdk'
 curl -s -m 20 $U/c/$EC | grep -q 'application/json+oembed'; curl -s -m 20 $U/c/$EC | grep -q 'name="twitter:player"'; echo "/c/$EC: oEmbed discovery and the player card"
 printf '%s' "$(mcp '{"jsonrpc":"2.0","id":11,"method":"tools/list","params":{}}')" | grep -q 'embed_url'; echo 'mcp share names embed_url'
 # --- 6665/6666: the lexicon harvest ---

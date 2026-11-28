@@ -5189,7 +5189,9 @@
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-loop-step"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-loop"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-release"/>
+		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-roll"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-scrub"/>
+		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-slip"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-snap"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-status"/>
 		<ns:acceptsVerb rdf:resource="https://beatscript.app/ontology/concept/verb-touch"/>
@@ -5198,6 +5200,7 @@
 		<ns:controlParameter>deck</ns:controlParameter>
 		<ns:controlParameter>dir</ns:controlParameter>
 		<ns:controlParameter>input</ns:controlParameter>
+		<ns:controlParameter>on</ns:controlParameter>
 		<ns:controlParameter>seconds</ns:controlParameter>
 		<ns:controlParameter>steps</ns:controlParameter>
 		<ns:controlParameter>strip</ns:controlParameter>
@@ -6525,6 +6528,15 @@
 		<ns:inProductFamily rdf:resource="https://beatscript.app/ontology/concept/product-beatscript"/>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/product-beatscript-sdk">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#SoftwareDevelopmentKit"/>
+		<skos:altLabel xml:lang="en">Build your own</skos:altLabel>
+		<skos:definition xml:lang="en">What you can build your own interface on: the player and the embed config, the MCP server, the engine crates (a git dependency pinned by revision, with the FFI the Android and iPad apps use) and the language service (check, fmt, expand, highlight) outside the studio. Code MIT; programs and their output CC0 by default.</skos:definition>
+		<skos:prefLabel xml:lang="en">BeatScript SDK</skos:prefLabel>
+		<ns:homepage rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://beatscript.app/docs/sdk</ns:homepage>
+		<ns:inProductFamily rdf:resource="https://beatscript.app/ontology/concept/product-beatscript"/>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/product-beatscript">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ProductFamily"/>
 		<skos:definition xml:lang="en">The name shared by a music language, the Android app that plays it, the website beatscript.app and its MCP servers. Write or generate a program, send it to the phone, hear it.</skos:definition>
@@ -6573,6 +6585,15 @@
 		<skos:definition xml:lang="en">A linear control net whose transitions mute and unmute tracks and activate slots at section boundaries, so the order of sections is the order of transitions firing.</skos:definition>
 		<skos:prefLabel xml:lang="en">song structure net</skos:prefLabel>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/concept/song-structure-net"/>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/stage-view">
+		<skos:altLabel xml:lang="en">projector view</skos:altLabel>
+		<skos:definition xml:lang="en">A BeatScript program shown for a projector or a second screen while it plays: full screen, read-only, in large high-contrast type, with the firing markers lit, the follow-scroll on and, for a set, the tracklist line (the current track and the next). On beatscript.app it is ?view=stage; the booth&apos;s projector window is its native twin, with the same type scale, lamp colours and tracklist line.</skos:definition>
+		<skos:prefLabel xml:lang="en">stage view</skos:prefLabel>
+		<skos:scopeNote xml:lang="en">The web page&apos;s record mode (?record=1), from which the demo video is rendered frame by frame, is the same page without the person: no full-screen toggle, no play button, no tracklist line.</skos:scopeNote>
+		<ns:homepage rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://beatscript.app/docs/api#stage-view</ns:homepage>
+		<ns:inProductFamily rdf:resource="https://beatscript.app/ontology/concept/product-beatscript"/>
+		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/step-arc">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#EngineConcept"/>
@@ -7028,7 +7049,7 @@ Pass a device&apos;s id as device to eval, load, get or stop to drive that devic
 		<ns:toolTitle xml:lang="en">Your paired phones and booths</ns:toolTitle>
 	</ns:McpTool>
 	<ns:McpTool rdf:about="https://beatscript.app/ontology/concept/tool-beatscript-embed">
-		<skos:definition xml:lang="en">A program (or a set, or a station) embedded anywhere, from one embed config (https://beatscript.app/embed-config.schema.json, the same config the &lt;beatscript-track&gt; player and the &lt;beatscript-studio&gt; editor read): give a target and a config, and get the snippet or page for it, whether the config works there, is degraded or is unsupported, and one-sentence notes on what the target cannot do and what it does instead. Use the snippet as it is. Targets: artifact, web, iframe, oembed, preview, markdown, jupyter, vscode, obsidian, audio, rss, android, json. kind is player, studio (the whole editor as an MCP server inside the page: check, fmt, expand, generate, highlight, share, open, instruments, cheatsheet run offline on the wasm engine), card or audio; source is text, cid, set or station; audio is live, render, inline or url; features and capabilities are lists. With target artifact the answer is two text blocks, a JSON summary and the page: publish the page as an HTML page (an Artifact) exactly as it is, and declare the summary&apos;s capabilities (sample, mcp with the Beatscript connector&apos;s share, render and queue, db and user, downloads, room) when you publish it. Kind player or audio on target artifact is the artifact tool&apos;s page: kind audio (or audio inline) carries the site&apos;s render of a stored program in the page (a render not cached yet is limited as render&apos;s are), kind player plays it with the pinned player; kind studio loads @stackdump/beatscript-studio from cdn.jsdelivr.net at an exact version with Subresource Integrity. markdown (a GitHub README) gets an SVG card (https://beatscript.app/card/&lt;CID&gt;.svg) and an audio link; iframe, oembed, preview, audio, rss and obsidian need a program the site stores (share it signed in, or render it); android is the self-sealing /p# link the app opens. Give the program as text, cid or example (or in the config&apos;s source). No sign-in, and it stores nothing unless store (artifact, player or audio only); billed as a check. Text at most 16384 bytes. See https://beatscript.app/docs/embed.</skos:definition>
+		<skos:definition xml:lang="en">A program (or a set, or a station) embedded anywhere, from one embed config (https://beatscript.app/embed-config.schema.json, the same config the &lt;beatscript-track&gt; player and the &lt;beatscript-studio&gt; editor read): give a target and a config, and get the snippet or page for it, whether the config works there, is degraded or is unsupported, and one-sentence notes on what the target cannot do and what it does instead. Use the snippet as it is. Targets: artifact, web, iframe, oembed, preview, markdown, jupyter, vscode, obsidian, audio, rss, android, json. kind is player, studio (the whole editor as an MCP server inside the page: check, fmt, expand, generate, highlight, share, open, instruments, cheatsheet run offline on the wasm engine), card or audio; source is text, cid, set or station; audio is live, render, inline or url; features and capabilities are lists. With target artifact the answer is two text blocks, a JSON summary and the page: publish the page as an HTML page (an Artifact) exactly as it is, and declare the summary&apos;s capabilities (sample, mcp with the Beatscript connector&apos;s share, render and queue, db and user, downloads, room) when you publish it. Kind player or audio on target artifact is the artifact tool&apos;s page: kind audio (or audio inline) carries the site&apos;s render of a stored program in the page (a render not cached yet is limited as render&apos;s are), kind player plays it with the pinned player; kind studio loads @stackdump/beatscript-studio from cdn.jsdelivr.net at an exact version with Subresource Integrity. markdown (a GitHub README) gets an SVG card (https://beatscript.app/card/&lt;CID&gt;.svg) and an audio link; iframe, oembed, preview, audio, rss and obsidian need a program the site stores (share it signed in, or render it); android is the self-sealing /p# link the app opens. Give the program as text, cid or example (or in the config&apos;s source). No sign-in, and it stores nothing unless store (artifact, player or audio only); billed as a check. Text at most 16384 bytes. See https://beatscript.app/docs/embed; to build your own interface instead (the engine crates for native apps, the language service outside the studio, what is versioned), https://beatscript.app/docs/sdk.</skos:definition>
 		<skos:prefLabel xml:lang="en">embed</skos:prefLabel>
 		<ns:inputSchema>{&quot;additionalProperties&quot;:false,&quot;properties&quot;:{&quot;cid&quot;:{&quot;description&quot;:&quot;CID of a program stored here, or of an example.&quot;,&quot;maxLength&quot;:100,&quot;pattern&quot;:&quot;^z[1-9A-HJ-NP-Za-km-z]{20,100}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;config&quot;:{&quot;description&quot;:&quot;The embed config (https://beatscript.app/embed-config.schema.json): kind, source, audio, features, capabilities, theme, compact, width, height, title, site, bridge, pin. Defaults by kind.&quot;,&quot;type&quot;:&quot;object&quot;},&quot;example&quot;:{&quot;description&quot;:&quot;Name of an example, from list_examples.&quot;,&quot;maxLength&quot;:64,&quot;pattern&quot;:&quot;^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$&quot;,&quot;type&quot;:&quot;string&quot;},&quot;store&quot;:{&quot;description&quot;:&quot;Target artifact, kind player or audio: store the text first (signed in), as the artifact tool does.&quot;,&quot;type&quot;:&quot;boolean&quot;},&quot;target&quot;:{&quot;description&quot;:&quot;Where it goes. artifact (the default) gives a whole page.&quot;,&quot;enum&quot;:[&quot;artifact&quot;,&quot;web&quot;,&quot;iframe&quot;,&quot;oembed&quot;,&quot;preview&quot;,&quot;markdown&quot;,&quot;jupyter&quot;,&quot;vscode&quot;,&quot;obsidian&quot;,&quot;audio&quot;,&quot;rss&quot;,&quot;android&quot;,&quot;json&quot;],&quot;type&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;description&quot;:&quot;The program text, instead of the config&apos;s source. It must pass check.&quot;,&quot;maxLength&quot;:16384,&quot;type&quot;:&quot;string&quot;},&quot;title&quot;:{&quot;description&quot;:&quot;The name to show and publish under (default the program&apos;s `#! name:`).&quot;,&quot;maxLength&quot;:80,&quot;type&quot;:&quot;string&quot;}},&quot;required&quot;:[],&quot;type&quot;:&quot;object&quot;}</ns:inputSchema>
 		<ns:needsToken rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</ns:needsToken>
@@ -9106,6 +9127,13 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-deck"/>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-roll">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlVerb"/>
+		<skos:definition xml:lang="en">The control verb roll, accepted by: history.</skos:definition>
+		<skos:prefLabel xml:lang="en">roll</skos:prefLabel>
+		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-history"/>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-root">
 		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlVerb"/>
 		<skos:definition xml:lang="en">The control verb root, accepted by: loops.</skos:definition>
@@ -9300,6 +9328,13 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-setlist"/>
 		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-track"/>
 		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-vocal"/>
+		<ns:status>stable</ns:status>
+	</skos:Concept>
+	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-slip">
+		<rdf:type rdf:resource="https://beatscript.app/ontology/ns#ControlVerb"/>
+		<skos:definition xml:lang="en">The control verb slip, accepted by: history.</skos:definition>
+		<skos:prefLabel xml:lang="en">slip</skos:prefLabel>
+		<ns:actsOn rdf:resource="https://beatscript.app/ontology/concept/noun-history"/>
 		<ns:status>stable</ns:status>
 	</skos:Concept>
 	<skos:Concept rdf:about="https://beatscript.app/ontology/concept/verb-slot">
@@ -12214,6 +12249,12 @@ Answers {ok, version, station {text, cid, genre, generator, seed, step, forms, t
 		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#MusicConcept"/>
 		<prov:wasDerivedFrom rdf:resource="https://ontology.bitwrap.io/ns#ShareLink"/>
 		<ns:status>in-development</ns:status>
+	</owl:Class>
+	<owl:Class rdf:about="https://beatscript.app/ontology/ns#SoftwareDevelopmentKit">
+		<rdfs:comment xml:lang="en">The parts of a product that others may build their own interfaces on, each with a stated way it is versioned and pinned.</rdfs:comment>
+		<rdfs:label xml:lang="en">software development kit</rdfs:label>
+		<rdfs:subClassOf rdf:resource="https://beatscript.app/ontology/ns#Product"/>
+		<ns:status>stable</ns:status>
 	</owl:Class>
 	<owl:Class rdf:about="https://beatscript.app/ontology/ns#SongSection">
 		<rdfs:comment xml:lang="en">A named stretch of a song: intro, verse, drop and so on.</rdfs:comment>

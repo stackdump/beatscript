@@ -58,6 +58,13 @@ const EMBED_MD: &str = include_str!("../../../docs/beatscript/embed.md");
 const EMBED_PATH: &str = "/docs/embed";
 const EMBED_TITLE: &str = "Embed a program";
 const EMBED_BLURB: &str = "One embed config for every way to embed a program: the player, or the whole studio (an MCP server inside the page), in a Claude artifact or any page; an iframe, oEmbed, link previews that play, a README card, notebooks, VS Code, plain audio and feeds.";
+/// Building your own interface on BeatScript (docs/beatscript/sdk.md): what is supported and how it is versioned, the engine
+/// crates for native builders (and the FFI the apps use), and the language service outside the studio. `/docs/sdk` and its
+/// markdown, listed in the docs index, its JSON-LD, llms.txt and the sitemap. Built in, like the embed page.
+const SDK_MD: &str = include_str!("../../../docs/beatscript/sdk.md");
+const SDK_PATH: &str = "/docs/sdk";
+const SDK_TITLE: &str = "Build your own";
+const SDK_BLURB: &str = "Put your own interface on BeatScript: what is supported and how each surface is versioned (MIT code, CC0 output), the engine crates as a pinned git dependency and the FFI the Android and iPad apps use, and check, fmt, expand and highlight outside the studio.";
 /// Radio: stations (docs/beatscript/radio.md, `djlive::station`, the MCP `station` tool and `POST /api/station`): `/docs/radio` and its
 /// markdown, listed in the docs index, its JSON-LD, llms.txt and the sitemap. Built in, like the forms.
 const RADIO_MD: &str = include_str!("../../../docs/beatscript/radio.md");
@@ -743,6 +750,7 @@ impl Docs {
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{RADIO_PATH}"), "name": RADIO_TITLE, "description": RADIO_BLURB, "url": format!("{p}{RADIO_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{RADIO_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{POLISH_PATH}"), "name": POLISH_TITLE, "description": POLISH_BLURB, "url": format!("{p}{POLISH_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{POLISH_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{EMBED_PATH}"), "name": EMBED_TITLE, "description": EMBED_BLURB, "url": format!("{p}{EMBED_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{EMBED_PATH}.md"), "encodingFormat": "text/markdown"}}));
+        parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{SDK_PATH}"), "name": SDK_TITLE, "description": SDK_BLURB, "url": format!("{p}{SDK_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{SDK_PATH}.md"), "encodingFormat": "text/markdown"}, "about": {"@id": format!("{p}/ontology/concept/product-beatscript-sdk")}}));
         parts.push(json!({"@type": "TechArticle", "@id": format!("{p}{AUTHORSHIP_PATH}"), "name": AUTHORSHIP_TITLE, "description": AUTHORSHIP_BLURB, "url": format!("{p}{AUTHORSHIP_PATH}"), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}{AUTHORSHIP_PATH}.md"), "encodingFormat": "text/markdown"}}));
         parts.push(json!({"@type": "Dataset", "@id": format!("{p}{}", beatscript_serve::themes::PATH), "name": beatscript_serve::themes::TITLE, "description": beatscript_serve::themes::BLURB, "url": format!("{p}{}", beatscript_serve::themes::PATH), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}/themes.txt"), "encodingFormat": "text/plain"}}));
         parts.push(json!({"@type": "Dataset", "@id": format!("{p}{}", beatscript_serve::phrasebook::PATH), "name": beatscript_serve::phrasebook::TITLE, "description": beatscript_serve::phrasebook::BLURB, "url": format!("{p}{}", beatscript_serve::phrasebook::PATH), "encoding": {"@type": "MediaObject", "contentUrl": format!("{p}/phrasebook.txt"), "encodingFormat": "text/plain"}}));
@@ -766,6 +774,7 @@ impl Docs {
         b.push_str("<li><a href=\"/docs/radio\">Radio: stations</a>: endless, deterministic stations, each one small program: position N is always the same track, and a knob turned moves you to a neighbouring station at the same position</li>\n");
         b.push_str("<li><a href=\"/docs/polish\">Polish a mix</a>: the listen loop: check, listen, change one line, listen again with compare; what listen measures, the delivery targets, the order of fixes and the lines that make them</li>\n");
         b.push_str("<li><a href=\"/docs/embed\">Embed a program</a>: one embed config for every surface: the player and the studio (the editor as an MCP server inside a Claude artifact or any page), iframe, the &lt;beatscript-player&gt; element, oEmbed, link previews that play, a README card, Jupyter, VS Code, plain audio</li>\n");
+        b.push_str("<li><a href=\"/docs/sdk\">Build your own</a>: what you can build on and how each part is versioned: the player and embed, the MCP server, the engine crates (and the FFI the apps use) and the language service outside the studio</li>\n");
         b.push_str("<li><a href=\"/authorship\">Authorship and rights</a>: who authored a program and what rights it has, in plain language</li>\n");
         b.push_str("<li><a href=\"/phrasebook\">Phrasebook</a>: lines of verse, scripture, speech and work song first published before 1929, CC0, each with its meter as a step pattern, to sing by id</li>\n");
         b.push_str("<li><a href=\"/llms.txt\">llms.txt</a>: this site, indexed for a language model</li>\n");
@@ -831,6 +840,13 @@ impl Docs {
                 let r = render_markdown(EMBED_MD);
                 let nav = self.installed();
                 let html = shell(EMBED_TITLE, EMBED_BLURB, &format!("{}{EMBED_PATH}", self.public), "/docs/embed.md", "embed", &nav, &r.toc, &r.body);
+                Some(Answer::Body(HTML, Bytes::from(html), None, true))
+            }
+            "/docs/sdk.md" => body(MD, Some(SDK_MD.to_string())),
+            "/docs/sdk" => {
+                let r = render_markdown(SDK_MD);
+                let nav = self.installed();
+                let html = shell(SDK_TITLE, SDK_BLURB, &format!("{}{SDK_PATH}", self.public), "/docs/sdk.md", "sdk", &nav, &r.toc, &r.body);
                 Some(Answer::Body(HTML, Bytes::from(html), None, true))
             }
             "/authorship.md" => body(MD, Some(AUTHORSHIP_MD.to_string())),
@@ -931,7 +947,7 @@ impl Docs {
         matches!(
             path,
             "/llms.txt" | "/llms-full.txt" | "/docs/BEATSCRIPT.md" | "/docs/BTW.md" | "/docs/cheatsheet.md" | "/docs/api.md" | "/docs/assets/docs.css" | "/docs/assets/docs.js" | "/docs/" | "/docs/cheatsheet" | "/docs/language" | "/docs/api" | "/docs/arrange.md" | "/docs/arrange" | "/schema" | "/schema.jsonld" | "/schema.md" | "/docs/open-data" | "/docs/open-data.md" | "/grammar" | "/grammar.ebnf" | "/grammar.css" | "/lineage.css" | "/mcp.css" | "/authorship" | "/authorship.md" | "/phrasebook" | "/docs/found-phrases" | "/docs/found-phrases.md" | "/docs/forms" | "/docs/forms.md" | "/themes"
-                | "/docs/embed" | "/docs/embed.md" | "/docs/radio" | "/docs/radio.md" | "/docs/polish" | "/docs/polish.md"
+                | "/docs/embed" | "/docs/embed.md" | "/docs/radio" | "/docs/radio.md" | "/docs/polish" | "/docs/polish.md" | "/docs/sdk" | "/docs/sdk.md"
         )
     }
 
@@ -963,6 +979,8 @@ impl Docs {
         b.push_str(&format!("- [Radio: stations]({p}{RADIO_PATH}.md): a station is one small program (`station {{ from gen@2 techno seed=42; next seed=~; forms seeded passacaglia }}`) naming an endless, deterministic run of tracks: position N is always the same track (the same CID), the walk steps the seed (`seed=+N` counts on, `seed=~` draws from the CID of the track before), the forms take turns, and the segue from N to N+1 is the cross form of their seeds; a listener turns knobs (genre, seed, step, forms, tempo, key, length) and keeps N; the MCP `station` tool and POST {p}/api/station answer it ([page]({p}{RADIO_PATH}))\n"));
         b.push_str(&format!("- [Polish a mix]({p}{POLISH_PATH}.md): the loop for polishing a mix with the MCP `listen` tool: check, listen, change one line, listen again with `compare` (the previous version's CID or text: deltas, and the warnings fixed and introduced); what it measures per part and on the master (bands, centroid, width, correlation, crest; true peak, PLR, short-term max, loudness range), clashes between parts, delivery `targets` (streaming -14 LUFS / -1 dBTP, apple, broadcast, club), the order of fixes (not heard, clipping, clashes, balance, loudness, width) and the lines that make each one (`level`, `vel=`, `mix {{ B eq low -6 }}`, `duck B under A.kick 6db`, `filter hp`, `drive`), and what the language cannot do yet ([page]({p}{POLISH_PATH}))\n"));
         b.push_str(&format!("- [Embed a program]({p}{EMBED_PATH}.md): one embed config ({p}/embed-config.schema.json) for every surface: <beatscript-track> and <beatscript-studio> (the editor as an MCP server inside a Claude artifact or any page: check, fmt, expand, generate, share and the rest offline, compose and store through the artifact's capabilities), an iframe of {p}/embed/<CID> (?compact=1, ?theme=light), the <beatscript-player cid=…> element ({p}/embed.js), oEmbed ({p}/oembed?url=<a /p/ or /c/ link>&format=json), /c/<CID> cards that play (twitter:player, og:audio), a README card ({p}/card/<CID>.svg), Jupyter, VS Code, Obsidian, and the rendered audio ({p}/api/render/<CID>?format=opus); per target, whether the engine runs and what it gets instead; the MCP embed tool writes each one ([page]({p}{EMBED_PATH}))\n"));
+        b.push_str(&format!("- [Build your own]({p}{SDK_PATH}.md): the supported surfaces and how each is versioned (the language and its CIDs, the JSON reports, the embed config, the npm player and studio pinned by exact version and SRI, the MCP server and HTTP API, the ontology release, the engine crates as a git dependency pinned by rev); MIT code, CC0 programs and output; the engine crates for native builders (djlive, beatscript-api, beatscriptls, djengine, djhost and its features audio, sf2, midi, decode, network, off by default) and the UniFFI crate the Android and iPad apps use; check, fmt, expand and highlight outside the studio: the `beatscript` CLI, `beatscript lsp`, the MCP, `<beatscript-studio>`'s tools, the wasm module's exports, Rust and HTTP ([page]({p}{SDK_PATH}))\n"));
+        b.push_str(&format!("- [Stage view]({p}/docs/api#stage-view): {p}/?view=stage&cid=<CID> (or &example=<name>, or a share link's #...) shows a program on a projector or second screen: full screen (a button and F; Esc leaves it and never stops the music), read-only, large high-contrast type that follows the system's light or dark theme and prefers-contrast, the firing markers and the follow-scroll on, and for a `set {{ }}` the tracklist line (`2/5  now <track>  ·  next <track>`); record mode (?record=1, the demo video) is the same page without the person\n"));
         b.push_str(&format!("- [Instruments]({p}/api/instruments): the voices, families, drum kits and palettes a program may name (JSON)\n"));
         b.push_str(&format!("- [API reference]({p}/docs/api.md): every HTTP route, sign-in and tokens, compose, render streaming, sessions, the MCP tools with examples\n"));
         b.push_str(&format!("- [Ontology]({p}/ontology/): the BeatScript ontology, the vocabulary behind BeatScript (genres, grooves, rhythms, sections, the engine concepts and the language's own grammar, voices, controls and MCP tools) as Turtle, JSON-LD, SPARQL ({p}/ontology/sparql) and a read-only MCP server ({p}/ontology/mcp); term IRIs under {p}/ontology/ns#. Derived from the bitwrap ontology 0.2.0 (each term linked to its bitwrap IRI by prov:wasDerivedFrom), it evolves on its own\n"));
@@ -1246,7 +1264,7 @@ mod tests {
         std::fs::write(src.join("assets/docs.css"), "body{}").unwrap();
         let d = Docs::new(Some(dir.clone()), Some(src), "https://beatscript.app");
         let ex = Examples { list: Vec::new(), text: HashMap::new() };
-        let routes = ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", "/authorship", "/phrasebook", FOUND_PATH, FORMS_PATH, RADIO_PATH, "/themes"];
+        let routes = ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", "/authorship", "/phrasebook", FOUND_PATH, FORMS_PATH, RADIO_PATH, SDK_PATH, "/themes"];
         let mut sheets = std::collections::BTreeSet::new();
         for path in routes {
             assert!(d.is_route(path), "{path}");
@@ -1321,6 +1339,17 @@ mod tests {
             }
         }
         assert_eq!(hits, Vec::<String>::new(), "inline styles, which the site's CSP (style-src 'self') blocks: link a stylesheet instead");
+    }
+
+    #[test]
+    fn llms_txt_names_the_stage_view_and_the_api_page_has_it() {
+        // the stage view (?view=stage, site/web/js/stage.js): llms.txt points at its section of the API page, which says what it is
+        let d = Docs::new(None, None, "https://beatscript.app");
+        let ex = Examples { list: Vec::new(), text: HashMap::new() };
+        let l = d.llms_txt(&ex);
+        assert!(l.contains("https://beatscript.app/?view=stage&cid=<CID>") && l.contains("https://beatscript.app/docs/api#stage-view"), "llms.txt lacks the stage view");
+        let api = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../site/docs-src/api.md")).expect("site/docs-src/api.md");
+        assert!(api.contains("\n## Stage view\n") && api.contains("?view=stage&cid=<CID>") && api.contains("`?record=1`"), "the API page's Stage view section");
     }
 
     #[test]
@@ -1413,6 +1442,38 @@ mod tests {
         for said in ["/embed/<CID>", "<beatscript-player", "embed.js", "/oembed?url=", "twitter:player", "og:audio", "/api/render/<CID>?format=opus", "?compact=1", "?theme=light", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"] {
             assert!(EMBED_MD.contains(said), "the page does not say {said}");
         }
+    }
+
+    /// One doc (docs/beatscript/sdk.md), many views: the page and its markdown, the docs index and its JSON-LD (about the
+    /// ontology's SDK term), llms.txt and the sitemap, with no inline style; the page names every surface it maps, the embed
+    /// page and the embed tool point at it, and the ontology has the term the JSON-LD names.
+    #[test]
+    fn the_sdk_page_is_one_doc_in_many_views() {
+        let d = Docs::new(None, None, "https://beatscript.app");
+        let ex = Examples { list: Vec::new(), text: HashMap::new() };
+        let Some(Answer::Body(ct, b, _, _)) = d.answer(SDK_PATH, &ex) else { panic!("{SDK_PATH} is not served") };
+        assert!(ct.starts_with("text/html"));
+        let html = String::from_utf8_lossy(&b);
+        assert!(inline_styles(&html).is_empty(), "{:?}", inline_styles(&html));
+        assert!(html.contains("<link rel=\"canonical\" href=\"https://beatscript.app/docs/sdk\">"));
+        assert!(d.is_route("/docs/sdk") && d.is_route("/docs/sdk.md"));
+        assert_eq!(d.respond(&Method::GET, &HeaderMap::new(), "/docs/sdk.md", &ex).expect("the markdown is a route").status(), 200);
+        assert!(beatscript_serve::opendata::sitemap("https://beatscript.app", &[]).contains("<loc>https://beatscript.app/docs/sdk</loc>"));
+        let l = d.llms_txt(&ex);
+        assert!(l.contains("https://beatscript.app/docs/sdk.md") && l.contains("https://beatscript.app/docs/sdk)"), "llms.txt lacks the sdk page");
+        let index = String::from_utf8_lossy(&d.render_index()).to_string();
+        assert!(index.contains("<a href=\"/docs/sdk\">Build your own</a>"));
+        assert!(index.contains("\"@id\":\"https://beatscript.app/docs/sdk\""), "the index's JSON-LD");
+        assert!(index.contains("https://beatscript.app/ontology/concept/product-beatscript-sdk"), "the JSON-LD is about the ontology's term");
+        assert!(include_str!("../ontology/fork.ttl").contains("concept:product-beatscript-sdk a skos:Concept, ns:SoftwareDevelopmentKit"), "the ontology lacks the SDK term");
+        // the surfaces it maps, by the names the code gives them
+        for said in ["#! beatscript 2", "embed-config.schema.json", "@stackdump/beatscript-player", "@stackdump/beatscript-studio", "https://beatscript.app/mcp", "owl:versionIRI", "rev = \"<commit>\"", "`audio`", "`sf2`", "`midi`", "`network`", "djmobile", "rust/PINS", "beatscript lsp", "beatscript_check(text)", "BeatscriptLs", "check_json", "POST /api/check", "scripts/build-web-wasm.sh", "crates/djweb/tests/drift.rs", "MIT", "CC0-1.0"] {
+            assert!(SDK_MD.contains(said), "the page does not say {said}");
+        }
+        assert!(EMBED_MD.contains("/docs/sdk"), "the embed page does not point at the sdk page");
+        let tools = crate::mcp::tools::tool_list("https://beatscript.app", 16384, 60, 30, (50, 20, 30, 8, 30));
+        let em = tools.iter().find(|t| t["name"] == "embed").expect("the embed tool");
+        assert!(em["description"].as_str().unwrap_or("").contains("https://beatscript.app/docs/sdk"), "the embed tool does not point at the sdk page");
     }
 
     /// One doc (docs/beatscript/radio.md), many views: the page and its markdown, the docs index and its JSON-LD, llms.txt and the
@@ -1665,7 +1726,7 @@ mod tests {
         let d = Docs::new(Some(dir.clone()), src.is_dir().then_some(src.clone()), "https://beatscript.app");
         let ex = Examples { list: Vec::new(), text: HashMap::new() };
         let mut hits = Vec::new();
-        for path in ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", AUTHORSHIP_PATH, "/phrasebook", FOUND_PATH, FORMS_PATH, RADIO_PATH, "/themes"] {
+        for path in ["/docs/", "/docs/cheatsheet", "/docs/language", "/docs/arrange", "/docs/api", "/schema", "/docs/open-data", "/grammar", AUTHORSHIP_PATH, "/phrasebook", FOUND_PATH, FORMS_PATH, RADIO_PATH, SDK_PATH, "/themes"] {
             match d.answer(path, &ex) {
                 Some(Answer::Body(_, b, _, _)) => hits.extend(standalone_btw(path, &visible_html(&String::from_utf8_lossy(&b)))),
                 _ => assert!(path == "/docs/api" && !src.is_dir(), "{path} is not served"),

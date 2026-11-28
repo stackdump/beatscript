@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+### Build your own: `/docs/sdk`, the supported surfaces and how each is pinned (2026-11-28)
+
+- A new page, [Build your own](https://beatscript.app/docs/sdk) (docs/beatscript/sdk.md): the language and its CIDs, the
+  embed config, the npm player and studio (exact version and SRI), the MCP server and HTTP API, the ontology release and
+  the engine crates as a git dependency pinned by rev; MIT code, CC0 programs and output by default; the engine crates and
+  the UniFFI crate for native builders; check, fmt, expand and highlight outside the studio. The docs index, llms.txt, the
+  sitemap and the embed tool's description link it; the ontology has `ns:SoftwareDevelopmentKit` and
+  `concept:product-beatscript-sdk`.
+
+### History as a source: `history roll` and `history slip` (2026-11-28)
+
+- The control registry's `history` noun has `roll` (`on`, `beats`: a history loop held while pressed, on the beat, down to
+  1/16 beat) and `slip` (`on`: a jog release or the end of a loop or roll rejoins live instead of playing on from where it
+  was), on any strip's history (djrust 04729b9). docs/CONTROL.md lists them.
+
+### The stage view: `?view=stage`, a program on a projector or a second screen (2026-11-28)
+
+- `https://beatscript.app/?view=stage&cid=<CID>` (or `&example=`, or a share link's `#...`) shows the program full screen,
+  read-only, in large high-contrast type (whole pixels from the window's width), with the firing markers and the follow-scroll
+  on, playing at once. A full-screen toggle (a header button and F; Esc leaves full screen and never stops the music; where
+  the element cannot go full screen, as on an iPhone, the stage fills the window and says Share, then Add to Home Screen), the
+  play button and the "enable sound" banner. Nothing edits: no toolbar, problems, completion, scrubbing or panels (G is off).
+- A `set { }` shows its tracklist line in the header: `2/5  now <track>  ·  next <track>`, `mix 2→3  <track> → <track>`
+  during a mix, `last` on the last track (`site/web/js/stage-model.js`, from the set's text and the sections check names).
+- The system's light theme (a white ground, dark ink, lamps lit out of white) and `prefers-contrast: more` are honoured.
+- It is record mode's page with a person in front of it (one mode, two entry points). `?record=1`, the demo-video renderer's
+  page, is unchanged: `site/test/stage-browser.mjs --base-ref <ref>` renders its frames from both trees and they are the same bytes.
+- The type scale, lamp colours and tracklist line are the visual language the booth's projector window shares
+  (`/docs/api#stage-view`); llms.txt names the view, and the ontology has `concept:stage-view`.
 ### The booth as a paired device: kind `booth` on btw-pair/2, a set pushed whole, the program resolver (2026-11-28)
 
 - A device claims as `kind: booth` (btw-pair/2 only; the signed claim text gains a `kind: booth` line, phone claims and

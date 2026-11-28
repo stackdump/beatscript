@@ -48,6 +48,8 @@ ns:McpServer a owl:Class ; rdfs:subClassOf ns:Product ; rdfs:label "MCP server"@
     rdfs:comment "A Model Context Protocol server: tools an AI assistant such as Claude can call to use a product."@en .
 ns:ProgrammingLanguage a owl:Class ; rdfs:subClassOf ns:Product ; rdfs:label "programming language"@en ; ns:status "stable" ;
     rdfs:comment "A text language whose documents are programs a product runs. Its versions (ns:LanguageVersion) are in the generated vocabulary, from the code that reads them."@en .
+ns:SoftwareDevelopmentKit a owl:Class ; rdfs:subClassOf ns:Product ; rdfs:label "software development kit"@en ; ns:status "stable" ;
+    rdfs:comment "The parts of a product that others may build their own interfaces on, each with a stated way it is versioned and pinned."@en .
 ns:inProductFamily a owl:ObjectProperty ; rdfs:domain ns:Product ; rdfs:range ns:ProductFamily ; rdfs:label "in product family"@en ; ns:status "stable" ;
     rdfs:comment "The family whose name this product carries."@en .
 ns:homepage a owl:DatatypeProperty ; rdfs:domain ns:Product ; rdfs:range xsd:anyURI ; rdfs:label "homepage"@en ; ns:status "stable" .
@@ -74,6 +76,10 @@ concept:product-beatscript-language a skos:Concept, ns:ProgrammingLanguage ; sko
     ns:fileExtension ".beatscript" ; ns:legacyFileExtension ".btw" ;
     ns:mediaType "text/beatscript" ; ns:legacyMediaType "text/x-beatscript", "text/btw" ;
     rdfs:seeAlso ns:Program .
+concept:product-beatscript-sdk a skos:Concept, ns:SoftwareDevelopmentKit ; skos:prefLabel "BeatScript SDK"@en ;
+    skos:altLabel "Build your own"@en ; ns:status "stable" ;
+    skos:definition "What you can build your own interface on: the player and the embed config, the MCP server, the engine crates (a git dependency pinned by revision, with the FFI the Android and iPad apps use) and the language service (check, fmt, expand, highlight) outside the studio. Code MIT; programs and their output CC0 by default."@en ;
+    ns:inProductFamily concept:product-beatscript ; ns:homepage "https://beatscript.app/docs/sdk"^^xsd:anyURI .
 
 # --- pairing: the devices a BeatScript site plays on, and the read they resolve programs with -------------------
 # (site/PAIRING.md; the wire strings are the device record's `kind` and the resolver route)
@@ -99,6 +105,11 @@ concept:program-resolver a skos:Concept, ns:ProgramResolver ; skos:prefLabel "pr
     skos:definition "GET /api/programs/{cid} on beatscript.app: a stored public program by CID ({cid, text, meta} with its licence), no sign-in, cached as immutable, its JSON-LD named by a describedby Link; 404 for anything the site does not hold."@en ;
     ns:urlTemplate "https://beatscript.app/api/programs/{cid}" ;
     rdfs:seeAlso ns:Program .
+
+concept:stage-view a skos:Concept ; skos:prefLabel "stage view"@en ; skos:altLabel "projector view"@en ; ns:status "stable" ;
+    skos:definition "A BeatScript program shown for a projector or a second screen while it plays: full screen, read-only, in large high-contrast type, with the firing markers lit, the follow-scroll on and, for a set, the tracklist line (the current track and the next). On beatscript.app it is ?view=stage; the booth's projector window is its native twin, with the same type scale, lamp colours and tracklist line."@en ;
+    skos:scopeNote "The web page's record mode (?record=1), from which the demo video is rendered frame by frame, is the same page without the person: no full-screen toggle, no play button, no tracklist line."@en ;
+    ns:inProductFamily concept:product-beatscript ; ns:homepage "https://beatscript.app/docs/api#stage-view"^^xsd:anyURI .
 
 # --- conventions for the generator's own genres -----------------------------------------------------------------
 # The genres djrust's generator has beyond beats' catalogue (acid, deephouse, electro, italo) are generated from its

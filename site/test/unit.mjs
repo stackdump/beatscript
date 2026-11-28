@@ -3283,6 +3283,152 @@ test('record: window.__beatscript is window.__btw, one object (the tools and the
   }
 });
 
+// the stage view (?view=stage): stage-model.js, and record mode (?record=1) unchanged by it
+test('stage: ?record=1 is record mode exactly as before; ?view=stage is the same chrome-less mode plus the stage; record wins', async () => {
+  const { pageMode, htmlClasses } = await J('stage-model.js');
+  const q = (s) => new URLSearchParams(s);
+  // record mode, every URL the demo-video renderer and the MCP record tool use: the flags it always had, no stage
+  for (const u of ['record=1&cid=zABC', 'record=1&example=matrix-130', 'record=1&clock=manual&cid=zABC', 'record=1&clock=manual&example=x']) {
+    assert.deepEqual(pageMode(q(u)), { record: true, stage: false, manual: /clock=manual/.test(u) }, u);
+    assert.deepEqual(htmlClasses(pageMode(q(u))), ['record'], u);
+  }
+  // the stage view
+  assert.deepEqual(pageMode(q('view=stage&cid=zABC')), { record: true, stage: true, manual: false });
+  assert.deepEqual(htmlClasses(pageMode(q('view=stage'))), ['record', 'stage']);
+  // a renderer's URL never changes behaviour: with both, it is record mode
+  assert.deepEqual(pageMode(q('record=1&view=stage&cid=zABC')), { record: true, stage: false, manual: false });
+  // the editor
+  for (const u of ['', 'cid=zABC', 'view=editor', 'record=0', 'view=STAGE']) {
+    assert.deepEqual(pageMode(q(u)), { record: false, stage: false, manual: false }, u);
+    assert.deepEqual(htmlClasses(pageMode(q(u))), [], u);
+  }
+  // app.js reads the mode from stage-model.js, and installs the stage only in the stage view; record.js knows nothing of it
+  const app = fs.readFileSync(path.join(web, 'js', 'app.js'), 'utf8');
+  assert.match(app, /const mode = pageMode\(q\);\n\s+this\.record = mode\.record;\n\s+this\.stage = mode\.stage;\n\s+this\.manual = mode\.manual;/);
+  assert.match(app, /if \(this\.stage\) installStage\(this\);/);
+  assert.match(app, /document\.documentElement\.classList\.toggle\('record', this\.record\);/);
+  assert.ok(!/stage/.test(fs.readFileSync(path.join(web, 'js', 'record.js'), 'utf8')), 'record.js is untouched by the stage view');
+  // every stage rule in the sheet is under html.stage (or a stage-only element), so none of them reaches record mode's frames
+  const css = fs.readFileSync(path.join(web, 'css', 'beatscript.css'), 'utf8');
+  const start = css.indexOf('/* ---- the stage view');
+  const end = css.indexOf('button.link {', start);
+  assert.ok(start > 0 && end > start);
+  const block = css.slice(start, end).replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const rule of block.split('}').map((r) => r.trim()).filter((r) => r && !r.startsWith('@media'))) {
+    const sel = rule.replace(/^@media[^{]*\{/, '').split('{')[0].trim();
+    if (!sel) continue;
+    for (const one of sel.split(',')) assert.match(one.trim(), /^(html\.stage\b|\.stage-(tl|fs|hint)\b)/, `a stage rule that could reach record mode: ${one.trim()}`);
+  }
+});
+
+test('stage: record mode\'s lamps are the pixels they were (lampStyle with no palette); the stage\'s light ground lights out of white', async () => {
+  const { lampPalette, STAGE } = await J('stage-model.js');
+  // pinned: the demo video's over-lamp colours at a few intensities (markers-model.js before the stage view)
+  assert.deepEqual(lampStyle(0), { background: 'rgb(11,13,18)', color: 'rgb(216,220,230)' });
+  assert.deepEqual(lampStyle(0.5), { background: 'rgb(133,107,49)', color: 'rgb(91,93,99)' });
+  assert.deepEqual(lampStyle(1), { background: 'rgb(255,200,80)', color: 'rgb(16,16,20)' });
+  assert.deepEqual(lampStyle(0.5, null), lampStyle(0.5));
+  const light = lampPalette('light');
+  assert.deepEqual(lampStyle(0, light), { background: 'rgb(255,255,255)', color: 'rgb(16,18,24)' });
+  assert.equal(lampStyle(1, light).background, 'rgb(255,200,80)', 'the amber at full is the same on either ground');
+  assert.deepEqual(lampPalette('dark').stage, STAGE.ground.dark);
+  assert.deepEqual(lampPalette('anything').stage, STAGE.ground.dark);
+});
+
+test('stage: the type scale is whole pixels from the width, held between its bounds', async () => {
+  const { stageType, STAGE } = await J('stage-model.js');
+  assert.deepEqual(stageType(1920), { fs: 32, lh: 44, gut: 147 });
+  assert.deepEqual(stageType(1280), { fs: 21, lh: 29, gut: 97 });
+  assert.equal(stageType(320).fs, STAGE.minPx);
+  assert.equal(stageType(7680).fs, STAGE.maxPx);
+  assert.equal(stageType(0).fs, 21, 'no width: as a 1280 px window');
+  for (const w of [360, 768, 1024, 1366, 2560, 3840]) {
+    const t = stageType(w);
+    for (const v of Object.values(t)) assert.ok(Number.isInteger(v), `${w}: ${JSON.stringify(t)}`);
+  }
+});
+
+test('stage: the tracklist of a set, from its text and check; where the set is, from the section; the line it reads as', async () => {
+  const { setTracks, trackOfSection, sectionAt, setPosition, tracklistLine } = await J('stage-model.js');
+  const CID = 'zQmYwAPJzv5CZsnAzt8auVTLpG1bG6dkprdFM5ocTyBCQb3';
+  const text = `#! beatscript 2\nset {\n  play gen@2 techno seed=42\n  mix 8 bars with crossfade\n  next seed=+1\n  # a comment { with a brace }\n  play "my track" until 20m\n  mix 16 bars with echo_out, tempo 128 -> 124\n  play ${CID}\n}\nend\n`;
+  const report = { diagnostics: [{ severity: 'info', line: 5, message: 'next: gen@2 techno seed=43 -> z4EBG9j8eo (seeded@2)' }] };
+  const tracks = setTracks(text, report);
+  assert.deepEqual(tracks.map((t) => [t.n, t.line, t.label]), [[1, 2, 'gen@2 techno seed=42'], [2, 4, 'gen@2 techno seed=43'], [3, 6, 'my track'], [4, 8, 'zQmYwA…CQb3']]);
+  assert.equal(setTracks(text, null)[1].label, 'next seed=+1', 'without the check, the line as written');
+  assert.deepEqual(setTracks('#! beatscript 2\ndeck A: kick x ~ x ~\n', null), [], 'not a set');
+  assert.deepEqual(setTracks('', null), []);
+  // the set's sections, as the compiler names them (djlive set.rs)
+  assert.deepEqual(trackOfSection('2. buildup'), { n: 2 });
+  assert.deepEqual(trackOfSection('mix 1→2'), { n: 1, to: 2 });
+  assert.equal(trackOfSection('drop'), null);
+  const sections = [{ name: '1. intro', start: 0, bars: 112 }, { name: 'mix 1→2', start: 112, bars: 8 }, { name: '2. buildup', start: 120, bars: 96 }];
+  assert.equal(sectionAt(sections, 1), '1. intro');
+  assert.equal(sectionAt(sections, 113), 'mix 1→2');
+  assert.equal(sectionAt(sections, 121), '2. buildup');
+  assert.equal(sectionAt(sections, 0), null);
+  assert.equal(sectionAt(sections, 9999), null);
+  const p1 = setPosition(tracks, { songBar: 5, sections });
+  assert.deepEqual(p1, { n: 1, total: 4, now: 'gen@2 techno seed=42', next: 'gen@2 techno seed=43', to: null, line: 2 });
+  assert.equal(tracklistLine(p1), '1/4  now gen@2 techno seed=42  ·  next gen@2 techno seed=43');
+  const mx = setPosition(tracks, { section: 'mix 1→2' });
+  assert.equal(tracklistLine(mx), 'mix 1→2  gen@2 techno seed=42 → gen@2 techno seed=43');
+  const last = setPosition(tracks, { section: '4. outro' });
+  assert.equal(tracklistLine(last), `4/4  now zQmYwA…CQb3  ·  last`);
+  assert.equal(setPosition(tracks, { section: '9. x' }), null, 'a section past the tracks');
+  assert.equal(setPosition([], { section: '1. x' }), null);
+  assert.equal(tracklistLine(null), '');
+});
+
+test('stage: the set\'s tracklist against the real module: the sections check names are the ones the stage reads', { skip: !realWasm }, async () => {
+  const { setTracks, setPosition, tracklistLine } = await J('stage-model.js');
+  const text = '#! beatscript 2\nset {\n  play gen@2 techno seed=42\n  mix 8 bars with crossfade\n  next seed=+1\n  mix 8 bars with echo_out\n  play gen@2 house seed=7\n}\nend\n';
+  const c = facade.check(text);
+  assert.equal(c.ok, true, JSON.stringify(c.diagnostics));
+  const tracks = setTracks(text, c);
+  assert.deepEqual(tracks.map((t) => t.label), ['gen@2 techno seed=42', 'gen@2 techno seed=43', 'gen@2 house seed=7']);
+  const mix = c.sections.find((s) => /^mix 1→2/.test(s.name));
+  assert.ok(mix, JSON.stringify(c.sections));
+  assert.match(tracklistLine(setPosition(tracks, { songBar: 1, sections: c.sections })), /^1\/3  now gen@2 techno seed=42  ·  next gen@2 techno seed=43$/);
+  assert.match(tracklistLine(setPosition(tracks, { songBar: mix.start + 1, sections: c.sections })), /^mix 1→2 /);
+  const s3 = c.sections.find((s) => /^3\. /.test(s.name));
+  assert.match(tracklistLine(setPosition(tracks, { songBar: s3.start + 1, sections: c.sections })), /^3\/3  now gen@2 house seed=7  ·  last$/);
+});
+
+test('stage: full screen with Safari\'s prefixes, and none where the element cannot go full screen (an iPhone)', async () => {
+  const { fullscreenOf, stageKey, exitHint } = await J('stage-model.js');
+  const calls = [];
+  const std = { fullscreenEnabled: true, fullscreenElement: null, onfullscreenchange: null, exitFullscreen() { calls.push('exit'); }, documentElement: { requestFullscreen(o) { calls.push(['req', o]); } } };
+  const f = fullscreenOf(std);
+  assert.equal(f.native, true);
+  assert.equal(f.event, 'fullscreenchange');
+  assert.equal(f.active(), false);
+  await f.request();
+  await f.exit();
+  assert.deepEqual(calls, [['req', { navigationUI: 'hide' }], 'exit']);
+  const wk = { webkitFullscreenEnabled: true, webkitFullscreenElement: {}, webkitExitFullscreen() {}, documentElement: { webkitRequestFullscreen() {} } };
+  const g = fullscreenOf(wk);
+  assert.equal(g.native, true);
+  assert.equal(g.event, 'webkitfullscreenchange');
+  assert.equal(g.active(), true);
+  const phone = { documentElement: {} };
+  const p = fullscreenOf(phone);
+  assert.equal(p.native, false);
+  await assert.rejects(p.request());
+  await p.exit();
+  assert.equal(fullscreenOf({ fullscreenEnabled: false, exitFullscreen() {}, documentElement: { requestFullscreen() {} } }).native, false, 'disabled (an iframe without allow=fullscreen)');
+  // the keys: F toggles, Esc leaves, G (an editing panel) is blocked, modifiers are the page's
+  assert.equal(stageKey({ key: 'f' }), 'fullscreen');
+  assert.equal(stageKey({ key: 'F' }), 'fullscreen');
+  assert.equal(stageKey({ key: 'Escape' }), 'exit');
+  assert.equal(stageKey({ key: 'g' }), 'block');
+  assert.equal(stageKey({ key: 'f', metaKey: true }), null);
+  assert.equal(stageKey({ key: 'l' }), null, 'L still toggles the follow');
+  assert.match(exitHint(true, false), /F or Esc/);
+  assert.match(exitHint(false, true), /Add to Home Screen/);
+  assert.doesNotMatch(exitHint(false, false), /Home Screen/);
+});
+
 test('starter: a fresh editor opens on a BeatScript 2 program, its version line first, and it checks', async () => {
   const { STARTER } = await J('starter.js');
   const v = await J('version.js');

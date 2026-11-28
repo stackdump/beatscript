@@ -23,6 +23,8 @@ import { fragmentOf, guardLink } from './link.js';
 import { Resolver } from './closure.js';
 import { lineStarts, lineOf, makeByteMapper, spanRange } from './geometry.js';
 import { early, install } from './record.js';
+import { pageMode } from './stage-model.js';
+import { installStage } from './stage.js';
 import { Background } from './background.js';
 import { PresenceTracker, UpNext, pauseMessage } from './queue-model.js';
 import { Assist } from './assist.js';
@@ -39,8 +41,11 @@ export class App {
     this.q = q;
     // the JS stand-in for the module (no real CIDs, a line-shape check) is for development: a link cannot switch it on elsewhere
     this.mock = q.get('mock') === '1' && isLoopbackHost(location.hostname);
-    this.record = q.get('record') === '1';
-    this.manual = q.get('clock') === 'manual';
+    // record mode (?record=1) and the stage view (?view=stage) are one chrome-less mode with two entry points (stage-model.js)
+    const mode = pageMode(q);
+    this.record = mode.record;
+    this.stage = mode.stage;
+    this.manual = mode.manual;
     this.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.api = makeApi();
     this.beatscript = null;
@@ -103,6 +108,7 @@ export class App {
     });
     this.painter = new MarkerPainter(this.editor);
     this.wire();
+    if (this.stage) installStage(this);
     if (!this.record) this.presence.attach(window);
     if (!this.manual) { this.bg = new Background(this); this.bg.start(); }
     this.setProgram(STARTER, { name: 'starter', quiet: true, keepHash: true });
@@ -1459,7 +1465,7 @@ export class App {
   /** The strip under the header: {kind, text|html, actions:[{label, run, primary}]}; null clears it. */
   banner(b) {
     const el = this.el.banner;
-    if (!b || this.record) {
+    if (!b || (this.record && !this.stage)) {
       el.hidden = true;
       el.replaceChildren();
       return;

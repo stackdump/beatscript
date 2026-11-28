@@ -17,6 +17,9 @@ with all rights reserved, or a link to a program the site does not keep is not e
 Share a program while signed in to store it. Through MCP, the `share` tool called signed in answers the player's URL as
 `embed_url`. The elements need no stored program: they carry the text and play it with the engine in the page.
 
+To build your own interface rather than embed this one, see [Build your own](/docs/sdk): what is supported and how it is
+versioned, the engine crates for a native app, and the language service outside the studio.
+
 ## The config
 
 ```json

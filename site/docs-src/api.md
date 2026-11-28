@@ -23,6 +23,7 @@ version is `/privacy`. `GET /.well-known/btw-site` names the site (`site_id`, it
 | route | auth | does |
 |---|---|---|
 | `GET /` and `/js/*`, `/css/*`, `/wasm/*` | | the page |
+| `GET /?view=stage&cid=<cid>` (or `&example=<name>`, or a share link's `#…`) | | the program on a stage: full screen, read-only, large type, [Stage view](#stage-view) |
 | `GET /healthz`, `GET /api/info` | | liveness; name, version, model, compose `{enabled, configured, limits}`, render limits, auth kinds |
 | `GET /api/examples`, `GET /examples/<name>.beatscript` | | the public example programs: list as JSON, text as written |
 | `GET /api/instruments` | | the voices, families, drum kits and palettes a program may name |
@@ -348,6 +349,38 @@ at most 8 credits of 80 characters). The text must check and hash to `<CID>`; on
 rights stay. It is limited per account (60 an hour) and per address. The MCP `share` tool does the same when called with a token.
 Reading is public: `GET /api/programs/<CID>` answers `{"cid", "text", "meta"}` (the canonical text and its rights), cross-origin, and the
 reader recomputes the CID from the text and refuses a mismatch, exactly as for a self-sealing link. A CID the site has not stored is `404`.
+
+## Stage view
+
+For a projector or a second screen at a gig: the program full screen, read-only, in large high-contrast type, with the firing
+markers lit and the follow-scroll on, playing at once.
+
+```text
+https://beatscript.app/?view=stage&cid=<CID>
+https://beatscript.app/?view=stage&example=<name>
+https://beatscript.app/?view=stage#<CID>.<packed>         (a share link's program)
+```
+
+It is the page's record mode (`?record=1`, which the demo video is rendered from, and which stays exactly as it is) with a person in
+front of it, so it has what a person needs and nothing that edits:
+
+- **Full screen**: the button in the header, or **F**. **Esc** leaves full screen and never stops the music. Where the page cannot go
+  full screen (Safari on an iPhone), it fills the window instead and says how to lose the browser's bars (Share, then Add to Home Screen).
+- **A set's tracklist**: when the program is a `set { }`, the header says where the set is, `2/5  now <track>  ·  next <track>`, during a
+  mix `mix 2→3  <track> → <track>`, and `last` on the last track.
+- **Play and stop**, and the browser's "enable sound" banner when it holds the sound until a click. No toolbar, no problems list, no
+  completion or scrubbing, no panels (G does nothing here); the text can be selected and copied, not changed.
+- **Type and colour**: the code's size follows the window (`width / 60` px, 18 to 44 px, line height 1.36 times that), on a black
+  ground; the system's light theme makes it a white ground with dark ink, and `prefers-contrast: more` makes it the most contrast each
+  theme has.
+
+When `?record=1` and `?view=stage` are both given, it is record mode: a renderer's URL never changes behaviour.
+
+**One look, two screens.** The booth's projector window (djrust, a viewport on a second display) and this view share a visual
+language, so a set looks the same projected from either: the type scale above; the lamp colours of the editor's markers (amber
+`#ffc850` for a token that sounded, green `#4cd06a` for a playing line, teal `#56b6c2` for a control line, red `#e05050` for a held one,
+purple `#c678dd` for a new generation, a lamp fading to the ground it sits on, `#000` or `#fff`); and the tracklist line's wording.
+The values live in `site/web/js/stage-model.js` (`STAGE`, `tracklistLine`) and `markers-model.js` (`COLORS`).
 
 ## For models
 

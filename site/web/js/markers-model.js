@@ -29,9 +29,12 @@ export const mix = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(
 export const rgb = (c) => `rgb(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])})`;
 export const rgba = (c, a) => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${Math.max(0, Math.min(1, a)).toFixed(3)})`;
 
-/** The look of a token lamp at intensity k: an opaque amber that cools to the stage, with the ink going dark as it warms. */
-export function lampStyle(k) {
-  return { background: rgb(mix(COLORS.stage, COLORS.amber, k)), color: rgb(mix(COLORS.ink, COLORS.inkDark, Math.min(1, k * 1.25))) };
+/** The look of a token lamp at intensity k: an opaque amber that cools to the stage, with the ink going dark as it warms.
+ *  `palette` ({stage, ink}) is another ground and ink (the stage view's light theme); without it, the editor's. */
+export function lampStyle(k, palette = null) {
+  const ground = (palette && palette.stage) || COLORS.stage;
+  const ink = (palette && palette.ink) || COLORS.ink;
+  return { background: rgb(mix(ground, COLORS.amber, k)), color: rgb(mix(ink, COLORS.inkDark, Math.min(1, k * 1.25))) };
 }
 
 /**

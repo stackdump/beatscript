@@ -8,6 +8,9 @@ ways:
 - djweb's `BeatscriptLs` (wasm): the same server for the browser editor, positions in UTF-16.
 - `beatscriptls::Server` in-process (the golden tests drive it).
 
+The other ways to check, format, expand and highlight outside the studio (the CLI, the MCP, the wasm module's exports,
+HTTP) are listed with this one in [docs/beatscript/sdk.md](beatscript/sdk.md), "The language service, outside the studio".
+
 ## Two tiers
 
 | tier | what | when |
