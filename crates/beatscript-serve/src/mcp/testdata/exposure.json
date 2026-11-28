@@ -36,6 +36,16 @@
       ]
     },
     {
+      "id": "sdk-path", "datum": 6795, "docs": ["sdk.md"],
+      "say": [["embed", "https://beatscript.app/docs/sdk"], ["embed", "the engine crates for native apps"], ["embed", "the language service outside the studio"]],
+      "calls": [
+        {"tool": "check", "args": {"text": "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n"},
+         "expect": [["/ok", "=", true], ["/version", "=", 2], ["/cid", "^", "z"], ["/renamed_cid", "has"]]},
+        {"tool": "fmt", "args": {"text": "#! beatscript 2\ntempo   120\ndeck A: kick x ~ x ~\n"},
+         "expect": [["/ok", "=", true], ["/version", "=", 2], ["/text", "~", "tempo 120\n"]]}
+      ]
+    },
+    {
       "id": "embed-tool", "datum": 6702, "docs": ["embed.md"],
       "say": [["embed", "embed-config.schema.json"], ["embed", "<beatscript-studio>"], ["embed", "capabilities"], ["embed", "Subresource Integrity"], ["embed", "/card/<CID>.svg"], ["embed", "degraded"]],
       "calls": [
