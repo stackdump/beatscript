@@ -36,13 +36,14 @@ instead, as described below), the server's internals, and the booth-only feature
 
 ### Licences
 
-The code is MIT. BeatScript programs and everything they make are CC0-1.0: the programs, the examples, the lexicon, the
-phrasebook and themes, the ontology, the docs and the audio a CC0 program renders to. `REUSE.toml` says which path is
-which. What you build on them is yours. You do not have to use these licences for your own code or your own programs,
-and a program keeps the licence its author gives it ([Authorship and rights](/authorship)). How rights travel with a
-program, into its CID, and how a fork credits what it came from is in `docs/LICENSING.md`.
+The code is MIT. Everything else in this repository is CC0-1.0: the programs and examples, the lexicon, the phrasebook
+and themes, the ontology and the docs. `REUSE.toml` says which path is which. Programs stored on beatscript.app are CC0
+by default, and so is the audio a CC0 program renders to. An author may choose a CC BY licence instead, and a program
+keeps the licence its author gives it ([Authorship and rights](/authorship)). What you build on these is yours, and your
+own code and programs need not use these licences. `docs/LICENSING.md` explains how rights travel with a program into its
+CID and how a fork credits what it came from.
 
-One rule holds on beatscript.app and should hold in what you build: content that is not Creative Commons never reaches
+One rule holds on beatscript.app: content that is not Creative Commons never reaches
 the site. A program that uses samples (`decode`, below) or says `use restricted` plays on your own device, but it is not
 stored, shared or embedded. A default build of every shipped target leaves the booth-only parts out, and
 `scripts/check-public-build.sh` checks that.

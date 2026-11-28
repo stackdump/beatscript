@@ -78,7 +78,7 @@ concept:product-beatscript-language a skos:Concept, ns:ProgrammingLanguage ; sko
     rdfs:seeAlso ns:Program .
 concept:product-beatscript-sdk a skos:Concept, ns:SoftwareDevelopmentKit ; skos:prefLabel "BeatScript SDK"@en ;
     skos:altLabel "Build your own"@en ; ns:status "stable" ;
-    skos:definition "What you can build your own interface on: the player and the embed config, the MCP server, the engine crates (a git dependency pinned by revision, with the FFI the Android and iPad apps use) and the language service (check, fmt, expand, highlight) outside the studio. Code MIT, programs and their output CC0."@en ;
+    skos:definition "What you can build your own interface on: the player and the embed config, the MCP server, the engine crates (a git dependency pinned by revision, with the FFI the Android and iPad apps use) and the language service (check, fmt, expand, highlight) outside the studio. Code MIT; programs and their output CC0 by default."@en ;
     ns:inProductFamily concept:product-beatscript ; ns:homepage "https://beatscript.app/docs/sdk"^^xsd:anyURI .
 
 # --- pairing: the devices a BeatScript site plays on, and the read they resolve programs with -------------------
