@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Build your own: `/docs/sdk`, the supported surfaces and how each is pinned (2026-11-28)
+
+- A new page, [Build your own](https://beatscript.app/docs/sdk) (docs/beatscript/sdk.md): the language and its CIDs, the
+  embed config, the npm player and studio (exact version and SRI), the MCP server and HTTP API, the ontology release and
+  the engine crates as a git dependency pinned by rev; MIT code, CC0 programs and output by default; the engine crates and
+  the UniFFI crate for native builders; check, fmt, expand and highlight outside the studio. The docs index, llms.txt, the
+  sitemap and the embed tool's description link it; the ontology has `ns:SoftwareDevelopmentKit` and
+  `concept:product-beatscript-sdk`.
+
+### History as a source: `history roll` and `history slip` (2026-11-28)
+
+- The control registry's `history` noun has `roll` (`on`, `beats`: a history loop held while pressed, on the beat, down to
+  1/16 beat) and `slip` (`on`: a jog release or the end of a loop or roll rejoins live instead of playing on from where it
+  was), on any strip's history (djrust 04729b9). docs/CONTROL.md lists them.
+
 ### The stage view: `?view=stage`, a program on a projector or a second screen (2026-11-28)
 
 - `https://beatscript.app/?view=stage&cid=<CID>` (or `&example=`, or a share link's `#...`) shows the program full screen,
