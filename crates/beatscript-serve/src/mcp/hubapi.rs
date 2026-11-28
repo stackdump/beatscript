@@ -19,6 +19,9 @@ pub struct SessionEvent {
     pub text: String,
     pub cid: String,
     pub play: bool,
+    /// A set's members (`hub::set_extra`) when the text is a set: to a booth's session it goes as a `set` event with
+    /// them; anywhere else it is dropped and the event is sent as `kind`.
+    pub set: Option<String>,
 }
 
 /// `api.SessionInfo`, what `get` needs of it.

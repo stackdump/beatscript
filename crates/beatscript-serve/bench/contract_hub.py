@@ -20,7 +20,16 @@ Normalization: only what is random or read off a clock, each by a named rule, ev
             module-matrix goldens and four pairing links' PNG bytes printed by Go.
   retry     a rate limit's seconds (`Retry-After`, `retry_after`, "try again in Ns") may differ by one when the
             two answers straddle a second; equal within one, then normalized.
+  r1a       what beatscript-serve adds for the booth (site/PAIRING.md "The booth", 2026-11-27) and Go never had is
+            undone on its side before comparing: `"kind":"phone"` in a device's views, the hello and MCP devices, and
+            `"programs":"<origin>/api/programs/{cid}"` in the hello. Every other byte is compared; Content-Length is then
+            checked against its own body. A case equal only after this is reported KNOWN with the reason.
 Accepted differences are recorded in KNOWN_HUB with their reason.
+
+The booth's own sequence (`Booth`, R1a) has no Go counterpart: it runs against beatscript-serve alone and checks what
+the contract says (a signed `kind: booth` claim, the hello, a `set` event and its members, `not_a_booth`, the
+resolver). `python3 contract_hub.py --rs 127.0.0.1:PORT` runs it on its own against a server started as pair.sh starts
+one (session.secret and site.json as here).
 """
 import base64, hashlib, hmac, json, re, socket, struct, threading, time, zlib
 
@@ -34,6 +43,9 @@ PROG = "tempo 120\ndeck A: kick x ~ x ~\n"
 
 # case -> reason
 KNOWN_HUB = {}
+# r1a: beatscript-serve's additions for the booth, undone on its side (the rule above)
+R1A_FIELDS = re.compile(rb',"kind":"phone"|,"programs":"https://beatscript\.app/api/programs/\{cid\}"')
+R1A_REASON = "R1a: a device's kind and the hello's resolver template (site/PAIRING.md \"The booth\"); equal once undone"
 
 
 def b64u(b):
@@ -158,15 +170,20 @@ class Phone:
     def sign(self, msg):
         return b64u(self.k.sign(msg.encode()))
 
-    def claim(self, pair_id, token, name="Pixel 9", ts=None, proto="btw-pair/2", host="beatscript.app", site=SITE, key=None):
+    def claim(self, pair_id, token, name="Pixel 9", ts=None, proto="btw-pair/2", host="beatscript.app", site=SITE, key=None, kind=None, signed_kind=None):
+        """kind: the claim's `kind` field (None: none, as a phone sends); signed_kind: the `kind:` line signed (a booth's)."""
         ts = int(time.time() * 1000) if ts is None else ts
         key = key or self.key
         th = hashlib.sha256(token.encode()).hexdigest()
         if proto == "btw-pair/2":
-            msg = f"btw-pair/2 claim\nsite: {site}\npair: {pair_id}\ntoken: {th}\nkey: {key}\nname: {name}\nts: {ts}"
+            line = f"kind: {signed_kind}\n" if signed_kind else ""
+            msg = f"btw-pair/2 claim\nsite: {site}\npair: {pair_id}\ntoken: {th}\nkey: {key}\nname: {name}\n{line}ts: {ts}"
         else:
             msg = f"btw-pair/1 claim\nhost: {host}\npair: {pair_id}\ntoken: {th}\nkey: {key}\nname: {name}\nts: {ts}"
-        return json.dumps({"proto": proto, "pair_id": pair_id, "token": token, "key": key, "name": name, "ts": ts, "sig": self.sign(msg)}).encode()
+        body = {"proto": proto, "pair_id": pair_id, "token": token, "key": key, "name": name, "ts": ts, "sig": self.sign(msg)}
+        if kind is not None:
+            body["kind"] = kind
+        return json.dumps(body).encode()
 
     def auth(self, side, method, path, body=b"", ts=None, v=2, dev=None):
         ts = int(time.time() * 1000) if ts is None else ts
@@ -264,6 +281,11 @@ class Hub:
         for v, lab in sorted(self.maps[side].items(), key=lambda x: -len(x[0])):
             body = body.replace(v.encode(), lab.encode())
         hs = []
+        if side == "rs":
+            b2 = R1A_FIELDS.sub(b"", body)
+            if b2 != body:
+                body = b2
+                applied.append("r1a")
         if "time" in rules and TIME.search(body):
             body = TIME.sub(b"<time>", body)
             applied.append("time")
@@ -271,7 +293,7 @@ class Hub:
             body = re.sub(rb'"retry_after":\d+', b'"retry_after":N', body)
             body = re.sub(rb"try again in \d+s", b"try again in Ns", body)
             applied.append("retry")
-        framing = "qr" in applied or "time" in applied
+        framing = "qr" in applied or "time" in applied or "r1a" in applied
         for k, v in resp["headers"]:
             kl = k.lower()
             if kl in ("date", "connection"):
@@ -303,6 +325,8 @@ class Hub:
                 i = next((k for k in range(min(len(ng[2]), len(nr[2]))) if ng[2][k] != nr[2][k]), min(len(ng[2]), len(nr[2])))
                 diff.append(f"body ({len(ng[2])} vs {len(nr[2])} B, first difference at {i}) go …{ng[2][max(0, i - 60):i + 120]!r} rs …{nr[2][max(0, i - 60):i + 120]!r}")
         known = known or KNOWN_HUB.get(name)
+        if same and "r1a" in nr[3]:
+            same, known = False, R1A_REASON
         if not same and b"v=r2rs" in r["body"]:
             # the one accepted difference of a render URL (RUST-SERVER.md §5.1): beatscript-serve's Opus is its own render
             # version, r2rs. Exact once that is undone, Content-Length two bytes per URL shorter.
@@ -687,5 +711,105 @@ class Hub:
         self.compare("POST /api/pair (the 21st in a minute)", g, r, rules=("retry",))
 
 
+class Booth:
+    """R1a: the booth's sequence, against beatscript-serve alone (site/PAIRING.md "The booth"). Each check is a result
+    of group `hub`, case `booth: …`, ok when the answer is what the contract says."""
+
+    def __init__(self, run, rs):
+        self.r, self.rs = run, rs
+        self.n = 0
+
+    def ip(self):
+        self.n += 1
+        return f"203.0.113.{self.n}"
+
+    def check(self, name, ok, detail=""):
+        self.r.results.append({"group": "hub", "case": f"booth: {name}", "same": bool(ok), "ok": bool(ok), "known": None,
+                               "diff": [] if ok else [detail[:400]], "bytes": 0, "rules": []})
+        if not ok or getattr(self.r.a, "verbose", False):
+            print(("SAME " if ok else "FAIL ") + f"[hub] booth: {name}" + ("" if ok else "  " + detail[:400]))
+
+    def post(self, path, body, who=CA):
+        r = raw(self.rs, "POST", path, {"Cookie": who, "Origin": ORIGIN, "Content-Type": "application/json", "X-Real-IP": self.ip()}, json.dumps(body).encode())
+        return r, json.loads(r["body"] or b"null")
+
+    def offer(self):
+        _, o = self.post("/api/pair", {})
+        pid, tok = o["url"].split("#")[1].split(".")
+        return pid, tok
+
+    def claim(self, body):
+        r = raw(self.rs, "POST", "/api/pair/claim", {"Content-Type": "application/json", "X-Real-IP": self.ip()}, body)
+        return r, json.loads(r["body"] or b"null")
+
+    def run(self):
+        booth, phone = Phone(41), Phone(43)
+        pid, tok = self.offer()
+        r, j = self.claim(booth.claim(pid, tok, "Booth Mac", kind="toaster", signed_kind="toaster"))
+        self.check("claim: unknown kind is 400", r["status"].split()[1] == "400", r["body"].decode(errors="replace"))
+        r, j = self.claim(booth.claim(pid, tok, "Booth Mac", kind="booth", proto="btw-pair/1", host="beatscript.app"))
+        self.check("claim: v1 cannot name a kind", r["status"].split()[1] == "400", r["body"].decode(errors="replace"))
+        r, j = self.claim(booth.claim(pid, tok, "Booth Mac", kind="booth"))
+        self.check("claim: the kind is signed", r["status"].split()[1] == "401" and j.get("error") == "bad_signature", r["body"].decode(errors="replace"))
+        r, j = self.claim(booth.claim(pid, tok, "Booth Mac", kind="booth", signed_kind="booth"))
+        self.check("claim: a booth pairs", r["status"].split()[1] == "200" and j.get("kind") == "booth" and j.get("programs") == f"{ORIGIN}/api/programs/{{cid}}", r["body"].decode(errors="replace"))
+        booth.dev = {"rs": j.get("device_id")}
+        pid, tok = self.offer()
+        r, j = self.claim(phone.claim(pid, tok))
+        phone.dev = {"rs": j.get("device_id")}
+        self.check("claim: a phone pairs as before (kind phone)", j.get("kind") == "phone", r["body"].decode(errors="replace"))
+        r = raw(self.rs, "GET", "/api/devices", {"Cookie": CA})
+        kinds = {d["name"]: d.get("kind") for d in json.loads(r["body"])["devices"]}
+        self.check("GET /api/devices names each kind", kinds.get("Booth Mac") == "booth" and kinds.get("Pixel 9") == "phone", str(kinds))
+        sb = SSE(self.rs, "/api/device/events", {"Authorization": booth.auth("rs", "GET", "/api/device/events")})
+        sp = SSE(self.rs, "/api/device/events", {"Authorization": phone.auth("rs", "GET", "/api/device/events")})
+        _, body, _ = sb.frames(1)
+        self.check("the booth's hello names its kind and the resolver", b'"kind":"booth"' in body and b"/api/programs/{cid}" in body, body.decode(errors="replace"))
+        sp.frames(1)
+        cids = []
+        for t in ("#! beatscript 2\ntempo 124\ndeck A: kick x ~ x ~\n", "#! beatscript 2\ntempo 126\ndeck A: kick x x ~ x\n"):
+            c = json.loads(raw(self.rs, "POST", "/api/check", {"Content-Type": "application/json"}, json.dumps({"text": t}).encode())["body"])["cid"]
+            raw(self.rs, "PUT", f"/api/programs/{c}", {"Content-Type": "text/plain", "X-Real-IP": self.ip()}, t.encode())
+            cids.append(c)
+        a, b = cids
+        st = f"#! beatscript 2\nset {{\n  play {a}\n  mix 8 bars with crossfade\n  play {b}\n  play {a}\n}}\n"
+        r, j = self.post(f"/api/devices/{booth.dev['rs']}/push", {"type": "set", "text": st, "play": True})
+        self.check("push: a set to a booth", r["status"].split()[1] == "200" and j.get("members") == [a, b], r["body"].decode(errors="replace"))
+        _, body, _ = sb.frames(2)
+        evs = [json.loads(l[5:]) for l in body.decode(errors="replace").splitlines() if l.startswith("data:")]
+        ev = next((e for e in evs if e.get("type") == "set"), None)
+        want = [{"cid": a, "n": 1, "set": False}, {"cid": b, "n": 2, "set": False}]
+        self.check("the booth receives set with its members", ev is not None and ev.get("extra", {}).get("members") == want and ev.get("play") is True, str(evs)[:400])
+        r, j = self.post(f"/api/devices/{phone.dev['rs']}/push", {"type": "set", "text": st})
+        self.check("push: a set to a phone is not_a_booth", r["status"].split()[1] == "422" and j.get("error") == "not_a_booth", r["body"].decode(errors="replace"))
+        r, j = self.post(f"/api/devices/{booth.dev['rs']}/push", {"type": "set", "text": "#! beatscript 2\ntempo 120\ndeck A: kick x ~ x ~\n"})
+        self.check("push: a program with no set block is not_a_set", r["status"].split()[1] == "422" and j.get("error") == "not_a_set", r["body"].decode(errors="replace"))
+        r, j = self.post(f"/api/devices/{booth.dev['rs']}/push", {"type": "set", "text": f"#! beatscript 2\nuse restricted\nset {{\n  play {a}\n}}\n"})
+        self.check("push: a restricted set is refused", r["status"].split()[1] == "422", r["body"].decode(errors="replace"))
+        r = raw(self.rs, "GET", f"/api/programs/{a}")
+        hs = {k.lower(): v for k, v in r["headers"] if k.lower() != "link"}
+        links = [v for k, v in r["headers"] if k.lower() == "link"]
+        self.check("resolver: a stored program, immutable, its JSON-LD linked", r["status"].split()[1] == "200" and hs.get("cache-control") == "public, max-age=31536000, immutable"
+                   and f'<{ORIGIN}/p/{a}.jsonld>; rel="describedby"; type="application/ld+json"' in links, str(r["headers"]))
+        r = raw(self.rs, "GET", "/api/programs/z" + "Q" * 40)
+        self.check("resolver: a CID not held is 404", r["status"].split()[1] == "404", r["status"])
+        sb.close()
+        sp.close()
+
+
 def run(contract_run):
     Hub(contract_run).run()
+    Booth(contract_run, contract_run.a.rs).run()
+
+
+if __name__ == "__main__":
+    import argparse, types
+    ap = argparse.ArgumentParser(description="the booth's sequence (R1a) against one beatscript-serve")
+    ap.add_argument("--rs", required=True)
+    ap.add_argument("-v", "--verbose", action="store_true")
+    a = ap.parse_args()
+    run_ = types.SimpleNamespace(a=a, results=[])
+    Booth(run_, a.rs).run()
+    bad = [x for x in run_.results if not x["ok"]]
+    print(f"booth: {len(run_.results) - len(bad)}/{len(run_.results)} ok")
+    raise SystemExit(1 if bad else 0)

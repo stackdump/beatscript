@@ -172,12 +172,22 @@ impl Hub {
                     last_seen: last.map(rfc3339).unwrap_or_default(),
                     session: if connected { self.core.device_session_id(&d.owner, &d.id) } else { String::new() },
                     state: st,
+                    kind: d.kind,
                     id: d.id,
                     name: d.name,
                     paired: d.paired,
                 }
             })
             .collect()
+    }
+
+    /// Whether `session` is the live session of one of `uid`'s booths.
+    pub fn booth_session(&self, uid: &str, session: &str) -> bool {
+        if session.is_empty() {
+            return false;
+        }
+        let booths: Vec<String> = self.pair.lock().unwrap().devices.values().filter(|d| d.owner == uid && d.is_booth()).map(|d| d.id.clone()).collect();
+        booths.iter().any(|id| self.core.device_session_id(uid, id) == session)
     }
 
     /// `DeviceSession`: the hub session of u's device.
@@ -207,7 +217,7 @@ impl Hub {
     /// `deviceView`: what the page sees of a device (a map: keys sorted).
     fn device_view(&self, d: &Device) -> String {
         let (connected, last, st) = self.core.device_status(&d.id);
-        let mut o = format!("{{\"connected\":{connected},\"fingerprint\":{},\"id\":{}", q(&key_fingerprint(&d.key)), q(&d.id));
+        let mut o = format!("{{\"connected\":{connected},\"fingerprint\":{},\"id\":{},\"kind\":{}", q(&key_fingerprint(&d.key)), q(&d.id), q(d.kind));
         if let Some(l) = last {
             o.push_str(&format!(",\"last_seen\":{}", q(&rfc3339(l))));
         }
@@ -226,14 +236,16 @@ impl Hub {
         let g = crate::caps::grant_json(&d.owner);
         let caps = g.as_ref().map(|g| format!("\"caps\":{},", g["caps"])).unwrap_or_default();
         let grant = g.as_ref().map(|g| format!(",\"grant\":{}", g["grant"])).unwrap_or_default();
-        let mut o = format!("{{\"address\":{},{caps}\"device_id\":{},\"events\":\"/api/device/events\",\"fingerprint\":{}{grant}", q(addr), q(&d.id), q(&key_fingerprint(&d.key)));
+        let mut o = format!("{{\"address\":{},{caps}\"device_id\":{},\"events\":\"/api/device/events\",\"fingerprint\":{}{grant},\"kind\":{}", q(addr), q(&d.id), q(&key_fingerprint(&d.key)), q(d.kind));
         if !self.moved_to.is_empty() {
             o.push_str(&format!(",\"moved_to\":{}", q(&self.moved_to)));
         }
+        // `programs`: the resolver, where a booth fetches a public program a set names and it does not hold
         o.push_str(&format!(
-            ",\"name\":{},\"origin\":{},\"proto\":\"{PAIR_PROTO2}\",\"protos\":[\"{PAIR_PROTO2}\",\"{PAIR_PROTO}\"],\"server\":{},\"site_id\":{},\"user\":{}}}",
+            ",\"name\":{},\"origin\":{},\"programs\":{},\"proto\":\"{PAIR_PROTO2}\",\"protos\":[\"{PAIR_PROTO2}\",\"{PAIR_PROTO}\"],\"server\":{},\"site_id\":{},\"user\":{}}}",
             q(&d.name),
             q(&self.public_url),
+            q(&programs_template(&self.public_url)),
             q(&self.public_url),
             q(&self.site_id),
             q(&d.owner)
@@ -266,9 +278,9 @@ impl Hub {
         true
     }
 
-    fn verify_claim(&self, key: &[u8; 32], c: &Claim, sig: &[u8]) -> bool {
+    fn verify_claim(&self, key: &[u8; 32], c: &Claim, kind: &str, sig: &[u8]) -> bool {
         if c.proto == PAIR_PROTO2 {
-            return verify(key, &claim_message2(&self.site_id, &c.pair_id, &c.token, &c.key, &c.name, c.ts), sig);
+            return verify(key, &pair::claim_message2_kind(&self.site_id, &c.pair_id, &c.token, &c.key, &c.name, kind, c.ts), sig);
         }
         self.hosts.iter().any(|h| verify(key, &claim_message(h, &c.pair_id, &c.token, &c.key, &c.name, c.ts), sig))
     }
@@ -290,6 +302,7 @@ struct Claim {
     token: String,
     key: String,
     name: String,
+    kind: String,
     ts: i64,
     sig: String,
 }
@@ -655,9 +668,13 @@ async fn device_push(State(s): State<HS>, Path(id): Path<String>, req: Request) 
         let d = s.hub.pair.lock().unwrap().devices.get(&id).cloned();
         let Some(d) = d.filter(|d| d.owner == u.id) else { return Err(ApiError::new(404, "not_found", "no such device (or it is not yours)")) };
         let mut ev = SessionEvent { typ: typ.clone(), play, ..Default::default() };
+        let mut members: Vec<String> = Vec::new();
         match typ.as_str() {
             "stop" => {}
-            "eval" | "load" => {
+            "eval" | "load" | "set" => {
+                if typ == "set" && !d.is_booth() {
+                    return Err(ApiError::new(422, "not_a_booth", format!("{} is a phone; a set goes to a booth", d.name)));
+                }
                 if text.trim().is_empty() {
                     return Err(ApiError::new(400, "bad_request", "text is required"));
                 }
@@ -676,15 +693,59 @@ async fn device_push(State(s): State<HS>, Path(id): Path<String>, req: Request) 
                 ev.cid = rep.get("cid").and_then(|v| v.as_str()).unwrap_or("").to_string();
                 // (checked as it was sent; the phone gets it formatted, a load as an eval, with the header lines and comments)
                 ev.text = beatscript_serve::autoformat::autoformat(&text, maxp);
+                // a set: what its members are (the check resolved each against this site's store), for the booth to
+                // fetch any it lacks from the resolver; a set to a booth goes as `set` whichever verb asked for it
+                let set = set_members(&rep);
+                if typ == "set" && set.is_none() {
+                    return Err(ApiError::new(422, "not_a_set", "the program has no set block: push it as eval or load"));
+                }
+                if let Some(m) = set.filter(|_| d.is_booth()) {
+                    ev.typ = "set".into();
+                    ev.extra = Some(set_extra(&m));
+                    members = m.into_iter().map(|(_, c, _)| c).collect();
+                }
             }
-            _ => return Err(ApiError::new(400, "bad_request", "type must be eval, load or stop")),
+            _ => return Err(ApiError::new(400, "bad_request", "type must be eval, load, stop or set")),
         }
         if !s.hub.core.push_device(&d.id, &ev) {
-            return Err(ApiError::new(409, "no_session", format!("{} is paired but not connected: open djrust on the phone", d.name)));
+            let app = if d.is_booth() { "the DJ app on the booth" } else { "djrust on the phone" };
+            return Err(ApiError::new(409, "no_session", format!("{} is paired but not connected: open {app}", d.name)));
+        }
+        if ev.typ == "set" {
+            let list: Vec<String> = members.iter().map(|c| q(c)).collect();
+            return Ok(json_answer(200, format!("{{\"cid\":{},\"delivered\":1,\"members\":[{}]}}", q(&ev.cid), list.join(","))));
         }
         Ok(json_answer(200, format!("{{\"cid\":{},\"delivered\":1}}", q(&ev.cid))))
     };
     r.await.unwrap_or_else(err)
+}
+
+/// A set's members as its check report names them (`set.tracks`, a track a line): each CID once, at the position of its
+/// first `play`, and whether it is itself a set. None when the program is not a set. A generator call has no CID and is
+/// not a member.
+pub fn set_members(rep: &serde_json::Value) -> Option<Vec<(i64, String, bool)>> {
+    let tracks = rep.get("set")?.get("tracks")?.as_array()?;
+    let mut out: Vec<(i64, String, bool)> = Vec::new();
+    for (i, t) in tracks.iter().enumerate() {
+        let cid = t.get("cid").and_then(|c| c.as_str()).unwrap_or("");
+        if cid.is_empty() || !crate::store::is_cid(cid) || out.iter().any(|(_, c, _)| c == cid) {
+            continue;
+        }
+        let n = t.get("n").and_then(|n| n.as_i64()).unwrap_or(i as i64 + 1);
+        out.push((n, cid.to_string(), t.get("set").and_then(|b| b.as_bool()).unwrap_or(false)));
+    }
+    Some(out)
+}
+
+/// The `set` event's `extra`: `{"members":[{"cid":…,"n":…,"set":…}]}` (keys sorted).
+pub fn set_extra(members: &[(i64, String, bool)]) -> String {
+    let list: Vec<String> = members.iter().map(|(n, c, set)| format!("{{\"cid\":{},\"n\":{n},\"set\":{set}}}", q(c))).collect();
+    format!("{{\"members\":[{}]}}", list.join(","))
+}
+
+/// Where a program is fetched by CID (the resolver, site/PAIRING.md "The booth"): `<origin>/api/programs/{cid}`.
+pub fn programs_template(origin: &str) -> String {
+    format!("{}/api/programs/{{cid}}", origin.trim_end_matches('/'))
 }
 
 /// The checker: P3's (`public::Checker`, charged to the caller's address as Go's checkerOwner does), else beatscript-api
@@ -714,19 +775,26 @@ async fn pair_claim(State(s): State<HS>, req: Request) -> Response<Body> {
         let n = decode_body(&b, MAX_CLAIM_BYTES)?;
         let mut c = Claim::default();
         let mut bd = Bind::new(&b);
-        bd.object(&n, "claimBody", "server.claimBody", &["proto", "pair_id", "token", "key", "name", "ts", "sig"], |bd, i, v| match i {
+        bd.object(&n, "claimBody", "server.claimBody", &["proto", "pair_id", "token", "key", "name", "ts", "sig", "kind"], |bd, i, v| match i {
             0 => bd.string(v, &mut c.proto),
             1 => bd.string(v, &mut c.pair_id),
             2 => bd.string(v, &mut c.token),
             3 => bd.string(v, &mut c.key),
             4 => bd.string(v, &mut c.name),
             5 => bd.int(v, &mut c.ts, "int64"),
-            _ => bd.string(v, &mut c.sig),
+            6 => bd.string(v, &mut c.sig),
+            _ => bd.string(v, &mut c.kind),
         });
         bind_err(bd)?;
         let bad = |st: u16, code: &str, m: &str| Err(ApiError::new(st, code, m));
         if c.proto != PAIR_PROTO && c.proto != PAIR_PROTO2 {
             return bad(400, "bad_request", &format!("proto must be {PAIR_PROTO2} (or {PAIR_PROTO})"));
+        }
+        let Some(kind) = pair::device_kind(&c.kind) else {
+            return bad(400, "bad_request", "kind must be phone or booth");
+        };
+        if kind != pair::KIND_PHONE && c.proto != PAIR_PROTO2 {
+            return bad(400, "bad_request", &format!("a {kind} pairs with {PAIR_PROTO2}: {PAIR_PROTO} cannot name a kind"));
         }
         let key = match decode_key(&c.key) {
             Ok(k) => k,
@@ -740,7 +808,7 @@ async fn pair_claim(State(s): State<HS>, req: Request) -> Response<Body> {
             return bad(401, "challenge_stale", "the phone's clock is too far from the server's (set it automatically and scan again)");
         }
         match b64url_decode(&c.sig) {
-            Some(sig) if hub.verify_claim(&key, &c, &sig) => {}
+            Some(sig) if hub.verify_claim(&key, &c, kind, &sig) => {}
             _ => return bad(401, "bad_signature", "the claim's signature does not verify"),
         }
         let (d, replaced) = {
@@ -774,7 +842,7 @@ async fn pair_claim(State(s): State<HS>, req: Request) -> Response<Body> {
             if p.devices.len() >= MAX_DEVICES {
                 return bad(503, "busy", "too many paired devices on this server");
             }
-            let d = Device { id: state::new_id(), owner, name: c.name.clone(), key: c.key.clone(), paired: rfc3339(now) };
+            let d = Device { id: state::new_id(), owner, name: c.name.clone(), key: c.key.clone(), paired: rfc3339(now), kind };
             p.devices.insert(d.id.clone(), d.clone());
             let o = p.offers.get_mut(&c.pair_id).unwrap();
             o.state = "paired".into();

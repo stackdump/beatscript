@@ -74,7 +74,8 @@ impl std::error::Error for Error {}
 /// What a push asks the phone to do.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Payload {
-    /// `eval` (play this text) or `load` (load it, leave it stopped unless `play`).
+    /// `eval` (play this text), `load` (load it, leave it stopped unless `play`; a booth stores it) or `set` (a set
+    /// program, for a booth: it stores it and resolves its members, site/PAIRING.md "The booth").
     pub kind: String,
     pub text: String,
     pub play: bool,
@@ -101,8 +102,8 @@ impl Payload {
             return Err(Error::BadPayload("unknown version"));
         }
         let kind = v["kind"].as_str().ok_or(Error::BadPayload("no kind"))?;
-        if !matches!(kind, "eval" | "load") {
-            return Err(Error::BadPayload("kind is eval or load"));
+        if !matches!(kind, "eval" | "load" | "set") {
+            return Err(Error::BadPayload("kind is eval, load or set"));
         }
         let text = v["text"].as_str().ok_or(Error::BadPayload("no text"))?;
         let id = v["id"].as_str().filter(|s| s.len() == 32 && s.bytes().all(|c| c.is_ascii_hexdigit())).ok_or(Error::BadPayload("no id"))?;

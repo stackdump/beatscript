@@ -19,7 +19,10 @@ fn val(s: String) -> Value {
 
 impl HubApi for Hub {
     fn push(&self, uid: &str, session: &str, ev: hubapi::SessionEvent) -> Result<usize, Fail> {
-        let ev = SessionEvent { typ: ev.kind.to_string(), text: ev.text, cid: ev.cid, play: ev.play, ..Default::default() };
+        // a set to a booth's session goes as `set`, with its members (site/PAIRING.md "The booth")
+        let booth = ev.set.is_some() && !uid.is_empty() && self.booth_session(uid, session);
+        let (typ, extra) = if booth { ("set", ev.set) } else { (ev.kind, None) };
+        let ev = SessionEvent { typ: typ.to_string(), text: ev.text, cid: ev.cid, play: ev.play, extra, ..Default::default() };
         Hub::push(self, user(uid).as_ref(), session, &ev).map_err(Fail::from)
     }
 

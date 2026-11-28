@@ -1,0 +1,13 @@
+{
+  "claim_message": "btw-pair/2 claim\nsite: siteSITEsiteSITEsite01\npair: pairPAIRpairPAIRpair01\ntoken: 53ee3f45e0d6a0002fa2ca51799e594a5760e72bb16506d916a1d84801ce7bf0\nkey: iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\nname: Booth Mac\nkind: booth\nts: 1795000000000",
+  "claim_sig": "j8fqqXHNCLEyexi3iDByZsilfwbrSysY3VZmO2Qea6mPSj7P30l2aagU4hndSE4UhevEZguIzl7Of3St86n9Bw",
+  "key": "iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+  "kind": "booth",
+  "name": "Booth Mac",
+  "pair_id": "pairPAIRpairPAIRpair01",
+  "proto": "btw-pair/2",
+  "seed_hex": "0101010101010101010101010101010101010101010101010101010101010101",
+  "site_id": "siteSITEsiteSITEsite01",
+  "token": "8PHy8_T19vf4-fr7_P3-_w",
+  "ts": 1795000000000
+}

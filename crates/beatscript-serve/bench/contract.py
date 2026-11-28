@@ -59,6 +59,35 @@ KNOWN = {
 }
 
 
+# R1a (site/PAIRING.md "The booth", 2026-11-27): what beatscript-serve adds that Go never had, undone on its side
+# before comparing, so every other byte is still compared. GET /api/programs/<cid> names its JSON-LD (a `describedby`
+# Link; a handler's Link replaces the middleware's, so the privacy and CC0 Links are written by the handler too, and a
+# renamed program's answer now carries them as well), and /.well-known/btw-site names the resolver (`programs`).
+R1A_REASON = "R1a: the resolver's describedby Link and the site document's programs template (site/PAIRING.md \"The booth\"); equal once undone"
+R1A_PROGRAMS = re.compile(rb',?\s*"programs":\s*"[^"]*"')
+
+
+def r1a_undo(path, r):
+    """r without what R1a added, and whether anything was."""
+    changed = False
+    hs = r["headers"]
+    if path.startswith("/api/programs/"):
+        renamed = any(k.lower() == "link" and "-version\"" in v for k, v in hs)
+        keep = []
+        for k, v in hs:
+            if k.lower() == "link" and ('rel="describedby"' in v or (renamed and ('rel="privacy-policy"' in v or 'rel="license"' in v))):
+                changed = True
+                continue
+            keep.append((k, v))
+        hs = keep
+    body = r["body"]
+    if path in ("/.well-known/btw-site", "/.well-known/beatscript-site") and b'"programs"' in body:
+        body = R1A_PROGRAMS.sub(b"", body, count=1)
+        hs = [(k, str(len(body)) if k.lower() == "content-length" else v) for k, v in hs]
+        changed = True
+    return dict(r, headers=hs, body=body), changed
+
+
 def norm(r):
     hs = []
     for k, v in r["headers"]:
@@ -157,6 +186,7 @@ class Run:
         that differs is KNOWN when both bodies are equal once fn is applied to each (Content-Length to match)."""
         g = send(go_addr or self.a.go, method, path, headers, body)
         r = send(self.a.rs, method, path, headers, body)
+        r, r1a = r1a_undo(path, r)
         created = None
         if (path.startswith("/api/programs/") or share_created) and g["body"] != r["body"]:
             fg, fr = CREATED.sub(b'"created":"T"', g["body"]), CREATED.sub(b'"created":"T"', r["body"])
@@ -213,6 +243,9 @@ class Run:
                 known = "status: the Opus URL carries beatscript-serve's Opus render version (v=r2rs)"
         if same and (created or retry):
             same, known = False, created or retry
+        if same and r1a:
+            # equal only once R1a's additions are undone: accepted, and said so
+            same, known = False, R1A_REASON
         ok = same or bool(known)
         self.results.append({"group": group, "case": key, "same": same, "ok": ok, "known": known, "diff": diff, "bytes": ng[3]})
         if self.a.verbose or not ok:

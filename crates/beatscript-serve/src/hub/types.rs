@@ -344,6 +344,8 @@ impl SessionInfo {
 pub struct DeviceInfo {
     pub id: String,
     pub name: String,
+    /// phone | booth
+    pub kind: &'static str,
     pub fingerprint: String,
     pub paired: String,
     pub connected: bool,
@@ -358,6 +360,8 @@ impl DeviceInfo {
         jstr(&mut o, &self.id);
         o.push_str(",\"name\":");
         jstr(&mut o, &self.name);
+        o.push_str(",\"kind\":");
+        jstr(&mut o, self.kind);
         o.push_str(",\"fingerprint\":");
         jstr(&mut o, &self.fingerprint);
         o.push_str(",\"paired\":");

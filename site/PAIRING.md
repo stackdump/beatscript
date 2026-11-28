@@ -200,7 +200,8 @@ POST /api/pair/claim   {proto: "btw-pair/2", pair_id, token, key, name, kind: "b
   ```
 
   A `btw-pair/1` claim cannot name a kind: `proto: "btw-pair/1"` with `kind: "booth"` is `400 bad_request`.
-  `site/testdata/pair/vectors-v2.json` gains a `claim_booth` case (the same fixed key, seed 32 × 0x01).
+  `site/testdata/pair/vectors-v2-booth.json` pins a booth's claim text and signature (the same fixed key, seed 32 ×
+  0x01, as `vectors-v2.json`, which is unchanged); `hub/pair.rs` `v2_booth_vector` reproduces it.
 - Signed requests (`btw-pair/2 request`) do not change: the kind lives in the device record, not in each request.
 - The device record (`<data>/devices.json`) carries `"kind": "booth"` for a booth and no `kind` for a phone (an
   existing file reads back as it was written).
@@ -260,15 +261,18 @@ POST /api/devices/<id>/push   {type: "eval" | "load" | "stop" | "set", text?, pl
   (`422 not_a_set` when the text has no `set` block). A member this site does not hold fails the check
   (`422 bad_request`, the checker's message names the CID): push it first, or send the set sealed.
 - The answer: `{cid, delivered: 1, members: [<cid>, …]}`. A booth that is not connected is `409 no_session`, and
-  nothing is queued.
+  nothing is queued. Nothing a push sends is stored: a push never writes the programs store (the members were stored
+  before, through the storage gate).
 - `eval` and `load` to a booth are as for a phone: the program is checked and formatted, and a restricted or
   asset-using program is refused (send it sealed).
 - Limits: the push runs the checker, charged to the caller's address like every check (60 a minute); the stream
   counts toward the 40 SSE streams per address.
 
-MCP: `eval` / `load` with `device: <booth id>` send `eval` / `load`; a set text sent with `eval` or `load` to a booth
-goes as a `set` event (to a phone it is refused, as above). `push_private` takes `set: true` to seal a set (payload
-kind `set`); `beatscript-seal` accepts `set` as a payload kind.
+MCP: `eval` / `load` with `device: <booth id>` send `eval` / `load`; a set text sent with `eval` to a booth goes as a
+`set` event with its members (to a phone, or a tab, it goes as `eval`, as before). The same holds for
+`/api/devices/<id>/push` with `type: "eval"`. `push_private` takes `set: true` to seal a set (payload kind `set`; a
+phone is `422 not_a_booth` when the server seals); `beatscript-seal` accepts `set` as a payload kind. `devices` lists
+each device's `kind`.
 
 ### The resolver: `GET /api/programs/<cid>`
 

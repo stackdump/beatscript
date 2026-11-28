@@ -685,6 +685,8 @@ fn site_doc(st: &Pub) -> Value {
     let mut d = json!({
         "proto": "btw-site/1", "site_id": st.site_id, "origin": st.public_url, "origins": origins,
         "pair": ["btw-pair/2", "btw-pair/1"], "license": CONTENT_LICENSE, "privacy": format!("{}/privacy", st.public_url),
+        // the resolver (site/PAIRING.md "The booth"): a public program by CID, read-only
+        "programs": crate::hub::programs_template(&st.public_url),
     });
     let moved = cfg.flag("moved-to", "").trim_end_matches('/').to_string();
     if !moved.is_empty() {
@@ -914,7 +916,10 @@ async fn get_program(State(st): St, req: Request) -> Response<Body> {
     let etag = format!("\"{cid}\"");
     let mut b = Response::builder().header(header::CACHE_CONTROL, "public, max-age=31536000, immutable").header(header::ETAG, &etag);
     let link = renamed_link(&st.public_url, renamed_to.as_deref(), renamed_from.as_deref());
-    if let Some(l) = &link {
+    // the resolver's contract (site/PAIRING.md "The booth"): the program's linked data is named on every answer. A
+    // handler's Link replaces the middleware's, so the privacy and licence links it would add are given here too.
+    let links = program_links(&st.public_url, &cid, link.as_deref(), meta["license"].as_str().unwrap_or(""));
+    for l in &links {
         b = b.header(header::LINK, l);
     }
     if req.headers().get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()) == Some(etag.as_str()) {
@@ -939,10 +944,23 @@ async fn get_program(State(st): St, req: Request) -> Response<Body> {
     let h = r.headers_mut();
     h.insert(header::CACHE_CONTROL, "public, max-age=31536000, immutable".parse().unwrap());
     h.insert(header::ETAG, etag.parse().unwrap());
-    if let Some(l) = link.and_then(|l| l.parse().ok()) {
-        h.insert(header::LINK, l);
+    for l in links.iter().filter_map(|l| l.parse().ok()) {
+        h.append(header::LINK, l);
     }
     r
+}
+
+/// The `Link`s of a stored program's answer: its twin (the rename), its JSON-LD (`/p/<cid>.jsonld`, `describedby`),
+/// the privacy policy, and its licence when it is CC0 (a CC-BY program's licence is in `meta.license`).
+fn program_links(origin: &str, cid: &str, renamed: Option<&str>, license: &str) -> Vec<String> {
+    let origin = origin.trim_end_matches('/');
+    let mut v: Vec<String> = renamed.map(str::to_string).into_iter().collect();
+    v.push(format!("<{origin}/p/{cid}.jsonld>; rel=\"describedby\"; type=\"application/ld+json\""));
+    v.push(format!("<{origin}/privacy>; rel=\"privacy-policy\""));
+    if license.is_empty() || license == "CC0-1.0" {
+        v.push("<https://creativecommons.org/publicdomain/zero/1.0/>; rel=\"license\"".into());
+    }
+    v
 }
 
 /// The `Link` of a program with a twin: `rel="successor-version"` to the BeatScript 2 program an old one is renamed to,
