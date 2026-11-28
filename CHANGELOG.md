@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### The booth as a paired device: kind `booth` on btw-pair/2, a set pushed whole, the program resolver (2026-11-28)
+
+- A device claims as `kind: booth` (btw-pair/2 only; the signed claim text gains a `kind: booth` line, phone claims and
+  their vectors are unchanged; `site/testdata/pair/vectors-v2-booth.json`). Device views, `hello` and the pair state carry
+  the kind; booths count toward the 8 devices a user may pair.
+- Push and MCP `eval` / `load` / `push_private` take a set: `type: set` to a booth sends the set's text and CID with its
+  members (the CIDs its play lines name, in order), checked against the site's store first. A set to a phone is 422
+  `not_a_booth`; a program with no set block is 422 `not_a_set`. A private set is sealed, and the server keeps nothing.
+- The resolver is the existing `GET /api/programs/<cid>` (CC, public programs only, as the storage gate admits them): it
+  now sends `Link: </p/<cid>.jsonld>; rel="describedby"`, and `hello` and `/.well-known/btw-site` name it as `programs`.
+- The contract is site/PAIRING.md, "The booth: a paired device of kind booth".
+
 ### The booth's jog gesture as a record: `deck scratch`, `seek from_seconds`, `nudge duration` (2026-11-27)
 
 - The control registry's `deck` noun has `scratch` (`seconds`: the platter's net turn, `beats`, `strokes`, `duration`,
